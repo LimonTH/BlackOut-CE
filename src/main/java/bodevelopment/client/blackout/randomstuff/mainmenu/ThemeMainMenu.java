@@ -9,41 +9,14 @@ import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.MathHelper;
-import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
-import java.util.ArrayList;
 
 public class ThemeMainMenu implements MainMenuRenderer {
-    private static final ArrayList<String> changelog = new ArrayList<>();
+    private final ChangelogRenderer changelogRenderer = new ChangelogRenderer();
     private static final float BUTTON_WIDTH = 360.0F;
     private static final float BUTTON_HEIGHT = 10.0F;
     private static final float BUTTON_RADIUS = 25.0F;
-    private static float longest = 0.0F;
-    private float changelogX = 450.0F;
-    private float changelogY = -200.0F;
-    private float targetX = 450.0F;
-    private float targetY = -200.0F;
-    private boolean dragging = false;
-    private float dragOffsetX, dragOffsetY;
-
-    public static void initChangelog() {
-        changelog.clear();
-        changelog.add("Ported to Minecraft 1.21.1");
-        changelog.add("Global rendering overhaul");
-        changelog.add("Improved world-logic communication");
-        changelog.add("Synchronized interface logic");
-        changelog.add("Fixed UI in Main Menu and world");
-        changelog.add("Fixed ID bugs in HUD manager");
-
-        float maxW = 0;
-        for (String s : changelog) {
-            float w = BlackOut.FONT.getWidth(s) * 1.5F;
-            if (w > maxW) maxW = w;
-        }
-        longest = maxW + 60.0F;
-    }
 
     @Override
     public void render(MatrixStack stack, float height, float mx, float my, String splashText) {
@@ -53,7 +26,14 @@ public class ThemeMainMenu implements MainMenuRenderer {
 
         this.renderButtons(stack, renderMx, renderMy);
         this.renderTitle(stack, splashText);
-        this.renderChangelog(stack, renderMx, renderMy);
+        ThemeSettings theme = ThemeSettings.getInstance();
+        MainMenuSettings settings = MainMenuSettings.getInstance();
+
+        this.changelogRenderer.render(stack, renderMx, renderMy,
+                true,
+                new Color(theme.getMain(180)),
+                new Color(theme.getSecond(180)),
+                settings.speed.get().floatValue());
         this.renderAllIconButtons(stack, height, renderMx, renderMy);
         this.renderDevs();
     }
@@ -197,55 +177,5 @@ public class ThemeMainMenu implements MainMenuRenderer {
     private void renderTitle(MatrixStack stack, String splashText) {
         BlackOut.BOLD_FONT.text(stack, "BlackOut", 8.5F, 0.0F, -250.0F, Color.WHITE.getRGB(), true, true);
         BlackOut.FONT.text(stack, splashText, 2.5F, 0.0F, -200.0F, Color.WHITE.getRGB(), true, true);
-    }
-
-    private void renderChangelog(MatrixStack stack, float mx, float my) {
-        if (changelog.isEmpty()) {
-            initChangelog();
-        }
-        float fontHeight = BlackOut.FONT.getHeight() * 1.5F;
-        int maxLines = 15;
-        float width = Math.max(longest, 350.0F);
-        float height = BlackOut.BOLD_FONT.getHeight() + Math.min(changelog.size(), maxLines) * fontHeight + 50.0F;
-
-        // Драг-логика
-        boolean mousePressed = GLFW.glfwGetMouseButton(BlackOut.mc.getWindow().getHandle(), 0) == 1;
-        if (this.dragging) {
-            if (mousePressed) {
-                this.targetX = mx - this.dragOffsetX;
-                this.targetY = my - this.dragOffsetY;
-            } else {
-                this.dragging = false;
-            }
-        } else if (mousePressed) {
-            if (mx >= this.changelogX && mx <= this.changelogX + width && my >= this.changelogY && my <= this.changelogY + 40.0F) {
-                this.dragging = true;
-                this.dragOffsetX = mx - this.changelogX;
-                this.dragOffsetY = my - this.changelogY;
-            }
-        }
-        this.changelogX = MathHelper.lerp(0.2F, this.changelogX, this.targetX);
-        this.changelogY = MathHelper.lerp(0.2F, this.changelogY, this.targetY);
-
-        stack.push();
-        stack.translate(this.changelogX, this.changelogY, 0.0F);
-
-        ThemeSettings theme = ThemeSettings.getInstance();
-        MainMenuSettings settings = MainMenuSettings.getInstance();
-
-        RenderUtils.roundedShadow(stack, 0.0F, 0.0F, width, height, 15.0F, 15.0F, new Color(0, 0, 0, 120).getRGB());
-        RenderUtils.drawLoadedBlur("title", stack, renderer -> renderer.rounded(0.0F, 0.0F, width, height, 15.0F, 10, 1.0F, 1.0F, 1.0F, 1.0F));
-
-        // Фон и градиентная рамка чейнджлога
-        RenderUtils.rounded(stack, 0.0F, 0.0F, width, height, 15.0F, 2.0F, new Color(20, 20, 20, 160).getRGB(), new Color(0, 0, 0, 200).getRGB());
-        RenderUtils.tenaRounded(stack, 0.0F, 0.0F, width, height, 15.0F, 1.5F, theme.getMain(180), theme.getSecond(180), settings.speed.get().floatValue());
-
-        BlackOut.BOLD_FONT.text(stack, "Update Notes", 2.2F, width / 2.0F, 12.0F, Color.WHITE.getRGB(), true, false);
-        RenderUtils.rounded(stack, 15.0F, 38.0F, width - 30.0F, 1.5F, 1.0F, 0.0F, new Color(255, 255, 255, 50).getRGB(), 0);
-
-        for (int j = 0; j < Math.min(changelog.size(), maxLines); j++) {
-            BlackOut.FONT.text(stack, "• " + changelog.get(j), 1.5F, 18.0F, 50.0F + (j * fontHeight), new Color(225, 225, 225).getRGB(), false, false);
-        }
-        stack.pop();
     }
 }
