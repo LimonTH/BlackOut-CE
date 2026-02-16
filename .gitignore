@@ -4,6 +4,9 @@
 build/
 out/
 classes/
+*.log
+.zencoder/
+.claude/
 
 # eclipse
 
