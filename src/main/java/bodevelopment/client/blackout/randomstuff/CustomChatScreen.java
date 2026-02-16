@@ -15,7 +15,7 @@ public class CustomChatScreen extends ChatScreen {
         super("");
     }
 
-    public void method_25420(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
     }
 
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
