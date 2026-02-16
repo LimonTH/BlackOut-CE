@@ -1,0 +1,97 @@
+plugins {
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+	id 'java'
+	id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
+
+repositories {
+	mavenCentral()
+	maven {
+		url = "https://repo.spongepowered.org/repository/maven-public/"
+	}
+	maven {
+		url = "https://files.minecraftforge.net/maven"
+	}
+}
+
+loom {
+	mixin {
+		defaultRefmapName = "blackout-refmap.json"
+		add sourceSets.main, "blackout-refmap.json"
+	}
+	mods {
+		"blackout" {
+			sourceSet "main"
+		}
+	}
+	accessWidenerPath = file("src/main/resources/blackout.accesswidener")
+
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	compileOnly 'com.google.errorprone:error_prone_annotations:2.47.0'
+}
+
+processResources {
+	inputs.property "id", project.archives_base_name
+	inputs.property "version", project.mod_version
+	inputs.property "name", project.mod_name
+	inputs.property "description", project.mod_description
+
+	filesMatching("fabric.mod.json") {
+		expand(
+				"id": project.archives_base_name,
+				"version": project.mod_version,
+				"name": project.mod_name,
+				"description": project.mod_description,
+				"minecraft_version": project.minecraft_version,
+				"loader_version": project.loader_version,
+				"java_version": project.java_version
+		)
+	}
+	duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.setRelease(java_version.toInteger())
+}
+
+java {
+	withSourcesJar()
+	setSourceCompatibility(JavaVersion.toVersion(java_version))
+	setTargetCompatibility(JavaVersion.toVersion(java_version))
+}
+
+jar {
+	inputs.property "archivesName", project.base.archivesName
+
+	from("LICENSE") {
+		rename { "${it}_${inputs.properties.archivesName}"}
+	}
+}
+
+publishing {
+	publications {
+		create("mavenJava", MavenPublication) {
+			artifactId = project.archives_base_name
+			from components.java
+		}
+	}
+}
+afterEvaluate {
+	tasks.withType(JavaCompile).configureEach {
+		options.compilerArgs << "-Xlint:all" << "-Xlint:-processing" << "-Xlint:-this-escape" << "-Xlint:-varargs"
+	}
+}

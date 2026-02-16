@@ -1,0 +1,49 @@
+accessWidener	v2 named
+
+accessible  class   com/mojang/blaze3d/platform/GlStateManager
+accessible  class   com/mojang/blaze3d/platform/GlStateManager$Texture2DState
+accessible	class	net/minecraft/client/world/ClientChunkManager$ClientChunkMap
+accessible	class	net/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket$InteractType
+accessible	class	net/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket$InteractTypeHandler
+
+
+accessible  field   com/mojang/blaze3d/platform/GlStateManager                                              TEXTURES                         [Lcom/mojang/blaze3d/platform/GlStateManager$Texture2DState;
+accessible	field	net/minecraft/client/world/ClientWorld   	                                            entityList               	     Lnet/minecraft/world/EntityList;
+accessible	field	net/minecraft/entity/player/PlayerEntity	                                            POSE_DIMENSIONS	                 Ljava/util/Map;
+accessible	field	net/minecraft/client/network/ClientPlayerInteractionManager	                            currentBreakingPos	             Lnet/minecraft/util/math/BlockPos;
+accessible	field	net/minecraft/client/world/ClientChunkManager	                                        chunks	                         Lnet/minecraft/client/world/ClientChunkManager$ClientChunkMap;
+accessible	field	net/minecraft/world/entity/SimpleEntityLookup	                                        cache	                         Lnet/minecraft/world/entity/SectionedEntityCache;
+accessible	field	net/minecraft/world/entity/EntityTrackingSection	                                    collection	                     Lnet/minecraft/util/collection/TypeFilterableList;
+accessible	field	net/minecraft/block/AbstractBlock                                                      	settings	                     Lnet/minecraft/block/AbstractBlock$Settings;
+accessible	field	net/minecraft/client/render/GameRenderer	                                            buffers	                         Lnet/minecraft/client/render/BufferBuilderStorage;
+accessible	field	net/minecraft/client/sound/SoundManager                                             	soundSystem	                     Lnet/minecraft/client/sound/SoundSystem;
+accessible	field	net/minecraft/client/sound/SoundSystem                                              	channel	                         Lnet/minecraft/client/sound/Channel;
+accessible	field	net/minecraft/client/world/ClientChunkManager$ClientChunkMap	                        chunks	                         Ljava/util/concurrent/atomic/AtomicReferenceArray;
+accessible	field	net/minecraft/world/entity/SectionedEntityCache	                                        trackedPositions	             Lit/unimi/dsi/fastutil/longs/LongSortedSet;
+accessible	field	net/minecraft/world/entity/SectionedEntityCache                                     	trackingSections	             Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;
+accessible	field	net/minecraft/entity/LivingEntity	                                                    lastDamageSource	             Lnet/minecraft/entity/damage/DamageSource;
+accessible	field	net/minecraft/client/render/WorldRenderer	                                            entityRenderDispatcher	         Lnet/minecraft/client/render/entity/EntityRenderDispatcher;
+accessible	field	net/minecraft/block/AbstractBlock$Settings	                                            replaceable             	     Z
+accessible	field	net/minecraft/block/AbstractBlock$Settings                                             	collidable	                     Z
+accessible	field	net/minecraft/entity/LivingEntity                                                   	lastDamageTime	                 J
+accessible	field	com/mojang/blaze3d/platform/GlStateManager                                              activeTexture	                 I
+accessible	field	net/minecraft/block/AbstractBlock$Settings	                                            opaque	                         Z
+accessible	field	com/mojang/blaze3d/platform/GlStateManager$Texture2DState                           	boundTexture	                 I
+accessible	field   net/minecraft/client/network/ClientPlayerInteractionManager	                            lastSelectedSlot    	         I
+accessible	field	net/minecraft/entity/LivingEntity	                                                    lastAttackedTicks	             I
+
+accessible	method	net/minecraft/client/world/ClientWorld                                                  getPendingUpdateManager          ()Lnet/minecraft/client/network/PendingUpdateManager;
+accessible	method	net/minecraft/item/BlockItem                                                            getPlaceSound	                 (Lnet/minecraft/block/BlockState;)Lnet/minecraft/sound/SoundEvent;
+accessible	method	net/minecraft/entity/Entity	                                                            adjustMovementForCollisions	     (Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;
+accessible	method	net/minecraft/entity/player/PlayerEntity	                                            adjustMovementForSneaking	     (Lnet/minecraft/util/math/Vec3d;Lnet/minecraft/entity/MovementType;)Lnet/minecraft/util/math/Vec3d;
+accessible	method	net/minecraft/entity/Entity	                                                            getVelocityAffectingPos	         ()Lnet/minecraft/util/math/BlockPos;
+accessible	method	net/minecraft/client/world/ClientWorld	                                                getEntityLookup                  ()Lnet/minecraft/world/entity/EntityLookup;
+accessible  method  net/minecraft/client/render/entity/EntityRenderer                                       renderLabelIfPresent             (Lnet/minecraft/entity/Entity;Lnet/minecraft/text/Text;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;IF)V
+accessible  method  net/minecraft/entity/LivingEntity                                                       tryUseTotem                      (Lnet/minecraft/entity/damage/DamageSource;)Z
+accessible	method	net/minecraft/client/render/WorldRenderer	                                            renderEntity	                 (Lnet/minecraft/entity/Entity;DDDFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;)V
+accessible	method	net/minecraft/client/render/entity/LivingEntityRenderer	                                getHandSwingProgress	         (Lnet/minecraft/entity/LivingEntity;F)F
+accessible  method  net/minecraft/client/network/ClientPlayerInteractionManager                             sendSequencedPacket              (Lnet/minecraft/client/world/ClientWorld;Lnet/minecraft/client/network/SequencedPacketCreator;)V
+accessible	method	net/minecraft/entity/Entity	                                                            getRotationVector	             (FF)Lnet/minecraft/util/math/Vec3d;
+accessible	method	net/minecraft/entity/LivingEntity	                                                    shouldSpawnConsumptionEffects    ()Z
+accessible	method	net/minecraft/entity/LivingEntity	                                                    consumeItem	                     ()V
+accessible	method	net/minecraft/entity/LivingEntity	                                                    updateAttributes	             ()V

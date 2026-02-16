@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "${id}",
+  "version": "${version}",
+  "name": "${name}",
+  "description": "${description}",
+  "authors": [
+    "KassuK",
+    "OLEPOSSU",
+    "Limon_TH"
+  ],
+  "contact": {
+    "repo": "https://github.com/KassuK1/BlackOut-Client/",
+    "discord": "https://discord.com/invite/mmWz9Dz4Y9"
+  },
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "bodevelopment.client.blackout.BlackOut"
+    ]
+  },
+  "mixins": [
+    "blackout.mixins.json"
+  ],
+  "accessWidener": "blackout.accesswidener",
+  "depends": {
+    "java": ">=${java_version}",
+    "minecraft": ">=${minecraft_version}",
+    "fabricloader": ">=${loader_version}"
+  }
+}

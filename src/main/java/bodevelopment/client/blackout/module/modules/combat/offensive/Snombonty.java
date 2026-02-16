@@ -1,0 +1,250 @@
+package bodevelopment.client.blackout.module.modules.combat.offensive;
+
+import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.enums.RenderShape;
+import bodevelopment.client.blackout.enums.RotationType;
+import bodevelopment.client.blackout.enums.SwingHand;
+import bodevelopment.client.blackout.enums.SwitchMode;
+import bodevelopment.client.blackout.event.Event;
+import bodevelopment.client.blackout.event.events.RenderEvent;
+import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.module.MoveUpdateModule;
+import bodevelopment.client.blackout.module.SubCategory;
+import bodevelopment.client.blackout.module.setting.Setting;
+import bodevelopment.client.blackout.module.setting.SettingGroup;
+import bodevelopment.client.blackout.randomstuff.BlackOutColor;
+import bodevelopment.client.blackout.randomstuff.ExtrapolationMap;
+import bodevelopment.client.blackout.randomstuff.FindResult;
+import bodevelopment.client.blackout.randomstuff.Rotation;
+import bodevelopment.client.blackout.util.BoxUtils;
+import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.ProjectileUtils;
+import bodevelopment.client.blackout.util.RotationUtils;
+import bodevelopment.client.blackout.util.render.Render3DUtils;
+import bodevelopment.client.blackout.util.render.RenderUtils;
+import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.util.Hand;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RotationAxis;
+import net.minecraft.util.math.Vec3d;
+
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+
+public class Snombonty extends MoveUpdateModule {
+    public final SettingGroup sgGeneral = this.addGroup("General");
+    public final SettingGroup sgRender = this.addGroup("Render");
+    private final Setting<Boolean> playerVelocity = this.sgGeneral.b("Velocity", true, "Uses your own velocity in trajectory calculations.");
+    private final Setting<Boolean> onlyPlayers = this.sgGeneral.b("Only Players", true, "Only abuses players.");
+    private final Setting<Double> range = this.sgGeneral.d("Range", 50.0, 0.0, 100.0, 1.0, "Doesn't target entities outside of this range.");
+    private final Setting<Double> throwSpeed = this.sgGeneral.d("Throw Speed", 20.0, 0.0, 20.0, 0.1, "How many snowballs to throw each second.");
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.e("Switch Mode", SwitchMode.Normal, "Method of switching. Silent is the most reliable.");
+    private final Setting<Boolean> extrapolation = this.sgGeneral.b("Extrapolation", true, "Predicts enemy movement.");
+    private final Setting<Double> extrapolationStrength = this.sgGeneral
+            .d("Extrapolation Strength", 1.0, 0.0, 1.0, 0.01, "How many snowballs to throw each second.");
+    private final Setting<Boolean> instantRotate = this.sgGeneral.b("Instant Rotate", true, "Ignores rotation speed limit.");
+    private final Setting<Boolean> renderSwing = this.sgRender.b("Render Swing", false, "Renders swing animation when throwing a snowball.");
+    private final Setting<SwingHand> swingHand = this.sgRender.e("Swing Hand", SwingHand.RealHand, "Which hand should be swung.");
+    private final Setting<RenderShape> renderShape = this.sgRender.e("Render Shape", RenderShape.Full, "Which parts of render should be rendered.");
+    private final Setting<BlackOutColor> lineColor = this.sgRender.c("Line Color", new BlackOutColor(255, 0, 0, 255), "Line color of rendered boxes.");
+    private final Setting<BlackOutColor> sideColor = this.sgRender.c("Side Color", new BlackOutColor(255, 0, 0, 50), "Side color of rendered boxes.");
+    private final Setting<Boolean> renderSpread = this.sgRender.b("Render Spread", true, "Renders spread circle on target entity.");
+    private final Setting<BlackOutColor> spreadColor = this.sgRender
+            .c("Spread Color", new BlackOutColor(255, 255, 255, 255), "Color of the spread circle.", this.renderSpread::get);
+    private final MatrixStack stack = new MatrixStack();
+    private final ExtrapolationMap extMap = new ExtrapolationMap();
+    private final Predicate<ItemStack> predicate = stack -> stack.isOf(Items.SNOWBALL) || stack.isOf(Items.EGG);
+    private final Consumer<double[]> snowballVelocity = vel -> {
+        vel[0] *= 0.99;
+        vel[1] *= 0.99;
+        vel[2] *= 0.99;
+        vel[1] -= 0.03;
+    };
+    private Entity target = null;
+    private Box targetBox = null;
+    private Box prevBox = null;
+    private double yaw = 0.0;
+    private double pitch = 0.0;
+    private double throwsLeft = 0.0;
+    private int balls = 0;
+    private FindResult result = null;
+    private boolean switched = false;
+
+    public Snombonty() {
+        super("Snombonty", "Spams snowballs at people.", SubCategory.OFFENSIVE);
+    }
+
+    @Event
+    public void onRender(RenderEvent.World.Post event) {
+        if (BlackOut.mc.player != null && BlackOut.mc.world != null && this.target != null) {
+            Render3DUtils.box(this.lerpBox(event.tickDelta, this.prevBox, this.targetBox), this.sideColor.get(), this.lineColor.get(), this.renderShape.get());
+            if (this.renderSpread.get()) {
+                this.renderSpread(event.tickDelta);
+            }
+        }
+    }
+
+    private void renderSpread(float tickDelta) {
+        Vec3d cameraPos = BlackOut.mc.gameRenderer.getCamera().getPos();
+        double x = MathHelper.lerp(
+                tickDelta, (this.prevBox.minX + this.prevBox.maxX) / 2.0, (this.targetBox.minX + this.targetBox.maxX) / 2.0
+        )
+                - cameraPos.x;
+        double y = MathHelper.lerp(tickDelta, this.prevBox.minY, this.targetBox.minY)
+                - cameraPos.y
+                + this.target.getHeight() / 2.0F;
+        double z = MathHelper.lerp(
+                tickDelta, (this.prevBox.minZ + this.prevBox.maxZ) / 2.0, (this.targetBox.minZ + this.targetBox.maxZ) / 2.0
+        )
+                - cameraPos.z;
+        this.stack.push();
+        Render3DUtils.setRotation(this.stack);
+        double pitch = RotationUtils.getPitch(
+                BlackOut.mc.gameRenderer.getCamera().getPos().add(x, y, z), BlackOut.mc.gameRenderer.getCamera().getPos()
+        );
+        this.stack.translate(x, y, z);
+        this.stack.scale(1.0F, -1.0F, 1.0F);
+        this.stack
+                .multiply(
+                        RotationAxis.POSITIVE_Y
+                                .rotation(
+                                        -(
+                                                (float) Math.toRadians(
+                                                        RotationUtils.getYaw(
+                                                                BlackOut.mc.gameRenderer.getCamera().getPos().add(x, y, z), BlackOut.mc.gameRenderer.getCamera().getPos(), 0.0
+                                                        )
+                                                )
+                                        )
+                                )
+                );
+        this.stack.multiply(RotationAxis.POSITIVE_X.rotation(-((float) Math.toRadians(pitch))));
+        GlStateManager._disableDepthTest();
+        GlStateManager._enableBlend();
+        GlStateManager._disableCull();
+        RenderUtils.circle2(this.stack, 0.0F, 0.0F, (float) (Math.sqrt(x * x + y * y + z * z) * 0.0174), this.spreadColor.get().getColor().getRGB());
+        this.stack.pop();
+    }
+
+    private Box lerpBox(float tickDelta, Box prev, Box current) {
+        return new Box(
+                MathHelper.lerp(tickDelta, prev.minX, current.minX),
+                MathHelper.lerp(tickDelta, prev.minY, current.minY),
+                MathHelper.lerp(tickDelta, prev.minZ, current.minZ),
+                MathHelper.lerp(tickDelta, prev.maxX, current.maxX),
+                MathHelper.lerp(tickDelta, prev.maxY, current.maxY),
+                MathHelper.lerp(tickDelta, prev.maxZ, current.maxZ)
+        );
+    }
+
+    @Override
+    protected void update(boolean allowAction, boolean fakePos) {
+        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+            if (this.extrapolation.get()) {
+                this.extMap
+                        .update(
+                                player -> (int) Math.floor(BlackOut.mc.player.getPos().distanceTo(player.getPos()) / 5.0 * this.extrapolationStrength.get())
+                        );
+            } else {
+                this.extMap.clear();
+            }
+
+            this.findTarget();
+            if (this.target != null) {
+                this.prevBox = this.targetBox;
+                this.targetBox = this.target instanceof AbstractClientPlayerEntity pl && this.extMap.contains(pl) ? this.extMap.get(pl) : this.target.getBoundingBox();
+                if (this.prevBox == null) {
+                    this.prevBox = this.targetBox;
+                }
+
+                if (BoxUtils.middle(this.prevBox).distanceTo(BoxUtils.middle(this.targetBox)) > 5.0) {
+                    this.prevBox = this.targetBox;
+                }
+
+                this.update(allowAction);
+            }
+        }
+    }
+
+    private void update(boolean allowAction) {
+        this.throwsLeft = this.throwsLeft + this.throwSpeed.get() / 20.0;
+        this.result = this.switchMode.get().find(this.predicate);
+        this.throwUpdate(allowAction);
+        this.throwsLeft = Math.min(this.throwsLeft, 1.0);
+    }
+
+    private void throwUpdate(boolean allowAction) {
+        Hand hand = OLEPOSSUtils.getHand(this.predicate);
+        if (hand != null || this.result.wasFound()) {
+            if (this.rotate((float) this.yaw, (float) this.pitch, 0.0, 10.0, RotationType.Other.withInstant(this.instantRotate.get()), "throwing")) {
+                if (allowAction) {
+                    if (hand == null) {
+                        if (this.result.wasFound()) {
+                            this.balls = Math.min((int) Math.floor(this.throwsLeft), this.result.amount());
+                        }
+                    } else {
+                        this.balls = this.getBalls(hand);
+                    }
+
+                    while (this.balls > 0) {
+                        this.throwSnowBall(hand);
+                        this.balls--;
+                        this.throwsLeft--;
+                    }
+
+                    if (this.switched) {
+                        this.switchMode.get().swapBack();
+                    }
+                }
+            }
+        }
+    }
+
+    private void throwSnowBall(Hand hand) {
+        if (hand != null || (this.switched = this.switchMode.get().swap(this.result.slot()))) {
+            this.useItem(hand);
+            if (this.renderSwing.get()) {
+                this.clientSwing(this.swingHand.get(), hand);
+            }
+        }
+    }
+
+    private int getBalls(Hand hand) {
+        return Math.min(
+                (int) Math.floor(this.throwsLeft),
+                hand == Hand.MAIN_HAND
+                        ? Managers.PACKET.getStack().getCount()
+                        : (hand == Hand.OFF_HAND ? BlackOut.mc.player.getOffHandStack().getCount() : 0)
+        );
+    }
+
+    private void findTarget() {
+        this.target = null;
+        double dist = 10000.0;
+
+        for (Entity entity : BlackOut.mc.world.getEntities()) {
+            if (entity != BlackOut.mc.player && entity instanceof LivingEntity && (!this.onlyPlayers.get() || entity instanceof PlayerEntity)) {
+                Box box = entity instanceof AbstractClientPlayerEntity pl && this.extMap.contains(pl) ? this.extMap.get(pl) : entity.getBoundingBox();
+                double d = BlackOut.mc.player.getPos().distanceTo(BoxUtils.feet(box));
+                if (!(this.range.get() > 0.0) || !(d > this.range.get())) {
+                    Rotation rotation = ProjectileUtils.calcShootingRotation(
+                            BlackOut.mc.player.getEyePos(), BoxUtils.middle(entity.getBoundingBox()), 1.5, this.playerVelocity.get(), this.snowballVelocity
+                    );
+                    if (rotation.pitch() != 0.0F && !(rotation.pitch() < -85.0F) && d < dist) {
+                        this.yaw = rotation.yaw();
+                        this.pitch = rotation.pitch();
+                        this.target = entity;
+                        dist = d;
+                    }
+                }
+            }
+        }
+    }
+}

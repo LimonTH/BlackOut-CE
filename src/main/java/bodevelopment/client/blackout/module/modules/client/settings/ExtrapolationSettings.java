@@ -1,0 +1,98 @@
+package bodevelopment.client.blackout.module.modules.client.settings;
+
+import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.event.Event;
+import bodevelopment.client.blackout.event.events.RenderEvent;
+import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.module.SettingsModule;
+import bodevelopment.client.blackout.module.setting.Setting;
+import bodevelopment.client.blackout.module.setting.SettingGroup;
+import bodevelopment.client.blackout.randomstuff.BlackOutColor;
+import bodevelopment.client.blackout.randomstuff.ExtrapolationMap;
+import bodevelopment.client.blackout.util.BoxUtils;
+import bodevelopment.client.blackout.util.render.Render3DUtils;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.render.*;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3d;
+import org.joml.Matrix4f;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class ExtrapolationSettings extends SettingsModule {
+    private static ExtrapolationSettings INSTANCE;
+    private final SettingGroup sgGeneral = this.addGroup("General");
+    public final Setting<Boolean> stepPredict = this.sgGeneral.b("Step Predict", true, ".");
+    public final Setting<Double> minStep = this.sgGeneral.d("Min Step", 0.6, 0.6, 3.0, 0.1, ".");
+    public final Setting<Integer> stepTicks = this.sgGeneral.i("Step Ticks", 40, 10, 100, 1, ".");
+    public final Setting<Boolean> reverseStepPredict = this.sgGeneral.b("Reverse Step Predict", true, ".");
+    public final Setting<Double> minReverseStep = this.sgGeneral.d("Min Reverse Step", 0.6, 0.6, 3.0, 0.1, ".");
+    public final Setting<Integer> reverseStepTicks = this.sgGeneral.i("Reverse Step Ticks", 20, 10, 100, 1, ".");
+    public final Setting<Boolean> jumpPredict = this.sgGeneral.b("Jump Predict", true, ".");
+    private final SettingGroup sgRender = this.addGroup("Render");
+    private final SettingGroup sgLag = this.addGroup("Lag");
+    public final Setting<Integer> maxLag = this.sgLag.i("Max Lag", 5, 0, 10, 1, ".");
+    public final Setting<Boolean> extraExtrapolation = this.sgLag.b("Extra Extrapolation", true, ".");
+    private final Setting<Boolean> renderExtrapolation = this.sgRender.b("Render Extrapolation", false, "");
+    private final Setting<Boolean> dashedLine = this.sgRender.b("Dashed Line", false, "");
+    private final Setting<BlackOutColor> lineColor = this.sgRender.c("Line Color", new BlackOutColor(255, 255, 255, 255), "");
+    private final ExtrapolationMap extrapolationMap = new ExtrapolationMap();
+    private final MatrixStack stack = new MatrixStack();
+
+    public ExtrapolationSettings() {
+        super("Extrapolation", false, true);
+        INSTANCE = this;
+    }
+
+    public static ExtrapolationSettings getInstance() {
+        return INSTANCE;
+    }
+
+    @Event
+    public void onRender(RenderEvent.World.Post event) {
+        if (BlackOut.mc.world != null && BlackOut.mc.player != null && this.renderExtrapolation.get()) {
+            Map<Entity, Box> map = this.extrapolationMap.getMap();
+            Map<Entity, List<Vec3d>> feet = new HashMap<>();
+            map.clear();
+            Managers.EXTRAPOLATION.getDataMap().forEach((player, data) -> {
+                if (player.isAlive()) {
+                    List<Vec3d> list = new ArrayList<>();
+                    Box box = data.extrapolate(player, 20, b -> list.add(BoxUtils.feet(b)));
+                    feet.put(player, list);
+                    map.put(player, box);
+                }
+            });
+            this.stack.push();
+            Render3DUtils.setRotation(this.stack);
+            Render3DUtils.start();
+            feet.values().forEach(this::renderList);
+            Render3DUtils.end();
+            this.stack.pop();
+        }
+    }
+
+    private void renderList(List<Vec3d> list) {
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder bufferBuilder = tessellator.begin(this.dashedLine.get() ? VertexFormat.DrawMode.DEBUG_LINES : VertexFormat.DrawMode.DEBUG_LINE_STRIP, VertexFormats.POSITION_COLOR);
+        Matrix4f matrix4f = this.stack.peek().getPositionMatrix();
+        Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
+        float red = this.lineColor.get().red / 255.0F;
+        float green = this.lineColor.get().green / 255.0F;
+        float blue = this.lineColor.get().blue / 255.0F;
+        float alpha = this.lineColor.get().alpha / 255.0F;
+        list.forEach(
+                vec -> bufferBuilder.vertex(
+                                matrix4f, (float) (vec.x - camPos.x), (float) (vec.y - camPos.y), (float) (vec.z - camPos.z)
+                        )
+                        .color(red, green, blue, alpha)
+                        
+        );
+        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+    }
+}

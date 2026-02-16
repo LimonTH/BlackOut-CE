@@ -1,0 +1,73 @@
+package bodevelopment.client.blackout.module.setting.settings;
+
+import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.interfaces.functional.SingleOut;
+import bodevelopment.client.blackout.keys.Key;
+import bodevelopment.client.blackout.keys.KeyBind;
+import bodevelopment.client.blackout.keys.MouseButton;
+import bodevelopment.client.blackout.module.setting.Setting;
+import bodevelopment.client.blackout.util.GuiColorUtils;
+import bodevelopment.client.blackout.util.SelectedComponent;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
+public class KeyBindSetting extends Setting<KeyBind> {
+    private final int id = SelectedComponent.nextId();
+
+    public KeyBindSetting(String name, String description, SingleOut<Boolean> visible) {
+        super(name, new KeyBind(null), description, visible);
+    }
+
+    @Override
+    public float render() {
+        BlackOut.FONT.text(this.stack, this.name, 2.0F, this.x + 5, this.y + 12.5F, GuiColorUtils.getSettingText(this.y), false, true);
+        this.get().render(this.stack, this.x + this.width - 21.0F, this.y + 12, this.x + this.width, this.mx, this.my);
+        return this.getHeight();
+    }
+
+    @Override
+    public boolean onMouse(int key, boolean pressed) {
+        this.get().onMouse(key, pressed);
+        return false;
+    }
+
+    @Override
+    public void onKey(int key, boolean pressed) {
+        this.get().onKey(key, pressed);
+    }
+
+    @Override
+    public float getHeight() {
+        return 30.0F;
+    }
+
+    @Override
+    public void write(JsonObject object) {
+        if (this.get().value == null) {
+            object.addProperty(this.name, "<NULL>");
+        } else {
+            object.addProperty(this.name, (this.get().value instanceof Key ? "k+" : "m+") + this.get().value.key);
+        }
+    }
+
+    @Override
+    public void set(JsonElement element) {
+        String string = element.getAsString();
+        if (string.equals("<NULL>")) {
+            this.setValue(new KeyBind(null));
+        } else {
+            String[] strings = string.split("\\+");
+            String bindType = strings[0];
+            switch (bindType) {
+                case "k":
+                    this.setValue(new KeyBind(new Key(Integer.parseInt(strings[1]))));
+                    break;
+                case "m":
+                    this.setValue(new KeyBind(new MouseButton(Integer.parseInt(strings[1]))));
+                    break;
+                default:
+                    this.setValue(new KeyBind(null));
+            }
+        }
+    }
+}
