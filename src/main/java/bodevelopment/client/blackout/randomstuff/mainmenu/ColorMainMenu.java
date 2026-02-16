@@ -23,6 +23,7 @@ public class ColorMainMenu implements MainMenuRenderer {
     private static final float BUTTON_RADIUS = 25.0F;
     private final CubeMapRenderer PANORAMA_CUBE_MAP = new CubeMapRenderer(Identifier.of("textures/gui/title/background/panorama"));
     private final RotatingCubeMapRenderer backgroundRenderer = new RotatingCubeMapRenderer(this.PANORAMA_CUBE_MAP);
+    private final ChangelogRenderer changelogRenderer = new ChangelogRenderer();
 
     @Override
     public void render(MatrixStack stack, float height, float mx, float my, String splashText) {
@@ -32,6 +33,9 @@ public class ColorMainMenu implements MainMenuRenderer {
 
         this.renderTitle(stack, splashText);
         this.renderButtons(stack, renderMx, renderMy);
+
+        this.changelogRenderer.render(stack, renderMx, renderMy, false, null, null, 0);
+
         this.renderAllIconButtons(stack, height, renderMx, renderMy);
         this.renderDevs();
     }
