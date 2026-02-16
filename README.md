@@ -44,6 +44,12 @@ A highly customizable and optimized Minecraft utility client, modernized and mai
 This project is licensed under the **GNU GPL v3**.  
 This ensures that the code remains open-source and free for the community. If you use parts of this code, you must keep your project open-source under the same license.
 
+### 📜 Story of this project
+This build is based on a leaked development JAR from 2 years ago.
+I took that build, manually deobfuscated the code, and spent a lot of time
+fixing broken logic and porting it to the modern 1.21.1 Fabric environment.
+It’s been a long journey from a "dead leak" to a fully working client.
+
 ---
 
 ## 🤝 Support & Contribution
@@ -107,6 +113,11 @@ Since I am developing this project solo, any feedback or bug reports are highly 
 
 Проект распространяется под лицензией **GNU GPL v3**.  
 Это гарантирует, что код останется открытым и бесплатным для сообщества. Если вы используете части этого кода, вы обязаны оставить свой проект открытым под той же лицензией.
+
+### 📜 История проекта
+Этот билд основан на утекшем (leak) JAR-файле ранней разработки двухлетней давности.
+Я взял этот файл, вручную деобфусцировал код и потратил огромное количество времени на восстановление сломанной логики и портирование всего проекта на современную среду Fabric 1.21.1.
+Это был долгий путь от «мертвого лика» до полностью рабочего и актуального клиента.
 
 ---
 
