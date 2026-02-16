@@ -51,38 +51,31 @@ public class ColorScreen extends ClickGuiScreen {
 
     @Override
     public void render() {
-        // 1. Рисуем общую подложку окна (весь прямоугольник 700x400)
         RenderUtils.rounded(this.stack, 0, 0, width, height, 10, 10, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
 
         // 2. Рисуем сайдбара (левая часть)
         this.renderSidebarContent();
 
-        // --- Настройка Scissor для ПРАВОЙ части (пикер и слайдеры) ---
         float currentScale = RenderUtils.getScale();
         int screenWidth = BlackOut.mc.getWindow().getWidth();
         int screenHeight = BlackOut.mc.getWindow().getHeight();
 
-        // realX/Y — это координаты центра окна в реальных пикселях монитора
         float realX = (screenWidth / 2f + (x - width / 2f) * unscaled);
         float realY = (screenHeight / 2f + (y - height / 2f) * unscaled);
 
-        // Обрезаем область: отступаем 185px слева (сайдбар)
         int scX = (int) (realX + 185 * unscaled);
         int scY = (int) realY;
         int scW = (int) (width * unscaled - 185 * unscaled);
         int scH = (int) (height * unscaled);
 
-        // OpenGL считает Y снизу вверх
         int invertedY = screenHeight - (scY + scH);
 
         GlStateManager._enableScissorTest();
         GlStateManager._scissorBox(Math.max(0, scX), Math.max(0, invertedY), Math.max(0, scW), Math.max(0, scH));
 
         this.stack.push();
-        // Сдвигаем матрицу для правой части
         this.stack.translate(200.0F, 0.0F, 0.0F);
 
-        // Сохраняем оригинальную мышь, чтобы не испортить логику другим методам
         double rawMx = this.mx;
         this.mx -= 200.0F;
 
@@ -93,12 +86,11 @@ public class ColorScreen extends ClickGuiScreen {
             this.renderBars();
         }
 
-        this.mx = rawMx; // Возвращаем мышь обратно
+        this.mx = rawMx;
         this.stack.pop();
 
         GlStateManager._disableScissorTest();
 
-        // 3. Обновляем состояние текстовых полей
         this.updateFieldsFocus();
     }
 

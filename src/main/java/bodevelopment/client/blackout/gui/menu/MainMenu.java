@@ -312,7 +312,7 @@ public class MainMenu {
     private void onClickIconButton(int i) {
         switch (i) {
             case 0:
-                this.openLink("https://github.com/KassuK1/Blackout-Client");
+                this.openLink("https://github.com/LimonTH/Blackout-CE");
                 break;
             case 1:
                 this.openLink("https://discord.com/invite/mmWz9Dz4Y9");
