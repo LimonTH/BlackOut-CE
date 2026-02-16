@@ -5,7 +5,7 @@
 A highly customizable and optimized Minecraft utility client, modernized and maintained for the latest versions of the game.
 
 > **Note:** This project is a continuation of the original Blackout Client by **luhpossu** and **KassuK**.
-> As a solo developer, I (**Limon_TH**) have completely overhauled the rendering system and ported the entire project to Minecraft 1.21.1.
+> As a solo developer, I (**Limon_TH**) have taken up this idea, and I'm not going to give it up just yet.
 
 ---
 
@@ -20,14 +20,12 @@ A highly customizable and optimized Minecraft utility client, modernized and mai
 
 ---
 
-## 🛠 Recent Changes (Changelog)
+## 🛠 Current TASKS (TODO)
 
-- `Fixed UI overlapping:` Categories now push each other for better visibility.
-- `Smooth hover expansion:` Added fluid animations for ClickGUI buttons.
-- `HUD Integration:` HUD now works flawlessly in the Main Menu.
-- `Editor Controls:` Added Right Ctrl bind for HudEditor and Delete/Backspace support.
-- `Grim Anti-Cheat:` Updated "Grim stuff" for better compatibility and bypasses.
-
+- `Fix ui scalling when font size > 1 or < 1`
+- `Paste modules description`
+- `Create localization settings(RUS/ENG)`
+- `Fix the text renderer (damage text in AutoCrystal: when placing crystals on a block, it should render the current damage, but currently nothing is being displayed) str. 714 - method renderBasic()`
 ---
 
 ## 💻 Tech Stack
@@ -74,7 +72,7 @@ Since I am developing this project solo, any feedback or bug reports are highly 
 Высокопроизводительный и настраиваемый чит-клиент для Minecraft, обновленный и адаптированный под актуальные версии игры.
 
 > **Примечание:** Данный проект является продолжением оригинального Blackout Client от **luhpossu** и **KassuK**.
-> Как соло-разработчик (**Limon_TH**), я полностью переписал систему рендеринга и перенес проект на версию Minecraft 1.21.1.
+> Как соло-разработчик (**Limon_TH**), я занялся этой идеей, и пока не собираюсь её бросать.
 
 ---
 
@@ -89,14 +87,12 @@ Since I am developing this project solo, any feedback or bug reports are highly 
 
 ---
 
-## 🛠 Последние изменения (Changelog)
+## 🛠 Текущие ЗАДАЧИ (TODO)
 
-- `Исправлено перекрытие UI:` Категории в ClickGUI теперь корректно расталкивают друг друга.
-- `Плавные анимации:` Добавлено динамическое расширение кнопок при наведении.
-- `Интеграция HUD:` Теперь элементы HUD работают даже в главном меню.
-- `Управление редактором:` Добавлен бинд на **Right Ctrl** и поддержка клавиш **Delete/Backspace** для удаления элементов.
-- `Система друзей:` Переработана для более стабильной и быстрой работы.
-- `Обходы Grim:` Обновлены модули под античит Grim для лучшей совместимости.
+- `Исправить скалирование UI, когда размер шрифта > 1 или < 1`
+- `Вставить описания для всех модулей`
+- `Создать настройки локализации (RUS/ENG)`
+- `Пофиксить рендерер текста (отображение урона при работе AutoCrystal: когда он ставит кристаллы на блок, должен рендериться текст с текущим уроном, но сейчас ничего не отображается) строка 714 - метод renderBasic()`
 
 ---
 
