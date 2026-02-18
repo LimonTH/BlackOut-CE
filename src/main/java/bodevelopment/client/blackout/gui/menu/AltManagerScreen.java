@@ -72,8 +72,8 @@ public class AltManagerScreen extends Screen {
 
         this.renderAltManagerTitle(stack);
         this.renderCurrentSession(stack);
-        this.renderTextField(stack);
         this.renderAccounts(stack);
+        this.renderTextField(stack);
 
         stack.pop();
 
@@ -107,7 +107,7 @@ public class AltManagerScreen extends Screen {
                 24.0F,
                 48.0F,
                 new Color(255, 255, 255, (int) Math.floor(this.progress * 255.0F)),
-                new Color(0, 0, 0, (int) Math.floor(this.progress * 30.0F))
+                new Color(0, 0, 0, (int) Math.floor(this.progress * 200.0F))
         );
     }
 

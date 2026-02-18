@@ -108,7 +108,6 @@ public class MainMenu {
             float bigW = 2000.0F;
             float bigH = this.windowHeight;
 
-            // Накладываем блюр
             RenderUtils.loadBlur("gui_blur", (int) (guiAlpha * 10.0F));
             RenderUtils.drawLoadedBlur("gui_blur", this.stack, renderer ->
                     renderer.quadShape(-bigW, -bigH, bigW * 2.0F, bigH * 2.0F, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F)

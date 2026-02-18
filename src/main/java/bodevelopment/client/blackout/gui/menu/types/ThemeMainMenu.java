@@ -1,40 +1,42 @@
-package bodevelopment.client.blackout.randomstuff.mainmenu;
+package bodevelopment.client.blackout.gui.menu.types;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.gui.menu.MainMenu;
 import bodevelopment.client.blackout.module.modules.client.MainMenuSettings;
-import bodevelopment.client.blackout.randomstuff.ShaderSetup;
+import bodevelopment.client.blackout.module.modules.client.ThemeSettings;
+import bodevelopment.client.blackout.randomstuff.mainmenu.ChangelogRenderer;
+import bodevelopment.client.blackout.randomstuff.mainmenu.MainMenuRenderer;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
-import bodevelopment.client.blackout.rendering.renderer.ShaderRenderer;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
-import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 
 import java.awt.*;
 
-public class SmokeMainMenu implements MainMenuRenderer {
+public class ThemeMainMenu implements MainMenuRenderer {
+    private final ChangelogRenderer changelogRenderer = new ChangelogRenderer();
     private static final float BUTTON_WIDTH = 360.0F;
     private static final float BUTTON_HEIGHT = 10.0F;
     private static final float BUTTON_RADIUS = 25.0F;
 
-    private static float shaderTime = 0;
-    private static long lastUpdate = System.currentTimeMillis();
-
-    private final ChangelogRenderer changelogRenderer = new ChangelogRenderer();
-
     @Override
     public void render(MatrixStack stack, float height, float mx, float my, String splashText) {
         boolean isGuiOpen = MainMenu.getInstance().isOpenedMenu();
-        float renderMx = (isGuiOpen || MainMenu.getInstance().isExiting()) ? -5000.0F : mx;
-        float renderMy = (isGuiOpen || MainMenu.getInstance().isExiting()) ? -5000.0F : my;
+        boolean isExiting = MainMenu.getInstance().isExiting();
+        float renderMx = (isGuiOpen || isExiting) ? -5000.0F : mx;
+        float renderMy = (isGuiOpen || isExiting) ? -5000.0F : my;
 
         this.renderButtons(stack, renderMx, renderMy);
         this.renderTitle(stack, splashText);
+        ThemeSettings theme = ThemeSettings.getInstance();
+        MainMenuSettings settings = MainMenuSettings.getInstance();
 
-        this.changelogRenderer.render(stack, renderMx, renderMy, false, null, null, 0);
+        this.changelogRenderer.render(stack, renderMx, renderMy,
+                true,
+                new Color(theme.getMain(180)),
+                new Color(theme.getSecond(180)),
+                settings.speed.get().floatValue());
 
         this.renderAllIconButtons(stack, height, renderMx, renderMy);
         this.renderDevs();
@@ -53,23 +55,6 @@ public class SmokeMainMenu implements MainMenuRenderer {
             this.renderSingleIconButton(stack, i, hovered);
             stack.translate(54.0F, 0.0F, 0.0F);
         }
-
-        stack.pop();
-    }
-
-    private void renderButtons(MatrixStack stack, float mx, float my) {
-        stack.push();
-        stack.translate(-180.0F, -100.0F, 0.0F);
-        float currentY = -100.0F;
-
-        for (String name : MainMenu.getInstance().buttonNames) {
-            boolean hovered = RenderUtils.insideRounded(mx, my, -180.0, currentY, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS);
-
-            this.renderButton(stack, name, hovered);
-
-            stack.translate(0.0F, 85.0F, 0.0F);
-            currentY += 85.0F;
-        }
         stack.pop();
     }
 
@@ -81,47 +66,69 @@ public class SmokeMainMenu implements MainMenuRenderer {
             default -> BOTextures.getGithubIconRenderer();
         };
 
-        float width = t.getWidth() / 2.0F;
-        float height = t.getHeight() / 2.0F;
         float alpha = hovered ? 1.0F : 0.6F;
+        ThemeSettings theme = ThemeSettings.getInstance();
+        MainMenuSettings settings = MainMenuSettings.getInstance();
 
         RenderUtils.drawLoadedBlur("title", stack, renderer ->
                 renderer.rounded(5.0F, 5.0F, 22.0F, 22.0F, 10.0F, 10, 1.0F, 1.0F, 1.0F, 1.0F));
+
+        RenderUtils.tenaRounded(stack, 5.0F, 5.0F, 22.0F, 22.0F, 10.0F, 1.5F,
+                theme.getMain(hovered ? 255 : 150), theme.getSecond(hovered ? 255 : 150), settings.speed.get().floatValue());
 
         RenderUtils.rounded(stack, 5.0F, 5.0F, 22.0F, 22.0F, 10.0F, 3.0F,
                 new Color(0, 0, 0, hovered ? 70 : 35).getRGB(),
                 new Color(0, 0, 0, 225).getRGB());
 
         Renderer.setAlpha(alpha);
-        t.quad(stack, 0.0F, 0.0F, width, height);
+        t.quad(stack, 0.0F, 0.0F, t.getWidth() / 2.0F, t.getHeight() / 2.0F);
         Renderer.setAlpha(1.0F);
     }
 
+    private void renderButtons(MatrixStack stack, float mx, float my) {
+        stack.push();
+        stack.translate(-180.0F, -100.0F, 0.0F);
+        float currentY = -100.0F;
+
+        for (String name : MainMenu.getInstance().buttonNames) {
+            boolean hovered = RenderUtils.insideRounded(mx, my, -180.0, currentY, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS);
+            this.renderButton(stack, name, hovered);
+            stack.translate(0.0F, 85.0F, 0.0F);
+            currentY += 85.0F;
+        }
+        stack.pop();
+    }
+
     private void renderButton(MatrixStack stack, String name, boolean hovered) {
-        RenderUtils.drawLoadedBlur("title", stack, renderer -> renderer.rounded(0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10, 1.0F, 1.0F, 1.0F, 1.0F));
+        ThemeSettings theme = ThemeSettings.getInstance();
+        MainMenuSettings settings = MainMenuSettings.getInstance();
+
+        RenderUtils.drawLoadedBlur("title", stack, renderer ->
+                renderer.rounded(0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10, 1.0F, 1.0F, 1.0F, 1.0F));
+
+        RenderUtils.tenaRounded(stack, 0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10.0F,
+                theme.getMain(hovered ? 255 : 150), theme.getSecond(hovered ? 255 : 150), settings.speed.get().floatValue());
+
         RenderUtils.rounded(stack, 0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10.0F,
-                new Color(0, 0, 0, hovered ? 65 : 35).getRGB(),
+                new Color(0, 0, 0, hovered ? 60 : 35).getRGB(),
                 new Color(0, 0, 0, 225).getRGB());
 
-        Color textColor = hovered ? Color.WHITE : new Color(200, 200, 200, 255);
-        BlackOut.FONT.text(stack, name, 3.0F, 180.0F, 5.0F, textColor.getRGB(), true, true);
+        BlackOut.FONT.text(stack, name, 3.0F, 180.0F, 5.0F, Color.WHITE.getRGB(), true, true);
     }
 
     private void renderDevs() {
         String devText = "Made by KassuK & OLEPOSSU | Continued by Limon_TH";
-
         float x = 1000.0F;
         float y = MainMenu.getInstance().getWindowHeight() / 2.0F;
-
         float scale = 2.0F;
 
         BlackOut.FONT.text(
                 MainMenu.getInstance().getMatrixStack(),
                 devText,
                 scale,
-                x - BlackOut.FONT.getWidth(devText) * scale - 5.0F,
-                y - BlackOut.FONT.getHeight() * scale - 5.0F,
-                new Color(255, 255, 255, 70).getRGB(),
+                x - BlackOut.FONT.getWidth(devText) * scale - 10.0F,
+                y - BlackOut.FONT.getHeight() * scale - 10.0F,
+                new Color(255, 255, 255, 80).getRGB(),
                 false,
                 false
         );
@@ -131,7 +138,8 @@ public class SmokeMainMenu implements MainMenuRenderer {
     public int onClick(float mx, float my) {
         float yCenter = -100.0F;
         for (int i = 0; i < 5; i++) {
-            if (RenderUtils.insideRounded(mx, my, -180.0, yCenter, 360.0, 10.0, 25.0)) return i;
+            if (RenderUtils.insideRounded(mx, my, -180.0, yCenter, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS))
+                return i;
             yCenter += 85.0F;
         }
 
@@ -146,39 +154,23 @@ public class SmokeMainMenu implements MainMenuRenderer {
                 return 10 + i;
             }
         }
-
         return -1;
     }
 
     @Override
     public void renderBackground(MatrixStack stack, float width, float height, float mx, float my) {
         MainMenuSettings mainMenuSettings = MainMenuSettings.getInstance();
-        ShaderRenderer shaderRenderer = ShaderRenderer.getInstance();
-
-        long now = System.currentTimeMillis();
-        long diff = now - lastUpdate;
-
+        ThemeSettings themeSettings = ThemeSettings.getInstance();
         boolean exiting = MainMenu.getInstance().isExiting();
 
-        if ((diff > 0 && diff < 500) && !exiting) {
-            shaderTime += (diff / 1000.0F) * mainMenuSettings.speed.get().floatValue();
-        }
-        lastUpdate = now;
-
-        shaderRenderer.quad(stack, 0.0F, 0.0F, width, height, 1.0F, 1.0F, 1.0F, 1.0F, Shaders.smoke, new ShaderSetup(setup -> {
-            setup.set("time", shaderTime);
-            setup.color("clr1", mainMenuSettings.color.get().getRGB());
-            setup.color("clr2", mainMenuSettings.color2.get().getRGB());
-            setup.set("speed", 1.0F);
-        }), VertexFormats.POSITION);
+        RenderUtils.fadeRounded(stack, 0.0F, 0.0F, width, height, 0.0F, 0.0F,
+                themeSettings.getMain(), themeSettings.getSecond(), 0.2F, mainMenuSettings.speed.get().floatValue() / 10.0F);
 
         int blurRadius = (int) (double) mainMenuSettings.blur.get();
-
         if (blurRadius > 0) {
             if (!exiting) {
                 RenderUtils.loadBlur("title", blurRadius);
             }
-
             RenderUtils.drawLoadedBlur("title", stack, renderer ->
                     renderer.quadShape(0.0F, 0.0F, width, height, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F));
         }

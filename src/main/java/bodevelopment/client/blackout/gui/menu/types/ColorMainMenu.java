@@ -1,9 +1,11 @@
-package bodevelopment.client.blackout.randomstuff.mainmenu;
+package bodevelopment.client.blackout.gui.menu.types;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.gui.menu.MainMenu;
 import bodevelopment.client.blackout.module.modules.client.MainMenuSettings;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
+import bodevelopment.client.blackout.randomstuff.mainmenu.ChangelogRenderer;
+import bodevelopment.client.blackout.randomstuff.mainmenu.MainMenuRenderer;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
