@@ -25,6 +25,7 @@ A highly customizable and optimized Minecraft utility client, modernized and mai
 - `Fix ui scalling when font size > 1 or < 1`
 - `Paste modules description`
 - `Create localization settings(RUS/ENG)`
+- `Fix the logic for rendering items on the screen (they seem to render in the dark)`
 
 ---
 
@@ -92,6 +93,7 @@ Since I am developing this project solo, any feedback or bug reports are highly 
 - `Исправить скалирование UI, когда размер шрифта > 1 или < 1`
 - `Вставить описания для всех модулей`
 - `Создать настройки локализации (RUS/ENG)`
+- `Починить логику рендеринга предметов на экране (они как будто бы в темноте рендерятся)`
 
 ---
 
