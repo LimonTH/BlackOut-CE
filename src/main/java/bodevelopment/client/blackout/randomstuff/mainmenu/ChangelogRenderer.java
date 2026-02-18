@@ -39,6 +39,9 @@ public class ChangelogRenderer {
         changelog.add("Update changelog render logic");
         changelog.add("Fixed ClickGUI issues in main menu");
         changelog.add("Fixed utils logic for better performance");
+        changelog.add("Update smoothy moves in main menu");
+        changelog.add("Fixed some bugs in 1.21.1 client");
+        changelog.add("optimized main menu rendering and sync");
         changelog.add("That's ALL, for now =)");
 
         float maxW = 0;

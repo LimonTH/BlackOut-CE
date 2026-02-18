@@ -21,8 +21,10 @@ public class ThemeMainMenu implements MainMenuRenderer {
     @Override
     public void render(MatrixStack stack, float height, float mx, float my, String splashText) {
         boolean isGuiOpen = MainMenu.getInstance().isOpenedMenu();
-        float renderMx = isGuiOpen ? -1000.0F : mx;
-        float renderMy = isGuiOpen ? -1000.0F : my;
+        // Добавляем проверку на exiting, чтобы мышь не подсвечивала кнопки при закрытии
+        boolean isExiting = MainMenu.getInstance().isExiting();
+        float renderMx = (isGuiOpen || isExiting) ? -5000.0F : mx;
+        float renderMy = (isGuiOpen || isExiting) ? -5000.0F : my;
 
         this.renderButtons(stack, renderMx, renderMy);
         this.renderTitle(stack, splashText);
@@ -34,6 +36,7 @@ public class ThemeMainMenu implements MainMenuRenderer {
                 new Color(theme.getMain(180)),
                 new Color(theme.getSecond(180)),
                 settings.speed.get().floatValue());
+
         this.renderAllIconButtons(stack, height, renderMx, renderMy);
         this.renderDevs();
     }
@@ -157,12 +160,19 @@ public class ThemeMainMenu implements MainMenuRenderer {
     public void renderBackground(MatrixStack stack, float width, float height, float mx, float my) {
         MainMenuSettings mainMenuSettings = MainMenuSettings.getInstance();
         ThemeSettings themeSettings = ThemeSettings.getInstance();
+        boolean exiting = MainMenu.getInstance().isExiting();
+
         RenderUtils.fadeRounded(stack, 0.0F, 0.0F, width, height, 0.0F, 0.0F,
                 themeSettings.getMain(), themeSettings.getSecond(), 0.2F, mainMenuSettings.speed.get().floatValue() / 10.0F);
 
-        RenderUtils.loadBlur("title", mainMenuSettings.blur.get());
-        RenderUtils.drawLoadedBlur("title", stack, renderer ->
-                renderer.quadShape(0.0F, 0.0F, width, height, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F));
+        int blurRadius = (int) (double) mainMenuSettings.blur.get();
+        if (blurRadius > 0) {
+            if (!exiting) {
+                RenderUtils.loadBlur("title", blurRadius);
+            }
+            RenderUtils.drawLoadedBlur("title", stack, renderer ->
+                    renderer.quadShape(0.0F, 0.0F, width, height, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F));
+        }
     }
 
     private void renderTitle(MatrixStack stack, String splashText) {

@@ -5,23 +5,19 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.KeyEvent;
 import bodevelopment.client.blackout.event.events.MouseButtonEvent;
 import bodevelopment.client.blackout.event.events.MouseScrollEvent;
-import bodevelopment.client.blackout.gui.TextField;
 import bodevelopment.client.blackout.gui.clickgui.ClickGui;
-import bodevelopment.client.blackout.helpers.ScrollHelper;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.client.MainMenuSettings;
-import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.BOLogger;
 import bodevelopment.client.blackout.util.SoundUtils;
-import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
 import net.minecraft.client.gui.screen.option.OptionsScreen;
 import net.minecraft.client.gui.screen.world.SelectWorldScreen;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.MathHelper;
 
 import java.awt.*;
 import java.util.Random;
@@ -32,45 +28,37 @@ public class MainMenu {
     public final String[] buttonNames = new String[]{"Singleplayer", "Multiplayer", "AltManager", "Options", "Quit"};
     private final String splashText = this.getSplash();
     private final MatrixStack stack = new MatrixStack();
-    private final TextField textField = new TextField();
     private final ClickGui clickGui = Managers.CLICK_GUI.CLICK_GUI;
     private TitleScreen titleScreen;
     private float windowHeight;
     private float scale;
     private boolean isClickStartedHere = false;
-    private float progress = 0.0F;
     private float mx;
     private float my;
-    private boolean altManagerOpen = false;
-    private long altManagerTime = 0L;
+    public static float globalFade = 0.0F;
+    private static Screen screenToSet = null;
+    private static boolean isExiting = false;
+    private float delta;
+    private boolean playedStartup = false;
+
     private final Runnable[] runnables = new Runnable[]{
             () -> {
                 Managers.ALT.switchToOriginal();
-                BlackOut.mc.setScreen(new SelectWorldScreen(this.titleScreen));
+                this.startExit(new SelectWorldScreen(this.titleScreen));
             },
             () -> {
                 Managers.ALT.switchToSelected();
-                BlackOut.mc.setScreen(new MultiplayerScreen(this.titleScreen));
+                this.startExit(new MultiplayerScreen(this.titleScreen));
             },
-            () -> {
-                if (this.altManagerOpen) {
-                    this.closeAltManager();
-                } else {
-                    this.openAltManager();
-                }
-            },
-            () -> BlackOut.mc.execute(() -> BlackOut.mc.setScreen(new OptionsScreen(this.titleScreen, BlackOut.mc.options))),
+            () -> this.startExit(new AltManagerScreen(this.titleScreen)),
+            () -> this.startExit(new OptionsScreen(this.titleScreen, BlackOut.mc.options)),
             BlackOut.mc::scheduleStop
     };
-    private float delta;
-    private float altLength = 0.0F;
-    private final ScrollHelper scroll = new ScrollHelper(
-            0.5F,
-            5.5F,
-            () -> 0.0F,
-            () -> Math.max(this.altLength - 600.0F, 0.0F)
-    ).limit(3.0F);
-    private boolean playedStartup = false;
+
+    private void startExit(Screen screen) {
+        screenToSet = screen;
+        isExiting = true;
+    }
 
     public static void init() {
         BlackOut.EVENT_BUS.subscribe(INSTANCE, () -> !(BlackOut.mc.currentScreen instanceof TitleScreen));
@@ -85,124 +73,68 @@ public class MainMenu {
     }
 
     public void render(int mouseX, int mouseY, float delta) {
-        if (!this.playedStartup) { SoundUtils.play(1.0F, 10.0F, "startup"); this.playedStartup = true; }
-        this.scroll.update(Math.min(BlackOut.mc.getRenderTickCounter().getLastFrameDuration(), 0.016F));
-        this.delta = delta / 20.0F;
+        if (!this.playedStartup) {
+            SoundUtils.play(1.0F, 10.0F, "startup");
+            this.playedStartup = true;
+        }
+
         this.updateWindowData();
+        this.delta = delta / 20.0F;
+
+        if (isExiting) {
+            globalFade = Math.max(0.0F, globalFade - this.delta * 3.0F);
+            if (globalFade <= 0.0F && screenToSet != null) {
+                BlackOut.mc.setScreen(screenToSet);
+                isExiting = false;
+                screenToSet = null;
+                return;
+            }
+        } else {
+            globalFade = Math.min(1.0F, globalFade + this.delta * 3.0F);
+        }
 
         float guiAlpha = (float) Math.sqrt(ClickGui.popUpDelta);
         boolean isGuiOpen = this.clickGui.isOpen() || guiAlpha > 0.01F;
-        float progress = this.getSwitchProgress();
-        float menuAlpha = MathHelper.clamp(MathHelper.getLerpProgress(progress, 0.4F, 0.0F), 0.0F, 1.0F);
-        float altAlpha = MathHelper.clamp(MathHelper.getLerpProgress(progress, 0.6F, 1.0F), 0.0F, 1.0F);
-        float tIntensity = (float) (1.0 - AnimUtils.easeInOutCubic(Math.min(Math.abs(progress - 0.5F), 0.5F) / 0.5F));
 
         this.startRender(this.scale);
 
-        // СЛОЙ 1: БЛЮР
-        float totalBlurRadius = 0.0F;
-        if (tIntensity > 0.01F || altAlpha > 0.01F) {
-            totalBlurRadius = (tIntensity * 12.0F) + (altAlpha * 6.0F);
-        }
+        float renderMx = (isGuiOpen || isExiting || globalFade < 0.99F) ? -5000.0F : this.mx;
+        float renderMy = (isGuiOpen || isExiting || globalFade < 0.99F) ? -5000.0F : this.my;
+
+        MainMenuSettings.getInstance().getRenderer().render(this.stack, this.windowHeight, renderMx, renderMy, this.splashText);
 
         if (guiAlpha > 0.01F) {
-            totalBlurRadius = Math.max(totalBlurRadius, guiAlpha * 10.0F);
-        }
-
-        if (totalBlurRadius > 0.1F) {
             this.stack.push();
-            RenderUtils.loadBlur("master_blur", (int) totalBlurRadius);
-            RenderUtils.drawLoadedBlur("master_blur", this.stack, r ->
-                    r.quadShape(-2000, -windowHeight, 4000, windowHeight * 2, 0, 1, 1, 1, 1));
+            float bigW = 2000.0F;
+            float bigH = this.windowHeight;
+
+            // Накладываем блюр
+            RenderUtils.loadBlur("gui_blur", (int) (guiAlpha * 10.0F));
+            RenderUtils.drawLoadedBlur("gui_blur", this.stack, renderer ->
+                    renderer.quadShape(-bigW, -bigH, bigW * 2.0F, bigH * 2.0F, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F)
+            );
+
+            RenderUtils.quad(this.stack, -bigW, -bigH, bigW * 2.0F, bigH * 2.0F, new Color(0, 0, 0, (int) (guiAlpha * 130)).getRGB());
             this.stack.pop();
         }
 
-        // СЛОЙ 2: ЗАТЕМНЕНИЕ
-        float brightness = 1.0F - (tIntensity * 0.7F) - (altAlpha * 0.3F);
-        brightness = MathHelper.clamp(brightness, 0.2F, 1.0F);
-        com.mojang.blaze3d.systems.RenderSystem.setShaderColor(brightness, brightness, brightness, 1.0F);
-
-        // СЛОЙ 3: КОНТЕНТ
-        float renderMx = isGuiOpen ? -1000.0F : this.mx;
-        float renderMy = isGuiOpen ? -1000.0F : this.my;
-
-        if (menuAlpha > 0.0F) {
-            Renderer.setAlpha(menuAlpha);
-            MainMenuSettings.getInstance().getRenderer().render(this.stack, this.windowHeight, renderMx, renderMy, this.splashText);
-        }
-
-        if (altAlpha > 0.01F) {
-            Renderer.setAlpha(altAlpha);
-            this.renderAltManager();
-        }
-
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-
         this.endRender();
 
+        if (globalFade < 1.0F) {
+            int alpha = (int) ((1.0F - globalFade) * 255.0F);
+            int blackColor = (alpha << 24);
+            float screenW = (float) BlackOut.mc.getWindow().getWidth();
+            float screenH = (float) BlackOut.mc.getWindow().getHeight();
+
+            stack.push();
+            RenderUtils.unGuiScale(stack);
+            RenderUtils.quad(stack, 0, 0, screenW, screenH, blackColor);
+            stack.pop();
+        }
+
         if (isGuiOpen) {
-            this.clickGui.render(new net.minecraft.client.gui.DrawContext(BlackOut.mc, BlackOut.mc.getBufferBuilders().getEntityVertexConsumers()), mouseX, mouseY, delta);
+            this.clickGui.render(new DrawContext(BlackOut.mc, BlackOut.mc.getBufferBuilders().getEntityVertexConsumers()), mouseX, mouseY, delta);
         }
-    }
-
-    private void renderAltManager() {
-        this.renderAltManagerTitle();
-        this.renderCurrentSession();
-        this.renderTextField();
-        this.renderAccounts();
-    }
-
-    private void renderTextField() {
-        if (!this.textField.isEmpty()) {
-            this.progress = Math.min(this.progress + this.delta, 1.0F);
-        } else {
-            this.progress = Math.max(this.progress - this.delta, 0.0F);
-        }
-
-        this.textField
-                .render(
-                        this.stack,
-                        4.0F,
-                        this.mx,
-                        this.my,
-                        -200.0F,
-                        400.0F,
-                        400.0F,
-                        0.0F,
-                        24.0F,
-                        48.0F,
-                        new Color(255, 255, 255, (int) Math.floor(this.progress * 255.0F)),
-                        new Color(0, 0, 0, (int) Math.floor(this.progress * 30.0F))
-                );
-    }
-
-    private void renderCurrentSession() {
-        Managers.ALT.currentSession.render(this.stack, -940.0F, this.windowHeight / 2.0F - 65.0F - 60.0F, this.delta);
-    }
-
-    private void renderAccounts() {
-        // TODO: возможно сделать конфигурируемые параметры менеджера аккаунтов
-        // MainMenuSettings mainMenuSettings = MainMenuSettings.getInstance();
-        this.altLength = -90.0F;
-        this.stack.push();
-        this.stack.translate(0.0F, -this.scroll.get(), 0.0F);
-        this.stack.translate(-250.0F, this.windowHeight / -2.0F + 200.0F, 0.0F);
-        Managers.ALT.getAccounts().forEach(account -> {
-            account.render(this.stack, 0.0F, 0.0F, this.delta);
-            float amogus = 155.0F;
-            this.stack.translate(0.0F, amogus, 0.0F);
-            this.altLength += amogus;
-        });
-        this.stack.pop();
-    }
-
-    private void renderAltManagerTitle() {
-        BlackOut.BOLD_FONT.text(this.stack, "Alt Manager", 8.5F, 0.0F, this.windowHeight / -2.0F + 100.0F, Color.WHITE, true, true);
-    }
-
-    public float getSwitchProgress() {
-        float f = Math.min((float) (System.currentTimeMillis() - this.altManagerTime) / 600.0F, 1.0F);
-        return this.altManagerOpen ? f : 1.0F - f;
     }
 
     private void clickMenu(int button, boolean pressed) {
@@ -245,54 +177,6 @@ public class MainMenu {
                 }
             }
         }
-    }
-
-    private void clickAltManager(int button, boolean pressed) {
-        if (!this.textField.click(button, pressed)) {
-
-            float startX = -250.0F;
-            float startY = this.windowHeight / -2.0F + 200.0F;
-            float currentY = startY - this.scroll.get();
-            for (Account account : new java.util.ArrayList<>(Managers.ALT.getAccounts())) {
-
-                float relX = this.mx - startX;
-                float relY = this.my - currentY;
-
-                if (this.clickAccount(account, relX, relY, button, pressed)) {
-                    return;
-                }
-
-                currentY += 155.0F;
-            }
-            float sessionX = -940.0F;
-            float sessionY = this.windowHeight / 2.0F - 65.0F - 60.0F;
-            this.clickAccount(Managers.ALT.currentSession, this.mx - sessionX, this.my - sessionY, button, pressed);
-        }
-    }
-
-    private boolean clickAccount(Account account, float x, float y, int button, boolean pressed) {
-        Account.AccountClickResult result = account.onClick(x, y, button, pressed);
-        if (result != Account.AccountClickResult.Nothing) {
-            this.handleAltClick(account, result);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private void handleAltClick(Account account, Account.AccountClickResult result) {
-        if (result == Account.AccountClickResult.Nothing) return;
-
-        switch (result) {
-            case Select -> Managers.ALT.set(account);
-            case Refresh -> account.refresh();
-            case Delete -> {
-                Managers.ALT.remove(account);
-                this.altLength = Managers.ALT.getAccounts().size() * 155.0F - 90.0F;
-            }
-        }
-
-        SoundUtils.play(1.0F, 3.0F, "menubutton");
     }
 
     private void onClickIconButton(int i) {
@@ -366,142 +250,21 @@ public class MainMenu {
     }
 
     private String getSplash() {
-        String[] splashTexts = new String[]{
-                // --- ОСНОВНОЙ ВАЙБ ---
-                "The best in the business",
-                "The real opp stoppa",
-                "Sponsored by Columbian cartels",
-                "The GOAT assistance software",
-                "Recommended by 9/10 dentists",
-                "Made in Finland",
-                "Innit bruv",
-                "Based & red-pilled",
-                "Bravo 6 blacking-out",
-                "A shark in the water",
-                "Gaslight, Gatekeep, Girlboss",
-                "Your FPS is my snack",
-                "Keyboard warrior approved",
-                "Hyper-threaded performance",
-                "Zero days since last blackout",
-                "Better than your average cheat",
-                "Calculated risk, maximum reward",
-                "Lag is just a state of mind",
-                "Stay frosty",
-                "The final boss of clients",
-                "Actually built different",
-                "I can see your house from here",
-                "Log4J was just a warmup",
-                "Your admin is my fanboy",
-                "Synthesized for greatness",
-                "Don't cry because it happened, laugh because it's over",
-                "The dark side has cookies",
-                "Skidding is for amateurs",
-                "Optimization is not a crime",
-                "More power than a nuclear reactor",
-                "Sleep is for the weak",
-                "Coded in a basement, used in the sky",
-                "Reject modernity, embrace BlackOut",
-                "I don't hack, I just have a better gaming chair",
-                "Unpatchable spirit",
-                "The silent predator",
-                "Digital adrenaline",
-                "Your firewall is a suggestion",
-                "Absolute dominance",
-                "Hiding in plain sight",
-                "I'm not saying I'm Batman, but...",
-                "Your antivirus is just a suggestion",
-                "Kernel-level charisma",
-                "Mainlining caffeine and bytecode",
-                "The cake is a lie, but this client isn't",
-                "Sending your packets to the shadow realm",
-                "I survived the 2b2t queue",
-                "100% organic, grass-fed code",
-                "Your base belongs to us",
-                "Unscheduled rapid disassembly of opponents",
-                "Error 404: Mercy not found",
-                "Move fast and break things (especially admins)",
-                "Quantum-entangled hitboxes",
-                "More features than a Swiss Army Knife",
-                "Injecting happiness since 2026",
-                "Wait, people play vanilla?",
-                "Technoblade never dies",
-                "Subscribed to chaos",
-                "You provide the salt, we provide the pepper",
-                "BlackOut: Because default is boring",
-
-                // --- RUSSIAN VIBE ---
-                "From Russia with hacks",
-                "Born in the snow, raised in the code",
-                "Hardbass in the headset",
-                "Cheeki breeki iv damke!",
-                "Cyberpunk in a Khrushchevka",
-                "Made in Russia, polished in Finland",
-                "Optimized for Siberian temperatures",
-                "Run on vodka and electricity",
-                "Hack the world, drink the tea",
-                "Soviet engineering inside",
-                "Do svidaniya, your base",
-                "Gop-stop in your chunk",
-                "Russian hacktivism is my hobby",
-                "Not just a client, it's a lifestyle",
-                "Bear-powered packet injection",
-                "Anarchy in my DNA",
-                "Siberian packet delivery service",
-                "Khrushchevka-based development",
-
-                // --- ЛЕГЕНДАРНЫЕ СЕРВЕРА (BALANCE) ---
-                "NewPlaces: Where legends are forged",
-                "NewPlaces is my playground",
-                "FitMC told me about this",
-                "Popbob's favorite tool",
-                "Bedrock is just a suggestion",
-                "Crystal PvP enthusiast",
-                "Spawn is just a warm-up",
-                "Breaking the economy, one dupe at a time",
-                "Total anarchy, total control",
-
-                // --- ТЕХНО-ТРЕШ ---
-                "Compiling hatred into bytecode",
-                "Memory leak? No, it's a feature",
-                "Run as Administrator",
-                "Harder than a sudo rm -rf",
-                "I speak fluent Assembly",
-                "127.0.0.1 is where the heart is",
-                "Ping is a choice"
-        };
+        String[] splashTexts = new String[]{"BlackOut: Because default is boring"};
         return splashTexts[new Random().nextInt(0, splashTexts.length)];
-    }
-
-    private void openAltManager() {
-        this.altManagerOpen = true;
-        this.altManagerTime = System.currentTimeMillis();
-    }
-
-    private void closeAltManager() {
-        this.altManagerOpen = false;
-        this.altManagerTime = System.currentTimeMillis();
     }
 
     @Event
     public void onMouse(MouseButtonEvent buttonEvent) {
         if (BlackOut.mc.currentScreen instanceof TitleScreen && (this.clickGui.isOpen() || ClickGui.popUpDelta > 0.1F)) {
             this.updateWindowData();
-
             buttonEvent.cancel();
-
             this.clickGui.onClick(buttonEvent);
             return;
         }
 
         this.updateWindowData();
-        float switchProgress = this.getSwitchProgress();
-        if (switchProgress == 0.0F) {
-            this.clickMenu(buttonEvent.button, buttonEvent.pressed);
-        }
-
-        if (switchProgress == 1.0F) {
-            this.clickAltManager(buttonEvent.button, buttonEvent.pressed);
-        }
+        this.clickMenu(buttonEvent.button, buttonEvent.pressed);
     }
 
     @Event
@@ -523,7 +286,6 @@ public class MainMenu {
                     return;
                 }
             }
-
             event.cancel();
             this.clickGui.onKey(event);
             return;
@@ -536,26 +298,6 @@ public class MainMenu {
                 this.clickGui.initGui();
             }
             SoundUtils.play(1.0F, 3.0F, "menubutton");
-            return;
-        }
-
-        if (!event.pressed) return;
-
-        if (event.key == 256) {
-            if (this.getSwitchProgress() > 0.5F) {
-                this.closeAltManager();
-                return;
-            }
-        } else if (event.key == 257) {
-            if (this.altManagerOpen && !this.textField.isEmpty()) {
-                Managers.ALT.add(new Account(this.textField.getContent()));
-                this.textField.clear();
-                SoundUtils.play(1.0F, 1.0F, "menubutton");
-                return;
-            }
-        }
-        if (this.altManagerOpen) {
-            this.textField.type(event.key, event.pressed);
         }
     }
 
@@ -564,10 +306,6 @@ public class MainMenu {
         if (this.clickGui.isOpen()) {
             event.cancel();
             this.clickGui.onScroll(event);
-            return;
-        }
-        if (this.altManagerOpen) {
-            this.scroll.add((float) event.vertical * 3.0F);
         }
     }
 
@@ -580,6 +318,10 @@ public class MainMenu {
     }
 
     public boolean isOpenedMenu() {
-        return clickGui.isOpen();
+        return this.clickGui.isOpen();
+    }
+
+    public boolean isExiting() {
+        return isExiting;
     }
 }

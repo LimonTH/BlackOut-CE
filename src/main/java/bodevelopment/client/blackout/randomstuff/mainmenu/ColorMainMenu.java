@@ -28,8 +28,10 @@ public class ColorMainMenu implements MainMenuRenderer {
     @Override
     public void render(MatrixStack stack, float height, float mx, float my, String splashText) {
         boolean isGuiOpen = MainMenu.getInstance().isOpenedMenu();
-        float renderMx = isGuiOpen ? -1000.0F : mx;
-        float renderMy = isGuiOpen ? -1000.0F : my;
+        boolean isExiting = MainMenu.getInstance().isExiting();
+
+        float renderMx = (isGuiOpen || isExiting) ? -5000.0F : mx;
+        float renderMy = (isGuiOpen || isExiting) ? -5000.0F : my;
 
         this.renderTitle(stack, splashText);
         this.renderButtons(stack, renderMx, renderMy);
@@ -137,6 +139,7 @@ public class ColorMainMenu implements MainMenuRenderer {
     public void renderBackground(MatrixStack stack, float width, float height, float mx, float my) {
         MainMenuSettings mainMenuSettings = MainMenuSettings.getInstance();
         BlackOutColor color = mainMenuSettings.shitfuckingmenucolor.get();
+        boolean exiting = MainMenu.getInstance().isExiting();
 
         DrawContext context = new DrawContext(BlackOut.mc, BlackOut.mc.getBufferBuilders().getEntityVertexConsumers());
         RenderSystem.setShaderColor(color.red / 255.0F, color.green / 255.0F, color.blue / 255.0F, color.alpha / 255.0F);
@@ -150,8 +153,12 @@ public class ColorMainMenu implements MainMenuRenderer {
         );
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        if (mainMenuSettings.blur.get() > 0) {
-            RenderUtils.loadBlur("title", mainMenuSettings.blur.get());
+
+        int blurRadius = (int) (double) mainMenuSettings.blur.get();
+        if (blurRadius > 0) {
+            if (!exiting) {
+                RenderUtils.loadBlur("title", blurRadius);
+            }
             RenderUtils.drawLoadedBlur("title", stack, renderer -> renderer.quadShape(0.0F, 0.0F, width, height, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F));
         }
     }

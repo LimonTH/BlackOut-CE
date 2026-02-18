@@ -1,12 +1,11 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
 import bodevelopment.client.blackout.BlackOut;
-import bodevelopment.client.blackout.gui.menu.MainMenu;
+import bodevelopment.client.blackout.gui.menu.AltManagerScreen;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.client.gui.screen.TitleScreen;
 
 public class Streamer extends Module {
     private static Streamer INSTANCE;
@@ -24,8 +23,7 @@ public class Streamer extends Module {
     }
 
     public String replace(String string) {
-        if (BlackOut.mc.currentScreen instanceof TitleScreen
-                && MainMenu.getInstance().getSwitchProgress() > 0.5F) {
+        if (BlackOut.mc.currentScreen instanceof AltManagerScreen) {
             return string;
         }
 

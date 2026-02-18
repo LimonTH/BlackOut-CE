@@ -63,7 +63,6 @@ public class ScrollHelper {
     public void update(double frameTime) {
         this.update((float) frameTime);
     }
-
     public void add(float amount) {
         amount = -amount;
         if (this.limit > 0.0F) {

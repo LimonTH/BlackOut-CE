@@ -16,18 +16,20 @@ import net.minecraft.client.util.math.MatrixStack;
 import java.awt.*;
 
 public class SmokeMainMenu implements MainMenuRenderer {
-    private static final long initTime = System.currentTimeMillis();
     private static final float BUTTON_WIDTH = 360.0F;
     private static final float BUTTON_HEIGHT = 10.0F;
     private static final float BUTTON_RADIUS = 25.0F;
+
+    private static float shaderTime = 0;
+    private static long lastUpdate = System.currentTimeMillis();
 
     private final ChangelogRenderer changelogRenderer = new ChangelogRenderer();
 
     @Override
     public void render(MatrixStack stack, float height, float mx, float my, String splashText) {
         boolean isGuiOpen = MainMenu.getInstance().isOpenedMenu();
-        float renderMx = isGuiOpen ? -1000.0F : mx;
-        float renderMy = isGuiOpen ? -1000.0F : my;
+        float renderMx = (isGuiOpen || MainMenu.getInstance().isExiting()) ? -5000.0F : mx;
+        float renderMy = (isGuiOpen || MainMenu.getInstance().isExiting()) ? -5000.0F : my;
 
         this.renderButtons(stack, renderMx, renderMy);
         this.renderTitle(stack, splashText);
@@ -75,7 +77,7 @@ public class SmokeMainMenu implements MainMenuRenderer {
         TextureRenderer t = switch (i) {
             case 1 -> BOTextures.getDiscordIconRenderer();
             case 2 -> BOTextures.getYoutubeIconRenderer();
-            case 3 -> BOTextures.getSettingsIconRenderer(); // Наша шестеренка
+            case 3 -> BOTextures.getSettingsIconRenderer();
             default -> BOTextures.getGithubIconRenderer();
         };
 
@@ -152,14 +154,34 @@ public class SmokeMainMenu implements MainMenuRenderer {
     public void renderBackground(MatrixStack stack, float width, float height, float mx, float my) {
         MainMenuSettings mainMenuSettings = MainMenuSettings.getInstance();
         ShaderRenderer shaderRenderer = ShaderRenderer.getInstance();
+
+        long now = System.currentTimeMillis();
+        long diff = now - lastUpdate;
+
+        boolean exiting = MainMenu.getInstance().isExiting();
+
+        if ((diff > 0 && diff < 500) && !exiting) {
+            shaderTime += (diff / 1000.0F) * mainMenuSettings.speed.get().floatValue();
+        }
+        lastUpdate = now;
+
         shaderRenderer.quad(stack, 0.0F, 0.0F, width, height, 1.0F, 1.0F, 1.0F, 1.0F, Shaders.smoke, new ShaderSetup(setup -> {
-            setup.time(initTime);
+            setup.set("time", shaderTime);
             setup.color("clr1", mainMenuSettings.color.get().getRGB());
             setup.color("clr2", mainMenuSettings.color2.get().getRGB());
-            setup.set("speed", mainMenuSettings.speed.get().floatValue());
+            setup.set("speed", 1.0F);
         }), VertexFormats.POSITION);
-        RenderUtils.loadBlur("title", mainMenuSettings.blur.get());
-        RenderUtils.drawLoadedBlur("title", stack, renderer -> renderer.quadShape(0.0F, 0.0F, width, height, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F));
+
+        int blurRadius = (int) (double) mainMenuSettings.blur.get();
+
+        if (blurRadius > 0) {
+            if (!exiting) {
+                RenderUtils.loadBlur("title", blurRadius);
+            }
+
+            RenderUtils.drawLoadedBlur("title", stack, renderer ->
+                    renderer.quadShape(0.0F, 0.0F, width, height, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F));
+        }
     }
 
     private void renderTitle(MatrixStack stack, String splashText) {

@@ -25,7 +25,7 @@ A highly customizable and optimized Minecraft utility client, modernized and mai
 - `Fix ui scalling when font size > 1 or < 1`
 - `Paste modules description`
 - `Create localization settings(RUS/ENG)`
-- `Fix the text renderer (damage text in AutoCrystal: when placing crystals on a block, it should render the current damage, but currently nothing is being displayed) str. 714 - method renderBasic()`
+
 ---
 
 ## 💻 Tech Stack
@@ -92,7 +92,6 @@ Since I am developing this project solo, any feedback or bug reports are highly 
 - `Исправить скалирование UI, когда размер шрифта > 1 или < 1`
 - `Вставить описания для всех модулей`
 - `Создать настройки локализации (RUS/ENG)`
-- `Пофиксить рендерер текста (отображение урона при работе AutoCrystal: когда он ставит кристаллы на блок, должен рендериться текст с текущим уроном, но сейчас ничего не отображается) строка 714 - метод renderBasic()`
 
 ---
 
