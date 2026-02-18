@@ -249,8 +249,63 @@ public class MainMenu {
     }
 
     private String getSplash() {
-        String[] splashTexts = new String[]{"BlackOut: Because default is boring"};
-        return splashTexts[new Random().nextInt(0, splashTexts.length)];
+        String[] splashTexts = new String[]{
+                // --- СТЕБ НАД КОММЬЮНИТИ ---
+                "Buying a better gaming chair...",
+                "Configs: 10$ | Skill: 0$",
+                "Staff is spectating, play it cool",
+                "Reported for: Being too good",
+                "Imagine playing vanilla in 2026",
+                "100% Legit (Trust me bro)",
+                "Wait, that's not a reach, it's just lag",
+                "Your admin is my biggest fan",
+                "Successfully bypassed your brain",
+                "Is it a fly? No, it's BlackOut",
+                "Clip it or it didn't happen",
+                "Average 2b2t queue survivor",
+
+                // --- ТЕХНИЧЕСКИЙ ЮМОР (HVH / АНАРХИЯ) ---
+                "Packet injection successful. Dopamine rising.",
+                "Crystal PvP is just rhythmic clicking",
+                "0ms ping in my dreams",
+                "NullPointerException: Your ego",
+                "Desync is a lifestyle",
+                "Matrix? More like a suggestion",
+                "Bypassing... 99%",
+                "Eat, Sleep, Log out on low HP, Repeat",
+                "Your base? My stash.",
+                "Java 17: Still not fast enough for my aura",
+
+                // --- BLACKOUT EXCLUSIVE ---
+                "BlackOut: Lights out for them",
+                "Fade to Black",
+                "Total Blackout, No Mercy",
+                "Darker than your future",
+                "Coded with spite and caffeine",
+                "Welcome to the dark side",
+
+                // --- RUSSIAN / CIS VIBE ---
+                "Привет от русских хакеров",
+                "Optimized for 2-slot potato PCs",
+                "Hardbass-driven development",
+                "Cheeki Breeki, your base is empty",
+                "Cyberpunk in Khrushchevka",
+                "Vodka.exe has started successfully",
+                "Славянский зажим кристаллами",
+                "Report me, I'm famous",
+                "Gop-stop in the End",
+
+                // --- КОРОТКИЕ ЦИТАТЫ ---
+                "Skidded? Maybe. Better? Definitely.",
+                "Git push --force your career",
+                "Stay mad.",
+                "Oops, did I do that?",
+                "Skill issue.",
+                "L + Ratio + No Stash",
+                "Don't cry, it's just a game",
+                "Unpatchable spirit."
+        };
+        return splashTexts[new Random().nextInt(splashTexts.length)];
     }
 
     @Event
