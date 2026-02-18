@@ -61,7 +61,7 @@ public class ShaderESP extends Module {
                     matrices,
                     vertexConsumers,
                     light,
-                    BlackOut.mc.getRenderTickCounter().getTickDelta(false) // 6-й аргумент в 1.21.1
+                    BlackOut.mc.getRenderTickCounter().getTickDelta(false)
             );
 
             ignore = false;

@@ -14,7 +14,6 @@ import net.minecraft.client.session.Session;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class AltManager extends Manager {
     private final List<Account> accounts = new ArrayList<>();
@@ -42,7 +41,7 @@ public class AltManager extends Manager {
                 if (element instanceof JsonObject object) {
                     this.readData(object);
                 } else {
-                    this.getAccounts().add(new Account(entry.getKey(), null, null, "", Optional.empty(), Optional.empty(), Session.AccountType.MOJANG));
+                    this.getAccounts().add(new Account(entry.getKey(), null, null, "", null, null, Session.AccountType.MOJANG));
                 }
             });
         } else {
@@ -107,8 +106,8 @@ public class AltManager extends Manager {
                     originalSession.getUsername(),
                     originalSession.getUuidOrNull(),
                     originalSession.getAccessToken(),
-                    originalSession.getXuid(),
-                    originalSession.getClientId(),
+                    originalSession.getXuid().orElse(null),
+                    originalSession.getClientId().orElse(null),
                     originalSession.getAccountType()
             );
         }

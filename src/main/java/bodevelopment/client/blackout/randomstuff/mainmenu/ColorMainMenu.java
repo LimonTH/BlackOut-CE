@@ -46,7 +46,6 @@ public class ColorMainMenu implements MainMenuRenderer {
         float currentY = -100.0F;
 
         for (String name : MainMenu.getInstance().buttonNames) {
-            // Честная проверка наведения
             boolean hovered = RenderUtils.insideRounded(mx, my, -180.0, currentY, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS);
 
             this.renderButton(stack, name, hovered);
@@ -58,12 +57,10 @@ public class ColorMainMenu implements MainMenuRenderer {
     }
 
     private void renderButton(MatrixStack stack, String name, boolean hovered) {
-        // Блюр под кнопкой
         RenderUtils.drawLoadedBlur("title", stack, renderer -> renderer.rounded(0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10, 1.0F, 1.0F, 1.0F, 1.0F));
 
-        // Сама плашка (белая обводка при наведении или стандартная тень)
         RenderUtils.rounded(stack, 0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10.0F,
-                new Color(255, 255, 255, hovered ? 40 : 0).getRGB(), // Легкий засвет при наведении
+                new Color(255, 255, 255, hovered ? 40 : 0).getRGB(),
                 new Color(0, 0, 0, 180).getRGB());
 
         Color textColor = hovered ? Color.WHITE : new Color(200, 200, 200);
@@ -116,14 +113,12 @@ public class ColorMainMenu implements MainMenuRenderer {
 
     @Override
     public int onClick(float mx, float my) {
-        // Кнопки меню
         float y = -100.0F;
         for (int i = 0; i < 5; i++) {
             if (RenderUtils.insideRounded(mx, my, -180.0, y, 360.0, 10.0, 25.0)) return i;
             y += 85.0F;
         }
 
-        // Иконки
         float windowHeight = MainMenu.getInstance().getWindowHeight();
         float startX = -1000.0F + 14.0F;
         float startY = windowHeight / 2.0F - 44.0F;
@@ -150,8 +145,8 @@ public class ColorMainMenu implements MainMenuRenderer {
                 context,
                 (int) width,
                 (int) height,
-                1.0F, // alpha
-                BlackOut.mc.getRenderTickCounter().getTickDelta(true) // tickDelta
+                1.0F,
+                BlackOut.mc.getRenderTickCounter().getTickDelta(true)
         );
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);

@@ -6,7 +6,6 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.interfaces.functional.SingleOut;
 import bodevelopment.client.blackout.manager.Managers;
-import bodevelopment.client.blackout.module.modules.client.ThemeSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
@@ -82,7 +81,7 @@ public class BoxMultiSetting {
         if (this.mode.get() == BoxRenderMode.Shader) {
             FrameBuffer insideBuffer = Managers.FRAME_BUFFER.getBuffer(this.insideBufferName);
             FrameBuffer bloomBuffer = Managers.FRAME_BUFFER.getBuffer(this.bloomBufferName);
-            ThemeSettings themeSettings = ThemeSettings.getInstance();
+            // TODO: ThemeSettings themeSettings = ThemeSettings.getInstance();
             if (this.blur.get()) {
                 float prevAlpha = Renderer.getAlpha();
                 Renderer.setAlpha(this.shaderAlpha);
@@ -133,12 +132,10 @@ public class BoxMultiSetting {
                 this.shaderAlpha = alphaS;
                 FrameBuffer insideBuffer = Managers.FRAME_BUFFER.getBuffer(this.insideBufferName);
                 insideBuffer.bind(true);
-                // Рендерим только sides в framebuffer для shader эффекта
                 if (this.shape.get().sides) {
                     Render3DUtils.box(box, BlackOutColor.WHITE, null, RenderShape.Sides);
                 }
                 insideBuffer.unbind();
-                // Outlines рендерим напрямую с отдельным цветом
                 if (this.shape.get().outlines) {
                     Render3DUtils.box(box, null, this.shaderOutlineColor.get().alphaMulti(alphaS), RenderShape.Outlines);
                 }

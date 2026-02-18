@@ -21,15 +21,12 @@ public class EntityUtils {
     public static boolean intersects(Box box, Predicate<Entity> predicate, Map<Entity, Box> hitboxes) {
         if (BlackOut.mc.world == null) return false;
 
-        // В 1.21.1 EntityLookup — самый эффективный способ
         EntityLookup<Entity> lookup = BlackOut.mc.world.getEntityLookup();
         boolean[] found = {false};
 
         lookup.forEachIntersects(box, entity -> {
-            // Эмуляция break: если уже нашли, пропускаем тяжелые проверки
             if (found[0]) return;
 
-            // Базовая проверка: не мертва ли сущность и подходит ли под условие
             if (predicate.test(entity) && !Managers.ENTITY.isDead(entity.getId())) {
                 Box entityBox = getBox(entity, hitboxes);
                 if (entityBox.intersects(box)) {
@@ -58,13 +55,10 @@ public class EntityUtils {
     }
 
     private static Box getBox(Entity entity, Map<Entity, Box> map) {
-        // Backtrack: если у нас есть записанная история хитбоксов, берем её
         return map != null && map.containsKey(entity) ? map.get(entity) : entity.getBoundingBox();
     }
 
     public static boolean intersectsWithSpawningItem(BlockPos pos) {
-        // Проверяем наличие предметов, которые могут заблокировать установку (Burrow/Surround)
-        // В 1.21.1 предметы часто имеют "плавающий" хитбокс
         return Managers.ENTITY.containsItem(pos) || Managers.ENTITY.containsItem(pos.up());
     }
 }

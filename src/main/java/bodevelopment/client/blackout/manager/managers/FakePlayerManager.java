@@ -166,12 +166,10 @@ public class FakePlayerManager extends Manager {
     }
 
     private float getDamage(Entity target) {
-        // 1. Берем ПОЛНЫЙ базовый урон игрока (включая Силу и атрибуты меча)
         float baseDamage = (float) BlackOut.mc.player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
 
         DamageSource playerAttackSource = BlackOut.mc.player.getDamageSources().playerAttack(BlackOut.mc.player);
 
-        // 2. Получаем чистый бонус чар
         float enchantmentDamage = EnchantmentHelper.getDamage(
                 null,
                 BlackOut.mc.player.getMainHandStack(),
@@ -182,16 +180,12 @@ public class FakePlayerManager extends Manager {
 
         float cooldown = BlackOut.mc.player.getAttackCooldownProgress(0.5F);
 
-        // 3. Рассчитываем текущий базовый урон с учетом кулдауна
         float currentDamage = baseDamage * (0.2F + cooldown * cooldown * 0.8F);
 
-        // 4. Проверка условий Критического удара
-        // (Твои проверки верны, можно оставить вызов метода или оставить как есть)
         if (isCrit(cooldown, target)) {
             currentDamage *= 1.5F;
         }
 
-        // 5. Итог: Критующая база + чары (которые тоже зависят от кулдауна)
         return currentDamage + (enchantmentDamage * cooldown);
     }
 

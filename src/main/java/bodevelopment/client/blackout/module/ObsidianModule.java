@@ -137,11 +137,9 @@ public class ObsidianModule extends Module {
     public void onRender(RenderEvent.World.Post event) {
         if (BlackOut.mc.player == null || BlackOut.mc.world == null) return;
 
-        // 1.21.1: Получаем MatrixStack
         MatrixStack stack = event.stack;
 
         if (!this.enabled) {
-            // Рендеринг затухания при выключении модуля
             this.render.update((pos, time, delta) ->
                     this.normalRendering.render(BoxUtils.get(pos), (float) (1.0 - delta), 1.0F)
             );
@@ -154,7 +152,6 @@ public class ObsidianModule extends Module {
                 this.updateBlocks();
                 this.updateSupport();
 
-                // Рендеринг основных блоков для установки
                 this.blockPlacements.stream()
                         .filter(OLEPOSSUtils::replaceable)
                         .forEach(block -> {
@@ -164,7 +161,6 @@ public class ObsidianModule extends Module {
                             }
                         });
 
-                // Рендеринг вспомогательных (support) блоков
                 this.supportPositions.forEach(block -> {
                     this.supportRendering.render(BoxUtils.get(block));
                     if (this.firstCalc) {
@@ -172,7 +168,6 @@ public class ObsidianModule extends Module {
                     }
                 });
 
-                // Обновление анимаций рендеринга
                 this.render.update((pos, time, delta) ->
                         this.normalRendering.render(BoxUtils.get(pos), (float) (1.0 - delta), 1.0F)
                 );
@@ -182,7 +177,6 @@ public class ObsidianModule extends Module {
 
                 this.firstCalc = false;
 
-                // Логика установки блоков
                 if (!this.pauseEat.get() || !BlackOut.mc.player.isUsingItem()) {
                     if (!this.onlyOnGround.get() || BlackOut.mc.player.isOnGround()) {
                         this.placeBlocks();

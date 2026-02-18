@@ -19,7 +19,6 @@ public class ListScreen<T> extends ClickGuiScreen {
     private double progress = 0.0;
 
     public ListScreen(ListSetting<T> setting, EpicInterface<T, String> getName) {
-        // Увеличиваем размер для удобства работы в главном меню
         super(setting.name, 750.0F, 550.0F, true);
         this.setting = setting;
         this.getName = getName;
@@ -35,24 +34,17 @@ public class ListScreen<T> extends ClickGuiScreen {
                 else left++;
             }
         }
-        // Динамический расчет высоты скролла
         return Math.max(left, right) * 30.0F + 60.0F;
     }
 
     @Override
     public void render() {
-        // 1. Фон окна (рисуем на (height - 40), так как родитель расширил окно)
         RenderUtils.rounded(this.stack, 0, 0, width, height - 40.0F, 10, 10, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
 
-        // --- КОНТЕНТ (Уже обрезан родителем по шапку!) ---
         this.stack.push();
-        // 15.0F — отступ от линии шапки, чтобы текст не прилипал
         this.stack.translate(0.0F, 15.0F - this.scroll.get(), 0.0F);
         this.renderListItems();
         this.stack.pop();
-
-        // 2. Поиск рисуем ПОВЕРХ списка.
-        // Поскольку он рисуется последним, список будет уходить "под" него.
         this.renderSearch();
     }
 
@@ -68,7 +60,6 @@ public class ListScreen<T> extends ClickGuiScreen {
             boolean selected = this.setting.get().contains(item);
             float currentY = selected ? rY : lY;
 
-            // Рендерим только то, что попадает в видимую область (оптимизация)
             if (currentY - scroll.get() > -30 && currentY - scroll.get() < height) {
                 double dist = Math.abs(this.my - (currentY - this.scroll.get() + 15.0F));
                 float hoverAnim = (float) Math.max(0.0, 1.0 - (dist / 25.0));
@@ -87,7 +78,6 @@ public class ListScreen<T> extends ClickGuiScreen {
                 else lY += 30.0F;
             }
         }
-        // Разделитель
         RenderUtils.line(this.stack, half, 0, half, Math.max(lY, rY), new Color(255, 255, 255, 15).getRGB());
     }
 
@@ -97,7 +87,6 @@ public class ListScreen<T> extends ClickGuiScreen {
                 : Math.max(progress - frameTime * 4.0, 0.0);
 
         if (progress > 0.01) {
-            // Позиционируем поиск внизу окна (относительно height-40)
             this.textField.render(this.stack, 1.6F, mx, my,
                     width / 2f - 100, height - 85, 200, 0, 10, 5,
                     ColorUtils.withAlpha(Color.WHITE, (int) (progress * 255)),
@@ -110,7 +99,6 @@ public class ListScreen<T> extends ClickGuiScreen {
         if (state && button == 0) {
             if (this.textField.click(button, state)) return;
 
-            // Логика клика переделана под относительные координаты окна
             T item = findItem();
             if (item != null) {
                 if (setting.get().contains(item)) setting.get().remove(item);
@@ -121,7 +109,6 @@ public class ListScreen<T> extends ClickGuiScreen {
     }
 
     private T findItem() {
-        // Ограничиваем клики по вертикали (чтобы не кликать сквозь шапку)
         if (my < 0 || my > height - 10) return null;
 
         boolean right = mx > width / 2f;

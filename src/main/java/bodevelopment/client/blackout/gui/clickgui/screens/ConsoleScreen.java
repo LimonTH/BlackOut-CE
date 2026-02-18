@@ -39,18 +39,13 @@ public class ConsoleScreen extends ClickGuiScreen {
 
     @Override
     public void render() {
-        // 1. Фон окна (уже внутри трансформации ClickGuiScreen)
         RenderUtils.rounded(this.stack, 0, 0, width, height - 40.0F, 10, 10, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
 
-        // --- КОНТЕНТ (Уже обрезан родителем сверху по шапку) ---
         this.stack.push();
-        // Сдвигаем контент. 10.0F — небольшой отступ от красной линии шапки
         this.stack.translate(20.0F, 10.0F - this.scroll.get(), 0.0F);
         this.renderLines();
         this.stack.pop();
 
-        // 2. Рендерим нижнюю часть
-        // Она перекроет текст консоли снизу, так как рисуется ПОСЖЕ
         this.renderBottomBG();
         this.renderBottom();
 
@@ -60,7 +55,6 @@ public class ConsoleScreen extends ClickGuiScreen {
     @Override
     public void onMouse(int button, boolean state) {
         if (state && button == 0) {
-            // Клик по полю ввода
             if (this.mx >= 20.0 && this.mx <= this.width - 20.0F && this.my >= this.height - 85.0F && this.my <= this.height - 45.0F) {
                 this.typing = true;
                 this.textField.clear();
@@ -72,7 +66,7 @@ public class ConsoleScreen extends ClickGuiScreen {
     @Override
     public void onKey(int key, boolean state) {
         if (this.typing) {
-            if (state && key == 257) { // ENTER
+            if (state && key == 257) {
                 this.handle(this.textField.getContent());
                 this.textField.clear();
                 this.typing = false;
@@ -84,14 +78,11 @@ public class ConsoleScreen extends ClickGuiScreen {
     }
 
     private void renderBottomBG() {
-        // Рисуем темную подложку внизу окна
         RenderUtils.roundedBottom(this.stack, 0.0F, this.height - 100.0F, this.width, 60.0F, 10.0F, 0.0F, GuiColorUtils.bg2.getRGB(), 0);
-        // Небольшая линия-разделитель
         RenderUtils.line(this.stack, 15.0F, this.height - 100.0F, this.width - 15.0F, this.height - 100.0F, LINE_COLOR);
     }
 
     private void renderBottom() {
-        // Само текстовое поле
         this.textField.render(this.stack, 2.0F, this.mx, this.my, 20.0F, this.height - 65.0F, this.width - 40.0F, 0.0F, 20.0F, 15.0F, Color.WHITE, GuiColorUtils.bg2);
     }
 
@@ -106,7 +97,6 @@ public class ConsoleScreen extends ClickGuiScreen {
     }
 
     private void renderLines() {
-        // Рисуем строки с конца (новые внизу или вверху, зависит от логики addLine)
         for (int i = this.lines.size() - 1; i >= 0; i--) {
             this.renderTexts(this.lines.get(i));
         }
@@ -155,8 +145,8 @@ public class ConsoleScreen extends ClickGuiScreen {
             this.scroll.offset(line.getHeight());
         }
 
-        this.lines.add(0, line);
-        OLEPOSSUtils.limitList(this.lines, 30); // Увеличил лимит строк для консоли
+        this.lines.addFirst(line);
+        OLEPOSSUtils.limitList(this.lines, 30);
     }
 
     private String currentTime() {
@@ -165,10 +155,8 @@ public class ConsoleScreen extends ClickGuiScreen {
     }
 
     private String[] split(String string, String time) {
-        // (Оставил твою логику сплита без изменений, так как она работает)
         List<String> list = new ArrayList<>();
-        StringBuilder sb = new StringBuilder().append(time).append(string);
-        list.add(sb.toString());
+        list.add(time + string);
         return list.toArray(new String[0]);
     }
 

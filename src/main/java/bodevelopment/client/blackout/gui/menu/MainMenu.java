@@ -15,6 +15,7 @@ import bodevelopment.client.blackout.util.BOLogger;
 import bodevelopment.client.blackout.util.SoundUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
 import net.minecraft.client.gui.screen.option.OptionsScreen;
@@ -58,11 +59,7 @@ public class MainMenu {
                     this.openAltManager();
                 }
             },
-            () -> {
-                BlackOut.mc.execute(() -> {
-                    BlackOut.mc.setScreen(new OptionsScreen(this.titleScreen, BlackOut.mc.options));
-                });
-            },
+            () -> BlackOut.mc.execute(() -> BlackOut.mc.setScreen(new OptionsScreen(this.titleScreen, BlackOut.mc.options))),
             BlackOut.mc::scheduleStop
     };
     private float delta;
@@ -88,29 +85,44 @@ public class MainMenu {
     }
 
     public void render(int mouseX, int mouseY, float delta) {
-        if (!this.playedStartup) {
-            SoundUtils.play(1.0F, 10.0F, "startup");
-            this.playedStartup = true;
-        }
+        if (!this.playedStartup) { SoundUtils.play(1.0F, 10.0F, "startup"); this.playedStartup = true; }
         this.scroll.update(Math.min(BlackOut.mc.getRenderTickCounter().getLastFrameDuration(), 0.016F));
-
         this.delta = delta / 20.0F;
         this.updateWindowData();
 
-        // Ускоренная анимация появления
         float guiAlpha = (float) Math.sqrt(ClickGui.popUpDelta);
         boolean isGuiOpen = this.clickGui.isOpen() || guiAlpha > 0.01F;
+        float progress = this.getSwitchProgress();
+        float menuAlpha = MathHelper.clamp(MathHelper.getLerpProgress(progress, 0.4F, 0.0F), 0.0F, 1.0F);
+        float altAlpha = MathHelper.clamp(MathHelper.getLerpProgress(progress, 0.6F, 1.0F), 0.0F, 1.0F);
+        float tIntensity = (float) (1.0 - AnimUtils.easeInOutCubic(Math.min(Math.abs(progress - 0.5F), 0.5F) / 0.5F));
 
-        float switchProgress = this.getSwitchProgress();
-        float menuAlpha = MathHelper.clamp(MathHelper.getLerpProgress(switchProgress, 0.4F, 0.0F), 0.0F, 1.0F);
-        float altManagerAlpha = MathHelper.clamp(MathHelper.getLerpProgress(switchProgress, 0.6F, 1.0F), 0.0F, 1.0F);
-        float bgDarkness = (float) (1.0 - AnimUtils.easeInOutCubic(Math.min(Math.abs(switchProgress - 0.5F), 0.5F) / 0.5F));
+        this.startRender(this.scale);
 
-        // 1. Старт рендера (Фон)
-        this.startRender(this.scale, bgDarkness);
+        // СЛОЙ 1: БЛЮР
+        float totalBlurRadius = 0.0F;
+        if (tIntensity > 0.01F || altAlpha > 0.01F) {
+            totalBlurRadius = (tIntensity * 12.0F) + (altAlpha * 6.0F);
+        }
 
-        // 2. Рендер контента основного меню (кнопки, текст и т.д.)
-        // Эти элементы будут ПОД блюром, так как мы вызовем блюр позже
+        if (guiAlpha > 0.01F) {
+            totalBlurRadius = Math.max(totalBlurRadius, guiAlpha * 10.0F);
+        }
+
+        if (totalBlurRadius > 0.1F) {
+            this.stack.push();
+            RenderUtils.loadBlur("master_blur", (int) totalBlurRadius);
+            RenderUtils.drawLoadedBlur("master_blur", this.stack, r ->
+                    r.quadShape(-2000, -windowHeight, 4000, windowHeight * 2, 0, 1, 1, 1, 1));
+            this.stack.pop();
+        }
+
+        // СЛОЙ 2: ЗАТЕМНЕНИЕ
+        float brightness = 1.0F - (tIntensity * 0.7F) - (altAlpha * 0.3F);
+        brightness = MathHelper.clamp(brightness, 0.2F, 1.0F);
+        com.mojang.blaze3d.systems.RenderSystem.setShaderColor(brightness, brightness, brightness, 1.0F);
+
+        // СЛОЙ 3: КОНТЕНТ
         float renderMx = isGuiOpen ? -1000.0F : this.mx;
         float renderMy = isGuiOpen ? -1000.0F : this.my;
 
@@ -119,34 +131,17 @@ public class MainMenu {
             MainMenuSettings.getInstance().getRenderer().render(this.stack, this.windowHeight, renderMx, renderMy, this.splashText);
         }
 
-        if (altManagerAlpha > 0.0F) {
-            Renderer.setAlpha(altManagerAlpha);
+        if (altAlpha > 0.01F) {
+            Renderer.setAlpha(altAlpha);
             this.renderAltManager();
         }
 
-        // 3. НАЛОЖЕНИЕ БЛЮРА ПОВЕРХ ВСЕГО МЕНЮ
-        if (guiAlpha > 0.01F) {
-            this.stack.push();
-            float bigW = 1000.0F;
-            float bigH = (this.windowHeight / 2.0F);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-            RenderUtils.loadBlur("gui_blur", (int) (guiAlpha * 10.0F));
-            RenderUtils.drawLoadedBlur("gui_blur", this.stack, renderer ->
-                    renderer.quadShape(-bigW, -bigH, bigW * 3.0F, bigH * 3.0F, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F)
-            );
-
-            // Затемнение (тоже поверх кнопок меню)
-            RenderUtils.quad(this.stack, -bigW, -bigH, bigW * 3.0F, bigH * 3.0F, new Color(0, 0, 0, (int) (guiAlpha * 130)).getRGB());
-            this.stack.pop();
-        }
-
-        // Завершаем трансформации основного меню
         this.endRender();
 
-        // 4. Click GUI (самый верхний слой, не блюрится)
         if (isGuiOpen) {
-            net.minecraft.client.gui.DrawContext guiContext = new net.minecraft.client.gui.DrawContext(BlackOut.mc, BlackOut.mc.getBufferBuilders().getEntityVertexConsumers());
-            this.clickGui.render(guiContext, mouseX, mouseY, delta);
+            this.clickGui.render(new net.minecraft.client.gui.DrawContext(BlackOut.mc, BlackOut.mc.getBufferBuilders().getEntityVertexConsumers()), mouseX, mouseY, delta);
         }
     }
 
@@ -186,7 +181,8 @@ public class MainMenu {
     }
 
     private void renderAccounts() {
-        MainMenuSettings mainMenuSettings = MainMenuSettings.getInstance();
+        // TODO: возможно сделать конфигурируемые параметры менеджера аккаунтов
+        // MainMenuSettings mainMenuSettings = MainMenuSettings.getInstance();
         this.altLength = -90.0F;
         this.stack.push();
         this.stack.translate(0.0F, -this.scroll.get(), 0.0F);
@@ -213,10 +209,8 @@ public class MainMenu {
         if (button != 0) return;
 
         if (pressed) {
-            // Опрашиваем рендер (SmokeMainMenu) на предмет клика
             int hoverIndex = MainMenuSettings.getInstance().getRenderer().onClick(this.mx, this.my);
 
-            // Если попали в кнопки или иконки соцсетей
             if (hoverIndex >= 0 || (this.my >= this.windowHeight / 2.0F - 54.0F && this.my <= this.windowHeight - 12.0F)) {
                 this.isClickStartedHere = true;
             }
@@ -224,10 +218,8 @@ public class MainMenu {
             if (!this.isClickStartedHere) return;
             this.isClickStartedHere = false;
 
-            // Получаем индекс клика из SmokeMainMenu
             int i = MainMenuSettings.getInstance().getRenderer().onClick(this.mx, this.my);
 
-            // ИНДЕКС 6 — ЭТО НАША ШЕСТЕРЕНКА В SmokeMainMenu
             if (i == 6) {
                 this.clickGui.toggleTime = System.currentTimeMillis();
                 this.clickGui.setOpen(!this.clickGui.isOpen());
@@ -238,12 +230,10 @@ public class MainMenu {
                 return;
             }
 
-            // Стандартные кнопки меню
             if (i >= 0 && i < this.runnables.length) {
                 SoundUtils.play(1.0F, 3.0F, "menubutton");
                 this.runnables[i].run();
             } else {
-                // Иконки соцсетей (Github, Discord и т.д.)
                 float offset = this.mx + 986.0F;
                 if (this.my >= this.windowHeight / 2.0F - 54.0F && this.my <= this.windowHeight - 12.0F) {
                     for (int j = 0; j < 3; j++) {
@@ -291,19 +281,15 @@ public class MainMenu {
     }
 
     private void handleAltClick(Account account, Account.AccountClickResult result) {
+        if (result == Account.AccountClickResult.Nothing) return;
+
         switch (result) {
-            case Nothing:
-            default:
-                break;
-            case Select:
-                Managers.ALT.set(account);
-                break;
-            case Delete:
+            case Select -> Managers.ALT.set(account);
+            case Refresh -> account.refresh();
+            case Delete -> {
                 Managers.ALT.remove(account);
                 this.altLength = Managers.ALT.getAccounts().size() * 155.0F - 90.0F;
-                break;
-            case Refresh:
-                account.refresh();
+            }
         }
 
         SoundUtils.play(1.0F, 3.0F, "menubutton");
@@ -360,22 +346,19 @@ public class MainMenu {
         this.my = (float) ((logicalY - physicalHeight / 2.0) / this.scale);
     }
 
-    private void startRender(float scale, float bgDarkness) {
+    private void startRender(float scale) {
         this.stack.push();
         RenderUtils.unGuiScale(this.stack);
+
+        int screenW = BlackOut.mc.getWindow().getWidth();
+        int screenH = BlackOut.mc.getWindow().getHeight();
+
         MainMenuSettings.getInstance()
                 .getRenderer()
-                .renderBackground(this.stack, BlackOut.mc.getWindow().getWidth(), BlackOut.mc.getWindow().getHeight(), this.mx, this.my);
-        this.stack.scale(scale, scale, scale);
-        this.stack.translate(BlackOut.mc.getFramebuffer().viewportWidth / 2.0F / scale, BlackOut.mc.getFramebuffer().viewportHeight / 2.0F / scale, 0.0F);
-    }
+                .renderBackground(this.stack, screenW, screenH, this.mx, this.my);
 
-    private void blurBackground() {
-        RenderUtils.loadBlur("title", 8);
-        RenderUtils.drawLoadedBlur("title", this.stack, renderer ->
-                renderer.quadShape(0.0F, 0.0F, BlackOut.mc.getWindow().getWidth(),
-                        BlackOut.mc.getWindow().getHeight(), 0.0F, 1.0F, 1.0F, 1.0F, 1.0F)
-        );
+        this.stack.translate(screenW / 2.0F, screenH / 2.0F, 0.0F);
+        this.stack.scale(scale, scale, scale);
     }
 
     private void endRender() {
@@ -384,7 +367,7 @@ public class MainMenu {
 
     private String getSplash() {
         String[] splashTexts = new String[]{
-// --- ОСНОВНОЙ ВАЙБ ---
+                // --- ОСНОВНОЙ ВАЙБ ---
                 "The best in the business",
                 "The real opp stoppa",
                 "Sponsored by Columbian cartels",
@@ -467,8 +450,8 @@ public class MainMenu {
                 "Khrushchevka-based development",
 
                 // --- ЛЕГЕНДАРНЫЕ СЕРВЕРА (BALANCE) ---
-                "Newpaces: Where legends are forged",
-                "Newpaces is my playground",
+                "NewPlaces: Where legends are forged",
+                "NewPlaces is my playground",
                 "FitMC told me about this",
                 "Popbob's favorite tool",
                 "Bedrock is just a suggestion",
@@ -510,7 +493,6 @@ public class MainMenu {
             return;
         }
 
-        // 2. Если GUI закрыт - работают кнопки меню
         this.updateWindowData();
         float switchProgress = this.getSwitchProgress();
         if (switchProgress == 0.0F) {
@@ -565,7 +547,6 @@ public class MainMenu {
                 return;
             }
         } else if (event.key == 257) {
-            // Добавляем только если менеджер открыт и поле НЕ пустое
             if (this.altManagerOpen && !this.textField.isEmpty()) {
                 Managers.ALT.add(new Account(this.textField.getContent()));
                 this.textField.clear();

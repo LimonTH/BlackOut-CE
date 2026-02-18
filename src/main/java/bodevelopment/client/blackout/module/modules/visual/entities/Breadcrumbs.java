@@ -76,7 +76,6 @@ public class Breadcrumbs extends Module {
     }
 
     private void drawDot(MatrixStack stack, Vec3d vec, double delta) {
-        // не влияло на проблему, оставляем true
         Vec2f f = RenderUtils.getCoords(vec.x, vec.y, vec.z, true);
         if (f != null) {
             Color[] colors = this.getColors();

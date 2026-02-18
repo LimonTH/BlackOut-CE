@@ -84,13 +84,11 @@ public class ESP extends Module {
         if (BlackOut.mc.world != null && BlackOut.mc.player != null) {
             Vec3d cameraPos = BlackOut.mc.gameRenderer.getCamera().getPos();
 
-            // ВАЖНО: Отключаем depth test чтобы ESP просвечивал сквозь стены
             RenderSystem.disableDepthTest();
             RenderSystem.depthMask(false);
 
             this.entities.forEach(entity -> this.render2D(event.tickDelta, cameraPos, entity));
 
-            // Восстанавливаем depth test
             RenderSystem.enableDepthTest();
             RenderSystem.depthMask(true);
         }

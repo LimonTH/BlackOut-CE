@@ -33,7 +33,6 @@ public class EnchantmentNames {
         map.clear();
         enchantments.clear();
 
-        // Заполняем карту коротких имен
         Map<RegistryKey<Enchantment>, String> shortNames = getShortNames();
 
         shortNames.forEach((key, shortName) -> {
@@ -86,8 +85,6 @@ public class EnchantmentNames {
         put(map, Enchantments.PIERCING, "pie");
         put(map, Enchantments.MENDING, "men");
         put(map, Enchantments.VANISHING_CURSE, "van");
-
-        // Новые зачарования 1.21 (Булава и т.д.)
         put(map, Enchantments.WIND_BURST, "wind");
         put(map, Enchantments.DENSITY, "dens");
         put(map, Enchantments.BREACH, "brea");

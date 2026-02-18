@@ -52,7 +52,6 @@ public class BoxESP extends Module {
     @Event
     public void onRender(RenderEvent.World.Post event) {
         if (BlackOut.mc.world != null && BlackOut.mc.player != null) {
-            // BoxMultiSetting.render() вызывает Render3DUtils.box(), который сам управляет OpenGL state
             this.entities.forEach(entity -> this.renderBox(entity, event.tickDelta));
         }
     }

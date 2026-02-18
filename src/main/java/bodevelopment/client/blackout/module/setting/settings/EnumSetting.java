@@ -24,17 +24,7 @@ public class EnumSetting<T extends Enum<?>> extends Setting<T> {
     public EnumSetting(String name, T val, String description, SingleOut<Boolean> visible) {
         super(name, val, description, visible);
 
-        // getEnumConstants() — это стандартный путь Java для получения всех значений Enum без ручной рефлексии методов
         this.values = (T[]) val.getDeclaringClass().getEnumConstants();
-
-        // Если по какой-то причине ты хочешь оставить именно вызов метода "values":
-        /*
-        try {
-            this.values = (T[]) val.getDeclaringClass().getMethod("values").invoke(null);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        */
     }
 
     @Override

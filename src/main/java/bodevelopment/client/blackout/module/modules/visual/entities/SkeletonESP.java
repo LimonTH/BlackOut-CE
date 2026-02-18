@@ -42,7 +42,6 @@ public class SkeletonESP extends Module {
                     RenderSystem.lineWidth(1.5F);
                     RenderSystem.disableDepthTest();
 
-                    // КРИТИЧНО: Сбрасываем ModelViewMat в identity чтобы избежать двойной трансформации
                     RenderSystem.getModelViewStack().pushMatrix();
                     RenderSystem.getModelViewStack().identity();
                     RenderSystem.applyModelViewMatrix();
@@ -53,11 +52,10 @@ public class SkeletonESP extends Module {
                     this.renderBones(positions, builder, color.red / 255.0F, color.green / 255.0F, color.blue / 255.0F, color.alpha / 255.0F);
                     BufferRenderer.drawWithGlobalProgram(builder.end());
 
-                    // Восстанавливаем ModelViewMat
                     RenderSystem.getModelViewStack().popMatrix();
                     RenderSystem.applyModelViewMatrix();
                     RenderSystem.enableDepthTest();
-                    // Восстанавливаем OpenGL state после рендера
+
                     Render3DUtils.end();
                     WireframeRenderer.matrixStack.pop();
                 }

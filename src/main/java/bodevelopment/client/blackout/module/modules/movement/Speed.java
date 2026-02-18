@@ -197,7 +197,6 @@ public class Speed extends Module {
         if (this.pauseElytra.get() && BlackOut.mc.player.isFallFlying()) return true;
         if (this.pauseFly.get() && BlackOut.mc.player.getAbilities().flying) return true;
 
-        // Проверка воды
         boolean inWater = switch (this.pauseWater.get()) {
             case Touching -> BlackOut.mc.player.isTouchingWater();
             case Submerged -> BlackOut.mc.player.isSubmergedIn(FluidTags.WATER);
@@ -206,7 +205,6 @@ public class Speed extends Module {
         };
         if (inWater) return true;
 
-        // Проверка лавы
         return switch (this.pauseLava.get()) {
             case Touching -> BlackOut.mc.player.isInLava();
             case Submerged -> BlackOut.mc.player.isSubmergedIn(FluidTags.LAVA);

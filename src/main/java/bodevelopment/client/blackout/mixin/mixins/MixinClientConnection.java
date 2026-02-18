@@ -83,23 +83,24 @@ public abstract class MixinClientConnection {
 
     @Inject(method = "sendImmediately", at = @At("HEAD"), cancellable = true)
     private void sendPing(Packet<?> packet, PacketCallbacks callbacks, boolean flush, CallbackInfo ci) {
+        if (this.channel == null || !this.channel.isOpen()) return;
         this.packetsSentCounter++;
+
+        boolean shouldDelay = Managers.PING.shouldDelay(packet);
+
         if (this.channel.eventLoop().inEventLoop()) {
-            if (Managers.PING.shouldDelay(packet) && this.side == NetworkSide.CLIENTBOUND) {
+            if (shouldDelay) {
                 Managers.PING.addSend(() -> this.sendInternal(packet, callbacks, flush));
-            } else {
-                this.sendInternal(packet, callbacks, flush);
+                ci.cancel();
             }
         } else {
-            Runnable runnable = () -> this.sendInternal(packet, callbacks, flush);
-            if (Managers.PING.shouldDelay(this.currentPacket) && this.side == NetworkSide.CLIENTBOUND) {
-                Managers.PING.addSend(() -> this.channel.eventLoop().execute(runnable));
-            } else {
-                this.channel.eventLoop().execute(runnable);
+            if (shouldDelay) {
+                Managers.PING.addSend(() -> this.channel.eventLoop().execute(() ->
+                        this.sendInternal(packet, callbacks, flush)
+                ));
+                ci.cancel();
             }
         }
-
-        ci.cancel();
     }
 
     @Redirect(

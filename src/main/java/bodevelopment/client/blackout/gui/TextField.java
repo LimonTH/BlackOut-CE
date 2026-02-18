@@ -161,21 +161,16 @@ public class TextField {
     }
 
     public void type(int key, boolean state) {
-        // 1. Проверяем, что клавиша нажата
         if (!state) return;
 
-        // 2. Расширяем диапазон допустимых клавиш:
-        // Буквы/Цифры (32-162) + Функциональные (256-348)
         if ((key >= 32 && key <= 162) || (key >= 256 && key <= 348)) {
 
-            // Обработка зажатия (BackSpace и стрелочки должны повторяться)
             if (key != this.heldKey) {
                 this.prevHeld = System.currentTimeMillis();
             }
             this.heldKey = key;
             this.limitIndex();
 
-            // 3. Обработка Ctrl + V
             if (key == GLFW.GLFW_KEY_V && (Keys.get(GLFW.GLFW_KEY_LEFT_CONTROL) || Keys.get(GLFW.GLFW_KEY_RIGHT_CONTROL))) {
                 String clipboard = BlackOut.mc.keyboard.getClipboard();
                 if (clipboard != null) {
@@ -186,9 +181,8 @@ public class TextField {
                 return;
             }
 
-            // 4. Логика клавиш
             switch (key) {
-                case GLFW.GLFW_KEY_BACKSPACE: // 259
+                case GLFW.GLFW_KEY_BACKSPACE:
                     if (this.typingIndex > 0) {
                         String pre = this.content.substring(0, this.typingIndex - 1);
                         String post = this.content.substring(this.typingIndex);
@@ -197,21 +191,21 @@ public class TextField {
                         this.lastType = System.currentTimeMillis();
                     }
                     return;
-                case GLFW.GLFW_KEY_RIGHT: // 262
+                case GLFW.GLFW_KEY_RIGHT:
                     this.lastType = System.currentTimeMillis();
                     this.typingIndex = MathHelper.clamp(this.typingIndex + 1, 0, this.content.length());
                     return;
-                case GLFW.GLFW_KEY_LEFT: // 263
+                case GLFW.GLFW_KEY_LEFT:
                     this.lastType = System.currentTimeMillis();
                     this.typingIndex = MathHelper.clamp(this.typingIndex - 1, 0, this.content.length());
                     return;
-                case GLFW.GLFW_KEY_LEFT_BRACKET: // 91
+                case GLFW.GLFW_KEY_LEFT_BRACKET:
                     this.addChar(Keys.get(GLFW.GLFW_KEY_LEFT_SHIFT) ? "{" : "[");
                     return;
-                case GLFW.GLFW_KEY_RIGHT_BRACKET: // 93
+                case GLFW.GLFW_KEY_RIGHT_BRACKET:
                     this.addChar(Keys.get(GLFW.GLFW_KEY_LEFT_SHIFT) ? "}" : "]");
                     return;
-                case GLFW.GLFW_KEY_SPACE: // 32
+                case GLFW.GLFW_KEY_SPACE:
                     this.addChar(" ");
                     return;
                 default:
@@ -221,7 +215,6 @@ public class TextField {
                         return;
                     }
 
-                    // Для всего остального (буквы и т.д.)
                     String name = GLFW.glfwGetKeyName(key, 0);
                     if (name != null) {
                         this.addChar(this.modify(name));
@@ -236,17 +229,14 @@ public class TextField {
     }
 
     private String modify(String string) {
-        // Используем константы для читаемости
         boolean shift = Keys.get(GLFW.GLFW_KEY_LEFT_SHIFT) || Keys.get(GLFW.GLFW_KEY_RIGHT_SHIFT);
         boolean alt = Keys.get(GLFW.GLFW_KEY_LEFT_ALT) || Keys.get(GLFW.GLFW_KEY_RIGHT_ALT);
 
         if (shift && alt) return "";
 
         if (shift) {
-            // Если в таблице замен (1 -> !) есть символ, берем его, иначе просто в верхний регистр
             return shiftModified.getOrDefault(string, string.toUpperCase());
         } else {
-            // Если в таблице Alt (5 -> €) есть символ, берем его, иначе просто возвращаем как есть
             return alt ? altModified.getOrDefault(string, string) : string.toLowerCase();
         }
     }

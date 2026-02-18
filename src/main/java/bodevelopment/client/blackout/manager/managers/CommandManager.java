@@ -36,11 +36,8 @@ public class CommandManager extends Manager {
             Command command = this.commands.get(args[0]);
 
             try {
-                // Проверяем, не требует ли команда наличие игрока/мира
-                // (Большинство команд чита упадут без них)
                 if (BlackOut.mc.player == null || BlackOut.mc.world == null) {
-                    // Список исключений: команды, которые МОЖНО использовать в меню
-                    // Например: "help", "prefix", "config"
+                    // Список исключений
                     if (!command.name.equalsIgnoreCase("folder")
                             && !command.name.equalsIgnoreCase("debug")
                             && !command.name.equalsIgnoreCase("disable")

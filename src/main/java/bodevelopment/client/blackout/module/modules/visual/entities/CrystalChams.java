@@ -56,7 +56,6 @@ public class CrystalChams extends Module {
         BlackOutColor lineColor = this.getLineColor(id);
         RenderShape shape = this.getShape(id);
 
-        // Делегируем рендеринг в Render3DUtils
         Render3DUtils.box(stack, box, sideColor, lineColor, shape);
     }
 

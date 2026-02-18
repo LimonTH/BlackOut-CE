@@ -27,11 +27,9 @@ public class ClickGuiButtons {
     private static final int BUTTON_SEPARATION = 20;
 
     static {
-        if (buttons.isEmpty()) {
-            a(ConfigScreen::new, BOTextures.getFolderIconRenderer());
-            a(FriendsScreen::new, BOTextures.getPersonIconRenderer());
-            a(ConsoleScreen::new, BOTextures.getConsoleIconRenderer());
-        }
+        a(ConfigScreen::new, BOTextures.getFolderIconRenderer());
+        a(FriendsScreen::new, BOTextures.getPersonIconRenderer());
+        a(ConsoleScreen::new, BOTextures.getConsoleIconRenderer());
     }
 
     private static void a(Supplier<? extends ClickGuiScreen> screen, TextureRenderer icon) {
@@ -43,7 +41,6 @@ public class ClickGuiButtons {
         stack.push();
         RenderUtils.unGuiScale(stack);
 
-        // Используем физические пиксели окна (как в MainMenu)
         double screenWidth = BlackOut.mc.getWindow().getWidth();
         double screenHeight = BlackOut.mc.getWindow().getHeight();
 
@@ -63,9 +60,8 @@ public class ClickGuiButtons {
      * Исправленный метод клика по логике MainMenu
      */
     public boolean onClick(int button) {
-        if (button != 0) return false; // Только ЛКМ
+        if (button != 0) return false;
 
-        // 1. Получаем физические координаты курсора напрямую из GLFW (как в твоем MainMenu)
         double[] xArr = new double[1];
         double[] yArr = new double[1];
         GLFW.glfwGetCursorPos(BlackOut.mc.getWindow().getHandle(), xArr, yArr);
@@ -73,24 +69,19 @@ public class ClickGuiButtons {
         double rawX = xArr[0];
         double rawY = yArr[0];
 
-        // 2. Получаем физические размеры окна
         double screenWidth = BlackOut.mc.getWindow().getWidth();
         double screenHeight = BlackOut.mc.getWindow().getHeight();
 
-        // 3. Расчет начальной точки блока кнопок (должен совпадать с render)
         double startX = (screenWidth - this.getWidth()) / 2.0;
         double startY = screenHeight - 105.0 - BUTTON_SEPARATION;
 
-        // 4. Проверяем каждую кнопку
         for (int i = 0; i < buttons.size(); i++) {
-            // Центр кнопки в физических пикселях
             double centerX = startX + 35.0 + (i * 90.0);
             double centerY = startY + 35.0;
 
             double dx = rawX - centerX;
             double dy = rawY - centerY;
 
-            // Если расстояние до центра меньше радиуса (35 пикселей)
             if (Math.sqrt(dx * dx + dy * dy) <= 35.0) {
                 Managers.CLICK_GUI.CLICK_GUI.setScreen(buttons.get(i).supplier.get());
                 return true;
@@ -112,7 +103,6 @@ public class ClickGuiButtons {
         float offset = anim * -50.0F + 50.0F;
         float half = 35.0F;
 
-        // ТВОЯ ОРИГИНАЛЬНАЯ ОТРИСОВКА
         RenderUtils.rounded(stack, half, half + offset, 0.0F, 0.0F, half, 15.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
 
         float ratio = icon.getWidth() / 36.0F;
