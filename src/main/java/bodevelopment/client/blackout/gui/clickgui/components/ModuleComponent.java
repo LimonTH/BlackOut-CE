@@ -39,16 +39,17 @@ public class ModuleComponent extends Component {
     }
 
     public static float getLength(List<SettingGroup> settingGroups) {
+        float fs = GuiSettings.getInstance().fontScale.get().floatValue();
         float length = switch (GuiSettings.getInstance().settingGroup.get()) {
             case Line, Shadow, None -> 0.0F;
-            case Quad -> 7.0F;
+            case Quad -> 7.0F * fs;
         };
 
         for (SettingGroup group : settingGroups) {
             length += switch (GuiSettings.getInstance().settingGroup.get()) {
-                case Line, None -> 40.0F;
-                case Shadow -> 45.0F;
-                case Quad -> 50.0F;
+                case Line, None -> 40.0F * fs;
+                case Shadow -> 45.0F * fs;
+                case Quad -> 50.0F * fs;
             };
 
             for (Setting<?> setting : group.settings) {
@@ -91,6 +92,7 @@ public class ModuleComponent extends Component {
 
     private void renderSettings() {
         this.l = this.getHeight();
+        float fs = GuiSettings.getInstance().fontScale.get().floatValue();
 
         for (int i = 0; i < this.module.settingGroups.size(); i++) {
             SettingGroup settingGroup = this.module.settingGroups.get(i);
@@ -104,7 +106,12 @@ public class ModuleComponent extends Component {
             }
 
             float categoryHeight = 0.0F;
-            float height = GuiSettings.getInstance().settingGroup.get().getHeight();
+
+            float height = switch (GuiSettings.getInstance().settingGroup.get()) {
+                case Line, None -> 40.0F * fs;
+                case Shadow -> 45.0F * fs;
+                case Quad -> 50.0F * fs;
+            };
 
             for (Setting<?> setting : settingGroup.settings) {
                 if (setting.isVisible()) {
@@ -130,7 +137,10 @@ public class ModuleComponent extends Component {
     }
 
     private void renderSettingGroup(SettingGroup group, boolean last) {
-        float categoryLength = 35.0F;
+        float fs = GuiSettings.getInstance().fontScale.get().floatValue();
+        float groupScale = fs * 0.9F;
+
+        float categoryLength = 35.0F * fs;
 
         for (Setting<?> setting : group.settings) {
             if (setting.isVisible()) {
@@ -141,30 +151,30 @@ public class ModuleComponent extends Component {
         switch (GuiSettings.getInstance().settingGroup.get()) {
             case Line:
                 this.fadeLine(
-                        this.x, this.y + this.l + 30.0F, this.x + this.width, this.y + this.l + 30.0F, GuiColorUtils.getSettingCategory(this.y + this.l + 30.0F)
+                        this.x, this.y + this.l + (30.0F * fs), this.x + this.width, this.y + this.l + (30.0F * fs), GuiColorUtils.getSettingCategory(this.y + this.l + 30.0F)
                 );
                 this.text(
                         group.name,
-                        1.8F,
+                        groupScale,
                         this.x + this.width / 2.0F,
-                        (int) (this.y + this.l + 20.0F),
+                        (int) (this.y + this.l + (20.0F * fs)),
                         true,
                         true,
                         GuiColorUtils.getSettingCategory(this.y + this.l + 30.0F)
                 );
                 break;
             case Shadow:
-                float bottomY = this.y + this.l + categoryLength - 10.0F;
+                float bottomY = this.y + this.l + categoryLength - (10.0F * fs);
                 if (!last && bottomY < ClickGui.height + 50.0F) {
-                    RenderUtils.topFade(this.stack, this.x - 5, this.y + this.l + categoryLength - 10.0F, this.width + 10.0F, 20.0F, ColorUtils.SHADOW80I);
+                    RenderUtils.topFade(this.stack, this.x - 5, this.y + this.l + categoryLength - (10.0F * fs), this.width + 10.0F, 20.0F, ColorUtils.SHADOW80I);
                 }
 
-                RenderUtils.bottomFade(this.stack, this.x - 5, this.y + this.l + 30.0F, this.width + 10.0F, 20.0F, ColorUtils.SHADOW80I);
+                RenderUtils.bottomFade(this.stack, this.x - 5, this.y + this.l + (30.0F * fs), this.width + 10.0F, 20.0F, ColorUtils.SHADOW80I);
                 this.text(
                         group.name,
-                        1.8F,
+                        groupScale,
                         this.x + this.width / 2.0F,
-                        (int) (this.y + this.l + 15.0F),
+                        (int) (this.y + this.l + (15.0F * fs)),
                         true,
                         true,
                         GuiColorUtils.getSettingCategory(this.y + this.l + 30.0F)
@@ -174,7 +184,7 @@ public class ModuleComponent extends Component {
                 RenderUtils.rounded(
                         this.stack,
                         this.x + 7,
-                        this.y + this.l + 12.0F,
+                        this.y + this.l + (12.0F * fs),
                         this.width - 14.0F,
                         categoryLength,
                         2.0F,
@@ -184,9 +194,9 @@ public class ModuleComponent extends Component {
                 );
                 this.text(
                         group.name,
-                        1.8F,
+                        groupScale,
                         this.x + this.width / 2.0F,
-                        (int) (this.y + this.l + 25.0F),
+                        (int) (this.y + this.l + (25.0F * fs)),
                         true,
                         true,
                         GuiColorUtils.getSettingCategory(this.y + this.l + 30.0F)
@@ -195,9 +205,9 @@ public class ModuleComponent extends Component {
             case None:
                 this.text(
                         group.name,
-                        1.8F,
+                        groupScale,
                         this.x + this.width / 2.0F,
-                        (int) (this.y + this.l + 20.0F),
+                        (int) (this.y + this.l + (20.0F * fs)),
                         true,
                         true,
                         GuiColorUtils.getSettingCategory(this.y + this.l + 30.0F)
@@ -208,25 +218,25 @@ public class ModuleComponent extends Component {
     private void renderModule(double toggleProgress) {
         float moduleNameOffset = this.getModuleNameOffset();
         GuiSettings guiSettings = GuiSettings.getInstance();
-        double nameY = this.getY();
+        float nameY = this.getY();
         if (nameY > -50.0 && nameY < ClickGui.height + 50.0F) {
             float prevAlpha = Renderer.getAlpha();
             if (toggleProgress > 0.0) {
                 Renderer.setAlpha((float) toggleProgress);
-                guiSettings.textColor.render(this.stack, this.module.getDisplayName(), this.getScale(), this.getX(), this.getY(), false, false);
+                guiSettings.textColor.render(this.stack, this.module.getDisplayName(), this.getScale(), this.getX(), nameY, false, true);
                 Renderer.setAlpha(prevAlpha);
             }
 
             if (1.0 - toggleProgress > 0.0) {
                 Renderer.setAlpha((float) (1.0 - toggleProgress));
-                BlackOut.FONT.text(this.stack, this.module.getDisplayName(), this.getScale(), this.getX(), this.getY(), disabledColor, false, false);
+                BlackOut.FONT.text(this.stack, this.module.getDisplayName(), this.getScale(), this.getX(), nameY, disabledColor, false, true);
                 Renderer.setAlpha(prevAlpha);
             }
         }
 
         if (this.module.toggleable()) {
             if (this.y + moduleNameOffset > -50.0F && nameY < ClickGui.height + 50.0F) {
-                this.module.bind.get().render(this.stack, this.x + this.width - 30.0F, this.y + moduleNameOffset, this.x + this.width, this.mx, this.my);
+                this.module.bind.get().render(this.stack, this.x + this.width - 30.0F, nameY, this.x + this.width, this.mx, this.my);
             }
         }
     }
@@ -310,25 +320,30 @@ public class ModuleComponent extends Component {
     }
 
     private float getY() {
-        return MathHelper.lerp(
-                MathHelper.lerp(
-                        this.openProgress, GuiSettings.getInstance().moduleYClosed.get().floatValue(), GuiSettings.getInstance().moduleY.get().floatValue()
-                ),
-                this.y + 8,
-                Math.max((float) (this.y + 8), this.y + this.getHeight() - 14.0F - this.getScale() * BlackOut.FONT.getHeight())
-        );
+        return this.y + (this.getHeight() / 2.0F);
     }
 
     private float getScale() {
-        return MathHelper.lerp(
-                this.openProgress, GuiSettings.getInstance().moduleScaleClosed.get().floatValue(), GuiSettings.getInstance().moduleScale.get().floatValue()
+        float fs = GuiSettings.getInstance().fontScale.get().floatValue();
+        float multiplier = MathHelper.lerp(
+                this.openProgress,
+                GuiSettings.getInstance().moduleScaleClosed.get().floatValue(),
+                GuiSettings.getInstance().moduleScale.get().floatValue()
         );
+        return Math.max(fs, fs * multiplier);
     }
 
     private float getHeight() {
-        return MathHelper.lerp(
-                this.openProgress, GuiSettings.getInstance().moduleHeightClosed.get().floatValue(), GuiSettings.getInstance().moduleHeight.get().floatValue()
+        float currentScale = this.getScale();
+        float minH = (BlackOut.FONT.getHeight() * currentScale) + (15.0F * currentScale);
+
+        float settingH = MathHelper.lerp(
+                this.openProgress,
+                GuiSettings.getInstance().moduleHeightClosed.get().floatValue(),
+                GuiSettings.getInstance().moduleHeight.get().floatValue()
         );
+
+        return Math.max(minH, settingH);
     }
 
     @Override

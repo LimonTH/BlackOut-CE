@@ -37,54 +37,37 @@ public class CategoryComponent extends Component {
         animation = (float) Math.min(1, animation + (targetAnim - animation) * 0.2);
         textOffset = (float) Math.min(10, textOffset + (targetOffset - textOffset) * 0.2);
 
-        float height = 35.0F;
-        float halfHeight = height / 2.0F;
+        float fontScale = GuiSettings.getInstance().fontScale.get().floatValue();
+        float categoryScale = fontScale * 2.0F;
+
+        float baseHeight = (BlackOut.FONT.getHeight() * categoryScale) + (15.0F * fontScale);
+        float halfHeight = baseHeight / 2.0F;
 
         if (animation > 0.01f) {
             int alpha = (int) (animation * GuiSettings.getInstance().selectorColor.get().alpha);
             int selCol = ColorUtils.withAlpha(GuiSettings.getInstance().selectorColor.get().getColor().getRGB(), alpha);
 
-            RenderUtils.rounded(this.stack, this.x + 5, this.y - halfHeight + 2, 170.0F, height - 4, 6.0F, 2.0F, selCol, ColorUtils.SHADOW100I);
+            RenderUtils.rounded(this.stack, this.x + 5, this.y - halfHeight + (2 * fontScale), 170.0F, baseHeight - (4 * fontScale), 6.0F, 2.0F, selCol, ColorUtils.SHADOW100I);
 
             if (GuiSettings.getInstance().selectorBar.get()) {
-                float currentBarHeight = (height - 12.0F) * animation;
+                float currentBarHeight = (baseHeight - (10.0F * fontScale)) * animation;
                 int barColor = GuiRenderUtils.getGuiColors(1.0F).getRGB();
 
                 float fogRadius = (float) GuiSettings.getInstance().selectorGlow.get() * 2.5F;
                 int fogColor = ColorUtils.withAlpha(barColor, (int) (animation * 60));
 
-                RenderUtils.rounded(
-                        this.stack,
-                        this.x + 5.5F,
-                        this.y - currentBarHeight / 2.0F,
-                        0.5F,
-                        currentBarHeight,
-                        1.0F,
-                        fogRadius,
-                        fogColor,
-                        fogColor
-                );
+                RenderUtils.rounded(this.stack, this.x + 5.5F, this.y - currentBarHeight / 2.0F, 0.5F, currentBarHeight, 1.0F, fogRadius, fogColor, fogColor);
 
                 int coreColor = ColorUtils.withAlpha(barColor, (int) (animation * 255));
-
-                RenderUtils.rounded(
-                        this.stack,
-                        this.x + 5,
-                        this.y - currentBarHeight / 2.0F,
-                        1.5F,
-                        currentBarHeight,
-                        1.0F,
-                        2.0F,
-                        coreColor,
-                        coreColor
-                );
+                RenderUtils.rounded(this.stack, this.x + 5, this.y - currentBarHeight / 2.0F, 1.5F, currentBarHeight, 1.0F, 2.0F, coreColor, coreColor);
             }
         }
 
         int textColor = ColorUtils.lerpColor(animation, GuiColorUtils.category, Color.WHITE).getRGB();
-        BlackOut.FONT.text(this.stack, this.category.name(), 2.0F, this.x + 15.0F + textOffset, this.y, textColor, false, true);
 
-        return 35.0F + (animation * 14.0F);
+        BlackOut.FONT.text(this.stack, this.category.name(), categoryScale, this.x + 15.0F + (textOffset * fontScale), this.y, textColor, false, true);
+
+        return baseHeight;
     }
 
     private boolean isActive() {
@@ -106,11 +89,13 @@ public class CategoryComponent extends Component {
     }
 
     private boolean isHovered() {
-        float currentHeight = 35.0F + (this.animation * 10.0F);
+        float fontScale = GuiSettings.getInstance().fontScale.get().floatValue();
+        float categoryScale = fontScale * 2.0F;
+        float baseHeight = (BlackOut.FONT.getHeight() * categoryScale) + (15.0F * fontScale);
 
         return this.mx > this.x && this.mx < this.x + 180.0F
-                && this.my > this.y - (currentHeight / 2.0F)
-                && this.my < this.y + (currentHeight / 2.0F);
+                && this.my > this.y - (baseHeight / 2.0F)
+                && this.my < this.y + (baseHeight / 2.0F);
     }
 
     public float getAnimation() {
