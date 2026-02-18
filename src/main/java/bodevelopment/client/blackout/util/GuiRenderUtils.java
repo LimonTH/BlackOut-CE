@@ -17,7 +17,6 @@ public class GuiRenderUtils {
     }
 
     public static void renderWaveText(MatrixStack stack, String text, float textScale, float x, float y, boolean xCenter, boolean yCenter, int clr1, int clr2) {
-        // В 1.21.1 время лучше брать из нативного метода RenderSystem
         float shaderTime = (float) (System.currentTimeMillis() - initTime) / 1000.0f;
 
         BlackOut.FONT.text(stack, text, textScale, x, y, Color.WHITE.getRGB(), xCenter, yCenter, Shaders.fontwave, new ShaderSetup(setup -> {
@@ -37,11 +36,9 @@ public class GuiRenderUtils {
         GuiSettings guiSettings = GuiSettings.getInstance();
 
         if (guiSettings.textColor.isWave()) {
-            // Получаем базовые цвета
             Color c1 = guiSettings.textColor.getTextColor().getColor();
             Color c2 = guiSettings.textColor.getWaveColor().getColor();
 
-            // Применяем темноту через ColorUtils, чтобы не плодить new Color вручную
             Color dc1 = ColorUtils.dark(c1, 1.0 / darkness);
             Color dc2 = ColorUtils.dark(c2, 1.0 / darkness);
 

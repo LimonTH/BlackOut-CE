@@ -20,17 +20,13 @@ public class HoleUtils {
     }
 
     public static Hole getHole(BlockPos pos, boolean s, boolean d, boolean q, int depth, boolean floor) {
-        // Проверка: пусто ли внутри ямы на нужную глубину
         if (!isAir(pos, depth, floor)) {
             return new Hole(pos, HoleType.NotHole);
         }
 
-        // Проверяем "стены" с Запада и Севера (начальная точка отсчета)
         if (isBlock(pos.west()) && isBlock(pos.north())) {
 
-            // Проверка на расширение по X
             boolean x = isAir(pos.east(), depth, floor) && isBlock(pos.east().north()) && isBlock(pos.east(2));
-            // Проверка на расширение по Z
             boolean z = isAir(pos.south(), depth, floor) && isBlock(pos.south().west()) && isBlock(pos.south(2));
 
             // 1x1
@@ -67,12 +63,10 @@ public class HoleUtils {
     static boolean isAir(BlockPos pos, int depth, boolean floor) {
         if (BlackOut.mc.world == null) return false;
 
-        // Проверка пола
         if (floor && !isBlock(pos.down())) return false;
 
         for (int i = 0; i < depth; i++) {
             BlockState state = BlackOut.mc.world.getBlockState(pos.up(i));
-            // Яма валидна, если внутри: Воздух, Трава, Огонь или блоки без коллизии (типа ниток)
             if (!state.isAir() && !state.isReplaceable() && !OLEPOSSUtils.replaceable(pos.up(i))) {
                 return false;
             }

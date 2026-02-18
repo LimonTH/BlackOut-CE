@@ -136,7 +136,6 @@ public class Trails extends Module {
                 RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
                 RenderSystem.lineWidth(Trails.getInstance().lineWidth.get().floatValue());
 
-                // Сбрасываем ModelViewMat в identity чтобы избежать двойной трансформации
                 RenderSystem.getModelViewStack().pushMatrix();
                 RenderSystem.getModelViewStack().identity();
                 RenderSystem.applyModelViewMatrix();
@@ -182,7 +181,6 @@ public class Trails extends Module {
 
                 BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
 
-                // Восстанавливаем ModelViewMat
                 RenderSystem.getModelViewStack().popMatrix();
                 RenderSystem.applyModelViewMatrix();
             }

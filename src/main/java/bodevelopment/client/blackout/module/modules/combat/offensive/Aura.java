@@ -347,7 +347,6 @@ public class Aura extends MoveUpdateModule {
                 }
                 case Vanilla -> timeSince >= this.minDelay.get()
                         && BlackOut.mc.player.lastAttackedTicks >= 20.0 / BlackOut.mc.player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED) * this.charge.get();
-                default -> true;
             };
         }
     }
@@ -396,12 +395,9 @@ public class Aura extends MoveUpdateModule {
         }
 
         if (this.chanceCheck()) {
-            // --- СИНХРОНИЗАЦИЯ КРИТОВ ---
-            // Вызываем логику критов прямо здесь. Пакеты движения уйдут ПЕРЕД пакетом атаки.
             if (Criticals.getInstance().enabled) {
                 Criticals.getInstance().doCritLogic();
             }
-            // ----------------------------
 
             boolean shouldCritSprint = this.critSprint.get()
                     && !BlackOut.mc.player.isOnGround()

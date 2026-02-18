@@ -26,7 +26,6 @@ import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
@@ -56,9 +55,9 @@ public class ClickGui extends Screen {
     public ClickGuiScreen openedScreen = null;
     private boolean upPressed = false;
     private boolean downPressed = false;
-    private long pressTime = 0L;         // Когда мы только нажали кнопку
-    private long lastCategoryChange = 0L; // Когда было последнее переключение
-    private boolean initialClickDone = false; // Чтобы первое нажатие срабатывало сразу
+    private long pressTime = 0L;
+    private long lastCategoryChange = 0L;
+    private boolean initialClickDone = false;
     private long openTime = 0L;
     private boolean moving = false;
     private boolean scaling = false;
@@ -130,30 +129,24 @@ public class ClickGui extends Screen {
 
         this.frameTime = delta / 20.0F;
 
-        // --- ЛОГИКА БЫСТРОГО ПЕРЕКЛЮЧЕНИЯ ---
         if (this.upPressed || this.downPressed) {
             long now = System.currentTimeMillis();
             long timeSincePress = now - pressTime;
 
-            // 1. ПЕРВОЕ НАЖАТИЕ (срабатывает мгновенно)
             if (!initialClickDone) {
                 changeCategory(this.downPressed);
                 lastCategoryChange = now;
                 initialClickDone = true;
             }
-            // 2. БЫСТРЫЙ ПЕРЕБОР (стартует после задержки)
-            else if (timeSincePress > 500L) { // 500ms - пауза "на подумать" перед стартом
-                // Скорость самого перебора (50ms - очень быстро)
+            else if (timeSincePress > 500L) {
                 if (now - lastCategoryChange > 50L) {
                     changeCategory(this.downPressed);
                     lastCategoryChange = now;
                 }
             }
         } else {
-            // Сброс, если кнопки отпущены
             initialClickDone = false;
         }
-        // ------------------------------------
 
         unscaled = scale;
 
@@ -182,7 +175,6 @@ public class ClickGui extends Screen {
         GuiAlphaFrameBuffer frameBuffer = Managers.FRAME_BUFFER.getGui();
         frameBuffer.start();
 
-        // Основные элементы
         RenderUtils.roundedShadow(this.stack, 0.0F, 0.0F, width, height, 10.0F, 30.0F, new Color(0, 0, 0, 100).getRGB());
         RenderUtils.roundedRight(this.stack, 200.0F, 0.0F, width - 200.0F, height, 10.0F, 0.0F, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
         RenderUtils.rightFade(this.stack, 180.0F, -10.0F, 55.0F, height + 20.0F, new Color(0, 0, 0, 100).getRGB());
@@ -194,7 +186,6 @@ public class ClickGui extends Screen {
         RenderUtils.rounded(this.stack, 0.0F, 0.0F, 200.0F, height, 10.0F, 2.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
         GuiRenderUtils.renderWaveText(this.stack, "Blackout", 4.5F, 100.0F, 50.0F, true, true, true);
 
-        // Уголок для изменения размера
         if (this.scaling) {
             this.scaleDelta = Math.min(this.scaleDelta + this.frameTime * 5.0F, 1.0F);
         } else {
@@ -209,7 +200,6 @@ public class ClickGui extends Screen {
         this.renderCategories(this.frameTime);
         frameBuffer.end(Math.min(popUpDelta * 1.5F, 1.0F));
 
-        // Кнопки и дополнительные экраны
         this.buttons.render(mouseX, mouseY, this.openTime, this.open ? 1.0F : popUpDelta);
         if (this.openedScreen != null) {
             this.openedScreen.onRender(this.frameTime, mouseX, mouseY);
@@ -400,7 +390,6 @@ public class ClickGui extends Screen {
         float startY = 110.0F - this.categoryScroll.get();
 
         GlStateManager._enableScissorTest();
-        // (Твой Scissor Box без изменений)
         float sx = BlackOut.mc.getWindow().getWidth() / 2.0F - width / 2.0F * unscaled + x;
         float y1 = BlackOut.mc.getWindow().getHeight() / 2.0F - (height / 2.0F + 10.0F) * unscaled - y;
         float y2 = BlackOut.mc.getWindow().getHeight() / 2.0F + (height / 2.0F - 100.0F) * unscaled - y;
@@ -419,20 +408,13 @@ public class ClickGui extends Screen {
             }
             prevParent = p;
 
-            // 1. Получаем реальную визуальную высоту кнопки сейчас (с учетом анимации)
-            float expansion = c.getAnimation() * 14.0F; // Тот же множитель, что в CategoryComponent
+            float expansion = c.getAnimation() * 14.0F;
             float baseHeight = 35.0F;
             float totalCurrentHeight = baseHeight + expansion;
 
-            // 2. РАСЧЕТ: Чтобы верх кнопки не двигался, а рос только низ:
-            // Мы передаем в onRender центр кнопки.
-            // Центр = (текущий оффсет) + (половина полной высоты).
             float drawY = startY + this.categoryOffset + (totalCurrentHeight / 2.0F);
-
             c.onRender(frameTime, 170.0F, 15, (int) drawY, this.mx, this.my);
 
-            // 3. Смещаем оффсет на ПОЛНУЮ высоту кнопки + зазор.
-            // Теперь следующая кнопка начнется строго ПОД текущей, включая всё её расширение.
             this.categoryOffset += totalCurrentHeight + 2.0F;
         }
 
@@ -504,7 +486,6 @@ public class ClickGui extends Screen {
                     this.offsetY = this.my;
                 }
             } else {
-                // Отпускание кнопок
                 if (button == 0) {
                     this.moving = false;
                     this.scaling = false;

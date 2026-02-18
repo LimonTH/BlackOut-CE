@@ -43,7 +43,6 @@ public class Sight extends Module {
         RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
         RenderSystem.lineWidth(this.lineWidth.get().floatValue());
 
-        // Сбрасываем ModelViewMat в identity
         RenderSystem.getModelViewStack().pushMatrix();
         RenderSystem.getModelViewStack().identity();
         RenderSystem.applyModelViewMatrix();
@@ -82,7 +81,6 @@ public class Sight extends Module {
                 );
         BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
 
-        // Восстанавливаем ModelViewMat
         RenderSystem.getModelViewStack().popMatrix();
         RenderSystem.applyModelViewMatrix();
 

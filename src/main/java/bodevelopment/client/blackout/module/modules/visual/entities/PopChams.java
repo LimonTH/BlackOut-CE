@@ -94,12 +94,10 @@ public class PopChams extends Module {
             WireframeRenderer.drawLines(positions, lines.red / 255.0F, lines.green / 255.0F, lines.blue / 255.0F, lines.alpha / 255.0F);
         }
 
-        // Восстанавливаем OpenGL state после рендера
         Render3DUtils.end();
     }
 
     private void drawPlayer(AbstractClientPlayerEntity player, Pop pop, double extraY, float scale) {
-        // Получаем рендерер. В мапе Minecraft они лежат как EntityRenderer<?>, поэтому нужен каст.
         EntityRenderer<? super AbstractClientPlayerEntity> entityRenderer = BlackOut.mc.getEntityRenderDispatcher().getRenderer(player);
 
         if (!(entityRenderer instanceof LivingEntityRenderer)) return;
@@ -171,10 +169,8 @@ public class PopChams extends Module {
 
         this.matrixStack.multiply(RotationAxis.POSITIVE_Y.rotation((float) Math.toRadians(h)));
 
-        // leaningPitch есть в BipedEntityModel, так что теперь это сработает
         model.leaningPitch = pop.leaningPitch;
 
-        // Устанавливаем углы и рендерим
         model.setAngles(pop.player, o, n, l, k, m);
         model.render(this.matrixStack, WireframeRenderer.provider.getBuffer(null), 69420, 0, ColorUtils.intColor(1, 1, 1, 1));
 

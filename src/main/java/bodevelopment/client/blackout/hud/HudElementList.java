@@ -65,7 +65,6 @@ public class HudElementList {
             return false;
         }
 
-        // Вычисляем экранные координаты начала списка
         float listX = (BlackOut.mc.getWindow().getWidth() - this.width) / 2.0F;
         float listY = BlackOut.mc.getWindow().getHeight() - this.height;
 
@@ -184,22 +183,13 @@ public class HudElementList {
         double sw = window.getWidth();
         double sh = window.getHeight();
 
-        float s = 1000.0F / (float) sw;
-
         double topContentY = (sh - this.height + 40.0F);
-
-        // В OpenGL Y идет снизу вверх, поэтому:
         double cutLineTop = sh - topContentY;
-
-        // Высота области контента в пикселях
         double contentHeightPx = (this.height - 40.0F);
-
-        // Нижняя граница
         double cutLineBottom = cutLineTop - contentHeightPx;
 
         GlStateManager._enableScissorTest();
 
-        // x = центр экрана - половина ширины
         int glX = (int) ((sw - this.width) / 2.0);
         int glY = (int) Math.max(0, cutLineBottom);
         int glW = (int) this.width;

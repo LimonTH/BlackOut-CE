@@ -146,7 +146,6 @@ public class HoleESP extends Module {
         RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
         RenderSystem.lineWidth(1.5F);
 
-        // Сбрасываем ModelViewMat в identity
         RenderSystem.getModelViewStack().pushMatrix();
         RenderSystem.getModelViewStack().identity();
         RenderSystem.applyModelViewMatrix();

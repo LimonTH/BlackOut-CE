@@ -123,23 +123,14 @@ public class Notifications extends SettingsModule {
                         stack, 0.0F, 0.0F, roundedWidth, roundedHeight, r, this.shadow.get() ? 3.0F : 0.0F, this.bgColor.get().getRGB(), this.shadowColor.get().getRGB()
                 );
 
-                // Возвращаем честный центр по Y (25 - r)
                 stack.translate(25.0F - r, 22.0F - r, 0.0F);
 
-                // 1. Иконка (Круг)
                 RenderUtils.circle(stack, 0.0F, 0.0F, 16.0F, c.getRGB());
 
-                // 2. Рендерим "i" - ФИКС ЗДЕСЬ
                 float iScale = 3.0F;
-                // Вместо того чтобы считать от высоты, просто берем 0 (центр круга)
-                // и немного опускаем, так как она у тебя "взлетала" выше текста.
-                // Если она все еще ВЫШЕ текста - увеличивай 0.5F до 1.0F или 1.5F
                 float iVisualY = 0.5F;
 
-                BlackOut.FONT.text(stack, "i", 3.0F, 0.0F, 0.5F, Color.WHITE, true, true);
-
-                // 3. Текст уведомления - ВОЗВРАЩАЕМ КАК БЫЛО
-                // Раз он был ровным при y=0.0 и yCenter=true, не трогаем его
+                BlackOut.FONT.text(stack, "i", iScale, 0.0F, iVisualY, Color.WHITE, true, true);
                 this.textColor.render(stack, n.text, 2.0F, 25.0F, 0.0F, false, true);
                 break;
             case Slim:

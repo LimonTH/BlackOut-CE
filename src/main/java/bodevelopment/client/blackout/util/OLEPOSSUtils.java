@@ -322,7 +322,7 @@ public class OLEPOSSUtils {
         ).isEmpty();
     }
 
-    // Доп метод для проверки установки факелов и прочего1
+    // Доп метод для проверки установки факелов и прочего
     public static boolean solid(BlockPos block) {
         if (BlackOut.mc.world == null) return false;
         BlockState state = BlackOut.mc.world.getBlockState(block);
@@ -373,10 +373,7 @@ public class OLEPOSSUtils {
     // Проверка качества блока (Safe vs Unsafe)
     public static boolean isSafe(BlockPos pos) {
         if (BlackOut.mc.world == null) return false;
-        // Получаем блок напрямую, это быстрее чем создавать новый объект BlockState
         float resistance = BlackOut.mc.world.getBlockState(pos).getBlock().getBlastResistance();
-        // 600.0f - это эндер-сундук (минимальный порог "безопасности")
-        // 1200.0f - это обсидиан
         return resistance >= 600.0f;
     }
 

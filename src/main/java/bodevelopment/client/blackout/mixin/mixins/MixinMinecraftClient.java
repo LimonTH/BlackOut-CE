@@ -140,9 +140,9 @@ public abstract class MixinMinecraftClient implements IMinecraftClient {
 
     @Override
     public void blackout_Client$setSession(
-            String username, UUID uuid, String accessToken, Optional<String> xuid, Optional<String> clientId, Session.AccountType accountType
+            String username, UUID uuid, String accessToken, String xuid, String clientId, Session.AccountType accountType
     ) {
-        this.session = new Session(username, uuid, accessToken, xuid, clientId, accountType);
+        this.session = new Session(username, uuid, accessToken, Optional.ofNullable(xuid), Optional.ofNullable(clientId), accountType);
     }
 
     @Override

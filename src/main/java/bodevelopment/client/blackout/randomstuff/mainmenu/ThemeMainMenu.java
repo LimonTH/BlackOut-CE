@@ -46,7 +46,6 @@ public class ThemeMainMenu implements MainMenuRenderer {
 
         for (int i = 0; i < 4; i++) {
             float currentX = startX + (i * 54.0F);
-            // Проверка наведения для иконок
             boolean hovered = RenderUtils.insideRounded(mx, my, currentX + 5.0F, startY + 5.0F, 22.0F, 22.0F, 10.0F);
 
             this.renderSingleIconButton(stack, i, hovered);
@@ -67,20 +66,16 @@ public class ThemeMainMenu implements MainMenuRenderer {
         ThemeSettings theme = ThemeSettings.getInstance();
         MainMenuSettings settings = MainMenuSettings.getInstance();
 
-        // Блюр
         RenderUtils.drawLoadedBlur("title", stack, renderer ->
                 renderer.rounded(5.0F, 5.0F, 22.0F, 22.0F, 10.0F, 10, 1.0F, 1.0F, 1.0F, 1.0F));
 
-        // Градиентная рамка в стиле темы
         RenderUtils.tenaRounded(stack, 5.0F, 5.0F, 22.0F, 22.0F, 10.0F, 1.5F,
                 theme.getMain(hovered ? 255 : 150), theme.getSecond(hovered ? 255 : 150), settings.speed.get().floatValue());
 
-        // Фон
         RenderUtils.rounded(stack, 5.0F, 5.0F, 22.0F, 22.0F, 10.0F, 3.0F,
                 new Color(0, 0, 0, hovered ? 70 : 35).getRGB(),
                 new Color(0, 0, 0, 225).getRGB());
 
-        // Иконка
         Renderer.setAlpha(alpha);
         t.quad(stack, 0.0F, 0.0F, t.getWidth() / 2.0F, t.getHeight() / 2.0F);
         Renderer.setAlpha(1.0F);
@@ -107,11 +102,9 @@ public class ThemeMainMenu implements MainMenuRenderer {
         RenderUtils.drawLoadedBlur("title", stack, renderer ->
                 renderer.rounded(0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10, 1.0F, 1.0F, 1.0F, 1.0F));
 
-        // Градиентная обводка темы
         RenderUtils.tenaRounded(stack, 0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10.0F,
                 theme.getMain(hovered ? 255 : 150), theme.getSecond(hovered ? 255 : 150), settings.speed.get().floatValue());
 
-        // Темная подложка
         RenderUtils.rounded(stack, 0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10.0F,
                 new Color(0, 0, 0, hovered ? 60 : 35).getRGB(),
                 new Color(0, 0, 0, 225).getRGB());
@@ -139,7 +132,6 @@ public class ThemeMainMenu implements MainMenuRenderer {
 
     @Override
     public int onClick(float mx, float my) {
-        // Кнопки по центру
         float yCenter = -100.0F;
         for (int i = 0; i < 5; i++) {
             if (RenderUtils.insideRounded(mx, my, -180.0, yCenter, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS))
@@ -147,7 +139,6 @@ public class ThemeMainMenu implements MainMenuRenderer {
             yCenter += 85.0F;
         }
 
-        // Иконки снизу
         float windowHeight = MainMenu.getInstance().getWindowHeight();
         float startX = -1000.0F + 14.0F;
         float startY = windowHeight / 2.0F - 44.0F;

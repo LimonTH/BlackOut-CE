@@ -4,6 +4,8 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Box;
@@ -11,33 +13,28 @@ import net.minecraft.util.math.ColorHelper;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 
 public class Render3DUtils {
     public static MatrixStack matrices = new MatrixStack();
 
-    // (1) Основной метод для ESP и прочих модулей
     public static void box(Box box, BlackOutColor sideColor, BlackOutColor lineColor, RenderShape shape) {
         box(box, sideColor == null ? 0 : sideColor.getRGB(), lineColor == null ? 0 : lineColor.getRGB(), shape);
     }
 
-    // (2) Подготовка статического стека (вычитаем камеру ЗДЕСЬ)
     public static void box(Box box, int sideColor, int lineColor, RenderShape shape) {
         Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
 
         matrices.push();
         setRotation(matrices);
 
-        // ВАЖНО: Вычитаем камеру только для глобального стека matrices
         matrices.translate(-camPos.x, -camPos.y, -camPos.z);
 
-        // Вызываем конечный метод отрисовки
         drawBoxRaw(matrices, box, sideColor, lineColor, shape);
 
         matrices.pop();
     }
 
-    // (3) Метод для Crystal Chams и других entity render pass
-    // Использует готовый MatrixStack из миксина, с полным управлением GL state
     public static void box(MatrixStack stack, Box box, BlackOutColor sideColor, BlackOutColor lineColor, RenderShape shape) {
         if (shape.sides && sideColor != null) {
             renderSides(stack, box, sideColor.getRGB());
@@ -47,8 +44,6 @@ public class Render3DUtils {
         }
     }
 
-    // (4) КОНЕЧНЫЙ МЕТОД - Чистая отрисовка без лишних трансляций
-    // renderSides и renderOutlines полностью управляют своим GL state
     public static void drawBoxRaw(MatrixStack stack, Box box, int sideColor, int lineColor, RenderShape shape) {
         drawBoxRaw(stack, box, sideColor, lineColor, shape, true);
     }
@@ -93,7 +88,6 @@ public class Render3DUtils {
 
         BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
 
-        // Восстанавливаем ModelViewMat
         RenderSystem.getModelViewStack().popMatrix();
         RenderSystem.applyModelViewMatrix();
 
@@ -159,7 +153,6 @@ public class Render3DUtils {
 
         BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
 
-        // Восстанавливаем ModelViewMat
         RenderSystem.getModelViewStack().popMatrix();
         RenderSystem.applyModelViewMatrix();
 
@@ -257,31 +250,27 @@ public class Render3DUtils {
     }
 
     public static void text(MatrixStack stack, String string, Vec3d pos, int color, float scale) {
-        Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
+        Camera camera = BlackOut.mc.gameRenderer.getCamera();
+        Vec3d camPos = camera.getPos();
+
         stack.push();
 
-        setRotation(stack);
-        stack.translate(pos.x - camPos.x, pos.y - camPos.y, pos.z - camPos.z);
-        stack.multiply(BlackOut.mc.gameRenderer.getCamera().getRotation());
-        stack.scale(-0.025F * scale, -0.025F * scale, 0.025F * scale);
+        Quaternionf invRotation = new Quaternionf(camera.getRotation()).conjugate();
+        stack.multiply(invRotation);
+
+        stack.translate((float)(pos.x - camPos.x), (float)(pos.y - camPos.y), (float)(pos.z - camPos.z));
+
+        stack.multiply(camera.getRotation());
+        stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0f));
+
+        stack.scale(-scale * 0.25F, -scale * 0.25F, scale * 0.25F);
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableDepthTest();
-
-        RenderSystem.getModelViewStack().pushMatrix();
-        RenderSystem.getModelViewStack().identity();
-
-        RenderSystem.getModelViewStack().mul(stack.peek().getPositionMatrix());
-
-        RenderSystem.applyModelViewMatrix();
-
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-        BlackOut.FONT.text(new MatrixStack(), string, BlackOut.FONT.getHeight(), 0.0F, 0.0F, color, true, true);
-
-        RenderSystem.getModelViewStack().popMatrix();
-        RenderSystem.applyModelViewMatrix();
+        BlackOut.FONT.text(stack, string, 1.0F, 0.0F, 0.0F, color, true, true);
 
         RenderSystem.enableDepthTest();
         RenderSystem.disableBlend();

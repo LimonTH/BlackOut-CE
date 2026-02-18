@@ -88,11 +88,11 @@ public class DamageUtils {
         for (ItemStack stack : equipment) {
             if (stack.isEmpty()) continue;
 
-            // Проверяем общую защиту (Protection)
+            // (Protection)
             int protLevel = EnchantmentHelper.getLevel(registry.getOrThrow(Enchantments.PROTECTION), stack);
             total += protLevel;
 
-            // Проверяем защиту от взрывов (Blast Protection)
+            // (Blast Protection)
             if (explosion) {
                 int blastLevel = EnchantmentHelper.getLevel(registry.getOrThrow(Enchantments.BLAST_PROTECTION), stack);
                 total += blastLevel * 2;
@@ -112,13 +112,11 @@ public class DamageUtils {
     public static double applyArmor(LivingEntity entity, double damage) {
         double armor = entity.getArmor();
 
-        // В 1.21.1 GENERIC_ARMOR_TOUGHNESS — это RegistryEntry.
-        // Метод getAttributeValue умеет принимать RegistryEntry напрямую.
         double toughness = entity.getAttributeValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS);
 
         double f = 2.0 + toughness / 4.0;
 
-        // Формула защиты: damage * (1 - clamp(armor - damage / f, armor * 0.2, 20) / 25)
+        // damage * (1 - clamp(armor - damage / f, armor * 0.2, 20) / 25)
         return damage * (1.0 - MathHelper.clamp(armor - damage / f, armor * 0.2, 20.0) / 25.0);
     }
 
@@ -226,23 +224,23 @@ public class DamageUtils {
             return 1.0;
         }
 
-        // 1. Базовый урон кулака
+        // (Base)
         double damage = 1.0;
 
-        // 2. Получаем урон из компонентов предмета (Attack Damage)
+        // (Attack Damage)
         net.minecraft.component.type.AttributeModifiersComponent modifiers = stack.getOrDefault(
                 net.minecraft.component.DataComponentTypes.ATTRIBUTE_MODIFIERS,
                 net.minecraft.component.type.AttributeModifiersComponent.DEFAULT
         );
 
-        // Считаем сумму всех модификаторов урона для основной руки
+        // (Other)
         for (net.minecraft.component.type.AttributeModifiersComponent.Entry entry : modifiers.modifiers()) {
             if (entry.attribute().equals(EntityAttributes.GENERIC_ATTACK_DAMAGE) && entry.slot().matches(net.minecraft.entity.EquipmentSlot.MAINHAND)) {
                 damage += entry.modifier().value();
             }
         }
 
-        // 3. Добавляем урон от остроты (Sharpness) через реестр
+        // (Sharpness)
         if (BlackOut.mc.world != null) {
             var registry = BlackOut.mc.world.getRegistryManager()
                     .getWrapperOrThrow(net.minecraft.registry.RegistryKeys.ENCHANTMENT);
@@ -253,7 +251,7 @@ public class DamageUtils {
             );
 
             if (sharpnessLevel > 0) {
-                // Формула 1.21.1: 0.5 * level + 0.5
+                // 0.5 * level + 0.5
                 damage += (sharpnessLevel * 0.5f + 0.5f);
             }
         }

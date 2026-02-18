@@ -23,7 +23,7 @@ public class ClickGuiManager extends Manager {
     public void onKey(KeyEvent event) {
         if (!event.pressed || BlackOut.mc.player == null || BlackOut.mc.world == null) return;
 
-        // Открытие на Right Shift (344)
+        // Right Shift
         if (event.key == 344) {
             if (BlackOut.mc.currentScreen == null || BlackOut.mc.currentScreen instanceof ClickGui) {
                 this.toggle();

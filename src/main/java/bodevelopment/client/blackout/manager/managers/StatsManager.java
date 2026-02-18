@@ -63,7 +63,7 @@ public class StatsManager extends Manager {
 
     @Event
     public void onReceive(PacketEvent.Receive.Pre event) {
-        // 1. Попы (Totem Pops)
+        // (Totem Pops)
         if (event.packet instanceof EntityStatusS2CPacket packet && packet.getStatus() == 35) {
             if (packet.getEntity(BlackOut.mc.world) instanceof AbstractClientPlayerEntity player) {
                 TrackerData data = this.getStats(player);
@@ -71,7 +71,7 @@ public class StatsManager extends Manager {
             }
         }
 
-        // 2. Еда (Burp sound)
+        // (Burp sound)
         if (event.packet instanceof PlaySoundS2CPacket packet) {
             if (packet.getSound().value().equals(SoundEvents.ENTITY_PLAYER_BURP)) {
                 AbstractClientPlayerEntity closest = this.getClosest(
@@ -82,7 +82,7 @@ public class StatsManager extends Manager {
             }
         }
 
-        // 3. Броня и починка (Mending Tracker)
+        // (Mending Tracker)
         if (event.packet instanceof EntityEquipmentUpdateS2CPacket packet) {
             if (BlackOut.mc.world.getEntityById(packet.getEntityId()) instanceof AbstractClientPlayerEntity player) {
                 packet.getEquipmentList().forEach(pair -> {

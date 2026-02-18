@@ -75,14 +75,12 @@ public abstract class MixinChatHud implements IChatHud {
         if (antiSpam.enabled) {
             AtomicBoolean found = new AtomicBoolean(false);
             this.messages.removeIf(line -> {
-                // Используем интерфейс для получения текста
                 String oldText = ((IChatHudLine) (Object) line).blackout_Client$getMessage().getString();
 
                 if (antiSpam.isSimilar(oldText, message.getString())) {
                     highest.setValue(Math.max(((IChatHudLine) (Object) line).blackout_Client$getSpam(), highest.getValue()));
                     found.set(true);
 
-                    // Удаляем визуальные строки
                     this.visibleMessages.removeIf(visible ->
                             ((IVisible) (Object) visible).blackout_Client$messageEquals(line)
                     );
@@ -92,7 +90,6 @@ public abstract class MixinChatHud implements IChatHud {
             });
 
             if (found.get()) {
-                // Создаем новую строку с (x)
                 this.currentLine = new ChatHudLine(
                         ticks,
                         message.copy().append(Formatting.AQUA + " (" + (highest.getValue() + 1) + ")"),
@@ -102,7 +99,6 @@ public abstract class MixinChatHud implements IChatHud {
             }
         }
 
-        // Сохраняем в интерфейс
         IChatHudLine current = (IChatHudLine) (Object) this.currentLine;
         current.blackout_Client$setSpam(highest.getValue() + 1);
         current.blackout_Client$setMessage(message);

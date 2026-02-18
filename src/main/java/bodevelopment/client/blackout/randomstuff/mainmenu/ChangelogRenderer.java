@@ -59,7 +59,6 @@ public class ChangelogRenderer {
         float width = Math.max(longest, 350.0F);
         float height = BlackOut.BOLD_FONT.getHeight() + Math.min(changelog.size(), maxLines) * fontHeight + 50.0F;
 
-        // Логика перетаскивания мышкой
         boolean mousePressed = GLFW.glfwGetMouseButton(BlackOut.mc.getWindow().getHandle(), 0) == 1;
         if (this.dragging) {
             if (mousePressed) {
@@ -81,23 +80,18 @@ public class ChangelogRenderer {
         stack.push();
         stack.translate(this.changelogX, this.changelogY, 0.0F);
 
-        // 1. Блюр и тень
         RenderUtils.roundedShadow(stack, 0.0F, 0.0F, width, height, 15.0F, 15.0F, new Color(0, 0, 0, 120).getRGB());
         RenderUtils.drawLoadedBlur("title", stack, renderer -> renderer.rounded(0.0F, 0.0F, width, height, 15.0F, 10, 1.0F, 1.0F, 1.0F, 1.0F));
 
-        // 2. Основной фон
         RenderUtils.rounded(stack, 0.0F, 0.0F, width, height, 15.0F, 2.0F, new Color(20, 20, 20, 160).getRGB(), new Color(0, 0, 0, 200).getRGB());
 
-        // 3. Цветная рамка (только если передан themeMode)
         if (themeMode && mainColor != null && secondColor != null) {
             RenderUtils.tenaRounded(stack, 0.0F, 0.0F, width, height, 15.0F, 1.5F, mainColor.getRGB(), secondColor.getRGB(), speed);
         }
 
-        // 4. Текст заголовка
         BlackOut.BOLD_FONT.text(stack, "Update Notes", 2.2F, width / 2.0F, 12.0F, Color.WHITE.getRGB(), true, false);
         RenderUtils.rounded(stack, 15.0F, 38.0F, width - 30.0F, 1.5F, 1.0F, 0.0F, new Color(255, 255, 255, 50).getRGB(), 0);
 
-        // 5. Отрисовка строк изменений
         for (int j = 0; j < Math.min(changelog.size(), maxLines); j++) {
             BlackOut.FONT.text(stack, "• " + changelog.get(j), 1.5F, 18.0F, 50.0F + (j * fontHeight), new Color(225, 225, 225).getRGB(), false, false);
         }

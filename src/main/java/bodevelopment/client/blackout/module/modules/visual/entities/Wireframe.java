@@ -51,7 +51,6 @@ public class Wireframe extends Module {
     @Event
     public void onRender(RenderEvent.World.Post event) {
         if (BlackOut.mc.world != null && BlackOut.mc.player != null) {
-            // WireframeRenderer.renderModel() сам управляет OpenGL state через Render3DUtils.start()/end()
             this.player
                     .forEach(
                             entity -> WireframeRenderer.renderModel(entity, this.lineColor.get(), this.sideColor.get(), this.renderShape.get(), BlackOut.mc.getRenderTickCounter().getTickDelta(true))

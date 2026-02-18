@@ -8,10 +8,8 @@ import com.google.gson.JsonObject;
 import net.minecraft.client.session.Session;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Uuids;
-import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
-import java.util.Optional;
 import java.util.UUID;
 
 public class Account {
@@ -23,8 +21,8 @@ public class Account {
     private String script;
     private UUID uuid;
     private String accessToken;
-    private Optional<String> xuid;
-    private Optional<String> clientId;
+    private String xuid;
+    private String clientId;
     private Session.AccountType accountType;
 
     public Account(String script) {
@@ -34,8 +32,8 @@ public class Account {
 
         this.uuid = Uuids.getOfflinePlayerUuid(this.name);
         this.accessToken = "";
-        this.xuid = Optional.empty();
-        this.clientId = Optional.empty();
+        this.xuid = null;
+        this.clientId = null;
 
         this.accountType = Session.AccountType.LEGACY;
     }
@@ -45,43 +43,32 @@ public class Account {
         this.script = session.getUsername();
         this.uuid = session.getUuidOrNull();
         this.accessToken = session.getAccessToken();
-        this.xuid = session.getXuid();
-        this.clientId = session.getClientId();
+        this.xuid = session.getXuid().orElse(null);
+        this.clientId = session.getClientId().orElse(null);
         this.accountType = session.getAccountType();
         this.progress = 1.0F;
     }
 
     public Account(JsonObject object) {
-        if (object.has("name")) {
-            this.name = object.get("name").getAsString();
-        }
+        if (object.has("name")) this.name = object.get("name").getAsString();
+        if (object.has("script")) this.script = object.get("script").getAsString();
 
-        if (object.has("script")) {
-            this.script = object.get("script").getAsString();
-        }
-
-        if (object.has("uuid") && object.get("uuid") instanceof JsonObject uuidObject && uuidObject.has("mostSigBits") && uuidObject.has("leastSigBits")) {
+        if (object.has("uuid") && object.get("uuid").isJsonObject()) {
+            JsonObject uuidObject = object.getAsJsonObject("uuid");
             this.uuid = new UUID(uuidObject.get("mostSigBits").getAsLong(), uuidObject.get("leastSigBits").getAsLong());
         }
 
-        if (object.has("accessToken")) {
-            this.accessToken = object.get("accessToken").getAsString();
-        }
+        if (object.has("accessToken")) this.accessToken = object.get("accessToken").getAsString();
 
-        if (object.has("xuid")) {
-            this.xuid = this.readOptional(object.get("xuid").getAsString());
-        }
-
-        if (object.has("clientId")) {
-            this.clientId = this.readOptional(object.get("clientId").getAsString());
-        }
+        this.xuid = getStringOrNull(object, "xuid");
+        this.clientId = getStringOrNull(object, "clientId");
 
         if (object.has("accountType")) {
             this.accountType = this.getAccountType(object.get("accountType").getAsString());
         }
     }
 
-    public Account(String name, String script, UUID uuid, String accessToken, Optional<String> xuid, Optional<String> clientId, Session.AccountType accountType) {
+    public Account(String name, String script, UUID uuid, String accessToken, String xuid, String clientId, Session.AccountType accountType) {
         this.script = (script == null || script.isEmpty()) ? "NewAccount" : script;
         String parsedName = AccountScriptReader.nameFromScript(this.script);
         this.name = (parsedName == null || parsedName.isEmpty() || parsedName.equals("null")) ? this.script : parsedName;
@@ -90,6 +77,13 @@ public class Account {
         this.xuid = xuid;
         this.clientId = clientId;
         this.accountType = accountType;
+    }
+
+    private String getStringOrNull(JsonObject obj, String key) {
+        if (obj.has(key) && !obj.get(key).isJsonNull()) {
+            return obj.get(key).getAsString();
+        }
+        return null;
     }
 
     public String getName() {
@@ -102,29 +96,24 @@ public class Account {
 
     public AccountClickResult onClick(float clickX, float clickY, int button, boolean pressed) {
         if (!pressed) return AccountClickResult.Nothing;
-
-        // Просто проверяем, входят ли координаты клика в границы карточки
         if (clickX >= 0 && clickX <= WIDTH && clickY >= 0 && clickY <= HEIGHT) {
             return switch (button) {
-                case 0 -> AccountClickResult.Select;  // ЛКМ
-                case 1 -> AccountClickResult.Refresh; // ПКМ
-                case 2 -> AccountClickResult.Delete;  // Колесико
+                case 0 -> AccountClickResult.Select;
+                case 1 -> AccountClickResult.Refresh;
+                case 2 -> AccountClickResult.Delete;
                 default -> AccountClickResult.Nothing;
             };
         }
-
         return AccountClickResult.Nothing;
     }
 
     public void render(MatrixStack stack, float x, float y, float delta) {
         stack.push();
         stack.translate(x, y, 0.0F);
-
         this.updateProgress(delta * 2.0F);
 
         Color nameColor = this.equals(Managers.ALT.selected) ? new Color(130, 255, 130) : Color.WHITE;
 
-        // 1. Блюр и Фон (радиус 25)
         RenderUtils.drawLoadedBlur("title", stack, renderer ->
                 renderer.rounded(0.0F, 0.0F, WIDTH, HEIGHT, 25.0F, 10, 1.0F, 1.0F, 1.0F, 1.0F));
 
@@ -138,21 +127,14 @@ public class Account {
                 new Color(20, 20, 20, 160).getRGB(), new Color(10, 10, 10, 225).getRGB());
 
         if (this.pulse > 0.0F) {
-            int pulseAlpha = (int) (this.pulse * 100); // Прозрачность вспышки
+            int pulseAlpha = (int) (this.pulse * 100);
             RenderUtils.rounded(stack, 0.0F, 0.0F, WIDTH, HEIGHT, 25.0F, 5.0F,
                     new Color(255, 255, 255, pulseAlpha).getRGB(),
                     new Color(255, 255, 255, 0).getRGB());
         }
 
-        // 2. ОПТИМАЛЬНО КРУПНЫЙ ТЕКСТ
         float textOffset = 28.0F;
-
-        // НИК (Размер 3.0F — золотая середина)
         BlackOut.BOLD_FONT.text(stack, this.name, 3.0F, textOffset, 8.0F, nameColor, false, false);
-
-        // ПОДЗАГОЛОВОК (Размер 1.8F)
-        String typeTag;
-        Color typeColor;
 
         float subY = 40.0F;
         if (!this.script.equals(this.name)) {
@@ -160,12 +142,12 @@ public class Account {
             BlackOut.FONT.text(stack, "Script: ", 1.8F, textOffset, subY, new Color(160, 160, 160), false, false);
             BlackOut.FONT.text(stack, this.script, 1.8F, textOffset + labelWidth, subY, Color.WHITE, false, false);
         } else {
-            typeTag = switch (this.accountType) {
+            String typeTag = switch (this.accountType) {
                 case MSA -> "Microsoft";
                 case MOJANG -> "Mojang";
                 case LEGACY -> "Cracked";
             };
-            typeColor = switch (this.accountType) {
+            Color typeColor = switch (this.accountType) {
                 case MSA -> new Color(0, 200, 255);
                 case MOJANG -> new Color(255, 160, 0);
                 default -> new Color(120, 120, 120);
@@ -173,7 +155,6 @@ public class Account {
             BlackOut.FONT.text(stack, typeTag, 1.8F, textOffset, subY, typeColor, false, false);
         }
 
-        // UUID (Размер 1.3F)
         String shortUuid = "#" + this.uuid.toString().substring(0, 8).toUpperCase();
         BlackOut.FONT.text(stack, shortUuid, 1.3F, WIDTH - 110.0F, HEIGHT - 22.0F, new Color(255, 255, 255, 35), false, false);
 
@@ -198,8 +179,8 @@ public class Account {
 
     public void setAccess(Session session) {
         this.accessToken = session.getAccessToken();
-        this.xuid = session.getXuid();
-        this.clientId = session.getClientId();
+        this.xuid = session.getXuid().orElse(null);
+        this.clientId = session.getClientId().orElse(null);
         Managers.ALT.save();
     }
 
@@ -220,43 +201,26 @@ public class Account {
     }
 
     public JsonObject asJson() {
-        if (this.name == null) {
-            if (this.script == null) {
-                return null;
-            }
-
+        if (this.name == null && this.script != null) {
             this.name = AccountScriptReader.nameFromScript(this.script);
         }
+        if (this.name == null) return null;
 
         JsonObject object = new JsonObject();
-        object.addProperty("script", this.nullable(this.script));
+        object.addProperty("script", this.script);
         object.addProperty("name", this.name);
         object.addProperty("accessToken", this.accessToken);
+
         JsonObject uuidObject = new JsonObject();
         uuidObject.addProperty("mostSigBits", this.uuid.getMostSignificantBits());
         uuidObject.addProperty("leastSigBits", this.uuid.getLeastSignificantBits());
         object.add("uuid", uuidObject);
-        object.addProperty("xuid", this.getFromOptional(this.xuid));
-        object.addProperty("clientId", this.getFromOptional(this.clientId));
-        object.addProperty("accountType", this.nullable(this.accountType.getName()));
+
+        object.addProperty("xuid", this.xuid);
+        object.addProperty("clientId", this.clientId);
+        object.addProperty("accountType", this.accountType.getName());
+
         return object;
-    }
-
-    private String nullable(@Nullable String string) {
-        return string == null ? "<NULL>" : string;
-    }
-
-    private String getFromOptional(Optional<String> optional) {
-        try {
-            return optional.orElse("<EMPTY>");
-        } catch (Exception e) {
-            System.out.println(this.name);
-            throw new RuntimeException(e);
-        }
-    }
-
-    private Optional<String> readOptional(String string) {
-        return string.equals("<EMPTY>") ? Optional.empty() : Optional.of(string);
     }
 
     public enum AccountClickResult {

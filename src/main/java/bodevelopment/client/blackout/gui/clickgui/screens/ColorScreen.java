@@ -53,10 +53,8 @@ public class ColorScreen extends ClickGuiScreen {
     public void render() {
         RenderUtils.rounded(this.stack, 0, 0, width, height, 10, 10, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
 
-        // 2. Рисуем сайдбара (левая часть)
         this.renderSidebarContent();
 
-        float currentScale = RenderUtils.getScale();
         int screenWidth = BlackOut.mc.getWindow().getWidth();
         int screenHeight = BlackOut.mc.getWindow().getHeight();
 
@@ -95,7 +93,6 @@ public class ColorScreen extends ClickGuiScreen {
     }
 
     private void renderSidebarContent() {
-        // Темная полоса разделения
         RenderUtils.leftFade(this.stack, 175.0F, 0.0F, 10.0F, height, new Color(0, 0, 0, 80).getRGB());
 
         int bgClr = new Color(15, 15, 15, 255).getRGB();
@@ -103,13 +100,11 @@ public class ColorScreen extends ClickGuiScreen {
 
         for (int i = 0; i < 3; i++) {
             float yPos = 20.0F + (i * 40.0F);
-            // Подсветка выбранного режима
             int currentBg = (this.colorSetting.theme == i) ? new Color(40, 40, 40).getRGB() : bgClr;
 
             RenderUtils.rounded(this.stack, 10, yPos, 155, 30, 4, 0, currentBg, 0);
             BlackOut.FONT.text(this.stack, labels[i], 1.8F, 20, yPos + 15, Color.WHITE, false, true);
 
-            // Маленький квадрат предпросмотра цвета
             int preview = (i == 0) ? colorSetting.actual.getRGB() :
                     (i == 1 ? ThemeSettings.getInstance().getMain() : ThemeSettings.getInstance().getSecond());
             RenderUtils.rounded(this.stack, 130, yPos + 8, 25, 14, 3, 0, preview, 0);

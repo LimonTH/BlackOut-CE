@@ -50,7 +50,6 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
     public FakePlayerEntity(String name, List<PlayerPos> recordedPositions) {
         super(BlackOut.mc.world, new GameProfile(Uuids.getOfflinePlayerUuid(name), name));
 
-        // Сначала загружаем данные
         this.positions.addAll(recordedPositions);
         this.progress = 0;
 
@@ -267,7 +266,6 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
     }
 
     public ItemStack getStack(World world, ItemStack stack) {
-        // В 1.21.1 проверяем наличие компонента еды
         FoodComponent food = stack.get(DataComponentTypes.FOOD);
 
         if (food != null) {
@@ -308,10 +306,8 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
     private void applyFoodEffects(ItemStack stack) {
         FoodComponent food = stack.get(DataComponentTypes.FOOD);
         if (food != null) {
-            // Проходим по списку эффектов из компонента
             for (FoodComponent.StatusEffectEntry entry : food.effects()) {
                 if (this.random.nextFloat() < entry.probability()) {
-                    // В 1.21.1 создаем копию эффекта
                     this.addStatusEffect(new StatusEffectInstance(entry.effect()));
                 }
             }
@@ -326,26 +322,22 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
 
     @Override
     public void tickMovement() {
-        // Запоминаем позицию до обновления
         double dx = this.getX();
         double dz = this.getZ();
 
         this.tickRecord();
 
-        // Считаем пройденное расстояние для анимации
         dx = this.getX() - dx;
         dz = this.getZ() - dz;
         float distanceMoved = (float) Math.sqrt(dx * dx + dz * dz);
 
         this.prevStrideDistance = this.strideDistance;
 
-        // ОБНОВЛЕНИЕ НОГ: теперь передаем реальную скорость, а не false
         this.updateLimbs(distanceMoved > 0.01F);
         this.limbAnimator.updateLimbs(distanceMoved * 4.0F, 0.4F);
 
         this.tickHandSwing();
 
-        // Сглаживание походки
         float f = (this.isOnGround() && !this.isDead()) ? (float) Math.min(0.1, distanceMoved) : 0.0F;
         this.strideDistance = this.strideDistance + (f - this.strideDistance) * 0.4F;
 
@@ -369,7 +361,7 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
         if (this.positions.isEmpty() || this.isDead()) return;
 
         if (this.progress >= this.positions.size()) {
-            this.progress = 0; // Зациклим движение, чтобы он бегал кругами
+            this.progress = 0;
         }
 
         if (this.progress >= 0) {

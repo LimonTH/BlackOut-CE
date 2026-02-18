@@ -6,10 +6,7 @@ import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
-import bodevelopment.client.blackout.util.ColorUtils;
-import bodevelopment.client.blackout.util.FileUtils;
-import bodevelopment.client.blackout.util.GuiColorUtils;
-import bodevelopment.client.blackout.util.SelectedComponent;
+import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import net.minecraft.util.math.MathHelper;
 import org.apache.commons.lang3.mutable.MutableDouble;
@@ -17,8 +14,9 @@ import org.apache.commons.lang3.mutable.MutableDouble;
 import java.awt.*;
 import java.io.*;
 import java.net.URI;
-import java.net.URL;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -66,16 +64,9 @@ public class ConfigScreen extends ClickGuiScreen {
         }
 
         this.updateDelete();
-
-        // 1. Фон окна (уже внутри трансформации матрицы)
-        // Рисуем основной фон ConfigScreen
         RenderUtils.rounded(this.stack, 0, 0, width, height - 40.0F, 10, 10, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
 
-        // 2. Просто вызываем отрисовку списка
-        // Scissor уже включен в ClickGuiScreen.onRender() вокруг этого метода!
         this.renderConfigs();
-
-        // 3. Элементы, которые должны быть поверх списка, но тоже внутри обрезки
         this.renderText();
         this.renderBottomBG();
         this.renderBottom();
@@ -91,24 +82,20 @@ public class ConfigScreen extends ClickGuiScreen {
             } else {
                 double offsetY = this.my + this.scroll.get() - 50.0;
 
-                // Кнопки локальных конфигов
                 for (Entry<String, MutableDouble> config : this.configs.entrySet()) {
                     double offsetX = this.mx - 215.0;
 
-                    // Дублировать
                     if (offsetX * offsetX + offsetY * offsetY < 200.0) {
                         this.duplicate(config.getKey());
                         return;
                     }
 
                     offsetX -= 35.0;
-                    // Удалить
                     if (offsetX * offsetX + offsetY * offsetY < 200.0) {
                         this.delete(config.getKey());
                         return;
                     }
 
-                    // Кнопки слотов (Combat, Movement и т.д.)
                     for (int i = 0; i < 8; i++) {
                         offsetX -= 65.0;
                         if (offsetX * offsetX + offsetY * offsetY < 1000.0) {
@@ -119,7 +106,6 @@ public class ConfigScreen extends ClickGuiScreen {
                     offsetY -= 70.0;
                 }
 
-                // Кнопки Добавить / Облако
                 double offsetXx = this.mx - this.width / 2.0F;
                 double dy = offsetY * offsetY;
                 if (offsetXx * offsetXx + dy <= 2500.0) { // Радиус 50
@@ -129,7 +115,6 @@ public class ConfigScreen extends ClickGuiScreen {
 
                 offsetY -= 70.0;
 
-                // Облачные конфиги
                 for (CloudConfig config : this.cloudConfigs) {
                     if (Math.abs(offsetY) < 35.0 && config.content().isDone()) {
                         this.downloadConfig(config);
@@ -174,7 +159,7 @@ public class ConfigScreen extends ClickGuiScreen {
     }
 
     private void addConfig(String name) {
-        if (!name.isEmpty() && !name.isBlank() && !name.contains("/") && !name.contains("\\")) {
+        if (!name.isBlank() && !name.contains("/") && !name.contains("\\")) {
             FileUtils.addFile("configs", name + ".json");
             this.updateConfigs();
         }
@@ -187,13 +172,13 @@ public class ConfigScreen extends ClickGuiScreen {
                 FileUtils.addFile(file);
                 FileUtils.write(file, config.content().get());
             } catch (Exception e) {
-                e.printStackTrace();
+                BOLogger.error("Error downloading configs from the cloud", e);
             }
         }
     }
 
     private void requestCloudConfigs(String repo) {
-        if (repo.isEmpty() || !repo.contains("/")) return;
+        if (!repo.contains("/")) return;
         this.cloudConfigs.clear();
         CompletableFuture.runAsync(() -> {
             try (InputStream stream = URI.create("https://raw.githubusercontent.com/" + repo + "/main/configs.txt").toURL().openStream();
@@ -201,7 +186,7 @@ public class ConfigScreen extends ClickGuiScreen {
                 reader.lines().forEach(line -> readLine(repo, line));
                 for (CloudConfig config : this.cloudConfigs) readConfig(config);
             } catch (IOException e) {
-                e.printStackTrace();
+                BOLogger.error("Error requesting configs from the cloud", e);
             }
         });
     }
@@ -318,7 +303,6 @@ public class ConfigScreen extends ClickGuiScreen {
         for (int i = 0; i < 8; i++) {
             this.stack.translate(65.0F, 0.0F, 0.0F);
 
-            // Иконка
             icons[i].quad(this.stack, -20.0F, -30.0F, 40.0F, 40.0F);
 
             BlackOut.FONT.text(this.stack, iconNames[i], 1.6F, 0.0F, 18.0F, Color.WHITE, true, true);
@@ -387,15 +371,20 @@ public class ConfigScreen extends ClickGuiScreen {
 
     private void updateConfigs() {
         this.prevUpdate = System.currentTimeMillis();
-        try {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(FileUtils.getFile("configs").toPath(), p -> p.toString().endsWith(".json"))) {
             List<String> foundNames = new ArrayList<>();
-            Files.newDirectoryStream(FileUtils.getFile("configs").toPath(), p -> p.toString().endsWith(".json")).forEach(p -> {
+
+            stream.forEach(p -> {
                 String name = p.getFileName().toString().replace(".json", "");
                 foundNames.add(name);
-                if (!configs.containsKey(name)) configs.put(name, new MutableDouble(0.0));
+                if (!configs.containsKey(name)) {
+                    configs.put(name, new MutableDouble(0.0));
+                }
             });
+
             configs.keySet().removeIf(k -> !foundNames.contains(k));
-        } catch (IOException ignored) {
+        } catch (IOException e) {
+            BOLogger.error("Error updating configs", e);
         }
     }
 

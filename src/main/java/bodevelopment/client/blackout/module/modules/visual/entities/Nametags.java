@@ -285,7 +285,6 @@ public class Nametags extends Module {
                         String name = EnchantmentNames.getName(enchantment, this.shortNames.get());
                         String text = (level > 1) ? name + " " + level : name;
 
-                        // Используем y[0] для расчета позиции
                         float cy = (this.enchantsAbove.get() ? -y[0] - 1 : y[0])
                                 * BlackOut.FONT.getHeight()
                                 * this.enchantScale.get().floatValue()
@@ -302,7 +301,6 @@ public class Nametags extends Module {
                                 false
                         );
 
-                        // Инкрементируем ТОЛЬКО если отрисовали текст
                         y[0]++;
                     }
                 });
