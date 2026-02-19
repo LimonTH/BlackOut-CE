@@ -70,9 +70,14 @@ public class Account {
 
     public Account(String name, String script, UUID uuid, String accessToken, String xuid, String clientId, Session.AccountType accountType) {
         this.script = (script == null || script.isEmpty()) ? "NewAccount" : script;
-        String parsedName = AccountScriptReader.nameFromScript(this.script);
-        this.name = (parsedName == null || parsedName.isEmpty() || parsedName.equals("null")) ? this.script : parsedName;
-        this.uuid = uuid;
+        if (name != null && !name.isEmpty() && !name.equals("null")) {
+            this.name = name;
+        } else {
+            String parsedName = AccountScriptReader.nameFromScript(this.script);
+            this.name = (parsedName == null || parsedName.isEmpty() || parsedName.equals("null")) ? this.script : parsedName;
+        }
+        this.uuid = (uuid != null) ? uuid : Uuids.getOfflinePlayerUuid(this.name);
+
         this.accessToken = accessToken;
         this.xuid = xuid;
         this.clientId = clientId;
