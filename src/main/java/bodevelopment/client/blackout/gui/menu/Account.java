@@ -112,6 +112,7 @@ public class Account {
         stack.translate(x, y, 0.0F);
         this.updateProgress(delta * 2.0F);
 
+        String displayName = (this.name == null) ? "Unknown" : this.name;
         Color nameColor = this.equals(Managers.ALT.selected) ? new Color(130, 255, 130) : Color.WHITE;
 
         RenderUtils.drawLoadedBlur("title", stack, renderer ->
@@ -134,28 +135,41 @@ public class Account {
         }
 
         float textOffset = 28.0F;
-        BlackOut.BOLD_FONT.text(stack, this.name, 3.0F, textOffset, 8.0F, nameColor, false, false);
+        BlackOut.BOLD_FONT.text(stack, displayName, 3.0F, textOffset, 8.0F, nameColor, false, false);
 
         float subY = 40.0F;
-        if (!this.script.equals(this.name)) {
+
+        if (this.script != null && !this.script.equals(displayName)) {
             float labelWidth = BlackOut.FONT.getWidth("Script: ") * 1.8F;
             BlackOut.FONT.text(stack, "Script: ", 1.8F, textOffset, subY, new Color(160, 160, 160), false, false);
             BlackOut.FONT.text(stack, this.script, 1.8F, textOffset + labelWidth, subY, Color.WHITE, false, false);
         } else {
-            String typeTag = switch (this.accountType) {
-                case MSA -> "Microsoft";
-                case MOJANG -> "Mojang";
-                case LEGACY -> "Cracked";
-            };
-            Color typeColor = switch (this.accountType) {
-                case MSA -> new Color(0, 200, 255);
-                case MOJANG -> new Color(255, 160, 0);
-                default -> new Color(120, 120, 120);
-            };
+
+            String typeTag = "Cracked";
+            Color typeColor = new Color(120, 120, 120);
+
+            if (this.accountType != null) {
+                typeTag = switch (this.accountType) {
+                    case MSA -> "Microsoft";
+                    case MOJANG -> "Mojang";
+                    case LEGACY -> "Cracked";
+                };
+                typeColor = switch (this.accountType) {
+                    case MSA -> new Color(0, 200, 255);
+                    case MOJANG -> new Color(255, 160, 0);
+                    default -> typeColor;
+                };
+            }
             BlackOut.FONT.text(stack, typeTag, 1.8F, textOffset, subY, typeColor, false, false);
         }
 
-        String shortUuid = "#" + this.uuid.toString().substring(0, 8).toUpperCase();
+        String shortUuid = "#UNKNOWN";
+        if (this.uuid != null) {
+            String fullUuid = this.uuid.toString();
+            if (fullUuid.length() >= 8) {
+                shortUuid = "#" + fullUuid.substring(0, 8).toUpperCase();
+            }
+        }
         BlackOut.FONT.text(stack, shortUuid, 1.3F, WIDTH - 110.0F, HEIGHT - 22.0F, new Color(255, 255, 255, 35), false, false);
 
         this.pulse = Math.max(this.pulse - delta, 0.0F);
