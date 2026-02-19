@@ -5,6 +5,7 @@ import bodevelopment.client.blackout.gui.clickgui.screens.ConfigScreen;
 import bodevelopment.client.blackout.gui.clickgui.screens.ConsoleScreen;
 import bodevelopment.client.blackout.gui.clickgui.screens.FriendsScreen;
 import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.module.modules.client.GuiSettings;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;

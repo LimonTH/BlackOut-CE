@@ -138,7 +138,7 @@ public class ModuleComponent extends Component {
 
     private void renderSettingGroup(SettingGroup group, boolean last) {
         float fs = GuiSettings.getInstance().fontScale.get().floatValue();
-        float groupScale = fs * 0.9F;
+        float groupScale = fs * 2.0F;
 
         float categoryLength = 35.0F * fs;
 
