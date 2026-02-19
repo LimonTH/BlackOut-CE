@@ -48,11 +48,6 @@ public class ShaderReader {
 
     public static int create(String name) {
         String[] s = getShaders(name);
-        if (name.equals("lines")) {
-            System.out.println(s[0]);
-            System.out.println("\n\n\n\nthis the next : \n\n\n\n");
-            System.out.println(s[1]);
-        }
 
         int fragId = GL20C.glCreateShader(35632);
         int vertId = GL20C.glCreateShader(35633);
@@ -153,10 +148,10 @@ public class ShaderReader {
         unBuilt.imports.forEach(i -> {
             UnBuilt.ShaderMethod method = findMethod(i, list);
             if (method != null) {
-                imported.add(0, method);
+                imported.addFirst(method);
             }
         });
-        imported.forEach(method -> unBuilt.methods.add(0, method));
+        imported.forEach(unBuilt.methods::addFirst);
     }
 
     private static UnBuilt.ShaderMethod findMethod(String name, List<UnBuilt> list) {
@@ -492,10 +487,9 @@ public class ShaderReader {
 
         private record ShaderMethod(String name, String type, String args, String content, boolean pre) {
             private String build() {
-                String builder = this.type + " " +
+                return this.type + " " +
                         this.name + "(" + this.args + ") {" +
                         this.content + "}";
-                return builder;
             }
         }
     }

@@ -42,8 +42,8 @@ public class RotationManager extends Manager {
     public float prevRenderPitch = 0.0F;
     public double priorityYaw = 0.0;
     public double priorityPitch = 0.0;
-    public String keyYaw = "Luposulu best";
-    public String keyPitch = "fr ^";
+    public String keyYaw = "Limon of guisese";
+    public String keyPitch = "ru/en or nigeria";
     public float moveLookYaw = 0.0F;
     public float moveYaw = 0.0F;
     public float moveOffset = 0.0F;

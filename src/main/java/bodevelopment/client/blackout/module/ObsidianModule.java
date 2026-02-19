@@ -137,8 +137,6 @@ public class ObsidianModule extends Module {
     public void onRender(RenderEvent.World.Post event) {
         if (BlackOut.mc.player == null || BlackOut.mc.world == null) return;
 
-        MatrixStack stack = event.stack;
-
         if (!this.enabled) {
             this.render.update((pos, time, delta) ->
                     this.normalRendering.render(BoxUtils.get(pos), (float) (1.0 - delta), 1.0F)

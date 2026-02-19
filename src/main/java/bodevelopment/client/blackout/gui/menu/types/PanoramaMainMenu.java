@@ -14,7 +14,7 @@ import net.minecraft.client.util.math.MatrixStack;
 
 import java.awt.*;
 
-public class ThemeMainMenu implements MainMenuRenderer {
+public class PanoramaMainMenu implements MainMenuRenderer {
     private final ChangelogRenderer changelogRenderer = new ChangelogRenderer();
     private static final float BUTTON_WIDTH = 360.0F;
     private static final float BUTTON_HEIGHT = 10.0F;
@@ -177,7 +177,7 @@ public class ThemeMainMenu implements MainMenuRenderer {
     }
 
     private void renderTitle(MatrixStack stack, String splashText) {
-        BlackOut.BOLD_FONT.text(stack, "BlackOut", 8.5F, 0.0F, -250.0F, Color.WHITE.getRGB(), true, true);
+        BlackOut.BOLD_FONT.text(stack, BlackOut.NAME, 8.5F, 0.0F, -250.0F, Color.WHITE.getRGB(), true, true);
         BlackOut.FONT.text(stack, splashText, 2.5F, 0.0F, -200.0F, Color.WHITE.getRGB(), true, true);
     }
 }

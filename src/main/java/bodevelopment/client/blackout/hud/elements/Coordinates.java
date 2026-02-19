@@ -39,7 +39,7 @@ public class Coordinates extends HudElement {
     public void render() {
         if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
             String text = this.getString(BlackOut.mc.player.getPos());
-            String otherWorldText = "Blackmen Client coordinate calculation system thread 42069 has failed the mathing of the coordinates please hit your pc with a hammer to fix the issue";
+            String otherWorldText = BlackOut.NAME + " Client coordinate calculation system thread 42069 has failed the mathing of the coordinates please hit your pc with a hammer to fix the issue";
             this.stack.push();
             float height;
             float width;

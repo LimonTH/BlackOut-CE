@@ -363,12 +363,6 @@ public class MainMenu {
         }
     }
 
-    public void resetFade() {
-        globalFade = 0.0F;
-        isExiting = false;
-        screenToSet = null;
-    }
-
     public float getWindowHeight() {
         return this.windowHeight;
     }

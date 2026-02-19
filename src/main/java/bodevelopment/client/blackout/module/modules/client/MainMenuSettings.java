@@ -7,7 +7,7 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.gui.menu.types.ColorMainMenu;
 import bodevelopment.client.blackout.randomstuff.mainmenu.MainMenuRenderer;
 import bodevelopment.client.blackout.gui.menu.types.SmokeMainMenu;
-import bodevelopment.client.blackout.gui.menu.types.ThemeMainMenu;
+import bodevelopment.client.blackout.gui.menu.types.PanoramaMainMenu;
 
 public class MainMenuSettings extends SettingsModule {
     private static MainMenuSettings INSTANCE;
@@ -38,7 +38,7 @@ public class MainMenuSettings extends SettingsModule {
     public enum MenuMode {
         Smoke(new SmokeMainMenu()),
         Color(new ColorMainMenu()),
-        Theme(new ThemeMainMenu());
+        Panorama(new PanoramaMainMenu());
 
         private final MainMenuRenderer renderer;
 

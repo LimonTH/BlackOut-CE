@@ -11,10 +11,7 @@ import bodevelopment.client.blackout.hud.elements.Arraylist;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.OnlyDev;
-import bodevelopment.client.blackout.util.ClassUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import bodevelopment.client.blackout.util.SettingUtils;
-import bodevelopment.client.blackout.util.SharedFeatures;
+import bodevelopment.client.blackout.util.*;
 import org.apache.commons.lang3.mutable.MutableFloat;
 
 import java.util.ArrayList;
@@ -67,7 +64,7 @@ public class ModuleManager extends Manager {
     private void initModules() {
         this.modules.clear();
         long time = OLEPOSSUtils.testTime(() -> this.getAllModuleObjects().stream().sorted(Comparator.comparing(o -> o.name)).forEach(this.modules::add));
-        System.out.printf("Initializing %s modules took %sms %n", this.modules.size(), time);
+        BOLogger.info(String.format("Initializing %s modules took %sms %n", this.modules.size(), time));
     }
 
     private List<Module> getAllModuleObjects() {

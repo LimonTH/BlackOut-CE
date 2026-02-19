@@ -187,7 +187,7 @@ public class SmokeMainMenu implements MainMenuRenderer {
     }
 
     private void renderTitle(MatrixStack stack, String splashText) {
-        BlackOut.BOLD_FONT.text(stack, "BlackOut", 8.5F, 0.0F, -250.0F, Color.WHITE.getRGB(), true, true);
+        BlackOut.BOLD_FONT.text(stack, BlackOut.NAME, 8.5F, 0.0F, -250.0F, Color.WHITE.getRGB(), true, true);
         BlackOut.FONT.text(stack, splashText, 2.5F, 0.0F, -200.0F, Color.WHITE.getRGB(), true, true);
     }
 }

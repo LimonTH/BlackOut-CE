@@ -184,7 +184,7 @@ public class ClickGui extends Screen {
         this.renderFade();
 
         RenderUtils.rounded(this.stack, 0.0F, 0.0F, 200.0F, height, 10.0F, 2.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
-        GuiRenderUtils.renderWaveText(this.stack, "Blackout", 4.5F, 100.0F, 50.0F, true, true, true);
+        GuiRenderUtils.renderWaveText(this.stack, BlackOut.NAME, 4.5F, 100.0F, 50.0F, true, true, true);
 
         if (this.scaling) {
             this.scaleDelta = Math.min(this.scaleDelta + this.frameTime * 5.0F, 1.0F);
