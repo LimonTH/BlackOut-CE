@@ -274,7 +274,7 @@ public class MainMenu {
                 "Bypassing... 99%",
                 "Eat, Sleep, Log out on low HP, Repeat",
                 "Your base? My stash.",
-                "Java 17: Still not fast enough for my aura",
+                "Java 21: Still not fast enough for my aura",
 
                 // --- BLACKOUT EXCLUSIVE ---
                 "BlackOut: Lights out for them",

@@ -83,7 +83,7 @@ public class Notifications extends SettingsModule {
             default -> BOTextures.getAlertIconRenderer();
         };
         int alpha = this.style.get() == Style.Old ? 255 : 125;
-
+        // TODO: В режиме Classic кружочек не рендерится или рендерится не в центре i (*)
         Color c = switch (n.type) {
             case Enable -> this.style.get() != Style.New && this.style.get() != Style.NewSlim
                     ? new Color(42, 121, 42, alpha)
@@ -125,7 +125,9 @@ public class Notifications extends SettingsModule {
 
                 stack.translate(25.0F - r, 22.0F - r, 0.0F);
 
-                RenderUtils.circle(stack, 0.0F, 0.0F, 16.0F, c.getRGB());
+                // TODO: тут (*)
+                float circleRadius = 16.0F;
+                RenderUtils.circle(stack, -circleRadius, -circleRadius, circleRadius, c.getRGB());
 
                 float iScale = 3.0F;
                 float iVisualY = 0.5F;

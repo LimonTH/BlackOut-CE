@@ -76,6 +76,13 @@ public class ColorScreen extends ClickGuiScreen {
 
         double rawMx = this.mx;
         this.mx -= 200.0F;
+        if (this.selecting > 0) {
+            if (this.colorSetting.theme > 0) {
+                this.handleThemeSliders();
+            } else {
+                this.handleSliders();
+            }
+        }
 
         this.renderPicker();
         if (this.colorSetting.theme > 0) {
@@ -96,7 +103,7 @@ public class ColorScreen extends ClickGuiScreen {
         RenderUtils.leftFade(this.stack, 175.0F, 0.0F, 10.0F, height, new Color(0, 0, 0, 80).getRGB());
 
         int bgClr = new Color(15, 15, 15, 255).getRGB();
-        String[] labels = {"Normal", "Theme 1", "Theme 2"};
+        String[] labels = {"Custom", "Global 1", "Global 2"};
 
         for (int i = 0; i < 3; i++) {
             float yPos = 20.0F + (i * 40.0F);
@@ -192,6 +199,11 @@ public class ColorScreen extends ClickGuiScreen {
                 break;
             case 3:
                 this.colorSetting.alpha = (int) (MathHelper.clamp(MathHelper.getLerpProgress(this.mx, 0.0, 500.0), 0.0, 1.0) * 255.0);
+                break;
+            case 4:
+                this.colorSetting.saturation = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.mx, 0.0, 500.0), 0.0, 1.0) * 2.0F - 1.0F;
+                this.colorSetting.brightness = (float) (1.0 - MathHelper.clamp(MathHelper.getLerpProgress(this.my, 10.0, 210.0), 0.0, 1.0)) * 2.0F - 1.0F;
+                break;
         }
     }
 
@@ -203,76 +215,49 @@ public class ColorScreen extends ClickGuiScreen {
     @Override
     public void onMouse(int button, boolean state) {
         if (button == 0) {
-            boolean b = false;
+            if (state) {
+                boolean overTextField = false;
 
-            for (ColorField textField : this.colorSetting.theme == 0 ? this.textFields : this.themeFields) {
-                if (textField.textField.click(0, state)) {
-                    b = true;
-                    SelectedComponent.setId(textField.selectedId);
-                    break;
-                }
-            }
-
-            if (state && !b) {
-                if (this.colorSetting.theme == 0) {
-                    if (this.inside(200, 700, 10, 210)) {
-                        this.selecting = 1;
-                    }
-
-                    if (this.inside(200, 700, 225, 238)) {
-                        this.selecting = 2;
-                    }
-
-                    if (this.inside(455, 700, 260, 273)) {
-                        this.selecting = 3;
-                    }
-
-                    if (this.inside(455, 700, 300, 313)) {
-                        this.selecting = 4;
-                    }
-
-                    if (this.inside(455, 700, 340, 353)) {
-                        this.selecting = 5;
-                    }
-
-                    if (this.inside(200, 445, 340, 353)) {
-                        this.selecting = 6;
-                    }
-
-                    if (this.inside(200, 445, 260, 273)) {
-                        this.selecting = 7;
-                    }
-
-                    if (this.inside(200, 445, 300, 313)) {
-                        this.selecting = 8;
-                    }
-                } else {
-                    if (this.inside(200, 700, 260, 273)) {
-                        this.selecting = 1;
-                    }
-
-                    if (this.inside(200, 700, 300, 313)) {
-                        this.selecting = 2;
-                    }
-
-                    if (this.inside(200, 700, 340, 353)) {
-                        this.selecting = 3;
+                for (ColorField field : (this.colorSetting.theme == 0 ? this.textFields : this.themeFields)) {
+                    if (field.textField.click(0, state)) {
+                        overTextField = true;
+                        SelectedComponent.setId(field.selectedId);
+                        break;
                     }
                 }
 
-                if (this.selecting > 0) {
-                    Managers.CONFIG.saveAll();
-                } else if (this.inside(0, 200, 20, 50)) {
-                    this.colorSetting.theme = 0;
-                    Managers.CONFIG.saveAll();
-                } else if (this.inside(0, 200, 60, 90)) {
-                    this.colorSetting.theme = 1;
-                    Managers.CONFIG.saveAll();
-                } else if (this.inside(0, 200, 100, 130)) {
-                    this.colorSetting.theme = 2;
-                    Managers.CONFIG.saveAll();
+                if (!overTextField) {
+                    if (this.colorSetting.theme == 0) {
+                        if (this.inside(200, 700, 10, 210))      this.selecting = 1; // Пикер
+                        else if (this.inside(200, 700, 225, 238)) this.selecting = 2; // Hue
+                        else if (this.inside(455, 700, 260, 273)) this.selecting = 3; // Red
+                        else if (this.inside(455, 700, 300, 313)) this.selecting = 4; // Green
+                        else if (this.inside(455, 700, 340, 353)) this.selecting = 5; // Blue
+                        else if (this.inside(200, 445, 340, 353)) this.selecting = 6; // Alpha
+                        else if (this.inside(200, 445, 260, 273)) this.selecting = 7; // Saturation
+                        else if (this.inside(200, 445, 300, 313)) this.selecting = 8; // Brightness
+                    } else {
+                        if (this.inside(200, 700, 10, 210))      this.selecting = 4;
+                        else if (this.inside(200, 700, 260, 273)) this.selecting = 1;
+                        else if (this.inside(200, 700, 300, 313)) this.selecting = 2;
+                        else if (this.inside(200, 700, 340, 353)) this.selecting = 3;
+                    }
+
+                    if (this.selecting == 0) {
+                        int oldTheme = this.colorSetting.theme;
+                        if (this.inside(0, 200, 20, 50))       this.colorSetting.theme = 0;
+                        else if (this.inside(0, 200, 60, 90))  this.colorSetting.theme = 1;
+                        else if (this.inside(0, 200, 100, 130)) this.colorSetting.theme = 2;
+
+                        if (oldTheme != this.colorSetting.theme) {
+                            Managers.CONFIG.saveAll();
+                        }
+                    }
                 }
             } else {
+                if (this.selecting > 0) {
+                    Managers.CONFIG.saveAll();
+                }
                 this.selecting = 0;
             }
         }
@@ -584,27 +569,50 @@ public class ColorScreen extends ClickGuiScreen {
     }
 
     private void renderPicker() {
-        int rgb = Color.HSBtoRGB(this.getHSB(true)[0], 1.0F, 1.0F);
-        int red = ColorHelper.Argb.getRed(rgb);
-        int green = ColorHelper.Argb.getGreen(rgb);
-        int blue = ColorHelper.Argb.getBlue(rgb);
+        int hueColor;
+        if (this.colorSetting.theme == 0) {
+            hueColor = Color.HSBtoRGB(this.getHSB(true)[0], 1.0F, 1.0F);
+        } else {
+            int themeRGB = (this.colorSetting.theme == 1) ? ThemeSettings.getInstance().getMain() : ThemeSettings.getInstance().getSecond();
+            float[] hsb = Color.RGBtoHSB((themeRGB >> 16) & 0xFF, (themeRGB >> 8) & 0xFF, themeRGB & 0xFF, null);
+            hueColor = Color.HSBtoRGB(hsb[0], 1.0F, 1.0F);
+        }
+
+        int red = ColorHelper.Argb.getRed(hueColor);
+        int green = ColorHelper.Argb.getGreen(hueColor);
+        int blue = ColorHelper.Argb.getBlue(hueColor);
+
         this.renderPickerQuad(10.0F, 500.0F, 200.0F, red / 255.0F, green / 255.0F, blue / 255.0F);
+
         float circleX;
         float circleY;
-        if (this.colorSetting.theme == 0 && this.selecting == 1) {
-            circleX = (float) MathHelper.clamp(this.mx, 0.0, 500.0);
-            circleY = (float) MathHelper.clamp(this.my, 10.0, 210.0);
+
+        if (this.colorSetting.theme > 0) {
+            if (this.selecting == 4) {
+                circleX = (float) MathHelper.clamp(this.mx, 0.0, 500.0);
+                circleY = (float) MathHelper.clamp(this.my, 10.0, 210.0);
+            } else {
+                circleX = (this.colorSetting.saturation + 1.0F) / 2.0F * 500.0F;
+                circleY = 10.0F + (1.0F - (this.colorSetting.brightness + 1.0F) / 2.0F) * 200.0F;
+            }
         } else {
-            float[] HSB = this.getHSB(false);
-            circleX = HSB[1] * 500.0F;
-            circleY = MathHelper.lerp(HSB[2], 210, 10);
+            if (this.selecting == 1) {
+                circleX = (float) MathHelper.clamp(this.mx, 0.0, 500.0);
+                circleY = (float) MathHelper.clamp(this.my, 10.0, 210.0);
+            } else {
+                float[] HSB = this.getHSB(false);
+                circleX = HSB[1] * 500.0F;
+                circleY = MathHelper.lerp(HSB[2], 210, 10);
+            }
         }
 
         this.prevCircleX = MathHelper.clampedLerp(this.prevCircleX, circleX, this.frameTime * 20.0F);
         this.prevCircleY = MathHelper.clampedLerp(this.prevCircleY, circleY, this.frameTime * 20.0F);
-        BlackOutColor color = this.colorSetting.get();
+
+        int displayColor = ColorUtils.withAlpha(this.colorSetting.get().getRGB(), 255);
+
         RenderUtils.rounded(
-                this.stack, this.prevCircleX, this.prevCircleY, 0.0F, 0.0F, 10.0F, 4.0F, ColorUtils.withAlpha(color.getRGB(), 255), ColorUtils.SHADOW100I
+                this.stack, this.prevCircleX, this.prevCircleY, 0.0F, 0.0F, 10.0F, 4.0F, displayColor, ColorUtils.SHADOW100I
         );
     }
 

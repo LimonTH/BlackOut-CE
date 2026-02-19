@@ -107,7 +107,7 @@ public class Watermark extends HudElement {
                     String ip = !BlackOut.mc.isIntegratedServerRunning() && BlackOut.mc.getNetworkHandler() != null && BlackOut.mc.getNetworkHandler().getServerInfo() != null
                             ? BlackOut.mc.getNetworkHandler().getServerInfo().address
                             : "Singleplayer";
-                    String text = BlackOut.NAME + " | "
+                    String text = "Blackout | "
                             + BlackOut.TYPE
                             + " | "
                             + BlackOut.mc.player.getName().getString()
