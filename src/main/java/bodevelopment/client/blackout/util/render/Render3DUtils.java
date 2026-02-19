@@ -4,8 +4,6 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Box;
@@ -49,6 +47,14 @@ public class Render3DUtils {
     }
 
     public static void drawBoxRaw(MatrixStack stack, Box box, int sideColor, int lineColor, RenderShape shape, boolean manageState) {
+        if (manageState) {
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            RenderSystem.disableCull();
+            RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+            RenderSystem.disableDepthTest();
+        }
+
         stack.push();
 
         if (shape.sides) {
@@ -59,6 +65,12 @@ public class Render3DUtils {
         }
 
         stack.pop();
+
+        if (manageState) {
+            RenderSystem.enableCull();
+            RenderSystem.disableBlend();
+            RenderSystem.enableDepthTest();
+        }
     }
 
     public static void renderOutlines(MatrixStack stack, Box box, int color) {
