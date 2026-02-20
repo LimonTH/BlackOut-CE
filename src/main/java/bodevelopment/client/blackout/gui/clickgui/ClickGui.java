@@ -32,6 +32,7 @@ import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
+import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -558,10 +559,27 @@ public class ClickGui extends Screen {
             return;
         }
 
-        boolean isPotentialSearch = (key >= 65 && key <= 90) || key == 47 || key == 70;
+        String keyName = GLFW.glfwGetKeyName(key, 0);
 
-        if (isPotentialSearch) {
-            if (!mouseOnModules() || !anyModuleBindHovered()) {
+        boolean isModifier = key == GLFW.GLFW_KEY_LEFT_CONTROL || key == GLFW.GLFW_KEY_RIGHT_CONTROL ||
+                key == GLFW.GLFW_KEY_LEFT_ALT || key == GLFW.GLFW_KEY_RIGHT_ALT ||
+                key == GLFW.GLFW_KEY_LEFT_SUPER || key == GLFW.GLFW_KEY_RIGHT_SUPER ||
+                key == GLFW.GLFW_KEY_LEFT_SHIFT || key == GLFW.GLFW_KEY_RIGHT_SHIFT;
+
+        boolean isFunctional = (key >= GLFW.GLFW_KEY_F1 && key <= GLFW.GLFW_KEY_F25) ||
+                key == GLFW.GLFW_KEY_DELETE ||
+                key == GLFW.GLFW_KEY_INSERT ||
+                key == GLFW.GLFW_KEY_PAGE_UP ||
+                key == GLFW.GLFW_KEY_PAGE_DOWN ||
+                key == GLFW.GLFW_KEY_HOME ||
+                key == GLFW.GLFW_KEY_END;
+
+        boolean isForbidden = (key == GLFW.GLFW_KEY_ESCAPE || key == GLFW.GLFW_KEY_ENTER ||
+                key == GLFW.GLFW_KEY_BACKSPACE || key == GLFW.GLFW_KEY_TAB ||
+                (key >= 262 && key <= 265));
+
+        if (keyName != null && !isModifier && !isForbidden && !isFunctional) {
+            if (!anyModuleBindHovered()) {
                 this.setScreen(new SearchScreen(key));
                 return;
             }

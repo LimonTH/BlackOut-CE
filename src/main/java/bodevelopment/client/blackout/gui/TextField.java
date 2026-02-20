@@ -13,7 +13,6 @@ import java.util.Map;
 
 public class TextField {
     private static final Map<String, String> shiftModified = new HashMap<>();
-    private static final Map<String, String> altModified = new HashMap<>();
 
     static {
         shiftModified.put("1", "!");
@@ -28,7 +27,15 @@ public class TextField {
         shiftModified.put("0", ")");
         shiftModified.put("-", "_");
         shiftModified.put("=", "+");
-        altModified.put("5", "€");
+        shiftModified.put("[", "{");
+        shiftModified.put("]", "}");
+        shiftModified.put(";", ":");
+        shiftModified.put("'", "\"");
+        shiftModified.put(",", "<");
+        shiftModified.put(".", ">");
+        shiftModified.put("/", "?");
+        shiftModified.put("\\", "|");
+        shiftModified.put("`", "~");
     }
 
     private String content = "";
@@ -163,62 +170,58 @@ public class TextField {
     public void type(int key, boolean state) {
         if (!state) return;
 
-        if ((key >= 32 && key <= 162) || (key >= 256 && key <= 348)) {
+        boolean ctrl = Keys.get(GLFW.GLFW_KEY_LEFT_CONTROL) || Keys.get(GLFW.GLFW_KEY_RIGHT_CONTROL);
 
-            if (key != this.heldKey) {
-                this.prevHeld = System.currentTimeMillis();
-            }
+        if ((key >= 32 && key <= 162) || (key >= 256 && key <= 348)) {
+            if (key != this.heldKey) this.prevHeld = System.currentTimeMillis();
             this.heldKey = key;
             this.limitIndex();
 
-            if (key == GLFW.GLFW_KEY_V && (Keys.get(GLFW.GLFW_KEY_LEFT_CONTROL) || Keys.get(GLFW.GLFW_KEY_RIGHT_CONTROL))) {
-                String clipboard = BlackOut.mc.keyboard.getClipboard();
-                if (clipboard != null) {
-                    for (char c : clipboard.toCharArray()) {
-                        this.addChar(String.valueOf(c));
-                    }
-                }
+            if (key == GLFW.GLFW_KEY_V && ctrl) {
+                String cb = BlackOut.mc.keyboard.getClipboard();
+                if (cb != null) for (char c : cb.toCharArray()) this.addChar(String.valueOf(c));
                 return;
             }
 
             switch (key) {
                 case GLFW.GLFW_KEY_BACKSPACE:
                     if (this.typingIndex > 0) {
-                        String pre = this.content.substring(0, this.typingIndex - 1);
-                        String post = this.content.substring(this.typingIndex);
-                        this.content = pre + post;
-                        this.typingIndex--;
+                        if (ctrl) {
+                            int lastSpace = this.content.substring(0, this.typingIndex).trim().lastIndexOf(" ");
+                            if (lastSpace == -1) {
+                                this.content = this.content.substring(this.typingIndex);
+                                this.typingIndex = 0;
+                            } else {
+                                this.content = this.content.substring(0, lastSpace + 1) + this.content.substring(this.typingIndex);
+                                this.typingIndex = lastSpace + 1;
+                            }
+                        } else {
+                            this.content = this.content.substring(0, this.typingIndex - 1) + this.content.substring(this.typingIndex);
+                            this.typingIndex--;
+                        }
                         this.lastType = System.currentTimeMillis();
                     }
                     return;
                 case GLFW.GLFW_KEY_RIGHT:
-                    this.lastType = System.currentTimeMillis();
                     this.typingIndex = MathHelper.clamp(this.typingIndex + 1, 0, this.content.length());
+                    this.lastType = System.currentTimeMillis();
                     return;
                 case GLFW.GLFW_KEY_LEFT:
-                    this.lastType = System.currentTimeMillis();
                     this.typingIndex = MathHelper.clamp(this.typingIndex - 1, 0, this.content.length());
-                    return;
-                case GLFW.GLFW_KEY_LEFT_BRACKET:
-                    this.addChar(Keys.get(GLFW.GLFW_KEY_LEFT_SHIFT) ? "{" : "[");
-                    return;
-                case GLFW.GLFW_KEY_RIGHT_BRACKET:
-                    this.addChar(Keys.get(GLFW.GLFW_KEY_LEFT_SHIFT) ? "}" : "]");
+                    this.lastType = System.currentTimeMillis();
                     return;
                 case GLFW.GLFW_KEY_SPACE:
                     this.addChar(" ");
                     return;
+                case GLFW.GLFW_KEY_ESCAPE: case GLFW.GLFW_KEY_ENTER: case GLFW.GLFW_KEY_TAB:
+                    return;
                 default:
                     if (key >= 48 && key <= 57) {
-                        String num = String.valueOf(key - 48);
-                        this.addChar(this.modify(num));
+                        this.addChar(this.modify(String.valueOf(key - 48), key));
                         return;
                     }
-
                     String name = GLFW.glfwGetKeyName(key, 0);
-                    if (name != null) {
-                        this.addChar(this.modify(name));
-                    }
+                    if (name != null) this.addChar(this.modify(name, key));
                     break;
             }
         }
@@ -228,17 +231,19 @@ public class TextField {
         this.typingIndex = MathHelper.clamp(this.typingIndex, 0, this.content.length());
     }
 
-    private String modify(String string) {
+    private String modify(String string, int key) {
         boolean shift = Keys.get(GLFW.GLFW_KEY_LEFT_SHIFT) || Keys.get(GLFW.GLFW_KEY_RIGHT_SHIFT);
-        boolean alt = Keys.get(GLFW.GLFW_KEY_LEFT_ALT) || Keys.get(GLFW.GLFW_KEY_RIGHT_ALT);
-
-        if (shift && alt) return "";
+        String lower = string.toLowerCase();
 
         if (shift) {
-            return shiftModified.getOrDefault(string, string.toUpperCase());
-        } else {
-            return alt ? altModified.getOrDefault(string, string) : string.toLowerCase();
+            if (key == GLFW.GLFW_KEY_SLASH && string.equals(".")) return ",";
+
+            if (shiftModified.containsKey(string)) return shiftModified.get(string);
+            if (shiftModified.containsKey(lower)) return shiftModified.get(lower);
+
+            return string.toUpperCase();
         }
+        return lower;
     }
 
     private void addChar(String c) {

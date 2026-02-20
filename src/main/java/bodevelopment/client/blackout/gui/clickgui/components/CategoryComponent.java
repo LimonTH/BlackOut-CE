@@ -89,6 +89,8 @@ public class CategoryComponent extends Component {
     }
 
     private boolean isHovered() {
+        if (Managers.CLICK_GUI.CLICK_GUI.openedScreen != null) return false;
+
         float fontScale = GuiSettings.getInstance().fontScale.get().floatValue();
         float categoryScale = fontScale * 2.0F;
         float baseHeight = (BlackOut.FONT.getHeight() * categoryScale) + (15.0F * fontScale);

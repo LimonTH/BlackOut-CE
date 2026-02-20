@@ -65,15 +65,22 @@ public class ModuleComponent extends Component {
 
     @Override
     public float render() {
+        boolean screenOpen = Managers.CLICK_GUI.CLICK_GUI.openedScreen != null;
+
+        float currentMx = screenOpen ? -999 : (float) this.mx;
+        float currentMy = screenOpen ? -999 : (float) this.my;
+
         GuiColorUtils.set(this.module);
         this.length = this.getHeight() + getLength(this.module.settingGroups);
         this.updateAnimation();
+
         if (!(this.y > ClickGui.height + 30.0F) && !(this.y + this.maxLength < -30.0F)) {
             this.shadowScissor();
             float bgY = Math.max(-15, this.y);
             float bgMaxY = Math.min(this.y + this.maxLength, ClickGui.height + 15.0F);
             this.rounded(this.x, bgY, this.width, bgMaxY - bgY, 5.0F, 8.0F, GuiColorUtils.bg2, ColorUtils.SHADOW100);
             this.scissor();
+
             double delta = (System.currentTimeMillis() - this.prevTime) / 1000.0;
             this.prevTime = System.currentTimeMillis();
             if (this.module.enabled) {
@@ -82,8 +89,9 @@ public class ModuleComponent extends Component {
                 this.toggleProgress = Math.max(this.toggleProgress - delta, 0.0);
             }
 
-            this.renderModule(AnimUtils.easeInOutCubic(this.toggleProgress));
-            this.renderSettings();
+            this.renderModule(AnimUtils.easeInOutCubic(this.toggleProgress), currentMx, currentMy);
+            this.renderSettings(currentMx, currentMy);
+
             GlStateManager._disableScissorTest();
             return Math.min(this.l, this.maxLength);
         } else {
@@ -91,23 +99,18 @@ public class ModuleComponent extends Component {
         }
     }
 
-    private void renderSettings() {
+    private void renderSettings(float currentMx, float currentMy) {
         this.l = this.getHeight();
         float fs = GuiSettings.getInstance().fontScale.get().floatValue();
 
         for (int i = 0; i < this.module.settingGroups.size(); i++) {
             SettingGroup settingGroup = this.module.settingGroups.get(i);
-            if (this.l >= this.maxLength) {
-                return;
-            }
+            if (this.l >= this.maxLength) return;
 
             float yPos = this.y + this.l;
-            if (yPos > ClickGui.height) {
-                return;
-            }
+            if (yPos > ClickGui.height) return;
 
             float categoryHeight = 0.0F;
-
             float height = switch (GuiSettings.getInstance().settingGroup.get()) {
                 case Line, None -> 40.0F * fs;
                 case Shadow -> 45.0F * fs;
@@ -115,9 +118,7 @@ public class ModuleComponent extends Component {
             };
 
             for (Setting<?> setting : settingGroup.settings) {
-                if (setting.isVisible()) {
-                    categoryHeight += setting.getHeight();
-                }
+                if (setting.isVisible()) categoryHeight += setting.getHeight();
             }
 
             if (yPos > -height - categoryHeight - 30.0F) {
@@ -125,15 +126,15 @@ public class ModuleComponent extends Component {
             }
 
             this.l += height;
-            settingGroup.settings.forEach(this::renderSetting);
+            settingGroup.settings.forEach(s -> this.renderSetting(s, currentMx, currentMy));
         }
     }
 
-    private void renderSetting(Setting<?> setting) {
+    private void renderSetting(Setting<?> setting, float currentMx, float currentMy) {
         if (setting.isVisible()) {
             int posY = (int) (this.y + this.l);
             boolean shouldRender = this.l < this.maxLength && posY >= -setting.getHeight() && posY <= ClickGui.height + setting.getHeight();
-            this.l = this.l + setting.onRender(this.stack, this.frameTime, this.width - 10.0F, this.x + 5, (int) (this.y + this.l), this.mx, this.my, shouldRender);
+            this.l = this.l + setting.onRender(this.stack, this.frameTime, this.width - 10.0F, this.x + 5, (int) (this.y + this.l), currentMx, currentMy, shouldRender);
         }
     }
 
@@ -216,10 +217,11 @@ public class ModuleComponent extends Component {
         }
     }
 
-    private void renderModule(double toggleProgress) {
+    private void renderModule(double toggleProgress, float currentMx, float currentMy) {
         float moduleNameOffset = this.getModuleNameOffset();
         GuiSettings guiSettings = GuiSettings.getInstance();
         float nameY = this.getY();
+
         if (nameY > -50.0 && nameY < ClickGui.height + 50.0F) {
             float prevAlpha = Renderer.getAlpha();
             if (toggleProgress > 0.0) {
@@ -237,7 +239,7 @@ public class ModuleComponent extends Component {
 
         if (this.module.toggleable()) {
             if (this.y + moduleNameOffset > -50.0F && nameY < ClickGui.height + 50.0F) {
-                this.module.bind.get().render(this.stack, this.x + this.width - 30.0F, nameY, this.x + this.width, this.mx, this.my);
+                this.module.bind.get().render(this.stack, this.x + this.width - 30.0F, nameY, this.x + this.width, currentMx, currentMy);
             }
         }
     }
@@ -248,6 +250,8 @@ public class ModuleComponent extends Component {
 
     @Override
     public void onMouse(int button, boolean pressed) {
+        if (Managers.CLICK_GUI.CLICK_GUI.openedScreen != null) return;
+
         if (!this.module.toggleable() || !this.module.bind.get().onMouse(button, pressed)) {
             if (!(this.my < this.y)) {
                 if (this.module.toggleable() && button == 0 && pressed && this.module.bind.get().onMouse(0, true)) {
@@ -348,6 +352,7 @@ public class ModuleComponent extends Component {
     }
 
     public boolean isMouseOverBind() {
+        if (Managers.CLICK_GUI.CLICK_GUI.openedScreen != null) return false;
         if (this.module.category != ClickGui.selectedCategory) return false;
 
         if (this.module.bind != null) {
@@ -370,6 +375,8 @@ public class ModuleComponent extends Component {
 
     @Override
     public void onKey(int key, boolean state) {
+        if (Managers.CLICK_GUI.CLICK_GUI.openedScreen != null) return;
+
         this.module.bind.get().onKey(key, state);
         this.module.settingGroups.forEach(group -> group.settings.forEach(setting -> {
             if (setting.isVisible()) {

@@ -127,6 +127,7 @@ public class SearchScreen extends ClickGuiScreen {
                 Managers.CLICK_GUI.CLICK_GUI.setScreen(null);
                 return;
             }
+
             this.textField.type(key, true);
             this.updateResults();
         } else {
@@ -134,7 +135,7 @@ public class SearchScreen extends ClickGuiScreen {
         }
     }
 
-    private void updateResults() {
+    public void updateResults() {
         String query = this.textField.getContent().toLowerCase();
         if (query.isEmpty()) {
             this.results = new ArrayList<>();
