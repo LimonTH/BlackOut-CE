@@ -57,9 +57,6 @@ public class ClickGuiButtons {
         stack.pop();
     }
 
-    /**
-     * Исправленный метод клика по логике MainMenu
-     */
     public boolean onClick(int button) {
         if (button != 0) return false;
 
