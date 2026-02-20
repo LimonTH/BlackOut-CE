@@ -72,6 +72,12 @@ public class ScrollHelper {
         this.scrolls.add(amount * this.speedMulti, 0.1);
     }
 
+    public void set(float value) {
+        this.scroll = value;
+        this.speed = 0.0F;
+        this.scrolls.clear();
+    }
+
     public void offset(float amount) {
         this.scroll += amount;
     }

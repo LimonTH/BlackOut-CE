@@ -8,9 +8,11 @@ import bodevelopment.client.blackout.event.events.MouseScrollEvent;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.gui.clickgui.components.CategoryComponent;
 import bodevelopment.client.blackout.gui.clickgui.components.ModuleComponent;
+import bodevelopment.client.blackout.gui.clickgui.screens.SearchScreen;
 import bodevelopment.client.blackout.helpers.ScrollHelper;
 import bodevelopment.client.blackout.helpers.SmoothScrollHelper;
 import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.ParentCategory;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.GuiSettings;
@@ -439,63 +441,105 @@ public class ClickGui extends Screen {
     }
 
     private void handleGlobalClick(int button, boolean pressed) {
-        if (!this.open) return;
-        if (!this.isAnimating()) return;
+        if (!this.open || popUpDelta < 0.1F) return;
 
-        if (this.open || popUpDelta > 0.1F) {
-            // ПРИОРИТЕТ 1: Дочерние окна
-            if (pressed && button == 1) {
-                if (this.openedScreen != null) {
-                    this.setScreen(null);
-                    return;
-                }
+        if (pressed) {
+            if (button == 0 && this.buttons.onClick(button)) {
+                return;
             }
 
             if (this.openedScreen != null) {
-                if (this.openedScreen.handleMouse(button, pressed)) {
-                    return;
-                }
+                if (this.openedScreen.handleMouse(button, pressed)) return;
+
+                if (button == 1) { this.setScreen(null); }
+                return;
             }
 
-            // ПРИОРИТЕТ 2: Кнопки Friends, Config, Console
-            if (pressed && button == 0) {
-                if (this.buttons.onClick(button)) {
-                    return;
-                }
-            }
-
-            // ПРИОРИТЕТ 3: Взаимодействие
-            if (pressed) {
-                if (this.mouseOnScale()) {
-                    if (button == 0) {
-                        this.scaling = true;
-                        this.offsetX = this.mx - width;
-                        this.offsetY = this.my - height;
-                    }
-                } else if (this.mouseOnCategories()) {
-                    this.categoryComponents.forEach(c -> c.onMouse(button, pressed));
-                } else if (this.mouseOnModules() && this.openedScreen == null) {
-                    this.moduleComponents.forEach(module -> {
-                        if (module.module.category == selectedCategory) {
-                            module.onMouse(button, pressed);
-                        }
-                    });
-                } else if (this.mouseOnName() && button == 0) {
-                    this.moving = true;
-                    this.offsetX = this.mx;
-                    this.offsetY = this.my;
-                }
-            } else {
+            if (this.mouseOnScale()) {
                 if (button == 0) {
-                    this.moving = false;
-                    this.scaling = false;
+                    this.scaling = true;
+                    this.offsetX = this.mx - width;
+                    this.offsetY = this.my - height;
+                }
+            } else if (this.mouseOnCategories()) {
+                this.categoryComponents.forEach(c -> c.onMouse(button, pressed));
+            } else if (this.mouseOnModules()) {
+                this.moduleComponents.forEach(module -> {
+                    if (module.module.category == selectedCategory) {
+                        module.onMouse(button, pressed);
+                    }
+                });
+            } else if (this.mouseOnName() && button == 0) {
+                this.moving = true;
+                this.offsetX = this.mx;
+                this.offsetY = this.my;
+            }
+        } else {
+            this.moving = false;
+            this.scaling = false;
+
+            if (this.openedScreen != null) {
+                this.openedScreen.handleMouse(button, pressed);
+            } else {
+                this.moduleComponents.forEach(m -> {
+                    if (m.module.category == selectedCategory) m.onMouse(button, pressed);
+                });
+            }
+        }
+    }
+
+    public void scrollToModule(Module module) {
+        int columns = this.getColumns();
+        int moduleWidth = this.getModuleWidth(columns);
+        int offset = this.getColumnOffset(columns, moduleWidth);
+
+        float[] columnHeights = new float[columns];
+        int currentColumn = 0;
+
+        for (ModuleComponent component : this.moduleComponents) {
+            if (component.module.category == module.category) {
+
+                if (component.module == module) {
+                    float targetScroll = columnHeights[currentColumn];
+                    this.moduleScroll.set(targetScroll);
+                    return;
                 }
 
-                if (this.openedScreen == null) {
-                    this.moduleComponents.forEach(m -> m.onMouse(button, pressed));
+                float h = component.getHeight() + (component.opened ? ModuleComponent.getLength(component.module.settingGroups) : 0) + 20.0F;
+
+                columnHeights[currentColumn] += h;
+
+                if (++currentColumn >= columns) {
+                    currentColumn = 0;
                 }
             }
         }
+    }
+
+    private boolean anyModuleBindHovered() {
+        for (ModuleComponent mc : this.moduleComponents) {
+            if (mc.module.category == selectedCategory) {
+                if (mc.isMouseOverBind()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public void updateModuleLengthManual() {
+        int columns = this.getColumns();
+        float[] lengths = new float[columns];
+        int current = 0;
+        for (ModuleComponent component : this.moduleComponents) {
+            if (component.module.category == selectedCategory) {
+                lengths[current] += component.getHeight() + (component.opened ? ModuleComponent.getLength(component.module.settingGroups) : 0) + 20.0F;
+                if (++current >= lengths.length) current = 0;
+            }
+        }
+        float max = 0.0F;
+        for (float f : lengths) max = Math.max(max, f);
+        this.moduleLength = max;
     }
 
     public void onKey(KeyEvent event) {
@@ -503,23 +547,31 @@ public class ClickGui extends Screen {
     }
 
     private void handleGlobalKey(int key, boolean pressed) {
-        if (key == 265 || key == 264) {
-            if (pressed) {
-                if (!(key == 265 ? upPressed : downPressed)) {
-                    pressTime = System.currentTimeMillis();
-                }
-            }
-            if (key == 265) upPressed = pressed;
-            if (key == 264) downPressed = pressed;
+        if (!pressed) {
+            if (key == 265) upPressed = false;
+            if (key == 264) downPressed = false;
+            return;
         }
 
-        if (this.openedScreen == null || !this.openedScreen.handleKey(key, pressed)) {
-            this.moduleComponents.forEach(module -> {
-                if (module.module.category == selectedCategory) {
-                    module.onKey(key, pressed);
-                }
-            });
+        if (this.openedScreen != null) {
+            this.openedScreen.handleKey(key, pressed);
+            return;
         }
+
+        boolean isPotentialSearch = (key >= 65 && key <= 90) || key == 47 || key == 70;
+
+        if (isPotentialSearch) {
+            if (!mouseOnModules() || !anyModuleBindHovered()) {
+                this.setScreen(new SearchScreen(key));
+                return;
+            }
+        }
+
+        this.moduleComponents.forEach(module -> {
+            if (module.module.category == selectedCategory) {
+                module.onKey(key, pressed);
+            }
+        });
     }
 
     @Event

@@ -8,6 +8,7 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.modules.client.GuiSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
+import bodevelopment.client.blackout.module.setting.settings.KeyBindSetting;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
@@ -333,7 +334,7 @@ public class ModuleComponent extends Component {
         return Math.max(fs, fs * multiplier);
     }
 
-    private float getHeight() {
+    public float getHeight() {
         float currentScale = this.getScale();
         float minH = (BlackOut.FONT.getHeight() * currentScale) + (15.0F * currentScale);
 
@@ -344,6 +345,27 @@ public class ModuleComponent extends Component {
         );
 
         return Math.max(minH, settingH);
+    }
+
+    public boolean isMouseOverBind() {
+        if (this.module.category != ClickGui.selectedCategory) return false;
+
+        if (this.module.bind != null) {
+            if (this.module.bind.get().isInside()) {
+                return true;
+            }
+        }
+
+        if (this.opened) {
+            for (SettingGroup sg : this.module.settingGroups) {
+                for (Setting<?> s : sg.settings) {
+                    if (s instanceof KeyBindSetting kbs) {
+                        if (kbs.get().isInside()) return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     @Override

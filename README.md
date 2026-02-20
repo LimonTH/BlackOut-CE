@@ -6,18 +6,7 @@ A highly customizable and optimized Minecraft utility client, modernized and mai
 
 > **Note:** This project is a continuation of the original Blackout Client by **luhpossu** and **KassuK**.
 > As a solo developer, I (**Limon_TH**) have taken up this idea, and I'm not going to give it up just yet.
-
----
-
-## 🚀 Key Features
-
-* **Ported to 1.21.1:** Fully compatible with the latest Fabric environment.
-* **Rendering Overhaul:** Fixed legacy rendering issues, including dark/flat item previews and buffer conflicts.
-* **World-Sync Logic:** Improved communication between the client and the world for better stability.
-* **UI Synchronization:** Completely synced interface logic to ensure smooth interactions.
-* **Modern HUD:** Fully functional HUD in the Main Menu with Right Ctrl access.
-* **Theme "Smoke":** A clean, modern aesthetic with smooth animations and integrated changelog.
-
+> 
 ---
 
 ## 🛠 Current TASKS (TODO)
@@ -26,7 +15,7 @@ A highly customizable and optimized Minecraft utility client, modernized and mai
 - `Paste modules description`
 - `Create localization settings(RUS/ENG)`
 - `Fix the logic for rendering items on the screen (they seem to render in the dark)`
-
+- `Fix entity selection in the Aura module's entity list, etc., and improve rendering in it for clearer use`
 ---
 
 ## 💻 Tech Stack
@@ -77,23 +66,12 @@ Since I am developing this project solo, any feedback or bug reports are highly 
 
 ---
 
-## 🚀 Основные особенности
-
-* **Порт на 1.21.1:** Полная совместимость с актуальной средой Fabric.
-* **Переработка рендеринга:** Исправлены старые баги отрисовки, включая темные/плоские иконки предметов и конфликты буферов.
-* **Логика синхронизации с миром:** Улучшено взаимодействие клиента с игровым миром для стабильной работы модулей.
-* **Синхронизация интерфейса:** Логика UI была полностью переписана для плавного и корректного отклика.
-* **Современный HUD:** Полноценная работа HUD в главном меню и удобный редактор на **Right Ctrl**.
-* **Тема "Smoke":** Чистая, современная эстетика с плавными анимациями и встроенным списком изменений.
-
----
-
 ## 🛠 Текущие ЗАДАЧИ (TODO)
 
-- `Исправить скалирование UI, когда размер шрифта > 1 или < 1`
 - `Вставить описания для всех модулей`
 - `Создать настройки локализации (RUS/ENG)`
 - `Починить логику рендеринга предметов на экране (они как будто бы в темноте рендерятся)`
+- `Починить выбор сущностей в списке сущностей модуля Aura и подобных, а также улучшить рендеринг в нём для более понятного использования`
 
 ---
 
@@ -113,7 +91,7 @@ Since I am developing this project solo, any feedback or bug reports are highly 
 
 ### 📜 История проекта
 Этот билд основан на утекшем (leak) JAR-файле ранней разработки двухлетней давности.
-Я взял этот файл, вручную деобфусцировал код и потратил огромное количество времени на восстановление сломанной логики и портирование всего проекта на современную среду Fabric 1.21.1.
+Я взял этот файл, вручную деобфусцировал код и потратил огромное количество времени на восстановление сломанной логики и портирование всего проекта на современную среду Fabric.
 Это был долгий путь от «мертвого лика» до полностью рабочего и актуального клиента.
 
 ---

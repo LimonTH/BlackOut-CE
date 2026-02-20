@@ -122,7 +122,7 @@ public class KeyBind {
         }
     }
 
-    private boolean isInside() {
+    public boolean isInside() {
         return this.mx > this.x - this.width / 2.0F - 4.0F && this.mx < this.x + this.width / 2.0F + 4.0F && this.my > this.y - 13.0F && this.my < this.y + 12.0F;
     }
 
