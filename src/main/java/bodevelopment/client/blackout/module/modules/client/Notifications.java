@@ -83,7 +83,6 @@ public class Notifications extends SettingsModule {
             default -> BOTextures.getAlertIconRenderer();
         };
         int alpha = this.style.get() == Style.Old ? 255 : 125;
-        // TODO: В режиме Classic кружочек не рендерится или рендерится не в центре i (*)
         Color c = switch (n.type) {
             case Enable -> this.style.get() != Style.New && this.style.get() != Style.NewSlim
                     ? new Color(42, 121, 42, alpha)
@@ -115,25 +114,31 @@ public class Notifications extends SettingsModule {
                 x = (float) (BlackOut.mc.getWindow().getWidth() - (width + 20.0F) * delta);
                 r = this.getRounding();
 
+                stack.push();
                 stack.translate(x + r - 5.0F, y + r - 5.0F, 0.0F);
                 roundedWidth = width - r * 2 + 10.0F;
                 roundedHeight = 40.0F - r * 2 + 10.0F;
 
-                RenderUtils.rounded(
-                        stack, 0.0F, 0.0F, roundedWidth, roundedHeight, r, this.shadow.get() ? 3.0F : 0.0F, this.bgColor.get().getRGB(), this.shadowColor.get().getRGB()
-                );
-
+                RenderUtils.rounded(stack, 0.0F, 0.0F, roundedWidth, roundedHeight, r, this.shadow.get() ? 3.0F : 0.0F, this.bgColor.get().getRGB(), this.shadowColor.get().getRGB());
                 stack.translate(25.0F - r, 22.0F - r, 0.0F);
 
-                // TODO: тут (*)
-                float circleRadius = 16.0F;
-                RenderUtils.circle(stack, -circleRadius, -circleRadius, circleRadius, c.getRGB());
-
-                float iScale = 3.0F;
                 float iVisualY = 0.5F;
+                float circleRad = 15.0F;
+                float yCorrection = 1.5F;
+                float finalCenterY = iVisualY + yCorrection;
 
-                BlackOut.FONT.text(stack, "i", iScale, 0.0F, iVisualY, Color.WHITE, true, true);
-                this.textColor.render(stack, n.text, 2.0F, 25.0F, 0.0F, false, true);
+                RenderUtils.circle(
+                        stack,
+                        0.0F,
+                        finalCenterY+1.5F,
+                        circleRad,
+                        c.getRGB()
+                );
+
+                BlackOut.FONT.text(stack, "i", 3.0F, 0.0F, finalCenterY, Color.WHITE, true, true);
+                this.textColor.render(stack, n.text, 2.0F, 25.0F, yCorrection, false, true);
+
+                stack.pop();
                 break;
             case Slim:
                 returnHeight = 30.0F;

@@ -477,13 +477,8 @@ public class Trajectories extends Module {
             DoubleFunction<ItemStack, Float, Vec3d> startPos,
             Function<ItemStack, double[]> speed,
             DoubleConsumer<Box, double[]> physics
-    ) {
-    }
+    ) {}
 
-    /**
-     * @param crossbowStack сам арбалет
-     * @param projectileItem чем именно должен быть заряжен (напр. Items.FIREWORK_ROCKET)
-     */
     private boolean isChargedWith(ItemStack crossbowStack, Item projectileItem) {
         if (!(crossbowStack.getItem() instanceof CrossbowItem)) return false;
         ChargedProjectilesComponent charged = crossbowStack.get(DataComponentTypes.CHARGED_PROJECTILES);

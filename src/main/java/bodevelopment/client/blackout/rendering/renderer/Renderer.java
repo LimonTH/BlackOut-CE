@@ -3,6 +3,7 @@ package bodevelopment.client.blackout.rendering.renderer;
 import bodevelopment.client.blackout.interfaces.functional.QuadConsumer;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.math.MatrixStack;
 import org.joml.Matrix4f;
 
@@ -98,8 +99,8 @@ public class Renderer {
         this.renderBuffer.vertex(this.renderMatrix, x, y, z).color(r, g, b, a).normal(nx, ny, nz);
     }
 
-    public void vertex2D(float x, float y) {
-        this.renderBuffer.vertex(emptyMatrix, x, y, 0.0F);
+    public VertexConsumer vertex2D(float x, float y) {
+        return this.renderBuffer.vertex(emptyMatrix, x, y, 0.0F);
     }
 
     public void vertex2D(float x, float y, float r, float g, float b, float a) {

@@ -101,11 +101,6 @@ public class ClickGuiScreen {
         frameBuffer.end(this.getAlpha());
     }
 
-    /**
-     * Исправленная прозрачность.
-     * Теперь она берется напрямую из ClickGui, что позволяет окнам исчезать
-     * вместе с интерфейсом даже в главном меню.
-     */
     private float getAlpha() {
         if (Managers.CLICK_GUI.CLICK_GUI.isAnimating()) {
             return Math.min(ClickGui.popUpDelta * 1.5F, 1.0F);

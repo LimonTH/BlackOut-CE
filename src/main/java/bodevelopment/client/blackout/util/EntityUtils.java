@@ -40,7 +40,6 @@ public class EntityUtils {
 
     /**
      * Возвращает список всех сущностей в коробке, подходящих под условие.
-     * Полезно для выбора приоритетной цели в AutoCrystal.
      */
     public static List<Entity> getEntities(Box box, Predicate<Entity> predicate) {
         List<Entity> list = new ArrayList<>();

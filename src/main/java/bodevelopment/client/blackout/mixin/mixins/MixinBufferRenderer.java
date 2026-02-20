@@ -9,8 +9,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BufferRenderer.class)
 public abstract class MixinBufferRenderer {
-    // TODO: РЕАЛИЗОВАНО!!! ; МИКСИН ДЛЯ ОБХОДА КРАША ПРИ ПЕРЕХОДЕ С 1.20.4 на 1.21.1 ВЫЗЫВАЕМОМ ПРИ BufferRenderer.draw() и т.п.
-    /* stacktrace:
+
+    /** stacktrace:
     Caused by: java.lang.NullPointerException: Cannot invoke "net.minecraft.class_9801.method_60822()" because "$$0" is null
     at knot//net.minecraft.class_286.method_43439(class_286.java:42)
     at knot//net.minecraft.class_286.method_43437(class_286.java:36)
