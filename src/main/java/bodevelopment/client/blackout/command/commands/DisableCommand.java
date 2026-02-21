@@ -7,4 +7,9 @@ public class DisableCommand extends ToggleCommand {
     public DisableCommand() {
         super("disable", Formatting.RED);
     }
+
+    @Override
+    public boolean canUseOutsideWorld() {
+        return true;
+    }
 }

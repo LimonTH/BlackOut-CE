@@ -61,7 +61,7 @@ public class ToggleCommand extends Command {
         Module best = null;
         double highest = 0.0;
 
-        for (Module module : Managers.MODULE.getModules()) {
+        for (Module module : Managers.MODULES.getModules()) {
             double similarity = Math.max(
                     OLEPOSSUtils.similarity(input, this.doStuff(module.name)),
                     OLEPOSSUtils.similarity(input, this.doStuff(module.getDisplayName()))
@@ -76,7 +76,7 @@ public class ToggleCommand extends Command {
 
     private Module getModule(String name) {
         Module display = null;
-        for (Module module : Managers.MODULE.getModules()) {
+        for (Module module : Managers.MODULES.getModules()) {
             if (name.equals(this.doStuff(module.name))) return module;
             if (name.equals(this.doStuff(module.getDisplayName()))) display = module;
         }

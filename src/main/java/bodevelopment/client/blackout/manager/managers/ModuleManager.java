@@ -12,7 +12,6 @@ import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.OnlyDev;
 import bodevelopment.client.blackout.util.*;
-import org.apache.commons.lang3.mutable.MutableFloat;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -23,8 +22,23 @@ public class ModuleManager extends Manager {
 
     @Override
     public void init() {
-        this.initModules();
-        this.modules.forEach(module -> Arraylist.deltaMap.put(module, new MutableFloat(0.0F)));
+        this.modules.clear();
+
+        long time = OLEPOSSUtils.testTime(() -> {
+            String internalPath = Module.class.getCanonicalName().replace(Module.class.getSimpleName(), "modules");
+
+            List<Module> internalModules = new ArrayList<>();
+            this.addModuleObjects(internalPath, internalModules, Module.class.getClassLoader());
+
+            internalModules.stream()
+                    .sorted(Comparator.comparing(o -> o.name))
+                    .forEach(this::add);
+        });
+
+        AddonLoader.load();
+
+        BOLogger.info(String.format("Initializing %s modules took %sms", this.modules.size(), time));
+
         BlackOut.EVENT_BUS.subscribe(this, () -> BlackOut.mc.currentScreen != null || SharedFeatures.shouldSilentScreen());
         SettingUtils.init();
         SharedFeatures.init();
@@ -61,29 +75,27 @@ public class ModuleManager extends Manager {
         });
     }
 
-    private void initModules() {
-        this.modules.clear();
-        long time = OLEPOSSUtils.testTime(() -> this.getAllModuleObjects().stream().sorted(Comparator.comparing(o -> o.name)).forEach(this.modules::add));
-        BOLogger.info(String.format("Initializing %s modules took %sms %n", this.modules.size(), time));
+    public void add(Module module) {
+        if (!modules.contains(module)) {
+            this.modules.add(module);
+            Arraylist.deltaMap.put(module, new org.apache.commons.lang3.mutable.MutableFloat(0.0F));
+        }
     }
 
-    private List<Module> getAllModuleObjects() {
-        List<Module> list = new ArrayList<>();
-        this.addModuleObjects(Module.class.getCanonicalName().replace(Module.class.getSimpleName(), "modules"), list);
-        AddonLoader.addons.forEach(addon -> this.addModuleObjects(addon.modulePath, list));
-        return list;
-    }
-
-    private void addModuleObjects(String path, List<Module> list) {
+    private void addModuleObjects(String path, List<Module> list, ClassLoader loader) {
+        if (path == null) return;
         ClassUtils.forEachClass(clazz -> {
-            if (Module.class.isAssignableFrom(clazz)) {
+            if (Module.class.isAssignableFrom(clazz)
+                    && !clazz.isInterface()
+                    && !java.lang.reflect.Modifier.isAbstract(clazz.getModifiers())) {
+
                 Class<? extends Module> moduleClass = clazz.asSubclass(Module.class);
 
                 if (BlackOut.TYPE.isDevBuild() || !moduleClass.isAnnotationPresent(OnlyDev.class)) {
                     list.add(ClassUtils.instance(moduleClass));
                 }
             }
-        }, path);
+        }, path, loader);
     }
 
     public final List<Module> getModules() {

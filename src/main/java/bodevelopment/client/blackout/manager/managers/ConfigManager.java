@@ -68,7 +68,7 @@ public class ConfigManager extends Manager {
         }
 
         if (shouldSave
-                && !Managers.MODULE.getModules().isEmpty()
+                && !Managers.MODULES.getModules().isEmpty()
                 && System.currentTimeMillis() > this.previousSave + 10000L
                 && !(BlackOut.mc.currentScreen instanceof ClickGui)
                 && !(BlackOut.mc.currentScreen instanceof HudEditor)) {
@@ -116,9 +116,9 @@ public class ConfigManager extends Manager {
             case Legit:
             case Client:
                 if (object.get(type.name()) instanceof JsonObject moduleObject) {
-                    Managers.MODULE.getModules().stream().filter(type.predicate).forEach(module -> this.readModule(module, moduleObject));
+                    Managers.MODULES.getModules().stream().filter(type.predicate).forEach(module -> this.readModule(module, moduleObject));
                 } else {
-                    Managers.MODULE.getModules().stream().filter(type.predicate).forEach(module -> {
+                    Managers.MODULES.getModules().stream().filter(type.predicate).forEach(module -> {
                         module.settingGroups.forEach(group -> group.settings.forEach(Setting::reset));
                         module.enabled = false;
                     });
@@ -132,7 +132,7 @@ public class ConfigManager extends Manager {
                 break;
             case Binds:
                 if (object.has("binds") && object.get("binds") instanceof JsonObject bindObject) {
-                    Managers.MODULE.getModules().forEach(module -> {
+                    Managers.MODULES.getModules().forEach(module -> {
                         if (bindObject.has(module.getFileName()) && bindObject.get(module.getFileName()) instanceof JsonObject moduleObject) {
                             module.bind.read(moduleObject);
                         } else {
@@ -140,7 +140,7 @@ public class ConfigManager extends Manager {
                         }
                     });
                 } else {
-                    Managers.MODULE.getModules().forEach(module -> module.bind.reset());
+                    Managers.MODULES.getModules().forEach(module -> module.bind.reset());
                 }
         }
     }
@@ -223,7 +223,7 @@ public class ConfigManager extends Manager {
         configObject.add("lastSave", timeObject);
         JsonObject moduleObject = new JsonObject();
         if (type.predicate != null) {
-            Managers.MODULE.getModules().stream().filter(type.predicate).forEach(module -> this.writeModule(module, moduleObject));
+            Managers.MODULES.getModules().stream().filter(type.predicate).forEach(module -> this.writeModule(module, moduleObject));
         }
 
         for (ConfigType configType : ConfigType.values()) {
@@ -255,7 +255,7 @@ public class ConfigManager extends Manager {
 
         if (type == ConfigType.Binds) {
             JsonObject bindObject = new JsonObject();
-            Managers.MODULE.getModules().forEach(module -> {
+            Managers.MODULES.getModules().forEach(module -> {
                 JsonObject jsonObject = new JsonObject();
                 module.bind.write(jsonObject);
                 bindObject.add(module.getFileName(), jsonObject);

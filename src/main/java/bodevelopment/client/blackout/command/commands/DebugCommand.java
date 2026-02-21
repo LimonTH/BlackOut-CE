@@ -41,4 +41,9 @@ public class DebugCommand extends Command {
         }
         return Collections.emptyList();
     }
+
+    @Override
+    public boolean canUseOutsideWorld() {
+        return true;
+    }
 }

@@ -14,6 +14,10 @@ public class Command {
         this.format = format;
     }
 
+    public boolean canUseOutsideWorld() {
+        return false;
+    }
+
     public List<String> getSuggestions(String[] args) {
         return Collections.emptyList();
     }

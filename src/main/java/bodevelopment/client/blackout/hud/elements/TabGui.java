@@ -53,7 +53,7 @@ public class TabGui extends HudElement {
     public TabGui() {
         super("Tab GUI", ".");
 
-        for (Module module : Managers.MODULE.getModules()) {
+        for (Module module : Managers.MODULES.getModules()) {
             this.moduleMap.put(module, new MutableDouble(module.enabled ? 1.0 : 0.0));
         }
 

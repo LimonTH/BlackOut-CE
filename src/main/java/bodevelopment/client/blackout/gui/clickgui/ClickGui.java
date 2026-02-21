@@ -81,7 +81,7 @@ public class ClickGui extends Screen {
 
     public void initGui() {
         this.moduleComponents.clear();
-        Managers.MODULE.getModules().forEach(m -> this.moduleComponents.add(new ModuleComponent(this.stack, m)));
+        Managers.MODULES.getModules().forEach(m -> this.moduleComponents.add(new ModuleComponent(this.stack, m)));
         this.categoryComponents.clear();
         SubCategory.categories.forEach(c -> this.categoryComponents.add(new CategoryComponent(this.stack, c)));
     }

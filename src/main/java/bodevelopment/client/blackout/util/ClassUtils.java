@@ -21,14 +21,15 @@ public class ClassUtils {
         constructor.setAccessible(true);
     }
 
-    public static void forEachClass(Consumer<? super Class<?>> consumer, String packageName) {
+    public static void forEachClass(Consumer<? super Class<?>> consumer, String packageName, ClassLoader loader) {
         try {
-            ClassLoader cl = BlackOut.class.getClassLoader();
+            ClassLoader cl = loader != null ? loader : BlackOut.class.getClassLoader();
+
             ClassPath.from(cl).getTopLevelClassesRecursive(packageName).forEach(info -> {
                 try {
-                    consumer.accept(Class.forName(info.getName()));
+                    consumer.accept(Class.forName(info.getName(), true, cl));
                 } catch (ClassNotFoundException e) {
-                    throw new RuntimeException(e);
+                    BOLogger.error("Класс не найден в " + packageName + " : ", e);
                 }
             });
         } catch (Exception e) {

@@ -28,7 +28,7 @@ public class PanicCommand extends Command {
                     }
 
                     this.states.clear();
-                    Managers.MODULE.getModules().forEach(m -> {
+                    Managers.MODULES.getModules().forEach(m -> {
                         this.states.put(m, m.enabled);
                         if (m.enabled) {
                             m.disable();
@@ -62,5 +62,10 @@ public class PanicCommand extends Command {
             );
         }
         return Collections.emptyList();
+    }
+
+    @Override
+    public boolean canUseOutsideWorld() {
+        return true;
     }
 }

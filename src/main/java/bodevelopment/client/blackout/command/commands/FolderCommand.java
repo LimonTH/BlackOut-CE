@@ -39,4 +39,9 @@ public class FolderCommand extends Command {
             return "§cError: Could not open folder. " + e.getMessage();
         }
     }
+
+    @Override
+    public boolean canUseOutsideWorld() {
+        return true;
+    }
 }

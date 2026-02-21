@@ -31,7 +31,7 @@ public class Arraylist extends HudElement {
     public final Setting<BracketMode> brackets = this.sgGeneral.e("Bracket Style", BracketMode.None, ".");
     private final Setting<FilterMode> filterMode = this.sgGeneral.e("Filter Mode", FilterMode.Blacklist, ".");
     private final Setting<List<Module>> moduleList = this.sgGeneral
-            .l("Modules", "Only renders these modules.", Managers.MODULE.getModules(), module -> module.name);
+            .l("Modules", "Only renders these modules.", Managers.MODULES.getModules(), module -> module.name);
     private final Setting<Boolean> drawInfo = this.sgGeneral.b("Show Info", true, ".");
     private final Setting<Boolean> rounded = this.sgGeneral.b("Rounded", true, "Renders a rounded background (cool af)");
     private final Setting<Boolean> sideBar = this.sgGeneral.b("Side bar", true, "Renders a sidebar", () -> !this.rounded.get());
@@ -63,7 +63,7 @@ public class Arraylist extends HudElement {
             Comparator<Module> comparator = Comparator.comparingDouble(
                     m -> BlackOut.FONT.getWidth(m.getDisplayName() + (m.getInfo() == null ? "" : this.getInfo(m.getInfo())))
             );
-            List<Module> modules = Managers.MODULE
+            List<Module> modules = Managers.MODULES
                     .getModules()
                     .stream()
                     .filter(module -> this.filterMode.get().shouldAccept(module, this.moduleList.get()) && module.category.parent() != ParentCategory.CLIENT)
