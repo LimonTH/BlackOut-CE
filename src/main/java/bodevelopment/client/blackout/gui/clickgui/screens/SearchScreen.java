@@ -142,7 +142,7 @@ public class SearchScreen extends ClickGuiScreen {
             return;
         }
 
-        this.results = Managers.MODULE.getModules().stream()
+        this.results = Managers.MODULES.getModules().stream()
                 .filter(m -> m.getDisplayName().toLowerCase().contains(query) || m.category.name().toLowerCase().contains(query))
                 .sorted((m1, m2) -> {
                     boolean m1Exact = m1.getDisplayName().toLowerCase().startsWith(query);

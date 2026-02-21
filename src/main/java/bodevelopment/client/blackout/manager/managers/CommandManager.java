@@ -19,34 +19,35 @@ public class CommandManager extends Manager {
     @Override
     public void init() {
         this.commands.clear();
-        List<Command> commandObjects = new ArrayList<>();
-        ClassUtils.forEachClass(
-                clazz -> commandObjects.add((Command) ClassUtils.instance((Class<?>) clazz)),
-                Command.class.getCanonicalName().replace(Command.class.getSimpleName(), "commands")
-        );
-        commandObjects.stream().sorted(Comparator.comparing(o -> o.name)).forEach(this::c);
+
+        String internalPath = Command.class.getCanonicalName().replace(Command.class.getSimpleName(), "commands");
+
+        ClassUtils.forEachClass(clazz -> {
+            if (Command.class.isAssignableFrom(clazz)
+                    && !clazz.isInterface()
+                    && !java.lang.reflect.Modifier.isAbstract(clazz.getModifiers())) {
+
+                this.add((Command) ClassUtils.instance((Class<?>) clazz));
+            }
+        }, internalPath, Command.class.getClassLoader());
     }
 
-    private void c(Command command) {
+    public void add(Command command) {
+        if (command == null) return;
         this.commands.put(command.name.toLowerCase(), command);
     }
 
     public String onCommand(String[] args) {
-        if (this.commands.containsKey(args[0])) {
-            Command command = this.commands.get(args[0]);
+        if (args.length == 0) return null;
+
+        String commandName = args[0].toLowerCase();
+        if (this.commands.containsKey(commandName)) {
+            Command command = this.commands.get(commandName);
 
             try {
-                if (BlackOut.mc.player == null || BlackOut.mc.world == null) {
-                    // Список исключений
-                    if (!command.name.equalsIgnoreCase("folder")
-                            && !command.name.equalsIgnoreCase("debug")
-                            && !command.name.equalsIgnoreCase("disable")
-                            && !command.name.equalsIgnoreCase("enable")
-                            && !command.name.equalsIgnoreCase("stats")
-                            && !command.name.equalsIgnoreCase("panic")) {
-                        return String.format("[%s]%s This command can only be used in-game!",
-                                command.name, Formatting.RED);
-                    }
+                if (BlackOut.mc.player == null && !command.canUseOutsideWorld()) {
+                    return String.format("[%s]%s This command can only be used in-game!",
+                            command.name, Formatting.RED);
                 }
 
                 String respond = command.execute(Arrays.copyOfRange(args, 1, args.length));

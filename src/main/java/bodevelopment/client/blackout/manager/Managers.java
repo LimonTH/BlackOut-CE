@@ -18,7 +18,7 @@ public class Managers {
     public static final FrameBufferManager FRAME_BUFFER = new FrameBufferManager();
     public static final FriendsManager FRIENDS = new FriendsManager();
     public static final HUDManager HUD = new HUDManager();
-    public static final ModuleManager MODULE = new ModuleManager();
+    public static final ModuleManager MODULES = new ModuleManager();
     public static final NotificationManager NOTIFICATIONS = new NotificationManager();
     public static final PacketManager PACKET = new PacketManager();
     public static final ParticleManager PARTICLE = new ParticleManager();

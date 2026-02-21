@@ -37,7 +37,7 @@ public class Keybinds extends HudElement {
     public void render() {
         if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
             Comparator<Module> comparator = Comparator.comparingDouble(m -> BlackOut.FONT.getWidth(m.getDisplayName() + m.bind.get().getName()));
-            List<Module> modules = Managers.MODULE
+            List<Module> modules = Managers.MODULES
                     .getModules()
                     .stream()
                     .filter(module -> module.enabled && module.bind.get().value != null)

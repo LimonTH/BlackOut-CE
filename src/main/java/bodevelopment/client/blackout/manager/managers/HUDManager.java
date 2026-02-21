@@ -51,18 +51,21 @@ public class HUDManager extends Manager {
     public void init() {
         BlackOut.EVENT_BUS.subscribe(this, () -> false);
         this.elements.clear();
-        List<Class<? extends HudElement>> hudClasses = new ArrayList<>();
-        ClassUtils.forEachClass(
-                clazz -> {
-                    try {
-                        hudClasses.add(clazz.asSubclass(HudElement.class));
-                    } catch (ClassCastException ignored) {
-                    }
-                },
-                HudElement.class.getCanonicalName().replace(HudElement.class.getSimpleName(), "elements")
-        );
-        hudClasses.stream().sorted(Comparator.comparing(Class::getSimpleName)).forEach(this::add);
-        this.HUD_EDITOR.initElements();
+
+        String internalPath = HudElement.class.getCanonicalName().replace(HudElement.class.getSimpleName(), "elements");
+        this.addHudObjects(internalPath, HudElement.class.getClassLoader());
+    }
+
+    private void addHudObjects(String path, ClassLoader loader) {
+        if (path == null) return;
+        ClassUtils.forEachClass(clazz -> {
+            if (HudElement.class.isAssignableFrom(clazz)
+                    && !clazz.isInterface()
+                    && !java.lang.reflect.Modifier.isAbstract(clazz.getModifiers())) {
+
+                this.add(clazz.asSubclass(HudElement.class));
+            }
+        }, path, loader);
     }
 
     @Event
@@ -77,6 +80,15 @@ public class HUDManager extends Manager {
             Renderer.setAlpha(1.0F);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             this.end(this.stack);
+        }
+    }
+
+    public void add(Class<? extends HudElement> clazz) {
+        String name = clazz.getSimpleName();
+        if (elements.stream().noneMatch(p -> p.getLeft().equals(name))) {
+            this.elements.add(new Pair<>(name, clazz));
+        } else {
+            this.elements.add(new Pair<>(clazz.getName(), clazz));
         }
     }
 
@@ -141,10 +153,6 @@ public class HUDManager extends Manager {
                 return;
             }
         }
-    }
-
-    private void add(Class<? extends HudElement> clazz) {
-        this.elements.add(new Pair<>(clazz.getSimpleName().replace(" ", ""), clazz));
     }
 
     private void toggle() {

@@ -7,4 +7,9 @@ public class EnableCommand extends ToggleCommand {
     public EnableCommand() {
         super("enable", Formatting.GREEN);
     }
+
+    @Override
+    public boolean canUseOutsideWorld() {
+        return true;
+    }
 }
