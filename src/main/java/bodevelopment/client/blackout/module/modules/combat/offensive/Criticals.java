@@ -10,6 +10,9 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.ExperienceOrbEntity;
+import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
@@ -44,10 +47,16 @@ public class Criticals extends Module {
     @Event
     public void onSend(PacketEvent.Send event) {
         if (BlackOut.mc.player == null || BlackOut.mc.world == null) return;
+        if (Aura.getInstance().enabled && Aura.getInstance().isAttacking) return;
 
         if (event.packet instanceof AccessorInteractEntityC2SPacket packet
-                && packet.getType().getType() == PlayerInteractEntityC2SPacket.InteractType.ATTACK
-                && BlackOut.mc.world.getEntityById(packet.getId()) instanceof LivingEntity) {
+                && packet.getType().getType() == PlayerInteractEntityC2SPacket.InteractType.ATTACK) {
+
+            Entity attackedEntity = BlackOut.mc.world.getEntityById(packet.getId());
+
+            if (attackedEntity == null ||
+                    attackedEntity instanceof ItemEntity ||
+                    attackedEntity instanceof ExperienceOrbEntity) return;
 
             if (BlackOut.mc.player.isSubmergedInWater() || BlackOut.mc.player.isInLava() ||
                     BlackOut.mc.player.isClimbing() || BlackOut.mc.player.hasStatusEffect(StatusEffects.BLINDNESS))
@@ -124,7 +133,7 @@ public class Criticals extends Module {
     }
 
     private void sendPos(double x, double y, double z, boolean onGround) {
-        this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(x, y, z, onGround));
+        this.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(x, y, z, onGround));
     }
 
     @Event

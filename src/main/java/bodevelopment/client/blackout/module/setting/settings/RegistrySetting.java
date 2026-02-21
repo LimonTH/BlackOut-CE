@@ -13,15 +13,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
 
 public class RegistrySetting<T> extends ListSetting<T> {
     private static final Map<Registry<?>, List<?>> registries = new HashMap<>();
     private final Registry<T> registry;
 
     @SafeVarargs
+    public RegistrySetting(String name, Registry<T> registry, EpicInterface<T, String> getName, String description, SingleOut<Boolean> visible, Predicate<T> filter, T... val) {
+        super(name, getFilteredList(registry, filter), getName, description, visible, val);
+        this.registry = registry;
+    }
+
+    @SafeVarargs
     public RegistrySetting(String name, Registry<T> registry, EpicInterface<T, String> getName, String description, SingleOut<Boolean> visible, T... val) {
         super(name, getList(registry), getName, description, visible, val);
         this.registry = registry;
+    }
+
+    private static <T> List<T> getFilteredList(Registry<T> registry, Predicate<T> filter) {
+        return registry.getEntrySet().stream()
+                .map(Entry::getValue)
+                .filter(filter)
+                .toList();
     }
 
     @SuppressWarnings("unchecked")

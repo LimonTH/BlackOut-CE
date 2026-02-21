@@ -12,6 +12,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 public class Settings {
     public static Setting<Boolean> b(String name, boolean value, String description, SingleOut<Boolean> visible) {
@@ -52,6 +53,10 @@ public class Settings {
 
     public static Setting<List<EntityType<?>>> el(String name, String description, SingleOut<Boolean> visible, EntityType<?>... value) {
         return r(name, description, visible, Registries.ENTITY_TYPE, entity -> entity.getName().getString(), value);
+    }
+
+    public static Setting<List<EntityType<?>>> el(String name, String description, SingleOut<Boolean> visible, Predicate<EntityType<?>> filter, EntityType<?>... value) {
+        return new RegistrySetting<>(name, Registries.ENTITY_TYPE, entity -> entity.getName().getString(), description, visible, filter, value);
     }
 
     @SafeVarargs

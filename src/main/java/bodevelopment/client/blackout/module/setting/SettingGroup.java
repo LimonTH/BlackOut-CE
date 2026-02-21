@@ -112,6 +112,10 @@ public class SettingGroup {
         return this.a(Settings.el(name, description, null, value));
     }
 
+    public Setting<List<EntityType<?>>> el(String name, String description, java.util.function.Predicate<EntityType<?>> filter, EntityType<?>... value) {
+        return this.a(Settings.el(name, description, null, filter, value));
+    }
+
     @SafeVarargs
     public final <T> Setting<List<T>> r(String name, String description, Registry<T> registry, EpicInterface<T, String> getName, T... value) {
         return this.a(Settings.r(name, description, null, registry, getName, value));
