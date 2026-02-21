@@ -57,7 +57,7 @@ public class AddonLoader {
             if (type.isAssignableFrom(clazz) && !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())) {
                 try {
                     Class<? extends T> targetClazz = clazz.asSubclass(type);
-                    T instance = (T) ClassUtils.instance(targetClazz);
+                    T instance = ClassUtils.instance(targetClazz);
 
                     action.accept(instance);
                 } catch (ClassCastException e) {

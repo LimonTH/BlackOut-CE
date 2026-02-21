@@ -15,7 +15,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class AutoMoan extends Module {
-    private static final String[] submissive = new String[]{
+    private static final String[] submissive = new String[]{ // TODO: Добавить фразочек AutoMoan
             "fuck me harder daddy",
             "deeper! daddy deeper!",
             "Fuck yes your so big!",
@@ -66,13 +66,13 @@ public class AutoMoan extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        this.timer = Math.min(this.delay.get().intValue(), this.timer + event.frameTime);
+        this.timer = Math.min(this.delay.get(), this.timer + event.frameTime);
     }
 
     @Event
     public void onTick(TickEvent.Pre event) {
         if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            if (!(this.timer++ < this.delay.get().intValue())) {
+            if (!(this.timer++ < this.delay.get())) {
                 this.MOAN();
                 this.timer = 0.0;
             }

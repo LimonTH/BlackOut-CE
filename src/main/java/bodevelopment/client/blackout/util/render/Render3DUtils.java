@@ -13,7 +13,7 @@ import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 
-public class Render3DUtils {
+public class Render3DUtils { // TODO: В одиночном мире рендер работает идеально, но при если игре на сервере было замечено странное поведение рендера (дёрганые элементы, пытающиеся прилепится к чему-либо, а также их части, по типу углов, скачущие на небольшие координаты туда сюда(в районе 0.1(x,y,z)). Ещё хочется сказать про невероятное дёрганье при движении этих рендерингуемых объектов
     public static MatrixStack matrices = new MatrixStack();
 
     public static void box(Box box, BlackOutColor sideColor, BlackOutColor lineColor, RenderShape shape) {

@@ -81,7 +81,6 @@ public class BoxMultiSetting {
         if (this.mode.get() == BoxRenderMode.Shader) {
             FrameBuffer insideBuffer = Managers.FRAME_BUFFER.getBuffer(this.insideBufferName);
             FrameBuffer bloomBuffer = Managers.FRAME_BUFFER.getBuffer(this.bloomBufferName);
-            // TODO: ThemeSettings themeSettings = ThemeSettings.getInstance();
             if (this.blur.get()) {
                 float prevAlpha = Renderer.getAlpha();
                 Renderer.setAlpha(this.shaderAlpha);

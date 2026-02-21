@@ -225,7 +225,7 @@ public class MainMenu {
     }
 
     private String getSplash() {
-        String[] splashTexts = new String[]{
+        String[] splashTexts = new String[]{ // TODO: Сделать нормальные высказывания клиента, а также сделать их смену прямо во время активной сессии(чтобы они свайпались один за другим)
                 // --- СТЕБ НАД КОММЬЮНИТИ ---
                 "Buying a better gaming chair...",
                 "Configs: 10$ | Skill: 0$",
