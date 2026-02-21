@@ -11,11 +11,9 @@ A highly customizable and optimized Minecraft utility client, modernized and mai
 
 ## 🛠 Current TASKS (TODO)
 
-- `Fix ui scalling when font size > 1 or < 1`
 - `Paste modules description`
 - `Create localization settings(RUS/ENG)`
 - `Fix the logic for rendering items on the screen (they seem to render in the dark)`
-- `Fix entity selection in the Aura module's entity list, etc., and improve rendering in it for clearer use`
 ---
 
 ## 💻 Tech Stack
@@ -71,7 +69,6 @@ Since I am developing this project solo, any feedback or bug reports are highly 
 - `Вставить описания для всех модулей`
 - `Создать настройки локализации (RUS/ENG)`
 - `Починить логику рендеринга предметов на экране (они как будто бы в темноте рендерятся)`
-- `Починить выбор сущностей в списке сущностей модуля Aura и подобных, а также улучшить рендеринг в нём для более понятного использования`
 
 ---
 
