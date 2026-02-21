@@ -117,10 +117,8 @@ public class FriendsScreen extends ClickGuiScreen {
         float size = 44.0F;
         float radius = 10.0F;
 
-        TextureRenderer.renderFitRounded(this.stack, x, y, size, size, 0.125F, 0.125F, 0.250F, 0.250F, 0.0F, 16, glId);
-        TextureRenderer.renderFitRounded(this.stack, x, y, size, size, 0.625F, 0.125F, 0.750F, 0.250F, 0.0F, 16, glId);
-
-        RenderUtils.revertedRounded(this.stack, x, y, size, size, radius, GuiColorUtils.bg1.getRGB()); // TODO: не работает маска скругления углов
+        TextureRenderer.renderFitRounded(this.stack, x, y, size, size, 0.125F, 0.125F, 0.250F, 0.250F, radius, 16, glId);
+        TextureRenderer.renderFitRounded(this.stack, x, y, size, size, 0.625F, 0.125F, 0.750F, 0.250F, radius, 16, glId);
     }
 
     @Override

@@ -306,44 +306,6 @@ public class RenderUtils {
         innerRounded(stack, x, y, w, h, radius, shadowRadius, color, shadowColor, minX, maxX, minY, maxY);
     }
 
-    public static void revertedRounded(MatrixStack stack, float x, float y, float w, float h, float radius, int color) {
-        float x1 = x + radius;
-        float x2 = x + w - radius;
-        float y1 = y + radius;
-        float y2 = y + h - radius;
-
-        Renderer.setMatrices(stack);
-        ShaderRenderer shaderRenderer = ShaderRenderer.getInstance();
-
-        shaderRenderer.startRender(null, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.DrawMode.QUADS, VertexFormats.POSITION);
-
-        shaderRenderer.vertex2D(x, y);
-        shaderRenderer.vertex2D(x1, y);
-        shaderRenderer.vertex2D(x1, y1);
-        shaderRenderer.vertex2D(x, y1);
-
-        shaderRenderer.vertex2D(x2, y);
-        shaderRenderer.vertex2D(x + w, y);
-        shaderRenderer.vertex2D(x + w, y1);
-        shaderRenderer.vertex2D(x2, y1);
-
-        shaderRenderer.vertex2D(x, y2);
-        shaderRenderer.vertex2D(x1, y2);
-        shaderRenderer.vertex2D(x1, y + h);
-        shaderRenderer.vertex2D(x, y + h);
-
-        shaderRenderer.vertex2D(x2, y2);
-        shaderRenderer.vertex2D(x + w, y2);
-        shaderRenderer.vertex2D(x + w, y + h);
-        shaderRenderer.vertex2D(x2, y + h);
-
-        shaderRenderer.endRender(Shaders.rounded, new ShaderSetup(setup -> {
-            setup.set("rad", radius, 0);
-            setup.color("clr", color);
-            setup.set("pos", x, y, w, h);
-        }));
-    }
-
     private static void innerRounded(
             MatrixStack stack,
             float x,
