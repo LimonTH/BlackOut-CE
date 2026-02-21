@@ -559,6 +559,17 @@ public class ClickGui extends Screen {
             return;
         }
 
+        if (key == GLFW.GLFW_KEY_UP) {
+            upPressed = pressed;
+            pressTime = System.currentTimeMillis();
+            return;
+        }
+        if (key == GLFW.GLFW_KEY_DOWN) {
+            downPressed = pressed;
+            pressTime = System.currentTimeMillis();
+            return;
+        }
+
         String keyName = GLFW.glfwGetKeyName(key, 0);
 
         boolean isModifier = key == GLFW.GLFW_KEY_LEFT_CONTROL || key == GLFW.GLFW_KEY_RIGHT_CONTROL ||

@@ -26,12 +26,11 @@ import bodevelopment.client.blackout.util.SettingUtils;
 import net.minecraft.client.gui.screen.DeathScreen;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.AxeItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
@@ -64,7 +63,35 @@ public class Aura extends MoveUpdateModule {
     private final Setting<Boolean> tpDisable = this.sgGeneral.b("Disable on TP", false, "Should we disable when teleporting to another world");
     private final Setting<RotationMode> rotationMode = this.sgGeneral
             .e("Rotation mode", RotationMode.OnHit, "When should we rotate. Only active if attack rotations are enabled in rotation settings.", () -> true);
-    private final Setting<List<EntityType<?>>> entities = this.sgGeneral.el("Entities", ".", EntityType.PLAYER);
+    private final Setting<List<EntityType<?>>> entities = this.sgGeneral.el(
+            "Entities",
+            "Entities to attack.",
+            type ->
+                    type != EntityType.ITEM
+                    && type != EntityType.EXPERIENCE_ORB
+                    && type != EntityType.AREA_EFFECT_CLOUD
+                    && type != EntityType.MARKER
+                    && type != EntityType.POTION
+                    && type != EntityType.LLAMA_SPIT
+                    && type != EntityType.EYE_OF_ENDER
+                    && type != EntityType.DRAGON_FIREBALL
+                    && type != EntityType.FIREWORK_ROCKET
+                    && type != EntityType.ENDER_PEARL
+                    && type != EntityType.FISHING_BOBBER
+                    && type != EntityType.ARROW
+                    && type != EntityType.SPECTRAL_ARROW
+                    && type != EntityType.SNOWBALL
+                    && type != EntityType.SMALL_FIREBALL
+                    && type != EntityType.WITHER_SKULL
+                    && type != EntityType.FALLING_BLOCK
+                    && type != EntityType.TNT
+                    && type != EntityType.EVOKER_FANGS
+                    && type != EntityType.LIGHTNING_BOLT
+                    && type != EntityType.WIND_CHARGE
+                    && type != EntityType.BREEZE_WIND_CHARGE
+                    && !type.toString().contains("display"),
+            EntityType.PLAYER
+    );
     private final Setting<Double> hitChance = this.sgGeneral.d("Hit Chance", 1.0, 0.0, 1.0, 0.01, ".");
     private final Setting<Double> expand = this.sgGeneral.d("Expand", 0.0, 0.0, 1.0, 0.01, ".");
     private final Setting<Integer> extrapolation = this.sgGeneral.i("Extrapolation", 1, 0, 3, 1, ".");
@@ -376,6 +403,8 @@ public class Aura extends MoveUpdateModule {
     }
 
     private void attackTarget() {
+        if (this.target == null) return;
+
         this.isAttacking = true;
         if (this.holdingSword() && this.block.get() == BlockMode.Spam && this.blocking.get()) {
             this.stopBlocking();
@@ -409,6 +438,14 @@ public class Aura extends MoveUpdateModule {
             }
 
             for (int i = 0; i < this.packets.get(); i++) {
+                if (!this.target.isAlive() || this.target.isRemoved()) {
+                    break;
+                }
+
+                if (this.target instanceof EndCrystalEntity && Managers.ENTITY.isDead(this.target.getId())) {
+                    break;
+                }
+
                 this.sendPacket(PlayerInteractEntityC2SPacket.attack(this.target, BlackOut.mc.player.isSneaking()));
             }
 
@@ -431,10 +468,7 @@ public class Aura extends MoveUpdateModule {
                 Vec3d pos = positions.get(i);
                 this.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(pos.getX(), pos.getY(), pos.getZ(), false));
             }
-
-            this.sendInstantly(
-                    new PlayerMoveC2SPacket.PositionAndOnGround(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), false)
-            );
+            this.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), false));
         }
 
         if (this.holdingSword() && this.block.get() == BlockMode.Spam && this.blocking.get()) {
@@ -489,6 +523,13 @@ public class Aura extends MoveUpdateModule {
         this.extrapolationMap.update(entity -> this.extrapolation.get());
         BlackOut.mc.world.getEntities().forEach(entity -> {
             if (this.entities.get().contains(entity.getType()) && entity != BlackOut.mc.player) {
+                if (entity instanceof ItemEntity ||
+                        entity instanceof ExperienceOrbEntity ||
+                        entity instanceof ProjectileEntity ||
+                        entity instanceof AreaEffectCloudEntity) {
+                    return;
+                }
+
                 double distance = BlackOut.mc.player.distanceTo(entity);
                 if (this.teleport.get()) {
                     if (distance > this.maxPackets.get() * this.maxDistance.get()) {
@@ -506,6 +547,7 @@ public class Aura extends MoveUpdateModule {
                 };
                 if (!(val <= value.get())) {
                     if (entity instanceof LivingEntity livingEntity) {
+                        if (livingEntity.isRemoved() || !livingEntity.isAlive()) return;
                         if (livingEntity.getHealth() <= 0.0F) {
                             return;
                         }
