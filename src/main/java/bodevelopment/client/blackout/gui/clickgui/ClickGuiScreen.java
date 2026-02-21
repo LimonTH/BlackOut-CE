@@ -22,7 +22,7 @@ public class ClickGuiScreen {
     protected final float width;
     protected final float height;
     protected final ScrollHelper scroll;
-    private final long openTime;
+    public final long openTime;
     private final String label;
     protected float x = 0;
     protected float y = 0;

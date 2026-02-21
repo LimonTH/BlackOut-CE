@@ -46,7 +46,7 @@ public class Capes {
 
     public static void requestCapes() {
         CompletableFuture.runAsync(() -> {
-            try (InputStream stream = URI.create("https://raw.githubusercontent.com/KassuK1/BlackoutCapes/main/capes").toURL().openStream();
+            try (InputStream stream = URI.create("https://raw.githubusercontent.com/LimonTH/Blackout-CE-capes/main/capes").toURL().openStream();
                  BufferedReader read = new BufferedReader(new InputStreamReader(stream))) {
 
                 Map<String, Identifier> identifiers = new HashMap<>();
@@ -85,7 +85,7 @@ public class Capes {
     private static class CapeTexture extends AbstractTexture {
         public CapeTexture(String name, Identifier identifier) {
             try {
-                BufferedImage image = ImageIO.read(URI.create("https://raw.githubusercontent.com/KassuK1/BlackoutCapes/main/textures/" + name + ".png").toURL());
+                BufferedImage image = ImageIO.read(URI.create("https://raw.githubusercontent.com/LimonTH/Blackout-CE-capes/main/textures/" + name + ".png").toURL());
 
                 RenderSystem.recordRenderCall(() -> {
                     uploadAndRegister(name, identifier, image);

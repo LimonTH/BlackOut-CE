@@ -48,6 +48,8 @@ public class ConfigScreen extends ClickGuiScreen {
     private boolean typing = false;
     private boolean isCloud = false;
 
+    private final Map<String, MutableDouble> slotAnims = new HashMap<>();
+
     public ConfigScreen() {
         super("Configs", 800.0F, 500.0F, true);
     }
@@ -149,7 +151,7 @@ public class ConfigScreen extends ClickGuiScreen {
         this.typing = true;
         this.isCloud = true;
         this.textField.clear();
-        this.textField.setContent("KassuK1/blackout-configs");
+        this.textField.setContent("LimonTH/BlackOut-CE-configs");
     }
 
     private void clickedAdd() {
@@ -268,7 +270,10 @@ public class ConfigScreen extends ClickGuiScreen {
         this.stack.translate(0.0F, 15.0F - this.scroll.get(), 0.0F);
 
         this.first = true;
-        this.configs.forEach(this::renderConfig);
+        int index = 0;
+        for (Entry<String, MutableDouble> entry : this.configs.entrySet()) {
+            renderConfig(entry.getKey(), entry.getValue(), index++);
+        }
 
         this.renderAdd();
 
@@ -321,20 +326,41 @@ public class ConfigScreen extends ClickGuiScreen {
         this.stack.translate(0.0F, 70.0F, 0.0F);
     }
 
-    private void renderConfig(String name, MutableDouble mutableDouble) {
+    private void renderConfig(String name, MutableDouble mutableDouble, int index) {
         if (!this.first) RenderUtils.line(this.stack, -10.0F, 0.0F, this.width + 10.0F, 0.0F, lineColor);
         this.first = false;
 
         this.stack.push();
         this.stack.translate(250.0F, 35.0F, 0.0F);
         boolean inUse = false;
+
+        double rowCenterY = index * 70.0 + 50.0 - this.scroll.get();
+        double mouseDiffY = this.my - rowCenterY;
+
         for (int i = 0; i < 8; i++) {
             this.stack.translate(65.0F, 0.0F, 0.0F);
-            if (Managers.CONFIG.getConfigs()[i].equals(name)) {
-                inUse = true;
-                RenderUtils.rounded(this.stack, 0.0F, 0.0F, 0.0F, 0.0F, 4.0F, 0.0F, Color.WHITE.getRGB(), Color.WHITE.getRGB());
+
+            boolean isSelected = Managers.CONFIG.getConfigs()[i].equals(name);
+            if (isSelected) inUse = true;
+            double checkX = 250.0 + 65.0 * (i + 1);
+            double dx = this.mx - checkX;
+            boolean isHovered = !isSelected && (dx * dx + mouseDiffY * mouseDiffY) < 1000.0;
+
+            String animKey = name + i;
+            MutableDouble anim = slotAnims.computeIfAbsent(animKey, k -> new MutableDouble(0));
+            anim.setValue(MathHelper.lerp(this.frameTime * 10.0F, (float)anim.getValue().doubleValue(), isHovered ? 1.0F : 0.0F));
+            float animVal = anim.getValue().floatValue();
+
+            RenderUtils.roundedShadow(this.stack, -4.0F, -4.0F, 8.0F, 8.0F, 10.0F, 10.0F, ColorUtils.SHADOW100I);
+
+            if (isSelected) {
+                float size = 4.0F;
+                RenderUtils.rounded(this.stack, -size, -size, size * 2, size * 2, size, 0, Color.WHITE.getRGB(), Color.WHITE.getRGB());
+                RenderUtils.roundedShadow(this.stack, -size, -size, size * 2, size * 2, 8.0F, 8.0F, ColorUtils.withAlpha(Color.WHITE.getRGB(), 60));
+            } else if (animVal > 0.01F) {
+                float size = animVal * 4.0F;
+                RenderUtils.rounded(this.stack, -size, -size, size * 2, size * 2, size, 0, ColorUtils.withAlpha(Color.WHITE.getRGB(), (int) (animVal * 120)), 0);
             }
-            RenderUtils.roundedShadow(this.stack, 0.0F, 0.0F, 0.0F, 0.0F, 10.0F, 10.0F, ColorUtils.SHADOW100I);
         }
         this.stack.pop();
 
