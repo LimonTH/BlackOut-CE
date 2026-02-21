@@ -55,20 +55,20 @@ public class PearlPhase extends Module {
                 if (!this.ccBypass.get() || this.cc() || this.placed) {
                     switch (this.rotationMode.get()) {
                         case Normal:
-                            if (!this.rotate(this.getYaw(), this.pitch.get().intValue(), RotationType.Other, "look")) {
+                            if (!this.rotate(this.getYaw(), this.pitch.get(), RotationType.Other, "look")) {
                                 return;
                             }
                             break;
                         case Instant:
-                            if (!this.rotate(this.getYaw(), this.pitch.get().intValue(), RotationType.InstantOther, "look")) {
+                            if (!this.rotate(this.getYaw(), this.pitch.get(), RotationType.InstantOther, "look")) {
                                 return;
                             }
                     }
-
+                    // TODO: Странная реализация switched
                     boolean switched = false;
                     if (switched || this.switchMode.get().swap(findResult.slot())) {
                         if (this.rotationMode.get() == ObsidianModule.RotationMode.Packet) {
-                            this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(this.getYaw(), this.pitch.get().intValue(), Managers.PACKET.isOnGround()));
+                            this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(this.getYaw(), this.pitch.get(), Managers.PACKET.isOnGround()));
                         }
 
                         this.useItem(hand);
@@ -87,8 +87,8 @@ public class PearlPhase extends Module {
         }
     }
 
-    private boolean cc() {
-        FindResult result = null;
+    private boolean cc() { // TODO: Странная инициализация FindResult
+        FindResult result;
         if (!(result = this.ccSwitchMode.get().find(stack -> stack.getItem() instanceof BlockItem)).wasFound()) {
             this.disable("no CC blocks found");
             return false;

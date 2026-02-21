@@ -278,21 +278,21 @@ public class PacketFly extends Module {
         double z = 0.0;
         switch (this.boundsMode.get()) {
             case Add:
-                x = BlackOut.mc.player.getX() + Math.cos(yaw) * this.xzBound.get().intValue();
-                y = BlackOut.mc.player.getY() + this.yBound.get().intValue();
-                z = BlackOut.mc.player.getZ() + Math.sin(yaw) * this.xzBound.get().intValue();
+                x = BlackOut.mc.player.getX() + (Math.cos(yaw) * this.xzBound.get());
+                y = BlackOut.mc.player.getY() + this.yBound.get();
+                z = BlackOut.mc.player.getZ() + Math.sin(yaw) * this.xzBound.get();
                 break;
             case Set:
                 if (this.setXZ.get()) {
-                    x = Math.cos(yaw) * this.xzBound.get().intValue();
-                    z = Math.sin(yaw) * this.xzBound.get().intValue();
+                    x = Math.cos(yaw) * this.xzBound.get();
+                    z = Math.sin(yaw) * this.xzBound.get();
                 } else {
                     x = BlackOut.mc.player.getX();
                     z = BlackOut.mc.player.getZ();
                 }
 
                 if (this.setY.get()) {
-                    y = this.yBound.get().intValue();
+                    y = this.yBound.get();
                 } else {
                     y = BlackOut.mc.player.getY();
                 }

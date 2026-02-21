@@ -164,12 +164,12 @@ public class AutoMend extends Module {
             }
         }
 
-        if (lowest <= this.forceMend.get().intValue()) {
+        if (lowest <= this.forceMend.get()) {
             return true;
         } else if (this.antiCharity.get() && this.playerAtPos()) {
             return false;
         } else {
-            return !(max >= this.antiWaste.get().intValue()) && (lowest <= this.minDur.get().intValue() || this.throwing);
+            return !(max >= this.antiWaste.get()) && (lowest <= this.minDur.get() || this.throwing);
         }
     }
 

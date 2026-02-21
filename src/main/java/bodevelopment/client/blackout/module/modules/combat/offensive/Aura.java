@@ -576,9 +576,10 @@ public class Aura extends MoveUpdateModule {
                             return;
                         }
 
-                        if (this.checkMaxHP.get() && player.getHealth() + player.getAbsorptionAmount() > this.maxHp.get().intValue()) {
-                            return;
-                        }
+                        if ((player.getHealth() + player.getAbsorptionAmount()) > this.maxHp.get().intValue())
+                            if (this.checkMaxHP.get()) {
+                                return;
+                            }
 
                         if (Managers.FRIENDS.isFriend(player)) {
                             return;

@@ -182,7 +182,7 @@ public class TabGui extends HudElement {
                 0.3F,
                 BlackOut.FONT.getHeight() + 2.0F,
                 1.0F,
-                this.bloomIntensity.get().intValue(),
+                this.bloomIntensity.get(),
                 color.getRGB(),
                 color.getRGB()
         );

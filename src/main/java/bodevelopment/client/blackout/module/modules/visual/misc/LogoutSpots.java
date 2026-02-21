@@ -26,7 +26,6 @@ import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket;
 import net.minecraft.util.math.Vec2f;
@@ -87,8 +86,8 @@ public class LogoutSpots extends Module {
 
     @Event
     public void onEntityRemove(PacketEvent.Receive.Pre event) {
-        if (event.packet instanceof PlayerRemoveS2CPacket packet) {
-            packet.profileIds().stream().filter(this::checkMatchingEntities).forEach(uuid -> this.removedUUIDs.add(uuid, 1.0));
+        if (event.packet instanceof PlayerRemoveS2CPacket(List<UUID> profileIds)) {
+            profileIds.stream().filter(this::checkMatchingEntities).forEach(uuid -> this.removedUUIDs.add(uuid, 1.0));
         }
     }
 

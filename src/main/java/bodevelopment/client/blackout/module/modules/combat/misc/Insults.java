@@ -30,7 +30,7 @@ public class Insults extends Module {
     public final Setting<Boolean> pop = this.sgPop.b("Pop", true, "Should we send a message when enemy pops a totem");
     private final Random r = new Random();
     private final List<Message> messageQueue = new LinkedList<>();
-    private final String[] insults = new String[]{
+    private final String[] insults = new String[]{ // TODO: Добавить фразочки Insults
             "<NAME> couldn't even beat 4 block",
             "<NAME> maybe you should be searching for your dad instead of minecraft pvp tutorials",
             "That was the easiest fight ever",
@@ -298,7 +298,7 @@ public class Insults extends Module {
     public void onTick(TickEvent.Pre event) {
         this.timer++;
         if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            if (!this.anyDead(this.range.get().intValue()) || !this.kill.get()) {
+            if (!this.anyDead(this.range.get()) || !this.kill.get()) {
                 this.lastState = false;
             } else if (!this.lastState) {
                 this.lastState = true;
@@ -306,13 +306,13 @@ public class Insults extends Module {
             }
 
             if (this.timer >= this.tickDelay.get() && !this.messageQueue.isEmpty() && BlackOut.mc.getNetworkHandler() != null) {
-                Message msg = this.messageQueue.get(0);
+                Message msg = this.messageQueue.getFirst();
                 ChatUtils.sendMessage(String.valueOf(msg.message));
                 this.timer = 0;
                 if (msg.kill) {
                     this.messageQueue.clear();
                 } else {
-                    this.messageQueue.remove(0);
+                    this.messageQueue.removeFirst();
                 }
             }
         }
@@ -328,7 +328,7 @@ public class Insults extends Module {
                     && entity instanceof PlayerEntity
                     && entity != BlackOut.mc.player
                     && !Managers.FRIENDS.isFriend((PlayerEntity) entity)
-                    && BlackOut.mc.player.getPos().distanceTo(entity.getPos()) <= this.range.get().intValue()) {
+                    && BlackOut.mc.player.getPos().distanceTo(entity.getPos()) <= this.range.get()) {
             }
         }
     }

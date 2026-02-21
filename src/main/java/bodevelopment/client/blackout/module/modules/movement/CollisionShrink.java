@@ -21,7 +21,7 @@ public class CollisionShrink extends Module {
     }
 
     public Box getBox(Box normal) {
-        double amount = 0.0625 * Math.pow(10.0, this.shrinkAmount.get().intValue()) / 1.0E10;
+        double amount = 0.0625 * Math.pow(10.0, this.shrinkAmount.get()) / 1.0E10;
         return normal.contract(amount, 0.0, amount);
     }
 }

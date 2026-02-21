@@ -30,7 +30,7 @@ public class KillEffects extends Module {
             if (this.ticks >= this.tickDelay.get()) {
                 for (PlayerEntity player : BlackOut.mc.world.getPlayers()) {
                     if (player != BlackOut.mc.player
-                            && player.getPos().distanceTo(BlackOut.mc.player.getPos()) <= this.range.get().intValue()
+                            && player.getPos().distanceTo(BlackOut.mc.player.getPos()) <= this.range.get()
                             && (player.getHealth() <= 0.0F || player.isDead())) {
                         this.ticks = 0;
                         LightningEntity lightning = new LightningEntity(EntityType.LIGHTNING_BOLT, BlackOut.mc.world);

@@ -380,7 +380,7 @@ public class Strafe extends Module {
         float start = this.ncpTimer.get() ? 1.088F : this.timer.get().floatValue();
         float end = this.endNcpTimer.get() ? 1.088F : this.endTimer.get().floatValue();
         return MathHelper.clampedLerp(
-                start, end, MathHelper.getLerpProgress(this.og, this.timerStartProgress.get().intValue(), this.timerEndProgress.get().intValue())
+                start, end, MathHelper.getLerpProgress(this.og, this.timerStartProgress.get(), this.timerEndProgress.get())
         );
     }
 

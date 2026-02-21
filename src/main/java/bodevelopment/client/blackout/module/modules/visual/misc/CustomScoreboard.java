@@ -58,7 +58,7 @@ public class CustomScoreboard extends Module {
                 this.stack
                         .translate(
                                 BlackOut.mc.getWindow().getWidth() - (width + 8.0F) * this.scale.get(),
-                                BlackOut.mc.getWindow().getHeight() / 2.0F + this.addedY.get().intValue(),
+                                BlackOut.mc.getWindow().getHeight() / 2.0F + this.addedY.get(),
                                 0.0
                         );
                 this.stack.scale(this.scale.get().floatValue(), this.scale.get().floatValue(), 0.0F);

@@ -85,10 +85,10 @@ public class Radar extends HudElement {
                 yaw = Math.toRadians(MathHelper.wrapDegrees(yaw - BlackOut.mc.player.getYaw() - 90.0));
                 float x = (float) (Math.cos(yaw) * dist);
                 float z = (float) (Math.sin(yaw) * dist);
-                x /= this.range.get().intValue();
+                x /= this.range.get();
                 if (!(Math.abs(x) >= 1.0F)) {
                     x *= 20.0F;
-                    z /= this.range.get().intValue();
+                    z /= this.range.get();
                     if (!(Math.abs(z) >= 1.0F)) {
                         z *= 20.0F;
                         this.renderEnemy(this.stack, x, z, isFriend);

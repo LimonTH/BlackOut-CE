@@ -94,20 +94,16 @@ public class Trails extends Module {
     }
 
     private Color getColor() {
-        Color color = Color.WHITE;
-        switch (this.colorMode.get()) {
-            case Custom:
-                color = this.clr.get().getColor();
-                break;
-            case Rainbow:
-                int rainbowColor = ColorUtils.getRainbow(4.0F, this.saturation.get().floatValue(), 1.0F, 150L);
-                color = new Color(rainbowColor >> 16 & 0xFF, rainbowColor >> 8 & 0xFF, rainbowColor & 0xFF, this.clr.get().alpha);
-                break;
-            case Wave:
-                color = ColorUtils.getWave(this.clr.get().getColor(), this.clr1.get().getColor(), this.speed.get(), 1.0, 1);
-        }
 
-        return color;
+        return switch (this.colorMode.get()) {
+            case Custom -> this.clr.get().getColor();
+            case Rainbow -> {
+                int rainbowColor = ColorUtils.getRainbow(4.0F, this.saturation.get().floatValue(), 1.0F, 150L);
+                yield new Color(rainbowColor >> 16 & 0xFF, rainbowColor >> 8 & 0xFF, rainbowColor & 0xFF, this.clr.get().alpha);
+            }
+            case Wave ->
+                    ColorUtils.getWave(this.clr.get().getColor(), this.clr1.get().getColor(), this.speed.get(), 1.0, 1);
+        };
     }
 
     public enum ColorMode {

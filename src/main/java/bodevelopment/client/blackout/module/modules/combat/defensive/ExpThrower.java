@@ -109,7 +109,7 @@ public class ExpThrower extends Module {
         if (!found) {
             return false;
         } else {
-            return lowest <= this.forceMend.get().intValue() || max < this.antiWaste.get().intValue();
+            return lowest <= this.forceMend.get() || max < this.antiWaste.get();
         }
     }
 

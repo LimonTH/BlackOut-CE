@@ -78,7 +78,7 @@ public class TickShift extends Module {
         if (this.smooth.get() == SmoothMode.Disabled) {
             return this.timer.get().floatValue();
         } else {
-            double progress = 1.0 - this.unSent / this.packets.get().intValue();
+            double progress = 1.0 - this.unSent / this.packets.get();
             if (this.smooth.get() == SmoothMode.Exponent) {
                 progress *= progress * progress * progress * progress;
             }
@@ -88,14 +88,10 @@ public class TickShift extends Module {
     }
 
     public boolean canCharge(boolean sent, boolean move) {
-        switch (this.chargeMode.get()) {
-            case Strict:
-                return !sent;
-            case Semi:
-                return !sent || !move;
-            default:
-                return false;
-        }
+        return switch (this.chargeMode.get()) {
+            case Strict -> !sent;
+            case Semi -> !sent || !move;
+        };
     }
 
     public boolean shouldStep() {

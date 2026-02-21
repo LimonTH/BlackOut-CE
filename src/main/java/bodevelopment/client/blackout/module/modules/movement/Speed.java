@@ -176,7 +176,7 @@ public class Speed extends Module {
             case Instant -> OLEPOSSUtils.approach(
                     this.prevMovement.horizontalLength(),
                     MovementUtils.getSpeed(this.getSpeed()),
-                    MovementUtils.getSpeed(this.getSpeed()) / this.accelerationTicks.get().intValue()
+                    MovementUtils.getSpeed(this.getSpeed()) / this.accelerationTicks.get()
             );
             case Vanilla -> 0.0;
             case Verus -> BlackOut.mc.player.isOnGround() ? 0.55 : 0.349;

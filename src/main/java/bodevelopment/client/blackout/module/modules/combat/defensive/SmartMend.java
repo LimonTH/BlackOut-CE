@@ -125,7 +125,7 @@ public class SmartMend extends Module {
             ItemStack stack = BlackOut.mc.player.getInventory().getArmorStack(equipmentSlot.getEntitySlotId());
             if (!stack.isEmpty() && stack.isDamageable()) {
                 double dur = (double) (stack.getMaxDamage() - stack.getDamage()) / stack.getMaxDamage() * 100.0;
-                if (dur >= this.antiWaste.get().intValue()) {
+                if (dur >= this.antiWaste.get()) {
                     armor.add(equipmentSlot);
                 }
             }

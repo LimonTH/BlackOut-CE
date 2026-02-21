@@ -229,7 +229,7 @@ public class Offhand extends Module {
         return !BlackOut.mc.player.currentScreenHandler.getCursorStack().isEmpty();
     }
 
-    @SuppressWarnings("fallthrough")
+    @SuppressWarnings("fallthrough") // TODO: Удостоверится в правильности
     private Predicate<ItemStack> getItem() {
         boolean shouldSG = this.swordGapple.get()
                 && BlackOut.mc.options.useKey.isPressed()
@@ -318,7 +318,7 @@ public class Offhand extends Module {
 
     private double getHealth() {
         boolean holdingTot = BlackOut.mc.player.getOffHandStack().isOf(Items.TOTEM_OF_UNDYING);
-        return this.isInHole() ? (holdingTot ? this.holeSafeHp : this.holeHp).get().intValue() : (holdingTot ? this.safeHealth : this.hp).get().intValue();
+        return this.isInHole() ? (holdingTot ? this.holeSafeHp : this.holeHp).get() : (holdingTot ? this.safeHealth : this.hp).get().intValue();
     }
 
     private boolean isInHole() {
@@ -333,19 +333,15 @@ public class Offhand extends Module {
 
     private boolean isInHole(Vec3d feet) {
         Hole hole = HoleUtils.currentHole(BlockPos.ofFloored(feet.add(0.0, 0.5, 0.0)));
-        if (hole == null) {
-            return false;
-        } else {
-            if (this.mineCheck.get()) {
-                for (BlockPos pos : hole.positions) {
-                    if (this.mining.containsValue(pos)) {
-                        return false;
-                    }
+        if (this.mineCheck.get()) {
+            for (BlockPos pos : hole.positions) {
+                if (this.mining.containsValue(pos)) {
+                    return false;
                 }
             }
-
-            return true;
         }
+
+        return true;
     }
 
     public enum ItemMode {

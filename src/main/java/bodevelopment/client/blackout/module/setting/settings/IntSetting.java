@@ -40,7 +40,7 @@ public class IntSetting extends Setting<Integer> {
             float val = MathHelper.lerp(this.sliderPos, this.min, this.max);
             this.setValue(Math.round(val / this.step) * this.step);
         } else {
-            this.sliderPos = MathHelper.clamp(MathHelper.getLerpProgress(this.get().intValue(), this.min, this.max), 0.0F, 1.0F);
+            this.sliderPos = MathHelper.clamp(MathHelper.getLerpProgress(this.get(), this.min, this.max), 0.0F, 1.0F);
         }
 
         if (Float.isNaN(this.sliderAnim)) {
@@ -127,7 +127,7 @@ public class IntSetting extends Setting<Integer> {
     @Override
     public void set(JsonElement element) {
         this.setValue(element.getAsInt());
-        this.sliderPos = MathHelper.clamp(MathHelper.getLerpProgress(this.get().intValue(), this.min, this.max), 0.0F, 1.0F);
+        this.sliderPos = MathHelper.clamp(MathHelper.getLerpProgress(this.get(), this.min, this.max), 0.0F, 1.0F);
         this.sliderAnim = this.sliderPos;
     }
 }

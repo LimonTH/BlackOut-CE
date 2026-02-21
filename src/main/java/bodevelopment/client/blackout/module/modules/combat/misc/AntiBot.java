@@ -73,12 +73,12 @@ public class AntiBot extends Module {
                                 if (this.smart.get()) {
                                     if (player.age < 10
                                             && BlackOut.mc.player.age > 10
-                                            && BlackOut.mc.player.distanceTo(player) < this.range.get().intValue()
+                                            && BlackOut.mc.player.distanceTo(player) < this.range.get()
                                             && player != BlackOut.mc.player) {
                                         this.addBot(player);
                                     }
 
-                                    if (BlackOut.mc.player.distanceTo(player) > this.range.get().intValue()) {
+                                    if (BlackOut.mc.player.distanceTo(player) > this.range.get()) {
                                         this.removeBot(player);
                                     }
 
