@@ -48,12 +48,19 @@ public class AddonScreen extends ClickGuiScreen {
             if (hovered) anim.setValue(Math.min(anim.getValue() + frameTime * 10, 1.0));
             else anim.setValue(Math.max(anim.getValue() - frameTime * 5, 0.0));
 
+            this.stack.push();
+            this.stack.translate(0, yPos, 0);
+
             if (anim.getValue() > 0) {
                 int alpha = (int) (anim.getValue() * 25);
-                RenderUtils.rounded(this.stack, 5, 5, width - 10, 60, 8, 0, ColorUtils.withAlpha(Color.WHITE.getRGB(), alpha), 0);
+
+                float r = 8.0F;
+                RenderUtils.rounded(this.stack, 5 + r, 5 + r, width - 10 - r * 2, 60 - r * 2, r, 0, ColorUtils.withAlpha(Color.WHITE.getRGB(), alpha), 0);
             }
 
             renderAddonRow(addon, i == 0);
+
+            this.stack.pop();
         }
         this.stack.pop();
 
@@ -64,16 +71,15 @@ public class AddonScreen extends ClickGuiScreen {
         if (!first) {
             RenderUtils.line(this.stack, -10.0F, 0.0F, this.width + 10.0F, 0.0F, LINE_COLOR);
         }
-        BlackOut.FONT.text(this.stack, addon.getName(), 2.5F, 10.0F, 35.0F, Color.WHITE, false, true);
+
+        BlackOut.FONT.text(this.stack, addon.getName(), 2.5F, 15.0F, 25.0F, Color.WHITE, false, true);
 
         String info = "v" + addon.getVersion() + " by " + addon.getAuthor();
-        BlackOut.FONT.text(this.stack, info, 1.8F, 10.0F, 55.0F, Color.GRAY, false, true);
+        BlackOut.FONT.text(this.stack, info, 1.8F, 15.0F, 45.0F, Color.GRAY, false, true);
 
         String modulesCount = (addon.modules != null ? addon.modules.size() : 0) + " Modules";
         float tw = BlackOut.FONT.getWidth(modulesCount) * 1.8F;
-        BlackOut.FONT.text(this.stack, modulesCount, 1.8F, width - tw - 20.0F, 35.0F, GuiColorUtils.parentCategory, false, true);
-
-        this.stack.translate(0.0F, 70.0F, 0.0F);
+        BlackOut.FONT.text(this.stack, modulesCount, 1.8F, width - tw - 20.0F, 25.0F, GuiColorUtils.parentCategory, false, true);
     }
 
     private void renderButtons() {
@@ -110,7 +116,7 @@ public class AddonScreen extends ClickGuiScreen {
                 if (Math.abs(mx - (width / 2.0F - 60.0F)) < 40) {
                     FileUtils.openDirectory(new File(BlackOut.RUN_DIRECTORY, "mods"));
                 } else if (Math.abs(mx - (width / 2.0F + 60.0F)) < 40) {
-                    FileUtils.openLink("https://github.com/LimonTH/Blackout-CE"); // TODO: НЕТ ССЫЛКИ НА АДДОНЫ(АДДОНОВ НЕТ =)) Стоит заглушка на репозиторий
+                    FileUtils.openLink("https://github.com/LimonTH/Blackout-CE-addon-template");
                 }
             }
         }

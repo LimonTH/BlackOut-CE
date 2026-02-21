@@ -34,9 +34,6 @@ public class ModuleManager extends Manager {
                     .sorted(Comparator.comparing(o -> o.name))
                     .forEach(this::add);
         });
-
-        AddonLoader.load();
-
         BOLogger.info(String.format("Initializing %s modules took %sms", this.modules.size(), time));
 
         BlackOut.EVENT_BUS.subscribe(this, () -> BlackOut.mc.currentScreen != null || SharedFeatures.shouldSilentScreen());

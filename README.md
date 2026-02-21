@@ -2,6 +2,8 @@
 
 # Blackout-CE (1.21.1) 🌑
 
+Template for client modding: https://github.com/LimonTH/Blackout-CE-addon-template
+
 A highly customizable and optimized Minecraft utility client, modernized and maintained for the latest versions of the game.
 
 > **Note:** This project is a continuation of the original Blackout Client by **luhpossu** and **KassuK**.
@@ -56,6 +58,8 @@ Since I am developing this project solo, any feedback or bug reports are highly 
 
 
 # Blackout-CE (1.21.1) 🌑 [RUS]
+
+Шаблон для моддинга клиента: https://github.com/LimonTH/Blackout-CE-addon-template
 
 Высокопроизводительный и настраиваемый чит-клиент для Minecraft, обновленный и адаптированный под актуальные версии игры.
 
