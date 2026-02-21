@@ -38,9 +38,6 @@ public class EntityUtils {
         return found[0];
     }
 
-    /**
-     * Возвращает список всех сущностей в коробке, подходящих под условие.
-     */
     public static List<Entity> getEntities(Box box, Predicate<Entity> predicate) {
         List<Entity> list = new ArrayList<>();
         if (BlackOut.mc.world == null) return list;

@@ -5,18 +5,23 @@ import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.manager.managers.FriendsManager;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
+import bodevelopment.client.blackout.util.BOLogger;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.authlib.GameProfile;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.util.Identifier;
 
 import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class FriendsScreen extends ClickGuiScreen {
     private static final float ITEM_HEIGHT = 75.0F;
     private boolean first;
+    private final Map<String, Identifier> skinCache = new HashMap<>();
 
     public FriendsScreen() {
         super("Friends", 800.0F, 500.0F, true);
@@ -33,7 +38,7 @@ public class FriendsScreen extends ClickGuiScreen {
 
         this.stack.push();
 
-        this.stack.translate(0.0F, 10.0F - this.scroll.get(), 0.0F);
+        this.stack.translate(0.0F, (float) Math.round(10.0F - this.scroll.get()), 0.0F);
 
         this.first = true;
         if (Managers.FRIENDS.getFriends().isEmpty()) {
@@ -72,32 +77,57 @@ public class FriendsScreen extends ClickGuiScreen {
     }
 
     private void renderFriendHead(FriendsManager.Friend friend) {
-        Identifier skin = DefaultSkinHelper.getTexture();
+        Identifier skin = skinCache.get(friend.getName());
 
-        if (friend.getUuid() != null) {
-            var skinTextures = BlackOut.mc.getSkinProvider().getSkinTextures(new GameProfile(friend.getUuid(), friend.getName()));
+        if (skin == null) {
+            if (friend.getUuid() != null) {
+                new Thread(() -> {
+                    try {
+                        var profileResult = BlackOut.mc.getSessionService().fetchProfile(friend.getUuid(), false);
 
-            if (skinTextures != null && skinTextures.texture() != null) {
-                skin = skinTextures.texture();
+                        if (profileResult != null) {
+                            GameProfile fullProfile = profileResult.profile();
+
+                            var skinTextures = BlackOut.mc.getSkinProvider().getSkinTextures(fullProfile);
+                            Identifier loadedSkin = skinTextures.texture();
+
+                            if (!loadedSkin.getPath().contains("textures/entity/player/")) {
+                                skinCache.put(friend.getName(), loadedSkin);
+                            }
+                        }
+                    } catch (Exception e) {
+                        BOLogger.error(e);
+                    }
+                }).start();
+
+                skin = DefaultSkinHelper.getSkinTextures(friend.getUuid()).texture();
+            } else {
+                skin = DefaultSkinHelper.getTexture();
             }
         }
 
-        RenderUtils.rounded(this.stack, 15.0F, 12.0F, 50.0F, 50.0F, 12.0F, 0, GuiColorUtils.bg1.getRGB(), 0);
-
         int glId = BlackOut.mc.getTextureManager().getTexture(skin).getGlId();
 
-        TextureRenderer.renderFitRounded(this.stack, 18.0F, 15.0F, 44.0F, 44.0F,
-                0.125F, 0.125F, 0.250F, 0.250F, 10.0F, 20, glId);
+        RenderSystem.setShaderTexture(0, skin);
+        RenderSystem.texParameter(3553, 10241, 9728);
+        RenderSystem.texParameter(3553, 10240, 9728);
 
-        TextureRenderer.renderFitRounded(this.stack, 18.0F, 15.0F, 44.0F, 44.0F,
-                0.625F, 0.125F, 0.750F, 0.250F, 10.0F, 20, glId);
+        float x = 18.0f;
+        float y = 15.0f;
+        float size = 44.0F;
+        float radius = 10.0F;
+
+        TextureRenderer.renderFitRounded(this.stack, x, y, size, size, 0.125F, 0.125F, 0.250F, 0.250F, 0.0F, 0, glId);
+        TextureRenderer.renderFitRounded(this.stack, x, y, size, size, 0.625F, 0.125F, 0.750F, 0.250F, 0.0F, 0, glId);
+
+        // TODO: ЕБАНАЯ МАСКА СКРУГЛЕНИЯ, ЗАЕБАЛА : RenderUtils.revertedRounded(this.stack, x, y, size, size, radius, GuiColorUtils.bg1.getRGB());
     }
 
     @Override
     public void onMouse(int button, boolean state) {
         if (state && button == 0) {
             if (my > 0 && my < height - 40) {
-                float startY = 25.0F - this.scroll.get();
+                float startY = 10.0F - this.scroll.get();
                 for (FriendsManager.Friend friend : Managers.FRIENDS.getFriends()) {
                     if (mx > width - 110 && mx < width - 10 && my > startY && my < startY + ITEM_HEIGHT) {
                         Managers.FRIENDS.remove(friend.getName());

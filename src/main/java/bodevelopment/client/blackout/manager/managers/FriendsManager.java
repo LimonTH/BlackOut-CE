@@ -5,17 +5,19 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.util.BOLogger;
 import bodevelopment.client.blackout.util.FileUtils;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.entity.player.PlayerEntity;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URL;
+import java.util.*;
 
 public class FriendsManager extends Manager {
     private final List<Friend> friends = new ArrayList<>();
@@ -54,11 +56,49 @@ public class FriendsManager extends Manager {
         }
     }
 
+    public void fetchUuid(String name) {
+        new Thread(() -> {
+            try {
+                URL url = URI.create("https://api.mojang.com/users/profiles/minecraft/" + name).toURL();
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.connect();
+
+                if (conn.getResponseCode() == 200) {
+                    Scanner sc = new Scanner(url.openStream());
+                    StringBuilder inline = new StringBuilder();
+                    while (sc.hasNext()) inline.append(sc.nextLine());
+                    sc.close();
+
+                    JsonObject data = JsonParser.parseString(inline.toString()).getAsJsonObject();
+                    String id = data.get("id").getAsString();
+                    UUID uuid = UUID.fromString(id.replaceFirst(
+                            "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{12})",
+                            "$1-$2-$3-$4-$5"
+                    ));
+
+                    for (Friend f : this.friends) {
+                        if (f.getName().equalsIgnoreCase(name)) {
+                            f.setUuid(uuid);
+                            this.save();
+                            break;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                BOLogger.error("Can not fetch UUID from mojang: ", e);
+            }
+        }).start();
+    }
+
     public String add(String name, UUID uuid) {
         File file = FileUtils.getFile("friends.json");
         FileUtils.addFile(file);
         Friend friend = new Friend(name, uuid);
         this.friends.add(friend);
+        if (uuid == null) {
+            this.fetchUuid(name);
+        }
         this.save();
         return friend.seen()
                 ? String.format("added %s to friends list", name)
