@@ -86,10 +86,13 @@ publishing {
 	publications {
 		create("mavenJava", MavenPublication) {
 			artifactId = project.archives_base_name
+			groupId = project.maven_group
+			version = project.mod_version
 			from components.java
 		}
 	}
 }
+
 afterEvaluate {
 	tasks.withType(JavaCompile).configureEach {
 		options.compilerArgs << "-Xlint:all" << "-Xlint:-processing" << "-Xlint:-this-escape" << "-Xlint:-varargs"

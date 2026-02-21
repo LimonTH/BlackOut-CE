@@ -28,37 +28,17 @@ public class AddonLoader {
                         BOLogger.info(String.format("Found addon: %s (version %s)", addon.getName(), addon.getVersion()));
 
                         if (addon.modulePath != null) {
-                            ClassUtils.forEachClass(clazz -> {
-                                if (Module.class.isAssignableFrom(clazz)
-                                        && !clazz.isInterface()
-                                        && !Modifier.isAbstract(clazz.getModifiers())) {
-
-                                    addon.modules.add((Module) ClassUtils.instance(clazz));
-                                }
-                            }, addon.modulePath, addonLoader);
+                            scan(addonLoader, addon.modulePath, Module.class, addon.modules::add);
                         }
 
                         if (addon.commandPath != null) {
-                            ClassUtils.forEachClass(clazz -> {
-                                if (Command.class.isAssignableFrom(clazz)
-                                        && !clazz.isInterface()
-                                        && !Modifier.isAbstract(clazz.getModifiers())) {
-
-                                    addon.commands.add((Command) ClassUtils.instance(clazz));
-                                }
-                            }, addon.commandPath, addonLoader);
+                            scan(addonLoader, addon.commandPath, Command.class, addon.commands::add);
                         }
 
                         if (addon.hudPath != null) {
-                            ClassUtils.forEachClass(clazz -> {
-                                if (HudElement.class.isAssignableFrom(clazz)
-                                        && !clazz.isInterface()
-                                        && !Modifier.isAbstract(clazz.getModifiers())) {
-
-                                    Managers.HUD.add(clazz.asSubclass(HudElement.class));
-                                }
-                            }, addon.hudPath, addonLoader);
+                            scan(addonLoader, addon.hudPath, HudElement.class, addon.hudElements::add);
                         }
+
                         addon.onInitialize();
 
                         addon.modules.forEach(Managers.MODULES::add);
@@ -67,10 +47,25 @@ public class AddonLoader {
 
                         addons.add(addon);
                     } catch (Exception e) {
-                        BOLogger.error("Failed to load addon: " + container.getProvider().getMetadata().getId());
+                        BOLogger.error("Failed to load addon: " + container.getProvider().getMetadata().getId(), e);
                     }
                 });
+    }
 
-        BOLogger.info(String.format("Successfully loaded %s addons.", addons.size()));
+    private static <T> void scan(ClassLoader loader, String path, Class<T> type, java.util.function.Consumer<T> action) {
+        ClassUtils.forEachClass(clazz -> {
+            if (type.isAssignableFrom(clazz) && !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())) {
+                try {
+                    Class<? extends T> targetClazz = clazz.asSubclass(type);
+                    T instance = (T) ClassUtils.instance(targetClazz);
+
+                    action.accept(instance);
+                } catch (ClassCastException e) {
+                    BOLogger.error("Type mismatch during addon scanning: " + clazz.getName());
+                } catch (Exception e) {
+                    BOLogger.error("Failed to instantiate addon component: " + clazz.getName(), e);
+                }
+            }
+        }, path, loader);
     }
 }
