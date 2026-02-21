@@ -99,7 +99,7 @@ public class PanoramaMainMenu implements MainMenuRenderer {
         stack.pop();
     }
 
-    private void renderButton(MatrixStack stack, String name, boolean hovered) {
+    private void renderButton(MatrixStack stack, String name, boolean hovered) { // TODO: Кнопки почти сливаются с фоном, нужно как то обыграть этот момент
         ThemeSettings theme = ThemeSettings.getInstance();
         MainMenuSettings settings = MainMenuSettings.getInstance();
 
