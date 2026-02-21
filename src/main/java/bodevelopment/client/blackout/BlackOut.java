@@ -13,6 +13,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.client.MinecraftClient;
 
 import java.awt.*;
+import java.io.File;
 
 public class BlackOut implements ClientModInitializer {
     public static final String NAME = "BlackOut";
@@ -20,6 +21,7 @@ public class BlackOut implements ClientModInitializer {
     public static final Type TYPE = Type.Dev;
     public static final Color TYPECOLOR = TYPE.getColor();
     public static final MinecraftClient mc = MinecraftClient.getInstance();
+    public static final File RUN_DIRECTORY = mc.runDirectory;
     public static final EventBus EVENT_BUS = new EventBus();
     public static final CustomFontRenderer FONT = new CustomFontRenderer("ubuntu");
     public static final CustomFontRenderer BOLD_FONT = new CustomFontRenderer("ubuntu-bold");

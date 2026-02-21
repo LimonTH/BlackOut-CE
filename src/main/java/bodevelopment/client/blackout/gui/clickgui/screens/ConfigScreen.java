@@ -108,7 +108,7 @@ public class ConfigScreen extends ClickGuiScreen {
 
                 double offsetXx = this.mx - this.width / 2.0F;
                 double dy = offsetY * offsetY;
-                if (offsetXx * offsetXx + dy <= 2500.0) { // Радиус 50
+                if (offsetXx * offsetXx + dy <= 2500.0) {
                     if (offsetXx > 0.0) this.clickedCloud();
                     else this.clickedAdd();
                 }
@@ -130,13 +130,13 @@ public class ConfigScreen extends ClickGuiScreen {
     @Override
     public void onKey(int key, boolean state) {
         if (this.typing && state) {
-            if (key == 257) { // Enter
+            if (key == 257) {
                 if (this.isCloud) this.requestCloudConfigs(this.textField.getContent());
                 else this.addConfig(this.textField.getContent());
 
                 this.typing = false;
                 SelectedComponent.reset();
-            } else if (key == 256) { // Escape
+            } else if (key == 256) {
                 this.typing = false;
                 SelectedComponent.reset();
             } else {

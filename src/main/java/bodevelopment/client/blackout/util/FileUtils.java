@@ -5,13 +5,16 @@ import bodevelopment.client.blackout.manager.Managers;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import net.minecraft.util.Formatting;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.Arrays;
@@ -20,7 +23,7 @@ public class FileUtils {
     public static File dir = null;
 
     public static void init() {
-        (dir = new File(BlackOut.mc.runDirectory, "bodevelopment/client/blackout")).mkdir();
+        (dir = new File(BlackOut.RUN_DIRECTORY, "bodevelopment/client/blackout")).mkdir();
         addFolder("fonts");
         addFile("friends.json");
         Managers.FRIENDS.read();
@@ -136,6 +139,53 @@ public class FileUtils {
         } catch (IOException e) {
             BOLogger.error("Failed to read resource image " + Arrays.toString(path) + " with error: ", e);
             return null;
+        }
+    }
+
+    public static void openDirectory(File folder){
+        if (!folder.exists()) {
+            folder.mkdirs();
+        }
+        String path = folder.getAbsolutePath();
+        String os = System.getProperty("os.name").toLowerCase();
+
+        try {
+            if (os.contains("win")) {
+                new ProcessBuilder("explorer.exe", path).start();
+            } else if (os.contains("nix") || os.contains("nux") || os.contains("mac")) {
+                String command = os.contains("mac") ? "open" : "xdg-open";
+                new ProcessBuilder(command, path).start();
+            } else {
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().open(folder);
+                }
+            }
+        } catch (IOException e) {
+            BOLogger.error("Failed to open directory " + path + " with error: ", e);
+        }
+    }
+
+    public static void openLink(String url) {
+        try {
+            URI uri = new java.net.URI(url);
+
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(java.awt.Desktop.Action.BROWSE)) {
+                Desktop.getDesktop().browse(uri);
+            } else {
+                String os = System.getProperty("os.name").toLowerCase();
+                ProcessBuilder pb;
+
+                if (os.contains("win")) {
+                    pb = new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", url);
+                } else if (os.contains("mac")) {
+                    pb = new ProcessBuilder("open", url);
+                } else {
+                    pb = new ProcessBuilder("xdg-open", url);
+                }
+                pb.start();
+            }
+        } catch (Exception e) {
+            BOLogger.error("Could not open link: " + url, e);
         }
     }
 }

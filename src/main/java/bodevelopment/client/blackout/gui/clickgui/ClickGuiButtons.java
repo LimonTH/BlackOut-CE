@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.gui.clickgui;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.gui.clickgui.screens.AddonScreen;
 import bodevelopment.client.blackout.gui.clickgui.screens.ConfigScreen;
 import bodevelopment.client.blackout.gui.clickgui.screens.ConsoleScreen;
 import bodevelopment.client.blackout.gui.clickgui.screens.FriendsScreen;
@@ -31,6 +32,7 @@ public class ClickGuiButtons {
         a(ConfigScreen::new, BOTextures.getFolderIconRenderer());
         a(FriendsScreen::new, BOTextures.getPersonIconRenderer());
         a(ConsoleScreen::new, BOTextures.getConsoleIconRenderer());
+        a(AddonScreen::new, BOTextures.getPlusIconRenderer());
     }
 
     private static void a(Supplier<? extends ClickGuiScreen> screen, TextureRenderer icon) {

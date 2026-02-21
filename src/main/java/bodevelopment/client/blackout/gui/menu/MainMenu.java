@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.event.events.MouseScrollEvent;
 import bodevelopment.client.blackout.gui.clickgui.ClickGui;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.client.MainMenuSettings;
-import bodevelopment.client.blackout.util.BOLogger;
+import bodevelopment.client.blackout.util.FileUtils;
 import bodevelopment.client.blackout.util.SoundUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import net.minecraft.client.gui.DrawContext;
@@ -181,37 +181,13 @@ public class MainMenu {
     private void onClickIconButton(int i) {
         switch (i) {
             case 0:
-                this.openLink("https://github.com/LimonTH/Blackout-CE");
+                FileUtils.openLink("https://github.com/LimonTH/Blackout-CE");
                 break;
             case 1:
-                this.openLink("https://discord.com/invite/mmWz9Dz4Y9");
+                FileUtils.openLink("https://discord.com/invite/mmWz9Dz4Y9");
                 break;
             case 2:
-                this.openLink("https://www.youtube.com/@BlackOutDevelopment");
-        }
-    }
-
-    private void openLink(String url) {
-        try {
-            java.net.URI uri = new java.net.URI(url);
-
-            if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.BROWSE)) {
-                java.awt.Desktop.getDesktop().browse(uri);
-            } else {
-                String os = System.getProperty("os.name").toLowerCase();
-                ProcessBuilder pb;
-
-                if (os.contains("win")) {
-                    pb = new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", url);
-                } else if (os.contains("mac")) {
-                    pb = new ProcessBuilder("open", url);
-                } else {
-                    pb = new ProcessBuilder("xdg-open", url);
-                }
-                pb.start();
-            }
-        } catch (Exception e) {
-            BOLogger.error("Could not open link: " + url, e);
+                FileUtils.openLink("https://www.youtube.com/@BlackOutDevelopment");
         }
     }
 
