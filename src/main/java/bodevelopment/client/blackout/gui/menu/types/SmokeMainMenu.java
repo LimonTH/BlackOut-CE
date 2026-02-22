@@ -28,18 +28,44 @@ public class SmokeMainMenu implements MainMenuRenderer {
     private final ChangelogRenderer changelogRenderer = new ChangelogRenderer();
 
     @Override
-    public void render(MatrixStack stack, float height, float mx, float my, String splashText) {
+    public void render(MatrixStack stack, float height, float mx, float my, String text1, String text2, float progress) {
         boolean isGuiOpen = MainMenu.getInstance().isOpenedMenu();
-        float renderMx = (isGuiOpen || MainMenu.getInstance().isExiting()) ? -5000.0F : mx;
-        float renderMy = (isGuiOpen || MainMenu.getInstance().isExiting()) ? -5000.0F : my;
+        boolean isExiting = MainMenu.getInstance().isExiting();
+
+        float renderMx = (isGuiOpen || isExiting) ? -5000.0F : mx;
+        float renderMy = (isGuiOpen || isExiting) ? -5000.0F : my;
 
         this.renderButtons(stack, renderMx, renderMy);
-        this.renderTitle(stack, splashText);
+
+        BlackOut.BOLD_FONT.text(stack, BlackOut.NAME, 8.5F, 0.0F, -250.0F, Color.WHITE.getRGB(), true, true);
+        this.renderAnimatedSplash(stack, text1, text2, progress);
 
         this.changelogRenderer.render(stack, renderMx, renderMy, false, null, null, 0);
 
         this.renderAllIconButtons(stack, height, renderMx, renderMy);
         this.renderDevs();
+    }
+
+    private void renderAnimatedSplash(MatrixStack stack, String text1, String text2, float progress) {
+        float yPos = -200.0F;
+        float scale = 2.5F;
+        float offset = 15.0F;
+
+        if (progress >= 1.0F || text2.isEmpty()) {
+            BlackOut.FONT.text(stack, text1, scale, 0.0F, yPos, Color.WHITE.getRGB(), true, true);
+        } else {
+            stack.push();
+            stack.translate(0, -progress * offset, 0);
+            int a1 = (int) ((1.0F - progress) * 255);
+            BlackOut.FONT.text(stack, text1, scale, 0.0F, yPos, new Color(255, 255, 255, a1).getRGB(), true, true);
+            stack.pop();
+
+            stack.push();
+            stack.translate(0, offset - (progress * offset), 0);
+            int a2 = (int) (progress * 255);
+            BlackOut.FONT.text(stack, text2, scale, 0.0F, yPos, new Color(255, 255, 255, a2).getRGB(), true, true);
+            stack.pop();
+        }
     }
 
     private void renderAllIconButtons(MatrixStack stack, float windowHeight, float mx, float my) {
@@ -67,12 +93,31 @@ public class SmokeMainMenu implements MainMenuRenderer {
         for (String name : MainMenu.getInstance().buttonNames) {
             boolean hovered = RenderUtils.insideRounded(mx, my, -180.0, currentY, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS);
 
+            stack.push();
+            if (hovered) {
+                stack.scale(1.03F, 1.03F, 1.0F);
+                stack.translate(-5.4F, -0.3F, 0.0F);
+            }
+
             this.renderButton(stack, name, hovered);
+
+            stack.pop();
 
             stack.translate(0.0F, 85.0F, 0.0F);
             currentY += 85.0F;
         }
         stack.pop();
+    }
+
+    private void renderButton(MatrixStack stack, String name, boolean hovered) {
+        RenderUtils.drawLoadedBlur("title", stack, renderer -> renderer.rounded(0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10, 1.0F, 1.0F, 1.0F, 1.0F));
+
+        RenderUtils.rounded(stack, 0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10.0F,
+                new Color(0, 0, 0, hovered ? 90 : 50).getRGB(),
+                new Color(0, 0, 0, 240).getRGB());
+
+        Color textColor = hovered ? Color.WHITE : new Color(180, 180, 180, 255);
+        BlackOut.FONT.text(stack, name, 3.0F, 180.0F, 5.0F, textColor.getRGB(), true, true);
     }
 
     private void renderSingleIconButton(MatrixStack stack, int i, boolean hovered) {
@@ -97,16 +142,6 @@ public class SmokeMainMenu implements MainMenuRenderer {
         Renderer.setAlpha(alpha);
         t.quad(stack, 0.0F, 0.0F, width, height);
         Renderer.setAlpha(1.0F);
-    }
-
-    private void renderButton(MatrixStack stack, String name, boolean hovered) {
-        RenderUtils.drawLoadedBlur("title", stack, renderer -> renderer.rounded(0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10, 1.0F, 1.0F, 1.0F, 1.0F));
-        RenderUtils.rounded(stack, 0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10.0F,
-                new Color(0, 0, 0, hovered ? 65 : 35).getRGB(),
-                new Color(0, 0, 0, 225).getRGB());
-
-        Color textColor = hovered ? Color.WHITE : new Color(200, 200, 200, 255);
-        BlackOut.FONT.text(stack, name, 3.0F, 180.0F, 5.0F, textColor.getRGB(), true, true);
     }
 
     private void renderDevs() {
@@ -184,10 +219,5 @@ public class SmokeMainMenu implements MainMenuRenderer {
             RenderUtils.drawLoadedBlur("title", stack, renderer ->
                     renderer.quadShape(0.0F, 0.0F, width, height, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F));
         }
-    }
-
-    private void renderTitle(MatrixStack stack, String splashText) {
-        BlackOut.BOLD_FONT.text(stack, BlackOut.NAME, 8.5F, 0.0F, -250.0F, Color.WHITE.getRGB(), true, true);
-        BlackOut.FONT.text(stack, splashText, 2.5F, 0.0F, -200.0F, Color.WHITE.getRGB(), true, true);
     }
 }

@@ -229,42 +229,33 @@ public class Offhand extends Module {
         return !BlackOut.mc.player.currentScreenHandler.getCursorStack().isEmpty();
     }
 
-    @SuppressWarnings("fallthrough") // TODO: Удостоверится в правильности
     private Predicate<ItemStack> getItem() {
         boolean shouldSG = this.swordGapple.get()
                 && BlackOut.mc.options.useKey.isPressed()
                 && BlackOut.mc.player.getMainHandStack().getItem() instanceof SwordItem;
-        if (!this.safeSwordGapple.get() && shouldSG) {
-            return ItemMode.Gapple.predicate;
-        } else {
-            switch (this.totemMode.get()) {
-                case Always:
-                    if (this.safeSwordGapple.get() && shouldSG) {
-                        return ItemMode.Gapple.predicate;
-                    }
 
-                    return this.totemPredicate;
-                case Danger:
-                    if (this.available(this.totemPredicate) && this.inDanger()) {
-                        return this.totemPredicate;
-                    }
-                    // Fall through
-                default:
-                    if (this.safeSwordGapple.get() && shouldSG) {
-                        return ItemMode.Gapple.predicate;
-                    } else {
-                        Predicate<ItemStack> primaryPredicate = this.primary.get().predicate;
-                        if (primaryPredicate == null) {
-                            return null;
-                        } else if (this.available(primaryPredicate)) {
-                            return primaryPredicate;
-                        } else {
-                            Predicate<ItemStack> secondaryPredicate = this.secondary.get().predicate;
-                            return secondaryPredicate != null && this.available(secondaryPredicate) ? secondaryPredicate : null;
-                        }
-                    }
+        if (shouldSG && (!this.safeSwordGapple.get() || !this.inDanger())) {
+            return ItemMode.Gapple.predicate;
+        }
+
+        TotemMode mode = this.totemMode.get();
+        if (mode == TotemMode.Always || (mode == TotemMode.Danger && this.inDanger())) {
+            if (this.available(this.totemPredicate)) {
+                return this.totemPredicate;
             }
         }
+
+        Predicate<ItemStack> primaryPredicate = this.primary.get().predicate;
+        if (primaryPredicate != null && this.available(primaryPredicate)) {
+            return primaryPredicate;
+        }
+
+        Predicate<ItemStack> secondaryPredicate = this.secondary.get().predicate;
+        if (secondaryPredicate != null && this.available(secondaryPredicate)) {
+            return secondaryPredicate;
+        }
+
+        return null;
     }
 
     private boolean available(Predicate<ItemStack> predicate) {

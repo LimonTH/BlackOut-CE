@@ -57,10 +57,12 @@ public class ChangelogRenderer {
             initChangelog();
         }
 
-        float fontHeight = BlackOut.FONT.getHeight() * 1.5F;
+        float fontScale = 1.5F;
+        float fontHeight = BlackOut.FONT.getHeight() * fontScale;
         int maxLines = 15;
+
         float width = Math.max(longest, 350.0F);
-        float height = BlackOut.BOLD_FONT.getHeight() + Math.min(changelog.size(), maxLines) * fontHeight + 50.0F;
+        float height = (BlackOut.BOLD_FONT.getHeight() * 2.2F) + (Math.min(changelog.size(), maxLines) * fontHeight) + 60.0F;
 
         boolean mousePressed = GLFW.glfwGetMouseButton(BlackOut.mc.getWindow().getHandle(), 0) == 1;
         if (this.dragging) {
@@ -85,18 +87,31 @@ public class ChangelogRenderer {
 
         RenderUtils.roundedShadow(stack, 0.0F, 0.0F, width, height, 15.0F, 15.0F, new Color(0, 0, 0, 120).getRGB());
         RenderUtils.drawLoadedBlur("title", stack, renderer -> renderer.rounded(0.0F, 0.0F, width, height, 15.0F, 10, 1.0F, 1.0F, 1.0F, 1.0F));
-
         RenderUtils.rounded(stack, 0.0F, 0.0F, width, height, 15.0F, 2.0F, new Color(20, 20, 20, 160).getRGB(), new Color(0, 0, 0, 200).getRGB());
 
         if (themeMode && mainColor != null && secondColor != null) {
             RenderUtils.tenaRounded(stack, 0.0F, 0.0F, width, height, 15.0F, 1.5F, mainColor.getRGB(), secondColor.getRGB(), speed);
         }
 
-        BlackOut.BOLD_FONT.text(stack, "Update Notes", 2.2F, width / 2.0F, 12.0F, Color.WHITE.getRGB(), true, false);
+        float titleScale = 2.2F;
+        float titleYOffset = (BlackOut.BOLD_FONT.getHeight() * (titleScale - 1.0F)) / 2.0F;
+        BlackOut.BOLD_FONT.text(stack, "Update Notes", titleScale, width / 2.0F, 12.0F - titleYOffset, Color.WHITE.getRGB(), true, false);
+
         RenderUtils.rounded(stack, 15.0F, 38.0F, width - 30.0F, 1.5F, 1.0F, 0.0F, new Color(255, 255, 255, 50).getRGB(), 0);
 
+        float textYOffset = (BlackOut.FONT.getHeight() * (fontScale - 1.0F)) / 2.0F;
+
         for (int j = 0; j < Math.min(changelog.size(), maxLines); j++) {
-            BlackOut.FONT.text(stack, "• " + changelog.get(j), 1.5F, 18.0F, 50.0F + (j * fontHeight), new Color(225, 225, 225).getRGB(), false, false);
+            float rowY = 55.0F + (j * fontHeight);
+
+            BlackOut.FONT.text(stack,
+                    "• " + changelog.get(j),
+                    fontScale,
+                    18.0F,
+                    rowY - textYOffset, // Применяем оффсет
+                    new Color(225, 225, 225).getRGB(),
+                    false, false
+            );
         }
         stack.pop();
     }

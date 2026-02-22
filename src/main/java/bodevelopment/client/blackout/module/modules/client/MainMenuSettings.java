@@ -4,10 +4,10 @@ import bodevelopment.client.blackout.module.SettingsModule;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
-import bodevelopment.client.blackout.gui.menu.types.ColorMainMenu;
+import bodevelopment.client.blackout.gui.menu.types.PanoramaMainMenu;
 import bodevelopment.client.blackout.randomstuff.mainmenu.MainMenuRenderer;
 import bodevelopment.client.blackout.gui.menu.types.SmokeMainMenu;
-import bodevelopment.client.blackout.gui.menu.types.PanoramaMainMenu;
+import bodevelopment.client.blackout.gui.menu.types.ColorMainMenu;
 
 public class MainMenuSettings extends SettingsModule {
     private static MainMenuSettings INSTANCE;

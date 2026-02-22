@@ -26,7 +26,6 @@ public class MainMenu {
     public static final int EMPTY_COLOR = new Color(0, 0, 0, 0).getRGB();
     private static final MainMenu INSTANCE = new MainMenu();
     public final String[] buttonNames = new String[]{"Singleplayer", "Multiplayer", "AltManager", "Options", "Quit"};
-    private final String splashText = this.getSplash();
     private final MatrixStack stack = new MatrixStack();
     private final ClickGui clickGui = Managers.CLICK_GUI.CLICK_GUI;
     private TitleScreen titleScreen;
@@ -40,6 +39,40 @@ public class MainMenu {
     private static boolean isExiting = false;
     private float delta;
     private boolean playedStartup = false;
+
+    private String currentSplash = "";
+    private String nextSplash = "";
+    private long lastSplashChange = System.currentTimeMillis();
+    private float splashProgress = 1.0F;
+    private static final long SPLASH_DELAY = 10000L;
+
+    public final String[] SPLASHES = {
+            "Singularity in your pocket, and you're still counting ticks.",
+            "Your ping is a ghost's whisper in the fiber-optic forest.",
+            "Dissolving 'allowed' and 'forbidden' in an acid code bath.",
+            "BlackOut: An electric exorcism for your reality.",
+            "Dancing on the blade of desync without touching the floor.",
+            "Quantum leap over the fence of legitimacy — Success.",
+            "Your aura smells like ozone and overclocked neurons.",
+            "Crypto-intuition: This packet will be the last.",
+            "We are the shadows cast by servers at 3 AM.",
+            "Architecture of chaos built on a foundation of pure logic.",
+            "Glitch-drive engaged. Reality begins to crumble.",
+            "Your config is poetry written in the language of falling stars.",
+            "Hacking the silence with a binary scream.",
+            "Virtual Transgressor: Beyond the possible, inside the impossible.",
+            "Feel the bytes transforming into pure adrenaline.",
+            "You didn't desync; you just transcended their perception.",
+            "Cyber-necromancy: Resurrecting your win rate.",
+            "Soul.firmware: Version 2.0. No errors detected.",
+            "Watch the world turn into digital sand through your fingers.",
+            "BlackOut: Where the darkness becomes your primary edge.",
+            "Chronoglitch initiated. Time is now a variable.",
+            "Syntax-terror in the neural network.",
+            "Aether-shift: Moving faster than the server's heartbeat.",
+            "Feeding the void with high-velocity packets.",
+            "Reality is a bug. BlackOut is the patch."
+    };
 
     private final Runnable[] runnables = new Runnable[]{
             () -> {
@@ -80,7 +113,7 @@ public class MainMenu {
 
         this.updateWindowData();
         this.delta = delta / 20.0F;
-
+        this.updateSplash(this.delta);
         if (isExiting) {
             globalFade = Math.max(0.0F, globalFade - this.delta * 3.0F);
             if (globalFade <= 0.0F && screenToSet != null) {
@@ -101,7 +134,15 @@ public class MainMenu {
         float renderMx = (isGuiOpen || isExiting || globalFade < 0.99F) ? -5000.0F : this.mx;
         float renderMy = (isGuiOpen || isExiting || globalFade < 0.99F) ? -5000.0F : this.my;
 
-        MainMenuSettings.getInstance().getRenderer().render(this.stack, this.windowHeight, renderMx, renderMy, this.splashText);
+        MainMenuSettings.getInstance().getRenderer().render(
+                this.stack,
+                this.windowHeight,
+                renderMx,
+                renderMy,
+                this.currentSplash,
+                this.nextSplash,
+                this.splashProgress
+        );
 
         if (guiAlpha > 0.01F) {
             this.stack.push();
@@ -220,68 +261,31 @@ public class MainMenu {
         this.stack.scale(scale, scale, scale);
     }
 
-    private void endRender() {
-        this.stack.pop();
+    private void updateSplash(float delta) {
+        long now = System.currentTimeMillis();
+
+        if (currentSplash.isEmpty()) {
+            currentSplash = SPLASHES[new Random().nextInt(SPLASHES.length)];
+        }
+
+        if (now - lastSplashChange > SPLASH_DELAY && splashProgress >= 1.0F) {
+            nextSplash = SPLASHES[new Random().nextInt(SPLASHES.length)];
+            lastSplashChange = now;
+            splashProgress = 0.0F;
+        }
+
+        if (splashProgress < 1.0F) {
+            splashProgress = Math.min(1.0F, splashProgress + delta * 2.0F);
+        }
+
+        if (splashProgress >= 1.0F && !nextSplash.isEmpty()) {
+            currentSplash = nextSplash;
+            nextSplash = "";
+        }
     }
 
-    private String getSplash() {
-        String[] splashTexts = new String[]{ // TODO: Сделать нормальные высказывания клиента, а также сделать их смену прямо во время активной сессии(чтобы они свайпались один за другим)
-                // --- СТЕБ НАД КОММЬЮНИТИ ---
-                "Buying a better gaming chair...",
-                "Configs: 10$ | Skill: 0$",
-                "Staff is spectating, play it cool",
-                "Reported for: Being too good",
-                "Imagine playing vanilla in 2026",
-                "100% Legit (Trust me bro)",
-                "Wait, that's not a reach, it's just lag",
-                "Your admin is my biggest fan",
-                "Successfully bypassed your brain",
-                "Is it a fly? No, it's BlackOut",
-                "Clip it or it didn't happen",
-                "Average 2b2t queue survivor",
-
-                // --- ТЕХНИЧЕСКИЙ ЮМОР (HVH / АНАРХИЯ) ---
-                "Packet injection successful. Dopamine rising.",
-                "Crystal PvP is just rhythmic clicking",
-                "0ms ping in my dreams",
-                "NullPointerException: Your ego",
-                "Desync is a lifestyle",
-                "Matrix? More like a suggestion",
-                "Bypassing... 99%",
-                "Eat, Sleep, Log out on low HP, Repeat",
-                "Your base? My stash.",
-                "Java 21: Still not fast enough for my aura",
-
-                // --- BLACKOUT EXCLUSIVE ---
-                "BlackOut: Lights out for them",
-                "Fade to Black",
-                "Total Blackout, No Mercy",
-                "Darker than your future",
-                "Coded with spite and caffeine",
-                "Welcome to the dark side",
-
-                // --- RUSSIAN / CIS VIBE ---
-                "Привет от русских хакеров",
-                "Optimized for 2-slot potato PCs",
-                "Hardbass-driven development",
-                "Cheeki Breeki, your base is empty",
-                "Cyberpunk in Khrushchevka",
-                "Vodka.exe has started successfully",
-                "Славянский зажим кристаллами",
-                "Report me, I'm famous",
-                "Gop-stop in the End",
-
-                // --- КОРОТКИЕ ЦИТАТЫ ---
-                "Skidded? Maybe. Better? Definitely.",
-                "Git push --force your career",
-                "Stay mad.",
-                "Oops, did I do that?",
-                "Skill issue.",
-                "L + Ratio + No Stash",
-                "Don't cry, it's just a game",
-                "Unpatchable spirit."
-        };
-        return splashTexts[new Random().nextInt(splashTexts.length)];
+    private void endRender() {
+        this.stack.pop();
     }
 
     @Event
