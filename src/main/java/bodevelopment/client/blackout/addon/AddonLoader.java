@@ -36,14 +36,18 @@ public class AddonLoader {
                         }
 
                         if (addon.hudPath != null) {
-                            scan(addonLoader, addon.hudPath, HudElement.class, addon.hudElements::add);
+                            scan(addonLoader, addon.hudPath, HudElement.class, instance -> {
+                                if (Managers.HUD.getElements().stream().noneMatch(p -> p.getRight().equals(instance.getClass()))) {
+                                    Managers.HUD.add(instance);
+                                    addon.hudElements.add(instance);
+                                }
+                            });
                         }
 
                         addon.onInitialize();
 
                         addon.modules.forEach(Managers.MODULES::add);
                         addon.commands.forEach(Managers.COMMANDS::add);
-                        addon.hudElements.forEach(Managers.HUD::add);
 
                         addons.add(addon);
                     } catch (Exception e) {

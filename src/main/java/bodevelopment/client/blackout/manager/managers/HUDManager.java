@@ -12,6 +12,7 @@ import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.randomstuff.Pair;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
+import bodevelopment.client.blackout.util.BOLogger;
 import bodevelopment.client.blackout.util.ClassUtils;
 import bodevelopment.client.blackout.util.SharedFeatures;
 import bodevelopment.client.blackout.util.render.RenderUtils;
@@ -50,10 +51,11 @@ public class HUDManager extends Manager {
     @Override
     public void init() {
         BlackOut.EVENT_BUS.subscribe(this, () -> false);
-        this.elements.clear();
 
         String internalPath = HudElement.class.getCanonicalName().replace(HudElement.class.getSimpleName(), "elements");
         this.addHudObjects(internalPath, HudElement.class.getClassLoader());
+
+        this.HUD_EDITOR.initElements();
     }
 
     private void addHudObjects(String path, ClassLoader loader) {
@@ -63,7 +65,14 @@ public class HUDManager extends Manager {
                     && !clazz.isInterface()
                     && !java.lang.reflect.Modifier.isAbstract(clazz.getModifiers())) {
 
-                this.add(clazz.asSubclass(HudElement.class));
+                try {
+                    Class<? extends HudElement> targetClazz = clazz.asSubclass(HudElement.class);
+
+                    HudElement instance = ClassUtils.instance(targetClazz);
+                    this.add(instance);
+                } catch (Exception e) {
+                    BOLogger.error("Error while adding HUD element: " + clazz.getName(), e);
+                }
             }
         }, path, loader);
     }
@@ -83,13 +92,24 @@ public class HUDManager extends Manager {
         }
     }
 
-    public void add(Class<? extends HudElement> clazz) {
+    public boolean add(Class<? extends HudElement> clazz) {
+        if (clazz == null) return false;
+
         String name = clazz.getSimpleName();
+        boolean added = false;
+
         if (elements.stream().noneMatch(p -> p.getLeft().equals(name))) {
             this.elements.add(new Pair<>(name, clazz));
+            added = true;
         } else {
-            this.elements.add(new Pair<>(clazz.getName(), clazz));
+            String fullName = clazz.getName();
+            if (elements.stream().noneMatch(p -> p.getLeft().equals(fullName))) {
+                this.elements.add(new Pair<>(fullName, clazz));
+                added = true;
+            }
         }
+
+        return added;
     }
 
     @Event
@@ -146,8 +166,10 @@ public class HUDManager extends Manager {
     }
 
     public void add(HudElement element) {
-        for (int i = 0; i < 1000; i++) {
-            if (!this.loaded.containsKey(++i)) {
+        this.add(element.getClass());
+
+        for (int i = 1; i < 1000; i++) {
+            if (!this.loaded.containsKey(i)) {
                 this.loaded.put(i, element);
                 element.id = i;
                 return;

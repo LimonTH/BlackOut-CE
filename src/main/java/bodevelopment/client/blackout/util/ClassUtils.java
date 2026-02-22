@@ -29,7 +29,7 @@ public class ClassUtils {
                 try {
                     consumer.accept(Class.forName(info.getName(), true, cl));
                 } catch (ClassNotFoundException e) {
-                    BOLogger.error("Класс не найден в " + packageName + " : ", e);
+                    BOLogger.error("Class not found in " + packageName + " : ", e);
                 }
             });
         } catch (Exception e) {

@@ -5,6 +5,7 @@ import bodevelopment.client.blackout.enums.ConfigType;
 import bodevelopment.client.blackout.helpers.ScrollHelper;
 import bodevelopment.client.blackout.helpers.SmoothScrollHelper;
 import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.randomstuff.Pair;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ClassUtils;
 import bodevelopment.client.blackout.util.ColorUtils;
@@ -41,8 +42,15 @@ public class HudElementList {
     private float closeProgress = 0.0F;
 
     public void init() {
-        Managers.HUD.getElements().forEach(pair -> this.entries.add(new HudListEntry(pair.getRight())));
+        this.entries.clear();
+        List<Pair<String, Class<? extends HudElement>>> managerElements = Managers.HUD.getElements();
+
+        managerElements.forEach(pair -> {
+            this.entries.add(new HudListEntry(pair.getRight()));
+        });
+
         this.listLength = this.entries.size() * 60;
+        this.scroll.set(0);
     }
 
     public void render(MatrixStack stack, float frameTime, float mouseX, float mouseY) {
