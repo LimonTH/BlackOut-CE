@@ -13,7 +13,7 @@ import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 
-public class Render3DUtils { // TODO: В одиночном мире рендер работает идеально, но при если игре на сервере было замечено странное поведение рендера (дёрганые элементы, пытающиеся прилепится к чему-либо, а также их части, по типу углов, скачущие на небольшие координаты туда сюда(в районе 0.1(x,y,z)). Ещё хочется сказать про невероятное дёрганье при движении этих рендерингуемых объектов
+public class Render3DUtils {
     public static MatrixStack matrices = new MatrixStack();
 
     public static void box(Box box, BlackOutColor sideColor, BlackOutColor lineColor, RenderShape shape) {
@@ -21,12 +21,8 @@ public class Render3DUtils { // TODO: В одиночном мире ренде�
     }
 
     public static void box(Box box, int sideColor, int lineColor, RenderShape shape) {
-        Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
-
         matrices.push();
         setRotation(matrices);
-
-        matrices.translate(-camPos.x, -camPos.y, -camPos.z);
 
         drawBoxRaw(matrices, box, sideColor, lineColor, shape);
 
@@ -73,6 +69,72 @@ public class Render3DUtils { // TODO: В одиночном мире ренде�
         }
     }
 
+    public static void boxRaw(MatrixStack stack, Box box, BlackOutColor sideColor, BlackOutColor lineColor, RenderShape shape) {
+        if (shape.sides && sideColor != null) {
+            renderSidesRaw(stack, box, sideColor.getRGB());
+        }
+        if (shape.outlines && lineColor != null) {
+            renderOutlinesRaw(stack, box, lineColor.getRGB());
+        }
+    }
+
+    public static void renderOutlinesRaw(MatrixStack stack, Box box, int color) {
+        start();
+        RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
+        RenderSystem.lineWidth(1.5F);
+
+        RenderSystem.getModelViewStack().pushMatrix();
+        RenderSystem.getModelViewStack().mul(stack.peek().getPositionMatrix());
+        RenderSystem.applyModelViewMatrix();
+
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
+
+        float r = ColorHelper.Argb.getRed(color) / 255.0F;
+        float g = ColorHelper.Argb.getGreen(color) / 255.0F;
+        float b = ColorHelper.Argb.getBlue(color) / 255.0F;
+        float a = ColorHelper.Argb.getAlpha(color) / 255.0F;
+
+        drawOutlines(new MatrixStack(), bufferBuilder,
+                (float) box.minX, (float) box.minY, (float) box.minZ,
+                (float) box.maxX, (float) box.maxY, (float) box.maxZ,
+                r, g, b, a);
+
+        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+
+        RenderSystem.getModelViewStack().popMatrix();
+        RenderSystem.applyModelViewMatrix();
+        end();
+    }
+
+    public static void renderSidesRaw(MatrixStack stack, Box box, int color) {
+        start();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+
+        RenderSystem.getModelViewStack().pushMatrix();
+        RenderSystem.getModelViewStack().mul(stack.peek().getPositionMatrix());
+        RenderSystem.applyModelViewMatrix();
+
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+
+        float r = ColorHelper.Argb.getRed(color) / 255.0F;
+        float g = ColorHelper.Argb.getGreen(color) / 255.0F;
+        float b = ColorHelper.Argb.getBlue(color) / 255.0F;
+        float a = ColorHelper.Argb.getAlpha(color) / 255.0F;
+
+        drawSides(new MatrixStack(), bufferBuilder,
+                (float) box.minX, (float) box.minY, (float) box.minZ,
+                (float) box.maxX, (float) box.maxY, (float) box.maxZ,
+                r, g, b, a);
+
+        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+
+        RenderSystem.getModelViewStack().popMatrix();
+        RenderSystem.applyModelViewMatrix();
+        end();
+    }
+
     public static void renderOutlines(MatrixStack stack, Box box, int color) {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
@@ -93,9 +155,11 @@ public class Render3DUtils { // TODO: В одиночном мире ренде�
         float b = ColorHelper.Argb.getBlue(color) / 255.0F;
         float a = ColorHelper.Argb.getAlpha(color) / 255.0F;
 
+        Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
+
         drawOutlines(new MatrixStack(), bufferBuilder,
-                (float) box.minX, (float) box.minY, (float) box.minZ,
-                (float) box.maxX, (float) box.maxY, (float) box.maxZ,
+                (float) (box.minX - camPos.x), (float) (box.minY - camPos.y), (float) (box.minZ - camPos.z),
+                (float) (box.maxX - camPos.x), (float) (box.maxY - camPos.y), (float) (box.maxZ - camPos.z),
                 r, g, b, a);
 
         BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
@@ -160,8 +224,12 @@ public class Render3DUtils { // TODO: В одиночном мире ренде�
         float b = ColorHelper.Argb.getBlue(color) / 255.0F;
         float a = ColorHelper.Argb.getAlpha(color) / 255.0F;
 
-        drawSides(new MatrixStack(), bufferBuilder, (float) box.minX, (float) box.minY, (float) box.minZ,
-                (float) box.maxX, (float) box.maxY, (float) box.maxZ, r, g, b, a);
+        Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
+
+        drawSides(new MatrixStack(), bufferBuilder,
+                (float) (box.minX - camPos.x), (float) (box.minY - camPos.y), (float) (box.minZ - camPos.z),
+                (float) (box.maxX - camPos.x), (float) (box.maxY - camPos.y), (float) (box.maxZ - camPos.z),
+                r, g, b, a);
 
         BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
 

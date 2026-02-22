@@ -7,141 +7,211 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderer;
+import net.minecraft.client.render.entity.LivingEntityRenderer;
+import net.minecraft.client.render.entity.model.BipedEntityModel;
+import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.EntityPose;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class WireframeRenderer extends WireframeContext {
-    public static final MatrixStack matrixStack = new MatrixStack();
     public static final ModelVertexConsumerProvider provider = new ModelVertexConsumerProvider();
     public static boolean hidden = false;
 
-    public static void renderModel(AbstractClientPlayerEntity player, BlackOutColor lineColor, BlackOutColor sideColor, RenderShape shape, float tickDelta) {
-        matrixStack.push();
+    /**
+     * Рендер для статических анимаций (PopChams, LogoutSpots) с поддержкой прогресса.
+     */
+    public static void renderServerPlayer(MatrixStack stack, AbstractClientPlayerEntity player,
+                                          ModelData data, BlackOutColor lineColor,
+                                          BlackOutColor sideColor, RenderShape shape,
+                                          float progress, double yOffset, float maxScale) {
+
         Render3DUtils.start();
         provider.consumer.start();
 
-        Render3DUtils.setRotation(matrixStack);
-        drawEntity(player, tickDelta, provider);
+        MatrixStack modelStack = new MatrixStack();
+        modelStack.loadIdentity();
+
+        data.scale = MathHelper.lerp(progress, 1.0F, maxScale);
+
+        drawStaticPlayerModel(modelStack, player, data);
 
         List<Vec3d[]> positions = provider.consumer.positions;
+
+        stack.push();
+
+        stack.translate(0, yOffset * progress, 0);
+
+        Matrix4f matrix = stack.peek().getPositionMatrix();
+
+        float alphaMult = 1.0F - progress;
+
         if (shape.sides) {
-            drawQuads(positions, sideColor.red / 255.0F, sideColor.green / 255.0F, sideColor.blue / 255.0F, sideColor.alpha / 255.0F);
+            RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+            drawQuads(matrix, positions,
+                    sideColor.red / 255.0F,
+                    sideColor.green / 255.0F,
+                    sideColor.blue / 255.0F,
+                    (sideColor.alpha / 255.0F) * alphaMult);
         }
 
         if (shape.outlines) {
-            drawLines(positions, lineColor.red / 255.0F, lineColor.green / 255.0F, lineColor.blue / 255.0F, lineColor.alpha / 255.0F);
+            RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
+            drawLines(matrix, positions,
+                    lineColor.red / 255.0F,
+                    lineColor.green / 255.0F,
+                    lineColor.blue / 255.0F,
+                    (lineColor.alpha / 255.0F) * alphaMult);
+        }
+
+        stack.pop();
+        Render3DUtils.end();
+    }
+
+    /**
+     * Обычный рендер модели без прогресса и анимаций.
+     */
+    public static void renderModel(MatrixStack stack, AbstractClientPlayerEntity player,
+                                   ModelData data, BlackOutColor lineColor,
+                                   BlackOutColor sideColor, RenderShape shape) {
+
+        Render3DUtils.start();
+        provider.consumer.start();
+
+        MatrixStack modelStack = new MatrixStack();
+        modelStack.loadIdentity();
+
+        drawStaticPlayerModel(modelStack, player, data);
+
+        List<Vec3d[]> positions = provider.consumer.positions;
+        Matrix4f matrix = stack.peek().getPositionMatrix();
+
+        if (shape.sides) {
+            RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+            drawQuads(matrix, positions, sideColor.red / 255.0F, sideColor.green / 255.0F, sideColor.blue / 255.0F, sideColor.alpha / 255.0F);
+        }
+
+        if (shape.outlines) {
+            RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
+            drawLines(matrix, positions, lineColor.red / 255.0F, lineColor.green / 255.0F, lineColor.blue / 255.0F, lineColor.alpha / 255.0F);
         }
 
         Render3DUtils.end();
-        matrixStack.pop();
     }
 
-    public static void drawLines(List<Vec3d[]> positions, float red, float green, float blue, float alpha) {
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableCull();
-        RenderSystem.disableDepthTest();
-        RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
-        RenderSystem.lineWidth(1.5F);
+    @SuppressWarnings("unchecked")
+    private static void drawStaticPlayerModel(MatrixStack stack, AbstractClientPlayerEntity player, ModelData data) {
+        EntityRenderer<? super AbstractClientPlayerEntity> entityRenderer = BlackOut.mc.getEntityRenderDispatcher().getRenderer(player);
+        if (!(entityRenderer instanceof LivingEntityRenderer<?, ?> livingRenderer)) return;
 
-        RenderSystem.getModelViewStack().pushMatrix();
-        RenderSystem.getModelViewStack().identity();
-        RenderSystem.applyModelViewMatrix();
+        EntityModel<?> rawModel = livingRenderer.getModel();
+        if (!(rawModel instanceof BipedEntityModel<?>)) return;
 
+        BipedEntityModel<AbstractClientPlayerEntity> model = (BipedEntityModel<AbstractClientPlayerEntity>) rawModel;
+
+        stack.push();
+        model.handSwingProgress = data.swingProgress;
+        model.riding = data.riding;
+        model.child = false;
+
+        float s = data.scale * 0.9375F;
+        stack.scale(s, -s, -s);
+        stack.translate(0.0F, -1.501F, 0.0F);
+
+        if (data.sleeping && data.sleepDir != null) {
+            stack.translate((float) (-data.sleepDir.getOffsetX()) * data.eyeHeight, 0.0F, (float) (-data.sleepDir.getOffsetZ()) * data.eyeHeight);
+        }
+
+        float bodyYaw = data.bodyYaw;
+        if (data.hasVehicle) {
+            float headYawWrap = MathHelper.wrapDegrees(data.headYaw - data.vehicleYaw);
+            float clampedHead = MathHelper.clamp(headYawWrap, -85.0F, 85.0F);
+            bodyYaw = data.headYaw - clampedHead;
+            if (clampedHead * clampedHead > 2500.0F) bodyYaw += clampedHead * 0.2F;
+        }
+
+        stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(bodyYaw));
+
+        if (data.flip) {
+            stack.translate(0.0F, 2.125F, 0.0F);
+            stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180.0F));
+        }
+
+        float headYaw = data.headYaw - bodyYaw;
+        float pitch = data.pitch;
+        if (data.flip) { pitch *= -1.0F; headYaw *= -1.0F; }
+
+        float limbPos = !data.hasVehicle ? data.limbPos : 0.0F;
+        float limbSpeed = !data.hasVehicle ? Math.min(data.limbSpeed, 1.0F) : 0.0F;
+
+        model.leaningPitch = data.leaningPitch;
+        model.setAngles(player, limbPos, limbSpeed, data.animationProgress, headYaw, pitch);
+
+        hidden = true;
+        model.render(stack, provider.getBuffer(null), 69420, 0, 16777215);
+        hidden = false;
+
+        stack.pop();
+    }
+
+    public static void drawLines(Matrix4f matrix, List<Vec3d[]> positions, float red, float green, float blue, float alpha) {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder builder = tessellator.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
 
-        MatrixStack.Entry entry = new MatrixStack().peek();
-        Matrix4f identity = entry.getPositionMatrix();
-
-        List<Vec3d[]> rendered = new ArrayList<>();
         positions.forEach(arr -> {
             for (int i = 0; i < 4; i++) {
-                Vec3d[] line = new Vec3d[]{arr[i], arr[(i + 1) % 4]};
-                if (!contains(rendered, line)) {
-                    Vec3d diff = line[1].subtract(line[0]);
-                    double len = diff.length();
-                    if (len < 1e-6) len = 1.0;
-                    float nx = (float) (diff.x / len);
-                    float ny = (float) (diff.y / len);
-                    float nz = (float) (diff.z / len);
-
-                    builder.vertex(identity, (float) line[0].x, (float) line[0].y, (float) line[0].z)
-                            .color(red, green, blue, alpha)
-                            .normal(entry, nx, ny, nz);
-                    builder.vertex(identity, (float) line[1].x, (float) line[1].y, (float) line[1].z)
-                            .color(red, green, blue, alpha)
-                            .normal(entry, nx, ny, nz);
-                    rendered.add(line);
-                }
+                Vec3d p1 = arr[i];
+                Vec3d p2 = arr[(i + 1) % 4];
+                builder.vertex(matrix, (float) p1.x, (float) p1.y, (float) p1.z).color(red, green, blue, alpha).normal(0, 1, 0);
+                builder.vertex(matrix, (float) p2.x, (float) p2.y, (float) p2.z).color(red, green, blue, alpha).normal(0, 1, 0);
             }
         });
         BufferRenderer.drawWithGlobalProgram(builder.end());
-
-        RenderSystem.getModelViewStack().popMatrix();
-        RenderSystem.applyModelViewMatrix();
-
-        RenderSystem.enableDepthTest();
-        RenderSystem.enableCull();
-        RenderSystem.disableBlend();
     }
 
-    public static void drawQuads(List<Vec3d[]> positions, float red, float green, float blue, float alpha) {
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableCull();
-        RenderSystem.disableDepthTest();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-
-        RenderSystem.getModelViewStack().pushMatrix();
-        RenderSystem.getModelViewStack().identity();
-        RenderSystem.applyModelViewMatrix();
-
+    public static void drawQuads(Matrix4f matrix, List<Vec3d[]> positions, float red, float green, float blue, float alpha) {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder builder = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
-        Matrix4f identity = new Matrix4f();
-
         positions.forEach(arr -> {
             for (Vec3d pos : arr) {
-                builder.vertex(identity, (float) pos.x, (float) pos.y, (float) pos.z)
-                        .color(red, green, blue, alpha);
+                builder.vertex(matrix, (float) pos.x, (float) pos.y, (float) pos.z).color(red, green, blue, alpha);
             }
         });
         BufferRenderer.drawWithGlobalProgram(builder.end());
-
-        RenderSystem.getModelViewStack().popMatrix();
-        RenderSystem.applyModelViewMatrix();
-
-        RenderSystem.enableDepthTest();
-        RenderSystem.enableCull();
-        RenderSystem.disableBlend();
     }
 
-    public static void drawEntity(AbstractClientPlayerEntity player, float tickDelta, VertexConsumerProvider vertexConsumerProvider) {
-        double d = MathHelper.lerp(tickDelta, player.lastRenderX, player.getX());
-        double e = MathHelper.lerp(tickDelta, player.lastRenderY, player.getY());
-        double f = MathHelper.lerp(tickDelta, player.lastRenderZ, player.getZ());
-        float yaw = MathHelper.lerp(tickDelta, player.prevYaw, player.getYaw());
-        EntityRenderer<? super AbstractClientPlayerEntity> entityRenderer = BlackOut.mc.worldRenderer.entityRenderDispatcher.getRenderer(player);
-        Vec3d cameraPos = BlackOut.mc.gameRenderer.getCamera().getPos();
-        double x = d - cameraPos.x;
-        double y = e - cameraPos.y;
-        double z = f - cameraPos.z;
-        Vec3d vec3d = entityRenderer.getPositionOffset(player, tickDelta);
-        double d2 = x + vec3d.getX();
-        double e2 = y + vec3d.getY();
-        double f2 = z + vec3d.getZ();
-        matrixStack.push();
-        matrixStack.translate(d2, e2, f2);
-        hidden = true;
-        entityRenderer.render(player, yaw, tickDelta, matrixStack, vertexConsumerProvider, 69420);
-        hidden = false;
-        matrixStack.pop();
+    public static class ModelData {
+        public float scale = 1.0f;
+        public boolean riding, flip, hasVehicle, sleeping;
+        public float bodyYaw, headYaw, vehicleYaw, pitch, eyeHeight, animationProgress, leaningPitch, limbSpeed, limbPos, swingProgress;
+        public Direction sleepDir;
+
+        public ModelData(AbstractClientPlayerEntity player, float tickDelta) {
+            this.riding = player.hasVehicle();
+            this.bodyYaw = MathHelper.lerp(tickDelta, player.prevBodyYaw, player.bodyYaw);
+            this.headYaw = MathHelper.lerp(tickDelta, player.prevHeadYaw, player.headYaw);
+            if (player.getVehicle() instanceof LivingEntity living) {
+                this.hasVehicle = true;
+                this.vehicleYaw = MathHelper.lerpAngleDegrees(tickDelta, living.prevBodyYaw, living.bodyYaw);
+            }
+            this.flip = LivingEntityRenderer.shouldFlipUpsideDown(player);
+            this.pitch = MathHelper.lerp(tickDelta, player.prevPitch, player.getPitch());
+            this.eyeHeight = player.getEyeHeight(EntityPose.STANDING) - 0.1F;
+            this.animationProgress = player.age + tickDelta;
+            this.leaningPitch = player.getLeaningPitch(tickDelta);
+            this.limbSpeed = player.limbAnimator.getSpeed(tickDelta);
+            this.limbPos = player.limbAnimator.getPos(tickDelta);
+            this.swingProgress = player.getHandSwingProgress(tickDelta);
+            this.sleeping = player.isInPose(EntityPose.SLEEPING);
+            this.sleepDir = player.getSleepingDirection();
+        }
     }
 }

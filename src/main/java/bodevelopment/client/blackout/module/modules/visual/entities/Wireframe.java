@@ -13,7 +13,11 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.render.WireframeRenderer;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+import org.joml.Quaternionf;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -45,16 +49,41 @@ public class Wireframe extends Module {
 
     public boolean shouldRender(Entity entity) {
         AntiBot antiBot = AntiBot.getInstance();
-        return (!antiBot.enabled || antiBot.mode.get() != AntiBot.HandlingMode.Ignore || !antiBot.getBots().contains(this.player)) && entity != BlackOut.mc.player;
+        return (!antiBot.enabled || antiBot.mode.get() != AntiBot.HandlingMode.Ignore || !antiBot.getBots().contains(entity)) && entity != BlackOut.mc.player;
     }
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.world != null && BlackOut.mc.player != null) {
-            this.player
-                    .forEach(
-                            entity -> WireframeRenderer.renderModel(entity, this.lineColor.get(), this.sideColor.get(), this.renderShape.get(), BlackOut.mc.getRenderTickCounter().getTickDelta(true))
-                    );
-        }
+        if (BlackOut.mc.world == null || BlackOut.mc.player == null) return;
+
+        Camera camera = BlackOut.mc.gameRenderer.getCamera();
+        Vec3d camPos = camera.getPos();
+        float tickDelta = event.tickDelta;
+
+        this.player.forEach(entity -> {
+            WireframeRenderer.ModelData data = new WireframeRenderer.ModelData(entity, tickDelta);
+
+            event.stack.push();
+
+            event.stack.loadIdentity();
+            event.stack.multiply(new Quaternionf(camera.getRotation()).conjugate());
+
+            double x = MathHelper.lerp(tickDelta, entity.lastRenderX, entity.getX()) - camPos.x;
+            double y = MathHelper.lerp(tickDelta, entity.lastRenderY, entity.getY()) - camPos.y;
+            double z = MathHelper.lerp(tickDelta, entity.lastRenderZ, entity.getZ()) - camPos.z;
+
+            event.stack.translate((float) x, (float) y, (float) z);
+
+            WireframeRenderer.renderModel(
+                    event.stack,
+                    entity,
+                    data,
+                    this.lineColor.get(),
+                    this.sideColor.get(),
+                    this.renderShape.get()
+            );
+
+            event.stack.pop();
+        });
     }
 }

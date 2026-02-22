@@ -23,13 +23,16 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.render.Camera;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
+import org.joml.Quaternionf;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -126,40 +129,53 @@ public class LogoutSpots extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            this.spots
-                    .removeIf(
-                            spot -> {
-                                if (!spot.seen && this.anyPlayerMatches(spot.player.getGameProfile().getId())) {
-                                    spot.setSeen();
-                                }
+        if (BlackOut.mc.player == null || BlackOut.mc.world == null) return;
 
-                                this.setAlpha(spot);
-                                if (this.alphaMulti <= 0.0F) {
-                                    return true;
-                                } else {
-                                    if (this.model.get()) {
-                                        WireframeRenderer.renderModel(
-                                                spot.player,
-                                                this.lineColor.get().alphaMulti(this.alphaMulti),
-                                                this.sideColor.get().alphaMulti(this.alphaMulti),
-                                                this.renderShape.get(),
-                                                spot.tickDelta
-                                        );
-                                    } else {
-                                        Render3DUtils.box(
-                                                spot.player.getBoundingBox(),
-                                                this.sideColor.get().alphaMulti(this.alphaMulti),
-                                                this.lineColor.get().alphaMulti(this.alphaMulti),
-                                                this.renderShape.get()
-                                        );
-                                    }
+        Camera camera = BlackOut.mc.gameRenderer.getCamera();
+        Vec3d camPos = camera.getPos();
 
-                                    return System.currentTimeMillis() - spot.logTime > (this.maxTime.get() + this.fadeTime.get()) * 1000.0;
-                                }
-                            }
-                    );
-        }
+        this.spots.removeIf(spot -> {
+            UUID uuid = spot.player.getGameProfile().getId();
+            if (!spot.seen && this.anyPlayerMatches(uuid)) spot.setSeen();
+
+            this.setAlpha(spot);
+            if (this.alphaMulti <= 0.0F) return true;
+
+            event.stack.push();
+
+            event.stack.loadIdentity();
+            event.stack.multiply(new Quaternionf(camera.getRotation()).conjugate());
+
+            double x = spot.x - camPos.x;
+            double y = spot.y - camPos.y;
+            double z = spot.z - camPos.z;
+            event.stack.translate((float) x, (float) y, (float) z);
+
+            if (this.model.get()) {
+                WireframeRenderer.renderServerPlayer(
+                        event.stack,
+                        spot.player,
+                        spot.modelData,
+                        this.lineColor.get().alphaMulti(this.alphaMulti),
+                        this.sideColor.get().alphaMulti(this.alphaMulti),
+                        this.renderShape.get(),
+                        0f,
+                        0,
+                        1f
+                );
+            } else {
+                Render3DUtils.box(
+                        spot.player.getBoundingBox().offset(-spot.player.getX(), -spot.player.getY(), -spot.player.getZ()),
+                        this.sideColor.get().alphaMulti(this.alphaMulti),
+                        this.lineColor.get().alphaMulti(this.alphaMulti),
+                        this.renderShape.get()
+                );
+            }
+            event.stack.pop();
+
+            long lifetime = (long) ((this.maxTime.get() + this.fadeTime.get()) * 1000.0);
+            return (System.currentTimeMillis() - spot.logTime) > lifetime;
+        });
     }
 
     @Event
@@ -282,48 +298,39 @@ public class LogoutSpots extends Module {
         this.matrixStack.translate(0.0F, BlackOut.FONT.getHeight(), 0.0F);
     }
 
-    private void renderArmorAndItems(Spot spot, int textColor) {
-        int size = 0;
+    private void renderArmorAndItems(Spot spot, int color) {
+        List<ItemComponent> toRender = spot.items.stream()
+                .filter(i -> (i.armor() && armor.get()) || (!i.armor() && items.get()))
+                .toList();
 
-        for (ItemComponent item : spot.items) {
-            if (item.armor() && this.armor.get() || !item.armor() && this.items.get()) {
-                size++;
-            }
-        }
+        if (toRender.isEmpty()) return;
 
         this.matrixStack.push();
-        this.matrixStack.translate(-size * 8, 0.0F, 0.0F);
-        spot.items.forEach(itemx -> {
-            if (itemx.armor() && this.armor.get() || !itemx.armor() && this.items.get()) {
-                this.renderComponent(itemx, textColor);
-            }
-        });
-        this.matrixStack.pop();
-        this.matrixStack.translate(0.0F, 20.0F, 0.0F);
-    }
+        this.matrixStack.translate(-toRender.size() * 8, 0, 0);
 
-    private void renderComponent(ItemComponent component, int textColor) {
-        ItemStack itemStack = component.itemStack();
+        for (ItemComponent item : toRender) {
+            ItemStack stack = item.itemStack();
 
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alphaMulti);
-        RenderUtils.renderItem(this.matrixStack, itemStack.getItem(), 0.0F, 0.0F, 16.0F);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alphaMulti);
+            RenderUtils.renderItem(this.matrixStack, stack.getItem(), 0.0F, 0.0F, 16.0F);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-        if (component.armor()) {
-            boolean isUnbreakable = itemStack.get(DataComponentTypes.UNBREAKABLE) != null;
-
-            if (!isUnbreakable && itemStack.isDamageable()) {
-                float maxDamage = (float) itemStack.getMaxDamage();
-                if (maxDamage > 0) {
-                    int durabilityPercentage = Math.round((maxDamage - itemStack.getDamage()) * 100.0F / maxDamage);
-                    BlackOut.FONT.text(this.matrixStack, durabilityPercentage + "%", 0.8F, 8.0F, 16.0F, textColor, true, true);
+            if (item.armor()) {
+                boolean isUnbreakable = stack.get(DataComponentTypes.UNBREAKABLE) != null;
+                if (!isUnbreakable && stack.isDamageable()) {
+                    float maxDamage = (float) stack.getMaxDamage();
+                    int dur = Math.round((maxDamage - stack.getDamage()) * 100.0F / maxDamage);
+                    BlackOut.FONT.text(this.matrixStack, dur + "%", 0.7F, 8.0F, 16.0F, color, true, true);
                 }
+            } else if (stack.getCount() > 1) {
+                BlackOut.FONT.text(this.matrixStack, String.valueOf(stack.getCount()), 0.8F, 8.0F, 16.0F, color, true, true);
             }
-        } else if (itemStack.isStackable() || itemStack.getCount() > 1) {
-            BlackOut.FONT.text(this.matrixStack, String.valueOf(itemStack.getCount()), 0.8F, 8.0F, 16.0F, textColor, true, true);
+
+            this.matrixStack.translate(16.0F, 0.0F, 0.0F);
         }
 
-        this.matrixStack.translate(16.0F, 0.0F, 0.0F);
+        this.matrixStack.pop();
+        this.matrixStack.translate(0.0F, 20.0F, 0.0F);
     }
 
     private double infoHeight(Spot spot) {
@@ -398,50 +405,45 @@ public class LogoutSpots extends Module {
 
     private static class Spot {
         private final AbstractClientPlayerEntity player;
-        private final float tickDelta = BlackOut.mc.getRenderTickCounter().getTickDelta(true);
+        private final WireframeRenderer.ModelData modelData;
+        private final double x, y, z;
         private final List<ItemComponent> items = new ArrayList<>();
         private final float health;
-        private final int ping;
-        private final int pops;
+        private final int ping, pops;
         private final long logTime = System.currentTimeMillis();
         private boolean seen = false;
         private long seenSince = 0L;
 
         public Spot(AbstractClientPlayerEntity player) {
             this.player = player;
-            this.fillItems();
+            float tickDelta = BlackOut.mc.getRenderTickCounter().getTickDelta(true);
+
+            this.x = MathHelper.lerp(tickDelta, player.lastRenderX, player.getX());
+            this.y = MathHelper.lerp(tickDelta, player.lastRenderY, player.getY());
+            this.z = MathHelper.lerp(tickDelta, player.lastRenderZ, player.getZ());
+
+            this.modelData = new WireframeRenderer.ModelData(player, tickDelta);
+
             this.health = player.getHealth() + player.getAbsorptionAmount();
             PlayerListEntry entry = BlackOut.mc.getNetworkHandler().getPlayerListEntry(player.getGameProfile().getId());
-            if (entry != null) {
-                this.ping = entry.getLatency();
-            } else {
-                this.ping = -1;
-            }
+            this.ping = entry != null ? entry.getLatency() : -1;
 
-            StatsManager.TrackerData trackerData = Managers.STATS.getStats(player);
-            if (trackerData == null) {
-                this.pops = 0;
-            } else {
-                this.pops = trackerData.pops;
-            }
+            StatsManager.TrackerData tracker = Managers.STATS.getStats(player);
+            this.pops = tracker != null ? tracker.pops : 0;
+
+            this.fillItems();
         }
 
         private void fillItems() {
-            UUID uuid = this.player.getGameProfile().getId();
-            TimerMap<UUID, ItemStack[]> map = LogoutSpots.getInstance().prevItems;
-            if (map.containsKey(uuid)) {
-                ItemStack[] arr = map.get(uuid);
-
+            ItemStack[] arr = LogoutSpots.getInstance().prevItems.get(player.getGameProfile().getId());
+            if (arr != null) {
                 for (int i = 0; i < 6; i++) {
-                    ItemStack stack = arr[i];
-                    if (!stack.isEmpty()) {
-                        this.items.add(new ItemComponent(stack, i != 0 && i != 5));
-                    }
+                    if (!arr[i].isEmpty()) this.items.add(new ItemComponent(arr[i], i != 0 && i != 5));
                 }
             }
         }
 
-        private void setSeen() {
+        public void setSeen() {
             this.seen = true;
             this.seenSince = System.currentTimeMillis();
         }
