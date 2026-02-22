@@ -18,8 +18,6 @@ public class CommandManager extends Manager {
 
     @Override
     public void init() {
-        this.commands.clear();
-
         String internalPath = Command.class.getCanonicalName().replace(Command.class.getSimpleName(), "commands");
 
         ClassUtils.forEachClass(clazz -> {
@@ -27,14 +25,17 @@ public class CommandManager extends Manager {
                     && !clazz.isInterface()
                     && !java.lang.reflect.Modifier.isAbstract(clazz.getModifiers())) {
 
-                this.add((Command) ClassUtils.instance((Class<?>) clazz));
+                String name = clazz.getSimpleName().toLowerCase();
+                if (!this.commands.containsKey(name)) {
+                    this.add((Command) ClassUtils.instance((Class<?>) clazz));
+                }
             }
         }, internalPath, Command.class.getClassLoader());
     }
 
     public void add(Command command) {
         if (command == null) return;
-        this.commands.put(command.name.toLowerCase(), command);
+        this.commands.putIfAbsent(command.name.toLowerCase(), command);
     }
 
     public String onCommand(String[] args) {

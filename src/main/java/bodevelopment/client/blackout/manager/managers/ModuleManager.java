@@ -1,7 +1,6 @@
 package bodevelopment.client.blackout.manager.managers;
 
 import bodevelopment.client.blackout.BlackOut;
-import bodevelopment.client.blackout.addon.AddonLoader;
 import bodevelopment.client.blackout.enums.BindMode;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.KeyEvent;
@@ -22,8 +21,6 @@ public class ModuleManager extends Manager {
 
     @Override
     public void init() {
-        this.modules.clear();
-
         long time = OLEPOSSUtils.testTime(() -> {
             String internalPath = Module.class.getCanonicalName().replace(Module.class.getSimpleName(), "modules");
 
@@ -73,7 +70,12 @@ public class ModuleManager extends Manager {
     }
 
     public void add(Module module) {
-        if (!modules.contains(module)) {
+        if (module == null) return;
+
+        boolean alreadyExists = this.modules.stream()
+                .anyMatch(m -> m.getClass().equals(module.getClass()));
+
+        if (!alreadyExists) {
             this.modules.add(module);
             Arraylist.deltaMap.put(module, new org.apache.commons.lang3.mutable.MutableFloat(0.0F));
         }

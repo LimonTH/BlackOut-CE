@@ -8,7 +8,7 @@ import java.util.List;
 
 public class StatsCommand extends Command {
     public StatsCommand() {
-        super("Stats", "Usage: Stats [reset]");
+        super("stats", "Usage: Stats [reset]");
     }
 
     @Override
