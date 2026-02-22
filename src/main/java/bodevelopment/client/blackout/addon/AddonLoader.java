@@ -28,11 +28,17 @@ public class AddonLoader {
                         BOLogger.info(String.format("Found addon: %s (version %s)", addon.getName(), addon.getVersion()));
 
                         if (addon.modulePath != null) {
-                            scan(addonLoader, addon.modulePath, Module.class, addon.modules::add);
+                            scan(addonLoader, addon.modulePath, Module.class, instance -> {
+                                Managers.MODULES.add(instance);
+                                addon.modules.add(instance);
+                            });
                         }
 
                         if (addon.commandPath != null) {
-                            scan(addonLoader, addon.commandPath, Command.class, addon.commands::add);
+                            scan(addonLoader, addon.commandPath, Command.class, instance -> {
+                                Managers.COMMANDS.add(instance);
+                                addon.commands.add(instance);
+                            });
                         }
 
                         if (addon.hudPath != null) {
@@ -45,9 +51,6 @@ public class AddonLoader {
                         }
 
                         addon.onInitialize();
-
-                        addon.modules.forEach(Managers.MODULES::add);
-                        addon.commands.forEach(Managers.COMMANDS::add);
 
                         addons.add(addon);
                     } catch (Exception e) {
