@@ -500,28 +500,38 @@ public class ClickGui extends Screen {
 
     public void scrollToModule(Module module) {
         int columns = this.getColumns();
-        int moduleWidth = this.getModuleWidth(columns);
-        int offset = this.getColumnOffset(columns, moduleWidth);
-
-        float[] columnHeights = new float[columns];
-        int currentColumn = 0;
+        float[] lengths = new float[columns];
+        int current = 0;
 
         for (ModuleComponent component : this.moduleComponents) {
             if (component.module.category == module.category) {
 
-                if (component.module == module) {
-                    float targetScroll = columnHeights[currentColumn];
-                    this.moduleScroll.set(targetScroll);
+                boolean isTarget = (component.module == module);
+                float targetProgress = isTarget ? 1.0F : 0.0F;
+
+                float fs = GuiSettings.getInstance().fontScale.get().floatValue();
+                float multiplier = MathHelper.lerp(targetProgress,
+                        GuiSettings.getInstance().moduleScaleClosed.get().floatValue(),
+                        GuiSettings.getInstance().moduleScale.get().floatValue());
+                float scale = Math.max(fs, fs * multiplier);
+                float finalHeaderHeight = Math.max((BlackOut.FONT.getHeight() * scale) + (15.0F * scale),
+                        MathHelper.lerp(targetProgress,
+                                GuiSettings.getInstance().moduleHeightClosed.get().floatValue(),
+                                GuiSettings.getInstance().moduleHeight.get().floatValue()));
+
+                float settingsHeight = isTarget ? ModuleComponent.getLength(component.module.settingGroups) : 0.0F;
+                float totalFinalHeight = finalHeaderHeight + settingsHeight;
+
+                if (isTarget) {
+                    float moduleTop = lengths[current];
+                    float targetScroll = moduleTop - (height / 2.0F) + (totalFinalHeight / 2.0F) + 30.0F;
+
+                    this.moduleScroll.animateTo(targetScroll);
                     return;
                 }
 
-                float h = component.getHeight() + (component.opened ? ModuleComponent.getLength(component.module.settingGroups) : 0) + 20.0F;
-
-                columnHeights[currentColumn] += h;
-
-                if (++currentColumn >= columns) {
-                    currentColumn = 0;
-                }
+                lengths[current] += totalFinalHeight + 20.0F;
+                if (++current >= columns) current = 0;
             }
         }
     }

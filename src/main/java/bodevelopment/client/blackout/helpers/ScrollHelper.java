@@ -7,6 +7,7 @@ import net.minecraft.util.math.MathHelper;
 public class ScrollHelper {
     private final float friction;
     private final float speedMulti;
+    private float targetScroll = -1.0F;
     private final SingleOut<Float> min;
     private final SingleOut<Float> max;
     private final TimerList<Float> scrolls = new TimerList<>(false);
@@ -38,7 +39,20 @@ public class ScrollHelper {
     public void update(float frameTime) {
         this.scrolls.update();
         this.scrolls.forEach(timer -> this.speed = this.speed + timer.value * frameTime * 20.0F);
-        this.scroll = this.scroll + this.speed * frameTime * 20.0F;
+
+        if (this.targetScroll != -1.0F) {
+            float diff = this.targetScroll - this.scroll;
+            this.scroll += diff * Math.min(1.0F, frameTime * 20.0F * 0.15F);
+            this.speed = MathHelper.clampedLerp(this.speed, 0.0F, frameTime * 20.0F * 0.2F);
+
+            if (Math.abs(diff) < 0.1F) {
+                this.scroll = this.targetScroll;
+                this.targetScroll = -1.0F;
+            }
+        } else {
+            this.scroll = this.scroll + this.speed * frameTime * 20.0F;
+        }
+
         this.clamp(this.min.get(), this.max.get());
         this.speed = MathHelper.clampedLerp(this.speed, 0.0F, frameTime * 20.0F * this.friction);
     }
@@ -63,7 +77,9 @@ public class ScrollHelper {
     public void update(double frameTime) {
         this.update((float) frameTime);
     }
+
     public void add(float amount) {
+        this.targetScroll = -1.0F;
         amount = -amount;
         if (this.limit > 0.0F) {
             amount = MathHelper.clamp(amount, -this.limit, this.limit);
@@ -75,7 +91,12 @@ public class ScrollHelper {
     public void set(float value) {
         this.scroll = value;
         this.speed = 0.0F;
+        this.targetScroll = -1.0F;
         this.scrolls.clear();
+    }
+
+    public void animateTo(float target) {
+        this.targetScroll = target;
     }
 
     public void offset(float amount) {
