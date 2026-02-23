@@ -30,7 +30,7 @@ public class Insults extends Module {
     public final Setting<Boolean> pop = this.sgPop.b("Pop", true, "Should we send a message when enemy pops a totem");
     private final Random r = new Random();
     private final List<Message> messageQueue = new LinkedList<>();
-    private final String[] insults = new String[]{ // TODO: Добавить фразочки Insults
+    private final String[] insults = new String[]{
             "<NAME> couldn't even beat 4 block",
             "<NAME> maybe you should be searching for your dad instead of minecraft pvp tutorials",
             "That was the easiest fight ever",

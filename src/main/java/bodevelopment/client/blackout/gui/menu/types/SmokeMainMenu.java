@@ -78,10 +78,16 @@ public class SmokeMainMenu implements MainMenuRenderer {
             float currentX = startX + (i * 54.0F);
             boolean hovered = RenderUtils.insideRounded(mx, my, currentX + 5.0F, startY + 5.0F, 22.0F, 22.0F, 10.0F);
 
+            stack.push();
+            if (hovered) {
+                stack.scale(1.1F, 1.1F, 1.0F);
+                stack.translate(-1.0F, -1.0F, 0.0F);
+            }
             this.renderSingleIconButton(stack, i, hovered);
+            stack.pop();
+
             stack.translate(54.0F, 0.0F, 0.0F);
         }
-
         stack.pop();
     }
 
@@ -100,7 +106,6 @@ public class SmokeMainMenu implements MainMenuRenderer {
             }
 
             this.renderButton(stack, name, hovered);
-
             stack.pop();
 
             stack.translate(0.0F, 85.0F, 0.0F);
@@ -110,13 +115,14 @@ public class SmokeMainMenu implements MainMenuRenderer {
     }
 
     private void renderButton(MatrixStack stack, String name, boolean hovered) {
-        RenderUtils.drawLoadedBlur("title", stack, renderer -> renderer.rounded(0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10, 1.0F, 1.0F, 1.0F, 1.0F));
+        RenderUtils.drawLoadedBlur("title", stack, renderer ->
+                renderer.rounded(0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10, 1.0F, 1.0F, 1.0F, 1.0F));
 
         RenderUtils.rounded(stack, 0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10.0F,
-                new Color(0, 0, 0, hovered ? 90 : 50).getRGB(),
+                new Color(0, 0, 0, hovered ? 100 : 60).getRGB(),
                 new Color(0, 0, 0, 240).getRGB());
 
-        Color textColor = hovered ? Color.WHITE : new Color(180, 180, 180, 255);
+        Color textColor = hovered ? Color.WHITE : new Color(190, 190, 190, 255);
         BlackOut.FONT.text(stack, name, 3.0F, 180.0F, 5.0F, textColor.getRGB(), true, true);
     }
 
@@ -128,21 +134,18 @@ public class SmokeMainMenu implements MainMenuRenderer {
             default -> BOTextures.getGithubIconRenderer();
         };
 
-        float width = t.getWidth() / 2.0F;
-        float height = t.getHeight() / 2.0F;
-        float alpha = hovered ? 1.0F : 0.6F;
-
         RenderUtils.drawLoadedBlur("title", stack, renderer ->
                 renderer.rounded(5.0F, 5.0F, 22.0F, 22.0F, 10.0F, 10, 1.0F, 1.0F, 1.0F, 1.0F));
 
         RenderUtils.rounded(stack, 5.0F, 5.0F, 22.0F, 22.0F, 10.0F, 3.0F,
-                new Color(0, 0, 0, hovered ? 70 : 35).getRGB(),
-                new Color(0, 0, 0, 225).getRGB());
+                new Color(255, 255, 255, hovered ? 40 : 10).getRGB(),
+                new Color(0, 0, 0, 210).getRGB());
 
-        Renderer.setAlpha(alpha);
-        t.quad(stack, 0.0F, 0.0F, width, height);
+        Renderer.setAlpha(hovered ? 1.0F : 0.65F);
+        t.quad(stack, 0.0F, 0.0F, t.getWidth() / 2.0F, t.getHeight() / 2.0F);
         Renderer.setAlpha(1.0F);
     }
+
 
     private void renderDevs() {
         String devText = "Made by KassuK & OLEPOSSU | Continued by Limon_TH";

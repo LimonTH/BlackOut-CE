@@ -27,18 +27,19 @@ import net.minecraft.util.math.Vec3d;
 public class PearlPhase extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
     public final SettingGroup sgRender = this.addGroup("Render");
-    public final Setting<SwitchMode> ccSwitchMode = this.sgGeneral
-            .e("CC Switch Mode", SwitchMode.Normal, "Which method of switching should be used for cc items.");
-    public final Setting<SwitchMode> switchMode = this.sgGeneral.e("Switch Mode", SwitchMode.Normal, "Which method of switching should be used.");
+
+    public final Setting<SwitchMode> ccSwitchMode = this.sgGeneral.e("CC Switch Mode", SwitchMode.Normal, "Switch method for CC blocks.");
+    public final Setting<SwitchMode> switchMode = this.sgGeneral.e("Switch Mode", SwitchMode.Normal, "Switch method for pearl.");
     public final Setting<Integer> pitch = this.sgGeneral.i("Pitch", 85, -90, 90, 1, "How deep down to look.");
-    private final Setting<Boolean> ccBypass = this.sgRender.b("CC Bypass", false, "Does funny stuff to bypass cc's anti delay.");
-    private final Setting<ObsidianModule.RotationMode> rotationMode = this.sgGeneral.e("Rotation Mode", ObsidianModule.RotationMode.Normal, ".");
-    private final Setting<Boolean> swing = this.sgRender.b("Swing", false, "Renders swing animation when placing throwing a peal");
-    private final Setting<SwingHand> swingHand = this.sgRender.e("Swing Hand", SwingHand.RealHand, "Which hand should be swung.");
+    private final Setting<Boolean> ccBypass = this.sgGeneral.b("CC Bypass", false, "Bypass CC anti-delay by placing a block first.");
+    private final Setting<ObsidianModule.RotationMode> rotationMode = this.sgGeneral.e("Rotation Mode", ObsidianModule.RotationMode.Normal, "Rotation method.");
+    private final Setting<Boolean> swing = this.sgRender.b("Swing", false, "Swing animation.");
+    private final Setting<SwingHand> swingHand = this.sgRender.e("Swing Hand", SwingHand.RealHand, "Hand to swing.");
+
     private boolean placed = false;
 
     public PearlPhase() {
-        super("Pearl Phase", "Throws a pearl", SubCategory.MISC_COMBAT, true);
+        super("Pearl Phase", "Throws a pearl to phase through blocks", SubCategory.MISC_COMBAT, true);
     }
 
     @Override
@@ -48,101 +49,82 @@ public class PearlPhase extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            Hand hand = OLEPOSSUtils.getHand(Items.ENDER_PEARL);
-            FindResult findResult = this.switchMode.get().find(Items.ENDER_PEARL);
-            if (hand != null || findResult.wasFound()) {
-                if (!this.ccBypass.get() || this.cc() || this.placed) {
-                    switch (this.rotationMode.get()) {
-                        case Normal:
-                            if (!this.rotate(this.getYaw(), this.pitch.get(), RotationType.Other, "look")) {
-                                return;
-                            }
-                            break;
-                        case Instant:
-                            if (!this.rotate(this.getYaw(), this.pitch.get(), RotationType.InstantOther, "look")) {
-                                return;
-                            }
-                    }
-                    // TODO: Странная реализация switched
-                    boolean switched = false;
-                    if (switched || this.switchMode.get().swap(findResult.slot())) {
-                        if (this.rotationMode.get() == ObsidianModule.RotationMode.Packet) {
-                            this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(this.getYaw(), this.pitch.get(), Managers.PACKET.isOnGround()));
-                        }
+        if (BlackOut.mc.player == null || BlackOut.mc.world == null) return;
 
-                        this.useItem(hand);
-                        if (this.swing.get()) {
-                            this.clientSwing(this.swingHand.get(), hand);
-                        }
+        Hand hand = OLEPOSSUtils.getHand(Items.ENDER_PEARL);
+        FindResult pearlResult = this.switchMode.get().find(Items.ENDER_PEARL);
 
-                        this.end("look");
-                        this.disable("success");
-                        if (hand == null) {
-                            this.switchMode.get().swapBack();
-                        }
-                    }
-                }
+        if (hand == null && !pearlResult.wasFound()) return;
+
+        if (this.ccBypass.get() && !this.placed) {
+            if (!this.cc()) return;
+        }
+
+        if (!this.handleRotations(this.getYaw(), this.pitch.get(), "look")) return;
+
+        boolean isInvSwitch = hand == null;
+        if (!isInvSwitch || this.switchMode.get().swap(pearlResult.slot())) {
+            if (this.rotationMode.get() == ObsidianModule.RotationMode.Packet) {
+                this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(this.getYaw(), this.pitch.get(), Managers.PACKET.isOnGround()));
             }
+            this.useItem(hand == null ? Hand.MAIN_HAND : hand);
+            if (this.swing.get()) {
+                this.clientSwing(this.swingHand.get(), hand == null ? Hand.MAIN_HAND : hand);
+            }
+            this.end("look");
+            if (isInvSwitch) this.switchMode.get().swapBack();
+            this.disable("success");
         }
     }
 
-    private boolean cc() { // TODO: Странная инициализация FindResult
-        FindResult result;
-        if (!(result = this.ccSwitchMode.get().find(stack -> stack.getItem() instanceof BlockItem)).wasFound()) {
+    private boolean cc() {
+        FindResult blockResult = this.ccSwitchMode.get().find(stack -> stack.getItem() instanceof BlockItem);
+
+        if (!blockResult.wasFound()) {
             this.disable("no CC blocks found");
             return false;
-        } else {
-            BlockPos pos = BlackOut.mc.player.getBlockPos();
-            if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-                switch (this.rotationMode.get()) {
-                    case Normal:
-                        if (!this.rotateBlock(pos.down(), Direction.UP, RotationType.BlockPlace, "placing")) {
-                            return false;
-                        }
-                        break;
-                    case Instant:
-                        if (!this.rotateBlock(pos.down(), Direction.UP, RotationType.InstantBlockPlace, "placing")) {
-                            return false;
-                        }
-                }
-            }
-
-            Hand hand = OLEPOSSUtils.getHand(stack -> stack.getItem() instanceof BlockItem);
-            if (hand == null && !this.ccSwitchMode.get().swap(result.slot())) {
-                return false;
-            } else {
-                if (SettingUtils.shouldRotate(RotationType.BlockPlace) && this.rotationMode.get() == ObsidianModule.RotationMode.Packet) {
-                    this.sendPacket(
-                            new PlayerMoveC2SPacket.LookAndOnGround(
-                                    (float) RotationUtils.getYaw(pos.toCenterPos()),
-                                    (float) RotationUtils.getPitch(BlackOut.mc.player.getEyePos(), pos.toCenterPos()),
-                                    Managers.PACKET.isOnGround()
-                            )
-                    );
-                }
-
-                this.placeBlock(hand == null ? Hand.MAIN_HAND : hand, pos.down().toCenterPos(), Direction.UP, pos.down());
-                if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-                    this.end("placing");
-                }
-
-                this.placed = true;
-                if (hand == null) {
-                    this.ccSwitchMode.get().swapBack();
-                }
-
-                return true;
-            }
         }
+
+        BlockPos pos = BlackOut.mc.player.getBlockPos().down();
+
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
+            if (!this.handleRotations(
+                    (float) RotationUtils.getYaw(pos.toCenterPos()),
+                    (float) RotationUtils.getPitch(BlackOut.mc.player.getEyePos(), pos.toCenterPos()),
+                    "placing")) return false;
+        }
+
+        Hand blockHand = OLEPOSSUtils.getHand(stack -> stack.getItem() instanceof BlockItem);
+        boolean isInvSwitch = blockHand == null;
+
+        if (!isInvSwitch || this.ccSwitchMode.get().swap(blockResult.slot())) {
+            this.placeBlock(blockHand == null ? Hand.MAIN_HAND : blockHand, pos.toCenterPos(), Direction.UP, pos);
+
+            if (SettingUtils.shouldRotate(RotationType.BlockPlace)) this.end("placing");
+
+            if (isInvSwitch) this.ccSwitchMode.get().swapBack();
+            this.placed = true;
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean handleRotations(float yaw, float pitch, String name) {
+        RotationType type = name.equals("placing") ? RotationType.BlockPlace : RotationType.Other;
+        RotationType instantType = name.equals("placing") ? RotationType.InstantBlockPlace : RotationType.InstantOther;
+
+        return switch (this.rotationMode.get()) {
+            case Normal -> this.rotate(yaw, pitch, type, name);
+            case Instant -> this.rotate(yaw, pitch, instantType, name);
+            case Packet -> true;
+        };
     }
 
     private int getYaw() {
-        return (int) Math.round(
-                RotationUtils.getYaw(
-                        new Vec3d(Math.floor(BlackOut.mc.player.getX()) + 0.5, 0.0, Math.floor(BlackOut.mc.player.getZ()) + 0.5)
-                )
-        )
-                + 180;
+        return (int) Math.round(RotationUtils.getYaw(new Vec3d(
+                Math.floor(BlackOut.mc.player.getX()) + 0.5,
+                0.0,
+                Math.floor(BlackOut.mc.player.getZ()) + 0.5))) + 180;
     }
 }
