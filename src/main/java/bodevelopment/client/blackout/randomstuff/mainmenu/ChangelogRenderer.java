@@ -22,27 +22,10 @@ public class ChangelogRenderer {
     public void initChangelog() {
         changelog.clear();
         changelog.add("I kill old changelog, Alas! =)");
-        changelog.add("Initial restore from deobfuscation");
-        changelog.add("Fix crashes with mixins and other uncorrected functions");
-        changelog.add("Fix UI rendering issues: scissors, textures, ...");
-        changelog.add("Swapped keyboard layout from Filipino to English");
-        changelog.add("Fix binding issues");
-        changelog.add("ClickGUI now can opened in Main Menu");
-        changelog.add("Modules cleanup");
-        changelog.add("Add TAB-autocomplete with -commands");
-        changelog.add("FakePlayer fixes, record now worked correctly");
-        changelog.add("Update 3D rendering for client");
-        changelog.add("Resolve system synchronizations(linux, windows, macOS)");
-        changelog.add("Updated to Minecraft 1.21.1");
-        changelog.add("Global rendering overhaul");
-        changelog.add("Improved world-logic communication");
-        changelog.add("Update changelog render logic");
-        changelog.add("Fixed ClickGUI issues in main menu");
-        changelog.add("Fixed utils logic for better performance");
-        changelog.add("Update smoothy moves in main menu");
-        changelog.add("Fixed some bugs in 1.21.1 client");
-        changelog.add("optimized main menu rendering and sync");
-        changelog.add("That's ALL, for now =)");
+        changelog.add("More and more fixes");
+        changelog.add("new UI");
+        changelog.add("new renders");
+        changelog.add("and more и море");
 
         float maxW = 0;
         for (String s : changelog) {

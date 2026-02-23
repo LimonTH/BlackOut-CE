@@ -14,7 +14,7 @@ import net.minecraft.client.util.math.MatrixStack;
 
 import java.awt.*;
 
-public class ColorMainMenu implements MainMenuRenderer {
+public class ColorMainMenu implements MainMenuRenderer { // (ThemeMainMenu)
     private final ChangelogRenderer changelogRenderer = new ChangelogRenderer();
     private static final float BUTTON_WIDTH = 360.0F;
     private static final float BUTTON_HEIGHT = 10.0F;
@@ -66,7 +66,6 @@ public class ColorMainMenu implements MainMenuRenderer {
             stack.pop();
         }
     }
-
     private void renderAllIconButtons(MatrixStack stack, float windowHeight, float mx, float my) {
         stack.push();
         float startX = -1000.0F + 14.0F;
@@ -77,7 +76,15 @@ public class ColorMainMenu implements MainMenuRenderer {
             float currentX = startX + (i * 54.0F);
             boolean hovered = RenderUtils.insideRounded(mx, my, currentX + 5.0F, startY + 5.0F, 22.0F, 22.0F, 10.0F);
 
+            stack.push();
+            if (hovered) {
+                stack.scale(1.1F, 1.1F, 1.0F);
+                stack.translate(-1.0F, -1.0F, 0.0F);
+            }
+
             this.renderSingleIconButton(stack, i, hovered);
+            stack.pop();
+
             stack.translate(54.0F, 0.0F, 0.0F);
         }
         stack.pop();
@@ -91,7 +98,7 @@ public class ColorMainMenu implements MainMenuRenderer {
             default -> BOTextures.getGithubIconRenderer();
         };
 
-        float alpha = hovered ? 1.0F : 0.6F;
+        float alpha = hovered ? 1.0F : 0.65F;
         ThemeSettings theme = ThemeSettings.getInstance();
         MainMenuSettings settings = MainMenuSettings.getInstance();
 
@@ -99,7 +106,7 @@ public class ColorMainMenu implements MainMenuRenderer {
                 renderer.rounded(5.0F, 5.0F, 22.0F, 22.0F, 10.0F, 10, 1.0F, 1.0F, 1.0F, 1.0F));
 
         RenderUtils.tenaRounded(stack, 5.0F, 5.0F, 22.0F, 22.0F, 10.0F, 1.5F,
-                theme.getMain(hovered ? 255 : 150), theme.getSecond(hovered ? 255 : 150), settings.speed.get().floatValue());
+                theme.getMain(hovered ? 255 : 120), theme.getSecond(hovered ? 255 : 120), settings.speed.get().floatValue());
 
         RenderUtils.rounded(stack, 5.0F, 5.0F, 22.0F, 22.0F, 10.0F, 3.0F,
                 new Color(0, 0, 0, hovered ? 70 : 35).getRGB(),
@@ -120,8 +127,8 @@ public class ColorMainMenu implements MainMenuRenderer {
 
             stack.push();
             if (hovered) {
-                stack.scale(1.02F, 1.02F, 1.0F);
-                stack.translate(-3.6F, -0.2F, 0.0F);
+                stack.scale(1.03F, 1.03F, 1.0F);
+                stack.translate(-5.4F, -0.3F, 0.0F);
             }
 
             this.renderButton(stack, name, hovered);
@@ -137,8 +144,8 @@ public class ColorMainMenu implements MainMenuRenderer {
         ThemeSettings theme = ThemeSettings.getInstance();
         MainMenuSettings settings = MainMenuSettings.getInstance();
 
-        int mainCol = theme.getMain(hovered ? 255 : 120);
-        int secondCol = theme.getSecond(hovered ? 255 : 120);
+        int mainCol = theme.getMain(hovered ? 255 : 140);
+        int secondCol = theme.getSecond(hovered ? 255 : 140);
 
         RenderUtils.drawLoadedBlur("title", stack, renderer ->
                 renderer.rounded(0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10, 1.0F, 1.0F, 1.0F, 1.0F));
@@ -147,10 +154,11 @@ public class ColorMainMenu implements MainMenuRenderer {
                 mainCol, secondCol, settings.speed.get().floatValue());
 
         RenderUtils.rounded(stack, 0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10.0F,
-                new Color(0, 0, 0, hovered ? 80 : 50).getRGB(),
-                new Color(0, 0, 0, 235).getRGB());
+                new Color(0, 0, 0, hovered ? 100 : 60).getRGB(),
+                new Color(0, 0, 0, 240).getRGB());
 
-        BlackOut.FONT.text(stack, name, 3.0F, 180.0F, 5.0F, Color.WHITE.getRGB(), true, true);
+        Color txtColor = hovered ? Color.WHITE : new Color(190, 190, 190, 255);
+        BlackOut.FONT.text(stack, name, 3.0F, 180.0F, 5.0F, txtColor.getRGB(), true, true);
     }
 
     private void renderDevs() {
@@ -165,7 +173,7 @@ public class ColorMainMenu implements MainMenuRenderer {
                 scale,
                 x - BlackOut.FONT.getWidth(devText) * scale - 10.0F,
                 y - BlackOut.FONT.getHeight() * scale - 10.0F,
-                new Color(255, 255, 255, 80).getRGB(),
+                new Color(255, 255, 255, 75).getRGB(),
                 false,
                 false
         );

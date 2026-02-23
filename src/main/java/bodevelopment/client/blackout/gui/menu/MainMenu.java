@@ -47,31 +47,22 @@ public class MainMenu {
     private static final long SPLASH_DELAY = 10000L;
 
     public final String[] SPLASHES = {
-            "Singularity in your pocket, and you're still counting ticks.",
-            "Your ping is a ghost's whisper in the fiber-optic forest.",
-            "Dissolving 'allowed' and 'forbidden' in an acid code bath.",
-            "BlackOut: An electric exorcism for your reality.",
-            "Dancing on the blade of desync without touching the floor.",
-            "Quantum leap over the fence of legitimacy — Success.",
-            "Your aura smells like ozone and overclocked neurons.",
-            "Crypto-intuition: This packet will be the last.",
-            "We are the shadows cast by servers at 3 AM.",
-            "Architecture of chaos built on a foundation of pure logic.",
-            "Glitch-drive engaged. Reality begins to crumble.",
-            "Your config is poetry written in the language of falling stars.",
-            "Hacking the silence with a binary scream.",
-            "Virtual Transgressor: Beyond the possible, inside the impossible.",
-            "Feel the bytes transforming into pure adrenaline.",
-            "You didn't desync; you just transcended their perception.",
-            "Cyber-necromancy: Resurrecting your win rate.",
-            "Soul.firmware: Version 2.0. No errors detected.",
-            "Watch the world turn into digital sand through your fingers.",
-            "BlackOut: Where the darkness becomes your primary edge.",
-            "Chronoglitch initiated. Time is now a variable.",
-            "Syntax-terror in the neural network.",
-            "Aether-shift: Moving faster than the server's heartbeat.",
-            "Feeding the void with high-velocity packets.",
-            "Reality is a bug. BlackOut is the patch."
+            "The best in the business",
+            "The real opp stoppa",
+            "Sponsored by Columbian cartels",
+            "The GOAT assistance software",
+            "Recommended by 9/10 dentists",
+            "Made in Finland, resumed in Russia",
+            "Innit bruv",
+            "Based & red-pilled",
+            "Bravo 6 blacking-out",
+            "A shark in the water",
+            "Gaslight, Gatekeep, Girlboss",
+            "Your FPS is my snack",
+            "Keyboard warrior approved",
+            "Hyper-threaded performance",
+            "Zero days since last blackout",
+            "Better than your average cheat"
     };
 
     private final Runnable[] runnables = new Runnable[]{
