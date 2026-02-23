@@ -81,7 +81,7 @@ public class Zoomify extends Module {
         scrollMultiplier = MathHelper.clamp(scrollMultiplier, 0.1, 20.0);
     }
 
-    public float getFov(float fov) {
+    public float getZoomFactor(float fov) {
         if (!this.enabled) return fov;
         return (float) (fov / currentZoom);
     }

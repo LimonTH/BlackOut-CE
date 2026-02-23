@@ -42,7 +42,7 @@ public abstract class MixinAbstractClientPlayerEntity {
         Zoomify zoom = Zoomify.getInstance();
 
         if (zoom != null && zoom.enabled) {
-            cir.setReturnValue(zoom.getFov(cir.getReturnValue()));
+            cir.setReturnValue(zoom.getZoomFactor(cir.getReturnValue()));
         }
     }
 }
