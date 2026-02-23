@@ -78,4 +78,8 @@ public class KeyBindSetting extends Setting<KeyBind> {
             }
         }
     }
+
+    public int getId() {
+        return this.id;
+    }
 }

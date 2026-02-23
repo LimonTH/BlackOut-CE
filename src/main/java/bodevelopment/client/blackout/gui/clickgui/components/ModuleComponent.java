@@ -362,8 +362,13 @@ public class ModuleComponent extends Component {
             for (SettingGroup sg : this.module.settingGroups) {
                 for (Setting<?> s : sg.settings) {
                     if (!s.isVisible()) continue;
+
                     if (s instanceof StringSetting ss) {
-                        if (SelectedComponent.is(ss.getId())) {
+                        if (SelectedComponent.is(ss.getId())) return true;
+                    }
+
+                    if (s instanceof KeyBindSetting kbs) {
+                        if (SelectedComponent.is(kbs.getId())) {
                             return true;
                         }
                     }
