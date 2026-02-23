@@ -95,7 +95,8 @@ public class HUDManager extends Manager {
     public boolean add(Class<? extends HudElement> clazz) {
         if (clazz == null) return false;
 
-        String name = clazz.getSimpleName();
+        HudElement tempInstance = ClassUtils.instance(clazz);
+        String name = tempInstance.name;
         boolean added = false;
 
         if (elements.stream().noneMatch(p -> p.getLeft().equals(name))) {
