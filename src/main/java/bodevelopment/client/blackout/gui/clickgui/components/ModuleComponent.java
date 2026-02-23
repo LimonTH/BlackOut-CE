@@ -26,7 +26,6 @@ import java.util.List;
 public class ModuleComponent extends Component {
     private static final Color disabledColor = new Color(150, 150, 150, 255);
     public final Module module;
-    private final int id = SelectedComponent.nextId();
     public float length;
     public float l;
     public float maxLength = -1.0F;
@@ -76,6 +75,9 @@ public class ModuleComponent extends Component {
         this.updateAnimation();
 
         if (!(this.y > ClickGui.height + 30.0F) && !(this.y + this.maxLength < -30.0F)) {
+            if (currentMx > this.x && currentMx < this.x + this.width && currentMy > this.y && currentMy < this.y + this.getHeight()) {
+                ClickGui.hoveredDescription = this.module.description;
+            }
             this.shadowScissor();
             float bgY = Math.max(-15, this.y);
             float bgMaxY = Math.min(this.y + this.maxLength, ClickGui.height + 15.0F);
