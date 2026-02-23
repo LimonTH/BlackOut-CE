@@ -9,6 +9,7 @@ import bodevelopment.client.blackout.module.setting.multisettings.RoundedColorMu
 import bodevelopment.client.blackout.module.setting.multisettings.TextColorMultiSetting;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
@@ -35,58 +36,55 @@ public class ArmorHUD extends HudElement {
         this.setSize(80.0F, 19.0F);
     }
 
-    @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null && armorFound()) {
-            this.setSize(80.0F, 19.0F);
-            this.stack.push();
-            this.draw(this.stack);
-            this.stack.pop();
-        }
+        if (BlackOut.mc.player == null || BlackOut.mc.world == null) return;
+        if (!armorFound()) return;
+
+        float bgHeight = this.bar.get() ? 24.0F : 18.0F;
+        this.setSize(88.0F, bgHeight);
+
+        this.stack.push();
+        this.draw(this.stack);
+        this.stack.pop();
     }
 
     private void draw(MatrixStack stack) {
-        float bgHeight = this.bar.get() ? 20.0F : 14.0F;
+        float width = 88.0F;
+        float height = this.getHeight();
+
         if (this.blur.get()) {
-            RenderUtils.drawLoadedBlur("hudblur", stack, renderer -> renderer.rounded(0.0F, 0.0F, 80.0F, bgHeight, 3.0F, 10));
+            RenderUtils.drawLoadedBlur("hudblur", stack, r -> r.rounded(0.0F, 0.0F, width, height, 3.0F, 10));
             Renderer.onHUDBlur();
         }
 
         if (this.bg.get()) {
-            this.background.render(stack, 0.0F, 0.0F, 80.0F, bgHeight, 3.0F, this.shadow.get() ? 3.0F : 0.0F);
+            this.background.render(stack, 0.0F, 0.0F, width, height, 3.0F, this.shadow.get() ? 3.0F : 0.0F);
         }
+
+        BlackOut.mc.getBufferBuilders().getEntityVertexConsumers().draw();
+        RenderSystem.enableDepthTest();
 
         for (int i = 0; i < 4; i++) {
             ItemStack itemStack = BlackOut.mc.player.getInventory().armor.get(this.reversed.get() ? i : 3 - i);
-            if (this.armorBG.get()) {
-                if (this.background.isStatic()) {
-                    this.background.render(stack, 2 + 22 * i, 2.0F, 10.0F, 10.0F, 3.0F, this.shadow.get() ? 3.0F : 0.0F);
-                } else {
-                    RenderUtils.rounded(stack, 2 + 22 * i, 2.0F, 10.0F, 10.0F, 3.0F, 0.0F, new Color(0, 0, 0, 100).getRGB(), Color.BLACK.getRGB());
+            float xOffset = 2 + (22 * i);
+
+            if (itemStack.isEmpty()) continue;
+
+            RenderUtils.renderItem(stack, itemStack, xOffset, 1.0F, 16.0F);
+
+            if (itemStack.isDamageable()) {
+                float durabilityValue = (float) (itemStack.getMaxDamage() - itemStack.getDamage()) / itemStack.getMaxDamage();
+                int durabilityPercentage = Math.round(durabilityValue * 100.0f);
+
+                if (this.text.get()) {
+                    String textStr = durabilityPercentage + "%";
+                    this.textColor.render(stack, textStr, 0.6F, xOffset + (this.centerText.get() ? 8 : 0), 14.0F, this.centerText.get(), true);
                 }
-            }
 
-            if (!itemStack.isEmpty()) {
-                RenderUtils.renderItem(stack, itemStack.getItem(), -1 + 22 * i, -1.0F, 16.0F);
-
-                boolean isUnbreakable = itemStack.get(DataComponentTypes.UNBREAKABLE) != null;
-
-                if (!isUnbreakable && itemStack.isDamageable()) {
-                    float maxDamage = (float) itemStack.getMaxDamage();
-                    float currentDamage = (float) itemStack.getDamage();
-                    float durabilityValue = (maxDamage - currentDamage) / maxDamage;
-                    int durabilityPercentage = Math.round(durabilityValue * 100.0f);
-
-                    if (this.text.get()) {
-                        this.textColor.render(stack, durabilityPercentage + " %", 0.6F, 22 * i + (this.centerText.get() ? 7 : 0), 12.0F, this.centerText.get(), true);
-                    }
-
-                    if (this.bar.get()) {
-                        Color background = new Color(0, 0, 0, 85);
-                        RenderUtils.rounded(stack, 22 * i, 19.0F, 14.0F, 0.3F, 1.0F, 0.0F, background.getRGB(), background.getRGB());
-
-                        this.armorBar.render(stack, 22 * i, 19.0F, 14.0F * durabilityValue, 0.3F, 1.0F, 0.0F);
-                    }
+                if (this.bar.get()) {
+                    Color bgColor = new Color(0, 0, 0, 120);
+                    RenderUtils.rounded(stack, xOffset, height - 3, 16, 1.5F, 1.0F, 0.0F, bgColor.getRGB(), bgColor.getRGB());
+                    this.armorBar.render(stack, xOffset, height - 3, 16 * durabilityValue, 1.5F, 1.0F, 0.0F);
                 }
             }
         }

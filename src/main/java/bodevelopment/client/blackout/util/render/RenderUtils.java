@@ -12,11 +12,10 @@ import bodevelopment.client.blackout.rendering.shader.Shaders;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.render.*;
-import net.minecraft.client.render.model.BakedModel;
 import net.minecraft.client.render.model.json.ModelTransformationMode;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.ColorHelper;
 import net.minecraft.util.math.MathHelper;
@@ -74,29 +73,36 @@ public class RenderUtils {
         );
     }
 
-    public static void renderItem(MatrixStack stack, Item item, float x, float y, float scale) {
-        ItemStack itemStack = item.getDefaultStack();
-        if (!itemStack.isEmpty()) {
-            BakedModel bakedModel = BlackOut.mc.getItemRenderer().getModel(itemStack, BlackOut.mc.world, BlackOut.mc.player, 0);
-            stack.push();
-            stack.translate(x + 8.0F, y + 8.0F, 0.0F);
-            stack.multiplyPositionMatrix(new Matrix4f().scaling(1.0F, -1.0F, 1.0F));
-            stack.scale(scale, scale, scale);
-            boolean bl = !bakedModel.isSideLit();
-            if (bl) {
-                DiffuseLighting.disableGuiDepthLighting();
-            }
+    public static void renderItem(MatrixStack stack, ItemStack itemStack, float x, float y, float scale) {
+        if (itemStack.isEmpty()) return;
 
-            BlackOut.mc
-                    .getItemRenderer()
-                    .renderItem(itemStack, ModelTransformationMode.GUI, false, stack, getVertexConsumers(), 15728880, OverlayTexture.DEFAULT_UV, bakedModel);
-            getVertexConsumers().draw();
-            if (bl) {
-                DiffuseLighting.enableGuiDepthLighting();
-            }
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-            stack.pop();
-        }
+        RenderSystem.setShaderTexture(0, PlayerScreenHandler.BLOCK_ATLAS_TEXTURE);
+        RenderSystem.applyModelViewMatrix();
+
+        stack.push();
+
+        stack.translate(x + 8.0F, -y + 8.0F, 150.0F);
+        stack.scale(scale, -scale, scale);
+
+        DiffuseLighting.enableGuiDepthLighting();
+
+        RenderSystem.setShader(GameRenderer::getPositionColorTexLightmapProgram);
+        BlackOut.mc.getItemRenderer().renderItem(
+                itemStack,
+                ModelTransformationMode.GUI,
+                0xF000F0,
+                OverlayTexture.DEFAULT_UV,
+                stack,
+                BlackOut.mc.getBufferBuilders().getEntityVertexConsumers(),
+                BlackOut.mc.world,
+                0
+        );
+
+        BlackOut.mc.getBufferBuilders().getEntityVertexConsumers().draw();
+        DiffuseLighting.disableGuiDepthLighting();
+        stack.pop();
     }
 
     public static void scissor(float x, float y, float w, float h) {

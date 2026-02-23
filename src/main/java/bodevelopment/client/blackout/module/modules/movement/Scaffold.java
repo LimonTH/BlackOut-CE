@@ -225,7 +225,7 @@ public class Scaffold extends MoveUpdateModule {
                     );
                 }
 
-                RenderUtils.renderItem(this.stack, itemStack.getItem(), 3.0F, 3.0F, 24.0F);
+                RenderUtils.renderItem(this.stack, itemStack, 3.0F, 3.0F, 24.0F);
                 BlackOut.FONT.text(this.stack, text, textScale, 26.0F, 1.0F, this.customColor.get().getColor(), false, false);
                 Renderer.setAlpha(prevAlpha);
                 this.stack.pop();

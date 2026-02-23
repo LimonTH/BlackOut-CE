@@ -515,7 +515,7 @@ public class TargetHUD extends HudElement {
                     RenderUtils.rounded(stack, x + ix * 18, y, 8.0F, 8.0F, 2.0F, 0.0F, new Color(45, 45, 45, 255).getRGB(), 0);
                     RenderUtils.rounded(stack, x + ix * 18 + 1.0F, y + 1.0F, 6.0F, 6.0F, 2.0F, 0.0F, new Color(25, 25, 25, 255).getRGB(), 0);
                     if (!itemStack.isEmpty()) {
-                        RenderUtils.renderItem(stack, itemStack.getItem(), x - 4.0F + ix * 18, y - 4.0F, 10.0F);
+                        RenderUtils.renderItem(stack, itemStack, x - 4.0F + ix * 18, y - 4.0F, 10.0F);
                     }
                 }
                 break;
@@ -523,7 +523,7 @@ public class TargetHUD extends HudElement {
                 for (int i = 0; i < 4; i++) {
                     ItemStack itemStack = player.getInventory().armor.get(3 - i);
                     if (!itemStack.isEmpty()) {
-                        RenderUtils.renderItem(stack, itemStack.getItem(), x + i * 20, y - 3.0F, 16.0F);
+                        RenderUtils.renderItem(stack, itemStack, x + i * 20, y - 3.0F, 16.0F);
                     }
                 }
         }
