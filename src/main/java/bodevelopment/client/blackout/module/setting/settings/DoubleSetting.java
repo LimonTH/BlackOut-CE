@@ -88,17 +88,27 @@ public class DoubleSetting extends Setting<Double> {
             if (this.moving) {
                 Managers.CONFIG.saveAll();
             }
-
             this.moving = false;
             return true;
-        } else if (this.textField.click(0, true)) {
+        }
+
+        if (this.textField.click(0, true)) {
             SelectedComponent.setId(this.id);
             return true;
-        } else if (this.mx > this.x && this.mx < this.x + this.width && this.my > this.y && this.my < this.y + this.getHeight()) {
+        }
+        else if (this.mx > this.x && this.mx < this.x + this.width && this.my > this.y && this.my < this.y + this.getHeight()) {
+            if (SelectedComponent.is(this.id)) {
+                SelectedComponent.reset();
+            }
+
             this.moving = true;
             Managers.CONFIG.saveAll();
             return true;
-        } else {
+        }
+        else {
+            if (SelectedComponent.is(this.id)) {
+                SelectedComponent.reset();
+            }
             return false;
         }
     }

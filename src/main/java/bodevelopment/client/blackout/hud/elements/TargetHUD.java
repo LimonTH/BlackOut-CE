@@ -139,7 +139,8 @@ public class TargetHUD extends HudElement {
         float nameScale = this.renderTarget.getName().getString().length() >= 12 ? 0.7F : 0.9F;
         float renderHealth = this.renderTarget.getHealth() + this.renderTarget.getAbsorptionAmount();
         float renderScale = (float) AnimUtils.easeOutQuart(this.delta);
-        float colorHealth = Math.min((this.renderTarget.getHealth() + this.renderTarget.getAbsorptionAmount()) / this.renderTarget.getMaxHealth(), 1.0F);
+        // TODO: color integration
+        // float colorHealth = Math.min((this.renderTarget.getHealth() + this.renderTarget.getAbsorptionAmount()) / this.renderTarget.getMaxHealth(), 1.0F);
         float targetProgress = Math.min(health / 20.0F, 1.0F);
         float progressDelta = this.frameTime + this.frameTime * Math.abs(targetProgress - this.progress);
         if (targetProgress > this.progress) {
@@ -217,6 +218,7 @@ public class TargetHUD extends HudElement {
                 this.drawArmor(this.stack, this.renderTarget, 32.0F, 19.0F);
                 this.drawFace(this.stack, 1.1F, 1.0F, 3.0F);
                 break;
+
             case BlackoutInfo:
                 String ping = "0";
                 PlayerListEntry entry = BlackOut.mc.getNetworkHandler().getPlayerListEntry(this.renderTarget.getUuid());
@@ -247,6 +249,7 @@ public class TargetHUD extends HudElement {
                     this.drawArmor(this.stack, this.renderTarget, 20.0F, 24.0F + BlackOut.FONT.getHeight());
                 }
                 break;
+
             case Old:
                 if (this.blur.get()) {
                     RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 108.0F, 24.0F, 0.0F, 10));
@@ -259,6 +262,7 @@ public class TargetHUD extends HudElement {
                 BlackOut.FONT.text(this.stack, "HP: " + Math.round(renderHealth), 0.8F, 65.0F, 18.0F, Color.WHITE, true, true);
                 this.drawFace(this.stack, 1.0F, 2.0F, 2.0F);
                 break;
+
             case Tenacity:
                 if (this.blur.get()) {
                     RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 115.0F, 26.0F, 6.0F, 10));
@@ -283,6 +287,7 @@ public class TargetHUD extends HudElement {
                         );
                 this.drawFace(this.stack, 1.2F, 0.0F, 1.0F);
                 break;
+
             case Tenacity2:
                 if (this.blur.get()) {
                     RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 100.0F, 26.0F, 6.0F, 10));
@@ -309,6 +314,7 @@ public class TargetHUD extends HudElement {
                         .text(this.stack, healthPercent + " " + dist, 0.8F, 65.0F, BlackOut.FONT.getHeight() * 2.5F, this.textColor.get().getColor(), true, false);
                 this.drawFace(this.stack, 1.2F, 0.0F, 1.0F);
                 break;
+
             case BlackoutNew:
                 if (this.blur.get()) {
                     RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 100.0F, 20.0F, 3.0F, 10));
@@ -326,6 +332,7 @@ public class TargetHUD extends HudElement {
                 BlackOut.FONT.text(this.stack, txt, 0.75F, x, 1.0F, new Color(150, 150, 150, 255), false, false);
                 this.drawFace(this.stack, 1.1F, -1.0F, -1.0F);
                 break;
+
             case Arsenic:
                 String name = "Name: " + this.renderTarget.getName().getString();
                 String hp = "HP: " + Math.round(renderHealth);
@@ -363,6 +370,7 @@ public class TargetHUD extends HudElement {
                                 false
                         );
                 break;
+
             case Exhibition:
                 RenderUtils.quad(this.stack, 0.0F, 0.0F, 114.0F, 32.0F, new Color(0, 0, 0, 150).getRGB());
                 RenderUtils.quad(this.stack, 1.0F, 1.0F, 30.0F, 30.0F, new Color(200, 200, 200, 255).getRGB());
@@ -417,7 +425,6 @@ public class TargetHUD extends HudElement {
         }
 
         Renderer.setAlpha(prevAlpha);
-        this.stack.pop();
         this.stack.pop();
     }
 

@@ -25,31 +25,33 @@ public class StringSetting extends Setting<String> {
         BlackOut.FONT.text(this.stack, this.name, 2.0F, this.x + 5, this.y + 9, GuiColorUtils.getSettingText(this.y), false, true);
         this.textField
                 .render(this.stack, 1.8F, this.mx, this.my, this.x + 15, this.y + 35, this.width - 30.0F, 0.0F, 12.0F, 6.0F, Color.WHITE, GuiColorUtils.bg2);
-        this.setValue(this.textField.getContent());
+
         this.textField.setActive(SelectedComponent.is(this.id));
         return this.getHeight();
     }
 
     @Override
     public boolean onMouse(int button, boolean pressed) {
-        if (button == 0 && pressed && this.mx > this.x && this.mx < this.x + this.width && this.my > this.y && this.my < this.y + this.getHeight()) {
-            SelectedComponent.setId(this.id);
-            this.textField.click(button, true);
-            return true;
-        } else {
-            return false;
+        if (button == 0 && pressed) {
+            boolean overSetting = this.mx > this.x && this.mx < this.x + this.width &&
+                    this.my > this.y && this.my < this.y + this.getHeight();
+
+            if (overSetting) {
+                if (this.textField.click(button, true) || this.my > this.y + 25) {
+                    SelectedComponent.setId(this.id);
+                    return true;
+                }
+            }
         }
+        return false;
     }
 
     @Override
     public void onKey(int key, boolean pressed) {
         if (SelectedComponent.is(this.id)) {
-            if (key == 257) {
-                SelectedComponent.reset();
-            } else {
                 this.textField.type(key, pressed);
+                this.setValue(this.textField.getContent());
                 Managers.CONFIG.saveAll();
-            }
         }
     }
 
@@ -67,5 +69,9 @@ public class StringSetting extends Setting<String> {
     public void set(JsonElement element) {
         this.setValue(element.getAsString());
         this.textField.setContent(this.get());
+    }
+
+    public int getId() {
+        return this.id;
     }
 }

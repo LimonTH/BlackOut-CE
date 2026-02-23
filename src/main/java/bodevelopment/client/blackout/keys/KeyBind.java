@@ -24,11 +24,14 @@ public class KeyBind {
     private double bindProgress = 0.0;
     private double pulse = 0.0;
 
+    private long lastRenderTime;
+
     public KeyBind(Pressable value) {
         this.value = value;
     }
 
     public void render(MatrixStack stack, float x, float y, float maxX, double mx, double my) {
+        this.lastRenderTime = System.currentTimeMillis();
         this.x = x;
         this.y = y;
         this.mx = mx;
@@ -123,7 +126,14 @@ public class KeyBind {
     }
 
     public boolean isInside() {
-        return this.mx > this.x - this.width / 2.0F - 4.0F && this.mx < this.x + this.width / 2.0F + 4.0F && this.my > this.y - 13.0F && this.my < this.y + 12.0F;
+        if (System.currentTimeMillis() - this.lastRenderTime > 100L) {
+            return false;
+        }
+
+        return this.mx > this.x - this.width / 2.0F - 4.0F &&
+                this.mx < this.x + this.width / 2.0F + 4.0F &&
+                this.my > this.y - 13.0F &&
+                this.my < this.y + 12.0F;
     }
 
     public void setMouse(int key) {
@@ -148,6 +158,10 @@ public class KeyBind {
 
     public boolean isMouse(int key) {
         return this.value instanceof MouseButton m && m.key == key;
+    }
+
+    public boolean isBinding() {
+        return this.holdingKey >= 0;
     }
 
     public boolean isPressed() {

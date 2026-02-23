@@ -10,6 +10,7 @@ import bodevelopment.client.blackout.module.modules.client.GuiSettings;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.GuiRenderUtils;
+import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import org.lwjgl.glfw.GLFW;
 
@@ -49,9 +50,10 @@ public class SearchScreen extends ClickGuiScreen {
 
         float startY = 35.0F + fieldHeight;
         float entryHeight = 40.0F * fs;
-        float spacing = 8.0F * fs;
+        float radius = 6.0F;
+        float spacing = (8.0F * fs) + (radius * 2);
 
-        float yPos = startY - this.scroll.get();
+        float yPos = startY - this.scroll.get() + radius;
 
         for (Module module : results) {
             if (yPos > this.height - entryHeight) break;
@@ -124,6 +126,7 @@ public class SearchScreen extends ClickGuiScreen {
     public void onKey(int key, boolean state) {
         if (state) {
             if (key == GLFW.GLFW_KEY_ESCAPE || key == GLFW.GLFW_KEY_ENTER) {
+                SelectedComponent.reset();
                 Managers.CLICK_GUI.CLICK_GUI.setScreen(null);
                 return;
             }
@@ -134,7 +137,6 @@ public class SearchScreen extends ClickGuiScreen {
             this.textField.type(key, false);
         }
     }
-
     public void updateResults() {
         String query = this.textField.getContent().toLowerCase();
         if (query.isEmpty()) {

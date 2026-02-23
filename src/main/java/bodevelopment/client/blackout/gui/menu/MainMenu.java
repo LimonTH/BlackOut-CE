@@ -9,6 +9,7 @@ import bodevelopment.client.blackout.gui.clickgui.ClickGui;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.client.MainMenuSettings;
 import bodevelopment.client.blackout.util.FileUtils;
+import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.SoundUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import net.minecraft.client.gui.DrawContext;
@@ -297,20 +298,30 @@ public class MainMenu {
         if (this.clickGui.isOpen()) {
             if (event.pressed) {
                 if (event.key == 256) {
+                    if (SelectedComponent.isSelected()) {
+                        SelectedComponent.reset();
+                        event.cancel();
+                        return;
+                    }
                     if (this.clickGui.openedScreen != null) {
                         this.clickGui.setScreen(null);
+                        event.cancel();
                         return;
                     }
                     this.clickGui.setOpen(false);
                     this.clickGui.toggleTime = System.currentTimeMillis();
+                    event.cancel();
                     return;
                 }
+
                 if (event.key == 344) {
                     this.clickGui.setOpen(false);
                     this.clickGui.toggleTime = System.currentTimeMillis();
+                    event.cancel();
                     return;
                 }
             }
+
             event.cancel();
             this.clickGui.onKey(event);
             return;

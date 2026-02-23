@@ -27,13 +27,21 @@ public class KeyBindSetting extends Setting<KeyBind> {
 
     @Override
     public boolean onMouse(int key, boolean pressed) {
-        this.get().onMouse(key, pressed);
-        return false;
+        boolean interacted = this.get().onMouse(key, pressed);
+        if (interacted) {
+            SelectedComponent.setId(this.id);
+        }
+        return interacted;
     }
 
     @Override
     public void onKey(int key, boolean pressed) {
         this.get().onKey(key, pressed);
+        if (key == 256 || key == 344 || !this.get().isBinding()) {
+            if (SelectedComponent.is(this.id)) {
+                SelectedComponent.reset();
+            }
+        }
     }
 
     @Override
