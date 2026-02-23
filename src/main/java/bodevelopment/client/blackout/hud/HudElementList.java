@@ -46,7 +46,7 @@ public class HudElementList {
         List<Pair<String, Class<? extends HudElement>>> managerElements = Managers.HUD.getElements();
 
         managerElements.forEach(pair -> {
-            this.entries.add(new HudListEntry(pair.getRight()));
+            this.entries.add(new HudListEntry(pair.getRight(), pair.getLeft()));
         });
 
         this.listLength = this.entries.size() * 60;
@@ -178,7 +178,7 @@ public class HudElementList {
 
             RenderUtils.rounded(this.stack, 7.5F, y, this.width - 15.0F, 35.0F, 5.0F, 8.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
 
-            BlackOut.FONT.text(this.stack, entry.hudElement.getSimpleName(), 2.0F, this.width / 2.0F, y + 17.5F, this.getTextColor(entry), true, true);
+            BlackOut.FONT.text(this.stack, entry.displayName, 2.0F, this.width / 2.0F, y + 17.5F, this.getTextColor(entry), true, true);
             y += 60.0F;
         }
 
@@ -232,10 +232,12 @@ public class HudElementList {
 
     private static class HudListEntry {
         private final Class<? extends HudElement> hudElement;
+        private final String displayName;
         private float progress = 0.0F;
 
-        private HudListEntry(Class<? extends HudElement> hudElement) {
+        private HudListEntry(Class<? extends HudElement> hudElement, String displayName) {
             this.hudElement = hudElement;
+            this.displayName = displayName;
         }
 
         private void updateProgress(float frameTime, boolean close) {
