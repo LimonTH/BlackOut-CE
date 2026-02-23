@@ -9,6 +9,7 @@ import bodevelopment.client.blackout.module.modules.client.GuiSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.settings.KeyBindSetting;
+import bodevelopment.client.blackout.module.setting.settings.StringSetting;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
@@ -252,24 +253,24 @@ public class ModuleComponent extends Component {
     public void onMouse(int button, boolean pressed) {
         if (Managers.CLICK_GUI.CLICK_GUI.openedScreen != null) return;
 
-        if (!this.module.toggleable() || !this.module.bind.get().onMouse(button, pressed)) {
-            if (!(this.my < this.y)) {
-                if (this.module.toggleable() && button == 0 && pressed && this.module.bind.get().onMouse(0, true)) {
-                    SelectedComponent.setId(this.id);
-                } else if (this.mx > this.x && this.mx < this.x + this.width && pressed && this.my < this.y + this.getHeight() - 10.0F) {
-                    if (button == 1) {
-                        this.opened = !this.opened;
-                    } else if (button == 0 && this.module.toggleable()) {
-                        this.module.toggle();
-                        Managers.CONFIG.saveModule(this.module);
-                    }
-                } else {
-                    if (this.mx > this.x && this.mx < this.x + this.width && this.my < this.y + this.maxLength || !pressed) {
-                        for (SettingGroup group : this.module.settingGroups) {
-                            for (Setting<?> setting : group.settings) {
-                                if (setting.isVisible() && setting.onMouse(button, pressed) && pressed) {
-                                    return;
-                                }
+        if (this.module.toggleable() && this.module.bind.get().onMouse(button, pressed)) {
+            return;
+        }
+
+        if (!(this.my < this.y)) {
+            if (this.mx > this.x && this.mx < this.x + this.width && pressed && this.my < this.y + this.getHeight()) {
+                if (button == 1) {
+                    this.opened = !this.opened;
+                } else if (button == 0) {
+                    this.module.toggle();
+                    Managers.CONFIG.saveModule(this.module);
+                }
+            } else {
+                if (this.mx > this.x && this.mx < this.x + this.width && this.my < this.y + this.maxLength || !pressed) {
+                    for (SettingGroup group : this.module.settingGroups) {
+                        for (Setting<?> setting : group.settings) {
+                            if (setting.isVisible() && setting.onMouse(button, pressed) && pressed) {
+                                return;
                             }
                         }
                     }
@@ -355,17 +356,16 @@ public class ModuleComponent extends Component {
         if (Managers.CLICK_GUI.CLICK_GUI.openedScreen != null) return false;
         if (this.module.category != ClickGui.selectedCategory) return false;
 
-        if (this.module.bind != null) {
-            if (this.module.bind.get().isInside()) {
-                return true;
-            }
-        }
+        if (this.module.toggleable() && this.module.bind.get().isInside()) return true;
 
         if (this.opened) {
             for (SettingGroup sg : this.module.settingGroups) {
                 for (Setting<?> s : sg.settings) {
-                    if (s instanceof KeyBindSetting kbs) {
-                        if (kbs.get().isInside()) return true;
+                    if (!s.isVisible()) continue;
+                    if (s instanceof StringSetting ss) {
+                        if (SelectedComponent.is(ss.getId())) {
+                            return true;
+                        }
                     }
                 }
             }

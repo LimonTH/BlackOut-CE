@@ -7,7 +7,6 @@ import bodevelopment.client.blackout.gui.clickgui.ClickGui;
 import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.manager.Managers;
-import bodevelopment.client.blackout.util.BOLogger;
 import net.minecraft.client.gui.screen.TitleScreen;
 
 public class ClickGuiManager extends Manager {
@@ -23,7 +22,6 @@ public class ClickGuiManager extends Manager {
     public void onKey(KeyEvent event) {
         if (!event.pressed || BlackOut.mc.player == null || BlackOut.mc.world == null) return;
 
-        // Right Shift
         if (event.key == 344) {
             if (BlackOut.mc.currentScreen == null || BlackOut.mc.currentScreen instanceof ClickGui) {
                 this.toggle();

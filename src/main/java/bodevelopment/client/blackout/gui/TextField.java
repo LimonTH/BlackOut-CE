@@ -50,6 +50,7 @@ public class TextField {
     private double my;
     private float scale;
     private float radius;
+    private boolean capsLock = false;
 
     public void render(
             MatrixStack stack,
@@ -131,15 +132,15 @@ public class TextField {
     }
 
     public boolean click(int button, boolean state) {
-        if (this.isEmpty()) {
-            return false;
-        } else if (this.mx < -this.radius || this.mx > this.width + this.radius || this.my < -this.radius || this.my > this.height + this.radius) {
+        if (this.isEmpty()) return false;
+        if (this.mx < -this.radius || this.mx > this.width + this.radius || this.my < -this.radius || this.my > this.height + this.radius) {
             return false;
         } else if (button == 0 && state) {
             this.typingIndex = this.getIndex();
             this.lastType = System.currentTimeMillis();
             return true;
         } else {
+            this.active = false;
             return true;
         }
     }
@@ -213,7 +214,10 @@ public class TextField {
                 case GLFW.GLFW_KEY_SPACE:
                     this.addChar(" ");
                     return;
-                case GLFW.GLFW_KEY_ESCAPE: case GLFW.GLFW_KEY_ENTER: case GLFW.GLFW_KEY_TAB:
+                case GLFW.GLFW_KEY_CAPS_LOCK:
+                    this.capsLock = !this.capsLock;
+                    return;
+                case GLFW.GLFW_KEY_ESCAPE, GLFW.GLFW_KEY_ENTER :
                     return;
                 default:
                     if (key >= 48 && key <= 57) {
@@ -233,17 +237,18 @@ public class TextField {
 
     private String modify(String string, int key) {
         boolean shift = Keys.get(GLFW.GLFW_KEY_LEFT_SHIFT) || Keys.get(GLFW.GLFW_KEY_RIGHT_SHIFT);
+
+        boolean upperCase = shift ^ this.capsLock;
+
         String lower = string.toLowerCase();
 
         if (shift) {
             if (key == GLFW.GLFW_KEY_SLASH && string.equals(".")) return ",";
-
             if (shiftModified.containsKey(string)) return shiftModified.get(string);
             if (shiftModified.containsKey(lower)) return shiftModified.get(lower);
-
-            return string.toUpperCase();
         }
-        return lower;
+
+        return upperCase ? string.toUpperCase() : lower;
     }
 
     private void addChar(String c) {

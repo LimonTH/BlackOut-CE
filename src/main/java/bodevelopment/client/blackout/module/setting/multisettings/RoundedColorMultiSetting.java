@@ -88,7 +88,6 @@ public class RoundedColorMultiSetting {
     }
 
     public void render(MatrixStack stack, float x, float y, float w, float h, float r, float sr) {
-        ThemeSettings themeSettings = ThemeSettings.getInstance();
         switch (this.mode.get()) {
             case Static:
                 RenderUtils.rounded(stack, x, y, w, h, r, sr, this.roundedColor.get().getRGB(), this.shadowColor.get().getRGB());

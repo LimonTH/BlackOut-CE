@@ -23,11 +23,13 @@ import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.GuiRenderUtils;
+import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
@@ -446,12 +448,12 @@ public class ClickGui extends Screen {
 
         if (pressed) {
             if (button == 0 && this.buttons.onClick(button)) {
+                SelectedComponent.reset();
                 return;
             }
 
             if (this.openedScreen != null) {
-                if (this.openedScreen.handleMouse(button, pressed)) return;
-
+                this.openedScreen.handleMouse(button, pressed);
                 if (button == 1) { this.setScreen(null); }
                 return;
             }
@@ -461,10 +463,14 @@ public class ClickGui extends Screen {
                     this.scaling = true;
                     this.offsetX = this.mx - width;
                     this.offsetY = this.my - height;
+                    SelectedComponent.reset();
                 }
             } else if (this.mouseOnCategories()) {
                 this.categoryComponents.forEach(c -> c.onMouse(button, pressed));
+                SelectedComponent.reset();
             } else if (this.mouseOnModules()) {
+                SelectedComponent.reset();
+
                 this.moduleComponents.forEach(module -> {
                     if (module.module.category == selectedCategory) {
                         module.onMouse(button, pressed);
@@ -474,6 +480,9 @@ public class ClickGui extends Screen {
                 this.moving = true;
                 this.offsetX = this.mx;
                 this.offsetY = this.my;
+                SelectedComponent.reset();
+            } else {
+                SelectedComponent.reset();
             }
         } else {
             this.moving = false;
@@ -559,53 +568,34 @@ public class ClickGui extends Screen {
             return;
         }
 
-        if (key == GLFW.GLFW_KEY_UP) {
-            upPressed = pressed;
-            pressTime = System.currentTimeMillis();
-            return;
-        }
-        if (key == GLFW.GLFW_KEY_DOWN) {
-            downPressed = pressed;
-            pressTime = System.currentTimeMillis();
+        boolean isWritingText = SelectedComponent.isSelected();
+
+        if (isWritingText || anyModuleBindHovered()) {
+            this.moduleComponents.forEach(module -> {
+                if (module.module.category == selectedCategory) {
+                    module.onKey(key, pressed);
+                }
+            });
+
             return;
         }
 
         String keyName = GLFW.glfwGetKeyName(key, 0);
+        boolean isModifier = (key == GLFW.GLFW_KEY_LEFT_SHIFT || key == GLFW.GLFW_KEY_RIGHT_SHIFT || key == GLFW.GLFW_KEY_LEFT_CONTROL || key == GLFW.GLFW_KEY_RIGHT_CONTROL || key == GLFW.GLFW_KEY_LEFT_ALT || key == GLFW.GLFW_KEY_RIGHT_ALT);
+        boolean isForbidden = (key == GLFW.GLFW_KEY_ESCAPE || key == GLFW.GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_BACKSPACE || key == GLFW.GLFW_KEY_TAB);
 
-        boolean isModifier = key == GLFW.GLFW_KEY_LEFT_CONTROL || key == GLFW.GLFW_KEY_RIGHT_CONTROL ||
-                key == GLFW.GLFW_KEY_LEFT_ALT || key == GLFW.GLFW_KEY_RIGHT_ALT ||
-                key == GLFW.GLFW_KEY_LEFT_SUPER || key == GLFW.GLFW_KEY_RIGHT_SUPER ||
-                key == GLFW.GLFW_KEY_LEFT_SHIFT || key == GLFW.GLFW_KEY_RIGHT_SHIFT;
-
-        boolean isFunctional = (key >= GLFW.GLFW_KEY_F1 && key <= GLFW.GLFW_KEY_F25) ||
-                key == GLFW.GLFW_KEY_DELETE ||
-                key == GLFW.GLFW_KEY_INSERT ||
-                key == GLFW.GLFW_KEY_PAGE_UP ||
-                key == GLFW.GLFW_KEY_PAGE_DOWN ||
-                key == GLFW.GLFW_KEY_HOME ||
-                key == GLFW.GLFW_KEY_END;
-
-        boolean isForbidden = (key == GLFW.GLFW_KEY_ESCAPE || key == GLFW.GLFW_KEY_ENTER ||
-                key == GLFW.GLFW_KEY_BACKSPACE || key == GLFW.GLFW_KEY_TAB ||
-                (key >= 262 && key <= 265));
-
-        if (keyName != null && !isModifier && !isForbidden && !isFunctional) {
-            if (!anyModuleBindHovered()) {
-                this.setScreen(new SearchScreen(key));
-                return;
-            }
+        if (keyName != null && !isModifier && !isForbidden) {
+            this.setScreen(new SearchScreen(key));
+            return;
         }
 
-        this.moduleComponents.forEach(module -> {
-            if (module.module.category == selectedCategory) {
-                module.onKey(key, pressed);
-            }
-        });
+        if (key == GLFW.GLFW_KEY_UP) { upPressed = true; pressTime = System.currentTimeMillis(); return; }
+        if (key == GLFW.GLFW_KEY_DOWN) { downPressed = true; pressTime = System.currentTimeMillis(); return; }
     }
 
     @Event
     public void onScroll(MouseScrollEvent event) {
-        if (BlackOut.mc.currentScreen instanceof net.minecraft.client.gui.screen.TitleScreen && !event.isCancelled()) {
+        if (BlackOut.mc.currentScreen instanceof TitleScreen && !event.isCancelled()) {
             return;
         }
         if (this.openedScreen == null || !this.openedScreen.handleScroll(event.horizontal, event.vertical)) {
@@ -655,11 +645,27 @@ public class ClickGui extends Screen {
         if (keyCode == 256) {
             if (this.openedScreen != null) {
                 this.setScreen(null);
+                SelectedComponent.reset();
                 return true;
             }
+
+            if (SelectedComponent.isSelected()) {
+                SelectedComponent.reset();
+                return true;
+            }
+
             this.close();
             return true;
         }
+
+        if (keyCode == 344) {
+            if (System.currentTimeMillis() - this.openTime > 100L) {
+                this.close();
+                return true;
+            }
+            return true;
+        }
+
         handleGlobalKey(keyCode, true);
         return super.keyPressed(keyCode, scanCode, modifiers);
     }

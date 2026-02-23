@@ -219,7 +219,7 @@ public class ColorScreen extends ClickGuiScreen {
                 boolean overTextField = false;
 
                 for (ColorField field : (this.colorSetting.theme == 0 ? this.textFields : this.themeFields)) {
-                    if (field.textField.click(0, state)) {
+                    if (field.textField.click(button, state)) {
                         overTextField = true;
                         SelectedComponent.setId(field.selectedId);
                         break;
@@ -227,15 +227,17 @@ public class ColorScreen extends ClickGuiScreen {
                 }
 
                 if (!overTextField) {
+                    SelectedComponent.reset();
+
                     if (this.colorSetting.theme == 0) {
-                        if (this.inside(200, 700, 10, 210))      this.selecting = 1; // Пикер
-                        else if (this.inside(200, 700, 225, 238)) this.selecting = 2; // Hue
-                        else if (this.inside(455, 700, 260, 273)) this.selecting = 3; // Red
-                        else if (this.inside(455, 700, 300, 313)) this.selecting = 4; // Green
-                        else if (this.inside(455, 700, 340, 353)) this.selecting = 5; // Blue
-                        else if (this.inside(200, 445, 340, 353)) this.selecting = 6; // Alpha
-                        else if (this.inside(200, 445, 260, 273)) this.selecting = 7; // Saturation
-                        else if (this.inside(200, 445, 300, 313)) this.selecting = 8; // Brightness
+                        if (this.inside(200, 700, 10, 210))      this.selecting = 1;
+                        else if (this.inside(200, 700, 225, 238)) this.selecting = 2;
+                        else if (this.inside(455, 700, 260, 273)) this.selecting = 3;
+                        else if (this.inside(455, 700, 300, 313)) this.selecting = 4;
+                        else if (this.inside(455, 700, 340, 353)) this.selecting = 5;
+                        else if (this.inside(200, 445, 340, 353)) this.selecting = 6;
+                        else if (this.inside(200, 445, 260, 273)) this.selecting = 7;
+                        else if (this.inside(200, 445, 300, 313)) this.selecting = 8;
                     } else {
                         if (this.inside(200, 700, 10, 210))      this.selecting = 4;
                         else if (this.inside(200, 700, 260, 273)) this.selecting = 1;
