@@ -231,7 +231,7 @@ public class Nametags extends Module {
                             ItemStack itemStack = livingEntity.getInventory().getArmorStack(3 - i);
 
                             if (!itemStack.isEmpty()) {
-                                RenderUtils.renderItem(this.stack, itemStack.getItem(), i * (wbg + separation), 0.0F, 16.0F);
+                                RenderUtils.renderItem(this.stack, itemStack, i * (wbg + separation), 0.0F, 16.0F);
                                 boolean isUnbreakable = itemStack.get(DataComponentTypes.UNBREAKABLE) != null;
 
                                 if (!isUnbreakable && itemStack.isDamageable()) {
@@ -257,7 +257,7 @@ public class Nametags extends Module {
 
     private void renderHandItem(ItemStack itemStack, float wbg, float separation, int i) {
         if (!itemStack.isEmpty()) {
-            RenderUtils.renderItem(this.stack, itemStack.getItem(), i * (wbg + separation), 0.0F, 16.0F);
+            RenderUtils.renderItem(this.stack, itemStack, i * (wbg + separation), 0.0F, 16.0F);
             if (itemStack.isStackable() || itemStack.getCount() > 1) {
                 this.drawItemText(String.valueOf(itemStack.getCount()), wbg, separation, i);
             }

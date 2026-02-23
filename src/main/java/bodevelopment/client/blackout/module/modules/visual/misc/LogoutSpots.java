@@ -312,7 +312,7 @@ public class LogoutSpots extends Module {
             ItemStack stack = item.itemStack();
 
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alphaMulti);
-            RenderUtils.renderItem(this.matrixStack, stack.getItem(), 0.0F, 0.0F, 16.0F);
+            RenderUtils.renderItem(this.matrixStack, stack, 0.0F, 0.0F, 16.0F);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
             if (item.armor()) {
