@@ -9,12 +9,14 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 
 public class Streamer extends Module {
     private static Streamer INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<String> spoofedName = this.sgGeneral.stringSetting("Spoofed Name", "Luhposu", "");
-    public final Setting<Boolean> skin = this.sgGeneral.booleanSetting("Skin", true, ".");
+
+    public final Setting<String> spoofedName = this.sgGeneral.stringSetting("Spoofed Name", "Limon", "The alias that will replace your real username in the HUD, chat, and other UI elements.");
+    public final Setting<Boolean> skin = this.sgGeneral.booleanSetting("Skin Protection", true, "Prevents your actual player skin from being rendered to hide your identity.");
 
     public Streamer() {
-        super("Streamer", "Spoofs stuff to not reveal your account.", SubCategory.MISC, true);
+        super("Streamer", "Anonymizes your account details by spoofing your name and skin, preventing viewers from seeing your real credentials.", SubCategory.MISC, true);
         INSTANCE = this;
     }
 

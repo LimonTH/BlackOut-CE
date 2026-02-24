@@ -19,17 +19,19 @@ import java.util.List;
 
 public class FastUse extends Module {
     private static FastUse INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Timing> timing = this.sgGeneral.enumSetting("Timing", Timing.Tick, "");
-    public final Setting<Integer> delayTicks = this.sgGeneral.intSetting("Delay Ticks", 1, 0, 4, 1, ".", () -> this.timing.get() == Timing.Tick);
-    public final Setting<Double> delaySeconds = this.sgGeneral.doubleSetting("Delay Seconds", 0.2, 0.0, 1.0, 0.002, ".", () -> this.timing.get() == Timing.Render);
-    private final Setting<List<Item>> items = this.sgGeneral.itemListSetting("Items", "", Items.EXPERIENCE_BOTTLE);
-    public final Setting<RotationMode> rotate = this.sgGeneral
-            .enumSetting("Rotate EXP", RotationMode.Normal, ".", () -> this.items.get().contains(Items.EXPERIENCE_BOTTLE));
+
+    public final Setting<Timing> timing = this.sgGeneral.enumSetting("Update Logic", Timing.Tick, "The event hook used to trigger item usage; Render allows for sub-tick speeds.");
+    public final Setting<Integer> delayTicks = this.sgGeneral.intSetting("Tick Delay", 1, 0, 4, 1, "The number of game ticks to wait between uses.", () -> this.timing.get() == Timing.Tick);
+    public final Setting<Double> delaySeconds = this.sgGeneral.doubleSetting("Time Delay", 0.2, 0.0, 1.0, 0.002, "The cooldown in seconds between uses when using Render timing.", () -> this.timing.get() == Timing.Render);
+    private final Setting<List<Item>> items = this.sgGeneral.itemListSetting("Affected Items", "The specific items that will be used at an accelerated rate.", Items.EXPERIENCE_BOTTLE);
+    public final Setting<RotationMode> rotate = this.sgGeneral.enumSetting("EXP Rotation", RotationMode.Normal, "Automatically looks downward when throwing experience bottles to maximize efficiency.", () -> this.items.get().contains(Items.EXPERIENCE_BOTTLE));
+
     private long prevUse = 0L;
 
     public FastUse() {
-        super("Fast Use", "Uses items faster.", SubCategory.MISC, true);
+        super("Fast Use", "Reduces or removes the delay between using consumable or throwable items.", SubCategory.MISC, true);
         INSTANCE = this;
     }
 

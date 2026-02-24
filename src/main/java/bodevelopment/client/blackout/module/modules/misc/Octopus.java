@@ -16,19 +16,21 @@ import bodevelopment.client.blackout.util.SettingUtils;
 
 public class Octopus extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<KeyBind> slot1 = this.sgGeneral.keySetting("Slot 1", ".");
-    private final Setting<KeyBind> slot2 = this.sgGeneral.keySetting("Slot 2", ".");
-    private final Setting<KeyBind> slot3 = this.sgGeneral.keySetting("Slot 3", ".");
-    private final Setting<KeyBind> slot4 = this.sgGeneral.keySetting("Slot 4", ".");
-    private final Setting<KeyBind> slot5 = this.sgGeneral.keySetting("Slot 5", ".");
-    private final Setting<KeyBind> slot6 = this.sgGeneral.keySetting("Slot 6", ".");
-    private final Setting<KeyBind> slot7 = this.sgGeneral.keySetting("Slot 7", ".");
-    private final Setting<KeyBind> slot8 = this.sgGeneral.keySetting("Slot 8", ".");
-    private final Setting<KeyBind> slot9 = this.sgGeneral.keySetting("Slot 9", ".");
+
+    private final Setting<KeyBind> slot1 = this.sgGeneral.keySetting("Bind Slot 1", "Hotkey to silently use the item in hotbar slot 1.");
+    private final Setting<KeyBind> slot2 = this.sgGeneral.keySetting("Bind Slot 2", "Hotkey to silently use the item in hotbar slot 2.");
+    private final Setting<KeyBind> slot3 = this.sgGeneral.keySetting("Bind Slot 3", "Hotkey to silently use the item in hotbar slot 3.");
+    private final Setting<KeyBind> slot4 = this.sgGeneral.keySetting("Bind Slot 4", "Hotkey to silently use the item in hotbar slot 4.");
+    private final Setting<KeyBind> slot5 = this.sgGeneral.keySetting("Bind Slot 5", "Hotkey to silently use the item in hotbar slot 5.");
+    private final Setting<KeyBind> slot6 = this.sgGeneral.keySetting("Bind Slot 6", "Hotkey to silently use the item in hotbar slot 6.");
+    private final Setting<KeyBind> slot7 = this.sgGeneral.keySetting("Bind Slot 7", "Hotkey to silently use the item in hotbar slot 7.");
+    private final Setting<KeyBind> slot8 = this.sgGeneral.keySetting("Bind Slot 8", "Hotkey to silently use the item in hotbar slot 8.");
+    private final Setting<KeyBind> slot9 = this.sgGeneral.keySetting("Bind Slot 9", "Hotkey to silently use the item in hotbar slot 9.");
+
     private int toUse = -1;
 
     public Octopus() {
-        super("Octopus", "Silently uses items from slots.", SubCategory.MISC, true);
+        super("Octopus", "Allows you to use items from specific hotbar slots using custom hotkeys without manually switching to them.", SubCategory.MISC, true);
     }
 
     @Event

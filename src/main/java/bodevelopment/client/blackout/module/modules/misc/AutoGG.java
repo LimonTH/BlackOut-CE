@@ -10,7 +10,7 @@ import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
 
 public class AutoGG extends Module {
     public AutoGG() {
-        super("Auto GG", ".", SubCategory.MISC, true);
+        super("Auto GG", "Automatically sends a congratulatory message in chat upon the conclusion of a match or after a death.", SubCategory.MISC, true);
     }
 
     @Event

@@ -14,7 +14,7 @@ public class CrystalOptimizer extends Module {
     private static CrystalOptimizer INSTANCE;
 
     public CrystalOptimizer() {
-        super("Crystal Optimizer", "Stupid name but basically means set dead.", SubCategory.LEGIT, true);
+        super("Crystal Optimizer", "Improves combat fluidness by instantly removing crystal entities from the client-side world upon attack.", SubCategory.LEGIT, true);
         INSTANCE = this;
     }
 

@@ -20,30 +20,26 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class AutoChatGame extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Double> chance = this.sgGeneral.doubleSetting("Chance", 1.0, 0.0, 1.0, 0.01, "");
-    private final Setting<DelayMode> delayMode = this.sgGeneral.enumSetting("Delay Mode", DelayMode.Dumb, "");
-    private final Setting<Double> minDelay = this.sgGeneral.doubleSetting("Min Delay", 1.0, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Dumb);
-    private final Setting<Double> maxDelay = this.sgGeneral.doubleSetting("Max Delay", 2.0, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Dumb);
-    private final Setting<Double> chatOpenTime = this.sgGeneral
-            .doubleSetting("Chat Open Time", 1.0, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
-    private final Setting<Double> shiftTime = this.sgGeneral
-            .doubleSetting("Shift Time", 0.1, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
-    private final Setting<Double> altTime = this.sgGeneral.doubleSetting("Alt Time", 0.5, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
-    private final Setting<Double> letterTime = this.sgGeneral
-            .doubleSetting("Letter Time", 0.2, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
-    private final Setting<Double> numberTime = this.sgGeneral
-            .doubleSetting("Number Time", 0.3, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
-    private final Setting<Double> specialTime = this.sgGeneral
-            .doubleSetting("Special Char Time", 0.3, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
-    private final Setting<Double> enterTime = this.sgGeneral
-            .doubleSetting("Enter Time", 0.1, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
+
+    private final Setting<Double> chance = this.sgGeneral.doubleSetting("Response Probability", 1.0, 0.0, 1.0, 0.01, "The statistical likelihood of the module participating in a detected chat game.");
+    private final Setting<DelayMode> delayMode = this.sgGeneral.enumSetting("Timing Mode", DelayMode.Dumb, "The method used to calculate the response delay.");
+    private final Setting<Double> minDelay = this.sgGeneral.doubleSetting("Minimum Wait", 1.0, 0.0, 10.0, 0.1, "The lower bound for randomized response timing.", () -> this.delayMode.get() == DelayMode.Dumb);
+    private final Setting<Double> maxDelay = this.sgGeneral.doubleSetting("Maximum Wait", 2.0, 0.0, 10.0, 0.1, "The upper bound for randomized response timing.", () -> this.delayMode.get() == DelayMode.Dumb);
+    private final Setting<Double> chatOpenTime = this.sgGeneral.doubleSetting("GUI Interaction Time", 1.0, 0.0, 10.0, 0.1, "Simulated time taken to open the chat interface.", () -> this.delayMode.get() == DelayMode.Smart);
+    private final Setting<Double> shiftTime = this.sgGeneral.doubleSetting("Modifier Key Delay", 0.1, 0.0, 10.0, 0.1, "Additional time added when a character requires the Shift key.", () -> this.delayMode.get() == DelayMode.Smart);
+    private final Setting<Double> altTime = this.sgGeneral.doubleSetting("AltGr Delay", 0.5, 0.0, 10.0, 0.1, "Additional time added when a character requires the Alt key.", () -> this.delayMode.get() == DelayMode.Smart);
+    private final Setting<Double> letterTime = this.sgGeneral.doubleSetting("Alpha Key Stroke", 0.2, 0.0, 10.0, 0.1, "Simulated time taken to type a standard letter.", () -> this.delayMode.get() == DelayMode.Smart);
+    private final Setting<Double> numberTime = this.sgGeneral.doubleSetting("Numeric Key Stroke", 0.3, 0.0, 10.0, 0.1, "Simulated time taken to type a number.", () -> this.delayMode.get() == DelayMode.Smart);
+    private final Setting<Double> specialTime = this.sgGeneral.doubleSetting("Symbol Key Stroke", 0.3, 0.0, 10.0, 0.1, "Simulated time taken to type special characters.", () -> this.delayMode.get() == DelayMode.Smart);
+    private final Setting<Double> enterTime = this.sgGeneral.doubleSetting("Submission Delay", 0.1, 0.0, 10.0, 0.1, "Simulated time taken to press the Enter key.", () -> this.delayMode.get() == DelayMode.Smart);
+
     private final List<Character> shiftChars = new ArrayList<>();
     private final List<Character> altChars = new ArrayList<>();
     private String message;
     private long sendTime = 0L;
 
     public AutoChatGame() {
-        super("Auto Chat Game", ".", SubCategory.MISC, true);
+        super("Auto Chat Game", "Automatically solves and answers in-game chat challenges with customizable human-like typing delays.", SubCategory.MISC, true);
         this.initChars();
     }
 

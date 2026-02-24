@@ -15,22 +15,14 @@ public class Zoomify extends Module {
 
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    private final Setting<Double> zoomValue = this.sgGeneral.doubleSetting("Zoom Value", 3.0, 1.0, 50.0, 0.1,
-            "The base magnification level when zoom is active.");
-    private final Setting<Boolean> hideHands = this.sgGeneral.booleanSetting("Hide Hands", true,
-            "Hides your hands and held items while zooming.");
-    private final Setting<Boolean> cleanScreen = this.sgGeneral.booleanSetting("Clean Screen", false,
-            "Hides HUD, crosshair, and other overlays while zooming.");
-    private final Setting<Double> smoothSpeed = this.sgGeneral.doubleSetting("Smooth Speed", 0.15, 0.01, 1.0, 0.01,
-            "How fast the camera transitions to the zoomed view.");
-    private final Setting<Boolean> cinematic = this.sgGeneral.booleanSetting("Cinematic Camera", true,
-            "Automatically enables smooth camera movement while zooming.");
-    private final Setting<Boolean> mouseModifier = this.sgGeneral.booleanSetting("Mouse Modifier", true,
-            "Decreases mouse sensitivity as you zoom in to make aiming easier.");
-    private final Setting<Boolean> scroll = this.sgGeneral.booleanSetting("Allow Scroll", true,
-            "Enables changing magnification using the scroll wheel while zooming.");
-    private final Setting<Double> scrollSpeed = this.sgGeneral.doubleSetting("Scroll Speed", 1.1, 1.01, 2.0, 0.01,
-            "How much the zoom level changes per scroll tick.", this.scroll::get);
+    private final Setting<Double> zoomValue = this.sgGeneral.doubleSetting("Magnification", 3.0, 1.0, 50.0, 0.1, "The base multiplier for the camera zoom level.");
+    private final Setting<Boolean> hideHands = this.sgGeneral.booleanSetting("Hide Hands", true, "Removes your hands and held items from the screen while zooming.");
+    private final Setting<Boolean> cleanScreen = this.sgGeneral.booleanSetting("Hide Overlay", false, "Hides the HUD, crosshair, and other screen overlays for a clearer view.");
+    private final Setting<Double> smoothSpeed = this.sgGeneral.doubleSetting("Interpolation Speed", 0.15, 0.01, 1.0, 0.01, "The speed at which the camera transitions to the target zoom level.");
+    private final Setting<Boolean> cinematic = this.sgGeneral.booleanSetting("Cinematic Interpolation", true, "Enables smooth, weighted camera movement to prevent jerky motion while magnified.");
+    private final Setting<Boolean> mouseModifier = this.sgGeneral.booleanSetting("Sensitivity Scaling", true, "Dynamically lowers mouse sensitivity based on the current zoom level to improve aiming precision.");
+    private final Setting<Boolean> scroll = this.sgGeneral.booleanSetting("Variable Zoom", true, "Allows you to adjust the magnification level in real-time using the mouse scroll wheel.");
+    private final Setting<Double> scrollSpeed = this.sgGeneral.doubleSetting("Scroll Sensitivity", 1.1, 1.01, 2.0, 0.01, "The factor by which the zoom level changes per scroll tick.", this.scroll::get);
 
     private double currentZoom = 1.0;
     private double scrollMultiplier = 1.0;
@@ -38,7 +30,7 @@ public class Zoomify extends Module {
     private float lastMouseSens = -1;
 
     public Zoomify() {
-        super("Zoomify", "Advanced zoom with cinematic effects.", SubCategory.MISC, true);
+        super("Zoomify", "Provides advanced camera magnification features with smooth transitions and cinematic controls.", SubCategory.MISC, true);
         INSTANCE = this;
     }
 

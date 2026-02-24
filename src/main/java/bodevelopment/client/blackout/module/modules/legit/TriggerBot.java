@@ -23,17 +23,19 @@ import java.util.List;
 
 public class TriggerBot extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<List<EntityType<?>>> entityTypes = this.sgGeneral.entityListSetting("Entities", ".", EntityType.PLAYER);
-    private final Setting<Boolean> smartDelay = this.sgGeneral.booleanSetting("Smart Delay", true, "Charges weapon when hitting living entities.");
-    private final Setting<Integer> minDelay = this.sgGeneral.intSetting("Min Delay", 2, 0, 20, 1, "Ticks between attacks.", this.smartDelay::get);
-    private final Setting<Integer> attackDelay = this.sgGeneral.intSetting("Attack Delay", 2, 0, 20, 1, "Ticks between attacks.");
-    private final Setting<Boolean> onlyWeapon = this.sgGeneral.booleanSetting("Only Weapon", true, "Only attacks with weapons");
-    private final Setting<Boolean> critSync = this.sgGeneral.booleanSetting("Crit Sync", false, ".");
-    private final Setting<Double> critSyncTime = this.sgGeneral.doubleSetting("Crit Sync Time", 0.3, 0.0, 1.0, 0.01, ".", this.critSync::get);
+
+    private final Setting<List<EntityType<?>>> entityTypes = this.sgGeneral.entityFilterdListSetting("Target Entities", "The types of entities that will trigger an automatic attack.", type -> type != EntityType.ITEM && type != EntityType.EXPERIENCE_ORB && type != EntityType.AREA_EFFECT_CLOUD && type != EntityType.MARKER && type != EntityType.POTION && type != EntityType.LLAMA_SPIT && type != EntityType.EYE_OF_ENDER && type != EntityType.DRAGON_FIREBALL && type != EntityType.FIREWORK_ROCKET && type != EntityType.ENDER_PEARL && type != EntityType.FISHING_BOBBER && type != EntityType.ARROW && type != EntityType.SPECTRAL_ARROW && type != EntityType.SNOWBALL && type != EntityType.SMALL_FIREBALL && type != EntityType.WITHER_SKULL && type != EntityType.FALLING_BLOCK && type != EntityType.TNT && type != EntityType.EVOKER_FANGS && type != EntityType.LIGHTNING_BOLT && type != EntityType.WIND_CHARGE && type != EntityType.BREEZE_WIND_CHARGE && !type.toString().contains("display"), EntityType.PLAYER);
+    private final Setting<Boolean> smartDelay = this.sgGeneral.booleanSetting("Attack Speed Synchronization", true, "Matches the attack timing with the weapon's cooldown for maximum damage efficiency.");
+    private final Setting<Integer> minDelay = this.sgGeneral.intSetting("Minimum Tick Delay", 2, 0, 20, 1, "The minimum number of ticks to wait between attacks when using smart delay.", this.smartDelay::get);
+    private final Setting<Integer> attackDelay = this.sgGeneral.intSetting("Static Attack Delay", 2, 0, 20, 1, "The fixed interval (in ticks) between attacks when smart delay is disabled.");
+    private final Setting<Boolean> onlyWeapon = this.sgGeneral.booleanSetting("Weapon Restricted", true, "Prevents the module from triggering unless a tool or weapon is held in the main hand.");
+    private final Setting<Boolean> critSync = this.sgGeneral.booleanSetting("Critical Hit Sync", false, "Synchronizes attacks with the player's falling state to guarantee critical damage.");
+    private final Setting<Double> critSyncTime = this.sgGeneral.doubleSetting("Crit Window Duration", 0.3, 0.0, 1.0, 0.01, "The time window allowed for a critical hit before timing out.", this.critSync::get);
+
     private long critTime = 0L;
 
     public TriggerBot() {
-        super("Trigger Bot", "Automatically attacks entities when you look at them.", SubCategory.LEGIT, true);
+        super("Trigger Bot", "Automatically initiates an attack when the crosshair is positioned over a valid target.", SubCategory.LEGIT, true);
     }
 
     @Event

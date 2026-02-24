@@ -21,11 +21,13 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 
 public class FastProjectile extends Module {
     private static FastProjectile INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> posRot = this.sgGeneral.booleanSetting("Pos Rot", true, ".");
-    private final Setting<Boolean> blink = this.sgGeneral.booleanSetting("Blink", false, ".");
-    private final Setting<Double> timer = this.sgGeneral.doubleSetting("Timer", 1.0, 1.0, 10.0, 0.1, ".", this.blink::get);
-    private final Setting<Integer> charge = this.sgGeneral.intSetting("Charge", 10, 0, 100, 1, ".");
+    private final Setting<Boolean> posRot = this.sgGeneral.booleanSetting("Sync Rotation", true, "Includes rotation data in the spoofed movement packets.");
+    private final Setting<Boolean> blink = this.sgGeneral.booleanSetting("Blink Integration", false, "Buffers packets and releases them simultaneously to bypass strict velocity checks.");
+    private final Setting<Double> timer = this.sgGeneral.doubleSetting("Blink Speed", 1.0, 1.0, 10.0, 0.1, "The speed multiplier for packet release when using Blink mode.", this.blink::get);
+    private final Setting<Integer> charge = this.sgGeneral.intSetting("Power Level", 10, 0, 100, 1, "The number of movement packets to spoof per projectile throw to increase its velocity.");
+
     public int ticksLeft = 0;
     private double throwYaw = 0.0;
     private boolean down = false;
@@ -39,7 +41,7 @@ public class FastProjectile extends Module {
     private Packet<?> throwPacket = null;
 
     public FastProjectile() {
-        super("Fast Projectile", ".", SubCategory.MISC, true);
+        super("Fast Projectile", "Increases the velocity and distance of projectiles like arrows and ender pearls by spoofing rapid movement packets.", SubCategory.MISC, true);
         INSTANCE = this;
     }
 

@@ -37,13 +37,15 @@ import java.util.function.Predicate;
 
 public class AnchorCharge extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<SwitchMode> glowstoneSwitch = this.sgGeneral.enumSetting("Glowstone Switch", SwitchMode.Normal, "Method of switching.");
-    private final Setting<Boolean> fullCharge = this.sgGeneral.booleanSetting("Full Charge", false, "Uses 4 glowstone.");
-    private final Setting<Boolean> allowOffhand = this.sgGeneral.booleanSetting("Allow Offhand", true, "Blows up the anchor with offhand. Not possible in vanilla.");
-    private final Setting<SwitchMode> explodeSwitch = this.sgGeneral.enumSetting("Explode Switch", SwitchMode.Normal, "Method of switching.");
-    private final Setting<Double> speed = this.sgGeneral.doubleSetting("Speed", 4.0, 0.0, 20.0, 0.1, "Actions per second.");
-    private final Setting<Boolean> onlyOwn = this.sgGeneral.booleanSetting("Only Own", true, ".");
-    private final Setting<Double> ownTime = this.sgGeneral.doubleSetting("Own Time", 2.0, 0.0, 10.0, 0.1, ".");
+
+    private final Setting<SwitchMode> glowstoneSwitch = this.sgGeneral.enumSetting("Glowstone Switch", SwitchMode.Normal, "The method used to select glowstone in the hotbar.");
+    private final Setting<Boolean> fullCharge = this.sgGeneral.booleanSetting("Maximum Charge", false, "Ensures the anchor is filled with 4 glowstone before attempting to detonate.");
+    private final Setting<Boolean> allowOffhand = this.sgGeneral.booleanSetting("Allow Offhand", true, "Enables detonation using the offhand (non-vanilla behavior).");
+    private final Setting<SwitchMode> explodeSwitch = this.sgGeneral.enumSetting("Explode Switch", SwitchMode.Normal, "The method used to switch to a non-interactive item for detonation.");
+    private final Setting<Double> speed = this.sgGeneral.doubleSetting("Action Frequency", 4.0, 0.0, 20.0, 0.1, "The maximum number of interactions performed per second.");
+    private final Setting<Boolean> onlyOwn = this.sgGeneral.booleanSetting("Owned Only", true, "Only interacts with anchors placed by the user.");
+    private final Setting<Double> ownTime = this.sgGeneral.doubleSetting("Ownership Duration", 2.0, 0.0, 10.0, 0.1, "The time in seconds an anchor is considered 'owned' after placement.");
+
     private final TimerList<BlockPos> own = new TimerList<>(false);
     private final TimerMap<BlockPos, Integer> charges = new TimerMap<>(false);
     private final Map<BlockPos, BlockState> realStates = new ConcurrentHashMap<>();
@@ -59,7 +61,7 @@ public class AnchorCharge extends Module {
     private int prevAnchor = -1;
 
     public AnchorCharge() {
-        super("Anchor Charge", "Automatically charges and explodes anchors.", SubCategory.LEGIT, true);
+        super("Anchor Charge", "Automates the process of charging Respawn Anchors with glowstone and triggering their explosion.", SubCategory.LEGIT, true);
     }
 
     @Event

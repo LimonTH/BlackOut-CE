@@ -22,16 +22,18 @@ import java.util.List;
 
 public class Clear extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Integer> minX = this.sgGeneral.intSetting("Min X", -75, -100, 100, 1, ".");
-    private final Setting<Integer> maxX = this.sgGeneral.intSetting("Max X", 75, -100, 100, 1, ".");
-    private final Setting<Integer> minY = this.sgGeneral.intSetting("Min Y", 0, -65, 350, 1, ".");
-    private final Setting<Integer> maxY = this.sgGeneral.intSetting("Max Y", 100, -100, 100, 1, ".");
-    private final Setting<Integer> minZ = this.sgGeneral.intSetting("Min Z", -75, -100, 100, 1, ".");
-    private final Setting<Integer> maxZ = this.sgGeneral.intSetting("Max Z", 75, -100, 100, 1, ".");
-    private final Setting<Double> timer = this.sgGeneral.doubleSetting("Timer", 5.0, 1.0, 10.0, 0.1, ".");
-    private final Setting<Integer> movement = this.sgGeneral.intSetting("Movement", 1, 1, 10, 1, ".");
-    private final Setting<Integer> maxMovements = this.sgGeneral.intSetting("Max Movements", 3, 1, 10, 1, ".");
-    private final Setting<Double> range = this.sgGeneral.doubleSetting("Range", 6.0, 1.0, 10.0, 0.1, ".");
+
+    private final Setting<Integer> minX = this.sgGeneral.intSetting("Minimum X", -75, -100, 100, 1, "The lower bound of the X-axis for the clearing area.");
+    private final Setting<Integer> maxX = this.sgGeneral.intSetting("Maximum X", 75, -100, 100, 1, "The upper bound of the X-axis for the clearing area.");
+    private final Setting<Integer> minY = this.sgGeneral.intSetting("Minimum Y", 0, -65, 350, 1, "The lower bound of the Y-axis for the clearing area.");
+    private final Setting<Integer> maxY = this.sgGeneral.intSetting("Maximum Y", 100, -100, 100, 1, "The upper bound of the Y-axis for the clearing area.");
+    private final Setting<Integer> minZ = this.sgGeneral.intSetting("Minimum Z", -75, -100, 100, 1, "The lower bound of the Z-axis for the clearing area.");
+    private final Setting<Integer> maxZ = this.sgGeneral.intSetting("Maximum Z", 75, -100, 100, 1, "The upper bound of the Z-axis for the clearing area.");
+    private final Setting<Double> timer = this.sgGeneral.doubleSetting("Game Speed", 5.0, 1.0, 10.0, 0.1, "The multiplier applied to the game timer to accelerate the clearing process.");
+    private final Setting<Integer> movement = this.sgGeneral.intSetting("Step Distance", 1, 1, 10, 1, "The distance the player moves per iteration while scanning.");
+    private final Setting<Integer> maxMovements = this.sgGeneral.intSetting("Iterations Per Tick", 3, 1, 10, 1, "The maximum number of position updates processed within a single game tick.");
+    private final Setting<Double> range = this.sgGeneral.doubleSetting("Interaction Range", 6.0, 1.0, 10.0, 0.1, "The maximum distance at which blocks will be targeted for removal.");
+
     private boolean setTimer = true;
     private int x = 0;
     private int y = 0;
@@ -43,7 +45,7 @@ public class Clear extends Module {
     private boolean directionZ = false;
 
     public Clear() {
-        super("Clear", "Clears the spawn of a creative server.", SubCategory.MISC, true);
+        super("Clear", "Automates block removal across a specified 3D volume, typically used for clearing large areas on creative servers.", SubCategory.MISC, true);
     }
 
     @Override

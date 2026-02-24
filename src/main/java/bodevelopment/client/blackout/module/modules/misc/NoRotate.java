@@ -7,11 +7,13 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 
 public class NoRotate extends Module {
     private static NoRotate INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<NoRotateMode> mode = this.sgGeneral.enumSetting("Mode", NoRotateMode.Cancel, ".");
+
+    public final Setting<NoRotateMode> mode = this.sgGeneral.enumSetting("Bypass Mode", NoRotateMode.Cancel, "Determines how server-mandated rotation packets are handled during a rubberband or teleport event.");
 
     public NoRotate() {
-        super("No Rotate", "Doesn't set rotation on rubberband", SubCategory.MISC, false);
+        super("No Rotate", "Prevents the server from forcefully resetting your camera rotation, helping maintain focus during movement desync.", SubCategory.MISC, false);
         INSTANCE = this;
     }
 

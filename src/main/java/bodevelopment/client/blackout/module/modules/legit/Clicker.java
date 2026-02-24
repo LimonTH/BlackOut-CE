@@ -19,13 +19,15 @@ import net.minecraft.util.math.MathHelper;
 
 public class Clicker extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<RandomMode> randomise = this.sgGeneral.enumSetting("Randomise", RandomMode.Random, "Randomises CPS.");
-    private final Setting<Double> minCps = this.sgGeneral.doubleSetting("Min CPS", 10.0, 0.0, 20.0, 0.1, ".", () -> this.randomise.get() != RandomMode.Disabled);
-    private final Setting<Double> cps = this.sgGeneral.doubleSetting("CPS", 14.0, 0.0, 20.0, 0.1, ".");
+
+    private final Setting<RandomMode> randomise = this.sgGeneral.enumSetting("Randomization Mode", RandomMode.Random, "The algorithm used to vary the clicks per second.");
+    private final Setting<Double> minCps = this.sgGeneral.doubleSetting("Minimum CPS", 10.0, 0.0, 20.0, 0.1, "The lower bound for randomized clicks per second.", () -> this.randomise.get() != RandomMode.Disabled);
+    private final Setting<Double> cps = this.sgGeneral.doubleSetting("Target CPS", 14.0, 0.0, 20.0, 0.1, "The base or maximum clicks per second to maintain.");
+
     private long prev = 0L;
 
     public Clicker() {
-        super("Clicker", "Automatically clicks", SubCategory.LEGIT, true);
+        super("Clicker", "Simulates natural mouse clicks at a specified frequency while holding the attack key.", SubCategory.LEGIT, true);
     }
 
     @Event

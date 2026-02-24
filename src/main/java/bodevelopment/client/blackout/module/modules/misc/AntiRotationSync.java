@@ -7,7 +7,7 @@ public class AntiRotationSync extends Module {
     private static AntiRotationSync INSTANCE;
 
     public AntiRotationSync() {
-        super("Anti Rotation Sync", "Doesn't send movement packets when using items.", SubCategory.MISC, true);
+        super("Anti Rotation Sync", "Prevents the server from overriding the client's head rotations by intercepting specific movement synchronization packets.", SubCategory.MISC, true);
         INSTANCE = this;
     }
 

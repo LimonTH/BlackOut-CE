@@ -8,7 +8,7 @@ import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket;
 
 public class PortalGodMode extends Module {
     public PortalGodMode() {
-        super("Portal God Mode", "Prevents taking damage while in portals", SubCategory.MISC, true);
+        super("Portal God Mode", "Grants temporary invulnerability by canceling teleport confirmation packets while standing inside a portal.", SubCategory.MISC, true);
     }
 
     @Event

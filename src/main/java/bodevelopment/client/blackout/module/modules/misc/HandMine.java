@@ -14,13 +14,15 @@ import net.minecraft.util.math.BlockPos;
 
 public class HandMine extends Module {
     private static HandMine INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.InvSwitch, ".");
-    private final Setting<Boolean> allowInventory = this.sgGeneral.booleanSetting("Allow Inventory", false, ".", () -> this.switchMode.get().inventory);
-    private final Setting<Double> speed = this.sgGeneral.doubleSetting("Speed", 1.0, 0.0, 2.0, 0.02, ".");
+
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Swap Method", SwitchMode.InvSwitch, "The mechanism used to switch to the optimal tool.");
+    private final Setting<Boolean> allowInventory = this.sgGeneral.booleanSetting("Scan Inventory", false, "Allows the module to utilize tools located in the player's inventory, not just the hotbar.", () -> this.switchMode.get().inventory);
+    private final Setting<Double> speed = this.sgGeneral.doubleSetting("Mining Speed", 1.0, 0.0, 2.0, 0.02, "A multiplier applied to the mining speed of the selected tool.");
 
     public HandMine() {
-        super("Hand Mine", "Silently uses the best tool.", SubCategory.MISC, false);
+        super("Hand Mine", "Swaps to the most effective tool during the final stage of breaking a block to maximize efficiency.", SubCategory.MISC, false);
         INSTANCE = this;
     }
 

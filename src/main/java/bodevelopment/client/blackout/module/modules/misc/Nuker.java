@@ -43,34 +43,35 @@ public class Nuker extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgSpeed = this.addGroup("Speed");
     private final SettingGroup sgRender = this.addGroup("Render");
-    private final Setting<Boolean> pauseEat = this.sgGeneral.booleanSetting("Pause Eat", false, "Pauses when eating");
-    private final Setting<Boolean> packet = this.sgGeneral.booleanSetting("Packet", true, "Doesn't remove the block client side.");
-    private final Setting<SwitchMode> pickaxeSwitch = this.sgGeneral
-            .enumSetting("Pickaxe Switch", SwitchMode.InvSwitch, "Method of switching. InvSwitch is used in most clients.");
-    private final Setting<Boolean> allowInventory = this.sgGeneral.booleanSetting("Allow Inventory", false, ".", () -> this.pickaxeSwitch.get().inventory);
-    private final Setting<Boolean> resetOnSwitch = this.sgGeneral.booleanSetting("Reset On Switch", true, "Resets mining when switched held item.");
-    private final Setting<Boolean> ncpProgress = this.sgGeneral.booleanSetting("NCP Progress", true, "Uses ncp mining progress checks.");
-    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Blocks", ".");
-    private final Setting<Boolean> down = this.sgGeneral.booleanSetting("Down", false, "Allows mining down.");
-    private final Setting<Boolean> creative = this.sgSpeed.booleanSetting("Creative", false, ".");
-    private final Setting<Double> speed = this.sgSpeed.doubleSetting("Speed", 1.0, 0.0, 2.0, 0.05, "Vanilla speed multiplier.", () -> !this.creative.get());
-    private final Setting<Boolean> onGroundCheck = this.sgSpeed.booleanSetting("On Ground Check", true, "Mines 5x slower when not on ground.", () -> !this.creative.get());
-    private final Setting<Boolean> effectCheck = this.sgSpeed
-            .booleanSetting("Effect Check", true, "Modifies mining speed depending on haste and mining fatigue.", () -> !this.creative.get());
-    private final Setting<Boolean> waterCheck = this.sgSpeed.booleanSetting("Water Check", true, "Mines 5x slower while submerged in water.", () -> !this.creative.get());
-    private final Setting<Integer> maxInstants = this.sgSpeed.intSetting("Max Instants", 5, 1, 20, 1, "Maximum amount if instant mines per tick.");
-    private final Setting<Boolean> mineStartSwing = this.sgRender.booleanSetting("Mine Start Swing", false, "Renders swing animation when starting to mine.");
-    private final Setting<Boolean> mineEndSwing = this.sgRender.booleanSetting("Mine End Swing", false, "Renders swing animation when ending mining.");
-    private final Setting<SwingHand> mineHand = this.sgRender
-            .enumSetting("Mine Hand", SwingHand.RealHand, "Which hand should be swung.", () -> this.mineStartSwing.get() || this.mineEndSwing.get());
-    private final Setting<Boolean> animationColor = this.sgRender.booleanSetting("Animation Color", true, "Changes color smoothly.");
-    private final Setting<AutoMine.AnimationMode> animationMode = this.sgRender.enumSetting("Animation Mode", AutoMine.AnimationMode.Full, ".");
-    private final Setting<Double> animationExponent = this.sgRender.doubleSetting("Animation Exponent", 1.0, 0.0, 10.0, 0.1, ".");
-    private final Setting<RenderShape> renderShape = this.sgRender.enumSetting("Render Shape", RenderShape.Full, "Which parts should be rendered.");
-    private final Setting<BlackOutColor> lineStartColor = this.sgRender.colorSetting("Line Start Color", new BlackOutColor(255, 0, 0, 0), ".");
-    private final Setting<BlackOutColor> sideStartColor = this.sgRender.colorSetting("Side Start Color", new BlackOutColor(255, 0, 0, 0), ".");
-    private final Setting<BlackOutColor> lineEndColor = this.sgRender.colorSetting("Line End Color", new BlackOutColor(255, 0, 0, 255), ".");
-    private final Setting<BlackOutColor> sideEndColor = this.sgRender.colorSetting("Side End Color", new BlackOutColor(255, 0, 0, 50), ".");
+
+    private final Setting<Boolean> pauseEat = this.sgGeneral.booleanSetting("Pause While Using", false, "Suspends mining operations while consuming food or using items.");
+    private final Setting<Boolean> packet = this.sgGeneral.booleanSetting("Packet Mine", true, "Sends mining packets without removing the block client-side to prevent ghost blocks.");
+    private final Setting<SwitchMode> pickaxeSwitch = this.sgGeneral.enumSetting("Tool Swap Mode", SwitchMode.InvSwitch, "The method used to switch to the most effective tool for the target block.");
+    private final Setting<Boolean> allowInventory = this.sgGeneral.booleanSetting("Search Inventory", false, "Allows the module to utilize tools located in the player's inventory, not just the hotbar.", () -> this.pickaxeSwitch.get().inventory);
+    private final Setting<Boolean> resetOnSwitch = this.sgGeneral.booleanSetting("Reset on Swap", true, "Restarts the mining process if the held item is changed manually.");
+    private final Setting<Boolean> ncpProgress = this.sgGeneral.booleanSetting("NCP Compatibility", true, "Synchronizes mining progress with NoCheatPlus's server-side checks to prevent setbacks.");
+    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Target Blocks", "The specific types of blocks that the Nuker should target.");
+    private final Setting<Boolean> down = this.sgGeneral.booleanSetting("Mine Downwards", false, "Enables the module to target blocks located below the player's feet.");
+
+    private final Setting<Boolean> creative = this.sgSpeed.booleanSetting("Creative Mode", false, "Optimizes mining speed for creative mode instant-breaking.");
+    private final Setting<Double> speed = this.sgSpeed.doubleSetting("Speed Multiplier", 1.0, 0.0, 2.0, 0.05, "Adjusts the base mining speed for vanilla-compatible servers.", () -> !this.creative.get());
+    private final Setting<Boolean> onGroundCheck = this.sgSpeed.booleanSetting("Ground Constraint", true, "Accounts for the 5x mining speed reduction when the player is airborne.", () -> !this.creative.get());
+    private final Setting<Boolean> effectCheck = this.sgSpeed.booleanSetting("Status Effect Check", true, "Adjusts mining speed based on Haste and Mining Fatigue effects.", () -> !this.creative.get());
+    private final Setting<Boolean> waterCheck = this.sgSpeed.booleanSetting("Submersion Check", true, "Accounts for the mining speed penalty when submerged in water.", () -> !this.creative.get());
+    private final Setting<Integer> maxInstants = this.sgSpeed.intSetting("Max Instant Breaks", 5, 1, 20, 1, "The maximum number of blocks to break per tick when instant-mining is possible.");
+
+    private final Setting<Boolean> mineStartSwing = this.sgRender.booleanSetting("Swing on Start", false, "Triggers a hand swing animation when beginning to mine a block.");
+    private final Setting<Boolean> mineEndSwing = this.sgRender.booleanSetting("Swing on Break", false, "Triggers a hand swing animation when a block is successfully broken.");
+    private final Setting<SwingHand> mineHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand, "Determines which hand is used for the mining swing animation.", () -> this.mineStartSwing.get() || this.mineEndSwing.get());
+    private final Setting<Boolean> animationColor = this.sgRender.booleanSetting("Smooth Color Transition", true, "Gradually transitions the block highlight color as mining progress increases.");
+    private final Setting<AutoMine.AnimationMode> animationMode = this.sgRender.enumSetting("Visualization Mode", AutoMine.AnimationMode.Full, "The style of the mining progress animation.");
+    private final Setting<Double> animationExponent = this.sgRender.doubleSetting("Animation Curve", 1.0, 0.0, 10.0, 0.1, "Modifies the interpolation curve of the mining progress visual.");
+    private final Setting<RenderShape> renderShape = this.sgRender.enumSetting("Render Geometry", RenderShape.Full, "The geometric style used to render the block highlight.");
+    private final Setting<BlackOutColor> lineStartColor = this.sgRender.colorSetting("Initial Outline Color", new BlackOutColor(255, 0, 0, 0), "The outline color when mining begins.");
+    private final Setting<BlackOutColor> sideStartColor = this.sgRender.colorSetting("Initial Side Color", new BlackOutColor(255, 0, 0, 0), "The fill color when mining begins.");
+    private final Setting<BlackOutColor> lineEndColor = this.sgRender.colorSetting("Final Outline Color", new BlackOutColor(255, 0, 0, 255), "The outline color when the block is nearly broken.");
+    private final Setting<BlackOutColor> sideEndColor = this.sgRender.colorSetting("Final Side Color", new BlackOutColor(255, 0, 0, 50), "The fill color when the block is nearly broken.");
+
     private final List<Pair<BlockPos, Double>> instants = new ArrayList<>();
     public boolean started = false;
     private BlockPos minePos = null;
@@ -84,7 +85,7 @@ public class Nuker extends Module {
     private BlockPos ended = BlockPos.ORIGIN;
 
     public Nuker() {
-        super("Nuker", "Breaks blocks.", SubCategory.MISC, true);
+        super("Nuker", "Automatically breaks multiple blocks within range based on a filter list.", SubCategory.MISC, true);
     }
 
     @Event
