@@ -19,17 +19,17 @@ import net.minecraft.util.math.Vec3d;
 public class Speed extends Module {
     private static Speed INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<SpeedMode> mode = this.sgGeneral.e("Mode", SpeedMode.Instant, ".");
-    private final Setting<Boolean> strict = this.sgGeneral.b("Strict", true, ".", () -> this.mode.get() == SpeedMode.NCPOld);
+    public final Setting<SpeedMode> mode = this.sgGeneral.enumSetting("Mode", SpeedMode.Instant, ".");
+    private final Setting<Boolean> strict = this.sgGeneral.booleanSetting("Strict", true, ".", () -> this.mode.get() == SpeedMode.NCPOld);
     private final Setting<Boolean> ncpSpeed = this.sgGeneral
-            .b(
+            .booleanSetting(
                     "NCP Speed",
                     true,
                     "Uses instant mode when you arent pressing jump key.",
                     () -> this.mode.get() != SpeedMode.NCPOld && this.mode.get() != SpeedMode.Verus && this.mode.get() != SpeedMode.Vulcan
             );
     private final Setting<Double> speed = this.sgGeneral
-            .d(
+            .doubleSetting(
                     "Speed",
                     0.3,
                     0.0,
@@ -41,20 +41,20 @@ public class Speed extends Module {
                             && this.mode.get() != SpeedMode.Vulcan
                             && !this.ncpSpeed.get()
             );
-    private final Setting<Integer> accelerationTicks = this.sgGeneral.i("Acceleration", 3, 0, 10, 1, ".", () -> this.mode.get() == SpeedMode.Instant);
-    public final Setting<Double> vanillaSpeed = this.sgGeneral.d("Vanilla Speed", 1.0, 1.0, 2.0, 0.01, ".", () -> this.mode.get() == SpeedMode.Vanilla);
-    private final Setting<Double> speedMulti = this.sgGeneral.d("Speed Multi", 1.3, 0.0, 2.0, 0.01, ".", () -> this.mode.get() == SpeedMode.NCPOld);
-    private final Setting<Boolean> useTimer = this.sgGeneral.b("Use Timer", true, ".", () -> this.mode.get() != SpeedMode.Verus);
+    private final Setting<Integer> accelerationTicks = this.sgGeneral.intSetting("Acceleration", 3, 0, 10, 1, ".", () -> this.mode.get() == SpeedMode.Instant);
+    public final Setting<Double> vanillaSpeed = this.sgGeneral.doubleSetting("Vanilla Speed", 1.0, 1.0, 2.0, 0.01, ".", () -> this.mode.get() == SpeedMode.Vanilla);
+    private final Setting<Double> speedMulti = this.sgGeneral.doubleSetting("Speed Multi", 1.3, 0.0, 2.0, 0.01, ".", () -> this.mode.get() == SpeedMode.NCPOld);
+    private final Setting<Boolean> useTimer = this.sgGeneral.booleanSetting("Use Timer", true, ".", () -> this.mode.get() != SpeedMode.Verus);
     private final SettingGroup sgPause = this.addGroup("Pause");
-    public final Setting<LiquidMode> pauseWater = this.sgPause.e("Pause Water", LiquidMode.Touching, ".", () -> true);
-    public final Setting<LiquidMode> pauseLava = this.sgPause.e("Pause Lava", LiquidMode.Touching, ".", () -> true);
-    private final Setting<Double> stepBoost = this.sgGeneral.d("Step Boost", 0.0, 0.0, 0.5, 0.01, ".");
-    private final Setting<Double> boostDecay = this.sgGeneral.d("Boost Decay", 0.5, 0.0, 1.0, 0.01, ".", () -> this.stepBoost.get() > 0.0);
-    private final Setting<Double> stepBoostCooldown = this.sgGeneral.d("Step Boost Cooldown", 0.0, 0.0, 1.0, 0.01, ".", () -> this.stepBoost.get() > 0.0);
-    private final Setting<Boolean> instantStop = this.sgGeneral.b("Instant Stop", false, ".");
-    private final Setting<Boolean> pauseSneak = this.sgPause.b("PauseSneak", true, ".");
-    private final Setting<Boolean> pauseElytra = this.sgPause.b("PauseElytra", true, ".");
-    private final Setting<Boolean> pauseFly = this.sgPause.b("FlySneak", true, ".");
+    public final Setting<LiquidMode> pauseWater = this.sgPause.enumSetting("Pause Water", LiquidMode.Touching, ".", () -> true);
+    public final Setting<LiquidMode> pauseLava = this.sgPause.enumSetting("Pause Lava", LiquidMode.Touching, ".", () -> true);
+    private final Setting<Double> stepBoost = this.sgGeneral.doubleSetting("Step Boost", 0.0, 0.0, 0.5, 0.01, ".");
+    private final Setting<Double> boostDecay = this.sgGeneral.doubleSetting("Boost Decay", 0.5, 0.0, 1.0, 0.01, ".", () -> this.stepBoost.get() > 0.0);
+    private final Setting<Double> stepBoostCooldown = this.sgGeneral.doubleSetting("Step Boost Cooldown", 0.0, 0.0, 1.0, 0.01, ".", () -> this.stepBoost.get() > 0.0);
+    private final Setting<Boolean> instantStop = this.sgGeneral.booleanSetting("Instant Stop", false, ".");
+    private final Setting<Boolean> pauseSneak = this.sgPause.booleanSetting("PauseSneak", true, ".");
+    private final Setting<Boolean> pauseElytra = this.sgPause.booleanSetting("PauseElytra", true, ".");
+    private final Setting<Boolean> pauseFly = this.sgPause.booleanSetting("FlySneak", true, ".");
     private Vec3d prevMovement = Vec3d.ZERO;
     private double velocity = 0.0;
     private double yaw = 0.0;

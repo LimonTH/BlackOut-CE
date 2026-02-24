@@ -14,7 +14,7 @@ import net.minecraft.util.math.Vec3d;
 
 public class MovementSpam extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Integer> packets = this.sgGeneral.i("Packets", 1, 1, 10, 1, ".");
+    private final Setting<Integer> packets = this.sgGeneral.intSetting("Packets", 1, 1, 10, 1, ".");
     private int packetsSent;
 
     public MovementSpam() {

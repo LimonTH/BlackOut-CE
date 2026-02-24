@@ -19,15 +19,15 @@ public class FacingSettings extends SettingsModule {
 
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    public final Setting<Boolean> strictDir = this.sgGeneral.b("Strict Direction", false,
+    public final Setting<Boolean> strictDir = this.sgGeneral.booleanSetting("Strict Direction", false,
             "Only allows placing blocks on faces that you are realistically looking at to prevent unnatural rotations.");
-    public final Setting<Boolean> ncpDirection = this.sgGeneral.b("NCP Directions", false,
+    public final Setting<Boolean> ncpDirection = this.sgGeneral.booleanSetting("NCP Directions", false,
             "Applies specialized direction logic to bypass NoCheatPlus and similar anti-cheat raytrace checks.", this.strictDir::get);
-    public final Setting<Boolean> unblocked = this.sgGeneral.b("Unblocked", false,
+    public final Setting<Boolean> unblocked = this.sgGeneral.booleanSetting("Unblocked", false,
             "Ensures the selected block face isn't obstructed by another solid block.");
-    public final Setting<Boolean> airPlace = this.sgGeneral.b("Air Place", false,
+    public final Setting<Boolean> airPlace = this.sgGeneral.booleanSetting("Air Place", false,
             "Attempts to place blocks even if no valid neighbor exists. Requires server-side support for ghost/air placement.");
-    public final Setting<MaxHeight> maxHeight = this.sgGeneral.e("Max Height", MaxHeight.New,
+    public final Setting<MaxHeight> maxHeight = this.sgGeneral.enumSetting("Max Height", MaxHeight.New,
             "Sets the world height limit for placement. Old: 255 (1.12), New: 319 (1.17+), Disabled: No limit.");
 
     public FacingSettings() {

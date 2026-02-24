@@ -7,7 +7,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import java.time.LocalTime;
 
 public class Welcomer extends TextElement {
-    public final Setting<Mode> mode = this.sgGeneral.e("Mode", Mode.Simple, ".");
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Simple, ".");
 
     public Welcomer() {
         super("Welcomer", "Says hello to you");

@@ -12,15 +12,15 @@ import net.minecraft.client.option.KeyBinding;
 
 public class Keystrokes extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> useBlur = this.sgGeneral.b("Blur", true, "Uses a blur effect", () -> true);
-    private final Setting<Boolean> shadow = this.sgGeneral.b("Shadow", true, ".", () -> true);
-    private final Setting<BlackOutColor> shadowColor = this.sgGeneral.c("Shadow Color", new BlackOutColor(0, 0, 0, 100), "Shadow Color", this.shadow::get);
+    private final Setting<Boolean> useBlur = this.sgGeneral.booleanSetting("Blur", true, "Uses a blur effect", () -> true);
+    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Shadow", true, ".", () -> true);
+    private final Setting<BlackOutColor> shadowColor = this.sgGeneral.colorSetting("Shadow Color", new BlackOutColor(0, 0, 0, 100), "Shadow Color", this.shadow::get);
     private final Setting<BlackOutColor> pressedShadow = this.sgGeneral
-            .c("Pressed Shadow", new BlackOutColor(255, 255, 255, 100), "Pressed Shadow Color", this.shadow::get);
-    private final Setting<BlackOutColor> txtdColor = this.sgGeneral.c("Text Color", new BlackOutColor(255, 255, 255, 255), ".");
-    private final Setting<BlackOutColor> pressedtxtColor = this.sgGeneral.c("Pressed Text Color", new BlackOutColor(175, 175, 175, 255), ".");
-    private final Setting<BlackOutColor> backgroundColor = this.sgGeneral.c("Background Color", new BlackOutColor(0, 0, 0, 50), "Background Color");
-    private final Setting<BlackOutColor> pressedColor = this.sgGeneral.c("Pressed Color", new BlackOutColor(255, 255, 255, 50), "Pressed Color");
+            .colorSetting("Pressed Shadow", new BlackOutColor(255, 255, 255, 100), "Pressed Shadow Color", this.shadow::get);
+    private final Setting<BlackOutColor> txtdColor = this.sgGeneral.colorSetting("Text Color", new BlackOutColor(255, 255, 255, 255), ".");
+    private final Setting<BlackOutColor> pressedtxtColor = this.sgGeneral.colorSetting("Pressed Text Color", new BlackOutColor(175, 175, 175, 255), ".");
+    private final Setting<BlackOutColor> backgroundColor = this.sgGeneral.colorSetting("Background Color", new BlackOutColor(0, 0, 0, 50), "Background Color");
+    private final Setting<BlackOutColor> pressedColor = this.sgGeneral.colorSetting("Pressed Color", new BlackOutColor(255, 255, 255, 50), "Pressed Color");
 
     public Keystrokes() {
         super("Keystrokes", "Shows your keystrokes");

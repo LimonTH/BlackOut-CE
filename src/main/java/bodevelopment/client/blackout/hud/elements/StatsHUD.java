@@ -19,18 +19,18 @@ import java.util.function.Predicate;
 public class StatsHUD extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgData = this.addGroup("Data");
-    private final Setting<TargetMode> targetMode = this.sgGeneral.e("Target", TargetMode.Enemy, ".");
-    private final Setting<Boolean> bg = this.sgGeneral.b("Background", true, ".");
+    private final Setting<TargetMode> targetMode = this.sgGeneral.enumSetting("Target", TargetMode.Enemy, ".");
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, ".");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> blur = this.sgGeneral.b("Blur", true, ".");
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, ".");
     private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Text");
-    private final Setting<Boolean> hole = this.sgData.b("In Hole", true, ".");
-    private final Setting<Boolean> phased = this.sgData.b("Phased", true, ".");
-    private final Setting<Boolean> pops = this.sgData.b("Pops", true, ".");
-    private final Setting<Boolean> eaten = this.sgData.b("Eaten", true, ".");
-    private final Setting<Boolean> bottles = this.sgData.b("Bottles", true, ".");
-    private final Setting<Boolean> moved = this.sgData.b("Moved", true, ".");
-    private final Setting<Boolean> damage = this.sgData.b("Damage Taken", true, ".");
+    private final Setting<Boolean> hole = this.sgData.booleanSetting("In Hole", true, ".");
+    private final Setting<Boolean> phased = this.sgData.booleanSetting("Phased", true, ".");
+    private final Setting<Boolean> pops = this.sgData.booleanSetting("Pops", true, ".");
+    private final Setting<Boolean> eaten = this.sgData.booleanSetting("Eaten", true, ".");
+    private final Setting<Boolean> bottles = this.sgData.booleanSetting("Bottles", true, ".");
+    private final Setting<Boolean> moved = this.sgData.booleanSetting("Moved", true, ".");
+    private final Setting<Boolean> damage = this.sgData.booleanSetting("Damage Taken", true, ".");
 
     public StatsHUD() {
         super("Stats", ".");

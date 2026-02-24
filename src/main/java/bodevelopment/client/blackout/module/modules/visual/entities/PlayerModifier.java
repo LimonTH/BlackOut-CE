@@ -14,12 +14,12 @@ import net.minecraft.util.math.Vec3d;
 public class PlayerModifier extends Module {
     private static PlayerModifier INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Boolean> setLeaning = this.sgGeneral.b("Set Leaning", false, ".");
-    private final Setting<Double> leaning = this.sgGeneral.d("Leaning", 0.0, 0.0, 1.0, 0.01, ".", this.setLeaning::get);
-    private final Setting<Boolean> moveLeaning = this.sgGeneral.b("Move Leaning", true, ".", this.setLeaning::get);
-    public final Setting<Boolean> forceSneak = this.sgGeneral.b("Force Sneak", true, ".");
-    public final Setting<Boolean> noAnimations = this.sgGeneral.b("No Animations", true, ".");
-    public final Setting<Boolean> noSwing = this.sgGeneral.b("No Swing", true, ".");
+    public final Setting<Boolean> setLeaning = this.sgGeneral.booleanSetting("Set Leaning", false, ".");
+    private final Setting<Double> leaning = this.sgGeneral.doubleSetting("Leaning", 0.0, 0.0, 1.0, 0.01, ".", this.setLeaning::get);
+    private final Setting<Boolean> moveLeaning = this.sgGeneral.booleanSetting("Move Leaning", true, ".", this.setLeaning::get);
+    public final Setting<Boolean> forceSneak = this.sgGeneral.booleanSetting("Force Sneak", true, ".");
+    public final Setting<Boolean> noAnimations = this.sgGeneral.booleanSetting("No Animations", true, ".");
+    public final Setting<Boolean> noSwing = this.sgGeneral.booleanSetting("No Swing", true, ".");
     private final TimerMap<PlayerEntity, Float> leaningMap = new TimerMap<>(true);
 
     public PlayerModifier() {

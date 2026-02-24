@@ -10,8 +10,8 @@ import bodevelopment.client.blackout.util.SettingUtils;
 import net.minecraft.util.math.BlockPos;
 
 public class Flatten extends ObsidianModule {
-    private final Setting<Boolean> setY = this.sgGeneral.b("Set Y", true, "");
-    private final Setting<Integer> y = this.sgGeneral.i("Y", 3, -64, 300, 1, "", this.setY::get);
+    private final Setting<Boolean> setY = this.sgGeneral.booleanSetting("Set Y", true, "");
+    private final Setting<Integer> y = this.sgGeneral.intSetting("Y", 3, -64, 300, 1, "", this.setY::get);
     private int height = 0;
 
     public Flatten() {

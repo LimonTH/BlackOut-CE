@@ -25,9 +25,9 @@ import java.util.List;
 
 public class Wireframe extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<RenderShape> renderShape = this.sgGeneral.e("Render Shape", RenderShape.Full, ".");
-    private final Setting<BlackOutColor> lineColor = this.sgGeneral.c("Line Color", new BlackOutColor(255, 0, 0, 255), ".");
-    private final Setting<BlackOutColor> sideColor = this.sgGeneral.c("Side Color", new BlackOutColor(255, 0, 0, 50), ".");
+    private final Setting<RenderShape> renderShape = this.sgGeneral.enumSetting("Render Shape", RenderShape.Full, ".");
+    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Line Color", new BlackOutColor(255, 0, 0, 255), ".");
+    private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Side Color", new BlackOutColor(255, 0, 0, 50), ".");
     private final List<AbstractClientPlayerEntity> player = new ArrayList<>();
 
     public Wireframe() {

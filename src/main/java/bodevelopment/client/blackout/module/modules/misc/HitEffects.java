@@ -28,17 +28,17 @@ public class HitEffects extends Module {
     private final SettingGroup sgParticles = this.addGroup("Particles");
     private final SettingGroup sgHitSounds = this.addGroup("Hit Sounds");
     private final SettingGroup sgHitMarker = this.addGroup("Hit Marker");
-    private final Setting<List<EntityType<?>>> entities = this.sgEntities.el("Entities", ".", EntityType.PLAYER);
-    private final Setting<Boolean> particle = this.sgParticles.b("Draw Particles", false, ".");
+    private final Setting<List<EntityType<?>>> entities = this.sgEntities.entityListSetting("Entities", ".", EntityType.PLAYER);
+    private final Setting<Boolean> particle = this.sgParticles.booleanSetting("Draw Particles", false, ".");
     private final ParticleMultiSetting particles = ParticleMultiSetting.of(this.sgParticles, null, this.particle::get);
-    private final Setting<Boolean> hitSound = this.sgHitSounds.b("Hit Sound", false, ".");
-    public final Setting<Sound> sound = this.sgHitSounds.e("Sound", Sound.NeverLose, ".", this.hitSound::get);
-    private final Setting<Double> volume = this.sgHitSounds.d("Volume", 1.0, 0.0, 10.0, 0.1, ".", this.hitSound::get);
-    private final Setting<Double> pitch = this.sgHitSounds.d("Pitch", 1.0, 0.0, 10.0, 0.1, ".", this.hitSound::get);
-    private final Setting<Boolean> hitMarker = this.sgHitMarker.b("Hit Marker", false, ".");
-    private final Setting<Integer> start = this.sgHitMarker.i("Start", 5, 0, 25, 1, ".", this.hitMarker::get);
-    private final Setting<Integer> end = this.sgHitMarker.i("End", 15, 0, 50, 1, ".", this.hitMarker::get);
-    private final Setting<BlackOutColor> markerColor = this.sgHitMarker.c("Hit Marker Color", new BlackOutColor(175, 175, 175, 200), ".", this.hitMarker::get);
+    private final Setting<Boolean> hitSound = this.sgHitSounds.booleanSetting("Hit Sound", false, ".");
+    public final Setting<Sound> sound = this.sgHitSounds.enumSetting("Sound", Sound.NeverLose, ".", this.hitSound::get);
+    private final Setting<Double> volume = this.sgHitSounds.doubleSetting("Volume", 1.0, 0.0, 10.0, 0.1, ".", this.hitSound::get);
+    private final Setting<Double> pitch = this.sgHitSounds.doubleSetting("Pitch", 1.0, 0.0, 10.0, 0.1, ".", this.hitSound::get);
+    private final Setting<Boolean> hitMarker = this.sgHitMarker.booleanSetting("Hit Marker", false, ".");
+    private final Setting<Integer> start = this.sgHitMarker.intSetting("Start", 5, 0, 25, 1, ".", this.hitMarker::get);
+    private final Setting<Integer> end = this.sgHitMarker.intSetting("End", 15, 0, 50, 1, ".", this.hitMarker::get);
+    private final Setting<BlackOutColor> markerColor = this.sgHitMarker.colorSetting("Hit Marker Color", new BlackOutColor(175, 175, 175, 200), ".", this.hitMarker::get);
     private final MatrixStack stack = new MatrixStack();
     private long startedDraw = System.currentTimeMillis();
 

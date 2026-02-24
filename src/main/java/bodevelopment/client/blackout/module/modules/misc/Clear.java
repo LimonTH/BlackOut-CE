@@ -22,16 +22,16 @@ import java.util.List;
 
 public class Clear extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Integer> minX = this.sgGeneral.i("Min X", -75, -100, 100, 1, ".");
-    private final Setting<Integer> maxX = this.sgGeneral.i("Max X", 75, -100, 100, 1, ".");
-    private final Setting<Integer> minY = this.sgGeneral.i("Min Y", 0, -65, 350, 1, ".");
-    private final Setting<Integer> maxY = this.sgGeneral.i("Max Y", 100, -100, 100, 1, ".");
-    private final Setting<Integer> minZ = this.sgGeneral.i("Min Z", -75, -100, 100, 1, ".");
-    private final Setting<Integer> maxZ = this.sgGeneral.i("Max Z", 75, -100, 100, 1, ".");
-    private final Setting<Double> timer = this.sgGeneral.d("Timer", 5.0, 1.0, 10.0, 0.1, ".");
-    private final Setting<Integer> movement = this.sgGeneral.i("Movement", 1, 1, 10, 1, ".");
-    private final Setting<Integer> maxMovements = this.sgGeneral.i("Max Movements", 3, 1, 10, 1, ".");
-    private final Setting<Double> range = this.sgGeneral.d("Range", 6.0, 1.0, 10.0, 0.1, ".");
+    private final Setting<Integer> minX = this.sgGeneral.intSetting("Min X", -75, -100, 100, 1, ".");
+    private final Setting<Integer> maxX = this.sgGeneral.intSetting("Max X", 75, -100, 100, 1, ".");
+    private final Setting<Integer> minY = this.sgGeneral.intSetting("Min Y", 0, -65, 350, 1, ".");
+    private final Setting<Integer> maxY = this.sgGeneral.intSetting("Max Y", 100, -100, 100, 1, ".");
+    private final Setting<Integer> minZ = this.sgGeneral.intSetting("Min Z", -75, -100, 100, 1, ".");
+    private final Setting<Integer> maxZ = this.sgGeneral.intSetting("Max Z", 75, -100, 100, 1, ".");
+    private final Setting<Double> timer = this.sgGeneral.doubleSetting("Timer", 5.0, 1.0, 10.0, 0.1, ".");
+    private final Setting<Integer> movement = this.sgGeneral.intSetting("Movement", 1, 1, 10, 1, ".");
+    private final Setting<Integer> maxMovements = this.sgGeneral.intSetting("Max Movements", 3, 1, 10, 1, ".");
+    private final Setting<Double> range = this.sgGeneral.doubleSetting("Range", 6.0, 1.0, 10.0, 0.1, ".");
     private boolean setTimer = true;
     private int x = 0;
     private int y = 0;

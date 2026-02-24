@@ -13,11 +13,11 @@ public class Timer extends Module {
     private static float packets = 0.0F;
     private static float speed = -1.0F;
     public final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<TimerMode> mode = this.sgGeneral.e("Mode", TimerMode.Time, ".");
+    public final Setting<TimerMode> mode = this.sgGeneral.enumSetting("Mode", TimerMode.Time, ".");
     public final Setting<Double> timeMulti = this.sgGeneral
-            .d("Time Multiplier", 1.0, 0.05, 10.0, 0.04, "Timer speed.", () -> this.mode.get() == TimerMode.Time);
+            .doubleSetting("Time Multiplier", 1.0, 0.05, 10.0, 0.04, "Timer speed.", () -> this.mode.get() == TimerMode.Time);
     public final Setting<Double> physicsMulti = this.sgGeneral
-            .d("Physics Multiplier", 1.0, 0.0, 10.0, 0.04, "Multiplier for movement packets.", () -> this.mode.get() == TimerMode.Physics);
+            .doubleSetting("Physics Multiplier", 1.0, 0.0, 10.0, 0.04, "Multiplier for movement packets.", () -> this.mode.get() == TimerMode.Physics);
 
     public Timer() {
         super("Timer", "Speeds up your movement.", SubCategory.MISC, true);

@@ -17,10 +17,10 @@ import org.joml.Vector2i;
 
 public class FastFall extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> onlyHole = this.sgGeneral.b("Only Hole", false, "Falls faster when above a hole.");
-    private final Setting<Boolean> jumpHole = this.sgGeneral.b("Jump Hole", false, "Falls into holes even when you were falling.");
-    private final Setting<Double> fallSpeed = this.sgGeneral.d("Fall Speed", 1.0, 0.0, 10.0, 0.1, "How many blocks to fall each second.");
-    private final Setting<Boolean> rbDisable = this.sgGeneral.b("Rubberband Disable", true, "Disables fast fall if you rubberband.");
+    private final Setting<Boolean> onlyHole = this.sgGeneral.booleanSetting("Only Hole", false, "Falls faster when above a hole.");
+    private final Setting<Boolean> jumpHole = this.sgGeneral.booleanSetting("Jump Hole", false, "Falls into holes even when you were falling.");
+    private final Setting<Double> fallSpeed = this.sgGeneral.doubleSetting("Fall Speed", 1.0, 0.0, 10.0, 0.1, "How many blocks to fall each second.");
+    private final Setting<Boolean> rbDisable = this.sgGeneral.booleanSetting("Rubberband Disable", true, "Disables fast fall if you rubberband.");
     private boolean jumping = false;
     private Vector2i jumpPos = new Vector2i(0, 0);
     private boolean rubberbanded = false;

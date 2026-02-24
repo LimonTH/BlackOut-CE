@@ -31,21 +31,21 @@ public class AutoMend extends Module {
     private final SettingGroup sgPause = this.addGroup("Pause");
     private final SettingGroup sgRender = this.addGroup("Render");
 
-    private final Setting<Boolean> antiCharity = this.sgGeneral.b("Anti Charity", true, "Doesn't mend if any enemy is at same position.");
-    private final Setting<Double> throwSpeed = this.sgGeneral.d("Throw Speed", 20.0, 0.0, 20.0, 0.2, "How many timer to throw every second. 20 is recommended.");
-    private final Setting<Integer> bottles = this.sgGeneral.i("Bottles", 1, 1, 10, 1, "Amount of bottles to throw every time.");
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.e("Switch Mode", SwitchMode.Silent, "Method of switching. Silent is the most reliable.");
-    private final Setting<Integer> minDur = this.sgGeneral.i("Min Durability", 75, 0, 100, 1, "Mends if any armor piece is under this durability.");
+    private final Setting<Boolean> antiCharity = this.sgGeneral.booleanSetting("Anti Charity", true, "Doesn't mend if any enemy is at same position.");
+    private final Setting<Double> throwSpeed = this.sgGeneral.doubleSetting("Throw Speed", 20.0, 0.0, 20.0, 0.2, "How many timer to throw every second. 20 is recommended.");
+    private final Setting<Integer> bottles = this.sgGeneral.intSetting("Bottles", 1, 1, 10, 1, "Amount of bottles to throw every time.");
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent, "Method of switching. Silent is the most reliable.");
+    private final Setting<Integer> minDur = this.sgGeneral.intSetting("Min Durability", 75, 0, 100, 1, "Mends if any armor piece is under this durability.");
     private final Setting<Integer> antiWaste = this.sgGeneral
-            .i("Anti Waste", 90, 0, 100, 1, "Doesn't use experience if any armor piece is above this durability.");
-    private final Setting<Integer> forceMend = this.sgGeneral.i("Force Mend", 30, 0, 100, 1, "Ignores anti waste if any armor piece if under this durability.");
-    private final Setting<Boolean> instantRotate = this.sgGeneral.b("Instant Rotate", true, "Ignores rotation speed limit.");
-    private final Setting<Integer> autoCrystalPause = this.sgPause.i("Auto Crystal Pause", 0, 0, 100, 1, "Pauses for x ticks if auto crystal places.");
-    private final Setting<Integer> surroundPause = this.sgPause.i("Surround Pause", 0, 0, 100, 1, "Pauses for x ticks if surround places.");
-    private final Setting<Integer> movePause = this.sgPause.i("Move Pause", 0, 0, 100, 1, "Pauses for x ticks if moved.");
-    private final Setting<Integer> airPause = this.sgPause.i("Air Pause", 0, 0, 100, 1, "Pauses for x ticks if off ground.");
-    private final Setting<Boolean> renderSwing = this.sgRender.b("Render Swing", true, "Renders swing animation when throwing an exp bottle.");
-    private final Setting<SwingHand> swingHand = this.sgRender.e("Swing Hand", SwingHand.RealHand, "Which hand should be swung.");
+            .intSetting("Anti Waste", 90, 0, 100, 1, "Doesn't use experience if any armor piece is above this durability.");
+    private final Setting<Integer> forceMend = this.sgGeneral.intSetting("Force Mend", 30, 0, 100, 1, "Ignores anti waste if any armor piece if under this durability.");
+    private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotate", true, "Ignores rotation speed limit.");
+    private final Setting<Integer> autoCrystalPause = this.sgPause.intSetting("Auto Crystal Pause", 0, 0, 100, 1, "Pauses for x ticks if auto crystal places.");
+    private final Setting<Integer> surroundPause = this.sgPause.intSetting("Surround Pause", 0, 0, 100, 1, "Pauses for x ticks if surround places.");
+    private final Setting<Integer> movePause = this.sgPause.intSetting("Move Pause", 0, 0, 100, 1, "Pauses for x ticks if moved.");
+    private final Setting<Integer> airPause = this.sgPause.intSetting("Air Pause", 0, 0, 100, 1, "Pauses for x ticks if off ground.");
+    private final Setting<Boolean> renderSwing = this.sgRender.booleanSetting("Render Swing", true, "Renders swing animation when throwing an exp bottle.");
+    private final Setting<SwingHand> swingHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand, "Which hand should be swung.");
 
     private double throwsLeft = 0.0;
     private BlockPos lastPos = null;

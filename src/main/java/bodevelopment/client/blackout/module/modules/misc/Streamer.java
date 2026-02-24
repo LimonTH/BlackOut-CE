@@ -10,8 +10,8 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 public class Streamer extends Module {
     private static Streamer INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<String> spoofedName = this.sgGeneral.s("Spoofed Name", "Luhposu", "");
-    public final Setting<Boolean> skin = this.sgGeneral.b("Skin", true, ".");
+    public final Setting<String> spoofedName = this.sgGeneral.stringSetting("Spoofed Name", "Luhposu", "");
+    public final Setting<Boolean> skin = this.sgGeneral.booleanSetting("Skin", true, ".");
 
     public Streamer() {
         super("Streamer", "Spoofs stuff to not reveal your account.", SubCategory.MISC, true);

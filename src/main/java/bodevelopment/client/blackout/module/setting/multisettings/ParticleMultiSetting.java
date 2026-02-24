@@ -32,15 +32,15 @@ public class ParticleMultiSetting {
             name = name + " ";
         }
 
-        this.mode = sg.e(name + "Particle Mode", ParticleMode.Normal, ".", visible);
-        this.particles = sg.i(name + "Particles", 25, 0, 100, 1, ".", visible);
-        this.velocity = sg.d(name + "Particle Velocity", 0.5, 0.0, 1.0, 0.01, ".", visible);
-        this.time = sg.d(name + "Particle Time", 1.0, 0.0, 5.0, 0.05, ".", visible);
-        this.friction = sg.d(
+        this.mode = sg.enumSetting(name + "Particle Mode", ParticleMode.Normal, ".", visible);
+        this.particles = sg.intSetting(name + "Particles", 25, 0, 100, 1, ".", visible);
+        this.velocity = sg.doubleSetting(name + "Particle Velocity", 0.5, 0.0, 1.0, 0.01, ".", visible);
+        this.time = sg.doubleSetting(name + "Particle Time", 1.0, 0.0, 5.0, 0.05, ".", visible);
+        this.friction = sg.doubleSetting(
                 name + "Particle Friction", 0.9, 0.0, 1.0, 0.01, ".", () -> this.mode.get() == ParticleMode.Normal && visible.get()
         );
-        this.color = sg.c(name + "Particle Color", new BlackOutColor(255, 255, 255, 255), ".", visible);
-        this.shadowColor = sg.c(name + "Particle Shadow Color", new BlackOutColor(255, 255, 255, 255), ".", visible);
+        this.color = sg.colorSetting(name + "Particle Color", new BlackOutColor(255, 255, 255, 255), ".", visible);
+        this.shadowColor = sg.colorSetting(name + "Particle Shadow Color", new BlackOutColor(255, 255, 255, 255), ".", visible);
     }
 
     public static ParticleMultiSetting of(SettingGroup sg) {

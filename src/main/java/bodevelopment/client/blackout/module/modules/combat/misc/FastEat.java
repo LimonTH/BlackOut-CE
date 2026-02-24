@@ -21,8 +21,8 @@ import net.minecraft.util.math.Vec3d;
 public class FastEat extends Module {
     private static FastEat INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> antiStop = this.sgGeneral.b("Anti Stop", false, "Doesn't allow you to stop eating.");
-    private final Setting<Double> packets = this.sgGeneral.d("Packets", 0.0, 0.0, 10.0, 1.0, ".");
+    private final Setting<Boolean> antiStop = this.sgGeneral.booleanSetting("Anti Stop", false, "Doesn't allow you to stop eating.");
+    private final Setting<Double> packets = this.sgGeneral.doubleSetting("Packets", 0.0, 0.0, 10.0, 1.0, ".");
     private double toSend = 0.0;
 
     public FastEat() {

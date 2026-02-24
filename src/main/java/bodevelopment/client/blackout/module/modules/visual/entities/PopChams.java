@@ -23,15 +23,15 @@ import org.joml.Quaternionf;
 public class PopChams extends Module {
     private static PopChams INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Double> time = this.sgGeneral.d("Time", 1.0, 0.0, 5.0, 0.05, ".");
-    private final Setting<Double> y = this.sgGeneral.d("Y", 0.0, -5.0, 5.0, 0.1, ".");
-    private final Setting<Double> scale = this.sgGeneral.d("Scale", 1.0, 0.0, 5.0, 0.1, ".");
-    private final Setting<Boolean> enemy = this.sgGeneral.b("Enemy", true, ".");
-    private final Setting<Boolean> friends = this.sgGeneral.b("Friends", true, ".");
-    private final Setting<Boolean> self = this.sgGeneral.b("Self", false, ".");
-    private final Setting<RenderShape> renderShape = this.sgGeneral.e("Render Shape", RenderShape.Full, "Which parts of boxes should be rendered.");
-    private final Setting<BlackOutColor> lineColor = this.sgGeneral.c("Line Color", new BlackOutColor(255, 255, 255, 255), "Fill Color");
-    private final Setting<BlackOutColor> sideColor = this.sgGeneral.c("Side Color", new BlackOutColor(255, 255, 255, 50), "Side Color");
+    private final Setting<Double> time = this.sgGeneral.doubleSetting("Time", 1.0, 0.0, 5.0, 0.05, ".");
+    private final Setting<Double> y = this.sgGeneral.doubleSetting("Y", 0.0, -5.0, 5.0, 0.1, ".");
+    private final Setting<Double> scale = this.sgGeneral.doubleSetting("Scale", 1.0, 0.0, 5.0, 0.1, ".");
+    private final Setting<Boolean> enemy = this.sgGeneral.booleanSetting("Enemy", true, ".");
+    private final Setting<Boolean> friends = this.sgGeneral.booleanSetting("Friends", true, ".");
+    private final Setting<Boolean> self = this.sgGeneral.booleanSetting("Self", false, ".");
+    private final Setting<RenderShape> renderShape = this.sgGeneral.enumSetting("Render Shape", RenderShape.Full, "Which parts of boxes should be rendered.");
+    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Line Color", new BlackOutColor(255, 255, 255, 255), "Fill Color");
+    private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Side Color", new BlackOutColor(255, 255, 255, 50), "Side Color");
     private final TimerList<Pop> pops = new TimerList<>(true);
 
     public PopChams() {

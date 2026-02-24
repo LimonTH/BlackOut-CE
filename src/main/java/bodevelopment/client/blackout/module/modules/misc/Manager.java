@@ -38,44 +38,44 @@ public class Manager extends Module {
     public final SettingGroup sgHotbar = this.addGroup("Hotbar");
     public final SettingGroup sgReplenish = this.addGroup("Replenish");
     public final SettingGroup sgCleaner = this.addGroup("Cleaner");
-    private final Setting<Boolean> onlyInv = this.sgGeneral.b("Only Inv", false, ".");
-    private final Setting<Double> inventoryOpenTime = this.sgGeneral.d("Inventory Open Time", 0.1, 0.0, 1.0, 0.01, ".", this.onlyInv::get);
-    private final Setting<Boolean> silentInstant = this.sgGeneral.b("Silent Instant", true, ".", () -> !this.onlyInv.get());
-    private final Setting<Boolean> inInventoryInstant = this.sgGeneral.b("In Inventory Instant", true, ".");
-    private final Setting<Double> cooldown = this.sgGeneral.d("Cooldown", 0.3, 0.0, 1.0, 0.01, ".");
-    private final Setting<Boolean> tpDisable = this.sgGeneral.b("Disable on TP", false, "Should we disable when teleporting to another world");
-    private final Setting<Boolean> pauseCombat = this.sgGeneral.b("Pause Combat", false, ".");
-    private final Setting<Boolean> stopRotations = this.sgGeneral.b("Stop Rotations", true, ".");
-    private final Setting<Boolean> autoArmor = this.sgAutoArmor.b("Auto Armor", true, ".");
-    private final Setting<KeyBind> chestSwap = this.sgAutoArmor.k("Chest Swap", ".");
+    private final Setting<Boolean> onlyInv = this.sgGeneral.booleanSetting("Only Inv", false, ".");
+    private final Setting<Double> inventoryOpenTime = this.sgGeneral.doubleSetting("Inventory Open Time", 0.1, 0.0, 1.0, 0.01, ".", this.onlyInv::get);
+    private final Setting<Boolean> silentInstant = this.sgGeneral.booleanSetting("Silent Instant", true, ".", () -> !this.onlyInv.get());
+    private final Setting<Boolean> inInventoryInstant = this.sgGeneral.booleanSetting("In Inventory Instant", true, ".");
+    private final Setting<Double> cooldown = this.sgGeneral.doubleSetting("Cooldown", 0.3, 0.0, 1.0, 0.01, ".");
+    private final Setting<Boolean> tpDisable = this.sgGeneral.booleanSetting("Disable on TP", false, "Should we disable when teleporting to another world");
+    private final Setting<Boolean> pauseCombat = this.sgGeneral.booleanSetting("Pause Combat", false, ".");
+    private final Setting<Boolean> stopRotations = this.sgGeneral.booleanSetting("Stop Rotations", true, ".");
+    private final Setting<Boolean> autoArmor = this.sgAutoArmor.booleanSetting("Auto Armor", true, ".");
+    private final Setting<KeyBind> chestSwap = this.sgAutoArmor.keySetting("Chest Swap", ".");
     private final Setting<Boolean> elytra = this.sgAutoArmor
-            .b("Elytra Priority", false, ".", () -> this.chestSwap.get().value == null || this.chestSwap.get().value.key >= 0);
-    private final Setting<Integer> weaponSlot = this.sgHotbar.i("Weapon Slot", 0, 0, 9, 1, ".");
-    private final Setting<List<Item>> slot1 = this.sgHotbar.il("Slot 1", ".", () -> this.weaponSlot.get() != 1);
-    private final Setting<List<Item>> slot2 = this.sgHotbar.il("Slot 2", ".", () -> this.weaponSlot.get() != 2);
-    private final Setting<List<Item>> slot3 = this.sgHotbar.il("Slot 3", ".", () -> this.weaponSlot.get() != 3);
-    private final Setting<List<Item>> slot4 = this.sgHotbar.il("Slot 4", ".", () -> this.weaponSlot.get() != 4);
-    private final Setting<List<Item>> slot5 = this.sgHotbar.il("Slot 5", ".", () -> this.weaponSlot.get() != 5);
-    private final Setting<List<Item>> slot6 = this.sgHotbar.il("Slot 6", ".", () -> this.weaponSlot.get() != 6);
-    private final Setting<List<Item>> slot7 = this.sgHotbar.il("Slot 7", ".", () -> this.weaponSlot.get() != 7);
-    private final Setting<List<Item>> slot8 = this.sgHotbar.il("Slot 8", ".", () -> this.weaponSlot.get() != 8);
-    private final Setting<List<Item>> slot9 = this.sgHotbar.il("Slot 9", ".", () -> this.weaponSlot.get() != 9);
+            .booleanSetting("Elytra Priority", false, ".", () -> this.chestSwap.get().value == null || this.chestSwap.get().value.key >= 0);
+    private final Setting<Integer> weaponSlot = this.sgHotbar.intSetting("Weapon Slot", 0, 0, 9, 1, ".");
+    private final Setting<List<Item>> slot1 = this.sgHotbar.itemListSetting("Slot 1", ".", () -> this.weaponSlot.get() != 1);
+    private final Setting<List<Item>> slot2 = this.sgHotbar.itemListSetting("Slot 2", ".", () -> this.weaponSlot.get() != 2);
+    private final Setting<List<Item>> slot3 = this.sgHotbar.itemListSetting("Slot 3", ".", () -> this.weaponSlot.get() != 3);
+    private final Setting<List<Item>> slot4 = this.sgHotbar.itemListSetting("Slot 4", ".", () -> this.weaponSlot.get() != 4);
+    private final Setting<List<Item>> slot5 = this.sgHotbar.itemListSetting("Slot 5", ".", () -> this.weaponSlot.get() != 5);
+    private final Setting<List<Item>> slot6 = this.sgHotbar.itemListSetting("Slot 6", ".", () -> this.weaponSlot.get() != 6);
+    private final Setting<List<Item>> slot7 = this.sgHotbar.itemListSetting("Slot 7", ".", () -> this.weaponSlot.get() != 7);
+    private final Setting<List<Item>> slot8 = this.sgHotbar.itemListSetting("Slot 8", ".", () -> this.weaponSlot.get() != 8);
+    private final Setting<List<Item>> slot9 = this.sgHotbar.itemListSetting("Slot 9", ".", () -> this.weaponSlot.get() != 9);
     @SuppressWarnings("unchecked")
     private final Setting<List<Item>>[] slotSettings = (Setting<List<Item>>[]) new Setting<?>[]{
             this.slot1, this.slot2, this.slot3, this.slot4, this.slot5, this.slot6, this.slot7, this.slot8, this.slot9
     };
-    private final Setting<WeaponMode> weaponMode = this.sgHotbar.e("Weapon Mode", WeaponMode.Sword, ".");
-    private final Setting<Boolean> replenish = this.sgReplenish.b("Replenish", false, ".");
-    private final Setting<Boolean> unstackableReplenish = this.sgReplenish.b("Unstackable Replenish", true, ".");
-    private final Setting<Integer> percetageLeft = this.sgReplenish.i("Left %", 25, 0, 100, 1, ".");
-    private final Setting<Double> replenishMemory = this.sgReplenish.d("Replenish Memory", 1.0, 0.0, 5.0, 0.05, ".");
-    private final Setting<List<Item>> cleanerItems = this.sgCleaner.il("Cleaner Items", ".");
-    private final Setting<Boolean> badArmor = this.sgCleaner.b("Bad Armor", false, ".");
-    private final Setting<Boolean> badSwords = this.sgCleaner.b("Bad Swords", false, ".");
-    private final Setting<Boolean> badAxes = this.sgCleaner.b("Bad Axes", false, ".");
-    private final Setting<AxeCompareMode> axeComparing = this.sgCleaner.e("Axe Comparing", AxeCompareMode.Efficiency, ".", this.badAxes::get);
-    private final Setting<Boolean> badPickaxes = this.sgCleaner.b("Bad Pickaxes", false, ".");
-    private final Setting<Boolean> badBows = this.sgCleaner.b("Bad Bows", false, ".");
+    private final Setting<WeaponMode> weaponMode = this.sgHotbar.enumSetting("Weapon Mode", WeaponMode.Sword, ".");
+    private final Setting<Boolean> replenish = this.sgReplenish.booleanSetting("Replenish", false, ".");
+    private final Setting<Boolean> unstackableReplenish = this.sgReplenish.booleanSetting("Unstackable Replenish", true, ".");
+    private final Setting<Integer> percetageLeft = this.sgReplenish.intSetting("Left %", 25, 0, 100, 1, ".");
+    private final Setting<Double> replenishMemory = this.sgReplenish.doubleSetting("Replenish Memory", 1.0, 0.0, 5.0, 0.05, ".");
+    private final Setting<List<Item>> cleanerItems = this.sgCleaner.itemListSetting("Cleaner Items", ".");
+    private final Setting<Boolean> badArmor = this.sgCleaner.booleanSetting("Bad Armor", false, ".");
+    private final Setting<Boolean> badSwords = this.sgCleaner.booleanSetting("Bad Swords", false, ".");
+    private final Setting<Boolean> badAxes = this.sgCleaner.booleanSetting("Bad Axes", false, ".");
+    private final Setting<AxeCompareMode> axeComparing = this.sgCleaner.enumSetting("Axe Comparing", AxeCompareMode.Efficiency, ".", this.badAxes::get);
+    private final Setting<Boolean> badPickaxes = this.sgCleaner.booleanSetting("Bad Pickaxes", false, ".");
+    private final Setting<Boolean> badBows = this.sgCleaner.booleanSetting("Bad Bows", false, ".");
     private final ReplenishSlot[] replenishItems = new ReplenishSlot[]{
             new ReplenishSlot(),
             new ReplenishSlot(),

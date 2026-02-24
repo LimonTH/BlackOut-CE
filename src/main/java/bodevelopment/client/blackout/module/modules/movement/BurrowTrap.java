@@ -33,13 +33,13 @@ import java.util.List;
 
 public class BurrowTrap extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<List<Block>> blocks = this.sgGeneral.bl("Blocks", "Blocks to use.", Blocks.OBSIDIAN);
-    public final Setting<Boolean> useTimer = this.sgGeneral.b("Use Timer", true, ".");
-    public final Setting<Double> timer = this.sgGeneral.d("Timer", 2.0, 0.0, 5.0, 0.05, ".", this.useTimer::get);
+    public final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Blocks", "Blocks to use.", Blocks.OBSIDIAN);
+    public final Setting<Boolean> useTimer = this.sgGeneral.booleanSetting("Use Timer", true, ".");
+    public final Setting<Double> timer = this.sgGeneral.doubleSetting("Timer", 2.0, 0.0, 5.0, 0.05, ".", this.useTimer::get);
     private final Setting<SwitchMode> switchMode = this.sgGeneral
-            .e("Switch Mode", SwitchMode.Silent, "Method of switching. Silent is the most reliable but delays crystals on some servers.");
-    private final Setting<Boolean> packet = this.sgGeneral.b("Packet", false, ".");
-    private final Setting<Boolean> instantRotation = this.sgGeneral.b("Instant Rotation", true, ".");
+            .enumSetting("Switch Mode", SwitchMode.Silent, "Method of switching. Silent is the most reliable but delays crystals on some servers.");
+    private final Setting<Boolean> packet = this.sgGeneral.booleanSetting("Packet", false, ".");
+    private final Setting<Boolean> instantRotation = this.sgGeneral.booleanSetting("Instant Rotation", true, ".");
     private final double[] offsets = new double[]{0.42, 0.3332, 0.2468};
     private BlockPos pos = null;
     private int progress = 0;

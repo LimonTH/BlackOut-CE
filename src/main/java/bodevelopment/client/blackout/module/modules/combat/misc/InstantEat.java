@@ -25,11 +25,11 @@ import java.util.function.Supplier;
 public class InstantEat extends Module {
     private static InstantEat INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<PacketMode> packetMode = this.sgGeneral.e("Packet Mode", PacketMode.Full, ".");
-    private final Setting<Integer> packets = this.sgGeneral.i("Packets", 32, 0, 50, 1, ".");
-    private final Setting<List<Item>> items = this.sgGeneral.il("Items", ".", Items.GOLDEN_APPLE);
+    private final Setting<PacketMode> packetMode = this.sgGeneral.enumSetting("Packet Mode", PacketMode.Full, ".");
+    private final Setting<Integer> packets = this.sgGeneral.intSetting("Packets", 32, 0, 50, 1, ".");
+    private final Setting<List<Item>> items = this.sgGeneral.itemListSetting("Items", ".", Items.GOLDEN_APPLE);
     private final Predicate<ItemStack> predicate = itemStack -> this.items.get().contains(itemStack.getItem());
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.e("Switch Mode", SwitchMode.Silent, ".");
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent, ".");
     private final int packetsSent = 0;
 
     public InstantEat() {

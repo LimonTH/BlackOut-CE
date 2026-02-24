@@ -34,14 +34,14 @@ import java.util.List;
 
 public class Search extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<List<Block>> blocks = this.sgGeneral.bl("Blocks", "");
-    private final Setting<Boolean> dynamicBox = this.sgGeneral.b("Dynamic Box", true, ".");
-    private final Setting<Boolean> instantScan = this.sgGeneral.b("Instant Scan", false, ".");
-    private final Setting<Integer> scanSpeed = this.sgGeneral.i("Scan Speed", 1, 1, 10, 1, "Chunks per frame.", () -> !this.instantScan.get());
-    private final Setting<BlackOutColor> fillColor = this.sgGeneral.c("Fill Color", new BlackOutColor(255, 0, 0, 50), "");
-    private final Setting<Integer> bloom = this.sgGeneral.i("Bloom", 5, 0, 10, 1, ".");
-    private final Setting<BlackOutColor> bloomColor = this.sgGeneral.c("Bloom Color", new BlackOutColor(255, 0, 0, 100), "");
-    private final Setting<Boolean> onlyExposed = this.sgGeneral.b("Only Exposed", false, ".");
+    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Blocks", "");
+    private final Setting<Boolean> dynamicBox = this.sgGeneral.booleanSetting("Dynamic Box", true, ".");
+    private final Setting<Boolean> instantScan = this.sgGeneral.booleanSetting("Instant Scan", false, ".");
+    private final Setting<Integer> scanSpeed = this.sgGeneral.intSetting("Scan Speed", 1, 1, 10, 1, "Chunks per frame.", () -> !this.instantScan.get());
+    private final Setting<BlackOutColor> fillColor = this.sgGeneral.colorSetting("Fill Color", new BlackOutColor(255, 0, 0, 50), "");
+    private final Setting<Integer> bloom = this.sgGeneral.intSetting("Bloom", 5, 0, 10, 1, ".");
+    private final Setting<BlackOutColor> bloomColor = this.sgGeneral.colorSetting("Bloom Color", new BlackOutColor(255, 0, 0, 100), "");
+    private final Setting<Boolean> onlyExposed = this.sgGeneral.booleanSetting("Only Exposed", false, ".");
     private final List<BlockPos> positions = Collections.synchronizedList(new ArrayList<>());
     private final List<ChunkPos> toScan = new ArrayList<>();
     private final List<ChunkPos> prevChunks = new ArrayList<>();

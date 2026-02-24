@@ -24,9 +24,9 @@ import java.util.List;
 public class Spectate extends Module {
     private static Spectate INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> ignoreFriends = this.sgGeneral.b("Ignore Friends", true, "Doesn't spectate friends.");
-    private final Setting<KeyBind> forwardKey = this.sgGeneral.k("Forward", ".");
-    private final Setting<KeyBind> backKey = this.sgGeneral.k("Back", ".");
+    private final Setting<Boolean> ignoreFriends = this.sgGeneral.booleanSetting("Ignore Friends", true, "Doesn't spectate friends.");
+    private final Setting<KeyBind> forwardKey = this.sgGeneral.keySetting("Forward", ".");
+    private final Setting<KeyBind> backKey = this.sgGeneral.keySetting("Back", ".");
     private final List<PlayerEntity> playerEntities = new ArrayList<>();
     private final MatrixStack stack = new MatrixStack();
     private PlayerEntity target;

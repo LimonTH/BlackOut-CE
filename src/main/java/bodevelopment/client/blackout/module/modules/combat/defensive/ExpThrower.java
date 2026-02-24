@@ -22,16 +22,16 @@ public class ExpThrower extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRender = this.addGroup("Render");
 
-    private final Setting<Double> throwSpeed = this.sgGeneral.d("Throw Speed", 20.0, 0.0, 20.0, 0.2, "How many timer to throw every second. 20 is recommended.");
-    private final Setting<Integer> bottles = this.sgGeneral.i("Bottles", 1, 1, 10, 1, "Amount of bottles to throw every time.");
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.e("Switch Mode", SwitchMode.Silent, "Method of switching. Silent is the most reliable.");
+    private final Setting<Double> throwSpeed = this.sgGeneral.doubleSetting("Throw Speed", 20.0, 0.0, 20.0, 0.2, "How many timer to throw every second. 20 is recommended.");
+    private final Setting<Integer> bottles = this.sgGeneral.intSetting("Bottles", 1, 1, 10, 1, "Amount of bottles to throw every time.");
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent, "Method of switching. Silent is the most reliable.");
     private final Setting<Integer> antiWaste = this.sgGeneral
-            .i("Anti Waste", 90, 0, 100, 1, "Doesn't use experience if any armor piece is above this durability.");
-    private final Setting<Integer> forceMend = this.sgGeneral.i("Force Mend", 30, 0, 100, 1, "Ignores anti waste if any armor piece if under this durability.");
-    private final Setting<Boolean> rotate = this.sgGeneral.b("Rotate", true, "Looks down.");
-    private final Setting<Boolean> instantRotate = this.sgGeneral.b("Instant Rotate", true, "Ignores rotation speed limit.", this.rotate::get);
-    private final Setting<Boolean> renderSwing = this.sgRender.b("Render Swing", true, "Renders swing animation when throwing an exp bottle.");
-    private final Setting<SwingHand> swingHand = this.sgRender.e("Swing Hand", SwingHand.RealHand, "Which hand should be swung.");
+            .intSetting("Anti Waste", 90, 0, 100, 1, "Doesn't use experience if any armor piece is above this durability.");
+    private final Setting<Integer> forceMend = this.sgGeneral.intSetting("Force Mend", 30, 0, 100, 1, "Ignores anti waste if any armor piece if under this durability.");
+    private final Setting<Boolean> rotate = this.sgGeneral.booleanSetting("Rotate", true, "Looks down.");
+    private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotate", true, "Ignores rotation speed limit.", this.rotate::get);
+    private final Setting<Boolean> renderSwing = this.sgRender.booleanSetting("Render Swing", true, "Renders swing animation when throwing an exp bottle.");
+    private final Setting<SwingHand> swingHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand, "Which hand should be swung.");
     private double throwsLeft = 0.0;
 
     public ExpThrower() {

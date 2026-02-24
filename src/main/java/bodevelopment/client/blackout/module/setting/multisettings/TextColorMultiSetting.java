@@ -24,11 +24,11 @@ public class TextColorMultiSetting {
 
     private TextColorMultiSetting(SettingGroup sg, TextColorMode dm, BlackOutColor dt, BlackOutColor dw, SingleOut<Boolean> visible, String name) {
         String text = name == null ? "Text" : name;
-        this.mode = sg.e(text + " Color Mode", dm, ".");
-        this.textColor = sg.c(text + " Color", dt, ".", () -> (this.mode.get() == TextColorMode.Static || this.mode.get() == TextColorMode.Wave) && visible.get());
-        this.waveColor = sg.c(text + " Wave Color", dw, ".", () -> this.mode.get() == TextColorMode.Wave && visible.get());
-        this.saturation = sg.d(text + " Saturation", 1.0, 0.1, 1.0, 0.1, ".", () -> this.mode.get() == TextColorMode.Rainbow && visible.get());
-        this.frequency = sg.d(
+        this.mode = sg.enumSetting(text + " Color Mode", dm, ".");
+        this.textColor = sg.colorSetting(text + " Color", dt, ".", () -> (this.mode.get() == TextColorMode.Static || this.mode.get() == TextColorMode.Wave) && visible.get());
+        this.waveColor = sg.colorSetting(text + " Wave Color", dw, ".", () -> this.mode.get() == TextColorMode.Wave && visible.get());
+        this.saturation = sg.doubleSetting(text + " Saturation", 1.0, 0.1, 1.0, 0.1, ".", () -> this.mode.get() == TextColorMode.Rainbow && visible.get());
+        this.frequency = sg.doubleSetting(
                 text + " Frequency",
                 1.0,
                 0.1,
@@ -37,7 +37,7 @@ public class TextColorMultiSetting {
                 ".",
                 () -> (this.mode.get() == TextColorMode.Wave || this.mode.get() == TextColorMode.Rainbow) && visible.get()
         );
-        this.speed = sg.d(
+        this.speed = sg.doubleSetting(
                 text + " Speed", 1.0, 0.1, 10.0, 0.1, ".", () -> (this.mode.get() == TextColorMode.Wave || this.mode.get() == TextColorMode.Rainbow) && visible.get()
         );
     }

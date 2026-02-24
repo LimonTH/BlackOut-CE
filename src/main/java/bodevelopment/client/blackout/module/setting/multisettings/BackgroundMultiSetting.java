@@ -21,14 +21,14 @@ public class BackgroundMultiSetting {
             SettingGroup sg, BackgroundType dm, BlackOutColor rc, BlackOutColor sc, BlackOutColor shdw, SingleOut<Boolean> visible, String name
     ) {
         String text = name == null ? "Background" : name;
-        this.mode = sg.e(text + " Type", dm, ".");
-        this.roundedColor = sg.c(
+        this.mode = sg.enumSetting(text + " Type", dm, ".");
+        this.roundedColor = sg.colorSetting(
                 text + " Color", rc, ".", () -> (this.mode.get() == BackgroundType.Static || this.mode.get() == BackgroundType.Animated) && visible.get()
         );
-        this.secondaryColor = sg.c(text + " Secondary Color", sc, ".", () -> this.mode.get() == BackgroundType.Animated && visible.get());
-        this.shadow = sg.b(text + " Shadow", true, "Do we use a shadow effect");
-        this.shadowColor = sg.c(text + " Shadow Color", shdw, ".", () -> this.mode.get() == BackgroundType.Static && visible.get() && this.shadow.get());
-        this.speed = sg.d(text + " Speed", 1.0, 0.1, 10.0, 0.1, ".", () -> this.mode.get() == BackgroundType.Animated && visible.get());
+        this.secondaryColor = sg.colorSetting(text + " Secondary Color", sc, ".", () -> this.mode.get() == BackgroundType.Animated && visible.get());
+        this.shadow = sg.booleanSetting(text + " Shadow", true, "Do we use a shadow effect");
+        this.shadowColor = sg.colorSetting(text + " Shadow Color", shdw, ".", () -> this.mode.get() == BackgroundType.Static && visible.get() && this.shadow.get());
+        this.speed = sg.doubleSetting(text + " Speed", 1.0, 0.1, 10.0, 0.1, ".", () -> this.mode.get() == BackgroundType.Animated && visible.get());
     }
 
     public static BackgroundMultiSetting of(SettingGroup sg, String name) {

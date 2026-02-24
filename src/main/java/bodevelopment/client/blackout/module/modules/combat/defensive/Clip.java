@@ -28,23 +28,23 @@ public class Clip extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
     public final SettingGroup sgBounds = this.addGroup("Bounds");
 
-    public final Setting<Boolean> stopRotation = this.sgGeneral.b("Stop Rotation", true, ".");
-    private final Setting<OffsetMode> offset = this.sgGeneral.e("Offset", OffsetMode.NODamage, ".");
-    private final Setting<Integer> movementDelay = this.sgGeneral.i("Movement Delay", 10, 0, 20, 1, "How many ticks to wait betweeen movements.");
-    private final Setting<Double> movement = this.sgGeneral.d("Movement", 0.06, 0.0, 0.1, 0.001, "How many blocks to move eact time.");
-    private final Setting<Boolean> pauseMove = this.sgGeneral.b("Pause Move", true, ".");
-    private final Setting<Integer> stillTicks = this.sgGeneral.i("Still Ticks", 5, 0, 50, 1, ".");
-    private final Setting<Boolean> bounds = this.sgBounds.b("Bounds", true, ".");
-    private final Setting<Boolean> spamBounds = this.sgBounds.b("Spam Bounds", false, ".");
-    private final Setting<PacketFly.BoundsMode> boundsMode = this.sgBounds.e("Bounds Mode", PacketFly.BoundsMode.Add, "Spoofs on ground.");
+    public final Setting<Boolean> stopRotation = this.sgGeneral.booleanSetting("Stop Rotation", true, ".");
+    private final Setting<OffsetMode> offset = this.sgGeneral.enumSetting("Offset", OffsetMode.NODamage, ".");
+    private final Setting<Integer> movementDelay = this.sgGeneral.intSetting("Movement Delay", 10, 0, 20, 1, "How many ticks to wait betweeen movements.");
+    private final Setting<Double> movement = this.sgGeneral.doubleSetting("Movement", 0.06, 0.0, 0.1, 0.001, "How many blocks to move eact time.");
+    private final Setting<Boolean> pauseMove = this.sgGeneral.booleanSetting("Pause Move", true, ".");
+    private final Setting<Integer> stillTicks = this.sgGeneral.intSetting("Still Ticks", 5, 0, 50, 1, ".");
+    private final Setting<Boolean> bounds = this.sgBounds.booleanSetting("Bounds", true, ".");
+    private final Setting<Boolean> spamBounds = this.sgBounds.booleanSetting("Spam Bounds", false, ".");
+    private final Setting<PacketFly.BoundsMode> boundsMode = this.sgBounds.enumSetting("Bounds Mode", PacketFly.BoundsMode.Add, "Spoofs on ground.");
     private final Setting<Boolean> setXZ = this.sgBounds
-            .b("Set XZ", false, "Doesn't move horizontally and vertically in the same packet.", () -> this.boundsMode.get() == PacketFly.BoundsMode.Set);
+            .booleanSetting("Set XZ", false, "Doesn't move horizontally and vertically in the same packet.", () -> this.boundsMode.get() == PacketFly.BoundsMode.Set);
     public final Setting<Integer> xzBound = this.sgBounds
-            .i("XZ Bound", 0, -1337, 1337, 1, "Bounds offset horizontally.", () -> this.boundsMode.get() == PacketFly.BoundsMode.Add || this.setXZ.get());
+            .intSetting("XZ Bound", 0, -1337, 1337, 1, "Bounds offset horizontally.", () -> this.boundsMode.get() == PacketFly.BoundsMode.Add || this.setXZ.get());
     private final Setting<Boolean> setY = this.sgBounds
-            .b("Set Y", true, "Doesn't move horizontally and vertically in the same packet.", () -> this.boundsMode.get() == PacketFly.BoundsMode.Set);
+            .booleanSetting("Set Y", true, "Doesn't move horizontally and vertically in the same packet.", () -> this.boundsMode.get() == PacketFly.BoundsMode.Set);
     public final Setting<Integer> yBound = this.sgBounds
-            .i("Y Bound", -87, -1337, 1337, 1, "Bounds offset vertically.", () -> this.boundsMode.get() == PacketFly.BoundsMode.Add || this.setY.get());
+            .intSetting("Y Bound", -87, -1337, 1337, 1, "Bounds offset vertically.", () -> this.boundsMode.get() == PacketFly.BoundsMode.Add || this.setY.get());
     public boolean shouldCancel = false;
     public int noRotateTime = 0;
     private double cornerX = 0.0;

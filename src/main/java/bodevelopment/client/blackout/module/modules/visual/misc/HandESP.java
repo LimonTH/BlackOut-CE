@@ -19,19 +19,19 @@ import java.awt.*;
 public class HandESP extends Module {
     private static HandESP INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<ColorMode> colormode = this.sgGeneral.e("Mode", ColorMode.Custom, "What style to use");
+    public final Setting<ColorMode> colormode = this.sgGeneral.enumSetting("Mode", ColorMode.Custom, "What style to use");
     private final Setting<Double> saturation = this.sgGeneral
-            .d("Rainbow Saturation", 0.8, 0.0, 1.0, 0.1, ".", () -> this.colormode.get() == ColorMode.Rainbow);
+            .doubleSetting("Rainbow Saturation", 0.8, 0.0, 1.0, 0.1, ".", () -> this.colormode.get() == ColorMode.Rainbow);
     private final Setting<Double> waveSpeed = this.sgGeneral
-            .d("Wave Speed", 2.0, 0.0, 10.0, 0.1, "Slower wave effect", () -> this.colormode.get() == ColorMode.Wave);
+            .doubleSetting("Wave Speed", 2.0, 0.0, 10.0, 0.1, "Slower wave effect", () -> this.colormode.get() == ColorMode.Wave);
     private final Setting<Double> waveLength = this.sgGeneral
-            .d("Wave Length", 2.0, 0.0, 5.0, 0.1, "Longer wave effect", () -> this.colormode.get() == ColorMode.Wave);
+            .doubleSetting("Wave Length", 2.0, 0.0, 5.0, 0.1, "Longer wave effect", () -> this.colormode.get() == ColorMode.Wave);
     private final Setting<BlackOutColor> waveColor = this.sgGeneral
-            .c("Wave Color", new BlackOutColor(125, 125, 125, 255), "Text Color For The Wave", () -> this.colormode.get() == ColorMode.Wave);
-    private final Setting<Integer> dist = this.sgGeneral.i("Distance", 5, 1, 10, 1, ".");
-    private final Setting<Boolean> texture = this.sgGeneral.b("Texture", false, ".");
-    private final Setting<BlackOutColor> outsideColor = this.sgGeneral.c("Outside Color", new BlackOutColor(255, 0, 0, 255), ".");
-    private final Setting<BlackOutColor> insideColor = this.sgGeneral.c("Inside Color", new BlackOutColor(255, 0, 0, 50), ".");
+            .colorSetting("Wave Color", new BlackOutColor(125, 125, 125, 255), "Text Color For The Wave", () -> this.colormode.get() == ColorMode.Wave);
+    private final Setting<Integer> dist = this.sgGeneral.intSetting("Distance", 5, 1, 10, 1, ".");
+    private final Setting<Boolean> texture = this.sgGeneral.booleanSetting("Texture", false, ".");
+    private final Setting<BlackOutColor> outsideColor = this.sgGeneral.colorSetting("Outside Color", new BlackOutColor(255, 0, 0, 255), ".");
+    private final Setting<BlackOutColor> insideColor = this.sgGeneral.colorSetting("Inside Color", new BlackOutColor(255, 0, 0, 50), ".");
 
     public HandESP() {
         super("Hand ESP", "Modifies how hands are rendered.", SubCategory.MISC_VISUAL, true);

@@ -42,23 +42,23 @@ import java.util.function.Predicate;
 public class Snombonty extends MoveUpdateModule {
     public final SettingGroup sgGeneral = this.addGroup("General");
     public final SettingGroup sgRender = this.addGroup("Render");
-    private final Setting<Boolean> playerVelocity = this.sgGeneral.b("Velocity", true, "Uses your own velocity in trajectory calculations.");
-    private final Setting<Boolean> onlyPlayers = this.sgGeneral.b("Only Players", true, "Only abuses players.");
-    private final Setting<Double> range = this.sgGeneral.d("Range", 50.0, 0.0, 100.0, 1.0, "Doesn't target entities outside of this range.");
-    private final Setting<Double> throwSpeed = this.sgGeneral.d("Throw Speed", 20.0, 0.0, 20.0, 0.1, "How many snowballs to throw each second.");
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.e("Switch Mode", SwitchMode.Normal, "Method of switching. Silent is the most reliable.");
-    private final Setting<Boolean> extrapolation = this.sgGeneral.b("Extrapolation", true, "Predicts enemy movement.");
+    private final Setting<Boolean> playerVelocity = this.sgGeneral.booleanSetting("Velocity", true, "Uses your own velocity in trajectory calculations.");
+    private final Setting<Boolean> onlyPlayers = this.sgGeneral.booleanSetting("Only Players", true, "Only abuses players.");
+    private final Setting<Double> range = this.sgGeneral.doubleSetting("Range", 50.0, 0.0, 100.0, 1.0, "Doesn't target entities outside of this range.");
+    private final Setting<Double> throwSpeed = this.sgGeneral.doubleSetting("Throw Speed", 20.0, 0.0, 20.0, 0.1, "How many snowballs to throw each second.");
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Normal, "Method of switching. Silent is the most reliable.");
+    private final Setting<Boolean> extrapolation = this.sgGeneral.booleanSetting("Extrapolation", true, "Predicts enemy movement.");
     private final Setting<Double> extrapolationStrength = this.sgGeneral
-            .d("Extrapolation Strength", 1.0, 0.0, 1.0, 0.01, "How many snowballs to throw each second.");
-    private final Setting<Boolean> instantRotate = this.sgGeneral.b("Instant Rotate", true, "Ignores rotation speed limit.");
-    private final Setting<Boolean> renderSwing = this.sgRender.b("Render Swing", false, "Renders swing animation when throwing a snowball.");
-    private final Setting<SwingHand> swingHand = this.sgRender.e("Swing Hand", SwingHand.RealHand, "Which hand should be swung.");
-    private final Setting<RenderShape> renderShape = this.sgRender.e("Render Shape", RenderShape.Full, "Which parts of render should be rendered.");
-    private final Setting<BlackOutColor> lineColor = this.sgRender.c("Line Color", new BlackOutColor(255, 0, 0, 255), "Line color of rendered boxes.");
-    private final Setting<BlackOutColor> sideColor = this.sgRender.c("Side Color", new BlackOutColor(255, 0, 0, 50), "Side color of rendered boxes.");
-    private final Setting<Boolean> renderSpread = this.sgRender.b("Render Spread", true, "Renders spread circle on target entity.");
+            .doubleSetting("Extrapolation Strength", 1.0, 0.0, 1.0, 0.01, "How many snowballs to throw each second.");
+    private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotate", true, "Ignores rotation speed limit.");
+    private final Setting<Boolean> renderSwing = this.sgRender.booleanSetting("Render Swing", false, "Renders swing animation when throwing a snowball.");
+    private final Setting<SwingHand> swingHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand, "Which hand should be swung.");
+    private final Setting<RenderShape> renderShape = this.sgRender.enumSetting("Render Shape", RenderShape.Full, "Which parts of render should be rendered.");
+    private final Setting<BlackOutColor> lineColor = this.sgRender.colorSetting("Line Color", new BlackOutColor(255, 0, 0, 255), "Line color of rendered boxes.");
+    private final Setting<BlackOutColor> sideColor = this.sgRender.colorSetting("Side Color", new BlackOutColor(255, 0, 0, 50), "Side color of rendered boxes.");
+    private final Setting<Boolean> renderSpread = this.sgRender.booleanSetting("Render Spread", true, "Renders spread circle on target entity.");
     private final Setting<BlackOutColor> spreadColor = this.sgRender
-            .c("Spread Color", new BlackOutColor(255, 255, 255, 255), "Color of the spread circle.", this.renderSpread::get);
+            .colorSetting("Spread Color", new BlackOutColor(255, 255, 255, 255), "Color of the spread circle.", this.renderSpread::get);
     private final MatrixStack stack = new MatrixStack();
     private final ExtrapolationMap extMap = new ExtrapolationMap();
     private final Predicate<ItemStack> predicate = stack -> stack.isOf(Items.SNOWBALL) || stack.isOf(Items.EGG);

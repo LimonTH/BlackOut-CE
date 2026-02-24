@@ -21,17 +21,17 @@ public class Surround extends ObsidianModule {
     private static Surround INSTANCE;
     private final SettingGroup sgToggle = this.addGroup("Toggle");
 
-    private final Setting<Boolean> center = this.sgGeneral.b("Center", false, "Moves to block center before surrounding.");
+    private final Setting<Boolean> center = this.sgGeneral.booleanSetting("Center", false, "Moves to block center before surrounding.");
     private final Setting<Boolean> smartCenter = this.sgGeneral
-            .b("Smart Center", true, "Only moves until whole hitbox is inside target block.", this.center::get);
-    private final Setting<Boolean> phaseCenter = this.sgGeneral.b("Phase Center", true, "Doesn't center if clipped inside a block.", this.center::get);
-    private final Setting<Boolean> extend = this.sgGeneral.b("Extend", true, ".");
-    private final Setting<Boolean> toggleMove = this.sgToggle.b("Toggle Move", false, "Toggles if you move horizontally.");
+            .booleanSetting("Smart Center", true, "Only moves until whole hitbox is inside target block.", this.center::get);
+    private final Setting<Boolean> phaseCenter = this.sgGeneral.booleanSetting("Phase Center", true, "Doesn't center if clipped inside a block.", this.center::get);
+    private final Setting<Boolean> extend = this.sgGeneral.booleanSetting("Extend", true, ".");
+    private final Setting<Boolean> toggleMove = this.sgToggle.booleanSetting("Toggle Move", false, "Toggles if you move horizontally.");
     private final Setting<VerticalToggleMode> toggleVertical = this.sgToggle
-            .e("Toggle Vertical", VerticalToggleMode.Up, "Toggles the module if you move vertically.");
+            .enumSetting("Toggle Vertical", VerticalToggleMode.Up, "Toggles the module if you move vertically.");
     private final Setting<Double> singleCooldown = this.sgSpeed
-            .d("Single Cooldown", 0.05, 0.0, 1.0, 0.01, "Waits x seconds before trying to place at the same position if there is 1 missing block.");
-    private final Setting<Boolean> antiCev = this.sgAttack.b("Anti CEV", false, "Attacks crystals placed on surround blocks.", this.attack::get);
+            .doubleSetting("Single Cooldown", 0.05, 0.0, 1.0, 0.01, "Waits x seconds before trying to place at the same position if there is 1 missing block.");
+    private final Setting<Boolean> antiCev = this.sgAttack.booleanSetting("Anti CEV", false, "Attacks crystals placed on surround blocks.", this.attack::get);
     private final Map<AbstractClientPlayerEntity, Long> blockedSince = new HashMap<>();
     private final Direction[] directions = new Direction[]{
             Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST, Direction.DOWN

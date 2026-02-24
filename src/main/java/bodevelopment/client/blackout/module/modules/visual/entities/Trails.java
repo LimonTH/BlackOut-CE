@@ -31,20 +31,20 @@ public class Trails extends Module {
     private static Trails INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgColor = this.addGroup("Color");
-    public final Setting<ColorMode> colorMode = this.sgColor.e("Color Mode", ColorMode.Custom, "What color to use");
-    private final Setting<Double> speed = this.sgColor.d("Wave Speed", 1.0, 0.1, 10.0, 0.1, ".", () -> this.colorMode.get() == ColorMode.Wave);
+    public final Setting<ColorMode> colorMode = this.sgColor.enumSetting("Color Mode", ColorMode.Custom, "What color to use");
+    private final Setting<Double> speed = this.sgColor.doubleSetting("Wave Speed", 1.0, 0.1, 10.0, 0.1, ".", () -> this.colorMode.get() == ColorMode.Wave);
     private final Setting<Double> saturation = this.sgColor
-            .d("Rainbow Saturation", 0.8, 0.0, 1.0, 0.1, ".", () -> this.colorMode.get() == ColorMode.Rainbow);
+            .doubleSetting("Rainbow Saturation", 0.8, 0.0, 1.0, 0.1, ".", () -> this.colorMode.get() == ColorMode.Rainbow);
     private final Setting<BlackOutColor> clr = this.sgColor
-            .c("Line Color", new BlackOutColor(255, 255, 255, 255), ".", () -> this.colorMode.get() != ColorMode.Rainbow);
+            .colorSetting("Line Color", new BlackOutColor(255, 255, 255, 255), ".", () -> this.colorMode.get() != ColorMode.Rainbow);
     private final Setting<BlackOutColor> clr1 = this.sgColor
-            .c("Wave Color", new BlackOutColor(175, 175, 175, 255), ".", () -> this.colorMode.get() != ColorMode.Rainbow);
-    private final Setting<List<EntityType<?>>> entities = this.sgGeneral.el("Entities", "", EntityType.ENDER_PEARL);
-    private final Setting<HeightMode> renderHeight = this.sgGeneral.e("Render Height", HeightMode.Feet, "");
-    private final Setting<Double> renderTime = this.sgGeneral.d("Render Time", 0.0, 0.0, 10.0, 0.1, ".");
-    private final Setting<Double> fadeTime = this.sgGeneral.d("Fade Time", 5.0, 0.0, 10.0, 0.1, ".");
-    private final Setting<Double> maxFrequency = this.sgGeneral.d("Max Frequency", 40.0, 1.0, 100.0, 1.0, ".");
-    private final Setting<Double> lineWidth = this.sgGeneral.d("Line Width", 2.5, 0.5, 5.0, 0.05, ".");
+            .colorSetting("Wave Color", new BlackOutColor(175, 175, 175, 255), ".", () -> this.colorMode.get() != ColorMode.Rainbow);
+    private final Setting<List<EntityType<?>>> entities = this.sgGeneral.entityListSetting("Entities", "", EntityType.ENDER_PEARL);
+    private final Setting<HeightMode> renderHeight = this.sgGeneral.enumSetting("Render Height", HeightMode.Feet, "");
+    private final Setting<Double> renderTime = this.sgGeneral.doubleSetting("Render Time", 0.0, 0.0, 10.0, 0.1, ".");
+    private final Setting<Double> fadeTime = this.sgGeneral.doubleSetting("Fade Time", 5.0, 0.0, 10.0, 0.1, ".");
+    private final Setting<Double> maxFrequency = this.sgGeneral.doubleSetting("Max Frequency", 40.0, 1.0, 100.0, 1.0, ".");
+    private final Setting<Double> lineWidth = this.sgGeneral.doubleSetting("Line Width", 2.5, 0.5, 5.0, 0.05, ".");
     private final Map<Entity, Line> map = new HashMap<>();
     private long prevAdd = 0L;
 

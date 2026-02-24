@@ -36,25 +36,25 @@ public class TargetHUD extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgColor = this.addGroup("Color");
 
-    public final Setting<Mode> mode = this.sgGeneral.e("Mode", Mode.Blackout, ".");
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Blackout, ".");
     public final Setting<ArmorCount> countMode = this.sgGeneral
-            .e("Armor Count Mode", ArmorCount.Average, ".", () -> this.mode.get() == Mode.BlackoutNew);
-    private final Setting<Boolean> hp = this.sgGeneral.b("HP text", false, ".", () -> this.mode.get() == Mode.Blackout);
-    private final Setting<Boolean> blur = this.sgGeneral.b("Blur", true, ".", () -> this.mode.get() != Mode.Exhibition);
-    private final Setting<Boolean> shadow = this.sgGeneral.b("Shadow", true, ".", () -> this.mode.get() != Mode.Exhibition);
+            .enumSetting("Armor Count Mode", ArmorCount.Average, ".", () -> this.mode.get() == Mode.BlackoutNew);
+    private final Setting<Boolean> hp = this.sgGeneral.booleanSetting("HP text", false, ".", () -> this.mode.get() == Mode.Blackout);
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, ".", () -> this.mode.get() != Mode.Exhibition);
+    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Shadow", true, ".", () -> this.mode.get() != Mode.Exhibition);
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgColor, () -> this.mode.get() != Mode.ExhibitionNew, null);
     private final Setting<BlackOutColor> secondaryColor = this.sgColor
-            .c("Secondary Text Color", new BlackOutColor(220, 60, 90, 255), ".", () -> this.mode.get() == Mode.Arsenic);
+            .colorSetting("Secondary Text Color", new BlackOutColor(220, 60, 90, 255), ".", () -> this.mode.get() == Mode.Arsenic);
     private final RoundedColorMultiSetting armorBar = RoundedColorMultiSetting.of(this.sgColor, () -> this.mode.get() == Mode.BlackoutNew, "Armor Bar");
-    private final Setting<TargetMode> targetMode = this.sgGeneral.e("Target Mode", TargetMode.ModuleTarget, ".");
+    private final Setting<TargetMode> targetMode = this.sgGeneral.enumSetting("Target Mode", TargetMode.ModuleTarget, ".");
     private final Setting<Double> targetRange = this.sgGeneral
-            .d("Target Range", 20.0, 0.0, 200.0, 2.0, ".", () -> this.targetMode.get() == TargetMode.Closest);
-    private final Setting<RenderType> renderType = this.sgGeneral.e("Render Type", RenderType.Hud, ".");
+            .doubleSetting("Target Range", 20.0, 0.0, 200.0, 2.0, ".", () -> this.targetMode.get() == TargetMode.Closest);
+    private final Setting<RenderType> renderType = this.sgGeneral.enumSetting("Render Type", RenderType.Hud, ".");
     private final Setting<Double> renderHeight = this.sgGeneral
-            .d("Render Height", 0.75, 0.0, 1.0, 0.05, ".", () -> this.renderType.get() == RenderType.Player);
+            .doubleSetting("Render Height", 0.75, 0.0, 1.0, 0.05, ".", () -> this.renderType.get() == RenderType.Player);
     private final Setting<Double> dist = this.sgGeneral
-            .d("Distance From Target", 0.25, 0.0, 1.0, 0.05, ".", () -> this.renderType.get() == RenderType.Player);
-    private final Setting<BlackOutColor> textColor = this.sgColor.c("Text Color", new BlackOutColor(255, 255, 255, 255), "Text Color");
+            .doubleSetting("Distance From Target", 0.25, 0.0, 1.0, 0.05, ".", () -> this.renderType.get() == RenderType.Player);
+    private final Setting<BlackOutColor> textColor = this.sgColor.colorSetting("Text Color", new BlackOutColor(255, 255, 255, 255), "Text Color");
     private final RoundedColorMultiSetting healthBar = RoundedColorMultiSetting.of(this.sgColor, "Bar");
     private float delta = 0.0F;
     private float progress = 0.0F;

@@ -29,14 +29,14 @@ import java.util.List;
 
 public class Playerlist extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<NameMode> nameMode = this.sgGeneral.e("Name Mode", NameMode.EntityName, "");
-    private final Setting<Boolean> bg = this.sgGeneral.b("Background", true, "Renders a background");
+    private final Setting<NameMode> nameMode = this.sgGeneral.enumSetting("Name Mode", NameMode.EntityName, "");
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, "Renders a background");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> blur = this.sgGeneral.b("Blur", true, "Renders a Blur effect");
-    private final Setting<Boolean> dynamic = this.sgGeneral.b("Use dynamic info colors", false, ".");
-    private final Setting<BlackOutColor> good = this.sgGeneral.c("Good", new BlackOutColor(0, 225, 0, 255), ".", this.dynamic::get);
-    private final Setting<BlackOutColor> bad = this.sgGeneral.c("Bad", new BlackOutColor(150, 0, 0, 255), ".", this.dynamic::get);
-    private final Setting<Boolean> showPops = this.sgGeneral.b("Show totem pops", false, ".");
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, "Renders a Blur effect");
+    private final Setting<Boolean> dynamic = this.sgGeneral.booleanSetting("Use dynamic info colors", false, ".");
+    private final Setting<BlackOutColor> good = this.sgGeneral.colorSetting("Good", new BlackOutColor(0, 225, 0, 255), ".", this.dynamic::get);
+    private final Setting<BlackOutColor> bad = this.sgGeneral.colorSetting("Bad", new BlackOutColor(150, 0, 0, 255), ".", this.dynamic::get);
+    private final Setting<Boolean> showPops = this.sgGeneral.booleanSetting("Show totem pops", false, ".");
     private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Text");
     private final List<Entity> players = new ArrayList<>();
     private float currentLongest = 0.0F;

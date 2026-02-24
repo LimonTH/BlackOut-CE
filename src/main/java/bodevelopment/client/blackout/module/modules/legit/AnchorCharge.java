@@ -37,13 +37,13 @@ import java.util.function.Predicate;
 
 public class AnchorCharge extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<SwitchMode> glowstoneSwitch = this.sgGeneral.e("Glowstone Switch", SwitchMode.Normal, "Method of switching.");
-    private final Setting<Boolean> fullCharge = this.sgGeneral.b("Full Charge", false, "Uses 4 glowstone.");
-    private final Setting<Boolean> allowOffhand = this.sgGeneral.b("Allow Offhand", true, "Blows up the anchor with offhand. Not possible in vanilla.");
-    private final Setting<SwitchMode> explodeSwitch = this.sgGeneral.e("Explode Switch", SwitchMode.Normal, "Method of switching.");
-    private final Setting<Double> speed = this.sgGeneral.d("Speed", 4.0, 0.0, 20.0, 0.1, "Actions per second.");
-    private final Setting<Boolean> onlyOwn = this.sgGeneral.b("Only Own", true, ".");
-    private final Setting<Double> ownTime = this.sgGeneral.d("Own Time", 2.0, 0.0, 10.0, 0.1, ".");
+    private final Setting<SwitchMode> glowstoneSwitch = this.sgGeneral.enumSetting("Glowstone Switch", SwitchMode.Normal, "Method of switching.");
+    private final Setting<Boolean> fullCharge = this.sgGeneral.booleanSetting("Full Charge", false, "Uses 4 glowstone.");
+    private final Setting<Boolean> allowOffhand = this.sgGeneral.booleanSetting("Allow Offhand", true, "Blows up the anchor with offhand. Not possible in vanilla.");
+    private final Setting<SwitchMode> explodeSwitch = this.sgGeneral.enumSetting("Explode Switch", SwitchMode.Normal, "Method of switching.");
+    private final Setting<Double> speed = this.sgGeneral.doubleSetting("Speed", 4.0, 0.0, 20.0, 0.1, "Actions per second.");
+    private final Setting<Boolean> onlyOwn = this.sgGeneral.booleanSetting("Only Own", true, ".");
+    private final Setting<Double> ownTime = this.sgGeneral.doubleSetting("Own Time", 2.0, 0.0, 10.0, 0.1, ".");
     private final TimerList<BlockPos> own = new TimerList<>(false);
     private final TimerMap<BlockPos, Integer> charges = new TimerMap<>(false);
     private final Map<BlockPos, BlockState> realStates = new ConcurrentHashMap<>();

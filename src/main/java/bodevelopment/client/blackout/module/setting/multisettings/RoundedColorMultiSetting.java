@@ -20,14 +20,14 @@ public class RoundedColorMultiSetting {
 
     private RoundedColorMultiSetting(SettingGroup sg, RoundedColorMode dm, BlackOutColor dt, BlackOutColor dw, SingleOut<Boolean> visible, String name) {
         String text = name == null ? "Rounded" : name;
-        this.mode = sg.e(text + " Color Mode", dm, ".");
-        this.roundedColor = sg.c(
+        this.mode = sg.enumSetting(text + " Color Mode", dm, ".");
+        this.roundedColor = sg.colorSetting(
                 text + " Color", dt, ".", () -> (this.mode.get() == RoundedColorMode.Static || this.mode.get() == RoundedColorMode.Wave) && visible.get()
         );
-        this.waveColor = sg.c(text + " Wave Color", dw, ".", () -> this.mode.get() == RoundedColorMode.Wave && visible.get());
-        this.shadowColor = sg.c(text + " Shadow Color", dt, ".", () -> this.mode.get() == RoundedColorMode.Static && visible.get());
-        this.saturation = sg.d(text + " Saturation", 1.0, 0.1, 1.0, 0.1, ".", () -> this.mode.get() == RoundedColorMode.Rainbow && visible.get());
-        this.frequency = sg.d(
+        this.waveColor = sg.colorSetting(text + " Wave Color", dw, ".", () -> this.mode.get() == RoundedColorMode.Wave && visible.get());
+        this.shadowColor = sg.colorSetting(text + " Shadow Color", dt, ".", () -> this.mode.get() == RoundedColorMode.Static && visible.get());
+        this.saturation = sg.doubleSetting(text + " Saturation", 1.0, 0.1, 1.0, 0.1, ".", () -> this.mode.get() == RoundedColorMode.Rainbow && visible.get());
+        this.frequency = sg.doubleSetting(
                 text + " Frequency",
                 1.0,
                 0.1,
@@ -36,7 +36,7 @@ public class RoundedColorMultiSetting {
                 ".",
                 () -> (this.mode.get() == RoundedColorMode.Wave || this.mode.get() == RoundedColorMode.Rainbow) && visible.get()
         );
-        this.speed = sg.d(
+        this.speed = sg.doubleSetting(
                 text + " Speed",
                 1.0,
                 0.1,

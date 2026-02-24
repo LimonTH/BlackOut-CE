@@ -19,12 +19,12 @@ import net.minecraft.util.Hand;
 
 public class Disabler extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> grimMovement = this.sgGeneral.b("Grim Movement", false, ".");
-    private final Setting<Boolean> b1 = this.sgGeneral.b("Bol1", true, ".", this.grimMovement::get);
-    private final Setting<Boolean> b2 = this.sgGeneral.b("Bol2", true, ".", this.grimMovement::get);
-    private final Setting<Double> tridentDelay = this.sgGeneral.d("Trident Delay", 0.5, 0.0, 1.0, 0.01, ".", this.grimMovement::get);
-    private final Setting<SwitchMode> tridentSwitch = this.sgGeneral.e("Trident Switch", SwitchMode.Silent, ".", this.grimMovement::get);
-    private final Setting<Boolean> vulcanOmni = this.sgGeneral.b("Vulcan Omni Sprint", false, ".");
+    private final Setting<Boolean> grimMovement = this.sgGeneral.booleanSetting("Grim Movement", false, ".");
+    private final Setting<Boolean> b1 = this.sgGeneral.booleanSetting("Bol1", true, ".", this.grimMovement::get);
+    private final Setting<Boolean> b2 = this.sgGeneral.booleanSetting("Bol2", true, ".", this.grimMovement::get);
+    private final Setting<Double> tridentDelay = this.sgGeneral.doubleSetting("Trident Delay", 0.5, 0.0, 1.0, 0.01, ".", this.grimMovement::get);
+    private final Setting<SwitchMode> tridentSwitch = this.sgGeneral.enumSetting("Trident Switch", SwitchMode.Silent, ".", this.grimMovement::get);
+    private final Setting<Boolean> vulcanOmni = this.sgGeneral.booleanSetting("Vulcan Omni Sprint", false, ".");
     private long prevRiptide = 0L;
 
     public Disabler() {

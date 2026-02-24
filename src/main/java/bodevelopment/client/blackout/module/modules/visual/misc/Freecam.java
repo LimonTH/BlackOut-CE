@@ -15,9 +15,9 @@ public class Freecam extends Module {
     private static Freecam INSTANCE;
     public final Vec3d velocity = new Vec3d(0.0, 0.0, 0.0);
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Mode> mode = this.sgGeneral.e("Mode", Mode.Normal, ".");
-    private final Setting<Double> speedH = this.sgGeneral.d("Horizontal Speed", 1.0, 0.1, 10.0, 0.1, ".");
-    private final Setting<Double> speedV = this.sgGeneral.d("Vertical Speed", 1.0, 0.1, 10.0, 0.1, ".");
+    private final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Normal, ".");
+    private final Setting<Double> speedH = this.sgGeneral.doubleSetting("Horizontal Speed", 1.0, 0.1, 10.0, 0.1, ".");
+    private final Setting<Double> speedV = this.sgGeneral.doubleSetting("Vertical Speed", 1.0, 0.1, 10.0, 0.1, ".");
     public Vec3d pos = Vec3d.ZERO;
     private float moveYaw;
     private float vertical;

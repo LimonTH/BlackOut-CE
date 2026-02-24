@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 public class FastRiptide extends Module {
     private static FastRiptide INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Double> cooldown = this.sgGeneral.d("Cooldown", 0.0, 0.0, 1.0, 0.01, ".");
+    public final Setting<Double> cooldown = this.sgGeneral.doubleSetting("Cooldown", 0.0, 0.0, 1.0, 0.01, ".");
     public long prevRiptide = 0L;
 
     public FastRiptide() {

@@ -38,42 +38,54 @@ import java.util.Comparator;
 import java.util.List;
 
 public class ObsidianModule extends Module {
+
+    // --- Группы настроек ---
     public final SettingGroup sgGeneral = this.addGroup("General");
     public final SettingGroup sgBlocks = this.addGroup("Blocks");
     public final SettingGroup sgSpeed = this.addGroup("Speed");
     public final SettingGroup sgAttack = this.addGroup("Attack");
     public final SettingGroup sgRender = this.addGroup("Render");
-    public final Setting<List<Block>> blocks = this.sgBlocks.bl("Blocks", "Blocks to use.", Blocks.OBSIDIAN);
-    public final Setting<List<Block>> supportBlocks = this.sgBlocks.bl("Support Blocks", "Blocks to use for support.", Blocks.OBSIDIAN);
-    public final List<BlockPos> blockPlacements = new ArrayList<>();
-    protected final Setting<Double> cooldown = this.sgSpeed
-            .d("Cooldown", 0.3, 0.0, 1.0, 0.01, "Waits x seconds before trying to place at the same position if there is more than 1 missing block.");
-    protected final Setting<Boolean> attack = this.sgAttack.b("Attack", true, "Attacks crystals blocking surround.");
-    private final Setting<Double> attackSpeed = this.sgAttack
-            .d("Attack Speed", 4.0, 0.0, 20.0, 0.05, "How many times to attack every second.", this.attack::get);
-    private final Setting<Boolean> alwaysAttack = this.sgAttack
-            .b("Always Attack", false, "Attacks crystals even when surround block isn't broken.", this.attack::get);
-    protected final List<BlockPos> insideBlocks = new ArrayList<>();
-    protected final List<BlockPos> valids = new ArrayList<>();
-    private final Setting<Boolean> pauseEat = this.sgGeneral.b("Pause Eat", false, "Pauses when eating.");
-    private final Setting<Boolean> packet = this.sgGeneral.b("Packet", false, ".");
-    private final Setting<Boolean> allowSneak = this.sgGeneral.b("Allow Sneak", false, ".");
-    private final Setting<SwitchMode> switchMode = this.sgGeneral
-            .e("Switch Mode", SwitchMode.Silent, "Method of switching. Silent is the most reliable but delays crystals on some servers.");
-    private final Setting<Boolean> onlyOnGround = this.sgGeneral.b("Only On Ground", false, ".");
-    private final Setting<RotationMode> rotationMode = this.sgGeneral.e("Rotation Mode", RotationMode.Normal, ".");
-    private final Setting<Surround.PlaceDelayMode> placeDelayMode = this.sgSpeed.e("Place Delay Mode", Surround.PlaceDelayMode.Ticks, ".");
-    private final Setting<Integer> placeDelayT = this.sgSpeed
-            .i("Place Tick Delay", 1, 0, 20, 1, "Tick delay between places.", () -> this.placeDelayMode.get() == Surround.PlaceDelayMode.Ticks);
-    private final Setting<Double> placeDelayS = this.sgSpeed
-            .d("Place Delay", 0.1, 0.0, 1.0, 0.01, "Delay between places.", () -> this.placeDelayMode.get() == Surround.PlaceDelayMode.Seconds);
-    private final Setting<Integer> places = this.sgSpeed.i("Places", 1, 1, 20, 1, "How many blocks to place each time.");
-    private final Setting<Boolean> placeSwing = this.sgRender.b("Place Swing", true, "Renders swing animation when placing a block.");
-    private final Setting<SwingHand> placeHand = this.sgRender.e("Place Swing Hand", SwingHand.RealHand, "Which hand should be swung.", this.placeSwing::get);
-    private final Setting<Boolean> attackSwing = this.sgRender.b("Attack Swing", true, "Renders swing animation when attacking a block.");
-    private final Setting<SwingHand> attackHand = this.sgRender.e("Attack Swing Hand", SwingHand.RealHand, "Which hand should be swung.", this.attackSwing::get);
+
+    public final Setting<List<Block>> blocks = this.sgBlocks.blockListSetting("Blocks",
+            "The primary blocks to use for your protection (Obsidian/E-Chests).", Blocks.OBSIDIAN);
+    public final Setting<List<Block>> supportBlocks = this.sgBlocks.blockListSetting("Support Blocks",
+            "Blocks used to fill gaps below the surround to provide a placement surface.", Blocks.OBSIDIAN);
+
+    protected final Setting<Double> cooldown = this.sgSpeed.doubleSetting("Cooldown", 0.3, 0.0, 1.0, 0.01,
+            "Time in seconds to wait before retrying a failed placement at the same spot.");
+    private final Setting<Surround.PlaceDelayMode> placeDelayMode = this.sgSpeed.enumSetting("Place Delay Mode", Surround.PlaceDelayMode.Ticks,
+            "Whether to use game ticks or seconds for placement timing.");
+    private final Setting<Integer> placeDelayT = this.sgSpeed.intSetting("Place Tick Delay", 1, 0, 20, 1,
+            "Delay in ticks between placements.", () -> this.placeDelayMode.get() == Surround.PlaceDelayMode.Ticks);
+    private final Setting<Double> placeDelayS = this.sgSpeed.doubleSetting("Place Delay", 0.1, 0.0, 1.0, 0.01,
+            "Delay in seconds between placements.", () -> this.placeDelayMode.get() == Surround.PlaceDelayMode.Seconds);
+    private final Setting<Integer> places = this.sgSpeed.intSetting("Places", 1, 1, 20, 1,
+            "Maximum blocks to place per execution cycle.");
+
+    protected final Setting<Boolean> attack = this.sgAttack.booleanSetting("Attack", true,
+            "Automatically clears crystals that obstruct your surround blocks.");
+    private final Setting<Double> attackSpeed = this.sgAttack.doubleSetting("Attack Speed", 4.0, 0.0, 20.0, 0.05,
+            "Frequency of attacks per second against obstructing crystals.", this.attack::get);
+    private final Setting<Boolean> alwaysAttack = this.sgAttack.booleanSetting("Always Attack", false,
+            "Continuously attack crystals even if the block is already placed.", this.attack::get);
+
+    private final Setting<Boolean> pauseEat = this.sgGeneral.booleanSetting("Pause Eat", false, "Pauses placement while using items.");
+    private final Setting<Boolean> packet = this.sgGeneral.booleanSetting("Packet", false, "Uses packet-based placement for speed.");
+    private final Setting<Boolean> allowSneak = this.sgGeneral.booleanSetting("Allow Sneak", false, "Allow placing while sneaking.");
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent, "Method of selecting the block in your hotbar.");
+    private final Setting<Boolean> onlyOnGround = this.sgGeneral.booleanSetting("Only On Ground", false, "Only active while touching the floor.");
+    private final Setting<RotationMode> rotationMode = this.sgGeneral.enumSetting("Rotation Mode", RotationMode.Normal, "How the client rotates when placing.");
+
+    private final Setting<Boolean> placeSwing = this.sgRender.booleanSetting("Place Swing", true, "Render swing animation on place.");
+    private final Setting<SwingHand> placeHand = this.sgRender.enumSetting("Place Swing Hand", SwingHand.RealHand, "Hand used for place animation.", this.placeSwing::get);
+    private final Setting<Boolean> attackSwing = this.sgRender.booleanSetting("Attack Swing", true, "Render swing animation on attack.");
+    private final Setting<SwingHand> attackHand = this.sgRender.enumSetting("Attack Swing Hand", SwingHand.RealHand, "Hand used for attack animation.", this.attackSwing::get);
     private final BoxMultiSetting normalRendering = BoxMultiSetting.of(this.sgRender);
     private final BoxMultiSetting supportRendering = BoxMultiSetting.of(this.sgRender, "Support");
+
+    public final List<BlockPos> blockPlacements = new ArrayList<>();
+    protected final List<BlockPos> insideBlocks = new ArrayList<>();
+    protected final List<BlockPos> valids = new ArrayList<>();
     private final List<BlockPos> supportPositions = new ArrayList<>();
     private final TimerList<BlockPos> placed = new TimerList<>(false);
     private final RenderList<BlockPos> render = RenderList.getList(true);

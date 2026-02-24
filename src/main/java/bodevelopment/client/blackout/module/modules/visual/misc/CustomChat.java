@@ -11,12 +11,12 @@ public class CustomChat extends Module {
     private static CustomChat INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
     public final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Text");
-    public final Setting<Boolean> blur = this.sgGeneral.b("Blur", true, ".");
-    public final Setting<Boolean> background = this.sgGeneral.b("Background", true, ".");
-    public final Setting<Boolean> shadow = this.sgGeneral.b("Shadow", true, ".", this.background::get);
+    public final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, ".");
+    public final Setting<Boolean> background = this.sgGeneral.booleanSetting("Background", true, ".");
+    public final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Shadow", true, ".", this.background::get);
     public final Setting<BlackOutColor> shadowColor = this.sgGeneral
-            .c("Shadow Color", new BlackOutColor(0, 0, 0, 100), ".", () -> this.background.get() && this.shadow.get());
-    public final Setting<BlackOutColor> bgColor = this.sgGeneral.c("Background Color", new BlackOutColor(0, 0, 0, 50), ".", this.background::get);
+            .colorSetting("Shadow Color", new BlackOutColor(0, 0, 0, 100), ".", () -> this.background.get() && this.shadow.get());
+    public final Setting<BlackOutColor> bgColor = this.sgGeneral.colorSetting("Background Color", new BlackOutColor(0, 0, 0, 50), ".", this.background::get);
 
     public CustomChat() {
         super("Custom Chat", "Modifies Chat.", SubCategory.MISC_VISUAL, true);

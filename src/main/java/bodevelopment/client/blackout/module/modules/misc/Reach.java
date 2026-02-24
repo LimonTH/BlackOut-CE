@@ -8,8 +8,8 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 public class Reach extends Module {
     private static Reach INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Double> entityReach = this.sgGeneral.d("Entity Reach", 3.0, 0.0, 10.0, 0.1, ".");
-    public final Setting<Double> blockReach = this.sgGeneral.d("Block Reach", 4.5, 0.0, 10.0, 0.1, ".");
+    public final Setting<Double> entityReach = this.sgGeneral.doubleSetting("Entity Reach", 3.0, 0.0, 10.0, 0.1, ".");
+    public final Setting<Double> blockReach = this.sgGeneral.doubleSetting("Block Reach", 4.5, 0.0, 10.0, 0.1, ".");
 
     public Reach() {
         super("Reach", "Modifies interaction range for blocks and entities.", SubCategory.MISC, false);

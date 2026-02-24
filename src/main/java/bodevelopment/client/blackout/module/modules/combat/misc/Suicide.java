@@ -26,15 +26,15 @@ import java.util.stream.Collectors;
 public class Suicide extends Module {
     private static Suicide INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Boolean> disableDeath = this.sgGeneral.b("Disable On Death", true, "Disables the module on death.");
-    public final Setting<Boolean> useCA = this.sgGeneral.b("Use Auto Crystal", true, "Uses Auto Crystal to kill you.");
-    public final Setting<Boolean> enableCA = this.sgGeneral.b("Enable Auto Crystal", true, "Enables Auto Crystal when enabled.", this.useCA::get);
-    public final Setting<Boolean> useBA = this.sgGeneral.b("Use Bed Aura", false, "Uses Bed Aura to kill you.");
-    public final Setting<Boolean> enableBA = this.sgGeneral.b("Enable Bed Aura", true, "Enables Bed Aura on toggle", this.useBA::get);
-    public final Setting<Boolean> useCreeper = this.sgGeneral.b("Use Creeper Aura", false, "Uses Creeper Aura to kill you.");
-    public final Setting<Boolean> enableCreeper = this.sgGeneral.b("Enable Creeper Aura", true, "Enables Creeper Aura on toggle.", this.useCreeper::get);
-    public final Setting<Boolean> offHand = this.sgGeneral.b("Off Hand", false, "Stops Off Hand from saving you while suiciding");
-    public final Setting<Integer> dropArmor = this.sgGeneral.i("Drop Armor", 0, 0, 4, 1, "How many armor pieces to drop.");
+    public final Setting<Boolean> disableDeath = this.sgGeneral.booleanSetting("Disable On Death", true, "Disables the module on death.");
+    public final Setting<Boolean> useCA = this.sgGeneral.booleanSetting("Use Auto Crystal", true, "Uses Auto Crystal to kill you.");
+    public final Setting<Boolean> enableCA = this.sgGeneral.booleanSetting("Enable Auto Crystal", true, "Enables Auto Crystal when enabled.", this.useCA::get);
+    public final Setting<Boolean> useBA = this.sgGeneral.booleanSetting("Use Bed Aura", false, "Uses Bed Aura to kill you.");
+    public final Setting<Boolean> enableBA = this.sgGeneral.booleanSetting("Enable Bed Aura", true, "Enables Bed Aura on toggle", this.useBA::get);
+    public final Setting<Boolean> useCreeper = this.sgGeneral.booleanSetting("Use Creeper Aura", false, "Uses Creeper Aura to kill you.");
+    public final Setting<Boolean> enableCreeper = this.sgGeneral.booleanSetting("Enable Creeper Aura", true, "Enables Creeper Aura on toggle.", this.useCreeper::get);
+    public final Setting<Boolean> offHand = this.sgGeneral.booleanSetting("Off Hand", false, "Stops Off Hand from saving you while suiciding");
+    public final Setting<Integer> dropArmor = this.sgGeneral.intSetting("Drop Armor", 0, 0, 4, 1, "How many armor pieces to drop.");
 
     public Suicide() {
         super("Suicide", "Commits suicide. Recommended.", SubCategory.MISC_COMBAT, true);

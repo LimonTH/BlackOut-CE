@@ -18,10 +18,10 @@ import java.util.List;
 
 public class FeetESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<List<EntityType<?>>> entities = this.sgGeneral.el("Entities", ".", EntityType.PLAYER);
-    private final Setting<RenderShape> renderShape = this.sgGeneral.e("Render Shape", RenderShape.Full, "Which parts of boxes should be rendered.");
-    private final Setting<BlackOutColor> fill = this.sgGeneral.c("Fill Color", new BlackOutColor(255, 255, 255, 80), "Fill Color");
-    private final Setting<BlackOutColor> line = this.sgGeneral.c("Line Color", new BlackOutColor(255, 255, 255, 120), "Line Color");
+    private final Setting<List<EntityType<?>>> entities = this.sgGeneral.entityListSetting("Entities", ".", EntityType.PLAYER);
+    private final Setting<RenderShape> renderShape = this.sgGeneral.enumSetting("Render Shape", RenderShape.Full, "Which parts of boxes should be rendered.");
+    private final Setting<BlackOutColor> fill = this.sgGeneral.colorSetting("Fill Color", new BlackOutColor(255, 255, 255, 80), "Fill Color");
+    private final Setting<BlackOutColor> line = this.sgGeneral.colorSetting("Line Color", new BlackOutColor(255, 255, 255, 120), "Line Color");
 
     public FeetESP() {
         super("FeetESP", "Shows the feet hitbox does not show feet pictures", SubCategory.ENTITIES, true);

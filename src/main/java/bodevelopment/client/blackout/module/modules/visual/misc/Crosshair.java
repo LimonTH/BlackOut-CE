@@ -14,12 +14,12 @@ import net.minecraft.client.util.math.MatrixStack;
 public class Crosshair extends Module {
     private static Crosshair INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Boolean> remove = this.sgGeneral.b("Remove", false, "Stops the crosshair from rendering");
-    private final Setting<Integer> dist = this.sgGeneral.i("Distance", 5, 0, 25, 1, ".", () -> !this.remove.get());
-    private final Setting<Integer> width = this.sgGeneral.i("Width", 1, 1, 5, 1, ".", () -> !this.remove.get());
-    private final Setting<Integer> length = this.sgGeneral.i("Length", 10, 0, 50, 1, ".", () -> !this.remove.get());
-    private final Setting<BlackOutColor> color = this.sgGeneral.c("Color", new BlackOutColor(255, 255, 255, 225), ".", () -> !this.remove.get());
-    public final Setting<Boolean> t = this.sgGeneral.b("T shape", false, ".");
+    public final Setting<Boolean> remove = this.sgGeneral.booleanSetting("Remove", false, "Stops the crosshair from rendering");
+    private final Setting<Integer> dist = this.sgGeneral.intSetting("Distance", 5, 0, 25, 1, ".", () -> !this.remove.get());
+    private final Setting<Integer> width = this.sgGeneral.intSetting("Width", 1, 1, 5, 1, ".", () -> !this.remove.get());
+    private final Setting<Integer> length = this.sgGeneral.intSetting("Length", 10, 0, 50, 1, ".", () -> !this.remove.get());
+    private final Setting<BlackOutColor> color = this.sgGeneral.colorSetting("Color", new BlackOutColor(255, 255, 255, 225), ".", () -> !this.remove.get());
+    public final Setting<Boolean> t = this.sgGeneral.booleanSetting("T shape", false, ".");
     private final MatrixStack stack = new MatrixStack();
 
     public Crosshair() {

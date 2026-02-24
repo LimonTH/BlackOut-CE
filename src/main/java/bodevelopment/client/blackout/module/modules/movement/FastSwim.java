@@ -14,17 +14,17 @@ import net.minecraft.registry.tag.FluidTags;
 public class FastSwim extends Module {
     private final SettingGroup sgSpeed = this.addGroup("Speed");
     private final SettingGroup sgVertical = this.addGroup("Vertical");
-    private final Setting<Double> waterTouching = this.sgSpeed.d("Water Touching", 0.5, 0.0, 2.0, 0.02, ".");
-    private final Setting<Double> waterSubmerged = this.sgSpeed.d("Water Submerged", 0.5, 0.0, 2.0, 0.02, ".");
-    private final Setting<Double> waterDiving = this.sgSpeed.d("Water Diving", 0.5, 0.0, 2.0, 0.02, ".");
-    private final Setting<Double> lavaTouching = this.sgSpeed.d("Lava Touching", 0.5, 0.0, 2.0, 0.02, ".");
-    private final Setting<Double> lavaSubmerged = this.sgSpeed.d("Lava Submerged", 0.5, 0.0, 2.0, 0.02, ".");
-    private final Setting<Boolean> stillVertical = this.sgVertical.b("Still Vertical", true, ".");
-    private final Setting<Boolean> modifyVertical = this.sgVertical.b("Modify Vertical", false, ".");
-    private final Setting<Double> waterUp = this.sgVertical.d("Water Up", 0.5, 0.0, 2.0, 0.02, ".", this.modifyVertical::get);
-    private final Setting<Double> waterDown = this.sgVertical.d("Water Down", 0.5, 0.0, 2.0, 0.02, ".", this.modifyVertical::get);
-    private final Setting<Double> lavaUp = this.sgVertical.d("Lava Up", 0.5, 0.0, 2.0, 0.02, ".", this.modifyVertical::get);
-    private final Setting<Double> lavaDown = this.sgVertical.d("Lava Down", 0.5, 0.0, 2.0, 0.02, ".", this.modifyVertical::get);
+    private final Setting<Double> waterTouching = this.sgSpeed.doubleSetting("Water Touching", 0.5, 0.0, 2.0, 0.02, ".");
+    private final Setting<Double> waterSubmerged = this.sgSpeed.doubleSetting("Water Submerged", 0.5, 0.0, 2.0, 0.02, ".");
+    private final Setting<Double> waterDiving = this.sgSpeed.doubleSetting("Water Diving", 0.5, 0.0, 2.0, 0.02, ".");
+    private final Setting<Double> lavaTouching = this.sgSpeed.doubleSetting("Lava Touching", 0.5, 0.0, 2.0, 0.02, ".");
+    private final Setting<Double> lavaSubmerged = this.sgSpeed.doubleSetting("Lava Submerged", 0.5, 0.0, 2.0, 0.02, ".");
+    private final Setting<Boolean> stillVertical = this.sgVertical.booleanSetting("Still Vertical", true, ".");
+    private final Setting<Boolean> modifyVertical = this.sgVertical.booleanSetting("Modify Vertical", false, ".");
+    private final Setting<Double> waterUp = this.sgVertical.doubleSetting("Water Up", 0.5, 0.0, 2.0, 0.02, ".", this.modifyVertical::get);
+    private final Setting<Double> waterDown = this.sgVertical.doubleSetting("Water Down", 0.5, 0.0, 2.0, 0.02, ".", this.modifyVertical::get);
+    private final Setting<Double> lavaUp = this.sgVertical.doubleSetting("Lava Up", 0.5, 0.0, 2.0, 0.02, ".", this.modifyVertical::get);
+    private final Setting<Double> lavaDown = this.sgVertical.doubleSetting("Lava Down", 0.5, 0.0, 2.0, 0.02, ".", this.modifyVertical::get);
 
     public FastSwim() {
         super("Fast Swim", "Swims faster guh", SubCategory.MOVEMENT, true);

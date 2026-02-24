@@ -20,12 +20,12 @@ import java.util.List;
 public class FastUse extends Module {
     private static FastUse INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Timing> timing = this.sgGeneral.e("Timing", Timing.Tick, "");
-    public final Setting<Integer> delayTicks = this.sgGeneral.i("Delay Ticks", 1, 0, 4, 1, ".", () -> this.timing.get() == Timing.Tick);
-    public final Setting<Double> delaySeconds = this.sgGeneral.d("Delay Seconds", 0.2, 0.0, 1.0, 0.002, ".", () -> this.timing.get() == Timing.Render);
-    private final Setting<List<Item>> items = this.sgGeneral.il("Items", "", Items.EXPERIENCE_BOTTLE);
+    public final Setting<Timing> timing = this.sgGeneral.enumSetting("Timing", Timing.Tick, "");
+    public final Setting<Integer> delayTicks = this.sgGeneral.intSetting("Delay Ticks", 1, 0, 4, 1, ".", () -> this.timing.get() == Timing.Tick);
+    public final Setting<Double> delaySeconds = this.sgGeneral.doubleSetting("Delay Seconds", 0.2, 0.0, 1.0, 0.002, ".", () -> this.timing.get() == Timing.Render);
+    private final Setting<List<Item>> items = this.sgGeneral.itemListSetting("Items", "", Items.EXPERIENCE_BOTTLE);
     public final Setting<RotationMode> rotate = this.sgGeneral
-            .e("Rotate EXP", RotationMode.Normal, ".", () -> this.items.get().contains(Items.EXPERIENCE_BOTTLE));
+            .enumSetting("Rotate EXP", RotationMode.Normal, ".", () -> this.items.get().contains(Items.EXPERIENCE_BOTTLE));
     private long prevUse = 0L;
 
     public FastUse() {

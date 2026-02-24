@@ -15,10 +15,10 @@ import java.util.UUID;
 
 public class PopLag extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> target = this.sgGeneral.b("Target", true, ".");
-    private final Setting<String> command = this.sgGeneral.s("Command", "msg", ".");
-    private final Setting<Integer> length = this.sgGeneral.i("Length", 200, 0, 224, 1, ".");
-    private final Setting<Double> cooldown = this.sgGeneral.d("Cooldown (Minutes)", 2.0, 0.0, 10.0, 0.1, ".");
+    private final Setting<Boolean> target = this.sgGeneral.booleanSetting("Target", true, ".");
+    private final Setting<String> command = this.sgGeneral.stringSetting("Command", "msg", ".");
+    private final Setting<Integer> length = this.sgGeneral.intSetting("Length", 200, 0, 224, 1, ".");
+    private final Setting<Double> cooldown = this.sgGeneral.doubleSetting("Cooldown (Minutes)", 2.0, 0.0, 10.0, 0.1, ".");
     private final TimerList<UUID> sent = new TimerList<>(true);
 
     public PopLag() {

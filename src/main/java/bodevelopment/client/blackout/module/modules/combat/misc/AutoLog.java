@@ -14,10 +14,10 @@ import net.minecraft.text.Text;
 
 public class AutoLog extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> disable = this.sgGeneral.b("Disable on Disconnect", true, "Automatically Disables the module when disconnecting");
-    private final Setting<Double> health = this.sgGeneral.d("Log Health", 16.0, 0.0, 36.0, 1.0, "At what health should we disconnect");
-    private final Setting<Boolean> totems = this.sgGeneral.b("Count Totems", true, "Counts Totems");
-    private final Setting<Double> totemAmount = this.sgGeneral.d("Totem Amount", 3.0, 0.0, 36.0, 1.0, "How many totems left to disconnect", this.totems::get);
+    private final Setting<Boolean> disable = this.sgGeneral.booleanSetting("Disable on Disconnect", true, "Automatically Disables the module when disconnecting");
+    private final Setting<Double> health = this.sgGeneral.doubleSetting("Log Health", 16.0, 0.0, 36.0, 1.0, "At what health should we disconnect");
+    private final Setting<Boolean> totems = this.sgGeneral.booleanSetting("Count Totems", true, "Counts Totems");
+    private final Setting<Double> totemAmount = this.sgGeneral.doubleSetting("Totem Amount", 3.0, 0.0, 36.0, 1.0, "How many totems left to disconnect", this.totems::get);
 
     public AutoLog() {
         super("Auto Log", "Automatically logs off", SubCategory.MISC_COMBAT, true);

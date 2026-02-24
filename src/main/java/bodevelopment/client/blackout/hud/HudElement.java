@@ -20,7 +20,7 @@ public class HudElement {
     public final String name;
     public final String description;
     protected final SettingGroup sgScale = this.addGroup("Scale");
-    private final Setting<Double> scale = this.sgScale.d("Scale", 1.0, 0.1, 10.0, 0.1, ".");
+    private final Setting<Double> scale = this.sgScale.doubleSetting("Scale", 1.0, 0.1, 10.0, 0.1, ".");
     public float x = 0.0F;
     public float y = 0.0F;
     public int id;

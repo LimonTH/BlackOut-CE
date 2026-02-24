@@ -19,12 +19,12 @@ import net.minecraft.registry.tag.FluidTags;
 
 public class Jesus extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Mode> mode = this.sgGeneral.e("Mode", Mode.NCP, ".", () -> true);
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.NCP, ".", () -> true);
     private final Setting<Boolean> toggle = this.sgGeneral
-            .b("Anti Rubberband", true, "Tries to prevent extra rubberbanding", () -> this.mode.get() == Mode.NCP_Fast);
-    private final Setting<Double> bob = this.sgGeneral.d("Bob force", 0.005, 0.0, 1.0, 0.005, "How much to bob", () -> this.mode.get() == Mode.NCP_Fast);
+            .booleanSetting("Anti Rubberband", true, "Tries to prevent extra rubberbanding", () -> this.mode.get() == Mode.NCP_Fast);
+    private final Setting<Double> bob = this.sgGeneral.doubleSetting("Bob force", 0.005, 0.0, 1.0, 0.005, "How much to bob", () -> this.mode.get() == Mode.NCP_Fast);
     private final Setting<Double> waterSpeed = this.sgGeneral
-            .d("Water speed", 1.175, 0.0, 2.0, 0.005, "0.265 is generally better", () -> this.mode.get() == Mode.NCP_Fast);
+            .doubleSetting("Water speed", 1.175, 0.0, 2.0, 0.005, "0.265 is generally better", () -> this.mode.get() == Mode.NCP_Fast);
     private boolean inWater = false;
     private boolean isSlowed = false;
 

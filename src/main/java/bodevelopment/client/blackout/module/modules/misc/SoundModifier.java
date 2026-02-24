@@ -45,10 +45,10 @@ public class SoundModifier extends Module {
 
     private SoundSettingGroup addSSGroup(String name) {
         SettingGroup group = this.addGroup(name);
-        Setting<Boolean> cancel = group.b("Cancel " + name, false, "Doesn't play" + name + " sounds.");
-        Setting<Double> volume = group.d(name + " Volume", 1.0, 0.0, 10.0, 0.1, "Volume of " + name + " sounds.", () -> !cancel.get());
-        Setting<Double> pitch = group.d(name + " Pitch", 1.0, 0.0, 10.0, 0.1, "Pitch of " + name + " sounds.", () -> !cancel.get());
-        Setting<SoundMode> soundMode = group.e(name + " Mode", SoundMode.Default, ".", () -> !cancel.get());
+        Setting<Boolean> cancel = group.booleanSetting("Cancel " + name, false, "Doesn't play" + name + " sounds.");
+        Setting<Double> volume = group.doubleSetting(name + " Volume", 1.0, 0.0, 10.0, 0.1, "Volume of " + name + " sounds.", () -> !cancel.get());
+        Setting<Double> pitch = group.doubleSetting(name + " Pitch", 1.0, 0.0, 10.0, 0.1, "Pitch of " + name + " sounds.", () -> !cancel.get());
+        Setting<SoundMode> soundMode = group.enumSetting(name + " Mode", SoundMode.Default, ".", () -> !cancel.get());
         return new SoundSettingGroup(cancel, volume, pitch, soundMode);
     }
 

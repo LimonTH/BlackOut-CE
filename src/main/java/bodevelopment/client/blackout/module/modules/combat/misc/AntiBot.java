@@ -20,15 +20,15 @@ import java.util.List;
 public class AntiBot extends Module {
     private static AntiBot INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<HandlingMode> mode = this.sgGeneral.e("How to handle bots", HandlingMode.Ignore, ".");
-    public final Setting<Boolean> WD = this.sgGeneral.b("Watchdog", true, "Watchdog check");
-    public final Setting<Boolean> smart = this.sgGeneral.b("Smart", false, ".");
-    private final Setting<Integer> range = this.sgGeneral.i("Check Range", 24, 0, 64, 1, "In what range to check for the players", this.smart::get);
-    public final Setting<Boolean> inv = this.sgGeneral.b("Invisible", false, "Treats invisible players as bots");
-    public final Setting<Boolean> nameCheck = this.sgGeneral.b("Name Check", false, "Checks the players name to see if they are a bot");
-    public final Setting<Boolean> bedWars = this.sgGeneral.b("Bed Wars", false, "Checks for Bedwars npcs");
-    public final Setting<Boolean> notif = this.sgGeneral.b("Send Notification", false, "Sends a notification when adding a bot to the list");
-    public final Setting<Boolean> remove = this.sgGeneral.b("Remove Notification", false, "Sends a notification when adding a bot to the list");
+    public final Setting<HandlingMode> mode = this.sgGeneral.enumSetting("How to handle bots", HandlingMode.Ignore, ".");
+    public final Setting<Boolean> WD = this.sgGeneral.booleanSetting("Watchdog", true, "Watchdog check");
+    public final Setting<Boolean> smart = this.sgGeneral.booleanSetting("Smart", false, ".");
+    private final Setting<Integer> range = this.sgGeneral.intSetting("Check Range", 24, 0, 64, 1, "In what range to check for the players", this.smart::get);
+    public final Setting<Boolean> inv = this.sgGeneral.booleanSetting("Invisible", false, "Treats invisible players as bots");
+    public final Setting<Boolean> nameCheck = this.sgGeneral.booleanSetting("Name Check", false, "Checks the players name to see if they are a bot");
+    public final Setting<Boolean> bedWars = this.sgGeneral.booleanSetting("Bed Wars", false, "Checks for Bedwars npcs");
+    public final Setting<Boolean> notif = this.sgGeneral.booleanSetting("Send Notification", false, "Sends a notification when adding a bot to the list");
+    public final Setting<Boolean> remove = this.sgGeneral.booleanSetting("Remove Notification", false, "Sends a notification when adding a bot to the list");
     private final List<AbstractClientPlayerEntity> bots = new ArrayList<>();
     private String info = "";
 

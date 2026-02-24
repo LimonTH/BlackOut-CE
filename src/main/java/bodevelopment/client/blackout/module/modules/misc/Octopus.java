@@ -16,15 +16,15 @@ import bodevelopment.client.blackout.util.SettingUtils;
 
 public class Octopus extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<KeyBind> slot1 = this.sgGeneral.k("Slot 1", ".");
-    private final Setting<KeyBind> slot2 = this.sgGeneral.k("Slot 2", ".");
-    private final Setting<KeyBind> slot3 = this.sgGeneral.k("Slot 3", ".");
-    private final Setting<KeyBind> slot4 = this.sgGeneral.k("Slot 4", ".");
-    private final Setting<KeyBind> slot5 = this.sgGeneral.k("Slot 5", ".");
-    private final Setting<KeyBind> slot6 = this.sgGeneral.k("Slot 6", ".");
-    private final Setting<KeyBind> slot7 = this.sgGeneral.k("Slot 7", ".");
-    private final Setting<KeyBind> slot8 = this.sgGeneral.k("Slot 8", ".");
-    private final Setting<KeyBind> slot9 = this.sgGeneral.k("Slot 9", ".");
+    private final Setting<KeyBind> slot1 = this.sgGeneral.keySetting("Slot 1", ".");
+    private final Setting<KeyBind> slot2 = this.sgGeneral.keySetting("Slot 2", ".");
+    private final Setting<KeyBind> slot3 = this.sgGeneral.keySetting("Slot 3", ".");
+    private final Setting<KeyBind> slot4 = this.sgGeneral.keySetting("Slot 4", ".");
+    private final Setting<KeyBind> slot5 = this.sgGeneral.keySetting("Slot 5", ".");
+    private final Setting<KeyBind> slot6 = this.sgGeneral.keySetting("Slot 6", ".");
+    private final Setting<KeyBind> slot7 = this.sgGeneral.keySetting("Slot 7", ".");
+    private final Setting<KeyBind> slot8 = this.sgGeneral.keySetting("Slot 8", ".");
+    private final Setting<KeyBind> slot9 = this.sgGeneral.keySetting("Slot 9", ".");
     private int toUse = -1;
 
     public Octopus() {

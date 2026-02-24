@@ -42,23 +42,23 @@ public class BoxMultiSetting {
         this.insideBufferName = "insideBuffer-" + id;
         this.bloomBufferName = "bloomBuffer-" + id;
         id++;
-        this.mode = sg.e(name + "Render Mode", BoxRenderMode.Normal, ".", visible);
-        this.shape = sg.e(name + "Shape", RenderShape.Full, ".");
-        this.lineColor = sg.c(
+        this.mode = sg.enumSetting(name + "Render Mode", BoxRenderMode.Normal, ".", visible);
+        this.shape = sg.enumSetting(name + "Shape", RenderShape.Full, ".");
+        this.lineColor = sg.colorSetting(
                 name + "Line Color", defaultColor.withAlpha(255), ".", () -> this.mode.get() == BoxRenderMode.Normal && visible.get()
         );
-        this.sideColor = sg.c(
+        this.sideColor = sg.colorSetting(
                 name + "Side Color", defaultColor.withAlpha(50), ".", () -> this.mode.get() == BoxRenderMode.Normal && visible.get()
         );
-        this.bloom = sg.i(name + "Bloom", 3, 0, 10, 1, ".", () -> this.mode.get() == BoxRenderMode.Shader && visible.get());
-        this.blur = sg.b(name + "Blur", false, ".", () -> this.mode.get() == BoxRenderMode.Shader && visible.get());
-        this.insideColor = sg.c(
+        this.bloom = sg.intSetting(name + "Bloom", 3, 0, 10, 1, ".", () -> this.mode.get() == BoxRenderMode.Shader && visible.get());
+        this.blur = sg.booleanSetting(name + "Blur", false, ".", () -> this.mode.get() == BoxRenderMode.Shader && visible.get());
+        this.insideColor = sg.colorSetting(
                 name + "Inside Color", defaultColor.withAlpha(50), ".", () -> this.mode.get() == BoxRenderMode.Shader && visible.get()
         );
-        this.shaderOutlineColor = sg.c(
+        this.shaderOutlineColor = sg.colorSetting(
                 name + "Outline Color", defaultColor.withAlpha(255), ".", () -> this.mode.get() == BoxRenderMode.Shader && this.shape.get().outlines && visible.get()
         );
-        this.bloomColor = sg.c(
+        this.bloomColor = sg.colorSetting(
                 name + "Bloom Color", defaultColor.withAlpha(150), ".", () -> this.mode.get() == BoxRenderMode.Shader && visible.get()
         );
         BlackOut.EVENT_BUS.subscribe(this, () -> BlackOut.mc.player == null || BlackOut.mc.world == null);

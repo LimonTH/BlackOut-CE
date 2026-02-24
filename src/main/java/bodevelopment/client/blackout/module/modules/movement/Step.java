@@ -18,15 +18,15 @@ import java.util.List;
 public class Step extends Module {
     private static Step INSTANCE;
     public final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<StepMode> stepMode = this.sgGeneral.e("Step Mode", StepMode.NCP, ".");
-    public final Setting<Boolean> slow = this.sgGeneral.b("Slow", false, "Moves up slowly.", () -> this.stepMode.get() != StepMode.Vanilla);
+    public final Setting<StepMode> stepMode = this.sgGeneral.enumSetting("Step Mode", StepMode.NCP, ".");
+    public final Setting<Boolean> slow = this.sgGeneral.booleanSetting("Slow", false, "Moves up slowly.", () -> this.stepMode.get() != StepMode.Vanilla);
     public final Setting<Boolean> useTimer = this.sgGeneral
-            .b("Use Timer", false, "Uses timer when stepping.", () -> this.slow.get() && this.stepMode.get() != StepMode.Vanilla);
+            .booleanSetting("Use Timer", false, "Uses timer when stepping.", () -> this.slow.get() && this.stepMode.get() != StepMode.Vanilla);
     public final Setting<Double> timer = this.sgGeneral
-            .d("Timer", 2.0, 0.0, 10.0, 0.1, "Packet multiplier.", () -> this.slow.get() && this.stepMode.get() != StepMode.Vanilla && this.useTimer.get());
+            .doubleSetting("Timer", 2.0, 0.0, 10.0, 0.1, "Packet multiplier.", () -> this.slow.get() && this.stepMode.get() != StepMode.Vanilla && this.useTimer.get());
     public final Setting<Double> cooldown = this.sgGeneral
-            .d("Cooldown", 0.0, 0.0, 1.0, 0.01, "Time between steps.", () -> this.stepMode.get() != StepMode.Vanilla);
-    public final Setting<Double> height = this.sgGeneral.d("Height", 2.0, 0.0, 4.0, 0.05, ".");
+            .doubleSetting("Cooldown", 0.0, 0.0, 1.0, 0.01, "Time between steps.", () -> this.stepMode.get() != StepMode.Vanilla);
+    public final Setting<Double> height = this.sgGeneral.doubleSetting("Height", 2.0, 0.0, 4.0, 0.05, ".");
     public boolean shouldResetTimer = false;
     public int stepProgress = -1;
     public int sinceStep = 0;

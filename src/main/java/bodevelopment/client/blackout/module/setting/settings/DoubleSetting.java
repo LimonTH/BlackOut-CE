@@ -54,10 +54,10 @@ public class DoubleSetting extends Setting<Double> {
         if (SelectedComponent.is(this.id)) {
             try {
                 this.setValue(Double.parseDouble(this.textField.getContent().replace(",", ".")));
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException ignored) {
             }
         } else {
-            this.textField.setContent(String.format("%." + this.decimals + "f", this.get()));
+            this.textField.setContent(String.format(java.util.Locale.US, "%." + this.decimals + "f", this.get()));
         }
 
         this.textField.setActive(SelectedComponent.is(this.id));

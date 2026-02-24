@@ -20,14 +20,14 @@ public class SessionInfo extends HudElement {
     private static final long startTime = System.currentTimeMillis();
     private final SettingGroup sgGeneral = this.addGroup("General");
     public final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Text");
-    private final Setting<Style> style = this.sgGeneral.e("Style", Style.Blackout, ".");
-    private final Setting<Boolean> bar = this.sgGeneral.b("Bar", true, ".", () -> this.style.get() == Style.Blackout);
+    private final Setting<Style> style = this.sgGeneral.enumSetting("Style", Style.Blackout, ".");
+    private final Setting<Boolean> bar = this.sgGeneral.booleanSetting("Bar", true, ".", () -> this.style.get() == Style.Blackout);
     private final Setting<BlackOutColor> barColor = this.sgGeneral
-            .c("Bar Color", new BlackOutColor(255, 255, 255, 255), ".", () -> this.style.get() == Style.Blackout && this.bar.get());
-    private final Setting<Boolean> bg = this.sgGeneral.b("Background", true, ".", () -> this.style.get() == Style.Blackout);
+            .colorSetting("Bar Color", new BlackOutColor(255, 255, 255, 255), ".", () -> this.style.get() == Style.Blackout && this.bar.get());
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, ".", () -> this.style.get() == Style.Blackout);
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> blur = this.sgGeneral.b("Blur", true, ".", () -> this.style.get() == Style.Blackout);
-    private final Setting<Mode> mode = this.sgGeneral.e("Kill Count Mode", Mode.Chat, "How to count Kills");
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, ".", () -> this.style.get() == Style.Blackout);
+    private final Setting<Mode> mode = this.sgGeneral.enumSetting("Kill Count Mode", Mode.Chat, "How to count Kills");
     private int kills = 0;
     private int deaths = 0;
     private float height = 0.0F;

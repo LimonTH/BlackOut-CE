@@ -26,13 +26,13 @@ import org.apache.commons.lang3.tuple.Triple;
 public class MineESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRender = this.addGroup("Render");
-    private final Setting<Double> range = this.sgGeneral.d("Range", 10.0, 0.0, 50.0, 0.5, "Only renders inside this range.");
-    private final Setting<Boolean> accurateTime = this.sgGeneral.b("Accurate Time", false, ".");
-    private final Setting<ToolMaterials> pickaxeMaterial = this.sgGeneral.e("Pickaxe Material", ToolMaterials.NETHERITE, ".", this.accurateTime::get);
-    private final Setting<Integer> pickaxeEfficiency = this.sgGeneral.i("Pickaxe Efficiency", 5, 0, 5, 1, ".", this.accurateTime::get);
-    private final Setting<Double> fadeIn = this.sgGeneral.d("Fade In Time", 2.0, 0.0, 20.0, 0.1, ".", () -> !this.accurateTime.get());
-    private final Setting<Double> renderTime = this.sgGeneral.d("Render Time", 4.0, 0.0, 20.0, 0.1, ".");
-    private final Setting<Double> fadeOut = this.sgGeneral.d("Fade Out Time", 2.0, 0.0, 20.0, 0.1, ".");
+    private final Setting<Double> range = this.sgGeneral.doubleSetting("Range", 10.0, 0.0, 50.0, 0.5, "Only renders inside this range.");
+    private final Setting<Boolean> accurateTime = this.sgGeneral.booleanSetting("Accurate Time", false, ".");
+    private final Setting<ToolMaterials> pickaxeMaterial = this.sgGeneral.enumSetting("Pickaxe Material", ToolMaterials.NETHERITE, ".", this.accurateTime::get);
+    private final Setting<Integer> pickaxeEfficiency = this.sgGeneral.intSetting("Pickaxe Efficiency", 5, 0, 5, 1, ".", this.accurateTime::get);
+    private final Setting<Double> fadeIn = this.sgGeneral.doubleSetting("Fade In Time", 2.0, 0.0, 20.0, 0.1, ".", () -> !this.accurateTime.get());
+    private final Setting<Double> renderTime = this.sgGeneral.doubleSetting("Render Time", 4.0, 0.0, 20.0, 0.1, ".");
+    private final Setting<Double> fadeOut = this.sgGeneral.doubleSetting("Fade Out Time", 2.0, 0.0, 20.0, 0.1, ".");
     private final BoxMultiSetting box = BoxMultiSetting.of(this.sgRender);
     private final RenderList<Triple<BlockPos, Integer, Double>> renders = RenderList.getList(false);
 

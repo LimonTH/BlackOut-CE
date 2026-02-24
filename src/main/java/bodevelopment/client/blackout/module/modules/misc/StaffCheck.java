@@ -18,8 +18,8 @@ import java.util.List;
 
 public class StaffCheck extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> kb = this.sgGeneral.b("Knockback", true, "Notifies about suspicious knockback");
-    private final Setting<Boolean> nameCheck = this.sgGeneral.b("Name Check", false, ".");
+    private final Setting<Boolean> kb = this.sgGeneral.booleanSetting("Knockback", true, "Notifies about suspicious knockback");
+    private final Setting<Boolean> nameCheck = this.sgGeneral.booleanSetting("Name Check", false, ".");
     List<String> staff = new ArrayList<>();
     private long prevTime = System.currentTimeMillis();
     private boolean added = false;

@@ -14,10 +14,10 @@ import net.minecraft.util.math.BlockPos;
 
 public class Automation extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> holeSurround = this.sgGeneral.b("Hole Surround", true, "Enables surround when entering a hole.");
-    private final Setting<Boolean> leaveHoleBlink = this.sgGeneral.b("Leave Hole Blink", true, "Enables blink when leaving a hole.");
-    private final Setting<Boolean> enterHoleBlink = this.sgGeneral.b("Enter Hole Blink", true, "Disables blink when entering a hole.");
-    private final Setting<Boolean> safeHoleBlink = this.sgGeneral.b("Safe Hole Blink", true, "Disables blink if old hole is not valid.");
+    private final Setting<Boolean> holeSurround = this.sgGeneral.booleanSetting("Hole Surround", true, "Enables surround when entering a hole.");
+    private final Setting<Boolean> leaveHoleBlink = this.sgGeneral.booleanSetting("Leave Hole Blink", true, "Enables blink when leaving a hole.");
+    private final Setting<Boolean> enterHoleBlink = this.sgGeneral.booleanSetting("Enter Hole Blink", true, "Disables blink when entering a hole.");
+    private final Setting<Boolean> safeHoleBlink = this.sgGeneral.booleanSetting("Safe Hole Blink", true, "Disables blink if old hole is not valid.");
     private BlockPos currentPos = null;
     private BlockPos blinkPos = null;
 
