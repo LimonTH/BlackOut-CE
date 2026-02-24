@@ -6,6 +6,7 @@ import bodevelopment.client.blackout.event.events.*;
 import bodevelopment.client.blackout.interfaces.functional.DoubleConsumer;
 import bodevelopment.client.blackout.keys.KeyBind;
 import bodevelopment.client.blackout.module.Module;
+import bodevelopment.client.blackout.module.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.Notifications;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -31,51 +32,55 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 
+// TODO: NEED PATCHES
+@OnlyDev
 public class Manager extends Module {
     private static Manager INSTANCE;
+
     public final SettingGroup sgGeneral = this.addGroup("General");
     public final SettingGroup sgAutoArmor = this.addGroup("Auto Armor");
     public final SettingGroup sgHotbar = this.addGroup("Hotbar");
     public final SettingGroup sgReplenish = this.addGroup("Replenish");
     public final SettingGroup sgCleaner = this.addGroup("Cleaner");
-    private final Setting<Boolean> onlyInv = this.sgGeneral.booleanSetting("Only Inv", false, ".");
-    private final Setting<Double> inventoryOpenTime = this.sgGeneral.doubleSetting("Inventory Open Time", 0.1, 0.0, 1.0, 0.01, ".", this.onlyInv::get);
-    private final Setting<Boolean> silentInstant = this.sgGeneral.booleanSetting("Silent Instant", true, ".", () -> !this.onlyInv.get());
-    private final Setting<Boolean> inInventoryInstant = this.sgGeneral.booleanSetting("In Inventory Instant", true, ".");
-    private final Setting<Double> cooldown = this.sgGeneral.doubleSetting("Cooldown", 0.3, 0.0, 1.0, 0.01, ".");
-    private final Setting<Boolean> tpDisable = this.sgGeneral.booleanSetting("Disable on TP", false, "Should we disable when teleporting to another world");
-    private final Setting<Boolean> pauseCombat = this.sgGeneral.booleanSetting("Pause Combat", false, ".");
-    private final Setting<Boolean> stopRotations = this.sgGeneral.booleanSetting("Stop Rotations", true, ".");
-    private final Setting<Boolean> autoArmor = this.sgAutoArmor.booleanSetting("Auto Armor", true, ".");
-    private final Setting<KeyBind> chestSwap = this.sgAutoArmor.keySetting("Chest Swap", ".");
-    private final Setting<Boolean> elytra = this.sgAutoArmor
-            .booleanSetting("Elytra Priority", false, ".", () -> this.chestSwap.get().value == null || this.chestSwap.get().value.key >= 0);
-    private final Setting<Integer> weaponSlot = this.sgHotbar.intSetting("Weapon Slot", 0, 0, 9, 1, ".");
-    private final Setting<List<Item>> slot1 = this.sgHotbar.itemListSetting("Slot 1", ".", () -> this.weaponSlot.get() != 1);
-    private final Setting<List<Item>> slot2 = this.sgHotbar.itemListSetting("Slot 2", ".", () -> this.weaponSlot.get() != 2);
-    private final Setting<List<Item>> slot3 = this.sgHotbar.itemListSetting("Slot 3", ".", () -> this.weaponSlot.get() != 3);
-    private final Setting<List<Item>> slot4 = this.sgHotbar.itemListSetting("Slot 4", ".", () -> this.weaponSlot.get() != 4);
-    private final Setting<List<Item>> slot5 = this.sgHotbar.itemListSetting("Slot 5", ".", () -> this.weaponSlot.get() != 5);
-    private final Setting<List<Item>> slot6 = this.sgHotbar.itemListSetting("Slot 6", ".", () -> this.weaponSlot.get() != 6);
-    private final Setting<List<Item>> slot7 = this.sgHotbar.itemListSetting("Slot 7", ".", () -> this.weaponSlot.get() != 7);
-    private final Setting<List<Item>> slot8 = this.sgHotbar.itemListSetting("Slot 8", ".", () -> this.weaponSlot.get() != 8);
-    private final Setting<List<Item>> slot9 = this.sgHotbar.itemListSetting("Slot 9", ".", () -> this.weaponSlot.get() != 9);
+
+    private final Setting<Boolean> onlyInv = this.sgGeneral.booleanSetting("Inventory Only", false, "Restricts the module to operate only when the player's inventory screen is manually opened.");
+    private final Setting<Double> inventoryOpenTime = this.sgGeneral.doubleSetting("Activation Delay", 0.1, 0.0, 1.0, 0.01, "The duration to wait after opening the inventory before starting management tasks.", this.onlyInv::get);
+    private final Setting<Boolean> silentInstant = this.sgGeneral.booleanSetting("Silent Instant", true, "Performs inventory operations instantly without visual movements while the GUI is closed.", () -> !this.onlyInv.get());
+    private final Setting<Boolean> inInventoryInstant = this.sgGeneral.booleanSetting("GUI Instant", true, "Enables instantaneous item movement while the inventory screen is visible.");
+    private final Setting<Double> cooldown = this.sgGeneral.doubleSetting("Task Interval", 0.3, 0.0, 1.0, 0.01, "The cooldown in seconds between individual inventory actions.");
+    private final Setting<Boolean> tpDisable = this.sgGeneral.booleanSetting("Teleport Disable", false, "Automatically deactivates the module upon changing dimensions or teleporting.");
+    private final Setting<Boolean> pauseCombat = this.sgGeneral.booleanSetting("Pause in Combat", false, "Suspends inventory management while the player is taking damage.");
+    private final Setting<Boolean> stopRotations = this.sgGeneral.booleanSetting("Lock Rotations", true, "Prevents head movement during automated item transfers to avoid desync.");
+    private final Setting<Boolean> autoArmor = this.sgAutoArmor.booleanSetting("Auto Armor", true, "Automatically equips the most protective armor pieces found in the inventory.");
+    private final Setting<KeyBind> chestSwap = this.sgAutoArmor.keySetting("Elytra Switch", "A hotkey to toggle between prioritizing a Chestplate or an Elytra.");
+    private final Setting<Boolean> elytra = this.sgAutoArmor.booleanSetting("Elytra Priority", false, "Gives the Elytra higher priority than chestplates during automatic equipping.", () -> this.chestSwap.get().value == null || this.chestSwap.get().value.key >= 0);
+    private final Setting<Integer> weaponSlot = this.sgHotbar.intSetting("Primary Weapon Slot", 0, 0, 9, 1, "The designated hotbar slot for your main weapon.");
+    private final Setting<List<Item>> slot1 = this.sgHotbar.itemListSetting("Slot 1 Filter", "The items allowed to occupy hotbar slot 1.", () -> this.weaponSlot.get() != 1);
+    private final Setting<List<Item>> slot2 = this.sgHotbar.itemListSetting("Slot 2 Filter", "The items allowed to occupy hotbar slot 2.", () -> this.weaponSlot.get() != 2);
+    private final Setting<List<Item>> slot3 = this.sgHotbar.itemListSetting("Slot 3 Filter", "The items allowed to occupy hotbar slot 3.", () -> this.weaponSlot.get() != 3);
+    private final Setting<List<Item>> slot4 = this.sgHotbar.itemListSetting("Slot 4 Filter", "The items allowed to occupy hotbar slot 4.", () -> this.weaponSlot.get() != 4);
+    private final Setting<List<Item>> slot5 = this.sgHotbar.itemListSetting("Slot 5 Filter", "The items allowed to occupy hotbar slot 5.", () -> this.weaponSlot.get() != 5);
+    private final Setting<List<Item>> slot6 = this.sgHotbar.itemListSetting("Slot 6 Filter", "The items allowed to occupy hotbar slot 6.", () -> this.weaponSlot.get() != 6);
+    private final Setting<List<Item>> slot7 = this.sgHotbar.itemListSetting("Slot 7 Filter", "The items allowed to occupy hotbar slot 7.", () -> this.weaponSlot.get() != 7);
+    private final Setting<List<Item>> slot8 = this.sgHotbar.itemListSetting("Slot 8 Filter", "The items allowed to occupy hotbar slot 8.", () -> this.weaponSlot.get() != 8);
+    private final Setting<List<Item>> slot9 = this.sgHotbar.itemListSetting("Slot 9 Filter", "The items allowed to occupy hotbar slot 9.", () -> this.weaponSlot.get() != 9);
     @SuppressWarnings("unchecked")
     private final Setting<List<Item>>[] slotSettings = (Setting<List<Item>>[]) new Setting<?>[]{
             this.slot1, this.slot2, this.slot3, this.slot4, this.slot5, this.slot6, this.slot7, this.slot8, this.slot9
     };
-    private final Setting<WeaponMode> weaponMode = this.sgHotbar.enumSetting("Weapon Mode", WeaponMode.Sword, ".");
-    private final Setting<Boolean> replenish = this.sgReplenish.booleanSetting("Replenish", false, ".");
-    private final Setting<Boolean> unstackableReplenish = this.sgReplenish.booleanSetting("Unstackable Replenish", true, ".");
-    private final Setting<Integer> percetageLeft = this.sgReplenish.intSetting("Left %", 25, 0, 100, 1, ".");
-    private final Setting<Double> replenishMemory = this.sgReplenish.doubleSetting("Replenish Memory", 1.0, 0.0, 5.0, 0.05, ".");
-    private final Setting<List<Item>> cleanerItems = this.sgCleaner.itemListSetting("Cleaner Items", ".");
-    private final Setting<Boolean> badArmor = this.sgCleaner.booleanSetting("Bad Armor", false, ".");
-    private final Setting<Boolean> badSwords = this.sgCleaner.booleanSetting("Bad Swords", false, ".");
-    private final Setting<Boolean> badAxes = this.sgCleaner.booleanSetting("Bad Axes", false, ".");
-    private final Setting<AxeCompareMode> axeComparing = this.sgCleaner.enumSetting("Axe Comparing", AxeCompareMode.Efficiency, ".", this.badAxes::get);
-    private final Setting<Boolean> badPickaxes = this.sgCleaner.booleanSetting("Bad Pickaxes", false, ".");
-    private final Setting<Boolean> badBows = this.sgCleaner.booleanSetting("Bad Bows", false, ".");
+    private final Setting<WeaponMode> weaponMode = this.sgHotbar.enumSetting("Preferred Weapon", WeaponMode.Sword, "The type of weapon to prioritize for the primary weapon slot.");
+    private final Setting<Boolean> replenish = this.sgReplenish.booleanSetting("Auto Replenish", false, "Refills hotbar stacks from the inventory when they drop below a certain threshold.");
+    private final Setting<Boolean> unstackableReplenish = this.sgReplenish.booleanSetting("Replenish Unstackable", true, "Automatically replaces spent single-use items like soups or potions.");
+    private final Setting<Integer> percetageLeft = this.sgReplenish.intSetting("Refill Threshold %", 25, 0, 100, 1, "The percentage of a stack remaining before it is automatically replenished.");
+    private final Setting<Double> replenishMemory = this.sgReplenish.doubleSetting("Slot Memory", 1.0, 0.0, 5.0, 0.05, "The time in seconds the module remembers which item previously occupied an empty slot.");
+    private final Setting<List<Item>> cleanerItems = this.sgCleaner.itemListSetting("Trash Items", "Items that will be automatically dropped from the inventory.");
+    private final Setting<Boolean> badArmor = this.sgCleaner.booleanSetting("Drop Inferior Armor", false, "Discards armor pieces that are statistically worse than what is currently equipped.");
+    private final Setting<Boolean> badSwords = this.sgCleaner.booleanSetting("Drop Inferior Swords", false, "Discards swords with lower damage values than the primary weapon.");
+    private final Setting<Boolean> badAxes = this.sgCleaner.booleanSetting("Drop Inferior Axes", false, "Discards axes that are inferior based on the selected comparison mode.");
+    private final Setting<AxeCompareMode> axeComparing = this.sgCleaner.enumSetting("Axe Metric", AxeCompareMode.Efficiency, "Determines whether axes are evaluated by combat damage or mining efficiency.", this.badAxes::get);
+    private final Setting<Boolean> badPickaxes = this.sgCleaner.booleanSetting("Drop Inferior Pickaxes", false, "Discards pickaxes with lower mining speeds than the best one available.");
+    private final Setting<Boolean> badBows = this.sgCleaner.booleanSetting("Drop Inferior Bows", false, "Discards bows with lower damage or enchantments than the best one available.");
+
     private final ReplenishSlot[] replenishItems = new ReplenishSlot[]{
             new ReplenishSlot(),
             new ReplenishSlot(),
@@ -97,7 +102,7 @@ public class Manager extends Module {
     private long prevDamage = 0L;
 
     public Manager() {
-        super("Manager", ".", SubCategory.MISC, true);
+        super("Manager", "An all-in-one inventory automation utility that handles armor equipping, hotbar organization, item replenishing, and inventory cleaning.", SubCategory.MISC, true);
         INSTANCE = this;
     }
 
@@ -631,10 +636,10 @@ public class Manager extends Module {
     private record HotbarSearch(Predicate<Slot> predicate, ToDoubleFunction<Slot> function) {
     }
 
-    private class Action {
+    private static class Action {
     }
 
-    private class Drop extends Action {
+    private static class Drop extends Action {
         private final DoubleConsumer<ClientPlayerInteractionManager, ScreenHandler> consumer;
 
         private Drop(int id) {
@@ -642,7 +647,7 @@ public class Manager extends Module {
         }
     }
 
-    private class Move extends Action {
+    private static class Move extends Action {
         private final int from;
         private final int to;
         private final Predicate<ItemStack> predicate;
@@ -655,7 +660,7 @@ public class Manager extends Module {
         }
     }
 
-    private class QuickMove extends Action {
+    private static class QuickMove extends Action {
         private final DoubleConsumer<ClientPlayerInteractionManager, ScreenHandler> consumer;
 
         private QuickMove(int id) {
@@ -663,12 +668,12 @@ public class Manager extends Module {
         }
     }
 
-    private class ReplenishSlot {
+    private static class ReplenishSlot {
         private Item item = null;
         private long lastSeen = 0L;
     }
 
-    private class Swap extends Action {
+    private static class Swap extends Action {
         private final DoubleConsumer<ClientPlayerInteractionManager, ScreenHandler> consumer;
 
         private Swap(int id, int slotId) {

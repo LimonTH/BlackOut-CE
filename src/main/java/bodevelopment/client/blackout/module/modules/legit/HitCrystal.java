@@ -23,14 +23,17 @@ import net.minecraft.util.math.BlockPos;
 
 public class HitCrystal extends Module {
     private static HitCrystal INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Normal, "Method of switching.");
-    private final Setting<Integer> postPlace = this.sgGeneral.intSetting("Post Place Ticks", 1, 0, 20, 1, ".");
-    private final Setting<Integer> preCrystal = this.sgGeneral.intSetting("Pre Crystal Ticks", 1, 0, 20, 1, ".");
-    private final Setting<Boolean> multiCrystal = this.sgGeneral.booleanSetting("Multi Crystal", true, ".");
-    private final Setting<Double> speed = this.sgGeneral.doubleSetting("Speed", 10.0, 0.0, 20.0, 1.0, ".", this.multiCrystal::get);
-    private final Setting<Double> attackSpeed = this.sgGeneral.doubleSetting("Attack Speed", 20.0, 0.0, 20.0, 1.0, ".");
-    private final Setting<Boolean> attack = this.sgGeneral.booleanSetting("Attack", true, ".");
+
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Normal, "The method used to select End Crystals in the hotbar.");
+    private final Setting<Integer> postPlace = this.sgGeneral.intSetting("Post-Obsidian Delay", 1, 0, 20, 1, "Ticks to wait after placing obsidian before attempting to place a crystal.");
+    private final Setting<Integer> preCrystal = this.sgGeneral.intSetting("Pre-Crystal Delay", 1, 0, 20, 1, "Additional ticks to wait specifically before the crystal interaction.");
+    private final Setting<Boolean> multiCrystal = this.sgGeneral.booleanSetting("Continuous Placement", true, "Allows placing multiple crystals on the same block without resetting.");
+    private final Setting<Double> speed = this.sgGeneral.doubleSetting("Placement Speed", 10.0, 0.0, 20.0, 1.0, "The maximum number of crystal placements per second.", this.multiCrystal::get);
+    private final Setting<Double> attackSpeed = this.sgGeneral.doubleSetting("Attack Speed", 20.0, 0.0, 20.0, 1.0, "The maximum number of crystal attacks per second.");
+    private final Setting<Boolean> attack = this.sgGeneral.booleanSetting("Auto-Attack", true, "Automatically detonates the crystal after placement.");
+
     private int timer = -1;
     private BlockPos pos = null;
     private boolean placed = false;
@@ -39,7 +42,7 @@ public class HitCrystal extends Module {
     private double attacks = 0.0;
 
     public HitCrystal() {
-        super("Hit Crystal", "Places a crystal on top of obsidian.", SubCategory.LEGIT, true);
+        super("Hit Crystal", "Optimizes the sequence of placing obsidian and immediately following up with an End Crystal for rapid damage.", SubCategory.LEGIT, true);
         INSTANCE = this;
     }
 

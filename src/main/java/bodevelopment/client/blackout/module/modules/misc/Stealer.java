@@ -34,44 +34,39 @@ import java.util.function.Predicate;
 
 public class Stealer extends Module {
     private static Stealer INSTANCE;
+
     public final SettingGroup sgGeneral = this.addGroup("General");
     public final SettingGroup sgBest = this.addGroup("Best");
     public final SettingGroup sgRender = this.addGroup("Render");
-    private final Setting<Boolean> instant = this.sgGeneral.booleanSetting("Instant", false, ".");
-    private final Setting<Double> speed = this.sgGeneral.doubleSetting("Speed", 5.0, 0.0, 20.0, 0.1, ".", () -> !this.instant.get());
-    private final Setting<Double> openFor = this.sgGeneral.doubleSetting("Open For", 0.2, 0.0, 20.0, 0.1, ".");
-    private final Setting<Boolean> close = this.sgGeneral.booleanSetting("Close", true, "");
-    private final Setting<Double> closeDelay = this.sgGeneral.doubleSetting("Close Delay", 0.2, 0.0, 20.0, 0.1, ".");
-    private final Setting<Boolean> autoOpen = this.sgGeneral.booleanSetting("Auto Open", false, "");
-    private final Setting<Double> openCooldown = this.sgGeneral.doubleSetting("Open Cooldown", 0.0, 0.0, 10.0, 0.1, "");
-    private final Setting<Double> retryTime = this.sgGeneral.doubleSetting("Retry Time", 0.5, 0.0, 10.0, 0.1, "");
-    private final Setting<Double> reopenCooldown = this.sgGeneral.doubleSetting("Reopen Cooldown", 30.0, 0.0, 10.0, 0.1, "");
-    private final Setting<Boolean> silent = this.sgGeneral.booleanSetting("Silent", false, ".");
-    private final Setting<Boolean> stopRotations = this.sgGeneral.booleanSetting("Stop Rotations", true, ".");
-    private final Setting<Boolean> tpDisable = this.sgGeneral.booleanSetting("Disable on TP", false, "Should we disable when teleporting to another world");
-    private final Setting<Boolean> bestWeapon = this.sgBest.booleanSetting("Best Weapon", true, ".");
-    private final Setting<Boolean> swords = this.sgBest.booleanSetting("Swords", true, ".");
-    private final Setting<Boolean> axes = this.sgBest.booleanSetting("Axes", true, ".");
+
+    private final Setting<Boolean> instant = this.sgGeneral.booleanSetting("Instant Mode", false, "Transfers all items in a single tick without delay.");
+    private final Setting<Double> speed = this.sgGeneral.doubleSetting("Transfer Speed", 5.0, 0.0, 20.0, 0.1, "The number of items to transfer per second.", () -> !this.instant.get());
+    private final Setting<Double> openFor = this.sgGeneral.doubleSetting("Interaction Delay", 0.2, 0.0, 20.0, 0.1, "The minimum duration to keep the container open before beginning to steal.");
+    private final Setting<Boolean> close = this.sgGeneral.booleanSetting("Auto Close", true, "Automatically closes the container GUI once all desired items are stolen.");
+    private final Setting<Double> closeDelay = this.sgGeneral.doubleSetting("Close Delay", 0.2, 0.0, 20.0, 0.1, "The delay in seconds before closing the container after the operation is complete.");
+    private final Setting<Boolean> autoOpen = this.sgGeneral.booleanSetting("Auto Open", false, "Automatically scans and opens nearby containers within interaction range.");
+    private final Setting<Double> openCooldown = this.sgGeneral.doubleSetting("Open Cooldown", 0.0, 0.0, 10.0, 0.1, "The cooldown between opening different containers.");
+    private final Setting<Double> retryTime = this.sgGeneral.doubleSetting("Retry Interval", 0.5, 0.0, 10.0, 0.1, "The time to wait before re-attempting to open a failed container.");
+    private final Setting<Double> reopenCooldown = this.sgGeneral.doubleSetting("Blacklist Time", 30.0, 0.0, 10.0, 0.1, "The duration to wait before allowing the module to reopen the same container.");
+    private final Setting<Boolean> silent = this.sgGeneral.booleanSetting("Silent Steal", false, "Allows stealing items while the GUI is visually hidden (Server-dependent).");
+    private final Setting<Boolean> stopRotations = this.sgGeneral.booleanSetting("Lock Rotations", true, "Prevents look-at movements from interrupting the container interaction.");
+    private final Setting<Boolean> tpDisable = this.sgGeneral.booleanSetting("Disable on Teleport", false, "Automatically disables the module when changing dimensions or teleporting.");
+
+    private final Setting<Boolean> bestWeapon = this.sgBest.booleanSetting("Filter Best Weapon", true, "Prioritizes keeping only the highest damage weapons.");
+    private final Setting<Boolean> swords = this.sgBest.booleanSetting("Include Swords", true, "Includes swords in the weapon filter.");
+    private final Setting<Boolean> axes = this.sgBest.booleanSetting("Include Axes", true, "Includes axes in the weapon filter.");
+    private final Setting<Boolean> bestPickaxe = this.sgBest.booleanSetting("Filter Best Pickaxe", true, "Prioritizes keeping only the most efficient pickaxe.");
+    private final Setting<Boolean> tools = this.sgBest.booleanSetting("Steal All Tools", false, "Steals all tools regardless of their quality.");
+    private final Setting<Boolean> chestCheck = this.sgBest.booleanSetting("Name Check (Chest)", true, "Only interacts with containers that have 'Chest' in their name.");
+    private final Setting<ArmorMode> armor = this.sgBest.enumSetting("Armor Strategy", ArmorMode.Best, "Logic for selecting armor: Never, All, or Best only.");
+    private final Setting<List<Item>> items = this.sgBest.itemListSetting("Priority Items", "List of specific items that should always be stolen (e.g., Gapples, blocks).", Items.GOLDEN_APPLE, Items.ENCHANTED_GOLDEN_APPLE, Items.STONE, Items.OAK_PLANKS, Items.SNOWBALL, Items.EGG);
+
+    private final Setting<Double> renderTime = this.sgRender.doubleSetting("Highlight Duration", 5.0, 0.0, 10.0, 0.1, "How long the chest highlight remains visible.");
+    private final Setting<Double> fadeTime = this.sgRender.doubleSetting("Fade Out Time", 3.0, 0.0, 10.0, 0.1, "The duration of the fading effect for the highlight.");
+    private final BoxMultiSetting renderSetting = BoxMultiSetting.of(this.sgRender);
+
     private final Predicate<ItemStack> weaponPredicate = stack -> stack != null
             && (this.swords.get() && stack.getItem() instanceof SwordItem || this.axes.get() && stack.getItem() instanceof AxeItem);
-    private final Setting<Boolean> bestPickaxe = this.sgBest.booleanSetting("Best Pickaxe", true, ".");
-    private final Setting<Boolean> tools = this.sgBest.booleanSetting("Tools", false, ".");
-    private final Setting<Boolean> chestCheck = this.sgBest.booleanSetting("Chest Check", true, ".");
-    private final Setting<ArmorMode> armor = this.sgBest.enumSetting("Tools", ArmorMode.Best, ".");
-    private final Setting<List<Item>> items = this.sgBest
-            .itemListSetting(
-                    "Items",
-                    ".",
-                    Items.GOLDEN_APPLE,
-                    Items.ENCHANTED_GOLDEN_APPLE,
-                    Items.STONE,
-                    Items.OAK_PLANKS,
-                    Items.SNOWBALL,
-                    Items.EGG
-            );
-    private final Setting<Double> renderTime = this.sgRender.doubleSetting("Render Time", 5.0, 0.0, 10.0, 0.1, "How long the box should remain in full alpha value.");
-    private final Setting<Double> fadeTime = this.sgRender.doubleSetting("Fade Time", 3.0, 0.0, 10.0, 0.1, "How long the fading should take.");
-    private final BoxMultiSetting renderSetting = BoxMultiSetting.of(this.sgRender);
     private final List<Slot> movable = new ArrayList<>();
     private final List<Slot> container = new ArrayList<>();
     private final List<Slot> inventory = new ArrayList<>();
@@ -93,7 +88,7 @@ public class Stealer extends Module {
     private double movesLeft = 0.0;
 
     public Stealer() {
-        super("Stealer", "Transfers items from containers to inventory", SubCategory.MISC, true);
+        super("Stealer", "Automatically loots containers and manages your inventory by prioritizing high-value gear.", SubCategory.MISC, true);
         INSTANCE = this;
     }
 

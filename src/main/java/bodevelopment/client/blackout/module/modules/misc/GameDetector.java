@@ -17,13 +17,16 @@ import net.minecraft.item.Items;
 
 public class GameDetector extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Boolean> reEnable = this.sgGeneral.booleanSetting("Re Enable on game start", false, ".");
-    public final Setting<Boolean> disable = this.sgGeneral.booleanSetting("Disable on game end", true, ".");
-    private final SettingGroup sgDetect = this.addGroup("Detect");
-    public final Setting<Boolean> capabilities = this.sgDetect.booleanSetting("Capabilities", true, ".");
-    public final Setting<Boolean> compass = this.sgDetect.booleanSetting("Compass", true, ".");
-    public final Setting<Boolean> slime = this.sgDetect.booleanSetting("Slime", true, ".");
-    public final Setting<Boolean> test = this.sgDetect.booleanSetting("test", true, ".");
+    private final SettingGroup sgDetect = this.addGroup("Detection Logic");
+
+    public final Setting<Boolean> reEnable = this.sgGeneral.booleanSetting("Re-Enable on Match Start", false, "Automatically enables combat and utility modules when a new game session begins.");
+    public final Setting<Boolean> disable = this.sgGeneral.booleanSetting("Disable on Match End", true, "Automatically disables modules when the game ends to prevent unintended behavior in lobbies.");
+
+    public final Setting<Boolean> capabilities = this.sgDetect.booleanSetting("Check Abilities", true, "Detects lobby state by checking for flying or invulnerability permissions.");
+    public final Setting<Boolean> compass = this.sgDetect.booleanSetting("Compass Detection", true, "Assumes lobby state if a compass (common server selector) is found in the inventory.");
+    public final Setting<Boolean> slime = this.sgDetect.booleanSetting("Slime Ball Detection", true, "Assumes lobby state if a slime ball (common hide-player tool) is found in the inventory.");
+    public final Setting<Boolean> test = this.sgDetect.booleanSetting("Force Lobby State", true, "Debug setting to manually override game detection and force a lobby state.");
+
     public boolean gameStarted = false;
     private boolean prevState = false;
     private boolean disabledAura = false;
@@ -31,7 +34,7 @@ public class GameDetector extends Module {
     private boolean disabledManager = false;
 
     public GameDetector() {
-        super("Game Detector", "Detects when a game is in progress and toggles modules based on it", SubCategory.MISC, true);
+        super("Game Detector", "Analyzes environment and inventory state to automatically toggle modules between lobby and active gameplay.", SubCategory.MISC, true);
     }
 
     @Override

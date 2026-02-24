@@ -16,8 +16,7 @@ import java.util.UUID;
 public class ServerSpoof extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    private final Setting<Double> delay = this.sgGeneral.doubleSetting("Delay", 2.0, 0.0, 10.0, 0.1,
-            "Delay between spoofed status packets (Accepted -> Downloaded -> Loaded).");
+    private final Setting<Double> delay = this.sgGeneral.doubleSetting("Packet Delay", 2.0, 0.0, 10.0, 0.1, "The interval in seconds between each sequential spoofed status packet (Accepted, Downloaded, Loaded).");
 
     private final ResourcePackStatusC2SPacket.Status[] statuses = new ResourcePackStatusC2SPacket.Status[]{ResourcePackStatusC2SPacket.Status.ACCEPTED, ResourcePackStatusC2SPacket.Status.DOWNLOADED, ResourcePackStatusC2SPacket.Status.SUCCESSFULLY_LOADED};
     private UUID id;
@@ -25,7 +24,7 @@ public class ServerSpoof extends Module {
     private int progress = 0;
 
     public ServerSpoof() {
-        super("Server Spoof", "Spoofs resource pack installation to bypass server requirements.", SubCategory.MISC, true);
+        super("Server Spoof", "Automatically spoofs resource pack download and installation packets to bypass mandatory server pack requirements without downloading them.", SubCategory.MISC, true);
     }
 
     @Event

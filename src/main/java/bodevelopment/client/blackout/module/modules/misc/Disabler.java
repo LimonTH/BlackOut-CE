@@ -19,16 +19,18 @@ import net.minecraft.util.Hand;
 
 public class Disabler extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> grimMovement = this.sgGeneral.booleanSetting("Grim Movement", false, ".");
-    private final Setting<Boolean> b1 = this.sgGeneral.booleanSetting("Bol1", true, ".", this.grimMovement::get);
-    private final Setting<Boolean> b2 = this.sgGeneral.booleanSetting("Bol2", true, ".", this.grimMovement::get);
-    private final Setting<Double> tridentDelay = this.sgGeneral.doubleSetting("Trident Delay", 0.5, 0.0, 1.0, 0.01, ".", this.grimMovement::get);
-    private final Setting<SwitchMode> tridentSwitch = this.sgGeneral.enumSetting("Trident Switch", SwitchMode.Silent, ".", this.grimMovement::get);
-    private final Setting<Boolean> vulcanOmni = this.sgGeneral.booleanSetting("Vulcan Omni Sprint", false, ".");
+
+    private final Setting<Boolean> grimMovement = this.sgGeneral.booleanSetting("Grim Movement", false, "Attempts to desynchronize the Grim AntiCheat movement processor using Trident Riptide interactions.");
+    private final Setting<Boolean> b1 = this.sgGeneral.booleanSetting("Interact Packet", true, "Sends an item interaction packet before releasing the trident.", this.grimMovement::get);
+    private final Setting<Boolean> b2 = this.sgGeneral.booleanSetting("Release Packet", true, "Sends a stop-use packet to finalize the trident desync.", this.grimMovement::get);
+    private final Setting<Double> tridentDelay = this.sgGeneral.doubleSetting("Interaction Delay", 0.5, 0.0, 1.0, 0.01, "The cooldown in seconds between simulated Riptide uses.", this.grimMovement::get);
+    private final Setting<SwitchMode> tridentSwitch = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent, "The inventory swap method used to access the Trident.", this.grimMovement::get);
+    private final Setting<Boolean> vulcanOmni = this.sgGeneral.booleanSetting("Vulcan Omni Sprint", false, "Spoofs sprinting packets to allow multi-directional sprinting on Vulcan AntiCheat.");
+
     private long prevRiptide = 0L;
 
     public Disabler() {
-        super("Disabler", "Disables some parts of anticheats", SubCategory.MISC, true);
+        super("Disabler", "Exploits specific AntiCheat vulnerabilities to bypass movement restrictions or combat checks.", SubCategory.MISC, true);
     }
 
     @Event

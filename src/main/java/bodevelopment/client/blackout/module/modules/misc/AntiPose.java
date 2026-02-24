@@ -7,7 +7,7 @@ public class AntiPose extends Module {
     private static AntiPose INSTANCE;
 
     public AntiPose() {
-        super("Anti Pose", "Doesn't force you in swim or crouch pose when in too small space. For 1.12.2.", SubCategory.MISC, false);
+        super("Anti Pose", "Prevents the server from forcing specific player states, such as crouching or swimming, when moving through confined spaces. (for v1.12.2)", SubCategory.MISC, false);
         INSTANCE = this;
     }
 

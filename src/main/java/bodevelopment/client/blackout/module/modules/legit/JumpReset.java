@@ -7,8 +7,9 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 
 public class JumpReset extends Module {
+
     public JumpReset() {
-        super("Jump Reset", "Resets knockback by jumping", SubCategory.LEGIT, true);
+        super("Jump Reset", "Reduces incoming horizontal knockback by automatically jumping the moment damage is received.", SubCategory.LEGIT, true);
     }
 
     @Event

@@ -11,11 +11,12 @@ import java.util.List;
 
 public class Pause extends Module {
     private static Pause INSTANCE;
+
     public final List<Pair<ChannelHandlerContext, Packet<?>>> packets = new ArrayList<>();
     public boolean emptying = false;
 
     public Pause() {
-        super("Pause", "Pauses receiving packets.", SubCategory.MISC, false);
+        super("Pause", "Temporarily halts the processing of incoming network packets, allowing you to buffer server data.", SubCategory.MISC, false);
         INSTANCE = this;
     }
 

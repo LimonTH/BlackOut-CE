@@ -13,21 +13,19 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class PingSpoof extends Module {
     private static PingSpoof INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    private final Setting<SpoofMode> mode = this.sgGeneral.enumSetting("Spoof Mode", SpoofMode.Fake,
-            "Fake: Only changes the number in tab. Real: Actually delays packets to increase latency.");
-    private final Setting<Integer> extra = this.sgGeneral.intSetting("Extra", 50, 0, 1000, 10,
-            "The base amount of additional ping in milliseconds.");
-    private final Setting<Integer> jitter = this.sgGeneral.intSetting("Jitter", 5, 0, 1000, 10,
-            "Random variation added to the extra ping to make it look more natural.");
-    private final Setting<Integer> jitterInterval = this.sgGeneral.intSetting("Jitter Interval", 5, 0, 20, 1,
-            "How often (in ticks) the jitter value is recalculated.", () -> this.mode.get() == SpoofMode.Real);
+    private final Setting<SpoofMode> mode = this.sgGeneral.enumSetting("Latency Mode", SpoofMode.Fake, "Fake: Only modifies the ping value displayed in the tab list. Real: Delays packets to physically increase latency.");
+    private final Setting<Integer> extra = this.sgGeneral.intSetting("Additional Ping", 50, 0, 1000, 10, "The base amount of extra latency added to your connection in milliseconds.");
+    private final Setting<Integer> jitter = this.sgGeneral.intSetting("Jitter Magnitude", 5, 0, 1000, 10, "The maximum random variance added to the extra ping to simulate a natural connection.");
+    private final Setting<Integer> jitterInterval = this.sgGeneral.intSetting("Refresh Rate", 5, 0, 20, 1, "The interval in ticks at which the jitter value is recalculated for Real mode.", () -> this.mode.get() == SpoofMode.Real);
+
     private int ji = 0;
     private long nextJ = 0L;
 
     public PingSpoof() {
-        super("Ping Spoof", "Manipulates your perceived or actual latency to the server.", SubCategory.MISC, true);
+        super("Ping Spoof", "Artificially inflates your latency to the server for visual effect or specific bypasses.", SubCategory.MISC, true);
         INSTANCE = this;
     }
 

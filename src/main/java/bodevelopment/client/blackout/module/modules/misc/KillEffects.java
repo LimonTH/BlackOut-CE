@@ -15,12 +15,14 @@ import net.minecraft.sound.SoundEvents;
 
 public class KillEffects extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Integer> range = this.sgGeneral.intSetting("Range", 50, 0, 100, 1, ".");
-    public final Setting<Integer> tickDelay = this.sgGeneral.intSetting("Tick Delay", 10, 0, 20, 1, ".");
+
+    public final Setting<Integer> range = this.sgGeneral.intSetting("Detection Radius", 50, 0, 100, 1, "The maximum distance from the player to detect entity deaths.");
+    public final Setting<Integer> tickDelay = this.sgGeneral.intSetting("Effect Cooldown", 10, 0, 20, 1, "The minimum number of ticks between spawning successive effects to prevent performance drops.");
+
     private int ticks = 0;
 
     public KillEffects() {
-        super("Kill Effects", "Spawns lighting when someone dies", SubCategory.MISC, true);
+        super("Kill Effects", "Spawns aesthetic lightning bolts and thunder sounds at the location of a player's death.", SubCategory.MISC, true);
     }
 
     @Event

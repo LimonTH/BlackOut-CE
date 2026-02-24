@@ -10,17 +10,18 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 
 public class Timer extends Module {
     private static Timer INSTANCE;
+
+    public final SettingGroup sgGeneral = this.addGroup("General");
+
+    public final Setting<TimerMode> mode = this.sgGeneral.enumSetting("Timer Mode", TimerMode.Time, "Determines the synchronization method for the speed increase.");
+    public final Setting<Double> timeMulti = this.sgGeneral.doubleSetting("Time Multiplier", 1.0, 0.05, 10.0, 0.04, "Modifies the client-side tick rate to speed up or slow down the game world.", () -> this.mode.get() == TimerMode.Time);
+    public final Setting<Double> physicsMulti = this.sgGeneral.doubleSetting("Physics Multiplier", 1.0, 0.0, 10.0, 0.04, "Triggers extra physics updates per tick to simulate increased movement speed.", () -> this.mode.get() == TimerMode.Physics);
+
     private static float packets = 0.0F;
     private static float speed = -1.0F;
-    public final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<TimerMode> mode = this.sgGeneral.enumSetting("Mode", TimerMode.Time, ".");
-    public final Setting<Double> timeMulti = this.sgGeneral
-            .doubleSetting("Time Multiplier", 1.0, 0.05, 10.0, 0.04, "Timer speed.", () -> this.mode.get() == TimerMode.Time);
-    public final Setting<Double> physicsMulti = this.sgGeneral
-            .doubleSetting("Physics Multiplier", 1.0, 0.0, 10.0, 0.04, "Multiplier for movement packets.", () -> this.mode.get() == TimerMode.Physics);
 
     public Timer() {
-        super("Timer", "Speeds up your movement.", SubCategory.MISC, true);
+        super("Timer", "Manipulates the client-side tick rate or physics frequency to accelerate character actions and movement.", SubCategory.MISC, true);
         INSTANCE = this;
     }
 

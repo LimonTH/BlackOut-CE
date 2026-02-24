@@ -5,6 +5,7 @@ import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.manager.managers.RotationManager;
 import bodevelopment.client.blackout.module.modules.misc.AntiHunger;
+import bodevelopment.client.blackout.module.modules.misc.Portals;
 import bodevelopment.client.blackout.module.modules.movement.NoSlow;
 import bodevelopment.client.blackout.module.modules.movement.Sprint;
 import bodevelopment.client.blackout.module.modules.movement.TickShift;
@@ -182,6 +183,13 @@ public abstract class MixinClientPlayerEntity {
             } else {
                 instance.tick(slowDown, slowDownFactor);
             }
+        }
+    }
+
+    @Inject(method = "tickNausea", at = @At("HEAD"), cancellable = true)
+    private void onUpdateNausea(CallbackInfo ci) {
+        if (Portals.getInstance().enabled) {
+            ci.cancel();
         }
     }
 }

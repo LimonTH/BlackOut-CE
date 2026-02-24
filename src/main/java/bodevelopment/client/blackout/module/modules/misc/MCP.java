@@ -16,12 +16,13 @@ import net.minecraft.util.Hand;
 
 public class MCP extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<SwitchMode> mode = this.sgGeneral.enumSetting("Mode", SwitchMode.Normal, "How to switch.");
-    private final Setting<Boolean> swing = this.sgGeneral.booleanSetting("Swing", false, "Renders swing animation when placing throwing a peal");
-    private final Setting<SwingHand> swingHand = this.sgGeneral.enumSetting("Swing Hand", SwingHand.RealHand, "Which hand should be swung.");
+
+    public final Setting<SwitchMode> mode = this.sgGeneral.enumSetting("Swap Method", SwitchMode.Normal, "The mechanism used to switch to an Ender Pearl.");
+    private final Setting<Boolean> swing = this.sgGeneral.booleanSetting("Swing Animation", false, "Plays a hand swing animation upon throwing the pearl.");
+    private final Setting<SwingHand> swingHand = this.sgGeneral.enumSetting("Swing Hand", SwingHand.RealHand, "Determines which hand performs the swing animation.");
 
     public MCP() {
-        super("MCP", "Throws a pearl", SubCategory.MISC, true);
+        super("MCP", "Middle Click Pearl; automatically throws an Ender Pearl upon clicking the middle mouse button.", SubCategory.MISC, true);
     }
 
     @Event

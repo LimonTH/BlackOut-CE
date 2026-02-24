@@ -18,22 +18,25 @@ import java.util.List;
 
 public class StaffCheck extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> kb = this.sgGeneral.booleanSetting("Knockback", true, "Notifies about suspicious knockback");
-    private final Setting<Boolean> nameCheck = this.sgGeneral.booleanSetting("Name Check", false, ".");
+
+    private final Setting<Boolean> kb = this.sgGeneral.booleanSetting("Knockback Alert", true, "Notifies you if you receive purely vertical velocity, which is a common method used by staff to check for anti-knockback cheats.");
+    private final Setting<Boolean> nameCheck = this.sgGeneral.booleanSetting("Staff Name Alert", false, "Cross-references joining players with a known list of staff members and administrators.");
+
     List<String> staff = new ArrayList<>();
     private long prevTime = System.currentTimeMillis();
     private boolean added = false;
 
     public StaffCheck() {
-        super("Staff Check", "Alerts about staff checks", SubCategory.MISC, true);
+        super("Staff Check", "Monitors server activity for signs of administrative presence or manual 'vibe checks' like knockback testing.", SubCategory.MISC, true);
     }
 
     @Override
     public void onEnable() {
         if (!this.added) {
             this.added = true;
-            this.staff.add("Raksamies");
-            this.staff.add("OLEPOSSU");
+            this.staff.add("Limon_TH"); // LimonTH
+            this.staff.add("Raksamies"); // KassuK
+            this.staff.add("OLEPOSSU"); // luhpossu
         }
     }
 

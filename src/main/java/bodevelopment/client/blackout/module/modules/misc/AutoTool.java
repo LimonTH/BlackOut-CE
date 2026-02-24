@@ -13,8 +13,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 
 public class AutoTool extends Module {
+
     public AutoTool() {
-        super("Auto Tool", "Switches to the optimal tool when mining.", SubCategory.MISC, true);
+        super("Auto Tool", "Automatically selects the most efficient tool from the hotbar based on the block currently being broken.", SubCategory.MISC, true);
     }
 
     @Event

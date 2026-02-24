@@ -22,15 +22,17 @@ import java.util.function.Predicate;
 
 public class XCarry extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> fill = this.sgGeneral.booleanSetting("Fill", false, ".");
-    private final Setting<Double> fillDelay = this.sgGeneral.doubleSetting("Fill Delay", 1.0, 0.0, 5.0, 0.05, ".", this.fill::get);
-    private final Setting<List<Item>> fillItems = this.sgGeneral.itemListSetting("Items", ".", this.fill::get, Items.END_CRYSTAL, Items.EXPERIENCE_BOTTLE);
-    private final Setting<Integer> minStacks = this.sgGeneral.intSetting("Min Stacks", 1, 0, 10, 1, ".", this.fill::get);
-    private final Setting<Boolean> onlyInventory = this.sgGeneral.booleanSetting("Only Inventory", true, ".");
+
+    private final Setting<Boolean> fill = this.sgGeneral.booleanSetting("Auto Refill", false, "Automatically moves specific items from your inventory into the crafting slots for extra storage.");
+    private final Setting<Double> fillDelay = this.sgGeneral.doubleSetting("Refill Delay", 1.0, 0.0, 5.0, 0.05, "The delay between automated inventory movements.", this.fill::get);
+    private final Setting<List<Item>> fillItems = this.sgGeneral.itemListSetting("Priority Items", "The specific items allowed to be stored in the crafting grid slots.", this.fill::get, Items.END_CRYSTAL, Items.EXPERIENCE_BOTTLE);
+    private final Setting<Integer> minStacks = this.sgGeneral.intSetting("Stack Threshold", 1, 0, 10, 1, "The minimum number of stacks required in your main inventory before refilling the crafting grid.", this.fill::get);
+    private final Setting<Boolean> onlyInventory = this.sgGeneral.booleanSetting("Inventory Only", true, "Limits packet cancellation to the player's main inventory, ignoring other container types.");
+
     private long prevMove = 0L;
 
     public XCarry() {
-        super("XCarry", "Cancels inventory close packets.", SubCategory.MISC, true);
+        super("XCarry", "Allows you to store items in your crafting grid by canceling the packets that clear it when closing your inventory.", SubCategory.MISC, true);
     }
 
     @Event

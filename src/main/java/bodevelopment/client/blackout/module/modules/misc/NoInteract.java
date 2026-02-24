@@ -21,25 +21,26 @@ import java.util.List;
 
 public class NoInteract extends Module {
     private static NoInteract INSTANCE;
+
     private final SettingGroup sgBlocks = this.addGroup("Blocks");
     private final SettingGroup sgItems = this.addGroup("Items");
     private final SettingGroup sgEntity = this.addGroup("Entity");
-    private final Setting<NoInteractFilterMode> filterMode = this.sgBlocks
-            .enumSetting("Holding Filter Mode (Block)", NoInteractFilterMode.Cancel, ".");
-    private final Setting<List<Item>> whenHolding = this.sgBlocks.itemListSetting("When Holding (Block)", ".", Items.ENCHANTED_GOLDEN_APPLE, Items.GOLDEN_APPLE);
-    private final Setting<NoInteractFilterMode> blockFilterMode = this.sgBlocks.enumSetting("Block Filter Mode", NoInteractFilterMode.Cancel, ".");
-    private final Setting<List<Block>> blocks = this.sgBlocks.blockListSetting("Blocks", ".");
-    private final Setting<IgnoreMode> ignoreMode = this.sgBlocks.enumSetting("Ignore Mode", IgnoreMode.SneakBlocks, ".");
-    private final Setting<NoInteractFilterMode> itemFilterMode = this.sgItems.enumSetting("Item Filter Mode", NoInteractFilterMode.Cancel, ".");
-    private final Setting<List<Item>> items = this.sgItems.itemListSetting("Items", ".");
-    private final Setting<NoInteractFilterMode> filterModeEntity = this.sgEntity
-            .enumSetting("Holding Filter Mode (Entity)", NoInteractFilterMode.Cancel, ".");
-    private final Setting<List<Item>> whenHoldingEntity = this.sgEntity.itemListSetting("When Holding (Entity)", ".", Items.ENCHANTED_GOLDEN_APPLE, Items.GOLDEN_APPLE);
-    private final Setting<NoInteractFilterMode> entityFilterMode = this.sgEntity.enumSetting("Entity Filter Mode", NoInteractFilterMode.Accept, ".");
-    private final Setting<List<EntityType<?>>> entities = this.sgEntity.entityListSetting("Entities", ".");
 
+    private final Setting<NoInteractFilterMode> filterMode = this.sgBlocks.enumSetting("Holding Filter Mode (Block)", NoInteractFilterMode.Cancel, "Determines if the 'When Holding' list acts as a whitelist or a blacklist for block interactions.");
+    private final Setting<List<Item>> whenHolding = this.sgBlocks.itemListSetting("When Holding (Block)", "Prevents block interaction only when holding specific items (e.g., Gaps) to avoid opening chests accidentally.", Items.ENCHANTED_GOLDEN_APPLE, Items.GOLDEN_APPLE);
+    private final Setting<NoInteractFilterMode> blockFilterMode = this.sgBlocks.enumSetting("Block Filter Mode", NoInteractFilterMode.Cancel, "Determines if the 'Blocks' list acts as a whitelist or a blacklist.");
+    private final Setting<List<Block>> blocks = this.sgBlocks.blockListSetting("Blocks", "The specific blocks to block or allow interaction with (e.g., Chests, Crafting Tables).");
+    private final Setting<IgnoreMode> ignoreMode = this.sgBlocks.enumSetting("Ignore Mode", IgnoreMode.SneakBlocks, "The method used to bypass interaction, such as spoofing a sneak packet.");
+
+    private final Setting<NoInteractFilterMode> itemFilterMode = this.sgItems.enumSetting("Item Filter Mode", NoInteractFilterMode.Cancel, "Determines if the 'Items' list acts as a whitelist or a blacklist for item usage.");
+    private final Setting<List<Item>> items = this.sgItems.itemListSetting("Items", "The specific items to prevent using.");
+
+    private final Setting<NoInteractFilterMode> filterModeEntity = this.sgEntity.enumSetting("Holding Filter Mode (Entity)", NoInteractFilterMode.Cancel, "Determines if the 'When Holding' list acts as a whitelist or a blacklist for entity interactions.");
+    private final Setting<List<Item>> whenHoldingEntity = this.sgEntity.itemListSetting("When Holding (Entity)", "Prevents entity interaction (like mounting or trading) only when holding these items.", Items.ENCHANTED_GOLDEN_APPLE, Items.GOLDEN_APPLE);
+    private final Setting<NoInteractFilterMode> entityFilterMode = this.sgEntity.enumSetting("Entity Filter Mode", NoInteractFilterMode.Accept, "Determines if the 'Entities' list acts as a whitelist or a blacklist.");
+    private final Setting<List<EntityType<?>>> entities = this.sgEntity.entityListSetting("Entities", "The specific entity types to block or allow interaction with.");
     public NoInteract() {
-        super("No Interact", "Prevents interacting with blocks and entities.", SubCategory.MISC, false);
+        super("No Interact", "Prevents accidental interactions with containers, entities, or items while performing other actions.", SubCategory.MISC, false);
         INSTANCE = this;
     }
 
