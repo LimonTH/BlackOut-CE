@@ -228,43 +228,49 @@ public class ClickGui extends Screen {
         } else {
             descAlpha = MathHelper.clamp(descAlpha - frameTime * 8.0F, 0.0F, 1.0F);
         }
+        if (this.openedScreen == null) {
+            if (descAlpha > 0.0F && lastDescription != null) {
+                float textScale = 1.6F;
+                float maxBoxWidth = 350.0F;
+                List<String> lines = wrapText(lastDescription, maxBoxWidth / textScale);
 
-        if (descAlpha > 0.0F && lastDescription != null) {
-            float textScale = 1.6F;
-            float maxBoxWidth = 350.0F;
-            List<String> lines = wrapText(lastDescription, maxBoxWidth / textScale);
+                float finalWidth = 0;
+                for (String line : lines) {
+                    finalWidth = Math.max(finalWidth, BlackOut.FONT.getWidth(line) * textScale);
+                }
 
-            float finalWidth = 0;
-            for (String line : lines) {
-                finalWidth = Math.max(finalWidth, BlackOut.FONT.getWidth(line) * textScale);
+                float lineHeight = BlackOut.FONT.getHeight() * textScale;
+                float spacing = 2.0F;
+                float finalHeight = lines.size() * lineHeight + (lines.size() - 1) * spacing;
+
+                float rectX = (float) mx + 15;
+                float rectY = (float) my + 15;
+
+                if (rectX + finalWidth + 25 > width) rectX = (float) mx - finalWidth - 25;
+                if (rectY + finalHeight + 25 > height) rectY = (float) my - finalHeight - 25;
+
+                this.stack.push();
+                this.stack.translate(0, 0, 900);
+
+                float smoothAlpha = descAlpha * descAlpha;
+                int alphaInt = (int) (smoothAlpha * 255);
+                int bgColor = ColorUtils.withAlpha(GuiColorUtils.bg2.getRGB(), (int) (smoothAlpha * 235));
+                int textColor = ColorUtils.withAlpha(Color.WHITE.getRGB(), alphaInt);
+
+                RenderUtils.rounded(this.stack, rectX, rectY, finalWidth + 12, finalHeight + 10, 5.0F, 5.0F, bgColor, ColorUtils.SHADOW100I);
+
+                float currentY = rectY + 3.0F;
+                for (String line : lines) {
+                    BlackOut.FONT.text(this.stack, line, textScale, rectX + 6, currentY, textColor, false, false);
+                    currentY += lineHeight + spacing;
+                }
+
+                this.stack.pop();
             }
-
-            float lineHeight = BlackOut.FONT.getHeight() * textScale;
-            float spacing = 2.0F;
-            float finalHeight = lines.size() * lineHeight + (lines.size() - 1) * spacing;
-
-            float rectX = (float) mx + 15;
-            float rectY = (float) my + 15;
-
-            if (rectX + finalWidth + 25 > width) rectX = (float) mx - finalWidth - 25;
-            if (rectY + finalHeight + 25 > height) rectY = (float) my - finalHeight - 25;
-
+        } else {
+            descAlpha = 0;
             this.stack.push();
-            this.stack.translate(0, 0, 900);
-
-            float smoothAlpha = descAlpha * descAlpha;
-            int alphaInt = (int) (smoothAlpha * 255);
-            int bgColor = ColorUtils.withAlpha(GuiColorUtils.bg2.getRGB(), (int) (smoothAlpha * 235));
-            int textColor = ColorUtils.withAlpha(Color.WHITE.getRGB(), alphaInt);
-
-            RenderUtils.rounded(this.stack, rectX, rectY, finalWidth + 12, finalHeight + 10, 5.0F, 5.0F, bgColor, ColorUtils.SHADOW100I);
-
-            float currentY = rectY + 3.0F;
-            for (String line : lines) {
-                BlackOut.FONT.text(this.stack, line, textScale, rectX + 6, currentY, textColor, false, false);
-                currentY += lineHeight + spacing;
-            }
-
+            this.openedScreen.onRender(this.frameTime, mouseX, mouseY);
             this.stack.pop();
         }
 
@@ -659,7 +665,7 @@ public class ClickGui extends Screen {
         }
 
         if (key == GLFW.GLFW_KEY_UP) { upPressed = true; pressTime = System.currentTimeMillis(); return; }
-        if (key == GLFW.GLFW_KEY_DOWN) { downPressed = true; pressTime = System.currentTimeMillis(); return; }
+        if (key == GLFW.GLFW_KEY_DOWN) { downPressed = true; pressTime = System.currentTimeMillis(); }
     }
 
     @Event

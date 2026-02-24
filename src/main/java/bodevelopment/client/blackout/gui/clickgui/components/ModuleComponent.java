@@ -75,8 +75,11 @@ public class ModuleComponent extends Component {
         this.updateAnimation();
 
         if (!(this.y > ClickGui.height + 30.0F) && !(this.y + this.maxLength < -30.0F)) {
-            if (currentMx > this.x && currentMx < this.x + this.width && currentMy > this.y && currentMy < this.y + this.getHeight()) {
-                ClickGui.hoveredDescription = this.module.description;
+
+            if (Managers.CLICK_GUI.CLICK_GUI.openedScreen == null) {
+                if (currentMx > this.x && currentMx < this.x + this.width && currentMy > this.y && currentMy < this.y + this.getHeight()) {
+                    ClickGui.hoveredDescription = this.module.description;
+                }
             }
             this.shadowScissor();
             float bgY = Math.max(-15, this.y);
