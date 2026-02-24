@@ -15,14 +15,20 @@ import java.util.UUID;
 
 public class PopLag extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> target = this.sgGeneral.booleanSetting("Target", true, ".");
-    private final Setting<String> command = this.sgGeneral.stringSetting("Command", "msg", ".");
-    private final Setting<Integer> length = this.sgGeneral.intSetting("Length", 200, 0, 224, 1, ".");
-    private final Setting<Double> cooldown = this.sgGeneral.doubleSetting("Cooldown (Minutes)", 2.0, 0.0, 10.0, 0.1, ".");
+
+    private final Setting<Boolean> target = this.sgGeneral.booleanSetting("Target Only", true,
+            "Only attempts to lag the player currently targeted by AutoCrystal.");
+    private final Setting<String> command = this.sgGeneral.stringSetting("Command", "msg",
+            "The command used to deliver the lag string (e.g., 'msg', 'w', 'tell').");
+    private final Setting<Integer> length = this.sgGeneral.intSetting("Message Length", 200, 0, 224, 1,
+            "The amount of characters to send. Higher values cause more lag but may be blocked by some servers.");
+    private final Setting<Double> cooldown = this.sgGeneral.doubleSetting("Cooldown (Minutes)", 2.0, 0.0, 10.0, 0.1,
+            "Prevents spamming the lag command to the same player too frequently.");
+
     private final TimerList<UUID> sent = new TimerList<>(true);
 
     public PopLag() {
-        super("Pop Lag", ".", SubCategory.MISC_COMBAT, true);
+        super("Pop Lag", "Exploits chat rendering to lag out enemies when they pop a totem.", SubCategory.MISC_COMBAT, true);
     }
 
     @Event

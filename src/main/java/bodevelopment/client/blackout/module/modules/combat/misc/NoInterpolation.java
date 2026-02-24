@@ -7,7 +7,7 @@ public class NoInterpolation extends Module {
     private static NoInterpolation INSTANCE;
 
     public NoInterpolation() {
-        super("No Interpolation", "Doesn't move other players smoothly.", SubCategory.MISC_COMBAT, true);
+        super("No Interpolation", "Disables smooth movement for other players to show their exact server-side position.", SubCategory.MISC_COMBAT, true);
         INSTANCE = this;
     }
 

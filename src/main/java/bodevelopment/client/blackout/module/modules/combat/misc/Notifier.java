@@ -15,21 +15,33 @@ import net.minecraft.entity.effect.StatusEffects;
 
 public class Notifier extends Module {
     private static Notifier INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Notify mode", Mode.Hud, "How to notify you");
-    private final SettingGroup sgPops = this.addGroup("Pops");
     private final SettingGroup sgWeakness = this.addGroup("Weakness");
-    private final Setting<Boolean> pops = this.sgPops.booleanSetting("Pop Counter", true, "Counts Totem Pops");
-    private final Setting<Boolean> iOwn = this.sgPops.booleanSetting("Ignore Own", true, "Does not send count friends pops", this.pops::get);
-    private final Setting<Boolean> iFriends = this.sgPops.booleanSetting("Ignore Friends", true, "Does not send count friends pops", this.pops::get);
-    private final Setting<Boolean> weakness = this.sgWeakness.booleanSetting("Weakness", true, "Notifies about getting weakness");
-    private final Setting<Boolean> single = this.sgWeakness.booleanSetting("Single", true, "Only sends it once", this.weakness::get);
-    private final Setting<Double> delay = this.sgWeakness.doubleSetting("Delay", 5.0, 0.0, 100.0, 1.0, "Tick delay between alerts", this.weakness::get);
+    private final SettingGroup sgPops = this.addGroup("Pops");
+
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Notify mode", Mode.Hud,
+            "Where the alerts appear. 'Hud' uses the client's notification system, 'Chat' sends messages only you can see.");
+
+    private final Setting<Boolean> pops = this.sgPops.booleanSetting("Pop Counter", true,
+            "Tracks and displays how many totems a player has used.");
+    private final Setting<Boolean> iOwn = this.sgPops.booleanSetting("Ignore Own", true,
+            "Toggle to stop receiving notifications when YOU pop a totem.");
+    private final Setting<Boolean> iFriends = this.sgPops.booleanSetting("Ignore Friends", true,
+            "Toggle to stop receiving notifications when your FRIENDS pop a totem.");
+
+    private final Setting<Boolean> weakness = this.sgWeakness.booleanSetting("Weakness", true,
+            "Alerts you when you are affected by the Weakness effect.");
+    private final Setting<Boolean> single = this.sgWeakness.booleanSetting("Single", true,
+            "Only sends one notification when you get weakness, rather than spamming.");
+    private final Setting<Double> delay = this.sgWeakness.doubleSetting("Delay", 5.0, 0.0, 100.0, 1.0,
+            "The time (in seconds) between repeated weakness alerts if 'Single' is off.");
+
     private double timer = 0.0;
     private boolean last = false;
 
     public Notifier() {
-        super("Notifier", "Notifies you about events", SubCategory.MISC_COMBAT, true);
+        super("Notifier", "Notifies you about events like effects or totems.", SubCategory.MISC_COMBAT, true);
         INSTANCE = this;
     }
 
