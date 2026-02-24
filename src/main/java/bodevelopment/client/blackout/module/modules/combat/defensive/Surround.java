@@ -19,19 +19,28 @@ import java.util.Map;
 
 public class Surround extends ObsidianModule {
     private static Surround INSTANCE;
+
     private final SettingGroup sgToggle = this.addGroup("Toggle");
 
-    private final Setting<Boolean> center = this.sgGeneral.booleanSetting("Center", false, "Moves to block center before surrounding.");
-    private final Setting<Boolean> smartCenter = this.sgGeneral
-            .booleanSetting("Smart Center", true, "Only moves until whole hitbox is inside target block.", this.center::get);
-    private final Setting<Boolean> phaseCenter = this.sgGeneral.booleanSetting("Phase Center", true, "Doesn't center if clipped inside a block.", this.center::get);
-    private final Setting<Boolean> extend = this.sgGeneral.booleanSetting("Extend", true, ".");
-    private final Setting<Boolean> toggleMove = this.sgToggle.booleanSetting("Toggle Move", false, "Toggles if you move horizontally.");
-    private final Setting<VerticalToggleMode> toggleVertical = this.sgToggle
-            .enumSetting("Toggle Vertical", VerticalToggleMode.Up, "Toggles the module if you move vertically.");
-    private final Setting<Double> singleCooldown = this.sgSpeed
-            .doubleSetting("Single Cooldown", 0.05, 0.0, 1.0, 0.01, "Waits x seconds before trying to place at the same position if there is 1 missing block.");
-    private final Setting<Boolean> antiCev = this.sgAttack.booleanSetting("Anti CEV", false, "Attacks crystals placed on surround blocks.", this.attack::get);
+    private final Setting<Boolean> center = this.sgGeneral.booleanSetting("Center", false,
+            "Automatically teleports you to the center of the block for a perfect 1x1 surround.");
+    private final Setting<Boolean> smartCenter = this.sgGeneral.booleanSetting("Smart Center", true,
+            "Only moves you as much as necessary to fit your hitbox inside the block, avoiding unnecessary movement.", this.center::get);
+    private final Setting<Boolean> phaseCenter = this.sgGeneral.booleanSetting("Phase Center", true,
+            "Prevents centering if you are already clipped/glitched inside a block to avoid getting stuck.", this.center::get);
+    private final Setting<Boolean> extend = this.sgGeneral.booleanSetting("Extend", true,
+            "Automatically expands the surround if another player or entity is standing in your way.");
+
+    private final Setting<Boolean> toggleMove = this.sgToggle.booleanSetting("Toggle Move", false,
+            "Disables Surround if you move to a different horizontal block.");
+    private final Setting<VerticalToggleMode> toggleVertical = this.sgToggle.enumSetting("Toggle Vertical", VerticalToggleMode.Up,
+            "Disables the module when jumping or falling.");
+
+    private final Setting<Double> singleCooldown = this.sgSpeed.doubleSetting("Single Cooldown", 0.05, 0.0, 1.0, 0.01,
+            "Faster placement delay when only one block is missing from your surround.");
+    private final Setting<Boolean> antiCev = this.sgAttack.booleanSetting("Anti CEV", false,
+            "Predictively attacks crystals placed above your surround blocks to prevent Cev-Breaker attacks.", this.attack::get);
+
     private final Map<AbstractClientPlayerEntity, Long> blockedSince = new HashMap<>();
     private final Direction[] directions = new Direction[]{
             Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST, Direction.DOWN
@@ -42,7 +51,7 @@ public class Surround extends ObsidianModule {
     private BlockPos currentPos = null;
 
     public Surround() {
-        super("Surround", "Places blocks around your legs to protect from explosions.", SubCategory.DEFENSIVE);
+        super("Surround", "Forms a defensive obsidian ring around your feet to negate crystal damage.", SubCategory.DEFENSIVE);
         INSTANCE = this;
     }
 

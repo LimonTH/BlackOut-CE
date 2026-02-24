@@ -53,40 +53,66 @@ public class Blocker extends Module {
     private final SettingGroup sgDamage = this.addGroup("Damage");
     private final SettingGroup sgRender = this.addGroup("Render");
 
-    private final Setting<Boolean> pauseEat = this.sgGeneral.booleanSetting("Pause Eat", false, "Pauses when eating.");
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent, "Method of switching. Silent is the most reliable.");
-    private final Setting<Double> mineTime = this.sgGeneral
-            .doubleSetting("Mine Time", 1.0, 0.0, 10.0, 0.1, "How long do we let enemies mine our surround for before protecting it.");
-    private final Setting<Double> maxMineTime = this.sgGeneral.doubleSetting("Max Mine Time", 5.0, 0.0, 10.0, 0.1, "Ignores mining after x seconds.");
-    private final Setting<Boolean> packet = this.sgGeneral.booleanSetting("Packet", false, ".");
-    private final Setting<Boolean> onlyHole = this.sgGeneral.booleanSetting("Only Hole", false, "Only protects when you are in a hole..");
-    private final Setting<Boolean> surroundFloor = this.sgProtection.booleanSetting("Surround Floor", true, "Places blocks around surround floor blocks");
-    private final Setting<Boolean> surroundFloorBottom = this.sgProtection.booleanSetting("Surround Floor Bottom", true, "Places blocks under surround floor blocks");
-    private final Setting<Boolean> surroundSides = this.sgProtection.booleanSetting("Surround Sides", true, "Places blocks next to surround blocks");
-    private final Setting<Boolean> surroundTop = this.sgProtection.booleanSetting("Surround Side Top", true, "Places blocks on top of surround blocks");
-    private final Setting<Boolean> surroundBottom = this.sgProtection.booleanSetting("Surround Side Bottom", true, "Places blocks under surround blocks");
-    private final Setting<Boolean> trapCev = this.sgProtection.booleanSetting("Trap Cev", true, "Places on top of trap side block");
-    private final Setting<Boolean> cev = this.sgProtection.booleanSetting("Cev", true, "Places on top of trap top blocks");
-    private final Setting<PlaceDelayMode> placeDelayMode = this.sgSpeed.enumSetting("Place Delay Mode", PlaceDelayMode.Ticks, ".");
-    private final Setting<Integer> placeDelayT = this.sgSpeed
-            .intSetting("Place Delay Ticks", 1, 0, 20, 1, "Tick delay between places.", () -> this.placeDelayMode.get() == PlaceDelayMode.Ticks);
-    private final Setting<Double> placeDelayS = this.sgSpeed
-            .doubleSetting("Place Delay", 0.1, 0.0, 1.0, 1.0, "Delay between places.", () -> this.placeDelayMode.get() == PlaceDelayMode.Seconds);
-    private final Setting<Integer> places = this.sgSpeed.intSetting("Places", 1, 0, 20, 1, "How many blocks to place each time.");
-    private final Setting<Double> cooldown = this.sgSpeed.doubleSetting("Cooldown", 0.5, 0.0, 1.0, 1.0, "Waits x seconds before trying to place at the same position.");
-    private final Setting<List<Block>> blocks = this.sgBlocks.blockListSetting("Blocks", "Blocks to use.", Blocks.OBSIDIAN);
-    private final Setting<Boolean> attack = this.sgAttack.booleanSetting("Attack", true, "Attacks crystals blocking.");
-    private final Setting<Double> attackSpeed = this.sgAttack.doubleSetting("Attack Speed", 4.0, 0.0, 20.0, 0.1, "How many times to attack every second.");
-    private final Setting<Boolean> always = this.sgDamage.booleanSetting("Always", true, "Doesn't check for min damage when placing.");
-    private final Setting<Double> minDmg = this.sgDamage
-            .doubleSetting("Min Damage", 6.0, 0.0, 20.0, 0.1, "Doesn't place if you would take less damage than this.", () -> !this.always.get());
-    private final Setting<Boolean> placeSwing = this.sgRender.booleanSetting("Place Swing", true, "Renders swing animation when placing a block.");
-    private final Setting<SwingHand> placeHand = this.sgRender.enumSetting("Place Hand", SwingHand.RealHand, "Which hand should be swung.", this.placeSwing::get);
-    private final Setting<Boolean> attackSwing = this.sgRender.booleanSetting("Attack Swing", true, "Renders swing animation when attacking a crystal.");
-    private final Setting<SwingHand> attackHand = this.sgRender.enumSetting("Attack Hand", SwingHand.RealHand, "Which hand should be swung.", this.attackSwing::get);
-    private final Setting<RenderShape> renderShape = this.sgRender.enumSetting("Render Shape", RenderShape.Full, "Which parts should be rendered.");
-    private final Setting<BlackOutColor> lineColor = this.sgRender.colorSetting("Line Color", new BlackOutColor(255, 0, 0, 255), ".");
-    private final Setting<BlackOutColor> sideColor = this.sgRender.colorSetting("Side Color", new BlackOutColor(255, 0, 0, 50), ".");
+    private final Setting<Boolean> pauseEat = this.sgGeneral.booleanSetting("Pause Eat", false,
+            "Suspends actions while you are eating or drinking.");
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent,
+            "Method of switching to protective blocks. Silent is recommended for maximum efficiency.");
+    private final Setting<Double> mineTime = this.sgGeneral.doubleSetting("Mine Time", 1.0, 0.0, 10.0, 0.1,
+            "Wait time (seconds) after an enemy starts mining before we place protection.");
+    private final Setting<Double> maxMineTime = this.sgGeneral.doubleSetting("Max Mine Time", 5.0, 0.0, 10.0, 0.1,
+            "Stop tracking mining progress if it exceeds this time limit.");
+    private final Setting<Boolean> packet = this.sgGeneral.booleanSetting("Packet", false,
+            "Use packets for faster block placement logic.");
+    private final Setting<Boolean> onlyHole = this.sgGeneral.booleanSetting("Only Hole", false,
+            "Activate Blocker only when you are safely inside a hole.");
+
+    private final Setting<Boolean> surroundFloor = this.sgProtection.booleanSetting("Surround Floor", true,
+            "Protects the blocks forming your hole's floor.");
+    private final Setting<Boolean> surroundFloorBottom = this.sgProtection.booleanSetting("Surround Floor Bottom", true,
+            "Places blocks underneath your floor for extra security against burrow/downwards attacks.");
+    private final Setting<Boolean> surroundSides = this.sgProtection.booleanSetting("Surround Sides", true,
+            "Places blocks adjacent to your surround walls if they are being mined.");
+    private final Setting<Boolean> surroundTop = this.sgProtection.booleanSetting("Surround Side Top", true,
+            "Places blocks on top of your surround walls.");
+    private final Setting<Boolean> surroundBottom = this.sgProtection.booleanSetting("Surround Side Bottom", true,
+            "Places blocks under your surround walls.");
+    private final Setting<Boolean> trapCev = this.sgProtection.booleanSetting("Trap Cev", true,
+            "Protects the blocks at your head level from Cev-Breaker setups.");
+    private final Setting<Boolean> cev = this.sgProtection.booleanSetting("Cev", true,
+            "Protects the very top block of your trap/ceiling.");
+
+    private final Setting<PlaceDelayMode> placeDelayMode = this.sgSpeed.enumSetting("Place Delay Mode", PlaceDelayMode.Ticks,
+            "Whether to calculate placement delay in Ticks or Seconds.");
+    private final Setting<Integer> placeDelayT = this.sgSpeed.intSetting("Place Delay Ticks", 1, 0, 20, 1,
+            "Delay between block placements in ticks.", () -> this.placeDelayMode.get() == PlaceDelayMode.Ticks);
+    private final Setting<Double> placeDelayS = this.sgSpeed.doubleSetting("Place Delay", 0.1, 0.0, 1.0, 1.0,
+            "Delay between block placements in seconds.", () -> this.placeDelayMode.get() == PlaceDelayMode.Seconds);
+    private final Setting<Integer> places = this.sgSpeed.intSetting("Places", 1, 0, 20, 1,
+            "Max number of blocks to place in a single execution.");
+    private final Setting<Double> cooldown = this.sgSpeed.doubleSetting("Cooldown", 0.5, 0.0, 1.0, 1.0,
+            "Minimum time to wait before re-placing at the same location.");
+
+    private final Setting<List<Block>> blocks = this.sgBlocks.blockListSetting("Blocks",
+            "List of blocks available for protection (e.g., Obsidian).", Blocks.OBSIDIAN);
+
+    private final Setting<Boolean> attack = this.sgAttack.booleanSetting("Attack", true,
+            "Automatically breaks crystals that are blocking your placement positions.");
+    private final Setting<Double> attackSpeed = this.sgAttack.doubleSetting("Attack Speed", 4.0, 0.0, 20.0, 0.1,
+            "Attacks per second to break obstructing crystals.");
+
+    private final Setting<Boolean> always = this.sgDamage.booleanSetting("Always", true,
+            "Always place protection regardless of how much damage the potential explosion would do.");
+    private final Setting<Double> minDmg = this.sgDamage.doubleSetting("Min Damage", 6.0, 0.0, 20.0, 0.1,
+            "Minimum potential crystal damage required to trigger protection.", () -> !this.always.get());
+
+    private final Setting<Boolean> placeSwing = this.sgRender.booleanSetting("Place Swing", true, "Render hand swing on block placement.");
+    private final Setting<SwingHand> placeHand = this.sgRender.enumSetting("Place Hand", SwingHand.RealHand, "Swing hand for placement.");
+    private final Setting<Boolean> attackSwing = this.sgRender.booleanSetting("Attack Swing", true, "Render hand swing when attacking crystals.");
+    private final Setting<SwingHand> attackHand = this.sgRender.enumSetting("Attack Hand", SwingHand.RealHand, "Swing hand for attacking.");
+    private final Setting<RenderShape> renderShape = this.sgRender.enumSetting("Render Shape", RenderShape.Full, "Visual style of the protection box.");
+    private final Setting<BlackOutColor> lineColor = this.sgRender.colorSetting("Line Color", new BlackOutColor(255, 0, 0, 255), "Outline color.");
+    private final Setting<BlackOutColor> sideColor = this.sgRender.colorSetting("Side Color", new BlackOutColor(255, 0, 0, 50), "Fill color.");
+
     private final TimerList<Pair<BlockPos, Integer>> mining = new TimerList<>(true);
     private final List<ProtectBlock> toProtect = new ArrayList<>();
     private final List<BlockPos> placePositions = new ArrayList<>();
@@ -103,7 +129,7 @@ public class Blocker extends Module {
     private long lastAttack = 0L;
 
     public Blocker() {
-        super("Blocker", "Covers your surround blocks if any enemy tries to mine them.", SubCategory.DEFENSIVE, true);
+        super("Blocker", "Anti-Cev and Anti-Mine protection that places blocks to prevent enemy crystal setups.", SubCategory.DEFENSIVE, true);
     }
 
     @Event

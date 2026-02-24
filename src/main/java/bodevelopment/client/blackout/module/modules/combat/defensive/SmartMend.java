@@ -24,17 +24,20 @@ import java.util.Map;
 public class SmartMend extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    private final Setting<Integer> antiWaste = this.sgGeneral
-            .intSetting("Anti Waste", 90, 0, 100, 1, "Doesn't use experience if any armor piece is above this durability.");
-    private final Setting<Double> moveSpeed = this.sgGeneral.doubleSetting("Move Speed", 2.0, 0.0, 20.0, 0.2, ".");
-    private final Setting<Boolean> closeInv = this.sgGeneral.booleanSetting("Close Inventory", true, ".");
+    private final Setting<Integer> antiWaste = this.sgGeneral.intSetting("Anti Waste", 90, 0, 100, 1,
+            "Durability threshold. Items above this percentage are considered 'mended' and will be moved to inventory.");
+    private final Setting<Double> moveSpeed = this.sgGeneral.doubleSetting("Move Speed", 2.0, 0.0, 20.0, 0.2,
+            "How fast (actions per second) the module moves items between armor slots and inventory.");
+    private final Setting<Boolean> closeInv = this.sgGeneral.booleanSetting("Close Inventory", true,
+            "Automatically closes the inventory screen after moving an item to prevent GUI desync.");
+
     private final List<EquipmentSlot> moveBack = new ArrayList<>();
     private final TimerList<EquipmentSlot> delays = new TimerList<>(true);
     private final Map<EquipmentSlot, Long> wornSince = new HashMap<>();
     private long prevMove = 0L;
 
     public SmartMend() {
-        super("Smart Mend", "Moves fully mended items to inventory.", SubCategory.DEFENSIVE, true);
+        super("Smart Mend", "Moves fully repaired armor to your inventory so other pieces mend faster.", SubCategory.DEFENSIVE, true);
     }
 
     @Event

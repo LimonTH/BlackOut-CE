@@ -40,31 +40,49 @@ public class Offhand extends Module {
     private final SettingGroup sgHealth = this.addGroup("Health");
     private final SettingGroup sgThreading = this.addGroup("Threading");
 
-    private final Setting<TotemMode> totemMode = this.sgItem.enumSetting("Totem Mode", TotemMode.Always, ".");
-    private final Setting<ItemMode> primary = this.sgItem
-            .enumSetting("Primary", ItemMode.Crystal, ".", () -> this.totemMode.get() != TotemMode.Always);
-    private final Setting<ItemMode> secondary = this.sgItem
-            .enumSetting("Secondary", ItemMode.Gapple, ".", () -> this.totemMode.get() != TotemMode.Always && this.primary.get() != ItemMode.Nothing);
-    private final Setting<Boolean> swordGapple = this.sgItem.booleanSetting("Sword Gapple", true, ".");
-    private final Setting<Boolean> safeSwordGapple = this.sgItem
-            .booleanSetting("Safe Sword Gapple", true, ".", () -> this.swordGapple.get() && this.totemMode.get() != TotemMode.Never);
-    private final Setting<Boolean> onlyInInventory = this.sgSwitch.booleanSetting("Only In Inventory", false, ".");
-    private final Setting<SwitchMode> switchMode = this.sgSwitch.enumSetting("Switch Mode", SwitchMode.FClick, ".");
-    private final Setting<Double> cooldown = this.sgSwitch.doubleSetting("Cooldown", 0.2, 0.0, 1.0, 0.01, ".");
-    private final Setting<Integer> latency = this.sgHealth.intSetting("Latency", 0, 0, 10, 1, "");
-    private final Setting<Boolean> prediction = this.sgHealth.booleanSetting("Prediction", true, ".");
-    private final Setting<Integer> hp = this.sgHealth.intSetting("Totem Health", 14, 0, 36, 1, ".");
-    private final Setting<Integer> safeHealth = this.sgHealth.intSetting("Safe Health", 18, 0, 36, 1, ".");
-    private final Setting<Boolean> mineCheck = this.sgHealth.booleanSetting("Mine Check", true, ".");
-    private final Setting<Double> miningTime = this.sgHealth.doubleSetting("Mining Time", 4.0, 0.0, 10.0, 0.1, ".", this.mineCheck::get);
-    private final Setting<Integer> holeHp = this.sgHealth.intSetting("Hole Health", 10, 0, 36, 1, ".");
-    private final Setting<Integer> holeSafeHp = this.sgHealth.intSetting("Hole Safe Health", 14, 0, 36, 1, ".");
-    private final Setting<Double> safetyMultiplier = this.sgHealth.doubleSetting("Safety Multiplier", 1.0, 0.0, 5.0, 0.05, ".");
-    private final Setting<Boolean> render = this.sgThreading.booleanSetting("Render", true, ".");
-    private final Setting<Boolean> tickPre = this.sgThreading.booleanSetting("Tick Pre", true, ".");
-    private final Setting<Boolean> tickPost = this.sgThreading.booleanSetting("Tick Post", true, ".");
-    private final Setting<Boolean> move = this.sgThreading.booleanSetting("Move", true, ".");
-    private final Setting<Boolean> crystalSpawn = this.sgThreading.booleanSetting("Crystal Spawn", true, ".");
+    private final Setting<TotemMode> totemMode = this.sgItem.enumSetting("Totem Mode", TotemMode.Always,
+            "When to prioritize holding a Totem of Undying.");
+    private final Setting<ItemMode> primary = this.sgItem.enumSetting("Primary", ItemMode.Crystal,
+            "Default item to hold in offhand when you are safe.", () -> this.totemMode.get() != TotemMode.Always);
+    private final Setting<ItemMode> secondary = this.sgItem.enumSetting("Secondary", ItemMode.Gapple,
+            "Fall-back item if the primary item is out of stock.", () -> this.totemMode.get() != TotemMode.Always && this.primary.get() != ItemMode.Nothing);
+    private final Setting<Boolean> swordGapple = this.sgItem.booleanSetting("Sword Gapple", true,
+            "Automatically switches to Gapples when you hold a sword and press Use.");
+    private final Setting<Boolean> safeSwordGapple = this.sgItem.booleanSetting("Safe Sword Gapple", true,
+            "Forces a Totem instead of a Gapple if you are in danger, even while holding a sword.", () -> this.swordGapple.get() && this.totemMode.get() != TotemMode.Never);
+
+    private final Setting<Boolean> onlyInInventory = this.sgSwitch.booleanSetting("Only In Inventory", false,
+            "Only perform offhand switches while the inventory screen is open.");
+    private final Setting<SwitchMode> switchMode = this.sgSwitch.enumSetting("Switch Mode", SwitchMode.FClick,
+            "The packet/click method for swapping items. FClick is usually the fastest.");
+    private final Setting<Double> cooldown = this.sgSwitch.doubleSetting("Cooldown", 0.2, 0.0, 1.0, 0.01,
+            "Delay between offhand swaps to prevent inventory desync/ghost items.");
+
+    private final Setting<Integer> latency = this.sgHealth.intSetting("Latency", 0, 0, 10, 1,
+            "Compensates for server lag by checking your previous positions for damage.");
+    private final Setting<Boolean> prediction = this.sgHealth.booleanSetting("Prediction", true,
+            "Calculates potential damage based on your predicted movement.");
+    private final Setting<Integer> hp = this.sgHealth.intSetting("Totem Health", 14, 0, 36, 1,
+            "Health threshold to switch to a Totem when outside of a hole.");
+    private final Setting<Integer> safeHealth = this.sgHealth.intSetting("Safe Health", 18, 0, 36, 1,
+            "Stays on Totem until your health rises above this level for safety.");
+    private final Setting<Boolean> mineCheck = this.sgHealth.booleanSetting("Mine Check", true,
+            "Treats your hole as unsafe if someone is currently mining its walls.");
+    private final Setting<Double> miningTime = this.sgHealth.doubleSetting("Mining Time", 4.0, 0.0, 10.0, 0.1,
+            "How long to keep the 'Danger' status after a block starts being mined.");
+    private final Setting<Integer> holeHp = this.sgHealth.intSetting("Hole Health", 10, 0, 36, 1,
+            "Health threshold for Totem while safely inside a hole (usually lower than Totem Health).");
+    private final Setting<Integer> holeSafeHp = this.sgHealth.intSetting("Hole Safe Health", 14, 0, 36, 1,
+            "Recovery threshold while in a hole.");
+    private final Setting<Double> safetyMultiplier = this.sgHealth.doubleSetting("Safety Multiplier", 1.0, 0.0, 5.0, 0.05,
+            "Multiplies calculated crystal damage for extra safety padding.");
+
+    private final Setting<Boolean> render = this.sgThreading.booleanSetting("Render", true, "Update offhand during world rendering.");
+    private final Setting<Boolean> tickPre = this.sgThreading.booleanSetting("Tick Pre", true, "Update offhand during tick start.");
+    private final Setting<Boolean> tickPost = this.sgThreading.booleanSetting("Tick Post", true, "Update offhand during tick end.");
+    private final Setting<Boolean> move = this.sgThreading.booleanSetting("Move", true, "Update offhand when moving.");
+    private final Setting<Boolean> crystalSpawn = this.sgThreading.booleanSetting("Crystal Spawn", true, "Instant update when a crystal spawns.");
+
     private final TimerMap<Integer, BlockPos> mining = new TimerMap<>(true);
     private final List<Box> prevPositions = new ArrayList<>();
     private final Predicate<ItemStack> totemPredicate = stack -> stack.isOf(Items.TOTEM_OF_UNDYING);
@@ -72,7 +90,7 @@ public class Offhand extends Module {
     private long prevSwitch = 0L;
 
     public Offhand() {
-        super("Offhand", "Automatically puts items in offhand.", SubCategory.DEFENSIVE, true);
+        super("Offhand", "Manages totems and items with advanced damage prediction.", SubCategory.DEFENSIVE, true);
     }
 
     @Event

@@ -14,15 +14,20 @@ import java.util.concurrent.ThreadLocalRandom;
 public class PingSpoof extends Module {
     private static PingSpoof INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<SpoofMode> mode = this.sgGeneral.enumSetting("Spoof Mode", SpoofMode.Fake, "Real mode actually increases your ping.");
-    private final Setting<Integer> jitterInterval = this.sgGeneral.intSetting("Jitter Interval", 5, 0, 20, 1, ".", () -> this.mode.get() == SpoofMode.Real);
-    private final Setting<Integer> extra = this.sgGeneral.intSetting("Extra", 50, 0, 1000, 10, ".");
-    private final Setting<Integer> jitter = this.sgGeneral.intSetting("Jitter", 5, 0, 1000, 10, ".");
+
+    private final Setting<SpoofMode> mode = this.sgGeneral.enumSetting("Spoof Mode", SpoofMode.Fake,
+            "Fake: Only changes the number in tab. Real: Actually delays packets to increase latency.");
+    private final Setting<Integer> extra = this.sgGeneral.intSetting("Extra", 50, 0, 1000, 10,
+            "The base amount of additional ping in milliseconds.");
+    private final Setting<Integer> jitter = this.sgGeneral.intSetting("Jitter", 5, 0, 1000, 10,
+            "Random variation added to the extra ping to make it look more natural.");
+    private final Setting<Integer> jitterInterval = this.sgGeneral.intSetting("Jitter Interval", 5, 0, 20, 1,
+            "How often (in ticks) the jitter value is recalculated.", () -> this.mode.get() == SpoofMode.Real);
     private int ji = 0;
     private long nextJ = 0L;
 
     public PingSpoof() {
-        super("Ping Spoof", "Increases your ping.", SubCategory.MISC, true);
+        super("Ping Spoof", "Manipulates your perceived or actual latency to the server.", SubCategory.MISC, true);
         INSTANCE = this;
     }
 

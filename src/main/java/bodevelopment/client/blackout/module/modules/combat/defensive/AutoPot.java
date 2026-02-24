@@ -35,22 +35,40 @@ public class AutoPot extends Module {
     private final SettingGroup sgPause = this.addGroup("Pause");
     private final SettingGroup sgRender = this.addGroup("Render");
 
-    private final Setting<Double> throwSpeed = this.sgGeneral.doubleSetting("Throw Speed", 20.0, 0.0, 20.0, 0.2, "How many timer to throw every second. 20 is recommended.");
-    private final Setting<Integer> bottles = this.sgGeneral.intSetting("Bottles", 1, 1, 10, 1, "Amount of bottles to throw every time.");
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent, "Method of switching. Silent is the most reliable.");
-    private final Setting<Integer> throwTicks = this.sgGeneral
-            .intSetting("Throw Ticks", 1, 1, 20, 1, "Doesn't use experience if any armor piece is above this durability.");
-    private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotate", true, "Ignores rotation speed limit.");
-    private final Setting<Integer> health = this.sgHealth.intSetting("Health", 75, 0, 100, 1, "Mends if any armor piece is under this durability.");
-    private final Setting<Boolean> safe = this.sgHealth.booleanSetting("Safe", true, "Doesn't use experience if any armor piece is above this durability.");
-    private final Setting<Double> safeHealth = this.sgHealth.doubleSetting("Safe Health", 5.0, 0.0, 36.0, 0.1, ".");
-    private final Setting<Integer> maxExisted = this.sgHealth.intSetting("Max Existed", 10, 0, 100, 1, ".");
-    private final Setting<Integer> autoCrystalPause = this.sgPause.intSetting("Auto Crystal Pause", 0, 0, 100, 1, "Pauses for x ticks if auto crystal places.");
-    private final Setting<Integer> surroundPause = this.sgPause.intSetting("Surround Pause", 0, 0, 100, 1, "Pauses for x ticks if surround places.");
-    private final Setting<Integer> movePause = this.sgPause.intSetting("Move Pause", 0, 0, 100, 1, "Pauses for x ticks if moved.");
-    private final Setting<Integer> airPause = this.sgPause.intSetting("Air Pause", 0, 0, 100, 1, "Pauses for x ticks if off ground.");
-    private final Setting<Boolean> renderSwing = this.sgRender.booleanSetting("Render Swing", true, "Renders swing animation when throwing an exp bottle.");
-    private final Setting<SwingHand> swingHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand, "Which hand should be swung.");
+    private final Setting<Double> throwSpeed = this.sgGeneral.doubleSetting("Throw Speed", 20.0, 0.0, 20.0, 0.2,
+            "How many times to attempt throwing potions per second.");
+    private final Setting<Integer> bottles = this.sgGeneral.intSetting("Bottles", 1, 1, 10, 1,
+            "Maximum number of potions to throw in one action.");
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent,
+            "Method for switching to splash potions. Silent is recommended for combat.");
+    private final Setting<Integer> throwTicks = this.sgGeneral.intSetting("Throw Ticks", 1, 1, 20, 1,
+            "Duration (in ticks) to keep throwing once the healing condition is met.");
+    private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotate", true,
+            "Forces the camera to look down immediately for precise splashing.");
+
+    private final Setting<Integer> health = this.sgHealth.intSetting("Health", 15, 0, 36, 1,
+            "Starts throwing potions if your health drops below this value.");
+    private final Setting<Boolean> safe = this.sgHealth.booleanSetting("Safe", true,
+            "Enables predictive healing based on nearby crystal damage.");
+    private final Setting<Double> safeHealth = this.sgHealth.doubleSetting("Safe Health", 5.0, 0.0, 36.0, 0.1,
+            "Throws a potion if a nearby crystal's damage would leave you with less than this amount of health.");
+    private final Setting<Integer> maxExisted = this.sgHealth.intSetting("Max Existed", 10, 0, 100, 1,
+            "Only considers crystals that have existed for less than this many ticks (ignores old crystals).");
+
+    private final Setting<Integer> autoCrystalPause = this.sgPause.intSetting("Auto Crystal Pause", 0, 0, 100, 1,
+            "Pause healing for X ticks after placing a crystal to avoid block-clipping.");
+    private final Setting<Integer> surroundPause = this.sgPause.intSetting("Surround Pause", 0, 0, 100, 1,
+            "Pause healing for X ticks after placing a surround block.");
+    private final Setting<Integer> movePause = this.sgPause.intSetting("Move Pause", 0, 0, 100, 1,
+            "Pause healing for X ticks after moving between blocks.");
+    private final Setting<Integer> airPause = this.sgPause.intSetting("Air Pause", 0, 0, 100, 1,
+            "Pause healing while jumping or falling to ensure the potion hits your feet.");
+
+    private final Setting<Boolean> renderSwing = this.sgRender.booleanSetting("Render Swing", true,
+            "Visually swings your hand when a potion is thrown.");
+    private final Setting<SwingHand> swingHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand,
+            "Which hand to use for the swing animation.");
+
     private final Predicate<ItemStack> healthPred = stack -> {
         if (!(stack.getItem() instanceof ThrowablePotionItem)) {
             return false;
@@ -77,7 +95,7 @@ public class AutoPot extends Module {
     private FindResult result = null;
 
     public AutoPot() {
-        super("Auto Pot", "Automatically throws potions.", SubCategory.DEFENSIVE, true);
+        super("Auto Pot", "Automatically throws splash potions of healing at your feet.", SubCategory.DEFENSIVE, true);
     }
 
     @Event

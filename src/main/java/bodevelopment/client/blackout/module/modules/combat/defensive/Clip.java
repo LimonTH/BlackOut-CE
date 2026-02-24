@@ -25,26 +25,38 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class Clip extends Module {
     private static Clip INSTANCE;
+
     public final SettingGroup sgGeneral = this.addGroup("General");
     public final SettingGroup sgBounds = this.addGroup("Bounds");
 
-    public final Setting<Boolean> stopRotation = this.sgGeneral.booleanSetting("Stop Rotation", true, ".");
-    private final Setting<OffsetMode> offset = this.sgGeneral.enumSetting("Offset", OffsetMode.NODamage, ".");
-    private final Setting<Integer> movementDelay = this.sgGeneral.intSetting("Movement Delay", 10, 0, 20, 1, "How many ticks to wait betweeen movements.");
-    private final Setting<Double> movement = this.sgGeneral.doubleSetting("Movement", 0.06, 0.0, 0.1, 0.001, "How many blocks to move eact time.");
-    private final Setting<Boolean> pauseMove = this.sgGeneral.booleanSetting("Pause Move", true, ".");
-    private final Setting<Integer> stillTicks = this.sgGeneral.intSetting("Still Ticks", 5, 0, 50, 1, ".");
-    private final Setting<Boolean> bounds = this.sgBounds.booleanSetting("Bounds", true, ".");
-    private final Setting<Boolean> spamBounds = this.sgBounds.booleanSetting("Spam Bounds", false, ".");
-    private final Setting<PacketFly.BoundsMode> boundsMode = this.sgBounds.enumSetting("Bounds Mode", PacketFly.BoundsMode.Add, "Spoofs on ground.");
-    private final Setting<Boolean> setXZ = this.sgBounds
-            .booleanSetting("Set XZ", false, "Doesn't move horizontally and vertically in the same packet.", () -> this.boundsMode.get() == PacketFly.BoundsMode.Set);
-    public final Setting<Integer> xzBound = this.sgBounds
-            .intSetting("XZ Bound", 0, -1337, 1337, 1, "Bounds offset horizontally.", () -> this.boundsMode.get() == PacketFly.BoundsMode.Add || this.setXZ.get());
-    private final Setting<Boolean> setY = this.sgBounds
-            .booleanSetting("Set Y", true, "Doesn't move horizontally and vertically in the same packet.", () -> this.boundsMode.get() == PacketFly.BoundsMode.Set);
-    public final Setting<Integer> yBound = this.sgBounds
-            .intSetting("Y Bound", -87, -1337, 1337, 1, "Bounds offset vertically.", () -> this.boundsMode.get() == PacketFly.BoundsMode.Add || this.setY.get());
+    public final Setting<Boolean> stopRotation = this.sgGeneral.booleanSetting("Stop Rotation", true,
+            "Disables player rotations while clipping to prevent desync from the corner.");
+    private final Setting<OffsetMode> offset = this.sgGeneral.enumSetting("Offset", OffsetMode.NODamage,
+            "The depth of the clip. 'Damage' is deeper but might trigger some anti-cheats.");
+    private final Setting<Integer> movementDelay = this.sgGeneral.intSetting("Movement Delay", 10, 0, 20, 1,
+            "Ticks to wait between micro-movements into the corner.");
+    private final Setting<Double> movement = this.sgGeneral.doubleSetting("Movement", 0.06, 0.0, 0.1, 0.001,
+            "The distance (in blocks) to move towards the target corner per step.");
+    private final Setting<Boolean> pauseMove = this.sgGeneral.booleanSetting("Pause Move", true,
+            "Stops clipping if you are manually trying to move using WASD.");
+    private final Setting<Integer> stillTicks = this.sgGeneral.intSetting("Still Ticks", 5, 0, 50, 1,
+            "Amount of time to remain stationary before starting the wall-clipping process.");
+
+    private final Setting<Boolean> bounds = this.sgBounds.booleanSetting("Bounds", true,
+            "Sends out-of-bounds packets to trick the server into accepting your glitched position.");
+    private final Setting<Boolean> spamBounds = this.sgBounds.booleanSetting("Spam Bounds", false,
+            "Sends boundary packets every tick for more aggressive clipping (higher flag risk).");
+    private final Setting<PacketFly.BoundsMode> boundsMode = this.sgBounds.enumSetting("Bounds Mode", PacketFly.BoundsMode.Add,
+            "The mathematical method for calculating out-of-bounds packets.");
+    private final Setting<Boolean> setXZ = this.sgBounds.booleanSetting("Set XZ", false,
+            "Hard-sets the horizontal coordinates for bounds packets.", () -> this.boundsMode.get() == PacketFly.BoundsMode.Set);
+    public final Setting<Integer> xzBound = this.sgBounds.intSetting("XZ Bound", 0, -1337, 1337, 1,
+            "Horizontal distance for the 'Bounds' packets.", () -> this.boundsMode.get() == PacketFly.BoundsMode.Add || this.setXZ.get());
+    private final Setting<Boolean> setY = this.sgBounds.booleanSetting("Set Y", true,
+            "Hard-sets the vertical coordinate for bounds packets.", () -> this.boundsMode.get() == PacketFly.BoundsMode.Set);
+    public final Setting<Integer> yBound = this.sgBounds.intSetting("Y Bound", -87, -1337, 1337, 1,
+            "Vertical distance for the 'Bounds' packets.", () -> this.boundsMode.get() == PacketFly.BoundsMode.Add || this.setY.get());
+
     public boolean shouldCancel = false;
     public int noRotateTime = 0;
     private double cornerX = 0.0;
@@ -54,7 +66,7 @@ public class Clip extends Module {
     private boolean shouldBounds = false;
 
     public Clip() {
-        super("Clip", "Moves you inside a corner to protect from damage.", SubCategory.DEFENSIVE, true);
+        super("Clip", "Precisely adjusts your position in corners to minimize explosion damage.", SubCategory.DEFENSIVE, true);
         INSTANCE = this;
     }
 

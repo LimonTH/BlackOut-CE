@@ -36,24 +36,38 @@ public class Burrow extends Module {
     private final SettingGroup sgLagBack = this.addGroup("Lag Back");
     private final SettingGroup sgRender = this.addGroup("Render");
 
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent, "Method of switching.");
-    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Blocks", "Blocks to use.", Blocks.OBSIDIAN, Blocks.ENDER_CHEST);
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent,
+            "Method of switching to the burrow block. Silent is recommended to avoid desync.");
+    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Blocks",
+            "The blocks to use for burrowing. Obsidian or Ender Chests are standard.", Blocks.OBSIDIAN, Blocks.ENDER_CHEST);
+    private final Setting<Boolean> instaRot = this.sgGeneral.booleanSetting("Insta Rotation", false,
+            "Immediately snaps your rotation to look down without transition.");
+    private final Setting<Boolean> pFly = this.sgGeneral.booleanSetting("Packet Fly", false,
+            "Automatically enables PacketFly after a successful burrow to prevent rubberbanding.");
+    private final Setting<Boolean> enableScaffold = this.sgGeneral.booleanSetting("Scaffold", false,
+            "Automatically enables Scaffold after burrowing (requires Packet Fly to be active).", this.pFly::get);
+
+    private final Setting<Double> lagBackOffset = this.sgLagBack.doubleSetting("Offset", -0.1, -10.0, 10.0, 0.2,
+            "The Y-level offset for the spoofed movement packet. This 'rubberbands' you into the block.");
+    private final Setting<Integer> lagBackPackets = this.sgLagBack.intSetting("Packets", 1, 1, 20, 1,
+            "How many spoofed movement packets to send to the server to confirm your new position.");
+    private final Setting<Boolean> smooth = this.sgLagBack.booleanSetting("Smooth", false,
+            "Attempts to bypass anti-cheats by sending incremented position updates.");
+    private final Setting<Boolean> syncPacket = this.sgLagBack.booleanSetting("Sync Packet", false,
+            "Sends an extra rotation sync packet to stabilize your position.", this.smooth::get);
+
+    private final Setting<Boolean> renderSwing = this.sgRender.booleanSetting("Render Swing", true,
+            "Shows the arm swing animation when placing the burrow block.");
+    private final Setting<SwingHand> swingHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand,
+            "Which hand to animate for the block placement.");
+
     private final Predicate<ItemStack> predicate = itemStack -> itemStack.getItem() instanceof BlockItem block && this.blocks.get().contains(block.getBlock());
-    private final Setting<Boolean> instaRot = this.sgGeneral.booleanSetting("Insta Rotation", false, "Instantly rotates.");
-    private final Setting<Boolean> pFly = this.sgGeneral.booleanSetting("Packet Fly", false, "Enabled packetfly after burrowing.");
-    private final Setting<Boolean> enableScaffold = this.sgGeneral.booleanSetting("Scaffold", false, "Enabled scaffold after burrowing.", this.pFly::get);
-    private final Setting<Double> lagBackOffset = this.sgLagBack.doubleSetting("Offset", -0.1, -10.0, 10.0, 0.2, "Y offset for rubberband packet.");
-    private final Setting<Integer> lagBackPackets = this.sgLagBack.intSetting("Packets", 1, 1, 20, 1, "How many offset packets to send.");
-    private final Setting<Boolean> smooth = this.sgLagBack.booleanSetting("Smooth", false, "Enabled scaffold after burrowing.");
-    private final Setting<Boolean> syncPacket = this.sgLagBack.booleanSetting("Sync Packet", false, ".", this.smooth::get);
-    private final Setting<Boolean> renderSwing = this.sgRender.booleanSetting("Render Swing", true, "Renders swing animation when placing a block.");
-    private final Setting<SwingHand> swingHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand, "Which hand should be swung.", this.renderSwing::get);
     private boolean success = false;
     private boolean enabledPFly = false;
     private boolean enabledScaffold = false;
 
     public Burrow() {
-        super("Burrow", "Places a block inside your feet.", SubCategory.DEFENSIVE, true);
+        super("Burrow", "Glitch yourself into a block to become nearly immune to crystal damage.", SubCategory.DEFENSIVE, true);
     }
 
     @Override

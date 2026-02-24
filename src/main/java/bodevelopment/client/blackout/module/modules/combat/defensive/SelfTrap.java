@@ -15,17 +15,20 @@ import net.minecraft.util.math.Direction;
 public class SelfTrap extends ObsidianModule {
     private final SettingGroup sgToggle = this.addGroup("Toggle");
 
-    private final Setting<AutoTrap.TrapMode> trapMode = this.sgGeneral.enumSetting("Trap Mode", AutoTrap.TrapMode.Both, "");
-    private final Setting<Boolean> toggleMove = this.sgToggle.booleanSetting("Toggle Move", false, "Toggles if you move horizontally.");
-    private final Setting<Surround.VerticalToggleMode> toggleVertical = this.sgToggle
-            .enumSetting("Toggle Vertical", Surround.VerticalToggleMode.Up, "Toggles the module if you move vertically.");
+    private final Setting<AutoTrap.TrapMode> trapMode = this.sgGeneral.enumSetting("Trap Mode", AutoTrap.TrapMode.Both,
+            "Which parts of the trap to prioritize. 'Full' covers both the top and the sides at eye level.");
+
+    private final Setting<Boolean> toggleMove = this.sgToggle.booleanSetting("Toggle Move", false,
+            "Automatically disables the module if you move to a different horizontal block (X or Z).");
+    private final Setting<Surround.VerticalToggleMode> toggleVertical = this.sgToggle.enumSetting("Toggle Vertical", Surround.VerticalToggleMode.Up,
+            "Automatically disables the module if you move vertically (jumping, falling, or both).");
+
     private final Direction[] directions = new Direction[]{
-            Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST, Direction.UP
-    };
+            Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST, Direction.UP};
     private BlockPos prevPos = BlockPos.ORIGIN;
 
     public SelfTrap() {
-        super("Self Trap", "Covers you in blocks.", SubCategory.DEFENSIVE);
+        super("Self Trap", "Builds an obsidian 'cocoon' around your upper body to block overhead crystal damage.", SubCategory.DEFENSIVE);
     }
 
     @Override
