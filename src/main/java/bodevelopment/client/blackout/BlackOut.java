@@ -17,7 +17,7 @@ import java.io.File;
 
 public class BlackOut implements ClientModInitializer {
     public static final String NAME = "BlackOut";
-    public static final String VERSION = "2.2.5";
+    public static final String VERSION = "2.3.0";
     public static final Type TYPE = Type.Dev;
     public static final Color TYPECOLOR = TYPE.getColor();
     public static final MinecraftClient mc = MinecraftClient.getInstance();

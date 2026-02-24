@@ -32,8 +32,8 @@ public class DevInfo extends HudElement {
     public void render() {
         if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
             this.components.clear();
-            String text = "Public " + BlackOut.TYPE + " Build - " + BlackOut.VERSION;
-            this.components.add(new Component("Public "));
+            String text = "Dev " + BlackOut.TYPE + " Build - " + BlackOut.VERSION;
+            this.components.add(new Component("Dev "));
             this.components.add(new Component(BlackOut.TYPE.name(), this.typeColor.get() ? BlackOut.TYPECOLOR : null, true));
             this.components.add(new Component(" Build - " + BlackOut.VERSION));
             this.stack.push();
