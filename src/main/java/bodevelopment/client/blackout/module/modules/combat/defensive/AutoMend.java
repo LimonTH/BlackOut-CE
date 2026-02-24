@@ -31,21 +31,36 @@ public class AutoMend extends Module {
     private final SettingGroup sgPause = this.addGroup("Pause");
     private final SettingGroup sgRender = this.addGroup("Render");
 
-    private final Setting<Boolean> antiCharity = this.sgGeneral.booleanSetting("Anti Charity", true, "Doesn't mend if any enemy is at same position.");
-    private final Setting<Double> throwSpeed = this.sgGeneral.doubleSetting("Throw Speed", 20.0, 0.0, 20.0, 0.2, "How many timer to throw every second. 20 is recommended.");
-    private final Setting<Integer> bottles = this.sgGeneral.intSetting("Bottles", 1, 1, 10, 1, "Amount of bottles to throw every time.");
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent, "Method of switching. Silent is the most reliable.");
-    private final Setting<Integer> minDur = this.sgGeneral.intSetting("Min Durability", 75, 0, 100, 1, "Mends if any armor piece is under this durability.");
-    private final Setting<Integer> antiWaste = this.sgGeneral
-            .intSetting("Anti Waste", 90, 0, 100, 1, "Doesn't use experience if any armor piece is above this durability.");
-    private final Setting<Integer> forceMend = this.sgGeneral.intSetting("Force Mend", 30, 0, 100, 1, "Ignores anti waste if any armor piece if under this durability.");
-    private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotate", true, "Ignores rotation speed limit.");
-    private final Setting<Integer> autoCrystalPause = this.sgPause.intSetting("Auto Crystal Pause", 0, 0, 100, 1, "Pauses for x ticks if auto crystal places.");
-    private final Setting<Integer> surroundPause = this.sgPause.intSetting("Surround Pause", 0, 0, 100, 1, "Pauses for x ticks if surround places.");
-    private final Setting<Integer> movePause = this.sgPause.intSetting("Move Pause", 0, 0, 100, 1, "Pauses for x ticks if moved.");
-    private final Setting<Integer> airPause = this.sgPause.intSetting("Air Pause", 0, 0, 100, 1, "Pauses for x ticks if off ground.");
-    private final Setting<Boolean> renderSwing = this.sgRender.booleanSetting("Render Swing", true, "Renders swing animation when throwing an exp bottle.");
-    private final Setting<SwingHand> swingHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand, "Which hand should be swung.");
+    private final Setting<Boolean> antiCharity = this.sgGeneral.booleanSetting("Anti Charity", true,
+            "Avoids throwing experience if an enemy is standing in the same block, to prevent mending their gear.");
+    private final Setting<Double> throwSpeed = this.sgGeneral.doubleSetting("Throw Speed", 20.0, 0.0, 20.0, 0.2,
+            "Throwing frequency. Respects pauses and Anti-Charity checks to ensure efficiency in combat.");
+    private final Setting<Integer> bottles = this.sgGeneral.intSetting("Bottles", 1, 1, 10, 1,
+            "Amount of bottles to throw in a single action.");
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent,
+            "The method used to switch to experience bottles in your hotbar.");
+    private final Setting<Integer> minDur = this.sgGeneral.intSetting("Min Durability", 75, 0, 100, 1,
+            "The threshold (%) to start mending armor pieces.");
+    private final Setting<Integer> antiWaste = this.sgGeneral.intSetting("Anti Waste", 90, 0, 100, 1,
+            "Stops throwing experience if any armor piece reaches this durability percentage.");
+    private final Setting<Integer> forceMend = this.sgGeneral.intSetting("Force Mend", 30, 0, 100, 1,
+            "Overrides Anti Waste and Charity if armor durability drops below this critical level.");
+    private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotate", true,
+            "Forces the player to look down instantly, ignoring rotation speed limits.");
+
+    private final Setting<Integer> autoCrystalPause = this.sgPause.intSetting("Auto Crystal Pause", 0, 0, 100, 1,
+            "Stops mending for a set amount of ticks after AutoCrystal places a crystal.");
+    private final Setting<Integer> surroundPause = this.sgPause.intSetting("Surround Pause", 0, 0, 100, 1,
+            "Stops mending for a set amount of ticks after Surround places a block.");
+    private final Setting<Integer> movePause = this.sgPause.intSetting("Move Pause", 0, 0, 100, 1,
+            "Pauses mending for a set amount of ticks after you move to a different block.");
+    private final Setting<Integer> airPause = this.sgPause.intSetting("Air Pause", 0, 0, 100, 1,
+            "Pauses mending while you are not on the ground.");
+
+    private final Setting<Boolean> renderSwing = this.sgRender.booleanSetting("Render Swing", true,
+            "Shows the arm swing animation when throwing bottles.");
+    private final Setting<SwingHand> swingHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand,
+            "Determines which hand is used for the swing animation.");
 
     private double throwsLeft = 0.0;
     private BlockPos lastPos = null;
@@ -57,7 +72,7 @@ public class AutoMend extends Module {
     private int offGroundTimer = 0;
 
     public AutoMend() {
-        super("Auto Mend", "Automatically mends your armor with experience bottles.", SubCategory.DEFENSIVE, true);
+        super("Auto Mend", "Smart armor repair for combat. Pauses during actions (like AutoCrystal) and features Anti-Charity to avoid mending enemies.", SubCategory.DEFENSIVE, true);
     }
 
     @Event

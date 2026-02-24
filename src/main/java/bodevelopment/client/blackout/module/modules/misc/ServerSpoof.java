@@ -15,14 +15,17 @@ import java.util.UUID;
 
 public class ServerSpoof extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Double> delay = this.sgGeneral.doubleSetting("Delay", 2.0, 0.0, 10.0, 0.1, ".");
+
+    private final Setting<Double> delay = this.sgGeneral.doubleSetting("Delay", 2.0, 0.0, 10.0, 0.1,
+            "Delay between spoofed status packets (Accepted -> Downloaded -> Loaded).");
+
     private final ResourcePackStatusC2SPacket.Status[] statuses = new ResourcePackStatusC2SPacket.Status[]{ResourcePackStatusC2SPacket.Status.ACCEPTED, ResourcePackStatusC2SPacket.Status.DOWNLOADED, ResourcePackStatusC2SPacket.Status.SUCCESSFULLY_LOADED};
     private UUID id;
     private long time = -1L;
     private int progress = 0;
 
     public ServerSpoof() {
-        super("Server Spoof", ".", SubCategory.MISC, true);
+        super("Server Spoof", "Spoofs resource pack installation to bypass server requirements.", SubCategory.MISC, true);
     }
 
     @Event

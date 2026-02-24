@@ -19,23 +19,34 @@ import net.minecraft.util.Hand;
 
 public class ExpThrower extends Module {
     private static ExpThrower INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRender = this.addGroup("Render");
 
-    private final Setting<Double> throwSpeed = this.sgGeneral.doubleSetting("Throw Speed", 20.0, 0.0, 20.0, 0.2, "How many timer to throw every second. 20 is recommended.");
-    private final Setting<Integer> bottles = this.sgGeneral.intSetting("Bottles", 1, 1, 10, 1, "Amount of bottles to throw every time.");
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent, "Method of switching. Silent is the most reliable.");
-    private final Setting<Integer> antiWaste = this.sgGeneral
-            .intSetting("Anti Waste", 90, 0, 100, 1, "Doesn't use experience if any armor piece is above this durability.");
-    private final Setting<Integer> forceMend = this.sgGeneral.intSetting("Force Mend", 30, 0, 100, 1, "Ignores anti waste if any armor piece if under this durability.");
-    private final Setting<Boolean> rotate = this.sgGeneral.booleanSetting("Rotate", true, "Looks down.");
-    private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotate", true, "Ignores rotation speed limit.", this.rotate::get);
-    private final Setting<Boolean> renderSwing = this.sgRender.booleanSetting("Render Swing", true, "Renders swing animation when throwing an exp bottle.");
-    private final Setting<SwingHand> swingHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand, "Which hand should be swung.");
+    private final Setting<Double> throwSpeed = this.sgGeneral.doubleSetting("Throw Speed", 20.0, 0.0, 20.0, 0.2,
+            "Maximum throwing frequency. Ignores all combat and movement pauses for instant repairs.");
+    private final Setting<Integer> bottles = this.sgGeneral.intSetting("Bottles", 1, 1, 10, 1,
+            "Number of bottles to throw in a single tick.");
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent,
+            "The method for switching to Experience Bottles. Silent is best for keeping your current item held.");
+    private final Setting<Integer> antiWaste = this.sgGeneral.intSetting("Anti Waste", 90, 0, 100, 1,
+            "Stops throwing experience if all armor pieces are above this durability percentage.");
+    private final Setting<Integer> forceMend = this.sgGeneral.intSetting("Force Mend", 30, 0, 100, 1,
+            "Continues throwing even if Anti-Waste is triggered, as long as any piece is below this critical threshold.");
+    private final Setting<Boolean> rotate = this.sgGeneral.booleanSetting("Rotate", true,
+            "Automatically looks down at your feet to ensure the experience orbs are collected immediately.");
+    private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotate", true,
+            "Forces the rotation to happen instantly, ignoring rotation speed smoothing.", this.rotate::get);
+
+    private final Setting<Boolean> renderSwing = this.sgRender.booleanSetting("Render Swing", true,
+            "Displays the hand swing animation on your client.");
+    private final Setting<SwingHand> swingHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand,
+            "Which hand should perform the swing animation.");
+
     private double throwsLeft = 0.0;
 
     public ExpThrower() {
-        super("Exp Thrower", "Automatically throws exp bottles.", SubCategory.DEFENSIVE, true);
+        super("Exp Thrower", "High-priority experience thrower. Unlike AutoMend, it ignores combat pauses and movement to repair gear as fast as possible.", SubCategory.DEFENSIVE, true);
         INSTANCE = this;
     }
 
