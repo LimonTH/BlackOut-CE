@@ -28,150 +28,149 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class RotationSettings extends SettingsModule {
     private static RotationSettings INSTANCE;
-    // TODO: ...
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Integer> renderSmoothness = this.sgGeneral.i("Render Smoothness", 1, 0, 10, 1, ".");
-    public final Setting<Boolean> vanillaRotation = this.sgGeneral.b("Client Rotation", false, "Turns your head.");
-    public final Setting<RotationSpeedMode> rotationSpeedMode = this.sgGeneral
-            .e("Rotation Speed Mode", RotationSpeedMode.Normal, ".");
-    public final Setting<Boolean> timeBasedSpeed = this.sgGeneral
-            .b("Time Based Speed", true, ".", () -> this.rotationSpeedMode.get() != RotationSpeedMode.Balance);
-    public final Setting<Double> maxMulti = this.sgGeneral
-            .d("Max Multi", 1.0, 0.0, 5.0, 0.05, ".", () -> this.rotationSpeedMode.get() != RotationSpeedMode.Balance && this.timeBasedSpeed.get());
-    public final Setting<Integer> averageTicks = this.sgGeneral
-            .i("Average Ticks", 10, 0, 20, 1, ".", () -> this.rotationSpeedMode.get() == RotationSpeedMode.Balance);
-    public final Setting<Double> averageSpeed = this.sgGeneral
-            .d("Average Speed", 20.0, 0.0, 100.0, 1.0, ".", () -> this.rotationSpeedMode.get() == RotationSpeedMode.Balance);
-    public final Setting<Double> maxSpeed = this.sgGeneral
-            .d("Max Speed", 60.0, 0.0, 100.0, 1.0, ".", () -> this.rotationSpeedMode.get() == RotationSpeedMode.Balance);
-    public final Setting<Double> yawStep = this.sgGeneral
-            .d(
-                    "Yaw Step",
-                    90.0,
-                    0.0,
-                    180.0,
-                    1.0,
-                    "How many yaw degrees should be rotated each packet.",
-                    () -> this.rotationSpeedMode.get() == RotationSpeedMode.Separate
-            );
-    public final Setting<Double> pitchStep = this.sgGeneral
-            .d(
-                    "Pitch Step",
-                    45.0,
-                    0.0,
-                    180.0,
-                    1.0,
-                    "How many pitch degrees should be rotated each packet.",
-                    () -> this.rotationSpeedMode.get() == RotationSpeedMode.Separate
-            );
-    public final Setting<Double> rotationSpeed = this.sgGeneral
-            .d(
-                    "Rotation Speed",
-                    90.0,
-                    0.0,
-                    360.0,
-                    1.0,
-                    "How many degrees should be rotated each packet.",
-                    () -> this.rotationSpeedMode.get() == RotationSpeedMode.Normal
-            );
-    public final Setting<Double> minSmoothSpeed = this.sgGeneral
-            .d("Min Smooth Speed", 10.0, 0.0, 100.0, 1.0, ".", () -> this.rotationSpeedMode.get() == RotationSpeedMode.Smooth);
-    public final Setting<Double> maxSmoothSpeed = this.sgGeneral
-            .d("Max Smooth Speed", 75.0, 0.0, 100.0, 1.0, ".", () -> this.rotationSpeedMode.get() == RotationSpeedMode.Smooth);
-    public final Setting<Double> minSmoothAngle = this.sgGeneral
-            .d("Min Smooth Angle", 5.0, 0.0, 100.0, 1.0, ".", () -> this.rotationSpeedMode.get() == RotationSpeedMode.Smooth);
-    public final Setting<Double> maxSmoothAngle = this.sgGeneral
-            .d("Max Smooth Angle", 135.0, 0.0, 100.0, 1.0, ".", () -> this.rotationSpeedMode.get() == RotationSpeedMode.Smooth);
-    public final Setting<Double> yawRandom = this.sgGeneral
-            .d("Yaw Random", 1.0, 0.0, 10.0, 0.1, ".", () -> this.rotationSpeedMode.get() == RotationSpeedMode.Separate);
-    public final Setting<Double> pitchRandom = this.sgGeneral
-            .d("Pitch Random", 1.0, 0.0, 10.0, 0.1, ".", () -> this.rotationSpeedMode.get() == RotationSpeedMode.Separate);
-    public final Setting<Boolean> pauseRotated = this.sgGeneral.b("Pause Rotated", false, ".");
-    public final Setting<Integer> delay = this.sgGeneral.i("Delay", 3, 0, 10, 1, ".", this.pauseRotated::get);
-    public final Setting<Double> returnSpeed = this.sgGeneral.d("Return Speed", 20.0, 0.0, 180.0, 1.0, ".");
-    public final Setting<PacketRotationMode> packetRotationMode = this.sgGeneral
-            .e("Packet Rotation Mode", PacketRotationMode.Disabled, ".");
-    public final Setting<Boolean> smartPacket = this.sgGeneral
-            .b(
-                    "Smart Packet",
-                    true,
-                    "Only packet rotates if you arent already looking at the target.",
-                    () -> this.packetRotationMode.get() != PacketRotationMode.Disabled
-            );
-    public final Setting<Double> packetRotations = this.sgGeneral
-            .d("Packet Rotations", 1.0, 1.0, 10.0, 0.1, ".", () -> this.packetRotationMode.get() != PacketRotationMode.Disabled);
-    public final Setting<Boolean> instantPacketRotation = this.sgGeneral
-            .b("Instant Packet Rotation", true, ".", () -> this.packetRotationMode.get() != PacketRotationMode.Disabled);
     private final SettingGroup sgAttack = this.addGroup("Attack");
-    public final Setting<RotationCheckMode> attackMode = this.modeSetting("Attack", this.sgAttack);
-    public final Setting<Double> attackYawAngle = this.yawAngleSetting(
-            "Attack", this.sgAttack, () -> this.attackMode.get() == RotationCheckMode.Angle
-    );
-    public final Setting<Double> attackPitchAngle = this.pitchAngleSetting(
-            "Attack", this.sgAttack, () -> this.attackMode.get() == RotationCheckMode.Angle
-    );
-    public final Setting<Boolean> attackLimit = this.sgAttack.b("Attack Limit", false, ".");
-    public final Setting<Double> attackMaxSpeed = this.sgAttack.d("Max Attack Speed", 30.0, 0.0, 100.0, 1.0, ".");
-    public final Setting<Integer> attackTicks = this.sgAttack.i("Attack Ticks", 10, 0, 50, 1, ".");
-    public final Setting<Double> noOwnTime = this.sgAttack.d("No Own Rotate", 0.0, 0.0, 5.0, 0.05, ".");
-    public final Setting<Double> noOtherTime = this.sgAttack.d("No Other Rotate", 0.0, 0.0, 5.0, 0.05, ".");
     private final SettingGroup sgMining = this.addGroup("Mining");
-    public final Setting<BlockRotationCheckMode> mineMode = this.blockModeSetting("Mining", this.sgMining);
-    public final Setting<Double> mineYawAngle = this.yawAngleSetting(
-            "Mining", this.sgMining, () -> this.mineMode.get() == BlockRotationCheckMode.Angle
-    );
-    public final Setting<Double> minePitchAngle = this.pitchAngleSetting(
-            "Mining", this.sgMining, () -> this.mineMode.get() == BlockRotationCheckMode.Angle
-    );
-    public final Setting<Double> mineUpExpand = this.upExpandSetting(
-            "Mining", this.sgMining, () -> this.mineMode.get() == BlockRotationCheckMode.Raytrace
-    );
-    public final Setting<Double> mineDownExpand = this.downExpandSetting(
-            "Mining", this.sgMining, () -> this.mineMode.get() == BlockRotationCheckMode.Raytrace
-    );
-    public final Setting<Double> mineXZExpand = this.hzExpandSetting(
-            "Mining", this.sgMining, () -> this.mineMode.get() == BlockRotationCheckMode.Raytrace
-    );
-    public final Setting<MiningRotMode> mineTiming = this.sgMining.e("Mining Rotate Timing", MiningRotMode.End, ".");
     private final SettingGroup sgBlockPlace = this.addGroup("Block Place");
+    private final SettingGroup sgInteract = this.addGroup("Interact");
+
+    public final Setting<Integer> renderSmoothness = this.sgGeneral.i("Render Smoothness", 1, 0, 10, 1,
+            "Smooths out the visual rotation of your head for a more natural look in third-person.");
+    public final Setting<Boolean> vanillaRotation = this.sgGeneral.b("Client Rotation", false,
+            "Synchronizes your client-side camera with the internal rotation logic. Can be disorienting.");
+    public final Setting<RotationSpeedMode> rotationSpeedMode = this.sgGeneral.e("Rotation Speed Mode", RotationSpeedMode.Normal,
+            "The mathematical algorithm used to determine how fast the head moves between targets.");
+    public final Setting<Boolean> timeBasedSpeed = this.sgGeneral.b("Time Based Speed", true,
+            "Adjusts rotation speed based on real time elapsed since the last tick to ensure consistency regardless of TPS.",
+            () -> this.rotationSpeedMode.get() != RotationSpeedMode.Balance);
+    public final Setting<Double> maxMulti = this.sgGeneral.d("Max Multi", 1.0, 0.0, 5.0, 0.05,
+            "The maximum allowed speed multiplier for time-based corrections to prevent excessive snapping.",
+            () -> this.rotationSpeedMode.get() != RotationSpeedMode.Balance && this.timeBasedSpeed.get());
+    public final Setting<Integer> averageTicks = this.sgGeneral.i("Average Ticks", 10, 0, 20, 1,
+            "The sample size of previous ticks used to calculate the mean rotation speed in Balance mode.",
+            () -> this.rotationSpeedMode.get() == RotationSpeedMode.Balance);
+    public final Setting<Double> averageSpeed = this.sgGeneral.d("Average Speed", 20.0, 0.0, 100.0, 1.0,
+            "The target average degrees per tick the module tries to maintain in Balance mode.",
+            () -> this.rotationSpeedMode.get() == RotationSpeedMode.Balance);
+    public final Setting<Double> maxSpeed = this.sgGeneral.d("Max Speed", 60.0, 0.0, 100.0, 1.0,
+            "The absolute limit for rotation speed in a single packet when using Balance mode.",
+            () -> this.rotationSpeedMode.get() == RotationSpeedMode.Balance);
+    public final Setting<Double> yawStep = this.sgGeneral.d("Yaw Step", 90.0, 0.0, 180.0, 1.0,
+            "Maximum horizontal degrees the head can rotate in a single packet.",
+            () -> this.rotationSpeedMode.get() == RotationSpeedMode.Separate);
+    public final Setting<Double> pitchStep = this.sgGeneral.d("Pitch Step", 45.0, 0.0, 180.0, 1.0,
+            "Maximum vertical degrees the head can rotate in a single packet.",
+            () -> this.rotationSpeedMode.get() == RotationSpeedMode.Separate);
+    public final Setting<Double> rotationSpeed = this.sgGeneral.d("Rotation Speed", 90.0, 0.0, 360.0, 1.0,
+            "The base degrees per packet speed used in the Normal rotation mode.",
+            () -> this.rotationSpeedMode.get() == RotationSpeedMode.Normal);
+    public final Setting<Double> minSmoothSpeed = this.sgGeneral.d("Min Smooth Speed", 10.0, 0.0, 100.0, 1.0,
+            "The starting rotation speed in Smooth mode when the angle to the target is small.",
+            () -> this.rotationSpeedMode.get() == RotationSpeedMode.Smooth);
+    public final Setting<Double> maxSmoothSpeed = this.sgGeneral.d("Max Smooth Speed", 75.0, 0.0, 100.0, 1.0,
+            "The peak rotation speed in Smooth mode achieved when the angle to the target is large.",
+            () -> this.rotationSpeedMode.get() == RotationSpeedMode.Smooth);
+    public final Setting<Double> minSmoothAngle = this.sgGeneral.d("Min Smooth Angle", 5.0, 0.0, 100.0, 1.0,
+            "The angle threshold below which the rotation uses Min Smooth Speed.",
+            () -> this.rotationSpeedMode.get() == RotationSpeedMode.Smooth);
+    public final Setting<Double> maxSmoothAngle = this.sgGeneral.d("Max Smooth Angle", 135.0, 0.0, 100.0, 1.0,
+            "The angle threshold above which the rotation reaches its Max Smooth Speed.",
+            () -> this.rotationSpeedMode.get() == RotationSpeedMode.Smooth);
+    public final Setting<Double> yawRandom = this.sgGeneral.d("Yaw Random", 1.0, 0.0, 10.0, 0.1,
+            "Adds a degree of random horizontal variation to prevent perfectly static rotations.",
+            () -> this.rotationSpeedMode.get() == RotationSpeedMode.Separate);
+    public final Setting<Double> pitchRandom = this.sgGeneral.d("Pitch Random", 1.0, 0.0, 10.0, 0.1,
+            "Adds a degree of random vertical variation to prevent perfectly static rotations.",
+            () -> this.rotationSpeedMode.get() == RotationSpeedMode.Separate);
+    public final Setting<Boolean> pauseRotated = this.sgGeneral.b("Pause Rotated", false,
+            "Briefly stops rotation updates after a successful rotation has been completed.");
+    public final Setting<Integer> delay = this.sgGeneral.i("Delay", 3, 0, 10, 1,
+            "How many ticks to wait before starting a new rotation if Pause Rotated is enabled.", this.pauseRotated::get);
+    public final Setting<Double> returnSpeed = this.sgGeneral.d("Return Speed", 20.0, 0.0, 180.0, 1.0,
+            "How fast the head returns to your actual camera direction once a module stops rotating.");
+    public final Setting<PacketRotationMode> packetRotationMode = this.sgGeneral.e("Packet Rotation Mode", PacketRotationMode.Disabled,
+            "Enables sending additional rotation packets for higher precision or specific server bypasses.");
+    public final Setting<Boolean> smartPacket = this.sgGeneral.b("Smart Packet", true,
+            "Only sends extra rotation packets if your current look direction is not already targeting the object.",
+            () -> this.packetRotationMode.get() != PacketRotationMode.Disabled);
+    public final Setting<Double> packetRotations = this.sgGeneral.d("Packet Rotations", 1.0, 1.0, 10.0, 0.1,
+            "How many extra rotation packets to send per tick to increase rotation frequency.",
+            () -> this.packetRotationMode.get() != PacketRotationMode.Disabled);
+    public final Setting<Boolean> instantPacketRotation = this.sgGeneral.b("Instant Packet Rotation", true,
+            "Ignores standard speed limits for the extra rotation packets, making them effectively instant.",
+            () -> this.packetRotationMode.get() != PacketRotationMode.Disabled);
+    private final Setting<Integer> jitterStrength = this.sgGeneral.i("Jitter Strength", 1, 0, 10, 1,
+            "Simulates a realistic 'hand shake' by adding micro-vibrations to your rotation.");
+
+    public final Setting<Boolean> attackRotate = this.sgAttack.b("Attack Rotate", false,
+            "Enables automated rotations specifically when attacking entities.");
+    public final Setting<RotationCheckMode> attackMode = this.sgAttack.e("Attack Mode", RotationCheckMode.Raytrace,
+            "The method used to verify if the crosshair is correctly positioned on the target entity.");
+    public final Setting<Double> attackYawAngle = this.sgAttack.d("Attack Yaw Angle", 90.0, 0.0, 180.0, 1.0,
+            "The horizontal FOV within which a rotation is considered valid for attacking.",
+            () -> this.attackMode.get() == RotationCheckMode.Angle);
+    public final Setting<Double> attackPitchAngle = this.sgAttack.d("Attack Pitch Angle", 45.0, 0.0, 180.0, 1.0,
+            "The vertical FOV within which a rotation is considered valid for attacking.",
+            () -> this.attackMode.get() == RotationCheckMode.Angle);
+    public final Setting<Boolean> attackLimit = this.sgAttack.b("Attack Limit", false,
+            "If enabled, enforces a strict maximum speed cap during combat rotations.");
+    public final Setting<Double> attackMaxSpeed = this.sgAttack.d("Max Attack Speed", 30.0, 0.0, 100.0, 1.0,
+            "The absolute maximum degrees per packet allowed when Attack Limit is active.");
+    public final Setting<Integer> attackTicks = this.sgAttack.i("Attack Ticks", 10, 0, 50, 1,
+            "How many ticks the module should 'stick' to the target after the initial attack.");
+    public final Setting<Double> noOwnTime = this.sgAttack.d("No Own Rotate", 0.0, 0.0, 5.0, 0.05,
+            "The time (in seconds) to wait before this module can rotate again after another action.");
+    public final Setting<Double> noOtherTime = this.sgAttack.d("No Other Rotate", 0.0, 0.0, 5.0, 0.05,
+            "The duration in seconds during which other modules are blocked from rotating while attacking.");
+
+    public final Setting<Boolean> mineRotate = this.sgMining.b("Mining Rotate", false,
+            "Enables automated rotations specifically while mining or breaking blocks.");
+    public final Setting<BlockRotationCheckMode> mineMode = this.sgMining.e("Mining Mode", BlockRotationCheckMode.Raytrace,
+            "The verification mode used to ensure you are looking at the block being mined.");
+    public final Setting<Double> mineYawAngle = this.sgMining.d("Mining Yaw Angle", 90.0, 0.0, 180.0, 1.0,
+            "Horizontal angle tolerance for validating block mining rotations.",
+            () -> this.mineMode.get() == BlockRotationCheckMode.Angle);
+    public final Setting<Double> minePitchAngle = this.sgMining.d("Mining Pitch Angle", 45.0, 0.0, 180.0, 1.0,
+            "Vertical angle tolerance for validating block mining rotations.",
+            () -> this.mineMode.get() == BlockRotationCheckMode.Angle);
+    public final Setting<Double> mineUpExpand = this.sgMining.d("Mining Up Expand", 0.0, 0.0, 1.0, 0.01,
+            "Increases the effective size of the block's hit-box upwards for easier raycasting.",
+            () -> this.mineMode.get() == BlockRotationCheckMode.Raytrace);
+    public final Setting<Double> mineDownExpand = this.sgMining.d("Mining Down Expand", 0.0, 0.0, 1.0, 0.01,
+            "Increases the effective size of the block's hit-box downwards for easier raycasting.",
+            () -> this.mineMode.get() == BlockRotationCheckMode.Raytrace);
+    public final Setting<Double> mineXZExpand = this.sgMining.d("Mining XZ Expand", 0.0, 0.0, 1.0, 0.01,
+            "Expands the block's hit-box horizontally on the X and Z axes for easier raycasting.",
+            () -> this.mineMode.get() == BlockRotationCheckMode.Raytrace);
+    public final Setting<MiningRotMode> mineTiming = this.sgMining.e("Mining Rotate Timing", MiningRotMode.End,
+            "Determines if the rotation happens when starting to mine or just before the block breaks.");
+
+    public final Setting<Boolean> blockRotate = this.rotateSetting("Block Place", "placing a block", this.sgBlockPlace);
     public final Setting<BlockRotationCheckMode> blockMode = this.blockModeSetting("Block Place", this.sgBlockPlace);
     public final Setting<Double> blockYawAngle = this.yawAngleSetting(
-            "Block Place", this.sgBlockPlace, () -> this.blockMode.get() == BlockRotationCheckMode.Angle
-    );
+            "Block Place", this.sgBlockPlace, () -> this.blockMode.get() == BlockRotationCheckMode.Angle);
     public final Setting<Double> blockPitchAngle = this.pitchAngleSetting(
-            "Block Place", this.sgBlockPlace, () -> this.blockMode.get() == BlockRotationCheckMode.Angle
-    );
+            "Block Place", this.sgBlockPlace, () -> this.blockMode.get() == BlockRotationCheckMode.Angle);
     public final Setting<Double> blockUpExpand = this.upExpandSetting(
-            "Block Place", this.sgBlockPlace, () -> this.blockMode.get() == BlockRotationCheckMode.Raytrace
-    );
+            "Block Place", this.sgBlockPlace, () -> this.blockMode.get() == BlockRotationCheckMode.Raytrace);
     public final Setting<Double> blockDownExpand = this.downExpandSetting(
-            "Block Place", this.sgBlockPlace, () -> this.blockMode.get() == BlockRotationCheckMode.Raytrace
-    );
+            "Block Place", this.sgBlockPlace, () -> this.blockMode.get() == BlockRotationCheckMode.Raytrace);
     public final Setting<Double> blockXZExpand = this.hzExpandSetting(
-            "Block Place", this.sgBlockPlace, () -> this.blockMode.get() == BlockRotationCheckMode.Raytrace
-    );
-    private final SettingGroup sgInteract = this.addGroup("Interact");
+            "Block Place", this.sgBlockPlace, () -> this.blockMode.get() == BlockRotationCheckMode.Raytrace);
+
+    public final Setting<Boolean> interactRotate = this.rotateSetting("Interact", "interacting with a block", this.sgInteract);
     public final Setting<BlockRotationCheckMode> interactMode = this.blockModeSetting("Interact", this.sgInteract);
     public final Setting<Double> interactYawAngle = this.yawAngleSetting(
-            "Interact", this.sgInteract, () -> this.interactMode.get() == BlockRotationCheckMode.Angle
-    );
+            "Interact", this.sgInteract, () -> this.interactMode.get() == BlockRotationCheckMode.Angle);
     public final Setting<Double> interactPitchAngle = this.pitchAngleSetting(
-            "Interact", this.sgInteract, () -> this.interactMode.get() == BlockRotationCheckMode.Angle
-    );
+            "Interact", this.sgInteract, () -> this.interactMode.get() == BlockRotationCheckMode.Angle);
     public final Setting<Double> interactUpExpand = this.upExpandSetting(
-            "Interact", this.sgInteract, () -> this.interactMode.get() == BlockRotationCheckMode.Raytrace
-    );
+            "Interact", this.sgInteract, () -> this.interactMode.get() == BlockRotationCheckMode.Raytrace);
     public final Setting<Double> interactDownExpand = this.downExpandSetting(
-            "Interact", this.sgInteract, () -> this.interactMode.get() == BlockRotationCheckMode.Raytrace
-    );
+            "Interact", this.sgInteract, () -> this.interactMode.get() == BlockRotationCheckMode.Raytrace);
     public final Setting<Double> interactXZExpand = this.hzExpandSetting(
-            "Interact", this.sgInteract, () -> this.interactMode.get() == BlockRotationCheckMode.Raytrace
-    );
-    private final Setting<Integer> jitterStrength = this.sgGeneral.i("Jitter Strength", 1, 0, 10, 1, ".");
-    private final Setting<Boolean> interactRotate = this.rotateSetting("Interact", "interacting with a block", this.sgInteract);
-    private final Setting<Boolean> blockRotate = this.rotateSetting("Block Place", "placing a block", this.sgBlockPlace);
-    private final Setting<Boolean> mineRotate = this.rotateSetting("Mining", "mining a block", this.sgMining);
-    private final Setting<Boolean> attackRotate = this.rotateSetting("Attack", "attacking an entity", this.sgAttack);
+            "Interact", this.sgInteract, () -> this.interactMode.get() == BlockRotationCheckMode.Raytrace);
 
     private int sinceRotated = 0;
     public final Vec3d vec = new Vec3d(0.0, 0.0, 0.0);
@@ -185,35 +184,44 @@ public class RotationSettings extends SettingsModule {
     }
 
     private Setting<Boolean> rotateSetting(String type, String verb, SettingGroup sg) {
-        return sg.b(type + " Rotate", false, "Rotates when + " + verb);
+        return sg.b(type + " Rotate", false,
+                "Enables automatic rotations while " + verb + " to ensure the action is correctly validated by the server.");
     }
 
+    // TODO: modeSetting не используется
     private Setting<RotationCheckMode> modeSetting(String type, SettingGroup sg) {
-        return sg.e(type + " Mode", RotationCheckMode.Raytrace, ".");
+        return sg.e(type + " Mode", RotationCheckMode.Raytrace,
+                "The mathematical method used to verify if you are looking at the target entity.");
     }
 
     private Setting<BlockRotationCheckMode> blockModeSetting(String type, SettingGroup sg) {
-        return sg.e(type + " Mode", BlockRotationCheckMode.Raytrace, ".");
+        return sg.e(type + " Mode", BlockRotationCheckMode.Raytrace,
+                "The mathematical method used to verify if you are looking at the target block.");
     }
 
     private Setting<Double> yawAngleSetting(String type, SettingGroup sg, SingleOut<Boolean> visible) {
-        return sg.d(type + " Yaw Angle", 90.0, 0.0, 180.0, 1.0, "Accepts rotation if yaw angle to target is under this.", visible);
+        return sg.d(type + " Yaw Angle", 90.0, 0.0, 180.0, 1.0,
+                "The maximum horizontal degrees allowed between your crosshair and the target for the rotation to be considered valid.", visible);
     }
 
     private Setting<Double> pitchAngleSetting(String type, SettingGroup sg, SingleOut<Boolean> visible) {
-        return sg.d(type + " Pitch Angle", 45.0, 0.0, 180.0, 1.0, "Accepts rotation if yaw angle to target is under this.", visible);
+        return sg.d(type + " Pitch Angle", 45.0, 0.0, 180.0, 1.0,
+                "The maximum vertical degrees allowed between your crosshair and the target for the rotation to be considered valid.", visible);
     }
 
     private Setting<Double> upExpandSetting(String type, SettingGroup sg, SingleOut<Boolean> visible) {
-        return sg.d(type + " Up Expand", 0.0, 0.0, 1.0, 0.01, ".", visible);
+        return sg.d(type + " Up Expand", 0.0, 0.0, 1.0, 0.01,
+                "Artificially increases the top boundary of the target's bounding box to make raytrace verification more lenient.", visible);
     }
 
     private Setting<Double> downExpandSetting(String type, SettingGroup sg, SingleOut<Boolean> visible) {
-        return sg.d(type + " Down Expand", 0.0, 0.0, 1.0, 0.01, ".", visible);
+        return sg.d(type + " Down Expand", 0.0, 0.0, 1.0, 0.01,
+                "Artificially increases the bottom boundary of the target's bounding box to make raytrace verification more lenient.", visible);
     }
 
     private Setting<Double> hzExpandSetting(String type, SettingGroup sg, SingleOut<Boolean> visible) {
-        return sg.d(type + " XZ Expand", 0.0, 0.0, 1.0, 0.01, ".", visible);
+        return sg.d(type + " XZ Expand", 0.0, 0.0, 1.0, 0.01,
+                "Artificially increases the horizontal width and depth of the target's bounding box for easier raytracing.", visible);
     }
 
     public boolean blockRotationCheck(BlockPos pos, Direction dir, float yaw, float pitch, RotationType type) {
@@ -529,14 +537,18 @@ public class RotationSettings extends SettingsModule {
         double lenY = box.getLengthY();
         double lenZ = box.getLengthZ();
 
-        for (double x = 0.1; x <= 0.9; x += 0.1) {
+        for (int i = 1; i <= 9; i++) {
+            double x = i / 10.0;
             ((IVec3d) v).blackout_Client$setX(box.minX + lenX * x);
 
-            for (double y = 0.1; y <= 0.9; y += 0.1) {
+            for (int j = 1; j <= 9; j++) {
+                double y = j / 10.0;
                 ((IVec3d) v).blackout_Client$setY(box.minY + lenY * y);
 
-                for (double z = 0.1; z <= 0.9; z += 0.1) {
+                for (int k = 1; k <= 9; k++) {
+                    double z = k / 10.0;
                     ((IVec3d) v).blackout_Client$setZ(box.minZ + lenZ * z);
+
                     double distance = BlackOut.mc.player.getEyePos().distanceTo(v);
                     if (!(distance >= SettingUtils.getAttackRange())) {
                         if (distance > SettingUtils.getAttackWallsRange()) {

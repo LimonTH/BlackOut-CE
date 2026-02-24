@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AutoMend extends Module {
+
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgPause = this.addGroup("Pause");
     private final SettingGroup sgRender = this.addGroup("Render");
@@ -45,6 +46,7 @@ public class AutoMend extends Module {
     private final Setting<Integer> airPause = this.sgPause.i("Air Pause", 0, 0, 100, 1, "Pauses for x ticks if off ground.");
     private final Setting<Boolean> renderSwing = this.sgRender.b("Render Swing", true, "Renders swing animation when throwing an exp bottle.");
     private final Setting<SwingHand> swingHand = this.sgRender.e("Swing Hand", SwingHand.RealHand, "Which hand should be swung.");
+
     private double throwsLeft = 0.0;
     private BlockPos lastPos = null;
     private boolean throwing = false;
