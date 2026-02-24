@@ -31,15 +31,22 @@ public abstract class MixinMouse {
     @Shadow
     public abstract void lockCursor();
 
-    @Inject(method = "onMouseButton", at = @At("HEAD"))
+    @Inject(method = "onMouseButton", at = @At("HEAD"), cancellable = true)
     private void onClick(long window, int button, int action, int mods, CallbackInfo ci) {
-        BlackOut.EVENT_BUS.post(MouseButtonEvent.get(button, action == 1));
+        MouseButtonEvent event = MouseButtonEvent.get(button, action == 1);
+        if (BlackOut.EVENT_BUS.post(event).isCancelled()) {
+            ci.cancel();
+        }
+
         MouseButtons.set(button, action == 1);
     }
 
-    @Inject(method = "onMouseScroll", at = @At("HEAD"))
+    @Inject(method = "onMouseScroll", at = @At("HEAD"), cancellable = true)
     private void onScroll(long window, double horizontal, double vertical, CallbackInfo ci) {
-        BlackOut.EVENT_BUS.post(MouseScrollEvent.get(horizontal, vertical));
+        MouseScrollEvent event = MouseScrollEvent.get(horizontal, vertical);
+        if (BlackOut.EVENT_BUS.post(event).isCancelled()) {
+            ci.cancel();
+        }
     }
 
     @Inject(method = "isCursorLocked", at = @At("HEAD"), cancellable = true)

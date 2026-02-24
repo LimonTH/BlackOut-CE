@@ -13,6 +13,8 @@ public class MoveEvent {
     public static class Post {
         private static final Post INSTANCE = new Post();
 
+        private Post() {}
+
         public static Post get() {
             return INSTANCE;
         }
@@ -20,6 +22,8 @@ public class MoveEvent {
 
     public static class PostSend {
         private static final PostSend INSTANCE = new PostSend();
+
+        private PostSend() {}
 
         public static PostSend get() {
             return INSTANCE;

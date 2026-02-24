@@ -14,7 +14,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinWorldChunk {
     @Inject(method = "setBlockState", at = @At("TAIL"), cancellable = true)
     private void onBlockState(BlockPos pos, BlockState state, boolean moved, CallbackInfoReturnable<BlockState> cir) {
-        if (BlackOut.EVENT_BUS.post(BlockStateEvent.get(pos, state, cir.getReturnValue())).isCancelled()) {
+        BlockStateEvent event = BlockStateEvent.get(pos, state, cir.getReturnValue());
+        if (BlackOut.EVENT_BUS.post(event).isCancelled()) {
             cir.cancel();
         }
     }

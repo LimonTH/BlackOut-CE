@@ -11,22 +11,31 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import net.minecraft.util.math.MathHelper;
 
 public class Zoomify extends Module {
+    private static Zoomify INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    private final Setting<Double> zoomValue = this.sgGeneral.doubleSetting("Zoom Value", 3.0, 1.0, 50.0, 0.1, "Base magnification level.");
-    private final Setting<Double> smoothSpeed = this.sgGeneral.doubleSetting("Smooth Speed", 0.15, 0.01, 1.0, 0.01, "The speed of the zoom transition.");
-    private final Setting<Boolean> cinematic = this.sgGeneral.booleanSetting("Cinematic Camera", true, "Enables vanilla smooth camera while zooming.");
-    private final Setting<Boolean> mouseModifier = this.sgGeneral.booleanSetting("Mouse Modifier", true, "Reduces mouse sensitivity as you zoom in.");
-
-    private final Setting<Boolean> scroll = this.sgGeneral.booleanSetting("Allow Scroll", true, "Allows changing magnification with the scroll wheel.");
-    private final Setting<Double> scrollSpeed = this.sgGeneral.doubleSetting("Scroll Speed", 1.1, 1.01, 2.0, 0.01, "Exponential multiplier for scrolling.", this.scroll::get);
+    private final Setting<Double> zoomValue = this.sgGeneral.doubleSetting("Zoom Value", 3.0, 1.0, 50.0, 0.1,
+            "The base magnification level when zoom is active.");
+    private final Setting<Boolean> hideHands = this.sgGeneral.booleanSetting("Hide Hands", true,
+            "Hides your hands and held items while zooming.");
+    private final Setting<Boolean> cleanScreen = this.sgGeneral.booleanSetting("Clean Screen", false,
+            "Hides HUD, crosshair, and other overlays while zooming.");
+    private final Setting<Double> smoothSpeed = this.sgGeneral.doubleSetting("Smooth Speed", 0.15, 0.01, 1.0, 0.01,
+            "How fast the camera transitions to the zoomed view.");
+    private final Setting<Boolean> cinematic = this.sgGeneral.booleanSetting("Cinematic Camera", true,
+            "Automatically enables smooth camera movement while zooming.");
+    private final Setting<Boolean> mouseModifier = this.sgGeneral.booleanSetting("Mouse Modifier", true,
+            "Decreases mouse sensitivity as you zoom in to make aiming easier.");
+    private final Setting<Boolean> scroll = this.sgGeneral.booleanSetting("Allow Scroll", true,
+            "Enables changing magnification using the scroll wheel while zooming.");
+    private final Setting<Double> scrollSpeed = this.sgGeneral.doubleSetting("Scroll Speed", 1.1, 1.01, 2.0, 0.01,
+            "How much the zoom level changes per scroll tick.", this.scroll::get);
 
     private double currentZoom = 1.0;
     private double scrollMultiplier = 1.0;
     private boolean wasCinematic = false;
     private float lastMouseSens = -1;
-
-    private static Zoomify INSTANCE;
 
     public Zoomify() {
         super("Zoomify", "Advanced zoom with cinematic effects.", SubCategory.MISC, true);
@@ -70,6 +79,9 @@ public class Zoomify extends Module {
 
     @Event
     public void onScroll(MouseScrollEvent event) {
+        if (this.scroll.get() || this.cleanScreen.get()) {
+            event.cancel();
+        }
         if (!this.scroll.get() || BlackOut.mc.currentScreen != null) return;
 
         if (event.vertical > 0) {
@@ -84,6 +96,14 @@ public class Zoomify extends Module {
     public float getZoomFactor(float fov) {
         if (!this.enabled) return fov;
         return (float) (fov / currentZoom);
+    }
+
+    public boolean shouldHideHands() {
+        return this.enabled && hideHands.get() && currentZoom > 1.1;
+    }
+
+    public boolean isCleanScreen() {
+        return this.enabled && cleanScreen.get() && currentZoom > 1.1;
     }
 
     public static Zoomify getInstance() {
