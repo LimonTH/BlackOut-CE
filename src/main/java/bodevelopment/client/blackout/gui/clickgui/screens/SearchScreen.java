@@ -23,6 +23,10 @@ public class SearchScreen extends ClickGuiScreen {
     private final TextField textField = new TextField();
     private List<Module> results = new ArrayList<>();
 
+    private final float RADIUS = 6.0F;
+    private final float SHADOW = 2.0F;
+    private final float SHADER_PADDING = RADIUS + SHADOW;
+
     public SearchScreen(int key) {
         super("Search", 400, 500, true);
         this.textField.setActive(true);
@@ -33,38 +37,28 @@ public class SearchScreen extends ClickGuiScreen {
     public void render() {
         float fs = GuiSettings.getInstance().fontScale.get().floatValue();
         float fieldHeight = 45.0F * fs;
-        this.textField.render(
-                this.stack,
-                1.8F * fs,
-                this.mx,
-                this.my,
-                20.0F,
-                20.0F,
-                this.width - 40.0F,
-                fieldHeight,
-                5.0F,
-                2.0F,
-                Color.WHITE,
-                GuiColorUtils.bg1
-        );
+
+        this.textField.render(this.stack, 1.8F * fs, this.mx, this.my, 20.0F, 20.0F, this.width - 40.0F, fieldHeight, 5.0F, 2.0F, Color.WHITE, GuiColorUtils.bg1);
 
         float startY = 35.0F + fieldHeight;
         float entryHeight = 40.0F * fs;
-        float radius = 6.0F;
-        float spacing = (8.0F * fs) + (radius * 2);
 
-        float yPos = startY - this.scroll.get() + radius;
+        float spacing = 4.0F * fs;
+
+        float yPos = startY - this.scroll.get() + SHADER_PADDING;
 
         for (Module module : results) {
-            if (yPos > this.height - entryHeight) break;
+            if (yPos > this.height) break;
 
-            if (yPos > startY - entryHeight) {
+            if (yPos + entryHeight > startY - SHADER_PADDING) {
+
                 boolean hovered = this.mx > 20.0F && this.mx < this.width - 20.0F && this.my > yPos && this.my < yPos + entryHeight;
                 int bgColor = hovered ? ColorUtils.withAlpha(GuiColorUtils.bg1.getRGB(), 180) : ColorUtils.withAlpha(GuiColorUtils.bg1.getRGB(), 100);
 
-                RenderUtils.rounded(this.stack, 20.0F, yPos, this.width - 40.0F, entryHeight, 6.0F, 2.0F, bgColor, ColorUtils.SHADOW100I);
+                RenderUtils.rounded(this.stack, 20.0F, yPos, this.width - 40.0F, entryHeight, RADIUS, SHADOW, bgColor, ColorUtils.SHADOW100I);
 
                 int textColor = module.enabled ? GuiRenderUtils.getGuiColors(1.0F).getRGB() : Color.LIGHT_GRAY.getRGB();
+
                 BlackOut.FONT.text(this.stack, module.getDisplayName(), 1.8F * fs, 35.0F, yPos + (entryHeight / 2.0F), textColor, false, true);
 
                 String category = module.category.name();
@@ -72,7 +66,8 @@ public class SearchScreen extends ClickGuiScreen {
                 float catWidth = BlackOut.FONT.getWidth(category) * catScale;
                 BlackOut.FONT.text(this.stack, category, catScale, this.width - 35.0F - catWidth, yPos + (entryHeight / 2.0F), Color.GRAY.getRGB(), false, true);
             }
-            yPos += entryHeight + spacing;
+
+            yPos += entryHeight + (SHADER_PADDING * 2) + spacing;
         }
     }
 
@@ -81,8 +76,9 @@ public class SearchScreen extends ClickGuiScreen {
         float fs = GuiSettings.getInstance().fontScale.get().floatValue();
         float fieldHeight = 45.0F * fs;
         float entryHeight = 40.0F * fs;
-        float spacing = 8.0F * fs;
-        return (35.0F + fieldHeight) + results.size() * (entryHeight + spacing) + 10.0F;
+        float spacing = 4.0F * fs;
+
+        return (35.0F + fieldHeight) + results.size() * (entryHeight + (SHADER_PADDING * 2) + spacing) + 20.0F;
     }
 
     @Override
@@ -99,9 +95,10 @@ public class SearchScreen extends ClickGuiScreen {
             float fs = GuiSettings.getInstance().fontScale.get().floatValue();
             float startY = 35.0F + (45.0F * fs);
             float entryHeight = 40.0F * fs;
-            float spacing = 8.0F * fs;
+            float spacing = 4.0F * fs;
 
-            float yPos = startY - this.scroll.get();
+            float yPos = startY - this.scroll.get() + SHADER_PADDING;
+
             for (Module module : results) {
                 if (this.mx > 20.0F && this.mx < this.width - 20.0F && this.my > yPos && this.my < yPos + entryHeight) {
                     if (button == 0) {
@@ -117,7 +114,7 @@ public class SearchScreen extends ClickGuiScreen {
                     }
                     return;
                 }
-                yPos += entryHeight + spacing;
+                yPos += entryHeight + (SHADER_PADDING * 2) + spacing;
             }
         }
     }

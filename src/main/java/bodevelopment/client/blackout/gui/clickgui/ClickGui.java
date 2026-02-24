@@ -135,11 +135,12 @@ public class ClickGui extends Screen {
             }
             scale = (float) AnimUtils.easeOutQuart(popUpDelta);
         }
+
         hoveredDescription = null;
 
         this.frameTime = delta / 20.0F;
 
-        if (this.upPressed || this.downPressed) {
+        if (this.openedScreen == null && (this.upPressed || this.downPressed)) {
             long now = System.currentTimeMillis();
             long timeSincePress = now - pressTime;
 
@@ -153,6 +154,10 @@ public class ClickGui extends Screen {
                     lastCategoryChange = now;
                 }
             }
+        } else if (this.openedScreen != null) {
+            initialClickDone = false;
+            this.upPressed = false;
+            this.downPressed = false;
         } else {
             initialClickDone = false;
         }
@@ -452,7 +457,7 @@ public class ClickGui extends Screen {
 
     private void renderCategories(float frameTime) {
         ParentCategory prevParent = null;
-        float startY = 110.0F - this.categoryScroll.get();
+        float currentY = 110.0F - this.categoryScroll.get();
 
         GlStateManager._enableScissorTest();
         float sx = BlackOut.mc.getWindow().getWidth() / 2.0F - width / 2.0F * unscaled + x;
@@ -461,29 +466,37 @@ public class ClickGui extends Screen {
         float scissorHeight = Math.abs(y1 - y2);
         GlStateManager._scissorBox((int) sx, (int) y1, (int) (210.0F * unscaled), (int) scissorHeight);
 
-        this.categoryOffset = 0.0F;
+        float totalHeightCounter = 0.0F;
 
         for (CategoryComponent c : this.categoryComponents) {
             ParentCategory p = c.category.parent();
 
             if (prevParent != p) {
-                this.categoryOffset += (prevParent != null) ? 15.0F : 20.0F;
-                this.renderParentCategory(p, startY + this.categoryOffset);
-                this.categoryOffset += 25.0F;
+                float headerSpacing = (prevParent != null) ? 15.0F : 20.0F;
+                currentY += headerSpacing;
+                totalHeightCounter += headerSpacing;
+
+                this.renderParentCategory(p, currentY);
+
+                float headerHeight = 25.0F;
+                currentY += headerHeight;
+                totalHeightCounter += headerHeight;
             }
             prevParent = p;
 
-            float expansion = c.getAnimation() * 14.0F;
-            float baseHeight = 35.0F;
-            float totalCurrentHeight = baseHeight + expansion;
+            c.x = 15;
+            c.y = (int) currentY;
+            c.mx = (float) this.mx;
+            c.my = (float) this.my;
+            c.frameTime = frameTime;
 
-            float drawY = startY + this.categoryOffset + (totalCurrentHeight / 2.0F);
-            c.onRender(frameTime, 170.0F, 15, (int) drawY, this.mx, this.my);
+            float renderedHeight = c.render();
 
-            this.categoryOffset += totalCurrentHeight + 2.0F;
+            currentY += renderedHeight;
+            totalHeightCounter += renderedHeight;
         }
 
-        this.categoryOffset -= 2.0F;
+        this.categoryOffset = totalHeightCounter;
 
         RenderUtils.bottomFade(this.stack, 0.0F, 100.0F, 200.0F, 20.0F, GuiColorUtils.bg2.getRGB());
         RenderUtils.topFade(this.stack, 0.0F, height - 10.0F, 200.0F, 20.0F, GuiColorUtils.bg2.getRGB());
