@@ -15,187 +15,72 @@ import net.minecraft.world.RaycastContext;
 
 public class RaytraceSettings extends SettingsModule {
     private static RaytraceSettings INSTANCE;
+
     private final SettingGroup sgInteract = this.addGroup("Interact");
     private final SettingGroup sgPlace = this.addGroup("Place");
     private final SettingGroup sgAttack = this.addGroup("Attack");
     private final SettingGroup sgMine = this.addGroup("Mine");
 
-    public final Setting<Boolean> interactTrace = this.sgInteract.b("Interact Trace", false, "Raytraces when interacting.");
-    private final Setting<PlaceTraceMode> interactMode = this.sgInteract
-            .e("Interact Mode", PlaceTraceMode.SinglePoint, "Interact trace mode.", this.interactTrace::get);
-    private final Setting<Double> interactHeight = this.sgInteract
-            .d(
-                    "Interact Height",
-                    0.5,
-                    -2.0,
-                    2.0,
-                    0.05,
-                    "Raytraces to x blocks above the bottom.",
-                    () -> this.interactMode.get() == PlaceTraceMode.SinglePoint && this.interactTrace.get()
-            );
-    private final Setting<Double> interactHeight1 = this.sgInteract
-            .d(
-                    "Interact Height 1",
-                    0.25,
-                    -2.0,
-                    2.0,
-                    0.05,
-                    "Raytraces to x blocks above the bottom.",
-                    () -> this.interactMode.get() == PlaceTraceMode.DoublePoint && this.interactTrace.get()
-            );
-    private final Setting<Double> interactHeight2 = this.sgInteract
-            .d(
-                    "Interact Height 2",
-                    0.75,
-                    -2.0,
-                    2.0,
-                    0.05,
-                    "Raytraces to x blocks above the bottom.",
-                    () -> this.interactMode.get() == PlaceTraceMode.DoublePoint && this.interactTrace.get()
-            );
-    private final Setting<Double> interactExposure = this.sgInteract
-            .d(
-                    "Interact Exposure",
-                    50.0,
-                    0.0,
-                    100.0,
-                    1.0,
-                    "How many % of the block should be seen.",
-                    () -> this.interactMode.get() == PlaceTraceMode.Exposure && this.interactTrace.get()
-            );
-    private final Setting<Double> mineHeight = this.sgMine
-            .d(
-                    "Mine Height",
-                    0.5,
-                    -2.0,
-                    2.0,
-                    0.05,
-                    "Raytraces to x blocks above the bottom.",
-                    () -> this.interactMode.get() == PlaceTraceMode.SinglePoint && this.interactTrace.get()
-            );
-    private final Setting<Double> mineHeight1 = this.sgMine
-            .d(
-                    "Mine Height 1",
-                    0.25,
-                    -2.0,
-                    2.0,
-                    0.05,
-                    "Raytraces to x blocks above the bottom.",
-                    () -> this.interactMode.get() == PlaceTraceMode.DoublePoint && this.interactTrace.get()
-            );
-    private final Setting<Double> mineHeight2 = this.sgMine
-            .d(
-                    "Mine Height 2",
-                    0.75,
-                    -2.0,
-                    2.0,
-                    0.05,
-                    "Raytraces to x blocks above the bottom.",
-                    () -> this.interactMode.get() == PlaceTraceMode.DoublePoint && this.interactTrace.get()
-            );
-    private final Setting<Double> mineExposure = this.sgMine
-            .d(
-                    "Mine Exposure",
-                    50.0,
-                    0.0,
-                    100.0,
-                    1.0,
-                    "How many % of the block should be seen.",
-                    () -> this.interactMode.get() == PlaceTraceMode.Exposure && this.interactTrace.get()
-            );
-    private final Setting<PlaceTraceMode> mineMode = this.sgMine
-            .e("Mine Mode", PlaceTraceMode.SinglePoint, "Interact trace mode.", this.interactTrace::get);
-    public final Setting<Boolean> placeTrace = this.sgPlace.b("Place Trace", false, "Raytraces when placing.");
-    private final Setting<PlaceTraceMode> placeMode = this.sgPlace
-            .e("Place Mode", PlaceTraceMode.SinglePoint, "Place trace mode.", this.placeTrace::get);
-    private final Setting<Double> placeHeight = this.sgPlace
-            .d(
-                    "Place Height",
-                    0.5,
-                    -2.0,
-                    2.0,
-                    0.05,
-                    "Raytraces to x blocks above the bottom.",
-                    () -> this.placeMode.get() == PlaceTraceMode.SinglePoint && this.placeTrace.get()
-            );
-    private final Setting<Double> placeHeight1 = this.sgPlace
-            .d(
-                    "Place Height 1",
-                    0.25,
-                    -2.0,
-                    2.0,
-                    0.05,
-                    "Raytraces to x blocks above the bottom.",
-                    () -> this.placeMode.get() == PlaceTraceMode.DoublePoint && this.placeTrace.get()
-            );
-    private final Setting<Double> placeHeight2 = this.sgPlace
-            .d(
-                    "Place Height 2",
-                    0.75,
-                    -2.0,
-                    2.0,
-                    0.05,
-                    "Raytraces to x blocks above the bottom.",
-                    () -> this.placeMode.get() == PlaceTraceMode.DoublePoint && this.placeTrace.get()
-            );
-    private final Setting<Double> placeExposure = this.sgPlace
-            .d(
-                    "Place Exposure",
-                    50.0,
-                    0.0,
-                    100.0,
-                    1.0,
-                    "How many % of the block should be seen.",
-                    () -> this.placeMode.get() == PlaceTraceMode.Exposure && this.placeTrace.get()
-            );
-    public final Setting<Boolean> attackTrace = this.sgAttack.b("Attack Trace", false, "Raytraces when attacking.");
-    private final Setting<AttackTraceMode> attackMode = this.sgAttack
-            .e("Attack Mode", AttackTraceMode.SinglePoint, "Attack trace mode.", this.attackTrace::get);
-    private final Setting<Double> attackHeight = this.sgAttack
-            .d(
-                    "Attack Height",
-                    0.5,
-                    -2.0,
-                    2.0,
-                    0.05,
-                    "Raytraces to x blocks above the bottom.",
-                    () -> this.attackMode.get() == AttackTraceMode.SinglePoint && this.attackTrace.get()
-            );
-    private final Setting<Double> attackHeight1 = this.sgAttack
-            .d(
-                    "Attack Height 1",
-                    0.25,
-                    -2.0,
-                    2.0,
-                    0.05,
-                    "Raytraces to x blocks above the bottom.",
-                    () -> this.attackMode.get() == AttackTraceMode.DoublePoint && this.attackTrace.get()
-            );
-    private final Setting<Double> attackHeight2 = this.sgAttack
-            .d(
-                    "Attack Height 2",
-                    0.75,
-                    -2.0,
-                    2.0,
-                    0.05,
-                    "Raytraces to x blocks above the bottom.",
-                    () -> this.attackMode.get() == AttackTraceMode.DoublePoint && this.attackTrace.get()
-            );
-    private final Setting<Double> attackExposure = this.sgAttack
-            .d(
-                    "Attack Exposure",
-                    50.0,
-                    0.0,
-                    100.0,
-                    1.0,
-                    "How many % of the block should be seen.",
-                    () -> this.attackMode.get() == AttackTraceMode.Exposure && this.attackTrace.get()
-            );
-    public final Setting<Boolean> mineTrace = this.sgMine.b("Mine Trace", false, "Raytraces when mining.");
-    private final Setting<Boolean> interactNCP = this.sgInteract.b("Interact NCP", false, ".");
-    private final Setting<Boolean> placeNCP = this.sgPlace.b("Place NCP", false, ".");
-    private final Setting<Boolean> attackNCP = this.sgAttack.b("Attack NCP", false, ".");
-    private final Setting<Boolean> mineNCP = this.sgMine.b("Mine NCP", false, ".");
+    public final Setting<Boolean> interactTrace = this.sgInteract.b("Interact Trace", false,
+            "Performs a visibility check before interacting with blocks to ensure they aren't behind obstacles.");
+    private final Setting<PlaceTraceMode> interactMode = this.sgInteract.e("Interact Mode", PlaceTraceMode.SinglePoint,
+            "Determines how many points on the block are checked for visibility.");
+    private final Setting<Double> interactHeight = this.sgInteract.d("Interact Height", 0.5, -2.0, 2.0, 0.05,
+            "The vertical offset (from block bottom) for the single-point visibility check.");
+    private final Setting<Double> interactHeight1 = this.sgInteract.d("Interact Height 1", 0.25, -2.0, 2.0, 0.05,
+            "The first vertical offset for the double-point visibility check.");
+    private final Setting<Double> interactHeight2 = this.sgInteract.d("Interact Height 2", 0.75, -2.0, 2.0, 0.05,
+            "The second vertical offset for the double-point visibility check.");
+    private final Setting<Double> interactExposure = this.sgInteract.d("Interact Exposure", 50.0, 0.0, 100.0, 1.0,
+            "The percentage of the block that must be visible to pass the check (checked via 27-point grid).");
+    private final Setting<Boolean> interactNCP = this.sgInteract.b("Interact NCP", false,
+            "Uses specialized NoCheatPlus raytracing logic for interaction checks.");
+
+    public final Setting<Boolean> placeTrace = this.sgPlace.b("Place Trace", false,
+            "Validates that the placement position is visible before attempting to place a block.");
+    private final Setting<PlaceTraceMode> placeMode = this.sgPlace.e("Place Mode", PlaceTraceMode.SinglePoint,
+            "Calculation method for placement visibility, from single points to full block exposure.");
+    private final Setting<Double> placeHeight = this.sgPlace.d("Place Height", 0.5, -2.0, 2.0, 0.05,
+            "Target height for a single-point placement raytrace.");
+    private final Setting<Double> placeHeight1 = this.sgPlace.d("Place Height 1", 0.25, -2.0, 2.0, 0.05,
+            "Primary height for double-point placement check.");
+    private final Setting<Double> placeHeight2 = this.sgPlace.d("Place Height 2", 0.75, -2.0, 2.0, 0.05,
+            "Secondary height for double-point placement check.");
+    private final Setting<Double> placeExposure = this.sgPlace.d("Place Exposure", 50.0, 0.0, 100.0, 1.0,
+            "Required visibility percentage of the target placement area.");
+    private final Setting<Boolean> placeNCP = this.sgPlace.b("Place NCP", false,
+            "Enables NCP-compatible raytrace logic for block placement.");
+
+    public final Setting<Boolean> attackTrace = this.sgAttack.b("Attack Trace", false,
+            "Prevents attacking entities that are fully occluded by blocks.");
+    private final Setting<AttackTraceMode> attackMode = this.sgAttack.e("Attack Mode", AttackTraceMode.SinglePoint,
+            "Visibility logic for entities. 'Exposure' is most accurate but heavier on performance.");
+    private final Setting<Double> attackHeight = this.sgAttack.d("Attack Height", 0.5, -2.0, 2.0, 0.05,
+            "Vertical target point on the entity's hitbox for single-point checks.");
+    private final Setting<Double> attackHeight1 = this.sgAttack.d("Attack Height 1", 0.25, -2.0, 2.0, 0.05,
+            "First vertical check point for entity double-trace.");
+    private final Setting<Double> attackHeight2 = this.sgAttack.d("Attack Height 2", 0.75, -2.0, 2.0, 0.05,
+            "Second vertical check point for entity double-trace.");
+    private final Setting<Double> attackExposure = this.sgAttack.d("Attack Exposure", 50.0, 0.0, 100.0, 1.0,
+            "Required hitbox visibility percentage to allow an attack.");
+    private final Setting<Boolean> attackNCP = this.sgAttack.b("Attack NCP", false,
+            "Applies NCP-compliant raytracing specifically for entity combat.");
+
+    public final Setting<Boolean> mineTrace = this.sgMine.b("Mine Trace", false,
+            "Verifies block visibility before starting the mining process.");
+    private final Setting<PlaceTraceMode> mineMode = this.sgMine.e("Mine Mode", PlaceTraceMode.SinglePoint,
+            "Trace complexity for mining, ranging from center-point to multi-side checks.");
+    private final Setting<Double> mineHeight = this.sgMine.d("Mine Height", 0.5, -2.0, 2.0, 0.05,
+            "Height above block bottom to check for mining visibility.");
+    private final Setting<Double> mineHeight1 = this.sgMine.d("Mine Height 1", 0.25, -2.0, 2.0, 0.05,
+            "First height point for double-point mining trace.");
+    private final Setting<Double> mineHeight2 = this.sgMine.d("Mine Height 2", 0.75, -2.0, 2.0, 0.05,
+            "Second height point for double-point mining trace.");
+    private final Setting<Double> mineExposure = this.sgMine.d("Mine Exposure", 50.0, 0.0, 100.0, 1.0,
+            "Required block surface exposure for mining to commence.");
+    private final Setting<Boolean> mineNCP = this.sgMine.b("Mine NCP", false,
+            "Utilizes NCP-style raytracing for mining visibility checks.");
+
     private RaycastContext raycastContext;
     private BlockHitResult result;
     private int hit = 0;

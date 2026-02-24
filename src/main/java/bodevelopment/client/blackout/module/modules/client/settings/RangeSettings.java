@@ -22,157 +22,76 @@ import net.minecraft.util.math.Vec3d;
 
 public class RangeSettings extends SettingsModule {
     private static RangeSettings INSTANCE;
+
     private final SettingGroup sgInteract = this.addGroup("Interact");
-    public final Setting<Double> interactRange = this.sgInteract.d("Interact Range", 5.2, 0.0, 6.0, 0.05, "Range for interacting with blocks.");
-    public final Setting<Double> interactRangeWalls = this.sgInteract.d("Interact Range Walls", 5.2, 0.0, 6.0, 0.05, "Range for interacting behind blocks.");
-    public final Setting<BlockRangeMode> interactRangeMode = this.sgInteract
-            .e("Interact Range Mode", BlockRangeMode.NCP, "Where to calculate place ranges from.");
-    public final Setting<Double> interactBlockWidth = this.sgInteract
-            .d(
-                    "Interact Block Width",
-                    1.0,
-                    0.0,
-                    2.0,
-                    0.05,
-                    "How wide should the box be for closest place range.",
-                    () -> this.interactRangeMode.get() == BlockRangeMode.CustomBox
-            );
-    public final Setting<Double> interactBlockHeight = this.sgInteract
-            .d(
-                    "Interact Block Height",
-                    1.0,
-                    0.0,
-                    2.0,
-                    0.05,
-                    "How high should the box be for closest place range.",
-                    () -> this.interactRangeMode.get() == BlockRangeMode.CustomBox
-            );
-    public final Setting<Double> interactHeight = this.sgInteract
-            .d(
-                    "Interact Height",
-                    0.5,
-                    0.0,
-                    1.0,
-                    0.05,
-                    "The height to calculate ranges from.",
-                    () -> this.interactRangeMode.get() == BlockRangeMode.Height
-            );
     private final SettingGroup sgPlace = this.addGroup("Place");
-    public final Setting<Double> placeRange = this.sgPlace.d("Place Range", 5.2, 0.0, 6.0, 0.05, "Range for placing.");
-    public final Setting<Double> placeRangeWalls = this.sgPlace.d("Place Range Walls", 5.2, 0.0, 6.0, 0.05, "Range for placing behind blocks.");
-    public final Setting<BlockRangeMode> placeRangeMode = this.sgPlace
-            .e("Place Range Mode", BlockRangeMode.NCP, "Where to calculate place ranges from.");
-    public final Setting<Double> blockWidth = this.sgPlace
-            .d(
-                    "Block Width",
-                    1.0,
-                    0.0,
-                    2.0,
-                    0.05,
-                    "How wide should the box be for closest place range.",
-                    () -> this.placeRangeMode.get() == BlockRangeMode.CustomBox
-            );
-    public final Setting<Double> blockHeight = this.sgPlace
-            .d(
-                    "Block Height",
-                    1.0,
-                    0.0,
-                    2.0,
-                    0.05,
-                    "How high should the box be for closest place range.",
-                    () -> this.placeRangeMode.get() == BlockRangeMode.CustomBox
-            );
-    public final Setting<Double> placeHeight = this.sgPlace
-            .d("Place Height", 0.5, 0.0, 1.0, 0.05, "The height to calculate ranges from.", () -> this.placeRangeMode.get() == BlockRangeMode.Height);
     private final SettingGroup sgAttack = this.addGroup("Attack");
-    public final Setting<Double> attackRange = this.sgAttack.d("Attack Range", 4.8, 0.0, 6.0, 0.05, "Range for attacking entities.");
-    public final Setting<AttackRangeMode> attackRangeMode = this.sgAttack
-            .e("Attack Range Mode", AttackRangeMode.NCP, "Where to calculate attack ranges from.");
-    public final Setting<Double> closestAttackWidth = this.sgAttack
-            .d(
-                    "Closest Attack Width",
-                    1.0,
-                    0.0,
-                    3.0,
-                    0.05,
-                    "How wide should the box be for closest range.",
-                    () -> this.attackRangeMode.get().equals(AttackRangeMode.CustomBox)
-            );
-    public final Setting<Double> closestAttackHeight = this.sgAttack
-            .d(
-                    "Closest Attack Height",
-                    1.0,
-                    0.0,
-                    3.0,
-                    0.05,
-                    "How high should the box be for closest range.",
-                    () -> this.attackRangeMode.get().equals(AttackRangeMode.CustomBox)
-            );
-    public final Setting<Double> attackRangeWalls = this.sgAttack.d("Attack Range Walls", 4.8, 0.0, 6.0, 0.05, "Range for attacking entities behind blocks.");
-    public final Setting<AttackRangeMode> wallAttackRangeMode = this.sgAttack
-            .e("Wall Attack Range Mode", AttackRangeMode.NCP, "Where to calculate attack ranges from.");
-    public final Setting<Double> closestWallAttackWidth = this.sgAttack
-            .d(
-                    "Closest Wall Attack Width",
-                    1.0,
-                    0.0,
-                    3.0,
-                    0.05,
-                    "How wide should the box be for closest range.",
-                    () -> this.wallAttackRangeMode.get().equals(AttackRangeMode.CustomBox)
-            );
-    public final Setting<Double> closestWallAttackHeight = this.sgAttack
-            .d(
-                    "Closest Wall Attack Height",
-                    1.0,
-                    0.0,
-                    3.0,
-                    0.05,
-                    "How high should the box be for closest range.",
-                    () -> this.wallAttackRangeMode.get().equals(AttackRangeMode.CustomBox)
-            );
-    public final Setting<Boolean> reduce = this.sgAttack
-            .b("Reduce", false, "Reduces range on every hit by reduce step until it reaches (range - reduce amount).");
-    public final Setting<Boolean> wallReduce = this.sgAttack.b("Wall Reduce", false, ".");
-    public final Setting<Double> reduceAmount = this.sgAttack
-            .d("Reduce Amount", 0.8, 0.0, 6.0, 0.05, "Check description from 'Reduce' setting.", () -> this.reduce.get() || this.wallReduce.get());
-    public final Setting<Double> reduceStep = this.sgAttack
-            .d("Reduce Step", 0.14, 0.0, 1.0, 0.01, "Check description from 'Reduce' setting.", () -> this.reduce.get() || this.wallReduce.get());
     private final SettingGroup sgMine = this.addGroup("Mine");
-    public final Setting<Double> mineRange = this.sgMine.d("Mine Range", 5.2, 0.0, 6.0, 0.05, "Range for mining.");
-    public final Setting<Double> mineRangeWalls = this.sgMine.d("Mine Range Walls", 5.2, 0.0, 6.0, 0.05, "Range for mining behind blocks.");
-    public final Setting<MineRangeMode> mineRangeMode = this.sgMine
-            .e("Mine Range Mode", MineRangeMode.NCP, "Where to calculate mining ranges from.");
-    public final Setting<Double> closestMiningWidth = this.sgMine
-            .d(
-                    "Closest Mine Width",
-                    1.0,
-                    0.0,
-                    3.0,
-                    0.05,
-                    "How wide should the box be for closest range.",
-                    () -> this.mineRangeMode.get() == MineRangeMode.CustomBox
-            );
-    public final Setting<Double> closestMiningHeight = this.sgMine
-            .d(
-                    "Closest Mine Height",
-                    1.0,
-                    0.0,
-                    3.0,
-                    0.05,
-                    "How tall should the box be for closest range.",
-                    () -> this.mineRangeMode.get() == MineRangeMode.CustomBox
-            );
-    public final Setting<Double> miningHeight = this.sgMine
-            .d(
-                    "Mine Height",
-                    0.5,
-                    0.0,
-                    1.0,
-                    0.05,
-                    "The height above block bottom to calculate ranges from.",
-                    () -> this.mineRangeMode.get() == MineRangeMode.Height
-            );
+
+    public final Setting<Double> interactRange = this.sgInteract.d("Interact Range", 5.2, 0.0, 6.0, 0.05,
+            "Maximum distance for interacting with blocks (e.g., opening chests) with a clear line of sight.");
+    public final Setting<Double> interactRangeWalls = this.sgInteract.d("Interact Range Walls", 5.2, 0.0, 6.0, 0.05,
+            "Maximum interaction distance when the target block is behind a wall or other obstruction.");
+    public final Setting<BlockRangeMode> interactRangeMode = this.sgInteract.e("Interact Range Mode", BlockRangeMode.NCP,
+            "The calculation method for interaction distance. NCP uses block centers; Vanilla uses the closest point.");
+    public final Setting<Double> interactBlockWidth = this.sgInteract.d("Interact Block Width", 1.0, 0.0, 2.0, 0.05,
+            "Custom width for the interaction hit-box calculation.", () -> this.interactRangeMode.get() == BlockRangeMode.CustomBox);
+    public final Setting<Double> interactBlockHeight = this.sgInteract.d("Interact Block Height", 1.0, 0.0, 2.0, 0.05,
+            "Custom height for the interaction hit-box calculation.", () -> this.interactRangeMode.get() == BlockRangeMode.CustomBox);
+    public final Setting<Double> interactHeight = this.sgInteract.d("Interact Height", 0.5, 0.0, 1.0, 0.05,
+            "Specific height offset from the block bottom to calculate range from.", () -> this.interactRangeMode.get() == BlockRangeMode.Height);
+
+    public final Setting<Double> placeRange = this.sgPlace.d("Place Range", 5.2, 0.0, 6.0, 0.05,
+            "Maximum range for placing blocks when you have a direct line of sight.");
+    public final Setting<Double> placeRangeWalls = this.sgPlace.d("Place Range Walls", 5.2, 0.0, 6.0, 0.05,
+            "Maximum range for placing blocks through walls or obstructions.");
+    public final Setting<BlockRangeMode> placeRangeMode = this.sgPlace.e("Place Range Mode", BlockRangeMode.NCP,
+            "Method used to determine the distance between you and the placement position.");
+    public final Setting<Double> blockWidth = this.sgPlace.d("Block Width", 1.0, 0.0, 2.0, 0.05,
+            "Horizontal size of the target block box for distance checks.", () -> this.placeRangeMode.get() == BlockRangeMode.CustomBox);
+    public final Setting<Double> blockHeight = this.sgPlace.d("Block Height", 1.0, 0.0, 2.0, 0.05,
+            "Vertical size of the target block box for distance checks.", () -> this.placeRangeMode.get() == BlockRangeMode.CustomBox);
+    public final Setting<Double> placeHeight = this.sgPlace.d("Place Height", 0.5, 0.0, 1.0, 0.05,
+            "Manual vertical offset for placement range calculations.", () -> this.placeRangeMode.get() == BlockRangeMode.Height);
+    // TODO : closestAttackWidth и closestAttackHeight нигде не используются
+    public final Setting<Double> attackRange = this.sgAttack.d("Attack Range", 4.8, 0.0, 6.0, 0.05,
+            "Standard reach for attacking entities within line of sight.");
+    public final Setting<AttackRangeMode> attackRangeMode = this.sgAttack.e("Attack Range Mode", AttackRangeMode.NCP,
+            "Logic used to calculate distance to entities. 'UpdatedNCP' provides the most accurate bypass for modern servers.");
+    public final Setting<Double> closestAttackWidth = this.sgAttack.d("Closest Attack Width", 1.0, 0.0, 3.0, 0.05,
+            "Width multiplier for the entity's hit-box during attack range checks.", () -> this.attackRangeMode.get().equals(AttackRangeMode.CustomBox));
+    public final Setting<Double> closestAttackHeight = this.sgAttack.d("Closest Attack Height", 1.0, 0.0, 3.0, 0.05,
+            "Height multiplier for the entity's hit-box during attack range checks.", () -> this.attackRangeMode.get().equals(AttackRangeMode.CustomBox));
+    public final Setting<Double> attackRangeWalls = this.sgAttack.d("Attack Range Walls", 4.8, 0.0, 6.0, 0.05,
+            "Reach for attacking entities when blocks are obstructing your view.");
+    public final Setting<AttackRangeMode> wallAttackRangeMode = this.sgAttack.e("Wall Attack Range Mode", AttackRangeMode.NCP,
+            "Calculation logic for attack range specifically when hitting through walls.");
+    public final Setting<Double> closestWallAttackWidth = this.sgAttack.d("Closest Wall Attack Width", 1.0, 0.0, 3.0, 0.05,
+            "Custom width for wall-attack distance calculation.", () -> this.wallAttackRangeMode.get().equals(AttackRangeMode.CustomBox));
+    public final Setting<Double> closestWallAttackHeight = this.sgAttack.d("Closest Wall Attack Height", 1.0, 0.0, 3.0, 0.05,
+            "Custom height for wall-attack distance calculation.", () -> this.wallAttackRangeMode.get().equals(AttackRangeMode.CustomBox));
+    public final Setting<Boolean> reduce = this.sgAttack.b("Reduce", false,
+            "Dynamically lowers your reach after each hit. Helps stay under the detection threshold of some anti-cheats.");
+    public final Setting<Boolean> wallReduce = this.sgAttack.b("Wall Reduce", false,
+            "Applies the range reduction logic specifically to wall interactions.");
+    public final Setting<Double> reduceAmount = this.sgAttack.d("Reduce Amount", 0.8, 0.0, 6.0, 0.05,
+            "The total amount of distance to be subtracted from your maximum reach during reduction.");
+    public final Setting<Double> reduceStep = this.sgAttack.d("Reduce Step", 0.14, 0.0, 1.0, 0.01,
+            "How much your reach decreases/increases per hit or tick during the reduction process.");
+
+    public final Setting<Double> mineRange = this.sgMine.d("Mine Range", 5.2, 0.0, 6.0, 0.05,
+            "Maximum distance for breaking blocks that are visible.");
+    public final Setting<Double> mineRangeWalls = this.sgMine.d("Mine Range Walls", 5.2, 0.0, 6.0, 0.05,
+            "Maximum distance for breaking blocks through other obstacles.");
+    public final Setting<MineRangeMode> mineRangeMode = this.sgMine.e("Mine Range Mode", MineRangeMode.NCP,
+            "The logic for calculating distance to a block you are mining.");
+    public final Setting<Double> closestMiningWidth = this.sgMine.d("Closest Mine Width", 1.0, 0.0, 3.0, 0.05,
+            "Custom width for mining distance hit-box.", () -> this.mineRangeMode.get() == MineRangeMode.CustomBox);
+    public final Setting<Double> closestMiningHeight = this.sgMine.d("Closest Mine Height", 1.0, 0.0, 3.0, 0.05,
+            "Custom height for mining distance hit-box.", () -> this.mineRangeMode.get() == MineRangeMode.CustomBox);
+    public final Setting<Double> miningHeight = this.sgMine.d("Mine Height", 0.5, 0.0, 1.0, 0.05,
+            "Vertical offset used when mining range mode is set to 'Height'.", () -> this.mineRangeMode.get() == MineRangeMode.Height);
+
     public double reducedAmount = 0.0;
 
     public RangeSettings() {

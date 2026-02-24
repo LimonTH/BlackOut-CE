@@ -28,7 +28,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class RotationSettings extends SettingsModule {
     private static RotationSettings INSTANCE;
-    public final Vec3d vec = new Vec3d(0.0, 0.0, 0.0);
+    // TODO: ...
     private final SettingGroup sgGeneral = this.addGroup("General");
     public final Setting<Integer> renderSmoothness = this.sgGeneral.i("Render Smoothness", 1, 0, 10, 1, ".");
     public final Setting<Boolean> vanillaRotation = this.sgGeneral.b("Client Rotation", false, "Turns your head.");
@@ -172,8 +172,9 @@ public class RotationSettings extends SettingsModule {
     private final Setting<Boolean> blockRotate = this.rotateSetting("Block Place", "placing a block", this.sgBlockPlace);
     private final Setting<Boolean> mineRotate = this.rotateSetting("Mining", "mining a block", this.sgMining);
     private final Setting<Boolean> attackRotate = this.rotateSetting("Attack", "attacking an entity", this.sgAttack);
-    private int sinceRotated = 0;
 
+    private int sinceRotated = 0;
+    public final Vec3d vec = new Vec3d(0.0, 0.0, 0.0);
     public RotationSettings() {
         super("Rotate", false, true);
         INSTANCE = this;
