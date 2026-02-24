@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.module.modules.combat.offensive.Aura;
+import bodevelopment.client.blackout.module.modules.misc.Zoomify;
 import bodevelopment.client.blackout.module.modules.visual.misc.SwingModifier;
 import bodevelopment.client.blackout.module.modules.visual.misc.ViewModel;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -72,6 +73,10 @@ public abstract class MixinHeldItemRenderer {
             int light,
             CallbackInfo ci
     ) {
+        if (Zoomify.getInstance().shouldHideHands()) {
+            ci.cancel();
+            return;
+        }
         ViewModel viewModel = ViewModel.getInstance();
         if (viewModel.enabled) {
             if (viewModel.shouldCancel(hand)) {

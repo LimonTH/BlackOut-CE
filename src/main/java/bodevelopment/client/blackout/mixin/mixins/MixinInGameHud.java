@@ -3,6 +3,7 @@ package bodevelopment.client.blackout.mixin.mixins;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.module.modules.client.BlurSettings;
+import bodevelopment.client.blackout.module.modules.misc.Zoomify;
 import bodevelopment.client.blackout.module.modules.visual.entities.ShaderESP;
 import bodevelopment.client.blackout.module.modules.visual.misc.Crosshair;
 import bodevelopment.client.blackout.module.modules.visual.misc.CustomScoreboard;
@@ -31,8 +32,12 @@ public class MixinInGameHud {
     @Shadow
     private static Identifier PUMPKIN_BLUR;
 
-    @Inject(method = "render", at = @At("HEAD"))
+    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void preRender(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
+        if (Zoomify.getInstance().isCleanScreen()) {
+            ci.cancel();
+            return;
+        }
         float tickDelta = tickCounter.getTickDelta(true);
 
         BlurSettings blur = BlurSettings.getInstance();

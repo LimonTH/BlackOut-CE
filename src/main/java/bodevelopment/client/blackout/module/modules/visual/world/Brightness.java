@@ -13,10 +13,12 @@ import net.minecraft.entity.effect.StatusEffects;
 public class Brightness extends Module {
     private static Brightness INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Gamma, ".", () -> true);
+
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Gamma,
+            "The method to increase brightness: Gamma (manipulates lightmap) or Effect (Night Vision).");
 
     public Brightness() {
-        super("Brightness", "Makes the world bright", SubCategory.WORLD, true);
+        super("Brightness", "Illuminates the world and removes darkness.", SubCategory.WORLD, true);
         INSTANCE = this;
     }
 
@@ -26,8 +28,8 @@ public class Brightness extends Module {
 
     @Override
     public void onDisable() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            if (this.mode.get() == Mode.Effect && BlackOut.mc.player.hasStatusEffect(StatusEffects.NIGHT_VISION)) {
+        if (BlackOut.mc.player != null) {
+            if (BlackOut.mc.player.hasStatusEffect(StatusEffects.NIGHT_VISION)) {
                 BlackOut.mc.player.removeStatusEffect(StatusEffects.NIGHT_VISION);
             }
         }
@@ -38,11 +40,16 @@ public class Brightness extends Module {
         return this.mode.get().name();
     }
 
+
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            if (this.mode.get() == Mode.Effect) {
-                BlackOut.mc.player.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, 69, 0));
+        if (BlackOut.mc.player == null || BlackOut.mc.world == null) return;
+
+        if (this.mode.get() == Mode.Effect) {
+            BlackOut.mc.player.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, 1000, 0, false, false));
+        } else {
+            if (BlackOut.mc.player.hasStatusEffect(StatusEffects.NIGHT_VISION)) {
+                BlackOut.mc.player.removeStatusEffect(StatusEffects.NIGHT_VISION);
             }
         }
     }
