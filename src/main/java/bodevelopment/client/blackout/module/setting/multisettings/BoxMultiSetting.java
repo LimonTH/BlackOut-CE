@@ -42,25 +42,33 @@ public class BoxMultiSetting {
         this.insideBufferName = "insideBuffer-" + id;
         this.bloomBufferName = "bloomBuffer-" + id;
         id++;
-        this.mode = sg.enumSetting(name + "Render Mode", BoxRenderMode.Normal, ".", visible);
-        this.shape = sg.enumSetting(name + "Shape", RenderShape.Full, ".");
-        this.lineColor = sg.colorSetting(
-                name + "Line Color", defaultColor.withAlpha(255), ".", () -> this.mode.get() == BoxRenderMode.Normal && visible.get()
-        );
-        this.sideColor = sg.colorSetting(
-                name + "Side Color", defaultColor.withAlpha(50), ".", () -> this.mode.get() == BoxRenderMode.Normal && visible.get()
-        );
-        this.bloom = sg.intSetting(name + "Bloom", 3, 0, 10, 1, ".", () -> this.mode.get() == BoxRenderMode.Shader && visible.get());
-        this.blur = sg.booleanSetting(name + "Blur", false, ".", () -> this.mode.get() == BoxRenderMode.Shader && visible.get());
-        this.insideColor = sg.colorSetting(
-                name + "Inside Color", defaultColor.withAlpha(50), ".", () -> this.mode.get() == BoxRenderMode.Shader && visible.get()
-        );
-        this.shaderOutlineColor = sg.colorSetting(
-                name + "Outline Color", defaultColor.withAlpha(255), ".", () -> this.mode.get() == BoxRenderMode.Shader && this.shape.get().outlines && visible.get()
-        );
-        this.bloomColor = sg.colorSetting(
-                name + "Bloom Color", defaultColor.withAlpha(150), ".", () -> this.mode.get() == BoxRenderMode.Shader && visible.get()
-        );
+
+        this.mode = sg.enumSetting(name + "Render Mode", BoxRenderMode.Normal,
+                "The rendering method: Normal (classic lines/sides) or Shader (modern glow/blur effects).", visible);
+        this.shape = sg.enumSetting(name + "Shape", RenderShape.Full,
+                "Which parts of the box to render: Sides, Outlines, or Both.");
+        this.lineColor = sg.colorSetting(name + "Line Color", defaultColor.withAlpha(255),
+                "The color of the box edges in Normal mode.",
+                () -> this.mode.get() == BoxRenderMode.Normal && visible.get());
+        this.sideColor = sg.colorSetting(name + "Side Color", defaultColor.withAlpha(50),
+                "The color of the box faces in Normal mode.",
+                () -> this.mode.get() == BoxRenderMode.Normal && visible.get());
+        this.bloom = sg.intSetting(name + "Bloom", 3, 0, 10, 1,
+                "The intensity of the glow effect around the box (Shader mode only).",
+                () -> this.mode.get() == BoxRenderMode.Shader && visible.get());
+        this.blur = sg.booleanSetting(name + "Blur", false,
+                "Whether to blur the background behind the rendered box.",
+                () -> this.mode.get() == BoxRenderMode.Shader && visible.get());
+        this.insideColor = sg.colorSetting(name + "Inside Color", defaultColor.withAlpha(50),
+                "The fill color used for the box faces in Shader mode.",
+                () -> this.mode.get() == BoxRenderMode.Shader && visible.get());
+        this.shaderOutlineColor = sg.colorSetting(name + "Outline Color", defaultColor.withAlpha(255),
+                "The color of the edges in Shader mode.",
+                () -> this.mode.get() == BoxRenderMode.Shader && this.shape.get().outlines && visible.get());
+        this.bloomColor = sg.colorSetting(name + "Bloom Color", defaultColor.withAlpha(150),
+                "The color of the glow/bloom aura surrounding the box.",
+                () -> this.mode.get() == BoxRenderMode.Shader && visible.get());
+
         BlackOut.EVENT_BUS.subscribe(this, () -> BlackOut.mc.player == null || BlackOut.mc.world == null);
     }
 

@@ -24,21 +24,40 @@ public class TextColorMultiSetting {
 
     private TextColorMultiSetting(SettingGroup sg, TextColorMode dm, BlackOutColor dt, BlackOutColor dw, SingleOut<Boolean> visible, String name) {
         String text = name == null ? "Text" : name;
-        this.mode = sg.enumSetting(text + " Color Mode", dm, ".");
-        this.textColor = sg.colorSetting(text + " Color", dt, ".", () -> (this.mode.get() == TextColorMode.Static || this.mode.get() == TextColorMode.Wave) && visible.get());
-        this.waveColor = sg.colorSetting(text + " Wave Color", dw, ".", () -> this.mode.get() == TextColorMode.Wave && visible.get());
-        this.saturation = sg.doubleSetting(text + " Saturation", 1.0, 0.1, 1.0, 0.1, ".", () -> this.mode.get() == TextColorMode.Rainbow && visible.get());
+
+        this.mode = sg.enumSetting(text + " Color Mode", dm,
+                "Determines how the text is colored: Static, Wave, or Rainbow.");
+
+        this.textColor = sg.colorSetting(text + " Color", dt,
+                "The primary color of the text, or the first color for the Wave mode.",
+                () -> (this.mode.get() == TextColorMode.Static || this.mode.get() == TextColorMode.Wave) && visible.get());
+
+        this.waveColor = sg.colorSetting(text + " Wave Color", dw,
+                "The secondary color that cycles with the primary color in Wave mode.",
+                () -> this.mode.get() == TextColorMode.Wave && visible.get());
+
+        this.saturation = sg.doubleSetting(text + " Saturation", 1.0, 0.1, 1.0, 0.1,
+                "Adjusts how vibrant the colors are in Rainbow mode.",
+                () -> this.mode.get() == TextColorMode.Rainbow && visible.get());
+
         this.frequency = sg.doubleSetting(
                 text + " Frequency",
                 1.0,
                 0.1,
                 10.0,
                 0.1,
-                ".",
+                "Controls the density of the gradient. Higher values mean more color cycles across the text.",
                 () -> (this.mode.get() == TextColorMode.Wave || this.mode.get() == TextColorMode.Rainbow) && visible.get()
         );
+
         this.speed = sg.doubleSetting(
-                text + " Speed", 1.0, 0.1, 10.0, 0.1, ".", () -> (this.mode.get() == TextColorMode.Wave || this.mode.get() == TextColorMode.Rainbow) && visible.get()
+                text + " Speed",
+                1.0,
+                0.1,
+                10.0,
+                0.1,
+                "Controls how fast the colors animate/cycle.",
+                () -> (this.mode.get() == TextColorMode.Wave || this.mode.get() == TextColorMode.Rainbow) && visible.get()
         );
     }
 

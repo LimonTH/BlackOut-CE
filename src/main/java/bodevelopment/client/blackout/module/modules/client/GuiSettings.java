@@ -14,7 +14,7 @@ public class GuiSettings extends SettingsModule {
     private final SettingGroup sgClosed = this.addGroup("Closed");
 
     public final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgStyle, TextColorMode.Wave, () -> true,
-            "The primary color theme for text elements. Supports static, wave, and rainbow modes.");
+            "Text");
     public final Setting<Boolean> selectorBar = this.sgStyle.booleanSetting("Selector Bar", false,
             "Displays a decorative bar next to the currently selected module or setting.");
     public final Setting<Integer> selectorGlow = this.sgStyle.intSetting("Selector Glow", 0, 0, 5, 1,

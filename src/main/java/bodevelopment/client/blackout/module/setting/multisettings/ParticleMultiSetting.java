@@ -32,15 +32,22 @@ public class ParticleMultiSetting {
             name = name + " ";
         }
 
-        this.mode = sg.enumSetting(name + "Particle Mode", ParticleMode.Normal, ".", visible);
-        this.particles = sg.intSetting(name + "Particles", 25, 0, 100, 1, ".", visible);
-        this.velocity = sg.doubleSetting(name + "Particle Velocity", 0.5, 0.0, 1.0, 0.01, ".", visible);
-        this.time = sg.doubleSetting(name + "Particle Time", 1.0, 0.0, 5.0, 0.05, ".", visible);
-        this.friction = sg.doubleSetting(
-                name + "Particle Friction", 0.9, 0.0, 1.0, 0.01, ".", () -> this.mode.get() == ParticleMode.Normal && visible.get()
+        this.mode = sg.enumSetting(name + "Particle Mode", ParticleMode.Normal,
+                "The movement logic: Normal (floats with friction) or Bouncy (rebounds off surfaces).", visible);
+        this.particles = sg.intSetting(name + "Particles", 25, 0, 100, 1,
+                "The number of particles spawned per effect trigger.", visible);
+        this.velocity = sg.doubleSetting(name + "Particle Velocity", 0.5, 0.0, 1.0, 0.01,
+                "The initial speed at which particles fly away from the source.", visible);
+        this.time = sg.doubleSetting(name + "Particle Time", 1.0, 0.0, 5.0, 0.05,
+                "How long (in seconds) particles remain visible before disappearing.", visible);
+        this.friction = sg.doubleSetting(name + "Particle Friction", 0.9, 0.0, 1.0, 0.01,
+                "How quickly particles slow down over time (Normal mode only). Lower values mean faster stopping.",
+                () -> this.mode.get() == ParticleMode.Normal && visible.get()
         );
-        this.color = sg.colorSetting(name + "Particle Color", new BlackOutColor(255, 255, 255, 255), ".", visible);
-        this.shadowColor = sg.colorSetting(name + "Particle Shadow Color", new BlackOutColor(255, 255, 255, 255), ".", visible);
+        this.color = sg.colorSetting(name + "Particle Color", new BlackOutColor(255, 255, 255, 255),
+                "The primary color of the particle.", visible);
+        this.shadowColor = sg.colorSetting(name + "Particle Shadow Color", new BlackOutColor(255, 255, 255, 255),
+                "The color of the glow or shadow effect behind the particle.", visible);
     }
 
     public static ParticleMultiSetting of(SettingGroup sg) {

@@ -249,7 +249,6 @@ public class ClickGui extends Screen {
                 if (rectX + finalWidth + 25 > width) rectX = (float) mx - finalWidth - 25;
                 if (rectY + finalHeight + 25 > height) rectY = (float) my - finalHeight - 25;
 
-                this.stack.push();
                 this.stack.translate(0, 0, 900);
 
                 float smoothAlpha = descAlpha * descAlpha;
@@ -264,14 +263,10 @@ public class ClickGui extends Screen {
                     BlackOut.FONT.text(this.stack, line, textScale, rectX + 6, currentY, textColor, false, false);
                     currentY += lineHeight + spacing;
                 }
-
-                this.stack.pop();
             }
         } else {
             descAlpha = 0;
-            this.stack.push();
             this.openedScreen.onRender(this.frameTime, mouseX, mouseY);
-            this.stack.pop();
         }
 
         this.buttons.render(mouseX, mouseY, this.openTime, this.open ? 1.0F : popUpDelta);
@@ -628,6 +623,10 @@ public class ClickGui extends Screen {
     }
 
     public void onKey(KeyEvent event) {
+        if (!event.pressed) {
+            if (event.key == GLFW.GLFW_KEY_UP) upPressed = false;
+            if (event.key == GLFW.GLFW_KEY_DOWN) downPressed = false;
+        }
         handleGlobalKey(event.key, event.pressed);
     }
 
@@ -642,6 +641,9 @@ public class ClickGui extends Screen {
             this.openedScreen.handleKey(key, pressed);
             return;
         }
+
+        if (key == GLFW.GLFW_KEY_UP) { upPressed = true; pressTime = System.currentTimeMillis(); return; }
+        if (key == GLFW.GLFW_KEY_DOWN) { downPressed = true; pressTime = System.currentTimeMillis(); }
 
         boolean isWritingText = SelectedComponent.isSelected();
 
@@ -661,11 +663,7 @@ public class ClickGui extends Screen {
 
         if (keyName != null && !isModifier && !isForbidden) {
             this.setScreen(new SearchScreen(key));
-            return;
         }
-
-        if (key == GLFW.GLFW_KEY_UP) { upPressed = true; pressTime = System.currentTimeMillis(); return; }
-        if (key == GLFW.GLFW_KEY_DOWN) { downPressed = true; pressTime = System.currentTimeMillis(); }
     }
 
     @Event
