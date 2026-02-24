@@ -16,13 +16,19 @@ import net.minecraft.util.math.Vec3d;
 
 public class FacingSettings extends SettingsModule {
     private static FacingSettings INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Boolean> strictDir = this.sgGeneral.b("Strict Direction", false, "Doesn't place on faces which aren't in your direction.");
-    public final Setting<Boolean> ncpDirection = this.sgGeneral.b("NCP Directions", false, ".", this.strictDir::get);
-    public final Setting<Boolean> unblocked = this.sgGeneral.b("Unblocked", false, "Doesn't place on faces that have block on them.");
-    public final Setting<Boolean> airPlace = this.sgGeneral.b("Air Place", false, "Allows placing blocks in air.");
-    public final Setting<MaxHeight> maxHeight = this.sgGeneral
-            .e("Max Height", MaxHeight.New, "Doesn't place on top sides of blocks at max height. Old: 1.12, New: 1.17+");
+
+    public final Setting<Boolean> strictDir = this.sgGeneral.b("Strict Direction", false,
+            "Only allows placing blocks on faces that you are realistically looking at to prevent unnatural rotations.");
+    public final Setting<Boolean> ncpDirection = this.sgGeneral.b("NCP Directions", false,
+            "Applies specialized direction logic to bypass NoCheatPlus and similar anti-cheat raytrace checks.", this.strictDir::get);
+    public final Setting<Boolean> unblocked = this.sgGeneral.b("Unblocked", false,
+            "Ensures the selected block face isn't obstructed by another solid block.");
+    public final Setting<Boolean> airPlace = this.sgGeneral.b("Air Place", false,
+            "Attempts to place blocks even if no valid neighbor exists. Requires server-side support for ghost/air placement.");
+    public final Setting<MaxHeight> maxHeight = this.sgGeneral.e("Max Height", MaxHeight.New,
+            "Sets the world height limit for placement. Old: 255 (1.12), New: 319 (1.17+), Disabled: No limit.");
 
     public FacingSettings() {
         super("Facing", false, true);

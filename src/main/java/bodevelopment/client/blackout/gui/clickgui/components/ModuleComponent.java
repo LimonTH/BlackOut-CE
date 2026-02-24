@@ -135,9 +135,17 @@ public class ModuleComponent extends Component {
 
     private void renderSetting(Setting<?> setting, float currentMx, float currentMy) {
         if (setting.isVisible()) {
+            float height = setting.getHeight();
             int posY = (int) (this.y + this.l);
-            boolean shouldRender = this.l < this.maxLength && posY >= -setting.getHeight() && posY <= ClickGui.height + setting.getHeight();
-            this.l = this.l + setting.onRender(this.stack, this.frameTime, this.width - 10.0F, this.x + 5, (int) (this.y + this.l), currentMx, currentMy, shouldRender);
+
+            if (currentMx > this.x && currentMx < this.x + this.width && currentMy > posY && currentMy < posY + height) {
+                if (setting.description != null && !setting.description.isEmpty()) {
+                    ClickGui.hoveredDescription = setting.description;
+                }
+            }
+
+            boolean shouldRender = this.l < this.maxLength && posY >= -height && posY <= ClickGui.height + height;
+            this.l = this.l + setting.onRender(this.stack, this.frameTime, this.width - 10.0F, this.x + 5, posY, currentMx, currentMy, shouldRender);
         }
     }
 
