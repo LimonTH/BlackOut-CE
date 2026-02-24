@@ -57,9 +57,11 @@ public class Module extends RotationHelper {
         this.description = description;
         this.category = category;
         this.set(this);
-        this.displayName = this.sgModule.stringSetting("Name", name, "");
-        this.bind = (KeyBindSetting) Settings.keySetting("Bind", "This module can be toggled by pressing this key.", null);
-        this.bindMode = this.sgModule.enumSetting("Bind Mode", BindMode.Toggle, ".");
+
+        this.displayName = this.sgModule.stringSetting("Name", name, "The internal name used for this module in the interface.");
+        this.bind = (KeyBindSetting) Settings.keySetting("Bind", "The keyboard key assigned to toggle this module.", null);
+        this.bindMode = this.sgModule.enumSetting("Bind Mode", BindMode.Toggle, "Determines if the module toggles on press or stays active only while holding the key.");
+
         if (subscribe) {
             BlackOut.EVENT_BUS.subscribe(this, this::shouldSkipListeners);
         }

@@ -20,7 +20,6 @@ import bodevelopment.client.blackout.randomstuff.PlaceData;
 import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import net.minecraft.block.*;
-import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.player.PlayerEntity;
@@ -39,44 +38,33 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.Map;
-
 public class Auto32K extends Module {
     private static Auto32K INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRender = this.addGroup("Render");
-    private final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Hopper, ".");
-    private final Setting<Boolean> yCheck = this.sgGeneral.booleanSetting("Y Check", true, ".", () -> this.mode.get() == Mode.Dispenser);
-    private final Setting<Boolean> serverDir = this.sgGeneral.booleanSetting("Server Dir", true, ".", () -> this.mode.get() == Mode.Dispenser);
-    private final Setting<ObsidianModule.RotationMode> rotationMode = this.sgGeneral
-            .enumSetting("Rotation Mode", ObsidianModule.RotationMode.Instant, ".", () -> this.mode.get() == Mode.Dispenser);
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent, ".");
-    private final Setting<Boolean> currentSlot = this.sgGeneral.booleanSetting("Current Slot", true, ".");
-    private final Setting<Integer> swordSlot = this.sgGeneral.intSetting("Slot", 1, 1, 9, 1, ".", () -> !this.currentSlot.get());
-    private final Setting<Boolean> silent = this.sgGeneral.booleanSetting("Silent", true, ".");
-    private final Setting<RenderShape> renderShapeHopper = this.sgRender.enumSetting("Hopper Render Shape", RenderShape.Full, "Which parts of render should be rendered.");
-    private final Setting<BlackOutColor> lineColorHopper = this.sgRender
-            .colorSetting("Hopper Line Color", new BlackOutColor(255, 255, 255, 255), "Line color of rendered boxes.");
-    private final Setting<BlackOutColor> sideColorHopper = this.sgRender
-            .colorSetting("Hopper Side Color", new BlackOutColor(255, 255, 255, 50), "Side color of rendered boxes.");
-    private final Setting<RenderShape> renderShapeShulker = this.sgRender
-            .enumSetting("Shulker Render Shape", RenderShape.Full, "Which parts of render should be rendered.");
-    private final Setting<BlackOutColor> lineColorShulker = this.sgRender
-            .colorSetting("Shulker Line Color", new BlackOutColor(255, 0, 0, 255), "Line color of rendered boxes.");
-    private final Setting<BlackOutColor> sideColorShulker = this.sgRender
-            .colorSetting("Shulker Side Color", new BlackOutColor(255, 0, 0, 50), "Side color of rendered boxes.");
-    private final Setting<RenderShape> renderShapeDispenser = this.sgRender
-            .enumSetting("Dispenser Render Shape", RenderShape.Full, "Which parts of render should be rendered.");
-    private final Setting<BlackOutColor> lineColorDispenser = this.sgRender
-            .colorSetting("Dispenser Line Color", new BlackOutColor(255, 255, 255, 255), "Line color of rendered boxes.");
-    private final Setting<BlackOutColor> sideColorDispenser = this.sgRender
-            .colorSetting("Dispenser Side Color", new BlackOutColor(255, 255, 255, 50), "Side color of rendered boxes.");
-    private final Setting<RenderShape> renderShapeRedstone = this.sgRender
-            .enumSetting("Redstone Render Shape", RenderShape.Full, "Which parts of render should be rendered.");
-    private final Setting<BlackOutColor> lineColorRedstone = this.sgRender
-            .colorSetting("Redstone Line Color", new BlackOutColor(255, 0, 0, 255), "Line color of rendered boxes.");
-    private final Setting<BlackOutColor> sideColorRedstone = this.sgRender
-            .colorSetting("Redstone Side Color", new BlackOutColor(255, 0, 0, 50), "Side color of rendered boxes.");
+
+    private final Setting<Mode> mode = this.sgGeneral.enumSetting("Operation Mode", Mode.Hopper, "How the 32k sword should be obtained. Hopper is simple, Dispenser is for automated setup.");
+    private final Setting<Boolean> yCheck = this.sgGeneral.booleanSetting("Pitch Check", true, "Prevents dispenser placement if your look pitch is too high/low.", () -> this.mode.get() == Mode.Dispenser);
+    private final Setting<Boolean> serverDir = this.sgGeneral.booleanSetting("Server Facing", true, "Ensures the dispenser faces the correct direction based on server-side orientation.", () -> this.mode.get() == Mode.Dispenser);
+    private final Setting<ObsidianModule.RotationMode> rotationMode = this.sgGeneral.enumSetting("Rotation Logic", ObsidianModule.RotationMode.Instant, "The rotation method used for dispenser and support placement.", () -> this.mode.get() == Mode.Dispenser);
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Inventory Swap", SwitchMode.Silent, "How the module handles item switching for placement.");
+    private final Setting<Boolean> currentSlot = this.sgGeneral.booleanSetting("Use Selected Slot", true, "Attempts to move the 32k sword into your currently selected hotbar slot.");
+    private final Setting<Integer> swordSlot = this.sgGeneral.intSetting("Target Hotbar Slot", 1, 1, 9, 1, "The specific hotbar slot to move the sword into.", () -> !this.currentSlot.get());
+    private final Setting<Boolean> silent = this.sgGeneral.booleanSetting("Silent GUI", true, "Attempts to process container interactions without showing the GUI on your screen.");
+    private final Setting<RenderShape> renderShapeHopper = this.sgRender.enumSetting("Hopper Shape", RenderShape.Full, "Visual style for the hopper placement highlight.");
+    private final Setting<BlackOutColor> lineColorHopper = this.sgRender.colorSetting("Hopper Line", new BlackOutColor(255, 255, 255, 255), "Outline color for the hopper block.");
+    private final Setting<BlackOutColor> sideColorHopper = this.sgRender.colorSetting("Hopper Fill", new BlackOutColor(255, 255, 255, 50), "Face color for the hopper block.");
+    private final Setting<RenderShape> renderShapeShulker = this.sgRender.enumSetting("Shulker Shape", RenderShape.Full, "Visual style for the shulker box placement highlight.");
+    private final Setting<BlackOutColor> lineColorShulker = this.sgRender.colorSetting("Shulker Line", new BlackOutColor(255, 0, 0, 255), "Outline color for the shulker box.");
+    private final Setting<BlackOutColor> sideColorShulker = this.sgRender.colorSetting("Shulker Fill", new BlackOutColor(255, 0, 0, 50), "Face color for the shulker box.");
+    private final Setting<RenderShape> renderShapeDispenser = this.sgRender.enumSetting("Dispenser Shape", RenderShape.Full, "Visual style for the dispenser placement highlight.");
+    private final Setting<BlackOutColor> lineColorDispenser = this.sgRender.colorSetting("Dispenser Line", new BlackOutColor(255, 255, 255, 255), "Outline color for the dispenser block.");
+    private final Setting<BlackOutColor> sideColorDispenser = this.sgRender.colorSetting("Dispenser Fill", new BlackOutColor(255, 255, 255, 50), "Face color for the dispenser block.");
+    private final Setting<RenderShape> renderShapeRedstone = this.sgRender.enumSetting("Redstone Shape", RenderShape.Full, "Visual style for the redstone block placement highlight.");
+    private final Setting<BlackOutColor> lineColorRedstone = this.sgRender.colorSetting("Redstone Line", new BlackOutColor(255, 0, 0, 255), "Outline color for the redstone activation block.");
+    private final Setting<BlackOutColor> sideColorRedstone = this.sgRender.colorSetting("Redstone Fill", new BlackOutColor(255, 0, 0, 50), "Face color for the redstone activation block.");
+
     private Direction dispenserDir = null;
     private BlockPos hopperPos = null;
     private BlockPos supportPos = null;
@@ -100,7 +88,7 @@ public class Auto32K extends Module {
     private int calcR = 0;
 
     public Auto32K() {
-        super("Auto 32K", ".", SubCategory.OFFENSIVE, true);
+        super("Auto 32K", "Automatically sets up a hopper/dispenser system to retrieve and equip '32k' (super-enchanted) weapons.", SubCategory.OFFENSIVE, true);
         INSTANCE = this;
     }
 

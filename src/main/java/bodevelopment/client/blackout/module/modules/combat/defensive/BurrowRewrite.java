@@ -30,7 +30,8 @@ import net.minecraft.util.math.Vec3d;
 import java.util.List;
 import java.util.function.Predicate;
 
-// TODO: Now not @OnlyDev
+// TODO: NEED PATCHES
+@OnlyDev
 public class BurrowRewrite extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRubberband = this.addGroup("Rubberband");
@@ -79,7 +80,7 @@ public class BurrowRewrite extends Module {
     private boolean modifiedTimer = false;
 
     public BurrowRewrite() {
-        super("Burrow Rewrite", ".", SubCategory.DEFENSIVE, true);
+        super("Burrow Rewrite", "Glitch yourself inside a block to become immune to crystal damage.", SubCategory.DEFENSIVE, true);
     }
 
     @Event

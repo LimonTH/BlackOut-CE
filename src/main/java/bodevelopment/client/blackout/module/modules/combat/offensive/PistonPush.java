@@ -10,6 +10,7 @@ import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
+import bodevelopment.client.blackout.module.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -34,35 +35,37 @@ import net.minecraft.util.math.Direction;
 import java.util.Arrays;
 import java.util.Comparator;
 
+// TODO: NEED PATCHES
+@OnlyDev
 public class PistonPush extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Redstone> redstone = this.sgGeneral.enumSetting("Redstone", Redstone.Block, "What kind of redstone to use", () -> true);
-    public final Setting<SwitchMode> pistonSwitch = this.sgGeneral
-            .enumSetting("Piston modeMode", SwitchMode.Silent, "Method of switching. Silent is the most reliable.", () -> true);
-    public final Setting<SwitchMode> redstoneSwitch = this.sgGeneral
-            .enumSetting("Redstone Switch", SwitchMode.Silent, "Method of switching. Silent is the most reliable.", () -> true);
     private final SettingGroup sgDelay = this.addGroup("Delay");
     private final SettingGroup sgSwing = this.addGroup("Swing");
     private final SettingGroup sgRender = this.addGroup("Render");
-    private final Setting<Boolean> pauseEat = this.sgGeneral.booleanSetting("PauseEat", false, "Do we stop while eating");
-    private final Setting<Boolean> onlyHole = this.sgGeneral.booleanSetting("Only Hole", false, "Toggles when enemy gets out of the hole.");
-    private final Setting<Boolean> toggleMove = this.sgGeneral.booleanSetting("Toggle Move", false, "Toggles when enemy moves.");
-    private final Setting<Double> prDelay = this.sgDelay
-            .doubleSetting("Piston > Redstone", 0.0, 0.0, 20.0, 0.1, "How many seconds to wait between placing piston and redstone.");
-    private final Setting<Double> rmDelay = this.sgDelay
-            .doubleSetting("Redstone > Mine", 0.0, 0.0, 20.0, 0.1, "How many seconds to wait between placing redstone and starting to mine it.");
-    private final Setting<Double> mpDelay = this.sgDelay
-            .doubleSetting("Mine > Piston", 0.0, 0.0, 20.0, 0.1, "How many seconds to wait after mining the redstone before starting a new cycle.");
-    private final Setting<Boolean> pistonSwing = this.sgSwing.booleanSetting("Piston Swing", true, "Renders swing animation when placing a piston.");
-    private final Setting<SwingHand> pistonHand = this.sgSwing.enumSetting("Piston Hand", SwingHand.RealHand, "Which hand should be swung.", this.pistonSwing::get);
-    private final Setting<Boolean> redstoneSwing = this.sgSwing.booleanSetting("Redstone Swing", true, "Renders swing animation when placing redstone.");
-    private final Setting<SwingHand> redstoneHand = this.sgSwing.enumSetting("Redstone Hand", SwingHand.RealHand, "Which hand should be swung.", this.redstoneSwing::get);
-    private final Setting<RenderShape> pistonShape = this.sgRender.enumSetting("Piston Render Shape", RenderShape.Full, "Which parts should be rendered.");
-    private final Setting<BlackOutColor> psColor = this.sgRender.colorSetting("Piston Side Color", new BlackOutColor(255, 255, 255, 50), "Color of rendered sides.");
-    private final Setting<BlackOutColor> plColor = this.sgRender.colorSetting("Piston Line Color", new BlackOutColor(255, 255, 255, 255), "Color of rendered lines.");
-    private final Setting<RenderShape> redstoneShape = this.sgRender.enumSetting("Redstone Render Shape", RenderShape.Full, "Which parts should be rendered.");
-    private final Setting<BlackOutColor> rsColor = this.sgRender.colorSetting("Redstone Side Color", new BlackOutColor(255, 0, 0, 50), "Color of rendered sides.");
-    private final Setting<BlackOutColor> rlColor = this.sgRender.colorSetting("Redstone Line Color", new BlackOutColor(255, 0, 0, 255), "Color of rendered lines.");
+
+    public final Setting<Redstone> redstone = this.sgGeneral.enumSetting("Redstone Type", Redstone.Block, "The redstone component used to power the piston.");
+    public final Setting<SwitchMode> pistonSwitch = this.sgGeneral.enumSetting("Piston Switch", SwitchMode.Silent, "The method used to select pistons in the hotbar.");
+    public final Setting<SwitchMode> redstoneSwitch = this.sgGeneral.enumSetting("Redstone Switch", SwitchMode.Silent, "The method used to select redstone sources in the hotbar.");
+    private final Setting<Boolean> pauseEat = this.sgGeneral.booleanSetting("Pause on Consume", false, "Suspends operations while eating or drinking.");
+    private final Setting<Boolean> onlyHole = this.sgGeneral.booleanSetting("Target in Hole Only", false, "Automatically disables the module if the target exits their safety hole.");
+    private final Setting<Boolean> toggleMove = this.sgGeneral.booleanSetting("Auto-Disable on Move", false, "Disables the module if the target moves from their current position.");
+
+    private final Setting<Double> prDelay = this.sgDelay.doubleSetting("Piston-to-Redstone Delay", 0.0, 0.0, 20.0, 0.1, "The wait time between placing the piston and the redstone source.");
+    private final Setting<Double> rmDelay = this.sgDelay.doubleSetting("Redstone-to-Mine Delay", 0.0, 0.0, 20.0, 0.1, "The wait time between placing redstone and initiating the mining process.");
+    private final Setting<Double> mpDelay = this.sgDelay.doubleSetting("Cycle Reset Delay", 0.0, 0.0, 20.0, 0.1, "The wait time after mining redstone before starting the next placement cycle.");
+
+    private final Setting<Boolean> pistonSwing = this.sgSwing.booleanSetting("Piston Swing", true, "Visualizes the arm swing when placing a piston.");
+    private final Setting<SwingHand> pistonHand = this.sgSwing.enumSetting("Piston Arm", SwingHand.RealHand, "The arm used for piston placement animations.");
+    private final Setting<Boolean> redstoneSwing = this.sgSwing.booleanSetting("Redstone Swing", true, "Visualizes the arm swing when placing redstone.");
+    private final Setting<SwingHand> redstoneHand = this.sgSwing.enumSetting("Redstone Arm", SwingHand.RealHand, "The arm used for redstone placement animations.");
+
+    private final Setting<RenderShape> pistonShape = this.sgRender.enumSetting("Piston Highlight Shape", RenderShape.Full, "The geometry used to render the piston placement box.");
+    private final Setting<BlackOutColor> psColor = this.sgRender.colorSetting("Piston Fill Color", new BlackOutColor(255, 255, 255, 50), "The color of the piston highlight faces.");
+    private final Setting<BlackOutColor> plColor = this.sgRender.colorSetting("Piston Outline Color", new BlackOutColor(255, 255, 255, 255), "The color of the piston highlight edges.");
+    private final Setting<RenderShape> redstoneShape = this.sgRender.enumSetting("Redstone Highlight Shape", RenderShape.Full, "The geometry used to render the redstone placement box.");
+    private final Setting<BlackOutColor> rsColor = this.sgRender.colorSetting("Redstone Fill Color", new BlackOutColor(255, 0, 0, 50), "The color of the redstone highlight faces.");
+    private final Setting<BlackOutColor> rlColor = this.sgRender.colorSetting("Redstone Outline Color", new BlackOutColor(255, 0, 0, 255), "The color of the redstone highlight edges.");
+
     private long pistonTime = 0L;
     private long redstoneTime = 0L;
     private long mineTime = 0L;
@@ -82,7 +85,7 @@ public class PistonPush extends Module {
     private BlockPos currentPos = null;
 
     public PistonPush() {
-        super("Piston Push", "Pushes people out of their safe holes.", SubCategory.OFFENSIVE, true);
+        super("Piston Push", "Pushes targets out of defensive holes or surrounding cover by strategically placing and powering pistons.", SubCategory.OFFENSIVE, true);
     }
 
     @Override
