@@ -20,38 +20,45 @@ import java.awt.*;
 
 public class Notifications extends SettingsModule {
     private static Notifications INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Boolean> chatNotifications = this.sgGeneral.b("Chat Notifications", false, "Do we send notifications in chat.");
-    public final Setting<Boolean> hudNotifications = this.sgGeneral.b("Hud Notifications", true, "Do we render notifications on the hud.");
-    public final Setting<Boolean> sound = this.sgGeneral.b("Play Sound", true, ".");
     private final SettingGroup sgRender = this.addGroup("Render");
-    private final Setting<Style> style = this.sgRender.e("Style", Style.Classic, "What style to use", () -> true);
-    private final Setting<Double> rounding = this.sgRender
-            .d("Rounding", 0.5, 0.0, 1.0, 0.01, ".", () -> this.style.get() == Style.Classic || this.style.get() == Style.New);
-    private final Setting<Boolean> bold = this.sgRender
-            .b("Bold", true, ".", () -> this.style.get() == Style.Slim || this.style.get() == Style.NewSlim);
-    private final Setting<Integer> bgAlpha = this.sgRender
-            .i("Background Alpha", 175, 0, 255, 1, ".", () -> this.style.get() == Style.New || this.style.get() == Style.NewSlim);
-    private final Setting<BlackOutColor> bgColor = this.sgRender
-            .c(
-                    "Background Color",
-                    new BlackOutColor(0, 0, 0, 50),
-                    ".",
-                    () -> this.style.get() != Style.New || this.style.get() != Style.NewSlim
-            );
-    private final Setting<BlackOutColor> shadowColor = this.sgRender
-            .c(
-                    "Shadow Color",
-                    new BlackOutColor(0, 0, 0, 100),
-                    ".",
-                    () -> this.style.get() != Style.New || this.style.get() != Style.NewSlim
-            );
-    private final Setting<Boolean> blur = this.sgRender.b("Blur", true, ".");
-    private final Setting<Boolean> shadow = this.sgRender.b("Shadow", true, ".");
+
+    public final Setting<Boolean> chatNotifications = this.sgGeneral.b("Chat Notifications", false,
+            "Sends client events directly to the in-game chat. Useful for logging history.");
+    public final Setting<Boolean> hudNotifications = this.sgGeneral.b("Hud Notifications", true,
+            "Enables visual pop-up cards on your screen for real-time status updates.");
+    public final Setting<Boolean> sound = this.sgGeneral.b("Play Sound", true,
+            "Triggers an audible alert whenever a new notification appears to grab your attention.");
     private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Text");
-    private final Setting<Formatting> nameColor = this.sgRender.e("Name Color", Formatting.RED, ".");
-    private final Setting<Formatting> bracketColor = this.sgRender.e("Bracket Color", Formatting.DARK_GRAY, ".");
-    private final Setting<Formatting> txtColor = this.sgRender.e("Chat Text Color", Formatting.WHITE, ".");
+
+    private final Setting<Style> style = this.sgRender.e("Style", Style.Classic,
+            "Selects the overall design of the notification cards (e.g., modern Slim, legacy Old).");
+    private final Setting<Double> rounding = this.sgRender.d("Rounding", 0.5, 0.0, 1.0, 0.01,
+            "Adjusts how rounded the corners of the notification cards are. Only works with New and Classic styles.",
+            () -> this.style.get() == Style.Classic || this.style.get() == Style.New);
+    private final Setting<Boolean> bold = this.sgRender.b("Bold", true,
+            "Uses a thicker font weight for notification messages to improve visibility.",
+            () -> this.style.get() == Style.Slim || this.style.get() == Style.NewSlim);
+    private final Setting<Integer> bgAlpha = this.sgRender.i("Background Alpha", 175, 0, 255, 1,
+            "The opacity of the notification background. Lower values make it more transparent.",
+            () -> this.style.get() == Style.New || this.style.get() == Style.NewSlim);
+    private final Setting<BlackOutColor> bgColor = this.sgRender.c("Background Color", new BlackOutColor(0, 0, 0, 50),
+            "The primary color for the notification background plate.",
+            () -> this.style.get() != Style.New && this.style.get() != Style.NewSlim);
+    private final Setting<BlackOutColor> shadowColor = this.sgRender.c("Shadow Color", new BlackOutColor(0, 0, 0, 100),
+            "Determines the color and depth of the drop shadow effect.",
+            () -> this.style.get() != Style.New && this.style.get() != Style.NewSlim);
+    private final Setting<Boolean> blur = this.sgRender.b("Blur", true,
+            "Applies a Gaussian blur behind notifications to make them stand out from the game background.");
+    private final Setting<Boolean> shadow = this.sgRender.b("Shadow", true,
+            "Enables a subtle drop shadow under the notification cards for a 3D effect.");
+    private final Setting<Formatting> nameColor = this.sgRender.e("Name Color", Formatting.RED,
+            "The color of the client name inside the chat prefix.");
+    private final Setting<Formatting> bracketColor = this.sgRender.e("Bracket Color", Formatting.DARK_GRAY,
+            "The color of the square brackets [ ] that surround the prefix.");
+    private final Setting<Formatting> txtColor = this.sgRender.e("Chat Text Color", Formatting.WHITE,
+            "The default color for the notification message body in chat.");
 
     public Notifications() {
         super("Notifications", true, true);

@@ -12,9 +12,13 @@ public class ThemeSettings extends SettingsModule {
     public static final List<Theme> themes = new ArrayList<>();
     private static ThemeSettings INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Theme> theme = this.sgGeneral.e("Theme", Theme.BLACKOUT, ".");
-    public final Setting<Integer> alpha = this.sgGeneral.i("Color Alpha", 175, 0, 255, 1, "Should be used on backgrounds");
-    public final Setting<Integer> lowAlpha = this.sgGeneral.i("Low Alpha", 50, 0, 255, 1, "Should be used on other transparent things");
+
+    public final Setting<Theme> theme = this.sgGeneral.e("Theme", Theme.BLACKOUT,
+            "Selects the global color palette for the client. This affects buttons, sliders, and highlights across all modules.");
+    public final Setting<Integer> alpha = this.sgGeneral.i("Color Alpha", 175, 0, 255, 1,
+            "The primary transparency level for main background elements. Lower values create a more translucent, glass-like effect.");
+    public final Setting<Integer> lowAlpha = this.sgGeneral.i("Low Alpha", 50, 0, 255, 1,
+            "A secondary, lower transparency level used for subtle overlays, disabled states, and accent backgrounds.");
 
     public ThemeSettings() {
         super("Theme", true, false);
@@ -53,10 +57,12 @@ public class ThemeSettings extends SettingsModule {
         return this.alpha.get();
     }
 
+    // TODO: нет использований lowAlpha
     public int lowAlpha() {
         return this.lowAlpha.get();
     }
 
+    // TODO: нет использований getThemeAlpha
     public int getThemeAlpha() {
         return this.alpha.get();
     }

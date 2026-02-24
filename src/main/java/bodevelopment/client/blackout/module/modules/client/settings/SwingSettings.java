@@ -10,25 +10,35 @@ import net.minecraft.util.Hand;
 
 public class SwingSettings extends SettingsModule {
     private static SwingSettings INSTANCE;
+
     private final SettingGroup sgInteract = this.addGroup("Interact");
-    public final Setting<Boolean> interact = this.sgInteract.b("Interact Swing", true, "Swings your hand when you interact with a block.");
-    public final Setting<SwingState> interactState = this.sgInteract
-            .e("Interact State", SwingState.Post, "Should we swing our hand before or after the action.", this.interact::get);
     private final SettingGroup sgBlockPlace = this.addGroup("Block Place");
-    public final Setting<Boolean> blockPlace = this.sgBlockPlace.b("Block Place Swing", true, "Swings your hand when placing a block.");
-    public final Setting<SwingState> blockPlaceState = this.sgBlockPlace
-            .e("Block Place State", SwingState.Post, "Should we swing our hand before or after the action.", this.blockPlace::get);
     private final SettingGroup sgAttack = this.addGroup("Attack");
-    public final Setting<Boolean> attack = this.sgAttack.b("Attack Swing", true, "Swings your hand when you attack any entity.");
-    public final Setting<SwingState> attackState = this.sgAttack
-            .e("Attack State", SwingState.Post, "Should we swing our hand before or after the action.", this.attack::get);
     private final SettingGroup sgUse = this.addGroup("Use");
-    public final Setting<Boolean> use = this.sgUse.b("Use Swing", false, "Swings your hand when using an item. NCP doesn't check this.");
-    public final Setting<SwingState> useState = this.sgUse
-            .e("Use State", SwingState.Post, "Should we swing our hand before or after the action.", this.use::get);
     private final SettingGroup sgMining = this.addGroup("Mining");
-    public final Setting<MiningSwingState> mining = this.sgMining
-            .e("Block Place State", MiningSwingState.Double, "Swings your hand when you place a crystal.");
+
+    public final Setting<Boolean> interact = this.sgInteract.b("Interact Swing", true,
+            "Performs a hand swing animation when interacting with blocks (chests, levers, etc.) to synchronize visual actions with server-side events.");
+    public final Setting<SwingState> interactState = this.sgInteract.e("Interact State", SwingState.Post,
+            "Determines whether the swing packet is sent before (Pre) or after (Post) the interaction packet.", this.interact::get);
+
+    public final Setting<Boolean> blockPlace = this.sgBlockPlace.b("Block Place Swing", true,
+            "Triggers the swing animation when placing blocks, making your actions appear legitimate to other players and anti-cheats.");
+    public final Setting<SwingState> blockPlaceState = this.sgBlockPlace.e("Block Place State", SwingState.Post,
+            "Determines whether the swing packet is sent before or after the block placement packet.", this.blockPlace::get);
+
+    public final Setting<Boolean> attack = this.sgAttack.b("Attack Swing", true,
+            "Swings your hand when attacking entities. Disabling this may lead to 'NoSwing' flags on some anti-cheats.");
+    public final Setting<SwingState> attackState = this.sgAttack.e("Attack State", SwingState.Post,
+            "Determines if the swing animation is processed before or after the attack packet is dispatched.", this.attack::get);
+
+    public final Setting<Boolean> use = this.sgUse.b("Use Swing", false,
+            "Forces a hand swing animation when using items like food or bows. Typically not required for NCP bypasses but adds visual realism.");
+    public final Setting<SwingState> useState = this.sgUse.e("Use State", SwingState.Post,
+            "Controls the timing of the swing animation relative to the item usage packet.", this.use::get);
+
+    public final Setting<MiningSwingState> mining = this.sgMining.e("Mining Swing State", MiningSwingState.Double,
+            "Controls the hand swing logic specifically for mining actions. 'Double' can help with certain block-resetting bypasses.");
 
     public SwingSettings() {
         super("Swing", false, true);

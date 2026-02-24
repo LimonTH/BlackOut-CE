@@ -7,9 +7,11 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 public class BlurSettings extends SettingsModule {
     private static BlurSettings INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Integer> hudBlur = this.sgGeneral.i("HUD Blur", 5, 1, 20, 1, "");
-    private final Setting<Integer> threeDBlur = this.sgGeneral.i("3D Blur", 5, 1, 20, 1, "");
 
+    public final Setting<Integer> hudBlur = this.sgGeneral.i("HUD Blur", 5, 1, 20, 1,
+            "The intensity of the blur effect applied behind HUD elements. Higher values look smoother but can impact performance.");
+    public final Setting<Integer> threeDBlur = this.sgGeneral.i("3D Blur", 5, 1, 20, 1,
+            "The strength of the blur shader for in-game 3D menus and background overlays. Great for visual depth.");
     public BlurSettings() {
         super("Blur", true, false);
         INSTANCE = this;
