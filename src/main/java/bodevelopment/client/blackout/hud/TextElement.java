@@ -12,10 +12,10 @@ import net.minecraft.client.util.math.MatrixStack;
 public class TextElement extends HudElement {
     public final SettingGroup sgGeneral = this.addGroup("General");
     public final SettingGroup sgColor = this.addGroup("Color");
-    private final Setting<Boolean> bg = this.sgGeneral.b("Background", true, "Renders a background");
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, "Renders a background");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> blur = this.sgGeneral.b("Blur", true, "Renders a Blur effect");
-    private final Setting<Boolean> rounded = this.sgGeneral.b("Rounded", true, "Renders a background", () -> this.bg.get() || this.blur.get());
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, "Renders a Blur effect");
+    private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Rounded", true, "Renders a background", () -> this.bg.get() || this.blur.get());
     private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Text");
     private final TextColorMultiSetting infoColor = TextColorMultiSetting.of(this.sgColor, "Info");
 

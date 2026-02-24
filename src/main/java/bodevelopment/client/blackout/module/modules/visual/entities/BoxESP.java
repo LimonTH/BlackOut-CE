@@ -23,7 +23,7 @@ import java.util.List;
 
 public class BoxESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<List<EntityType<?>>> entityTypes = this.sgGeneral.el("Entities", ".", EntityType.PLAYER);
+    private final Setting<List<EntityType<?>>> entityTypes = this.sgGeneral.entityListSetting("Entities", ".", EntityType.PLAYER);
     private final BoxMultiSetting rendering = BoxMultiSetting.of(this.sgGeneral);
     private final List<Entity> entities = new ArrayList<>();
 

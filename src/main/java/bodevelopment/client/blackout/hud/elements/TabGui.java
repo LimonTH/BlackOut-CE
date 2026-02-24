@@ -27,18 +27,18 @@ import java.util.Map.Entry;
 
 public class TabGui extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<ColorMode> selectorMode = this.sgGeneral.e("Selector Mode", ColorMode.Custom, ".");
+    public final Setting<ColorMode> selectorMode = this.sgGeneral.enumSetting("Selector Mode", ColorMode.Custom, ".");
     private final Setting<BlackOutColor> selectorColor = this.sgGeneral
-            .c("Selector Color", new BlackOutColor(125, 125, 125, 255), "Base color for the selector", () -> this.selectorMode.get() != ColorMode.Rainbow);
+            .colorSetting("Selector Color", new BlackOutColor(125, 125, 125, 255), "Base color for the selector", () -> this.selectorMode.get() != ColorMode.Rainbow);
     private final Setting<Double> waveSpeed = this.sgGeneral
-            .d("Wave Speed", 2.0, 0.0, 10.0, 0.1, "Speed for the wave effect", () -> this.selectorMode.get() == ColorMode.Wave);
+            .doubleSetting("Wave Speed", 2.0, 0.0, 10.0, 0.1, "Speed for the wave effect", () -> this.selectorMode.get() == ColorMode.Wave);
     private final Setting<BlackOutColor> waveColor = this.sgGeneral
-            .c("Wave Color", new BlackOutColor(125, 125, 125, 255), "Color For The Wave", () -> this.selectorMode.get() == ColorMode.Wave);
+            .colorSetting("Wave Color", new BlackOutColor(125, 125, 125, 255), "Color For The Wave", () -> this.selectorMode.get() == ColorMode.Wave);
     private final Setting<Double> saturation = this.sgGeneral
-            .d("Rainbow Saturation", 0.8, 0.0, 1.0, 0.1, ".", () -> this.selectorMode.get() == ColorMode.Rainbow);
-    public final Setting<BlackOutColor> textDisabled = this.sgGeneral.c("Disabled Text", new BlackOutColor(150, 150, 150, 255), ".");
+            .doubleSetting("Rainbow Saturation", 0.8, 0.0, 1.0, 0.1, ".", () -> this.selectorMode.get() == ColorMode.Rainbow);
+    public final Setting<BlackOutColor> textDisabled = this.sgGeneral.colorSetting("Disabled Text", new BlackOutColor(150, 150, 150, 255), ".");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, null);
-    private final Setting<Integer> bloomIntensity = this.sgGeneral.i("Selector Bloom Intensity", 1, 0, 2, 1, ".");
+    private final Setting<Integer> bloomIntensity = this.sgGeneral.intSetting("Selector Bloom Intensity", 1, 0, 2, 1, ".");
     private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Enabled Text");
     private final Map<Module, MutableDouble> moduleMap = new HashMap<>();
     private int selectedModule = 0;

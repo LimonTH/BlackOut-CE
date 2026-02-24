@@ -46,58 +46,58 @@ public class CreeperAura extends Module {
     private final SettingGroup sgExtrapolation = this.addGroup("Extrapolation");
     private final SettingGroup sgRender = this.addGroup("Render");
     private final SettingGroup sgCalculation = this.addGroup("Calculations");
-    private final Setting<Boolean> place = this.sgPlace.b("Place", true, "Places crystals.");
-    private final Setting<Boolean> pauseEat = this.sgPlace.b("Pause Eat Place", false, "Pauses placing while eating.");
-    private final Setting<Double> placeSpeed = this.sgPlace.d("Place Speed", 20.0, 0.0, 20.0, 0.1, ".");
-    private final Setting<SwitchMode> switchMode = this.sgPlace.e("Switch", SwitchMode.Silent, "Mode for switching to beds in main hand.");
+    private final Setting<Boolean> place = this.sgPlace.booleanSetting("Place", true, "Places crystals.");
+    private final Setting<Boolean> pauseEat = this.sgPlace.booleanSetting("Pause Eat Place", false, "Pauses placing while eating.");
+    private final Setting<Double> placeSpeed = this.sgPlace.doubleSetting("Place Speed", 20.0, 0.0, 20.0, 0.1, ".");
+    private final Setting<SwitchMode> switchMode = this.sgPlace.enumSetting("Switch", SwitchMode.Silent, "Mode for switching to beds in main hand.");
     private final Setting<Double> slowDamage = this.sgSlow
-            .d("Slow Damage", 3.0, 0.0, 20.0, 0.1, "Switches to slow speed when the target would take under this amount of damage.");
+            .doubleSetting("Slow Damage", 3.0, 0.0, 20.0, 0.1, "Switches to slow speed when the target would take under this amount of damage.");
     private final Setting<Double> slowSpeed = this.sgSlow
-            .d("Slow Speed", 2.0, 0.0, 20.0, 0.1, "How many times should the module place per second when damage is under slow damage.");
-    private final Setting<Double> slowHealth = this.sgSlow.d("Slow Health", 10.0, 0.0, 20.0, 0.5, "Only slow places if enemy has over x health.");
-    private final Setting<KeyBind> holdFacePlace = this.sgFacePlace.k("Hold Face Place", "Faceplaces when holding this key.");
+            .doubleSetting("Slow Speed", 2.0, 0.0, 20.0, 0.1, "How many times should the module place per second when damage is under slow damage.");
+    private final Setting<Double> slowHealth = this.sgSlow.doubleSetting("Slow Health", 10.0, 0.0, 20.0, 0.5, "Only slow places if enemy has over x health.");
+    private final Setting<KeyBind> holdFacePlace = this.sgFacePlace.keySetting("Hold Face Place", "Faceplaces when holding this key.");
     private final Setting<Double> facePlaceHealth = this.sgFacePlace
-            .d("Face Place Health", 0.0, 0.0, 10.0, 0.1, "Automatically face places if enemy has under this much health.");
+            .doubleSetting("Face Place Health", 0.0, 0.0, 10.0, 0.1, "Automatically face places if enemy has under this much health.");
     private final Setting<Double> armorFacePlace = this.sgFacePlace
-            .d("Armor Face Place", 10.0, 0.0, 100.0, 1.0, "Face places if enemy's any armor piece is under this durability.");
-    private final Setting<Double> facePlaceDamage = this.sgFacePlace.d("Face Place Damage", 0.0, 0.0, 10.0, 0.1, "Sets min place and min attack to this.");
-    private final Setting<Boolean> ignoreSlow = this.sgFacePlace.b("Ignore Slow", true, "Doesn't slow place when faceplacing.");
-    private final Setting<Double> minPlace = this.sgDamage.d("Min Place", 5.0, 0.0, 20.0, 0.1, "Minimum damage to place.");
-    private final Setting<Boolean> checkSelfPlacing = this.sgDamage.b("Self Placing", true, "Checks self damage when placing.");
-    private final Setting<Double> maxSelfPlace = this.sgDamage.d("Max Place", 10.0, 0.0, 20.0, 0.1, "Max self damage for placing.", this.checkSelfPlacing::get);
+            .doubleSetting("Armor Face Place", 10.0, 0.0, 100.0, 1.0, "Face places if enemy's any armor piece is under this durability.");
+    private final Setting<Double> facePlaceDamage = this.sgFacePlace.doubleSetting("Face Place Damage", 0.0, 0.0, 10.0, 0.1, "Sets min place and min attack to this.");
+    private final Setting<Boolean> ignoreSlow = this.sgFacePlace.booleanSetting("Ignore Slow", true, "Doesn't slow place when faceplacing.");
+    private final Setting<Double> minPlace = this.sgDamage.doubleSetting("Min Place", 5.0, 0.0, 20.0, 0.1, "Minimum damage to place.");
+    private final Setting<Boolean> checkSelfPlacing = this.sgDamage.booleanSetting("Self Placing", true, "Checks self damage when placing.");
+    private final Setting<Double> maxSelfPlace = this.sgDamage.doubleSetting("Max Place", 10.0, 0.0, 20.0, 0.1, "Max self damage for placing.", this.checkSelfPlacing::get);
     private final Setting<Double> minSelfRatio = this.sgDamage
-            .d("Min Place Ratio", 2.0, 0.0, 20.0, 0.1, "Min self damage ratio for placing (enemy / self).", this.checkSelfPlacing::get);
-    private final Setting<Boolean> checkFriendPlacing = this.sgDamage.b("Friend Placing", true, "Checks friend damage when placing.");
+            .doubleSetting("Min Place Ratio", 2.0, 0.0, 20.0, 0.1, "Min self damage ratio for placing (enemy / self).", this.checkSelfPlacing::get);
+    private final Setting<Boolean> checkFriendPlacing = this.sgDamage.booleanSetting("Friend Placing", true, "Checks friend damage when placing.");
     private final Setting<Double> maxFriendPlace = this.sgDamage
-            .d("Max Friend Place", 12.0, 0.0, 20.0, 0.1, "Max friend damage for placing.", this.checkFriendPlacing::get);
+            .doubleSetting("Max Friend Place", 12.0, 0.0, 20.0, 0.1, "Max friend damage for placing.", this.checkFriendPlacing::get);
     private final Setting<Double> minFriendRatio = this.sgDamage
-            .d("Min Friend Place Ratio", 1.0, 0.0, 20.0, 0.1, "Min friend damage ratio for placing (enemy / friend).", this.checkFriendPlacing::get);
-    private final Setting<Double> forcePop = this.sgDamage.d("Force Pop", 0.0, 0.0, 5.0, 0.25, "Ignores damage checks if any enemy will be popped in x hits.");
-    private final Setting<Double> selfPop = this.sgDamage.d("Anti Pop", 1.0, 0.0, 5.0, 0.25, "Ignores damage checks if any enemy will be popped in x hits.");
+            .doubleSetting("Min Friend Place Ratio", 1.0, 0.0, 20.0, 0.1, "Min friend damage ratio for placing (enemy / friend).", this.checkFriendPlacing::get);
+    private final Setting<Double> forcePop = this.sgDamage.doubleSetting("Force Pop", 0.0, 0.0, 5.0, 0.25, "Ignores damage checks if any enemy will be popped in x hits.");
+    private final Setting<Double> selfPop = this.sgDamage.doubleSetting("Anti Pop", 1.0, 0.0, 5.0, 0.25, "Ignores damage checks if any enemy will be popped in x hits.");
     private final Setting<Double> friendPop = this.sgDamage
-            .d("Anti Friend Pop", 0.0, 0.0, 5.0, 0.25, "Ignores damage checks if any enemy will be popped in x hits.");
+            .doubleSetting("Anti Friend Pop", 0.0, 0.0, 5.0, 0.25, "Ignores damage checks if any enemy will be popped in x hits.");
     private final Setting<Integer> extrapolation = this.sgExtrapolation
-            .i("Extrapolation", 0, 0, 20, 1, "How many ticks of movement should be predicted for enemy damage checks.");
+            .intSetting("Extrapolation", 0, 0, 20, 1, "How many ticks of movement should be predicted for enemy damage checks.");
     private final Setting<Integer> selfExt = this.sgExtrapolation
-            .i("Self Extrapolation", 0, 0, 20, 1, "How many ticks of movement should be predicted for self damage checks.");
-    private final Setting<Boolean> placeSwing = this.sgRender.b("Place Swing", false, "Renders swing animation when placing a crystal.");
-    private final Setting<SwingHand> placeHand = this.sgRender.e("Place Hand", SwingHand.RealHand, "Which hand should be swung.");
-    private final Setting<Boolean> render = this.sgRender.b("Render Box", true, "Renders box on placement.");
+            .intSetting("Self Extrapolation", 0, 0, 20, 1, "How many ticks of movement should be predicted for self damage checks.");
+    private final Setting<Boolean> placeSwing = this.sgRender.booleanSetting("Place Swing", false, "Renders swing animation when placing a crystal.");
+    private final Setting<SwingHand> placeHand = this.sgRender.enumSetting("Place Hand", SwingHand.RealHand, "Which hand should be swung.");
+    private final Setting<Boolean> render = this.sgRender.booleanSetting("Render Box", true, "Renders box on placement.");
     private final Setting<Double> renderTime = this.sgRender
-            .d("Box Render Time", 0.3, 0.0, 10.0, 0.1, "How long the box should remain in full alpha value.", this.render::get);
-    private final Setting<Double> fadeTime = this.sgRender.d("Box Fade Time", 1.0, 0.0, 10.0, 0.1, "How long the fading should take.", this.render::get);
+            .doubleSetting("Box Render Time", 0.3, 0.0, 10.0, 0.1, "How long the box should remain in full alpha value.", this.render::get);
+    private final Setting<Double> fadeTime = this.sgRender.doubleSetting("Box Fade Time", 1.0, 0.0, 10.0, 0.1, "How long the fading should take.", this.render::get);
     private final Setting<RenderShape> renderShape = this.sgRender
-            .e("Box Render Shape", RenderShape.Full, "Which parts of render should be rendered.", this.render::get);
+            .enumSetting("Box Render Shape", RenderShape.Full, "Which parts of render should be rendered.", this.render::get);
     private final Setting<BlackOutColor> lineColor = this.sgRender
-            .c("Box Line Color", new BlackOutColor(255, 0, 0, 255), "Line color of rendered boxes.", this.render::get);
+            .colorSetting("Box Line Color", new BlackOutColor(255, 0, 0, 255), "Line color of rendered boxes.", this.render::get);
     private final Setting<BlackOutColor> sideColor = this.sgRender
-            .c("Box Side Color", new BlackOutColor(255, 0, 0, 50), "Side color of rendered boxes.", this.render::get);
-    private final Setting<Double> damageValue = this.sgCalculation.d("Damage Value", 1.0, -2.0, 2.0, 0.05, ".");
-    private final Setting<Double> selfDmgValue = this.sgCalculation.d("Self Damage Value", -1.0, -2.0, 2.0, 0.05, ".");
-    private final Setting<Double> friendDmgValue = this.sgCalculation.d("Friend Damage Value", 0.0, -2.0, 2.0, 0.05, ".");
-    private final Setting<Double> rotationValue = this.sgCalculation.d("Rotation Value", 3.0, -5.0, 10.0, 0.1, ".");
-    private final Setting<Integer> maxTargets = this.sgCalculation.i("Max Targets", 3, 1, 10, 1, ".");
-    private final Setting<Double> enemyDistance = this.sgCalculation.d("Enemy Distance", 10.0, 0.0, 100.0, 1.0, ".");
+            .colorSetting("Box Side Color", new BlackOutColor(255, 0, 0, 50), "Side color of rendered boxes.", this.render::get);
+    private final Setting<Double> damageValue = this.sgCalculation.doubleSetting("Damage Value", 1.0, -2.0, 2.0, 0.05, ".");
+    private final Setting<Double> selfDmgValue = this.sgCalculation.doubleSetting("Self Damage Value", -1.0, -2.0, 2.0, 0.05, ".");
+    private final Setting<Double> friendDmgValue = this.sgCalculation.doubleSetting("Friend Damage Value", 0.0, -2.0, 2.0, 0.05, ".");
+    private final Setting<Double> rotationValue = this.sgCalculation.doubleSetting("Rotation Value", 3.0, -5.0, 10.0, 0.1, ".");
+    private final Setting<Integer> maxTargets = this.sgCalculation.intSetting("Max Targets", 3, 1, 10, 1, ".");
+    private final Setting<Double> enemyDistance = this.sgCalculation.doubleSetting("Enemy Distance", 10.0, 0.0, 100.0, 1.0, ".");
     private final ExtrapolationMap extMap = new ExtrapolationMap();
     private final List<PlayerEntity> targets = new ArrayList<>();
     private BlockPos placePos = null;

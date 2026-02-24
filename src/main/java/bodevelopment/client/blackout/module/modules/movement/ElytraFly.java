@@ -17,27 +17,27 @@ public class ElytraFly extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgSpeed = this.addGroup("Speed");
 
-    public final Setting<Mode> mode = this.sgGeneral.e("Mode", Mode.Control, "How to sprint");
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Control, "How to sprint");
     private final Setting<Integer> bounceDelay = this.sgSpeed
-            .i("Bounce Delay", 1, 0, 20, 1, "How many blocks to move each tick horizontally.", () -> this.mode.get() == Mode.Bounce);
+            .intSetting("Bounce Delay", 1, 0, 20, 1, "How many blocks to move each tick horizontally.", () -> this.mode.get() == Mode.Bounce);
     private final Setting<Double> slowPitch = this.sgSpeed
-            .d("Slow Pitch", 50.0, 0.0, 90.0, 1.0, "How many blocks to move each tick horizontally.", () -> this.mode.get() == Mode.Bounce);
+            .doubleSetting("Slow Pitch", 50.0, 0.0, 90.0, 1.0, "How many blocks to move each tick horizontally.", () -> this.mode.get() == Mode.Bounce);
     private final Setting<Double> fastPitch = this.sgSpeed
-            .d("Fast Pitch", 35.0, 0.0, 90.0, 1.0, "How many blocks to move each tick horizontally.", () -> this.mode.get() == Mode.Bounce);
+            .doubleSetting("Fast Pitch", 35.0, 0.0, 90.0, 1.0, "How many blocks to move each tick horizontally.", () -> this.mode.get() == Mode.Bounce);
     private final Setting<Double> horizontal = this.sgSpeed
-            .d("Horizontal Speed", 1.0, 0.0, 5.0, 0.1, "How many blocks to move each tick horizontally.", () -> this.mode.get() == Mode.Wasp);
+            .doubleSetting("Horizontal Speed", 1.0, 0.0, 5.0, 0.1, "How many blocks to move each tick horizontally.", () -> this.mode.get() == Mode.Wasp);
     private final Setting<Double> up = this.sgSpeed
-            .d("Up Speed", 1.0, 0.0, 5.0, 0.1, "How many blocks to move up each tick.", () -> this.mode.get() == Mode.Wasp);
+            .doubleSetting("Up Speed", 1.0, 0.0, 5.0, 0.1, "How many blocks to move up each tick.", () -> this.mode.get() == Mode.Wasp);
     private final Setting<Double> speed = this.sgSpeed
-            .d("Speed", 1.0, 0.0, 5.0, 0.1, "How many blocks to move up each tick.", () -> this.mode.get() == Mode.Control);
+            .doubleSetting("Speed", 1.0, 0.0, 5.0, 0.1, "How many blocks to move up each tick.", () -> this.mode.get() == Mode.Control);
     private final Setting<Double> upMultiplier = this.sgSpeed
-            .d("Up Multiplier", 1.0, 0.0, 5.0, 0.1, "How many times faster should we fly up.", () -> this.mode.get() == Mode.Control);
+            .doubleSetting("Up Multiplier", 1.0, 0.0, 5.0, 0.1, "How many times faster should we fly up.", () -> this.mode.get() == Mode.Control);
     private final Setting<Double> down = this.sgSpeed
-            .d("Down Speed", 1.0, 0.0, 5.0, 0.1, "How many blocks to move down each tick.", () -> this.mode.get() == Mode.Control);
+            .doubleSetting("Down Speed", 1.0, 0.0, 5.0, 0.1, "How many blocks to move down each tick.", () -> this.mode.get() == Mode.Control);
     private final Setting<Boolean> smartFall = this.sgSpeed
-            .b("Smart Fall", true, "Only falls down when looking down.", () -> this.mode.get() == Mode.Wasp);
+            .booleanSetting("Smart Fall", true, "Only falls down when looking down.", () -> this.mode.get() == Mode.Wasp);
     private final Setting<Double> fallSpeed = this.sgSpeed
-            .d("Fall Speed", 0.01, 0.0, 1.0, 0.1, "How many blocks to fall down each tick.", () -> this.mode.get() == Mode.Control);
+            .doubleSetting("Fall Speed", 0.01, 0.0, 1.0, 0.1, "How many blocks to fall down each tick.", () -> this.mode.get() == Mode.Control);
     private boolean moving;
     private float yaw;
     private float pitch;

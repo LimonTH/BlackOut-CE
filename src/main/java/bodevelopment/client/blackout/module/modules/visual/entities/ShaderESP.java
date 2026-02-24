@@ -30,11 +30,11 @@ public class ShaderESP extends Module {
     private final BufferBuilderStorage storage = new BufferBuilderStorage(69);
     private final VertexConsumerProvider.Immediate vertexConsumerProvider = this.storage.getEntityVertexConsumers();
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<List<EntityType<?>>> entities = this.sgGeneral.el("Entities", ".");
-    public final Setting<Boolean> texture = this.sgGeneral.b("Texture", true, ".");
-    private final Setting<Integer> bloom = this.sgGeneral.i("Bloom", 3, 1, 10, 1, ".");
-    private final Setting<BlackOutColor> outsideColor = this.sgGeneral.c("Outside Color", new BlackOutColor(255, 0, 0, 255), ".");
-    private final Setting<BlackOutColor> insideColor = this.sgGeneral.c("Inside Color", new BlackOutColor(255, 0, 0, 50), ".");
+    public final Setting<List<EntityType<?>>> entities = this.sgGeneral.entityListSetting("Entities", ".");
+    public final Setting<Boolean> texture = this.sgGeneral.booleanSetting("Texture", true, ".");
+    private final Setting<Integer> bloom = this.sgGeneral.intSetting("Bloom", 3, 1, 10, 1, ".");
+    private final Setting<BlackOutColor> outsideColor = this.sgGeneral.colorSetting("Outside Color", new BlackOutColor(255, 0, 0, 255), ".");
+    private final Setting<BlackOutColor> insideColor = this.sgGeneral.colorSetting("Inside Color", new BlackOutColor(255, 0, 0, 50), ".");
 
     public ShaderESP() {
         super("Shader ESP", ".", SubCategory.ENTITIES, true);

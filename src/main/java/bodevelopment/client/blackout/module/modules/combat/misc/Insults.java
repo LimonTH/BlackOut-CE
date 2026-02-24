@@ -20,14 +20,14 @@ import java.util.Random;
 
 public class Insults extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Integer> range = this.sgGeneral.i("Range", 25, 0, 50, 1, ".");
-    public final Setting<Integer> tickDelay = this.sgGeneral.i("Tick Delay", 50, 0, 100, 1, ".");
+    public final Setting<Integer> range = this.sgGeneral.intSetting("Range", 25, 0, 50, 1, ".");
+    public final Setting<Integer> tickDelay = this.sgGeneral.intSetting("Tick Delay", 50, 0, 100, 1, ".");
     private final SettingGroup sgKill = this.addGroup("Kill");
-    public final Setting<Boolean> kill = this.sgKill.b("Kill", true, "Should we send a message when enemy dies");
+    public final Setting<Boolean> kill = this.sgKill.booleanSetting("Kill", true, "Should we send a message when enemy dies");
     public final Setting<MessageMode> killMsgMode = this.sgKill
-            .e("Kill Message Mode", MessageMode.Exhibition, "What kind of messages to send.", () -> true);
+            .enumSetting("Kill Message Mode", MessageMode.Exhibition, "What kind of messages to send.", () -> true);
     private final SettingGroup sgPop = this.addGroup("Pop");
-    public final Setting<Boolean> pop = this.sgPop.b("Pop", true, "Should we send a message when enemy pops a totem");
+    public final Setting<Boolean> pop = this.sgPop.booleanSetting("Pop", true, "Should we send a message when enemy pops a totem");
     private final Random r = new Random();
     private final List<Message> messageQueue = new LinkedList<>();
     private final String[] insults = new String[]{

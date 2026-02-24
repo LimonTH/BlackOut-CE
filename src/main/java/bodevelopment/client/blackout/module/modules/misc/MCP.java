@@ -16,9 +16,9 @@ import net.minecraft.util.Hand;
 
 public class MCP extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<SwitchMode> mode = this.sgGeneral.e("Mode", SwitchMode.Normal, "How to switch.");
-    private final Setting<Boolean> swing = this.sgGeneral.b("Swing", false, "Renders swing animation when placing throwing a peal");
-    private final Setting<SwingHand> swingHand = this.sgGeneral.e("Swing Hand", SwingHand.RealHand, "Which hand should be swung.");
+    public final Setting<SwitchMode> mode = this.sgGeneral.enumSetting("Mode", SwitchMode.Normal, "How to switch.");
+    private final Setting<Boolean> swing = this.sgGeneral.booleanSetting("Swing", false, "Renders swing animation when placing throwing a peal");
+    private final Setting<SwingHand> swingHand = this.sgGeneral.enumSetting("Swing Hand", SwingHand.RealHand, "Which hand should be swung.");
 
     public MCP() {
         super("MCP", "Throws a pearl", SubCategory.MISC, true);

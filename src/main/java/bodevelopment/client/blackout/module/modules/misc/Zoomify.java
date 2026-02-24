@@ -13,13 +13,13 @@ import net.minecraft.util.math.MathHelper;
 public class Zoomify extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    private final Setting<Double> zoomValue = this.sgGeneral.d("Zoom Value", 3.0, 1.0, 50.0, 0.1, "Base magnification level.");
-    private final Setting<Double> smoothSpeed = this.sgGeneral.d("Smooth Speed", 0.15, 0.01, 1.0, 0.01, "The speed of the zoom transition.");
-    private final Setting<Boolean> cinematic = this.sgGeneral.b("Cinematic Camera", true, "Enables vanilla smooth camera while zooming.");
-    private final Setting<Boolean> mouseModifier = this.sgGeneral.b("Mouse Modifier", true, "Reduces mouse sensitivity as you zoom in.");
+    private final Setting<Double> zoomValue = this.sgGeneral.doubleSetting("Zoom Value", 3.0, 1.0, 50.0, 0.1, "Base magnification level.");
+    private final Setting<Double> smoothSpeed = this.sgGeneral.doubleSetting("Smooth Speed", 0.15, 0.01, 1.0, 0.01, "The speed of the zoom transition.");
+    private final Setting<Boolean> cinematic = this.sgGeneral.booleanSetting("Cinematic Camera", true, "Enables vanilla smooth camera while zooming.");
+    private final Setting<Boolean> mouseModifier = this.sgGeneral.booleanSetting("Mouse Modifier", true, "Reduces mouse sensitivity as you zoom in.");
 
-    private final Setting<Boolean> scroll = this.sgGeneral.b("Allow Scroll", true, "Allows changing magnification with the scroll wheel.");
-    private final Setting<Double> scrollSpeed = this.sgGeneral.d("Scroll Speed", 1.1, 1.01, 2.0, 0.01, "Exponential multiplier for scrolling.", this.scroll::get);
+    private final Setting<Boolean> scroll = this.sgGeneral.booleanSetting("Allow Scroll", true, "Allows changing magnification with the scroll wheel.");
+    private final Setting<Double> scrollSpeed = this.sgGeneral.doubleSetting("Scroll Speed", 1.1, 1.01, 2.0, 0.01, "Exponential multiplier for scrolling.", this.scroll::get);
 
     private double currentZoom = 1.0;
     private double scrollMultiplier = 1.0;

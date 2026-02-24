@@ -14,10 +14,10 @@ import java.util.concurrent.ThreadLocalRandom;
 public class PingSpoof extends Module {
     private static PingSpoof INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<SpoofMode> mode = this.sgGeneral.e("Spoof Mode", SpoofMode.Fake, "Real mode actually increases your ping.");
-    private final Setting<Integer> jitterInterval = this.sgGeneral.i("Jitter Interval", 5, 0, 20, 1, ".", () -> this.mode.get() == SpoofMode.Real);
-    private final Setting<Integer> extra = this.sgGeneral.i("Extra", 50, 0, 1000, 10, ".");
-    private final Setting<Integer> jitter = this.sgGeneral.i("Jitter", 5, 0, 1000, 10, ".");
+    private final Setting<SpoofMode> mode = this.sgGeneral.enumSetting("Spoof Mode", SpoofMode.Fake, "Real mode actually increases your ping.");
+    private final Setting<Integer> jitterInterval = this.sgGeneral.intSetting("Jitter Interval", 5, 0, 20, 1, ".", () -> this.mode.get() == SpoofMode.Real);
+    private final Setting<Integer> extra = this.sgGeneral.intSetting("Extra", 50, 0, 1000, 10, ".");
+    private final Setting<Integer> jitter = this.sgGeneral.intSetting("Jitter", 5, 0, 1000, 10, ".");
     private int ji = 0;
     private long nextJ = 0L;
 

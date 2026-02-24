@@ -25,10 +25,10 @@ import org.joml.Matrix4f;
 
 public class Sight extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Double> lineWidth = this.sgGeneral.d("Line Width", 1.5, 0.5, 5.0, 0.05, ".");
-    private final Setting<BlackOutColor> lineColor = this.sgGeneral.c("Line Color", new BlackOutColor(255, 0, 0, 255), "");
-    private final Setting<Double> fadeIn = this.sgGeneral.d("Fade In", 1.0, 0.0, 50.0, 0.5, "");
-    private final Setting<Double> length = this.sgGeneral.d("Length", 5.0, 0.0, 50.0, 0.5, "");
+    private final Setting<Double> lineWidth = this.sgGeneral.doubleSetting("Line Width", 1.5, 0.5, 5.0, 0.05, ".");
+    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Line Color", new BlackOutColor(255, 0, 0, 255), "");
+    private final Setting<Double> fadeIn = this.sgGeneral.doubleSetting("Fade In", 1.0, 0.0, 50.0, 0.5, "");
+    private final Setting<Double> length = this.sgGeneral.doubleSetting("Length", 5.0, 0.0, 50.0, 0.5, "");
     private final MatrixStack stack = new MatrixStack();
 
     public Sight() {

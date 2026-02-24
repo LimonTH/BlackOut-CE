@@ -25,16 +25,16 @@ import java.util.List;
 
 public class SoundESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<FilterMode> filterMode = this.sgGeneral.e("Filter Mode", FilterMode.Whitelist, ".");
+    private final Setting<FilterMode> filterMode = this.sgGeneral.enumSetting("Filter Mode", FilterMode.Whitelist, ".");
     private final Setting<List<SoundEvent>> sounds = this.sgGeneral
-            .r("Sounds", ".", Registries.SOUND_EVENT, sound -> sound.getId().getPath(), SoundEvents.ENTITY_GENERIC_EXPLODE.value());
-    private final Setting<BlackOutColor> color = this.sgGeneral.c("Color", new BlackOutColor(255, 255, 255, 255), ".");
-    private final Setting<Double> fadeIn = this.sgGeneral.d("Fade In", 0.1, 0.0, 10.0, 0.1, ".");
-    private final Setting<Double> renderTime = this.sgGeneral.d("Render Time", 0.2, 0.0, 10.0, 0.1, ".");
-    private final Setting<Double> fadeOut = this.sgGeneral.d("Fade Out", 0.5, 0.0, 10.0, 0.1, ".");
-    private final Setting<Double> scale = this.sgGeneral.d("Scale", 1.0, 0.0, 10.0, 0.1, ".");
+            .registrySetting("Sounds", ".", Registries.SOUND_EVENT, sound -> sound.getId().getPath(), SoundEvents.ENTITY_GENERIC_EXPLODE.value());
+    private final Setting<BlackOutColor> color = this.sgGeneral.colorSetting("Color", new BlackOutColor(255, 255, 255, 255), ".");
+    private final Setting<Double> fadeIn = this.sgGeneral.doubleSetting("Fade In", 0.1, 0.0, 10.0, 0.1, ".");
+    private final Setting<Double> renderTime = this.sgGeneral.doubleSetting("Render Time", 0.2, 0.0, 10.0, 0.1, ".");
+    private final Setting<Double> fadeOut = this.sgGeneral.doubleSetting("Fade Out", 0.5, 0.0, 10.0, 0.1, ".");
+    private final Setting<Double> scale = this.sgGeneral.doubleSetting("Scale", 1.0, 0.0, 10.0, 0.1, ".");
     private final Setting<Double> scaleInc = this.sgGeneral
-            .d("Scale Increase", 1.0, 0.0, 5.0, 0.05, "How much should the scale increase when enemy is further away.");
+            .doubleSetting("Scale Increase", 1.0, 0.0, 5.0, 0.05, "How much should the scale increase when enemy is further away.");
     private final RenderList<SoundRender> renderList = RenderList.getList(false);
     private final MatrixStack stack = new MatrixStack();
 

@@ -11,8 +11,8 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 public class Sprint extends Module {
     private static Sprint INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<SprintMode> sprintMode = this.sgGeneral.e("Mode", SprintMode.Vanilla, "How to sprint");
-    public final Setting<Boolean> hungerCheck = this.sgGeneral.b("HungerCheck", true, "Do we check if we have enough hunger to sprint");
+    public final Setting<SprintMode> sprintMode = this.sgGeneral.enumSetting("Mode", SprintMode.Vanilla, "How to sprint");
+    public final Setting<Boolean> hungerCheck = this.sgGeneral.booleanSetting("HungerCheck", true, "Do we check if we have enough hunger to sprint");
 
     public Sprint() {
         super("Sprint", "Makes you sprint", SubCategory.MOVEMENT, true);

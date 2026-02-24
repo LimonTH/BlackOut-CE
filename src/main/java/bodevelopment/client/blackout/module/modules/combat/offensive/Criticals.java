@@ -24,8 +24,8 @@ public class Criticals extends Module {
     private static Criticals INSTANCE;
 
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Mode> mode = this.sgGeneral.e("Mode", Mode.Packet, "How to crit.");
-    private final Setting<Integer> spoofTime = this.sgGeneral.i("Spoof Time", 500, 0, 2500, 50, "For Strict mode.", () -> this.mode.get() == Mode.Strict);
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Packet, "How to crit.");
+    private final Setting<Integer> spoofTime = this.sgGeneral.intSetting("Spoof Time", 500, 0, 2500, 50, "For Strict mode.", () -> this.mode.get() == Mode.Strict);
 
     private boolean shouldSpoof = false;
     private long prevJump = 0L;

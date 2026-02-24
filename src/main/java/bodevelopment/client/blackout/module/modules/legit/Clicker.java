@@ -19,9 +19,9 @@ import net.minecraft.util.math.MathHelper;
 
 public class Clicker extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<RandomMode> randomise = this.sgGeneral.e("Randomise", RandomMode.Random, "Randomises CPS.");
-    private final Setting<Double> minCps = this.sgGeneral.d("Min CPS", 10.0, 0.0, 20.0, 0.1, ".", () -> this.randomise.get() != RandomMode.Disabled);
-    private final Setting<Double> cps = this.sgGeneral.d("CPS", 14.0, 0.0, 20.0, 0.1, ".");
+    private final Setting<RandomMode> randomise = this.sgGeneral.enumSetting("Randomise", RandomMode.Random, "Randomises CPS.");
+    private final Setting<Double> minCps = this.sgGeneral.doubleSetting("Min CPS", 10.0, 0.0, 20.0, 0.1, ".", () -> this.randomise.get() != RandomMode.Disabled);
+    private final Setting<Double> cps = this.sgGeneral.doubleSetting("CPS", 14.0, 0.0, 20.0, 0.1, ".");
     private long prev = 0L;
 
     public Clicker() {

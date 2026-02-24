@@ -27,12 +27,12 @@ import java.util.List;
 
 public class SourceESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> water = this.sgGeneral.b("Water", true, ".");
-    private final Setting<Boolean> lava = this.sgGeneral.b("Lava", true, ".");
-    private final Setting<Double> range = this.sgGeneral.d("Range", 8.0, 0.0, 10.0, 0.1, ".");
-    private final Setting<Integer> bloom = this.sgGeneral.i("Bloom", 3, 0, 10, 1, ".");
-    private final Setting<BlackOutColor> fillColor = this.sgGeneral.c("Fill Color", new BlackOutColor(255, 0, 0, 50), "");
-    private final Setting<BlackOutColor> bloomColor = this.sgGeneral.c("Bloom Color", new BlackOutColor(255, 0, 0, 150), "");
+    private final Setting<Boolean> water = this.sgGeneral.booleanSetting("Water", true, ".");
+    private final Setting<Boolean> lava = this.sgGeneral.booleanSetting("Lava", true, ".");
+    private final Setting<Double> range = this.sgGeneral.doubleSetting("Range", 8.0, 0.0, 10.0, 0.1, ".");
+    private final Setting<Integer> bloom = this.sgGeneral.intSetting("Bloom", 3, 0, 10, 1, ".");
+    private final Setting<BlackOutColor> fillColor = this.sgGeneral.colorSetting("Fill Color", new BlackOutColor(255, 0, 0, 50), "");
+    private final Setting<BlackOutColor> bloomColor = this.sgGeneral.colorSetting("Bloom Color", new BlackOutColor(255, 0, 0, 150), "");
     private final BlackOutColor white = new BlackOutColor(255, 255, 255, 255);
     private final List<Pair<BlockPos, Boolean>> sources = new ArrayList<>();
     private long prevCalc = 0L;

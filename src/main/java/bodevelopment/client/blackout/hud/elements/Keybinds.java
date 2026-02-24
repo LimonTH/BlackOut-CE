@@ -18,11 +18,11 @@ import java.util.List;
 public class Keybinds extends HudElement {
     public final SettingGroup sgGeneral = this.addGroup("General");
     private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Text");
-    private final Setting<BlackOutColor> bindColor = this.sgGeneral.c("Bind Color", new BlackOutColor(128, 128, 128, 50), ".");
-    private final Setting<Boolean> bg = this.sgGeneral.b("Background", true, "Renders a background");
+    private final Setting<BlackOutColor> bindColor = this.sgGeneral.colorSetting("Bind Color", new BlackOutColor(128, 128, 128, 50), ".");
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, "Renders a background");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> blur = this.sgGeneral.b("Blur", true, ".");
-    private final Setting<Boolean> rounded = this.sgGeneral.b("Rounded", true, "", () -> this.bg.get() || this.blur.get());
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, ".");
+    private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Rounded", true, "", () -> this.bg.get() || this.blur.get());
     private int i = 0;
     private boolean checked = false;
     private float width = 0.0F;

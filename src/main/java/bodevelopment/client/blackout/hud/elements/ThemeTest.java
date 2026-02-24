@@ -12,8 +12,8 @@ import java.awt.*;
 
 public class ThemeTest extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> useBlur = this.sgGeneral.b("Blur", true, "Uses a blur effect", () -> true);
-    private final Setting<Boolean> shadow = this.sgGeneral.b("Shadow", true, ".", () -> true);
+    private final Setting<Boolean> useBlur = this.sgGeneral.booleanSetting("Blur", true, "Uses a blur effect", () -> true);
+    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Shadow", true, ".", () -> true);
     private int i = 0;
     private float x = 0.0F;
     private float y = 0.0F;

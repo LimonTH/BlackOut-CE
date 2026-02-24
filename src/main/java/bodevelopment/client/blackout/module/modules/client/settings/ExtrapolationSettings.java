@@ -31,29 +31,29 @@ public class ExtrapolationSettings extends SettingsModule {
     private final SettingGroup sgLag = this.addGroup("Lag");
     private final SettingGroup sgRender = this.addGroup("Render");
 
-    public final Setting<Boolean> stepPredict = this.sgGeneral.b("Step Predict", true,
+    public final Setting<Boolean> stepPredict = this.sgGeneral.booleanSetting("Step Predict", true,
             "Predicts target's upward movement. Helps Aura and CrystalAura track targets as they step up blocks.");
-    public final Setting<Double> minStep = this.sgGeneral.d("Min Step", 0.6, 0.6, 3.0, 0.1,
+    public final Setting<Double> minStep = this.sgGeneral.doubleSetting("Min Step", 0.6, 0.6, 3.0, 0.1,
             "The minimum height (in blocks) required for the algorithm to start calculating upward prediction.");
-    public final Setting<Integer> stepTicks = this.sgGeneral.i("Step Ticks", 40, 10, 100, 1,
+    public final Setting<Integer> stepTicks = this.sgGeneral.intSetting("Step Ticks", 40, 10, 100, 1,
             "The number of ticks to look ahead during upward movement. Higher values result in longer predictions.");
-    public final Setting<Boolean> reverseStepPredict = this.sgGeneral.b("Reverse Step Predict", true,
+    public final Setting<Boolean> reverseStepPredict = this.sgGeneral.booleanSetting("Reverse Step Predict", true,
             "Predicts sudden downward movement. Essential for tracking targets falling off ledges or stairs.");
-    public final Setting<Double> minReverseStep = this.sgGeneral.d("Min Reverse Step", 0.6, 0.6, 3.0, 0.1,
+    public final Setting<Double> minReverseStep = this.sgGeneral.doubleSetting("Min Reverse Step", 0.6, 0.6, 3.0, 0.1,
             "The minimum vertical drop required to trigger downward prediction logic.");
-    public final Setting<Integer> reverseStepTicks = this.sgGeneral.i("Reverse Step Ticks", 20, 10, 100, 1,
+    public final Setting<Integer> reverseStepTicks = this.sgGeneral.intSetting("Reverse Step Ticks", 20, 10, 100, 1,
             "The number of ticks to look ahead during downward movement.");
-    public final Setting<Boolean> jumpPredict = this.sgGeneral.b("Jump Predict", true,
+    public final Setting<Boolean> jumpPredict = this.sgGeneral.booleanSetting("Jump Predict", true,
             "Calculates the target's jump arc. Required for accurate aim while the target is airborne.");
-    public final Setting<Integer> maxLag = this.sgLag.i("Max Lag", 5, 0, 10, 1,
+    public final Setting<Integer> maxLag = this.sgLag.intSetting("Max Lag", 5, 0, 10, 1,
             "How long (in seconds) the client continues to predict movement after the server stops sending updates.");
-    public final Setting<Boolean> extraExtrapolation = this.sgLag.b("Extra Extrapolation", true,
+    public final Setting<Boolean> extraExtrapolation = this.sgLag.booleanSetting("Extra Extrapolation", true,
             "Enables more aggressive calculation methods. Helps on low-TPS servers but may reduce visual smoothness.");
-    private final Setting<Boolean> renderExtrapolation = this.sgRender.b("Render Extrapolation", false,
+    private final Setting<Boolean> renderExtrapolation = this.sgRender.booleanSetting("Render Extrapolation", false,
             "Renders a line showing the predicted path in the world. Useful for debugging and fine-tuning your config.");
-    private final Setting<Boolean> dashedLine = this.sgRender.b("Dashed Line", false,
+    private final Setting<Boolean> dashedLine = this.sgRender.booleanSetting("Dashed Line", false,
             "Changes the prediction line style from solid to dashed for better visibility.");
-    private final Setting<BlackOutColor> lineColor = this.sgRender.c("Line Color", new BlackOutColor(255, 255, 255, 255),
+    private final Setting<BlackOutColor> lineColor = this.sgRender.colorSetting("Line Color", new BlackOutColor(255, 255, 255, 255),
             "The color of the extrapolation path line.");
 
     private final ExtrapolationMap extrapolationMap = new ExtrapolationMap();

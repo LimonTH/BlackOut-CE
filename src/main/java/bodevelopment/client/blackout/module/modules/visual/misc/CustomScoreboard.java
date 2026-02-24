@@ -19,19 +19,19 @@ import java.util.Collection;
 public class CustomScoreboard extends Module {
     private static CustomScoreboard INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Boolean> remove = this.sgGeneral.b("Remove", false, "Stops the scoreboard from rendering");
-    public final Setting<Boolean> useFont = this.sgGeneral.b("Use CustomFont", true, ".", () -> !this.remove.get());
-    public final Setting<Boolean> blur = this.sgGeneral.b("Blur", true, ".", () -> !this.remove.get());
-    public final Setting<Boolean> background = this.sgGeneral.b("Background", true, ".", () -> !this.remove.get());
-    public final Setting<Boolean> shadow = this.sgGeneral.b("Shadow", true, ".", () -> !this.remove.get() && this.background.get());
+    public final Setting<Boolean> remove = this.sgGeneral.booleanSetting("Remove", false, "Stops the scoreboard from rendering");
+    public final Setting<Boolean> useFont = this.sgGeneral.booleanSetting("Use CustomFont", true, ".", () -> !this.remove.get());
+    public final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, ".", () -> !this.remove.get());
+    public final Setting<Boolean> background = this.sgGeneral.booleanSetting("Background", true, ".", () -> !this.remove.get());
+    public final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Shadow", true, ".", () -> !this.remove.get() && this.background.get());
     private final SettingGroup sgColor = this.addGroup("Color");
     public final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, () -> this.useFont.get() && !this.remove.get(), "Text");
     public final Setting<BlackOutColor> bgColor = this.sgColor
-            .c("Background Color", new BlackOutColor(0, 0, 0, 50), ".", () -> this.background.get() && !this.remove.get());
+            .colorSetting("Background Color", new BlackOutColor(0, 0, 0, 50), ".", () -> this.background.get() && !this.remove.get());
     public final Setting<BlackOutColor> shadowColor = this.sgColor
-            .c("Shadow Color", new BlackOutColor(0, 0, 0, 100), ".", () -> this.background.get() && this.shadow.get() && !this.remove.get());
-    private final Setting<Double> scale = this.sgGeneral.d("Scale", 1.0, 0.0, 10.0, 0.05, "0");
-    private final Setting<Integer> addedY = this.sgGeneral.i("Added Y", 0, 0, 500, 10, ".");
+            .colorSetting("Shadow Color", new BlackOutColor(0, 0, 0, 100), ".", () -> this.background.get() && this.shadow.get() && !this.remove.get());
+    private final Setting<Double> scale = this.sgGeneral.doubleSetting("Scale", 1.0, 0.0, 10.0, 0.05, "0");
+    private final Setting<Integer> addedY = this.sgGeneral.intSetting("Added Y", 0, 0, 500, 10, ".");
     private final MatrixStack stack = new MatrixStack();
     public String objectiveName;
     public Color objectiveColor;

@@ -34,28 +34,28 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Velocity extends Module {
     private static Velocity INSTANCE;
     private final SettingGroup sgKnockback = this.addGroup("Knockback");
-    public final Setting<Mode> mode = this.sgKnockback.e("Mode", Mode.Simple, ".");
+    public final Setting<Mode> mode = this.sgKnockback.enumSetting("Mode", Mode.Simple, ".");
     public final Setting<Double> horizontal = this.sgKnockback
-            .d("Horizontal", 0.0, 0.0, 1.0, 0.01, "Multiplier for horizontal knockback.", () -> this.mode.get() == Mode.Simple);
+            .doubleSetting("Horizontal", 0.0, 0.0, 1.0, 0.01, "Multiplier for horizontal knockback.", () -> this.mode.get() == Mode.Simple);
     public final Setting<Double> vertical = this.sgKnockback
-            .d("Vertical", 0.0, 0.0, 1.0, 0.01, "Multiplier for vertical knockback.", () -> this.mode.get() == Mode.Simple);
+            .doubleSetting("Vertical", 0.0, 0.0, 1.0, 0.01, "Multiplier for vertical knockback.", () -> this.mode.get() == Mode.Simple);
     public final Setting<Double> hChance = this.sgKnockback
-            .d("Horizontal Chance", 1.0, 0.0, 1.0, 0.01, "Chance for horizontal knockback.", () -> this.mode.get() == Mode.Simple);
+            .doubleSetting("Horizontal Chance", 1.0, 0.0, 1.0, 0.01, "Chance for horizontal knockback.", () -> this.mode.get() == Mode.Simple);
     public final Setting<Double> vChance = this.sgKnockback
-            .d("Vertical Chance", 1.0, 0.0, 1.0, 0.01, "Chance for vertical knockback.", () -> this.mode.get() == Mode.Simple);
+            .doubleSetting("Vertical Chance", 1.0, 0.0, 1.0, 0.01, "Chance for vertical knockback.", () -> this.mode.get() == Mode.Simple);
     public final Setting<Double> chance = this.sgKnockback
-            .d("Chance", 1.0, 0.0, 1.0, 0.01, "Chance for knockback.", () -> this.mode.get() == Mode.Grim);
-    private final Setting<Boolean> single = this.sgKnockback.b("Single", true, ".", () -> this.mode.get() == Mode.Grim);
-    private final Setting<Integer> minDelay = this.sgKnockback.i("Min Delay", 0, 0, 20, 1, ".", () -> this.mode.get() == Mode.Delayed);
-    private final Setting<Integer> maxDelay = this.sgKnockback.i("Max Delay", 10, 0, 20, 1, ".", () -> this.mode.get() == Mode.Delayed);
-    private final Setting<Boolean> delayExplosion = this.sgKnockback.b("Delay Explosion", false, ".", () -> this.mode.get() == Mode.Delayed);
-    public final Setting<Boolean> fishingHook = this.sgKnockback.b("Fishing Hook", true, ".");
+            .doubleSetting("Chance", 1.0, 0.0, 1.0, 0.01, "Chance for knockback.", () -> this.mode.get() == Mode.Grim);
+    private final Setting<Boolean> single = this.sgKnockback.booleanSetting("Single", true, ".", () -> this.mode.get() == Mode.Grim);
+    private final Setting<Integer> minDelay = this.sgKnockback.intSetting("Min Delay", 0, 0, 20, 1, ".", () -> this.mode.get() == Mode.Delayed);
+    private final Setting<Integer> maxDelay = this.sgKnockback.intSetting("Max Delay", 10, 0, 20, 1, ".", () -> this.mode.get() == Mode.Delayed);
+    private final Setting<Boolean> delayExplosion = this.sgKnockback.booleanSetting("Delay Explosion", false, ".", () -> this.mode.get() == Mode.Delayed);
+    public final Setting<Boolean> fishingHook = this.sgKnockback.booleanSetting("Fishing Hook", true, ".");
     private final SettingGroup sgPush = this.addGroup("Push");
-    public final Setting<PushMode> entityPush = this.sgPush.e("Entity Push", PushMode.Ignore, "Prevents you from being pushed by entities.");
+    public final Setting<PushMode> entityPush = this.sgPush.enumSetting("Entity Push", PushMode.Ignore, "Prevents you from being pushed by entities.");
     public final Setting<Double> acceleration = this.sgPush
-            .d("Acceleration", 1.0, 0.0, 2.0, 0.02, ".", () -> this.entityPush.get() == PushMode.Accelerate);
-    public final Setting<Boolean> blockPush = this.sgPush.b("Block Push", true, "Prevents you from being pushed by blocks.");
-    private final Setting<Boolean> explosions = this.sgKnockback.b("Explosions", true, ".");
+            .doubleSetting("Acceleration", 1.0, 0.0, 2.0, 0.02, ".", () -> this.entityPush.get() == PushMode.Accelerate);
+    public final Setting<Boolean> blockPush = this.sgPush.booleanSetting("Block Push", true, "Prevents you from being pushed by blocks.");
+    private final Setting<Boolean> explosions = this.sgKnockback.booleanSetting("Explosions", true, ".");
     private final TickTimerList<Pair<Vec3d, Boolean>> delayed = new TickTimerList<>(false);
     public boolean grim = false;
 

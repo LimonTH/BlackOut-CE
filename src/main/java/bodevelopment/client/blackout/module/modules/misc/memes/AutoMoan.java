@@ -74,9 +74,9 @@ public class AutoMoan extends Module {
     };
 
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<MoanMode> moanmode = this.sgGeneral.e("Message Mode", MoanMode.Submissive, "What kind of messages to send.");
-    private final Setting<Boolean> ignoreFriends = this.sgGeneral.b("Ignore Friends", true, "Doesn't send messages targeted to friends.");
-    private final Setting<Integer> delay = this.sgGeneral.i("Tick Delay", 100, 10, 500, 1, "Tick delay between moans.");
+    private final Setting<MoanMode> moanmode = this.sgGeneral.enumSetting("Message Mode", MoanMode.Submissive, "What kind of messages to send.");
+    private final Setting<Boolean> ignoreFriends = this.sgGeneral.booleanSetting("Ignore Friends", true, "Doesn't send messages targeted to friends.");
+    private final Setting<Integer> delay = this.sgGeneral.intSetting("Tick Delay", 100, 10, 500, 1, "Tick delay between moans.");
 
     private int timer = 0;
 

@@ -28,13 +28,13 @@ public class PearlPhase extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
     public final SettingGroup sgRender = this.addGroup("Render");
 
-    public final Setting<SwitchMode> ccSwitchMode = this.sgGeneral.e("CC Switch Mode", SwitchMode.Normal, "Switch method for CC blocks.");
-    public final Setting<SwitchMode> switchMode = this.sgGeneral.e("Switch Mode", SwitchMode.Normal, "Switch method for pearl.");
-    public final Setting<Integer> pitch = this.sgGeneral.i("Pitch", 85, -90, 90, 1, "How deep down to look.");
-    private final Setting<Boolean> ccBypass = this.sgGeneral.b("CC Bypass", false, "Bypass CC anti-delay by placing a block first.");
-    private final Setting<ObsidianModule.RotationMode> rotationMode = this.sgGeneral.e("Rotation Mode", ObsidianModule.RotationMode.Normal, "Rotation method.");
-    private final Setting<Boolean> swing = this.sgRender.b("Swing", false, "Swing animation.");
-    private final Setting<SwingHand> swingHand = this.sgRender.e("Swing Hand", SwingHand.RealHand, "Hand to swing.");
+    public final Setting<SwitchMode> ccSwitchMode = this.sgGeneral.enumSetting("CC Switch Mode", SwitchMode.Normal, "Switch method for CC blocks.");
+    public final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Normal, "Switch method for pearl.");
+    public final Setting<Integer> pitch = this.sgGeneral.intSetting("Pitch", 85, -90, 90, 1, "How deep down to look.");
+    private final Setting<Boolean> ccBypass = this.sgGeneral.booleanSetting("CC Bypass", false, "Bypass CC anti-delay by placing a block first.");
+    private final Setting<ObsidianModule.RotationMode> rotationMode = this.sgGeneral.enumSetting("Rotation Mode", ObsidianModule.RotationMode.Normal, "Rotation method.");
+    private final Setting<Boolean> swing = this.sgRender.booleanSetting("Swing", false, "Swing animation.");
+    private final Setting<SwingHand> swingHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand, "Hand to swing.");
 
     private boolean placed = false;
 

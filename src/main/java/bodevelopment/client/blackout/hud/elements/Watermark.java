@@ -19,11 +19,11 @@ import java.util.Date;
 
 public class Watermark extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Mode> mode = this.sgGeneral.e("Mode", Mode.Clean, "What style to use", () -> true);
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Clean, "What style to use", () -> true);
     private final Setting<String> extraText = this.sgGeneral
-            .s("Extra Text", "", "Added text to the client name", () -> this.mode.get() == Mode.Exhibition && BlackOut.TYPE.isDevBuild());
+            .stringSetting("Extra Text", "", "Added text to the client name", () -> this.mode.get() == Mode.Exhibition && BlackOut.TYPE.isDevBuild());
     public final Setting<SigmaMode> sigmaMode = this.sgGeneral
-            .e("Sigma Mode", SigmaMode.SigmaJello, "What Sigma style to use", () -> this.mode.get() == Mode.Sigma);
+            .enumSetting("Sigma Mode", SigmaMode.SigmaJello, "What Sigma style to use", () -> this.mode.get() == Mode.Sigma);
     private final TextColorMultiSetting textColor = TextColorMultiSetting.of(
             this.sgGeneral,
             () -> this.mode.get() == Mode.Clean
@@ -33,17 +33,17 @@ public class Watermark extends HudElement {
             "Text"
     );
     private final Setting<BlackOutColor> secondaryColor = this.sgGeneral
-            .c(
+            .colorSetting(
                     "Secondary Color",
                     new BlackOutColor(255, 255, 255, 255),
                     ".",
                     () -> this.mode.get() == Mode.Simple || this.mode.get() == Mode.Exhibition
             );
     private final Setting<Boolean> blur = this.sgGeneral
-            .b("Blur", true, ".", () -> this.mode.get() == Mode.Clean || this.mode.get() == Mode.KassuK);
+            .booleanSetting("Blur", true, ".", () -> this.mode.get() == Mode.Clean || this.mode.get() == Mode.KassuK);
     private final Setting<Boolean> bg = this.sgGeneral
-            .b("Background", true, ".", () -> this.mode.get() == Mode.Clean || this.mode.get() == Mode.KassuK);
-    private final Setting<Boolean> bold = this.sgGeneral.b("Bold Font", true, ".", () -> this.mode.get() == Mode.Simple);
+            .booleanSetting("Background", true, ".", () -> this.mode.get() == Mode.Clean || this.mode.get() == Mode.KassuK);
+    private final Setting<Boolean> bold = this.sgGeneral.booleanSetting("Bold Font", true, ".", () -> this.mode.get() == Mode.Simple);
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(
             this.sgGeneral,
             () -> this.mode.get() != Mode.Exhibition

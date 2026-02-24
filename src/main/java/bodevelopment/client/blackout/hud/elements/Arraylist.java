@@ -28,20 +28,20 @@ import java.util.function.Consumer;
 public class Arraylist extends HudElement {
     public static Map<Module, MutableFloat> deltaMap = new HashMap<>();
     public final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<BracketMode> brackets = this.sgGeneral.e("Bracket Style", BracketMode.None, ".");
-    private final Setting<FilterMode> filterMode = this.sgGeneral.e("Filter Mode", FilterMode.Blacklist, ".");
+    public final Setting<BracketMode> brackets = this.sgGeneral.enumSetting("Bracket Style", BracketMode.None, ".");
+    private final Setting<FilterMode> filterMode = this.sgGeneral.enumSetting("Filter Mode", FilterMode.Blacklist, ".");
     private final Setting<List<Module>> moduleList = this.sgGeneral
-            .l("Modules", "Only renders these modules.", Managers.MODULES.getModules(), module -> module.name);
-    private final Setting<Boolean> drawInfo = this.sgGeneral.b("Show Info", true, ".");
-    private final Setting<Boolean> rounded = this.sgGeneral.b("Rounded", true, "Renders a rounded background (cool af)");
-    private final Setting<Boolean> sideBar = this.sgGeneral.b("Side bar", true, "Renders a sidebar", () -> !this.rounded.get());
-    private final Setting<Boolean> bg = this.sgGeneral.b("Background", true, "Renders a background");
-    private final Setting<BlackOutColor> bgColor = this.sgGeneral.c("Background Color", new BlackOutColor(0, 0, 0, 50), ".", this.bg::get);
-    private final Setting<Boolean> useBlur = this.sgGeneral.b("Blur", true, "Uses a blur effect", () -> true);
-    private final Setting<Integer> bloomIntensity = this.sgGeneral.i("Bloom Intensity", 3, 0, 10, 1, ".");
-    private final Setting<BlackOutColor> bloomColor = this.sgGeneral.c("Bloom Color", new BlackOutColor(0, 0, 0, 100), "", () -> this.bloomIntensity.get() > 0);
+            .listSetting("Modules", "Only renders these modules.", Managers.MODULES.getModules(), module -> module.name);
+    private final Setting<Boolean> drawInfo = this.sgGeneral.booleanSetting("Show Info", true, ".");
+    private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Rounded", true, "Renders a rounded background (cool af)");
+    private final Setting<Boolean> sideBar = this.sgGeneral.booleanSetting("Side bar", true, "Renders a sidebar", () -> !this.rounded.get());
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, "Renders a background");
+    private final Setting<BlackOutColor> bgColor = this.sgGeneral.colorSetting("Background Color", new BlackOutColor(0, 0, 0, 50), ".", this.bg::get);
+    private final Setting<Boolean> useBlur = this.sgGeneral.booleanSetting("Blur", true, "Uses a blur effect", () -> true);
+    private final Setting<Integer> bloomIntensity = this.sgGeneral.intSetting("Bloom Intensity", 3, 0, 10, 1, ".");
+    private final Setting<BlackOutColor> bloomColor = this.sgGeneral.colorSetting("Bloom Color", new BlackOutColor(0, 0, 0, 100), "", () -> this.bloomIntensity.get() > 0);
     private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Text");
-    private final Setting<BlackOutColor> customInfoColor = this.sgGeneral.c("Info Color", new BlackOutColor(150, 150, 150, 255), "Info text color.", () -> true);
+    private final Setting<BlackOutColor> customInfoColor = this.sgGeneral.colorSetting("Info Color", new BlackOutColor(150, 150, 150, 255), "Info text color.", () -> true);
     private int i = 0;
     private String info = "";
 

@@ -15,8 +15,8 @@ import net.minecraft.sound.SoundEvents;
 
 public class KillEffects extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Integer> range = this.sgGeneral.i("Range", 50, 0, 100, 1, ".");
-    public final Setting<Integer> tickDelay = this.sgGeneral.i("Tick Delay", 10, 0, 20, 1, ".");
+    public final Setting<Integer> range = this.sgGeneral.intSetting("Range", 50, 0, 100, 1, ".");
+    public final Setting<Integer> tickDelay = this.sgGeneral.intSetting("Tick Delay", 10, 0, 20, 1, ".");
     private int ticks = 0;
 
     public KillEffects() {

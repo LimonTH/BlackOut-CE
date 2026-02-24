@@ -25,9 +25,9 @@ public class SmartMend extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
 
     private final Setting<Integer> antiWaste = this.sgGeneral
-            .i("Anti Waste", 90, 0, 100, 1, "Doesn't use experience if any armor piece is above this durability.");
-    private final Setting<Double> moveSpeed = this.sgGeneral.d("Move Speed", 2.0, 0.0, 20.0, 0.2, ".");
-    private final Setting<Boolean> closeInv = this.sgGeneral.b("Close Inventory", true, ".");
+            .intSetting("Anti Waste", 90, 0, 100, 1, "Doesn't use experience if any armor piece is above this durability.");
+    private final Setting<Double> moveSpeed = this.sgGeneral.doubleSetting("Move Speed", 2.0, 0.0, 20.0, 0.2, ".");
+    private final Setting<Boolean> closeInv = this.sgGeneral.booleanSetting("Close Inventory", true, ".");
     private final List<EquipmentSlot> moveBack = new ArrayList<>();
     private final TimerList<EquipmentSlot> delays = new TimerList<>(true);
     private final Map<EquipmentSlot, Long> wornSince = new HashMap<>();

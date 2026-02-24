@@ -20,23 +20,23 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class AutoChatGame extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Double> chance = this.sgGeneral.d("Chance", 1.0, 0.0, 1.0, 0.01, "");
-    private final Setting<DelayMode> delayMode = this.sgGeneral.e("Delay Mode", DelayMode.Dumb, "");
-    private final Setting<Double> minDelay = this.sgGeneral.d("Min Delay", 1.0, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Dumb);
-    private final Setting<Double> maxDelay = this.sgGeneral.d("Max Delay", 2.0, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Dumb);
+    private final Setting<Double> chance = this.sgGeneral.doubleSetting("Chance", 1.0, 0.0, 1.0, 0.01, "");
+    private final Setting<DelayMode> delayMode = this.sgGeneral.enumSetting("Delay Mode", DelayMode.Dumb, "");
+    private final Setting<Double> minDelay = this.sgGeneral.doubleSetting("Min Delay", 1.0, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Dumb);
+    private final Setting<Double> maxDelay = this.sgGeneral.doubleSetting("Max Delay", 2.0, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Dumb);
     private final Setting<Double> chatOpenTime = this.sgGeneral
-            .d("Chat Open Time", 1.0, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
+            .doubleSetting("Chat Open Time", 1.0, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
     private final Setting<Double> shiftTime = this.sgGeneral
-            .d("Shift Time", 0.1, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
-    private final Setting<Double> altTime = this.sgGeneral.d("Alt Time", 0.5, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
+            .doubleSetting("Shift Time", 0.1, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
+    private final Setting<Double> altTime = this.sgGeneral.doubleSetting("Alt Time", 0.5, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
     private final Setting<Double> letterTime = this.sgGeneral
-            .d("Letter Time", 0.2, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
+            .doubleSetting("Letter Time", 0.2, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
     private final Setting<Double> numberTime = this.sgGeneral
-            .d("Number Time", 0.3, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
+            .doubleSetting("Number Time", 0.3, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
     private final Setting<Double> specialTime = this.sgGeneral
-            .d("Special Char Time", 0.3, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
+            .doubleSetting("Special Char Time", 0.3, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
     private final Setting<Double> enterTime = this.sgGeneral
-            .d("Enter Time", 0.1, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
+            .doubleSetting("Enter Time", 0.1, 0.0, 10.0, 0.1, "", () -> this.delayMode.get() == DelayMode.Smart);
     private final List<Character> shiftChars = new ArrayList<>();
     private final List<Character> altChars = new ArrayList<>();
     private String message;

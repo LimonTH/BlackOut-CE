@@ -9,7 +9,7 @@ import bodevelopment.client.blackout.util.OLEPOSSUtils;
 public class AntiSpam extends Module {
     private static AntiSpam INSTANCE;
     public final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Double> similarity = this.sgGeneral.d("Similarity", 0.9, 0.0, 1.0, 0.01, ".");
+    private final Setting<Double> similarity = this.sgGeneral.doubleSetting("Similarity", 0.9, 0.0, 1.0, 0.01, ".");
 
     public AntiSpam() {
         super("Anti Spam", "Stacks similar messages.", SubCategory.MISC, false);

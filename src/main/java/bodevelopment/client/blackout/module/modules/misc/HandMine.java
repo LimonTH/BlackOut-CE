@@ -15,9 +15,9 @@ import net.minecraft.util.math.BlockPos;
 public class HandMine extends Module {
     private static HandMine INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.e("Switch Mode", SwitchMode.InvSwitch, ".");
-    private final Setting<Boolean> allowInventory = this.sgGeneral.b("Allow Inventory", false, ".", () -> this.switchMode.get().inventory);
-    private final Setting<Double> speed = this.sgGeneral.d("Speed", 1.0, 0.0, 2.0, 0.02, ".");
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.InvSwitch, ".");
+    private final Setting<Boolean> allowInventory = this.sgGeneral.booleanSetting("Allow Inventory", false, ".", () -> this.switchMode.get().inventory);
+    private final Setting<Double> speed = this.sgGeneral.doubleSetting("Speed", 1.0, 0.0, 2.0, 0.02, ".");
 
     public HandMine() {
         super("Hand Mine", "Silently uses the best tool.", SubCategory.MISC, false);

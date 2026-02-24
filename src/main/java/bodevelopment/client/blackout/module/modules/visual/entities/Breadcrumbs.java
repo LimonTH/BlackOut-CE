@@ -24,17 +24,17 @@ import java.awt.*;
 public class Breadcrumbs extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgColor = this.addGroup("Color");
-    public final Setting<ColorMode> colorMode = this.sgColor.e("Color Mode", ColorMode.Custom, "What color to use");
+    public final Setting<ColorMode> colorMode = this.sgColor.enumSetting("Color Mode", ColorMode.Custom, "What color to use");
     private final Setting<Double> saturation = this.sgColor
-            .d("Rainbow Saturation", 0.8, 0.0, 1.0, 0.1, ".", () -> this.colorMode.get() == ColorMode.Rainbow);
-    private final Setting<Integer> iAlpha = this.sgColor.i("Inside Alpha", 150, 0, 255, 1, ".", () -> this.colorMode.get() == ColorMode.Rainbow);
-    private final Setting<Integer> oAlpha = this.sgColor.i("Outside Alpha", 50, 0, 255, 1, ".", () -> this.colorMode.get() == ColorMode.Rainbow);
-    private final Setting<Boolean> onlyMoving = this.sgGeneral.b("Only Moving", true, ".");
-    private final Setting<Double> size = this.sgGeneral.d("Size", 3.0, 1.0, 10.0, 0.1, ".");
-    private final Setting<Double> delay = this.sgGeneral.d("Delay", 0.1, 0.0, 3.0, 0.01, ".");
-    private final Setting<Double> renderTime = this.sgGeneral.d("Render Time", 3.0, 0.001, 20.0, 0.05, ".");
-    private final Setting<BlackOutColor> clr = this.sgColor.c("Inside Color", new BlackOutColor(255, 255, 255, 100), ".");
-    private final Setting<BlackOutColor> clr1 = this.sgColor.c("Outside Color", new BlackOutColor(175, 175, 175, 100), ".");
+            .doubleSetting("Rainbow Saturation", 0.8, 0.0, 1.0, 0.1, ".", () -> this.colorMode.get() == ColorMode.Rainbow);
+    private final Setting<Integer> iAlpha = this.sgColor.intSetting("Inside Alpha", 150, 0, 255, 1, ".", () -> this.colorMode.get() == ColorMode.Rainbow);
+    private final Setting<Integer> oAlpha = this.sgColor.intSetting("Outside Alpha", 50, 0, 255, 1, ".", () -> this.colorMode.get() == ColorMode.Rainbow);
+    private final Setting<Boolean> onlyMoving = this.sgGeneral.booleanSetting("Only Moving", true, ".");
+    private final Setting<Double> size = this.sgGeneral.doubleSetting("Size", 3.0, 1.0, 10.0, 0.1, ".");
+    private final Setting<Double> delay = this.sgGeneral.doubleSetting("Delay", 0.1, 0.0, 3.0, 0.01, ".");
+    private final Setting<Double> renderTime = this.sgGeneral.doubleSetting("Render Time", 3.0, 0.001, 20.0, 0.05, ".");
+    private final Setting<BlackOutColor> clr = this.sgColor.colorSetting("Inside Color", new BlackOutColor(255, 255, 255, 100), ".");
+    private final Setting<BlackOutColor> clr1 = this.sgColor.colorSetting("Outside Color", new BlackOutColor(175, 175, 175, 100), ".");
     private final MatrixStack stack = new MatrixStack();
     private final RenderList<Vec3d> list = RenderList.getList(true);
     private long lastAddition = System.currentTimeMillis();

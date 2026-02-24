@@ -21,15 +21,15 @@ public class NoSlow extends Module {
     private static NoSlow INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgStrict = this.addGroup("Strict");
-    private final Setting<Boolean> blocking = this.sgGeneral.b("Blocking", false, ".");
-    private final Setting<Boolean> using = this.sgGeneral.b("Using", false, ".");
-    private final Setting<Boolean> strict = this.sgStrict.b("Strict", false, "Sends switch packets to bypass NCP noslow checks.");
+    private final Setting<Boolean> blocking = this.sgGeneral.booleanSetting("Blocking", false, ".");
+    private final Setting<Boolean> using = this.sgGeneral.booleanSetting("Using", false, ".");
+    private final Setting<Boolean> strict = this.sgStrict.booleanSetting("Strict", false, "Sends switch packets to bypass NCP noslow checks.");
     private final Setting<Boolean> grim = this.sgStrict
-            .b("Grim", false, "Switches to a different slot instead of sending switch packet to the current one.", this.strict::get);
+            .booleanSetting("Grim", false, "Switches to a different slot instead of sending switch packet to the current one.", this.strict::get);
     private final Setting<Boolean> single = this.sgStrict
-            .b("Single Packet", true, "Only sends 1 switch packet after starting to eat. Works on most servers that require this module.", this.strict::get);
+            .booleanSetting("Single Packet", true, "Only sends 1 switch packet after starting to eat. Works on most servers that require this module.", this.strict::get);
     private final Setting<Integer> delay = this.sgStrict
-            .i("Delay", 1, 1, 20, 1, "Tick delay between switch packets.", () -> !this.single.get() && this.strict.get());
+            .intSetting("Delay", 1, 1, 20, 1, "Tick delay between switch packets.", () -> !this.single.get() && this.strict.get());
     private int timer = 0;
 
     public NoSlow() {

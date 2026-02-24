@@ -15,10 +15,10 @@ import net.minecraft.util.math.Direction;
 public class SelfTrap extends ObsidianModule {
     private final SettingGroup sgToggle = this.addGroup("Toggle");
 
-    private final Setting<AutoTrap.TrapMode> trapMode = this.sgGeneral.e("Trap Mode", AutoTrap.TrapMode.Both, "");
-    private final Setting<Boolean> toggleMove = this.sgToggle.b("Toggle Move", false, "Toggles if you move horizontally.");
+    private final Setting<AutoTrap.TrapMode> trapMode = this.sgGeneral.enumSetting("Trap Mode", AutoTrap.TrapMode.Both, "");
+    private final Setting<Boolean> toggleMove = this.sgToggle.booleanSetting("Toggle Move", false, "Toggles if you move horizontally.");
     private final Setting<Surround.VerticalToggleMode> toggleVertical = this.sgToggle
-            .e("Toggle Vertical", Surround.VerticalToggleMode.Up, "Toggles the module if you move vertically.");
+            .enumSetting("Toggle Vertical", Surround.VerticalToggleMode.Up, "Toggles the module if you move vertically.");
     private final Direction[] directions = new Direction[]{
             Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST, Direction.UP
     };

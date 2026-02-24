@@ -25,18 +25,18 @@ public class NoInteract extends Module {
     private final SettingGroup sgItems = this.addGroup("Items");
     private final SettingGroup sgEntity = this.addGroup("Entity");
     private final Setting<NoInteractFilterMode> filterMode = this.sgBlocks
-            .e("Holding Filter Mode (Block)", NoInteractFilterMode.Cancel, ".");
-    private final Setting<List<Item>> whenHolding = this.sgBlocks.il("When Holding (Block)", ".", Items.ENCHANTED_GOLDEN_APPLE, Items.GOLDEN_APPLE);
-    private final Setting<NoInteractFilterMode> blockFilterMode = this.sgBlocks.e("Block Filter Mode", NoInteractFilterMode.Cancel, ".");
-    private final Setting<List<Block>> blocks = this.sgBlocks.bl("Blocks", ".");
-    private final Setting<IgnoreMode> ignoreMode = this.sgBlocks.e("Ignore Mode", IgnoreMode.SneakBlocks, ".");
-    private final Setting<NoInteractFilterMode> itemFilterMode = this.sgItems.e("Item Filter Mode", NoInteractFilterMode.Cancel, ".");
-    private final Setting<List<Item>> items = this.sgItems.il("Items", ".");
+            .enumSetting("Holding Filter Mode (Block)", NoInteractFilterMode.Cancel, ".");
+    private final Setting<List<Item>> whenHolding = this.sgBlocks.itemListSetting("When Holding (Block)", ".", Items.ENCHANTED_GOLDEN_APPLE, Items.GOLDEN_APPLE);
+    private final Setting<NoInteractFilterMode> blockFilterMode = this.sgBlocks.enumSetting("Block Filter Mode", NoInteractFilterMode.Cancel, ".");
+    private final Setting<List<Block>> blocks = this.sgBlocks.blockListSetting("Blocks", ".");
+    private final Setting<IgnoreMode> ignoreMode = this.sgBlocks.enumSetting("Ignore Mode", IgnoreMode.SneakBlocks, ".");
+    private final Setting<NoInteractFilterMode> itemFilterMode = this.sgItems.enumSetting("Item Filter Mode", NoInteractFilterMode.Cancel, ".");
+    private final Setting<List<Item>> items = this.sgItems.itemListSetting("Items", ".");
     private final Setting<NoInteractFilterMode> filterModeEntity = this.sgEntity
-            .e("Holding Filter Mode (Entity)", NoInteractFilterMode.Cancel, ".");
-    private final Setting<List<Item>> whenHoldingEntity = this.sgEntity.il("When Holding (Entity)", ".", Items.ENCHANTED_GOLDEN_APPLE, Items.GOLDEN_APPLE);
-    private final Setting<NoInteractFilterMode> entityFilterMode = this.sgEntity.e("Entity Filter Mode", NoInteractFilterMode.Accept, ".");
-    private final Setting<List<EntityType<?>>> entities = this.sgEntity.el("Entities", ".");
+            .enumSetting("Holding Filter Mode (Entity)", NoInteractFilterMode.Cancel, ".");
+    private final Setting<List<Item>> whenHoldingEntity = this.sgEntity.itemListSetting("When Holding (Entity)", ".", Items.ENCHANTED_GOLDEN_APPLE, Items.GOLDEN_APPLE);
+    private final Setting<NoInteractFilterMode> entityFilterMode = this.sgEntity.enumSetting("Entity Filter Mode", NoInteractFilterMode.Accept, ".");
+    private final Setting<List<EntityType<?>>> entities = this.sgEntity.entityListSetting("Entities", ".");
 
     public NoInteract() {
         super("No Interact", "Prevents interacting with blocks and entities.", SubCategory.MISC, false);

@@ -5,6 +5,7 @@ import java.util.List;
 
 public record ParentCategory(String name) implements Category {
     public static List<ParentCategory> categories = new ArrayList<>();
+
     public static ParentCategory COMBAT = new ParentCategory("Combat");
     public static ParentCategory MOVEMENT = new ParentCategory("Movement");
     public static ParentCategory VISUAL = new ParentCategory("Visual");

@@ -9,7 +9,7 @@ import net.minecraft.util.math.Box;
 public class CollisionShrink extends Module {
     private static CollisionShrink INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Integer> shrinkAmount = this.sgGeneral.i("Shrink Amount", 1, 1, 10, 1, ".");
+    private final Setting<Integer> shrinkAmount = this.sgGeneral.intSetting("Shrink Amount", 1, 1, 10, 1, ".");
 
     public CollisionShrink() {
         super("Collision Shrink", "Shrinks your bounding box to phase inside walls.", SubCategory.MOVEMENT, false);

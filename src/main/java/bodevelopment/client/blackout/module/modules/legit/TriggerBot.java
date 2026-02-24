@@ -23,13 +23,13 @@ import java.util.List;
 
 public class TriggerBot extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<List<EntityType<?>>> entityTypes = this.sgGeneral.el("Entities", ".", EntityType.PLAYER);
-    private final Setting<Boolean> smartDelay = this.sgGeneral.b("Smart Delay", true, "Charges weapon when hitting living entities.");
-    private final Setting<Integer> minDelay = this.sgGeneral.i("Min Delay", 2, 0, 20, 1, "Ticks between attacks.", this.smartDelay::get);
-    private final Setting<Integer> attackDelay = this.sgGeneral.i("Attack Delay", 2, 0, 20, 1, "Ticks between attacks.");
-    private final Setting<Boolean> onlyWeapon = this.sgGeneral.b("Only Weapon", true, "Only attacks with weapons");
-    private final Setting<Boolean> critSync = this.sgGeneral.b("Crit Sync", false, ".");
-    private final Setting<Double> critSyncTime = this.sgGeneral.d("Crit Sync Time", 0.3, 0.0, 1.0, 0.01, ".", this.critSync::get);
+    private final Setting<List<EntityType<?>>> entityTypes = this.sgGeneral.entityListSetting("Entities", ".", EntityType.PLAYER);
+    private final Setting<Boolean> smartDelay = this.sgGeneral.booleanSetting("Smart Delay", true, "Charges weapon when hitting living entities.");
+    private final Setting<Integer> minDelay = this.sgGeneral.intSetting("Min Delay", 2, 0, 20, 1, "Ticks between attacks.", this.smartDelay::get);
+    private final Setting<Integer> attackDelay = this.sgGeneral.intSetting("Attack Delay", 2, 0, 20, 1, "Ticks between attacks.");
+    private final Setting<Boolean> onlyWeapon = this.sgGeneral.booleanSetting("Only Weapon", true, "Only attacks with weapons");
+    private final Setting<Boolean> critSync = this.sgGeneral.booleanSetting("Crit Sync", false, ".");
+    private final Setting<Double> critSyncTime = this.sgGeneral.doubleSetting("Crit Sync Time", 0.3, 0.0, 1.0, 0.01, ".", this.critSync::get);
     private long critTime = 0L;
 
     public TriggerBot() {

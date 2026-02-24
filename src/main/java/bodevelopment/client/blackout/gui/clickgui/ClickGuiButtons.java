@@ -29,13 +29,13 @@ public class ClickGuiButtons {
     private static final int BUTTON_SEPARATION = 20;
 
     static {
-        a(ConfigScreen::new, BOTextures.getFolderIconRenderer());
-        a(FriendsScreen::new, BOTextures.getPersonIconRenderer());
-        a(ConsoleScreen::new, BOTextures.getConsoleIconRenderer());
-        a(AddonScreen::new, BOTextures.getPlusIconRenderer());
+        addSetting(ConfigScreen::new, BOTextures.getFolderIconRenderer());
+        addSetting(FriendsScreen::new, BOTextures.getPersonIconRenderer());
+        addSetting(ConsoleScreen::new, BOTextures.getConsoleIconRenderer());
+        addSetting(AddonScreen::new, BOTextures.getPlusIconRenderer());
     }
 
-    private static void a(Supplier<? extends ClickGuiScreen> screen, TextureRenderer icon) {
+    private static void addSetting(Supplier<? extends ClickGuiScreen> screen, TextureRenderer icon) {
         buttons.add(new Button(screen, icon));
     }
 

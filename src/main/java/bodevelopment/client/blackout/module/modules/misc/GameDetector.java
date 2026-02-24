@@ -17,13 +17,13 @@ import net.minecraft.item.Items;
 
 public class GameDetector extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Boolean> reEnable = this.sgGeneral.b("Re Enable on game start", false, ".");
-    public final Setting<Boolean> disable = this.sgGeneral.b("Disable on game end", true, ".");
+    public final Setting<Boolean> reEnable = this.sgGeneral.booleanSetting("Re Enable on game start", false, ".");
+    public final Setting<Boolean> disable = this.sgGeneral.booleanSetting("Disable on game end", true, ".");
     private final SettingGroup sgDetect = this.addGroup("Detect");
-    public final Setting<Boolean> capabilities = this.sgDetect.b("Capabilities", true, ".");
-    public final Setting<Boolean> compass = this.sgDetect.b("Compass", true, ".");
-    public final Setting<Boolean> slime = this.sgDetect.b("Slime", true, ".");
-    public final Setting<Boolean> test = this.sgDetect.b("test", true, ".");
+    public final Setting<Boolean> capabilities = this.sgDetect.booleanSetting("Capabilities", true, ".");
+    public final Setting<Boolean> compass = this.sgDetect.booleanSetting("Compass", true, ".");
+    public final Setting<Boolean> slime = this.sgDetect.booleanSetting("Slime", true, ".");
+    public final Setting<Boolean> test = this.sgDetect.booleanSetting("test", true, ".");
     public boolean gameStarted = false;
     private boolean prevState = false;
     private boolean disabledAura = false;

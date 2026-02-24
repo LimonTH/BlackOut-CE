@@ -13,7 +13,7 @@ import net.minecraft.entity.effect.StatusEffects;
 public class Brightness extends Module {
     private static Brightness INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Mode> mode = this.sgGeneral.e("Mode", Mode.Gamma, ".", () -> true);
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Gamma, ".", () -> true);
 
     public Brightness() {
         super("Brightness", "Makes the world bright", SubCategory.WORLD, true);

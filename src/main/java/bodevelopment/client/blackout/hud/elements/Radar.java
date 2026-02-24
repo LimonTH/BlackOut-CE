@@ -23,17 +23,17 @@ import java.awt.*;
 
 public class Radar extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Integer> range = this.sgGeneral.i("Range", 32, 0, 128, 1, ".");
-    private final Setting<Style> style = this.sgGeneral.e("Style", Style.Blackout, ".");
-    private final Setting<Boolean> bg = this.sgGeneral.b("Background", true, "Renders a background", () -> this.style.get() == Style.Blackout);
+    public final Setting<Integer> range = this.sgGeneral.intSetting("Range", 32, 0, 128, 1, ".");
+    private final Setting<Style> style = this.sgGeneral.enumSetting("Style", Style.Blackout, ".");
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, "Renders a background", () -> this.style.get() == Style.Blackout);
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(
             this.sgGeneral, () -> this.bg.get() && this.style.get() == Style.Blackout, "Radar"
     );
-    private final Setting<Boolean> blur = this.sgGeneral.b("Blur", true, "Use blur", () -> this.style.get() == Style.Blackout);
-    private final Setting<Boolean> fadeLines = this.sgGeneral.b("Fade Lines", false, ".");
-    private final Setting<BlackOutColor> lineColor = this.sgGeneral.c("Line Color", new BlackOutColor(255, 255, 255, 80), "Line Color");
-    private final Setting<BlackOutColor> enemyColor = this.sgGeneral.c("Enemy Color", new BlackOutColor(255, 255, 255, 80), "Enemy Color");
-    private final Setting<BlackOutColor> friendColor = this.sgGeneral.c("Friend Color", new BlackOutColor(100, 100, 255, 180), "Friend Color");
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, "Use blur", () -> this.style.get() == Style.Blackout);
+    private final Setting<Boolean> fadeLines = this.sgGeneral.booleanSetting("Fade Lines", false, ".");
+    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Line Color", new BlackOutColor(255, 255, 255, 80), "Line Color");
+    private final Setting<BlackOutColor> enemyColor = this.sgGeneral.colorSetting("Enemy Color", new BlackOutColor(255, 255, 255, 80), "Enemy Color");
+    private final Setting<BlackOutColor> friendColor = this.sgGeneral.colorSetting("Friend Color", new BlackOutColor(100, 100, 255, 180), "Friend Color");
 
     public Radar() {
         super("Radar", ".");

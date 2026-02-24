@@ -15,7 +15,7 @@ import java.util.UUID;
 
 public class ServerSpoof extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Double> delay = this.sgGeneral.d("Delay", 2.0, 0.0, 10.0, 0.1, ".");
+    private final Setting<Double> delay = this.sgGeneral.doubleSetting("Delay", 2.0, 0.0, 10.0, 0.1, ".");
     private final ResourcePackStatusC2SPacket.Status[] statuses = new ResourcePackStatusC2SPacket.Status[]{ResourcePackStatusC2SPacket.Status.ACCEPTED, ResourcePackStatusC2SPacket.Status.DOWNLOADED, ResourcePackStatusC2SPacket.Status.SUCCESSFULLY_LOADED};
     private UUID id;
     private long time = -1L;

@@ -20,113 +20,113 @@ public class SettingGroup {
         this.name = name;
     }
 
-    public Setting<Boolean> b(String name, boolean value, String description, SingleOut<Boolean> visible) {
-        return this.a(Settings.b(name, value, description, visible));
+    public Setting<Boolean> booleanSetting(String name, boolean value, String description, SingleOut<Boolean> visible) {
+        return this.addSetting(Settings.booleanSetting(name, value, description, visible));
     }
 
-    public Setting<Double> d(String name, double value, double min, double max, double step, String description, SingleOut<Boolean> visible) {
-        return this.a(Settings.d(name, value, min, max, step, description, visible));
+    public Setting<Double> doubleSetting(String name, double value, double min, double max, double step, String description, SingleOut<Boolean> visible) {
+        return this.addSetting(Settings.doubleSetting(name, value, min, max, step, description, visible));
     }
 
-    public <T extends Enum<?>> Setting<T> e(String name, T value, String description, SingleOut<Boolean> visible) {
-        return this.a(Settings.e(name, value, description, visible));
+    public <T extends Enum<?>> Setting<T> enumSetting(String name, T value, String description, SingleOut<Boolean> visible) {
+        return this.addSetting(Settings.enumSetting(name, value, description, visible));
     }
 
-    public Setting<Integer> i(String name, int value, int min, int max, int step, String description, SingleOut<Boolean> visible) {
-        return this.a(Settings.i(name, value, min, max, step, description, visible));
+    public Setting<Integer> intSetting(String name, int value, int min, int max, int step, String description, SingleOut<Boolean> visible) {
+        return this.addSetting(Settings.intSetting(name, value, min, max, step, description, visible));
     }
 
-    public Setting<KeyBind> k(String name, String description, SingleOut<Boolean> visible) {
-        return this.a(Settings.k(name, description, visible));
+    public Setting<KeyBind> keySetting(String name, String description, SingleOut<Boolean> visible) {
+        return this.addSetting(Settings.keySetting(name, description, visible));
     }
 
-    public Setting<String> s(String name, String value, String description, SingleOut<Boolean> visible) {
-        return this.a(Settings.s(name, value, description, visible));
+    public Setting<String> stringSetting(String name, String value, String description, SingleOut<Boolean> visible) {
+        return this.addSetting(Settings.stringSetting(name, value, description, visible));
     }
 
-    public Setting<BlackOutColor> c(String name, BlackOutColor value, String description, SingleOut<Boolean> visible) {
-        return this.a(Settings.c(name, value, description, visible));
+    public Setting<BlackOutColor> colorSetting(String name, BlackOutColor value, String description, SingleOut<Boolean> visible) {
+        return this.addSetting(Settings.colorSetting(name, value, description, visible));
     }
 
-    public Setting<List<Block>> bl(String name, String description, SingleOut<Boolean> visible, Block... value) {
-        return this.a(Settings.bl(name, description, visible, value));
+    public Setting<List<Block>> blockListSetting(String name, String description, SingleOut<Boolean> visible, Block... value) {
+        return this.addSetting(Settings.blockListSetting(name, description, visible, value));
     }
 
-    public Setting<List<Item>> il(String name, String description, SingleOut<Boolean> visible, Item... value) {
-        return this.a(Settings.il(name, description, visible, value));
+    public Setting<List<Item>> itemListSetting(String name, String description, SingleOut<Boolean> visible, Item... value) {
+        return this.addSetting(Settings.itemListSetting(name, description, visible, value));
     }
 
-    public Setting<List<EntityType<?>>> el(String name, String description, SingleOut<Boolean> visible, EntityType<?>... value) {
-        return this.a(Settings.el(name, description, visible, value));
+    public Setting<List<EntityType<?>>> entityListSetting(String name, String description, SingleOut<Boolean> visible, EntityType<?>... value) {
+        return this.addSetting(Settings.entityListSetting(name, description, visible, value));
     }
 
     @SafeVarargs
-    public final <T> Setting<List<T>> r(
+    public final <T> Setting<List<T>> registrySetting(
             String name, String description, SingleOut<Boolean> visible, Registry<T> registry, EpicInterface<T, String> getName, T... value
     ) {
-        return this.a(Settings.r(name, description, visible, registry, getName, value));
+        return this.addSetting(Settings.registrySetting(name, description, visible, registry, getName, value));
     }
 
     @SafeVarargs
-    public final <T> Setting<List<T>> l(String name, String description, SingleOut<Boolean> visible, List<T> list, EpicInterface<T, String> getName, T... value) {
-        return this.a(Settings.l(name, description, visible, list, getName, value));
+    public final <T> Setting<List<T>> listSetting(String name, String description, SingleOut<Boolean> visible, List<T> list, EpicInterface<T, String> getName, T... value) {
+        return this.addSetting(Settings.listSetting(name, description, visible, list, getName, value));
     }
 
-    public Setting<Boolean> b(String name, boolean value, String description) {
-        return this.a(Settings.b(name, value, description, null));
+    public Setting<Boolean> booleanSetting(String name, boolean value, String description) {
+        return this.addSetting(Settings.booleanSetting(name, value, description, null));
     }
 
-    public Setting<Double> d(String name, double value, double min, double max, double step, String description) {
-        return this.a(Settings.d(name, value, min, max, step, description, null));
+    public Setting<Double> doubleSetting(String name, double value, double min, double max, double step, String description) {
+        return this.addSetting(Settings.doubleSetting(name, value, min, max, step, description, null));
     }
 
-    public <T extends Enum<?>> Setting<T> e(String name, T value, String description) {
-        return this.a(Settings.e(name, value, description, null));
+    public <T extends Enum<?>> Setting<T> enumSetting(String name, T value, String description) {
+        return this.addSetting(Settings.enumSetting(name, value, description, null));
     }
 
-    public Setting<Integer> i(String name, int value, int min, int max, int step, String description) {
-        return this.a(Settings.i(name, value, min, max, step, description, null));
+    public Setting<Integer> intSetting(String name, int value, int min, int max, int step, String description) {
+        return this.addSetting(Settings.intSetting(name, value, min, max, step, description, null));
     }
 
-    public Setting<KeyBind> k(String name, String description) {
-        return this.a(Settings.k(name, description, null));
+    public Setting<KeyBind> keySetting(String name, String description) {
+        return this.addSetting(Settings.keySetting(name, description, null));
     }
 
-    public Setting<String> s(String name, String value, String description) {
-        return this.a(Settings.s(name, value, description, null));
+    public Setting<String> stringSetting(String name, String value, String description) {
+        return this.addSetting(Settings.stringSetting(name, value, description, null));
     }
 
-    public Setting<BlackOutColor> c(String name, BlackOutColor value, String description) {
-        return this.a(Settings.c(name, value, description, null));
+    public Setting<BlackOutColor> colorSetting(String name, BlackOutColor value, String description) {
+        return this.addSetting(Settings.colorSetting(name, value, description, null));
     }
 
-    public Setting<List<Block>> bl(String name, String description, Block... value) {
-        return this.a(Settings.bl(name, description, null, value));
+    public Setting<List<Block>> blockListSetting(String name, String description, Block... value) {
+        return this.addSetting(Settings.blockListSetting(name, description, null, value));
     }
 
-    public Setting<List<Item>> il(String name, String description, Item... value) {
-        return this.a(Settings.il(name, description, null, value));
+    public Setting<List<Item>> itemListSetting(String name, String description, Item... value) {
+        return this.addSetting(Settings.itemListSetting(name, description, null, value));
     }
 
-    public Setting<List<EntityType<?>>> el(String name, String description, EntityType<?>... value) {
-        return this.a(Settings.el(name, description, null, value));
+    public Setting<List<EntityType<?>>> entityListSetting(String name, String description, EntityType<?>... value) {
+        return this.addSetting(Settings.entityListSetting(name, description, null, value));
     }
 
-    public Setting<List<EntityType<?>>> el(String name, String description, java.util.function.Predicate<EntityType<?>> filter, EntityType<?>... value) {
-        return this.a(Settings.el(name, description, null, filter, value));
-    }
-
-    @SafeVarargs
-    public final <T> Setting<List<T>> r(String name, String description, Registry<T> registry, EpicInterface<T, String> getName, T... value) {
-        return this.a(Settings.r(name, description, null, registry, getName, value));
+    public Setting<List<EntityType<?>>> entityFilterdListSetting(String name, String description, java.util.function.Predicate<EntityType<?>> filter, EntityType<?>... value) {
+        return this.addSetting(Settings.entityFilterdListSetting(name, description, null, filter, value));
     }
 
     @SafeVarargs
-    public final <T> Setting<List<T>> l(String name, String description, List<T> list, EpicInterface<T, String> getName, T... value) {
-        return this.a(Settings.l(name, description, null, list, getName, value));
+    public final <T> Setting<List<T>> registrySetting(String name, String description, Registry<T> registry, EpicInterface<T, String> getName, T... value) {
+        return this.addSetting(Settings.registrySetting(name, description, null, registry, getName, value));
     }
 
-    private <T> Setting<T> a(Setting<T> setting) {
+    @SafeVarargs
+    public final <T> Setting<List<T>> listSetting(String name, String description, List<T> list, EpicInterface<T, String> getName, T... value) {
+        return this.addSetting(Settings.listSetting(name, description, null, list, getName, value));
+    }
+
+    private <T> Setting<T> addSetting(Setting<T> setting) {
         this.settings.add(setting);
         return setting;
     }

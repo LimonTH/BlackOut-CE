@@ -15,8 +15,8 @@ import java.util.Random;
 
 public class AnteroTaateli extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> iFriends = this.sgGeneral.b("Ignore Friends", true, "Do we ignore friends");
-    private final Setting<Double> delay = this.sgGeneral.d("Delay (Ticks)", 100.0, 10.0, 500.0, 1.0, "Ticks between messages.");
+    private final Setting<Boolean> iFriends = this.sgGeneral.booleanSetting("Ignore Friends", true, "Do we ignore friends");
+    private final Setting<Double> delay = this.sgGeneral.doubleSetting("Delay (Ticks)", 100.0, 10.0, 500.0, 1.0, "Ticks between messages.");
 
     private final Random r = new Random();
     private final String[] messages = new String[]{

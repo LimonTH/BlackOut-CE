@@ -26,17 +26,17 @@ import java.util.List;
 
 public class HoleESP extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Double> range = this.sgGeneral.d("Range", 8.0, 0.0, 10.0, 0.1, "Maximum range to a hole.");
-    private final Setting<BlackOutColor> lineColor = this.sgGeneral.c("Line Color", new BlackOutColor(255, 0, 0, 255), "Line color of rendered boxes.");
-    private final Setting<BlackOutColor> sideColor = this.sgGeneral.c("Side Color", new BlackOutColor(255, 0, 0, 50), "Side color of rendered boxes.");
-    private final Setting<Boolean> bottomLines = this.sgGeneral.b("Bottom Lines", true, "Renders lines in hole bottom.");
-    private final Setting<Boolean> bottomSide = this.sgGeneral.b("Bottom Side", true, "Renders bottom plane.");
-    private final Setting<Boolean> fadeLines = this.sgGeneral.b("Fade Lines", true, "Renders lines in fade.");
-    private final Setting<Boolean> fadeSides = this.sgGeneral.b("Fade Sides", true, "Renders sides in fade.");
-    private final Setting<Double> minHeight = this.sgGeneral.d("Min Height", 0.5, -1.0, 1.0, 0.05, ".");
-    private final Setting<Double> maxHeight = this.sgGeneral.d("Max Height", 1.0, -1.0, 1.0, 0.05, "How tall should the fade be.");
+    private final Setting<Double> range = this.sgGeneral.doubleSetting("Range", 8.0, 0.0, 10.0, 0.1, "Maximum range to a hole.");
+    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Line Color", new BlackOutColor(255, 0, 0, 255), "Line color of rendered boxes.");
+    private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Side Color", new BlackOutColor(255, 0, 0, 50), "Side color of rendered boxes.");
+    private final Setting<Boolean> bottomLines = this.sgGeneral.booleanSetting("Bottom Lines", true, "Renders lines in hole bottom.");
+    private final Setting<Boolean> bottomSide = this.sgGeneral.booleanSetting("Bottom Side", true, "Renders bottom plane.");
+    private final Setting<Boolean> fadeLines = this.sgGeneral.booleanSetting("Fade Lines", true, "Renders lines in fade.");
+    private final Setting<Boolean> fadeSides = this.sgGeneral.booleanSetting("Fade Sides", true, "Renders sides in fade.");
+    private final Setting<Double> minHeight = this.sgGeneral.doubleSetting("Min Height", 0.5, -1.0, 1.0, 0.05, ".");
+    private final Setting<Double> maxHeight = this.sgGeneral.doubleSetting("Max Height", 1.0, -1.0, 1.0, 0.05, "How tall should the fade be.");
     private final Setting<Double> breathingSpeed = this.sgGeneral
-            .d("Breathing Speed", 1.0, 0.0, 10.0, 0.1, ".", () -> !this.minHeight.get().equals(this.maxHeight.get()));
+            .doubleSetting("Breathing Speed", 1.0, 0.0, 10.0, 0.1, ".", () -> !this.minHeight.get().equals(this.maxHeight.get()));
     private final List<Hole> holes = new ArrayList<>();
     private long prevCalc = 0L;
 

@@ -16,15 +16,15 @@ import net.minecraft.entity.effect.StatusEffects;
 public class Notifier extends Module {
     private static Notifier INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Mode> mode = this.sgGeneral.e("Notify mode", Mode.Hud, "How to notify you");
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Notify mode", Mode.Hud, "How to notify you");
     private final SettingGroup sgPops = this.addGroup("Pops");
     private final SettingGroup sgWeakness = this.addGroup("Weakness");
-    private final Setting<Boolean> pops = this.sgPops.b("Pop Counter", true, "Counts Totem Pops");
-    private final Setting<Boolean> iOwn = this.sgPops.b("Ignore Own", true, "Does not send count friends pops", this.pops::get);
-    private final Setting<Boolean> iFriends = this.sgPops.b("Ignore Friends", true, "Does not send count friends pops", this.pops::get);
-    private final Setting<Boolean> weakness = this.sgWeakness.b("Weakness", true, "Notifies about getting weakness");
-    private final Setting<Boolean> single = this.sgWeakness.b("Single", true, "Only sends it once", this.weakness::get);
-    private final Setting<Double> delay = this.sgWeakness.d("Delay", 5.0, 0.0, 100.0, 1.0, "Tick delay between alerts", this.weakness::get);
+    private final Setting<Boolean> pops = this.sgPops.booleanSetting("Pop Counter", true, "Counts Totem Pops");
+    private final Setting<Boolean> iOwn = this.sgPops.booleanSetting("Ignore Own", true, "Does not send count friends pops", this.pops::get);
+    private final Setting<Boolean> iFriends = this.sgPops.booleanSetting("Ignore Friends", true, "Does not send count friends pops", this.pops::get);
+    private final Setting<Boolean> weakness = this.sgWeakness.booleanSetting("Weakness", true, "Notifies about getting weakness");
+    private final Setting<Boolean> single = this.sgWeakness.booleanSetting("Single", true, "Only sends it once", this.weakness::get);
+    private final Setting<Double> delay = this.sgWeakness.doubleSetting("Delay", 5.0, 0.0, 100.0, 1.0, "Tick delay between alerts", this.weakness::get);
     private double timer = 0.0;
     private boolean last = false;
 

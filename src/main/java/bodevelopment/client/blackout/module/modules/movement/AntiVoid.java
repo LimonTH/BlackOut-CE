@@ -13,9 +13,9 @@ import bodevelopment.client.blackout.util.OLEPOSSUtils;
 
 public class AntiVoid extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Mode> mode = this.sgGeneral.e("Mode", Mode.Motion, ".", () -> true);
-    private final Setting<Double> d = this.sgGeneral.d("Activation Distance", 2.5, 0.0, 10.0, 0.5, ".");
-    private final Setting<Boolean> voidCheck = this.sgGeneral.b("Void Check", true, ".");
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Motion, ".", () -> true);
+    private final Setting<Double> d = this.sgGeneral.doubleSetting("Activation Distance", 2.5, 0.0, 10.0, 0.5, ".");
+    private final Setting<Boolean> voidCheck = this.sgGeneral.booleanSetting("Void Check", true, ".");
     private double prevOG = 0.0;
 
     public AntiVoid() {

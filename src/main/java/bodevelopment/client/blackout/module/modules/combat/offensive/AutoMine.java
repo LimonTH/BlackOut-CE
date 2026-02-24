@@ -55,77 +55,77 @@ public class AutoMine extends Module {
     private final SettingGroup sgAntiSurround = this.addGroup("Anti Surround");
     private final SettingGroup sgAntiBurrow = this.addGroup("Anti Burrow");
     private final SettingGroup sgRender = this.addGroup("Render");
-    private final Setting<Boolean> pauseEat = this.sgGeneral.b("Pause Eat", false, "Pauses when eating");
-    private final Setting<Boolean> pauseEatPlacing = this.sgGeneral.b("Pause Eat Placing", false, "Pauses placing a crystal when eating");
-    private final Setting<Boolean> pauseSword = this.sgGeneral.b("Pause Sword", false, "Doesn't mine while holding sword");
-    private final Setting<Boolean> packet = this.sgGeneral.b("Packet", true, "Doesn't remove the block client side.");
-    private final Setting<Boolean> autoMine = this.sgGeneral.b("Auto Mine", true, "Automatically chooses a target block.");
-    private final Setting<Boolean> manualMine = this.sgGeneral.b("Manual Mine", true, "Sets target block to the block you clicked.");
-    private final Setting<Boolean> manualInstant = this.sgGeneral.b("Manual Instant", false, "Uses instant mine when mining manually.", this.manualMine::get);
+    private final Setting<Boolean> pauseEat = this.sgGeneral.booleanSetting("Pause Eat", false, "Pauses when eating");
+    private final Setting<Boolean> pauseEatPlacing = this.sgGeneral.booleanSetting("Pause Eat Placing", false, "Pauses placing a crystal when eating");
+    private final Setting<Boolean> pauseSword = this.sgGeneral.booleanSetting("Pause Sword", false, "Doesn't mine while holding sword");
+    private final Setting<Boolean> packet = this.sgGeneral.booleanSetting("Packet", true, "Doesn't remove the block client side.");
+    private final Setting<Boolean> autoMine = this.sgGeneral.booleanSetting("Auto Mine", true, "Automatically chooses a target block.");
+    private final Setting<Boolean> manualMine = this.sgGeneral.booleanSetting("Manual Mine", true, "Sets target block to the block you clicked.");
+    private final Setting<Boolean> manualInstant = this.sgGeneral.booleanSetting("Manual Instant", false, "Uses instant mine when mining manually.", this.manualMine::get);
     private final Setting<Boolean> manualRemine = this.sgGeneral
-            .b("Manual Remine", false, "Mines the manually mined block again.", () -> this.manualMine.get() && !this.manualInstant.get());
+            .booleanSetting("Manual Remine", false, "Mines the manually mined block again.", () -> this.manualMine.get() && !this.manualInstant.get());
     private final Setting<Boolean> fastRemine = this.sgGeneral
-            .b(
+            .booleanSetting(
                     "Fast Remine",
                     false,
                     "Calculates mining progress from last block broken.",
                     () -> this.manualMine.get() && !this.manualInstant.get() && this.manualRemine.get()
             );
     private final Setting<Boolean> manualRangeReset = this.sgGeneral
-            .b("Manual Range Reset", true, "Resets manual mining if out of range.", this.manualMine::get);
-    private final Setting<Boolean> resetOnSwitch = this.sgGeneral.b("Reset On Switch", true, "Resets mining when switched held item.");
-    private final Setting<Boolean> ncpProgress = this.sgGeneral.b("NCP Progress", true, "Uses ncp mining progress checks.");
-    private final Setting<Boolean> damageSync = this.sgGeneral.b("Damage Sync", false, "Waits for enemy's damage tick to almost end before stopping mining.");
+            .booleanSetting("Manual Range Reset", true, "Resets manual mining if out of range.", this.manualMine::get);
+    private final Setting<Boolean> resetOnSwitch = this.sgGeneral.booleanSetting("Reset On Switch", true, "Resets mining when switched held item.");
+    private final Setting<Boolean> ncpProgress = this.sgGeneral.booleanSetting("NCP Progress", true, "Uses ncp mining progress checks.");
+    private final Setting<Boolean> damageSync = this.sgGeneral.booleanSetting("Damage Sync", false, "Waits for enemy's damage tick to almost end before stopping mining.");
     private final Setting<Integer> syncPredict = this.sgGeneral
-            .i("Sync Predict", 0, 0, 10, 1, "Waits for enemy's damage tick to almost end before stopping mining.", this.damageSync::get);
+            .intSetting("Sync Predict", 0, 0, 10, 1, "Waits for enemy's damage tick to almost end before stopping mining.", this.damageSync::get);
     private final Setting<Integer> syncLength = this.sgGeneral
-            .i("Sync Length", 2, 0, 10, 1, "Waits for enemy's damage tick to almost end before stopping mining.", this.damageSync::get);
-    private final Setting<Boolean> useMineBind = this.sgGeneral.b("Use Mine Bind", false, "Requires you to click the mine bind to break a block.");
-    private final Setting<KeyBind> mineBind = this.sgGeneral.k("Mine Bind", ".", this.useMineBind::get);
-    private final Setting<List<Block>> ignore = this.sgGeneral.bl("Ignore", ".");
-    private final Setting<Boolean> preSwitch = this.sgSwitch.b("Pre Switch", false, ".");
+            .intSetting("Sync Length", 2, 0, 10, 1, "Waits for enemy's damage tick to almost end before stopping mining.", this.damageSync::get);
+    private final Setting<Boolean> useMineBind = this.sgGeneral.booleanSetting("Use Mine Bind", false, "Requires you to click the mine bind to break a block.");
+    private final Setting<KeyBind> mineBind = this.sgGeneral.keySetting("Mine Bind", ".", this.useMineBind::get);
+    private final Setting<List<Block>> ignore = this.sgGeneral.blockListSetting("Ignore", ".");
+    private final Setting<Boolean> preSwitch = this.sgSwitch.booleanSetting("Pre Switch", false, ".");
     private final Setting<SwitchMode> pickaxeSwitch = this.sgSwitch
-            .e("Pickaxe Switch", SwitchMode.InvSwitch, "Method of switching. InvSwitch is used in most clients.");
-    private final Setting<Boolean> allowInventory = this.sgSwitch.b("Allow Inventory", false, ".", () -> this.pickaxeSwitch.get().inventory);
+            .enumSetting("Pickaxe Switch", SwitchMode.InvSwitch, "Method of switching. InvSwitch is used in most clients.");
+    private final Setting<Boolean> allowInventory = this.sgSwitch.booleanSetting("Allow Inventory", false, ".", () -> this.pickaxeSwitch.get().inventory);
     private final Setting<SwitchMode> crystalSwitch = this.sgSwitch
-            .e("Crystal Switch", SwitchMode.InvSwitch, "Method of switching. InvSwitch is used in most clients.");
-    private final Setting<Double> speed = this.sgSpeed.d("Speed", 1.0, 0.0, 2.0, 0.05, "Vanilla speed multiplier.");
-    private final Setting<Boolean> onGroundSpoof = this.sgSpeed.b("On Ground Spoof", false, ".");
+            .enumSetting("Crystal Switch", SwitchMode.InvSwitch, "Method of switching. InvSwitch is used in most clients.");
+    private final Setting<Double> speed = this.sgSpeed.doubleSetting("Speed", 1.0, 0.0, 2.0, 0.05, "Vanilla speed multiplier.");
+    private final Setting<Boolean> onGroundSpoof = this.sgSpeed.booleanSetting("On Ground Spoof", false, ".");
     private final Setting<Boolean> onGroundCheck = this.sgSpeed
-            .b("On Ground Check", true, "Mines 5x slower when not on ground.", () -> !this.onGroundSpoof.get());
-    private final Setting<Boolean> effectCheck = this.sgSpeed.b("Effect Check", true, "Modifies mining speed depending on haste and mining fatigue.");
-    private final Setting<Boolean> waterCheck = this.sgSpeed.b("Water Check", true, "Mines 5x slower while submerged in water.");
-    private final Setting<Double> placeSpeed = this.sgCrystals.d("Place Speed", 2.0, 0.0, 20.0, 0.1, "How many times to place a crystal every second.");
-    private final Setting<Double> attackSpeed = this.sgCrystals.d("Attack Speed", 2.0, 0.0, 20.0, 0.1, "How many times to attack a crystal every second.");
-    private final Setting<Double> attackTime = this.sgCrystals.d("Attack Time", 2.0, 0.0, 10.0, 0.1, "Tries to attack a crystal for this many seconds.");
-    private final Setting<Priority> cevPriority = this.sgCev.e("Cev Priority", Priority.Normal, "Priority of cev.");
+            .booleanSetting("On Ground Check", true, "Mines 5x slower when not on ground.", () -> !this.onGroundSpoof.get());
+    private final Setting<Boolean> effectCheck = this.sgSpeed.booleanSetting("Effect Check", true, "Modifies mining speed depending on haste and mining fatigue.");
+    private final Setting<Boolean> waterCheck = this.sgSpeed.booleanSetting("Water Check", true, "Mines 5x slower while submerged in water.");
+    private final Setting<Double> placeSpeed = this.sgCrystals.doubleSetting("Place Speed", 2.0, 0.0, 20.0, 0.1, "How many times to place a crystal every second.");
+    private final Setting<Double> attackSpeed = this.sgCrystals.doubleSetting("Attack Speed", 2.0, 0.0, 20.0, 0.1, "How many times to attack a crystal every second.");
+    private final Setting<Double> attackTime = this.sgCrystals.doubleSetting("Attack Time", 2.0, 0.0, 10.0, 0.1, "Tries to attack a crystal for this many seconds.");
+    private final Setting<Priority> cevPriority = this.sgCev.enumSetting("Cev Priority", Priority.Normal, "Priority of cev.");
     private final Setting<Boolean> cevDamageCheck = this.sgCev
-            .b("Cev Damage Check", true, "Checks for damage.", () -> this.cevPriority.get() != Priority.Disabled);
+            .booleanSetting("Cev Damage Check", true, "Checks for damage.", () -> this.cevPriority.get() != Priority.Disabled);
     private final Setting<Double> minCevDamage = this.sgCev
-            .d("Min Cev Damage", 6.0, 0.0, 20.0, 0.5, ".", () -> this.cevPriority.get() != Priority.Disabled && this.cevDamageCheck.get());
+            .doubleSetting("Min Cev Damage", 6.0, 0.0, 20.0, 0.5, ".", () -> this.cevPriority.get() != Priority.Disabled && this.cevDamageCheck.get());
     private final Setting<Double> maxCevDamage = this.sgCev
-            .d("Max Cev Damage", 10.0, 0.0, 20.0, 0.5, ".", () -> this.cevPriority.get() != Priority.Disabled && this.cevDamageCheck.get());
+            .doubleSetting("Max Cev Damage", 10.0, 0.0, 20.0, 0.5, ".", () -> this.cevPriority.get() != Priority.Disabled && this.cevDamageCheck.get());
     private final Setting<Boolean> instantCev = this.sgCev
-            .b("Instant Cev", false, "Only sends 1 mine start packet for each block.", () -> this.cevPriority.get() != Priority.Disabled);
+            .booleanSetting("Instant Cev", false, "Only sends 1 mine start packet for each block.", () -> this.cevPriority.get() != Priority.Disabled);
     private final Setting<Boolean> antiAntiCev = this.sgCev
-            .b("Anti Anti Cev", false, "Places a crystal and mines the block at the same time", () -> this.cevPriority.get() != Priority.Disabled);
-    private final Setting<Priority> trapCevPriority = this.sgTrapCev.e("Trap Cev Priority", Priority.Normal, "Priority of trap cev.");
+            .booleanSetting("Anti Anti Cev", false, "Places a crystal and mines the block at the same time", () -> this.cevPriority.get() != Priority.Disabled);
+    private final Setting<Priority> trapCevPriority = this.sgTrapCev.enumSetting("Trap Cev Priority", Priority.Normal, "Priority of trap cev.");
     private final Setting<Boolean> trapCevDamageCheck = this.sgTrapCev
-            .b("Trap Cev Damage Check", true, "Checks for damage.", () -> this.trapCevPriority.get() != Priority.Disabled);
+            .booleanSetting("Trap Cev Damage Check", true, "Checks for damage.", () -> this.trapCevPriority.get() != Priority.Disabled);
     private final Setting<Double> minTrapCevDamage = this.sgTrapCev
-            .d("Min Trap Cev Damage", 6.0, 0.0, 20.0, 0.5, ".", () -> this.trapCevPriority.get() != Priority.Disabled && this.trapCevDamageCheck.get());
+            .doubleSetting("Min Trap Cev Damage", 6.0, 0.0, 20.0, 0.5, ".", () -> this.trapCevPriority.get() != Priority.Disabled && this.trapCevDamageCheck.get());
     private final Setting<Double> maxTrapCevDamage = this.sgTrapCev
-            .d("Max Trap Cev Damage", 10.0, 0.0, 20.0, 0.5, ".", () -> this.trapCevPriority.get() != Priority.Disabled && this.trapCevDamageCheck.get());
+            .doubleSetting("Max Trap Cev Damage", 10.0, 0.0, 20.0, 0.5, ".", () -> this.trapCevPriority.get() != Priority.Disabled && this.trapCevDamageCheck.get());
     private final Setting<Boolean> instantTrapCev = this.sgTrapCev
-            .b("Instant Trap Cev", false, "Only sends 1 mine start packet for each block.", () -> this.trapCevPriority.get() != Priority.Disabled);
+            .booleanSetting("Instant Trap Cev", false, "Only sends 1 mine start packet for each block.", () -> this.trapCevPriority.get() != Priority.Disabled);
     private final Setting<Boolean> antiAntiTrapCev = this.sgTrapCev
-            .b("Anti Anti Trap Cev", false, "Places a crystal and mines the block at the same time", () -> this.trapCevPriority.get() != Priority.Disabled);
+            .booleanSetting("Anti Anti Trap Cev", false, "Places a crystal and mines the block at the same time", () -> this.trapCevPriority.get() != Priority.Disabled);
     private final Setting<Priority> surroundCevPriority = this.sgSurroundCev
-            .e("Surround Cev Priority", Priority.Normal, "Priority of surround cev.");
+            .enumSetting("Surround Cev Priority", Priority.Normal, "Priority of surround cev.");
     private final Setting<Boolean> surroundCevDamageCheck = this.sgSurroundCev
-            .b("Surround Cev Damage Check", true, "Checks for damage.", () -> this.surroundCevPriority.get() != Priority.Disabled);
+            .booleanSetting("Surround Cev Damage Check", true, "Checks for damage.", () -> this.surroundCevPriority.get() != Priority.Disabled);
     private final Setting<Double> minSurroundCevDamage = this.sgSurroundCev
-            .d(
+            .doubleSetting(
                     "Min Surround Cev Damage",
                     6.0,
                     0.0,
@@ -135,7 +135,7 @@ public class AutoMine extends Module {
                     () -> this.surroundCevPriority.get() != Priority.Disabled && this.surroundCevDamageCheck.get()
             );
     private final Setting<Double> maxSurroundCevDamage = this.sgSurroundCev
-            .d(
+            .doubleSetting(
                     "Max Surround Cev Damage",
                     10.0,
                     0.0,
@@ -145,56 +145,56 @@ public class AutoMine extends Module {
                     () -> this.surroundCevPriority.get() != Priority.Disabled && this.surroundCevDamageCheck.get()
             );
     private final Setting<Boolean> instantSurroundCev = this.sgSurroundCev
-            .b("Instant Surround Cev", false, "Only sends 1 mine start packet for each block.", () -> this.surroundCevPriority.get() != Priority.Disabled);
+            .booleanSetting("Instant Surround Cev", false, "Only sends 1 mine start packet for each block.", () -> this.surroundCevPriority.get() != Priority.Disabled);
     private final Setting<Boolean> antiAntiSurroundCev = this.sgSurroundCev
-            .b(
+            .booleanSetting(
                     "Anti Anti Surround Cev",
                     false,
                     "Places a crystal and mines the block at the same time.",
                     () -> this.surroundCevPriority.get() != Priority.Disabled
             );
     private final Setting<Boolean> acceptCollide = this.sgSurroundCev
-            .b(
+            .booleanSetting(
                     "Accept Collide",
                     false,
                     "Accepts crystals that arent on top of the block but colliding with it.",
                     () -> this.surroundCevPriority.get() != Priority.Disabled
             );
     private final Setting<Priority> autoCityPriority = this.sgAntiSurround
-            .e("Auto City Priority", Priority.Normal, "Priority of auto city. Places crystal next to enemy's surround block.");
+            .enumSetting("Auto City Priority", Priority.Normal, "Priority of auto city. Places crystal next to enemy's surround block.");
     private final Setting<Boolean> autoCityDamageCheck = this.sgAntiSurround
-            .b("Auto City Damage Check", true, "Checks for damage.", () -> this.autoCityPriority.get() != Priority.Disabled);
+            .booleanSetting("Auto City Damage Check", true, "Checks for damage.", () -> this.autoCityPriority.get() != Priority.Disabled);
     private final Setting<Double> minAutoCityDamage = this.sgAntiSurround
-            .d("Min Auto City Damage", 6.0, 0.0, 20.0, 0.5, ".", () -> this.autoCityPriority.get() != Priority.Disabled && this.autoCityDamageCheck.get());
+            .doubleSetting("Min Auto City Damage", 6.0, 0.0, 20.0, 0.5, ".", () -> this.autoCityPriority.get() != Priority.Disabled && this.autoCityDamageCheck.get());
     private final Setting<Double> maxAutoCityDamage = this.sgAntiSurround
-            .d("Max Auto City Damage", 10.0, 0.0, 20.0, 0.5, ".", () -> this.autoCityPriority.get() != Priority.Disabled && this.autoCityDamageCheck.get());
+            .doubleSetting("Max Auto City Damage", 10.0, 0.0, 20.0, 0.5, ".", () -> this.autoCityPriority.get() != Priority.Disabled && this.autoCityDamageCheck.get());
     private final Setting<Boolean> instantAutoCity = this.sgAntiSurround
-            .b("Instant Auto City", false, "Only sends 1 mine start packet for each block.", () -> this.autoCityPriority.get() != Priority.Disabled);
+            .booleanSetting("Instant Auto City", false, "Only sends 1 mine start packet for each block.", () -> this.autoCityPriority.get() != Priority.Disabled);
     private final Setting<Boolean> placeCrystal = this.sgAntiSurround
-            .b("Place Crystal", true, ".", () -> this.autoCityPriority.get() != Priority.Disabled);
+            .booleanSetting("Place Crystal", true, ".", () -> this.autoCityPriority.get() != Priority.Disabled);
     private final Setting<Boolean> attackCrystal = this.sgAntiSurround
-            .b("Attack Crystal", false, "Attacks the crystal we placed.", () -> this.autoCityPriority.get() != Priority.Disabled);
+            .booleanSetting("Attack Crystal", false, "Attacks the crystal we placed.", () -> this.autoCityPriority.get() != Priority.Disabled);
     private final Setting<Priority> antiBurrowPriority = this.sgAntiBurrow
-            .e("Anti Burrow Priority", Priority.Normal, "Priority of anti burrow.");
-    private final Setting<Boolean> mineStartSwing = this.sgRender.b("Mine Start Swing", false, "Renders swing animation when starting to mine.");
-    private final Setting<Boolean> mineEndSwing = this.sgRender.b("Mine End Swing", false, "Renders swing animation when ending mining.");
+            .enumSetting("Anti Burrow Priority", Priority.Normal, "Priority of anti burrow.");
+    private final Setting<Boolean> mineStartSwing = this.sgRender.booleanSetting("Mine Start Swing", false, "Renders swing animation when starting to mine.");
+    private final Setting<Boolean> mineEndSwing = this.sgRender.booleanSetting("Mine End Swing", false, "Renders swing animation when ending mining.");
     private final Setting<SwingHand> mineHand = this.sgRender
-            .e("Mine Hand", SwingHand.RealHand, "Which hand should be swung.", () -> this.mineStartSwing.get() || this.mineEndSwing.get());
-    private final Setting<Boolean> placeSwing = this.sgRender.b("Place Swing", false, "Renders swing animation when placing a crystal.");
-    private final Setting<SwingHand> placeHand = this.sgRender.e("Place Hand", SwingHand.RealHand, "Which hand should be swung.", this.placeSwing::get);
-    private final Setting<Boolean> attackSwing = this.sgRender.b("Attack Swing", false, "Renders swing animation when attacking a crystal.");
-    private final Setting<SwingHand> attackHand = this.sgRender.e("Attack Hand", SwingHand.RealHand, "Which hand should be swung.", this.attackSwing::get);
-    private final Setting<Boolean> animationColor = this.sgRender.b("Animation Color", true, "Changes color smoothly.");
-    private final Setting<AnimationMode> animationMode = this.sgRender.e("Animation Mode", AnimationMode.Full, ".");
-    private final Setting<Double> animationExponent = this.sgRender.d("Animation Exponent", 1.0, 0.0, 10.0, 0.1, ".");
-    private final Setting<RenderShape> renderShape = this.sgRender.e("Render Shape", RenderShape.Full, "Which parts should be rendered.");
-    private final Setting<BlackOutColor> lineStartColor = this.sgRender.c("Line Start Color", new BlackOutColor(255, 0, 0, 0), ".");
-    private final Setting<BlackOutColor> sideStartColor = this.sgRender.c("Side Start Color", new BlackOutColor(255, 0, 0, 0), ".");
-    private final Setting<BlackOutColor> lineEndColor = this.sgRender.c("Line End Color", new BlackOutColor(255, 0, 0, 255), ".");
-    private final Setting<BlackOutColor> sideEndColor = this.sgRender.c("Side End Color", new BlackOutColor(255, 0, 0, 50), ".");
-    private final Setting<RenderShape> instaRenderShape = this.sgRender.e("Insta Render Shape", RenderShape.Full, "Which parts should be rendered.");
-    private final Setting<BlackOutColor> instaLineColor = this.sgRender.c("Insta Line Color", new BlackOutColor(255, 0, 0, 255), ".");
-    private final Setting<BlackOutColor> instaSideColor = this.sgRender.c("Insta Side Color", new BlackOutColor(255, 0, 0, 50), ".");
+            .enumSetting("Mine Hand", SwingHand.RealHand, "Which hand should be swung.", () -> this.mineStartSwing.get() || this.mineEndSwing.get());
+    private final Setting<Boolean> placeSwing = this.sgRender.booleanSetting("Place Swing", false, "Renders swing animation when placing a crystal.");
+    private final Setting<SwingHand> placeHand = this.sgRender.enumSetting("Place Hand", SwingHand.RealHand, "Which hand should be swung.", this.placeSwing::get);
+    private final Setting<Boolean> attackSwing = this.sgRender.booleanSetting("Attack Swing", false, "Renders swing animation when attacking a crystal.");
+    private final Setting<SwingHand> attackHand = this.sgRender.enumSetting("Attack Hand", SwingHand.RealHand, "Which hand should be swung.", this.attackSwing::get);
+    private final Setting<Boolean> animationColor = this.sgRender.booleanSetting("Animation Color", true, "Changes color smoothly.");
+    private final Setting<AnimationMode> animationMode = this.sgRender.enumSetting("Animation Mode", AnimationMode.Full, ".");
+    private final Setting<Double> animationExponent = this.sgRender.doubleSetting("Animation Exponent", 1.0, 0.0, 10.0, 0.1, ".");
+    private final Setting<RenderShape> renderShape = this.sgRender.enumSetting("Render Shape", RenderShape.Full, "Which parts should be rendered.");
+    private final Setting<BlackOutColor> lineStartColor = this.sgRender.colorSetting("Line Start Color", new BlackOutColor(255, 0, 0, 0), ".");
+    private final Setting<BlackOutColor> sideStartColor = this.sgRender.colorSetting("Side Start Color", new BlackOutColor(255, 0, 0, 0), ".");
+    private final Setting<BlackOutColor> lineEndColor = this.sgRender.colorSetting("Line End Color", new BlackOutColor(255, 0, 0, 255), ".");
+    private final Setting<BlackOutColor> sideEndColor = this.sgRender.colorSetting("Side End Color", new BlackOutColor(255, 0, 0, 50), ".");
+    private final Setting<RenderShape> instaRenderShape = this.sgRender.enumSetting("Insta Render Shape", RenderShape.Full, "Which parts should be rendered.");
+    private final Setting<BlackOutColor> instaLineColor = this.sgRender.colorSetting("Insta Line Color", new BlackOutColor(255, 0, 0, 255), ".");
+    private final Setting<BlackOutColor> instaSideColor = this.sgRender.colorSetting("Insta Side Color", new BlackOutColor(255, 0, 0, 50), ".");
     private final TimerList<BlockPos> crystals = new TimerList<>(false);
     private final List<PlayerEntity> enemies = new ArrayList<>();
     public BlockPos minePos = null;

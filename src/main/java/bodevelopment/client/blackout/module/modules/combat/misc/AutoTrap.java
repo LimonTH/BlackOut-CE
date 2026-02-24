@@ -13,7 +13,7 @@ import net.minecraft.util.math.Direction;
 import java.util.Comparator;
 
 public class AutoTrap extends ObsidianModule {
-    private final Setting<TrapMode> trapMode = this.sgGeneral.e("Trap Mode", TrapMode.Both, "");
+    private final Setting<TrapMode> trapMode = this.sgGeneral.enumSetting("Trap Mode", TrapMode.Both, "");
     private final Direction[] directions = new Direction[]{
             Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST, Direction.UP
     };

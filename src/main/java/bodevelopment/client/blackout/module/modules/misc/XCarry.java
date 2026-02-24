@@ -22,11 +22,11 @@ import java.util.function.Predicate;
 
 public class XCarry extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> fill = this.sgGeneral.b("Fill", false, ".");
-    private final Setting<Double> fillDelay = this.sgGeneral.d("Fill Delay", 1.0, 0.0, 5.0, 0.05, ".", this.fill::get);
-    private final Setting<List<Item>> fillItems = this.sgGeneral.il("Items", ".", this.fill::get, Items.END_CRYSTAL, Items.EXPERIENCE_BOTTLE);
-    private final Setting<Integer> minStacks = this.sgGeneral.i("Min Stacks", 1, 0, 10, 1, ".", this.fill::get);
-    private final Setting<Boolean> onlyInventory = this.sgGeneral.b("Only Inventory", true, ".");
+    private final Setting<Boolean> fill = this.sgGeneral.booleanSetting("Fill", false, ".");
+    private final Setting<Double> fillDelay = this.sgGeneral.doubleSetting("Fill Delay", 1.0, 0.0, 5.0, 0.05, ".", this.fill::get);
+    private final Setting<List<Item>> fillItems = this.sgGeneral.itemListSetting("Items", ".", this.fill::get, Items.END_CRYSTAL, Items.EXPERIENCE_BOTTLE);
+    private final Setting<Integer> minStacks = this.sgGeneral.intSetting("Min Stacks", 1, 0, 10, 1, ".", this.fill::get);
+    private final Setting<Boolean> onlyInventory = this.sgGeneral.booleanSetting("Only Inventory", true, ".");
     private long prevMove = 0L;
 
     public XCarry() {

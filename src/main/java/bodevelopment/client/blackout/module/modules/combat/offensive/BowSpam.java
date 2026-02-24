@@ -15,8 +15,8 @@ import net.minecraft.util.Hand;
 public class BowSpam extends Module {
     private static BowSpam INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Integer> charge = this.sgGeneral.i("Charge", 3, 3, 20, 1, "How long to charge until releasing");
-    public final Setting<Boolean> fast = this.sgGeneral.b("Instant", false, "Instantly restarts using after stopping. Might not lose charge.");
+    public final Setting<Integer> charge = this.sgGeneral.intSetting("Charge", 3, 3, 20, 1, "How long to charge until releasing");
+    public final Setting<Boolean> fast = this.sgGeneral.booleanSetting("Instant", false, "Instantly restarts using after stopping. Might not lose charge.");
 
     public BowSpam() {
         super("Bow Spam", "Automatically releases arrows", SubCategory.OFFENSIVE, true);

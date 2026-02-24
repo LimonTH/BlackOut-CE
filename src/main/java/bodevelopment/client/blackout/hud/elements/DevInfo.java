@@ -15,11 +15,11 @@ import java.util.List;
 public class DevInfo extends HudElement {
     public final SettingGroup sgGeneral = this.addGroup("General");
     private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Text");
-    private final Setting<Boolean> bg = this.sgGeneral.b("Background", true, "Renders a background");
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, "Renders a background");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> blur = this.sgGeneral.b("Blur", true, ".");
-    private final Setting<Boolean> rounded = this.sgGeneral.b("Rounded", true, "Renders a background", () -> this.bg.get() || this.blur.get());
-    private final Setting<Boolean> typeColor = this.sgGeneral.b("Use Type Color", false, ".");
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, ".");
+    private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Rounded", true, "Renders a background", () -> this.bg.get() || this.blur.get());
+    private final Setting<Boolean> typeColor = this.sgGeneral.booleanSetting("Use Type Color", false, ".");
     private final List<Component> components = new ArrayList<>();
     private float offset = 0.0F;
 

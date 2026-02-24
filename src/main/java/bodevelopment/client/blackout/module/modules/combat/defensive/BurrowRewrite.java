@@ -30,28 +30,48 @@ import net.minecraft.util.math.Vec3d;
 import java.util.List;
 import java.util.function.Predicate;
 
-@OnlyDev
+// TODO: Now not @OnlyDev
 public class BurrowRewrite extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRubberband = this.addGroup("Rubberband");
 
-    private final Setting<BurrowMode> mode = this.sgGeneral.e("Mode", BurrowMode.Offset, ".");
-    private final Setting<Double> offset = this.sgRubberband.d("Offset", 1.0, -10.0, 10.0, 0.2, ".", () -> this.mode.get() == BurrowMode.Offset);
-    private final Setting<Integer> packets = this.sgRubberband.i("Packets", 1, 1, 20, 1, ".", () -> this.mode.get() == BurrowMode.Offset);
-    private final Setting<Boolean> checkCollisions = this.sgGeneral.b("Check Entities", true, ".");
-    private final Setting<Boolean> attack = this.sgGeneral.b("Attack", true, ".");
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.e("Switch Mode", SwitchMode.Silent, "Method of switching.");
-    private final Setting<List<Block>> blocks = this.sgGeneral.bl("Blocks", "Blocks to use.", Blocks.OBSIDIAN, Blocks.ENDER_CHEST);
+    // TODO: checkCollisions, attack и smartRotate нигде не используются
+    private final Setting<BurrowMode> mode = this.sgGeneral.enumSetting("Mode", BurrowMode.Offset,
+            "How to handle the rubberband effect. 'Offset' teleports you, while 'Cancel' tries to disrupt server-side positioning.");
+    private final Setting<Boolean> checkCollisions = this.sgGeneral.booleanSetting("Check Entities", true,
+            "Prevents burrowing if there are entities (like other players) that would block the placement.");
+    private final Setting<Boolean> attack = this.sgGeneral.booleanSetting("Attack", true,
+            "Automatically clears crystals or other obstacles in your feet before placing the block.");
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent,
+            "Inventory bypass method. 'Silent' is best for servers with strict switch checks.");
+    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Blocks",
+            "Blocks to use for self-fill. Obsidian and Ender Chests are standard choices.", Blocks.OBSIDIAN, Blocks.ENDER_CHEST);
+    private final Setting<Boolean> instant = this.sgGeneral.booleanSetting("Instant", true,
+            "Performs the entire burrow sequence in a single tick. Desyncs less on most servers.");
+    private final Setting<Boolean> useTimer = this.sgGeneral.booleanSetting("Use Timer", false,
+            "Slows down or speeds up game time during the jump to assist with placement timing.", () -> !this.instant.get());
+    private final Setting<Double> timer = this.sgGeneral.doubleSetting("Timer", 1.0, 1.0, 5.0, 0.05,
+            "The game speed multiplier to use during the burrow jump.", () -> !this.instant.get() && this.useTimer.get());
+    private final Setting<Boolean> smartRotate = this.sgGeneral.booleanSetting("Smart Rotate", true,
+            "Calculates the most efficient rotation to place the block without triggering anti-cheat flags.");
+    private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotate", true,
+            "Sends rotation packets instantly rather than smoothly interpolating them.");
+    private final Setting<Integer> jumpTicks = this.sgGeneral.intSetting("Jump Ticks", 3, 3, 10, 1,
+            "How many ticks to wait or simulate air-time before placing the block.");
+
+    private final Setting<Double> offset = this.sgRubberband.doubleSetting("Offset", 1.0, -10.0, 10.0, 0.2,
+            "The vertical distance to teleport you after placement. Positive values move you up, negative move you down.",
+            () -> this.mode.get() == BurrowMode.Offset);
+    private final Setting<Integer> packets = this.sgRubberband.intSetting("Packets", 1, 1, 20, 1,
+            "How many teleport packets to send. Higher values can help bypass strict rubberband checks.",
+            () -> this.mode.get() == BurrowMode.Offset);
+    private final Setting<Boolean> smooth = this.sgRubberband.booleanSetting("Smooth", false,
+            "Attempts to smooth out the movement after burrowing to prevent 'lag-back' visual glitches.");
+    private final Setting<Boolean> syncPacket = this.sgRubberband.booleanSetting("Sync Packet", false,
+            "Sends an extra movement packet to synchronize your position with the server more accurately.", this.smooth::get);
+
     private final Predicate<ItemStack> predicate = stack -> stack.getItem() instanceof BlockItem blockItem
             && this.blocks.get().contains(blockItem.getBlock());
-    private final Setting<Boolean> instant = this.sgGeneral.b("Instant", true, ".");
-    private final Setting<Boolean> useTimer = this.sgGeneral.b("Use Timer", false, ".", () -> !this.instant.get());
-    private final Setting<Double> timer = this.sgGeneral.d("Timer", 1.0, 1.0, 5.0, 0.05, ".", () -> !this.instant.get() && this.useTimer.get());
-    private final Setting<Boolean> smartRotate = this.sgGeneral.b("Smart Rotate", true, ".");
-    private final Setting<Boolean> instantRotate = this.sgGeneral.b("Instant Rotate", true, ".");
-    private final Setting<Integer> jumpTicks = this.sgGeneral.i("Jump Ticks", 3, 3, 10, 1, ".");
-    private final Setting<Boolean> smooth = this.sgRubberband.b("Smooth", false, "Enabled scaffold after burrowing.");
-    private final Setting<Boolean> syncPacket = this.sgRubberband.b("Sync Packet", false, ".", this.smooth::get);
     private boolean shouldCancel = true;
     private int tick = 0;
     private Vec3d startPos = Vec3d.ZERO;

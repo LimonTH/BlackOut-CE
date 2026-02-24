@@ -24,8 +24,8 @@ import java.util.List;
 
 public class SkeletonESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<BlackOutColor> lineColor = this.sgGeneral.c("Line Color", new BlackOutColor(255, 0, 0, 255), ".");
-    private final Setting<BlackOutColor> friendColor = this.sgGeneral.c("Friend Color", new BlackOutColor(0, 255, 255, 255), ".");
+    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Line Color", new BlackOutColor(255, 0, 0, 255), ".");
+    private final Setting<BlackOutColor> friendColor = this.sgGeneral.colorSetting("Friend Color", new BlackOutColor(0, 255, 255, 255), ".");
 
     public SkeletonESP() {
         super("Skeleton ESP", ".", SubCategory.ENTITIES, true);

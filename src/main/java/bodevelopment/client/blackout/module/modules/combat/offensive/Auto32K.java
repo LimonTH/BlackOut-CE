@@ -45,38 +45,38 @@ public class Auto32K extends Module {
     private static Auto32K INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRender = this.addGroup("Render");
-    private final Setting<Mode> mode = this.sgGeneral.e("Mode", Mode.Hopper, ".");
-    private final Setting<Boolean> yCheck = this.sgGeneral.b("Y Check", true, ".", () -> this.mode.get() == Mode.Dispenser);
-    private final Setting<Boolean> serverDir = this.sgGeneral.b("Server Dir", true, ".", () -> this.mode.get() == Mode.Dispenser);
+    private final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Hopper, ".");
+    private final Setting<Boolean> yCheck = this.sgGeneral.booleanSetting("Y Check", true, ".", () -> this.mode.get() == Mode.Dispenser);
+    private final Setting<Boolean> serverDir = this.sgGeneral.booleanSetting("Server Dir", true, ".", () -> this.mode.get() == Mode.Dispenser);
     private final Setting<ObsidianModule.RotationMode> rotationMode = this.sgGeneral
-            .e("Rotation Mode", ObsidianModule.RotationMode.Instant, ".", () -> this.mode.get() == Mode.Dispenser);
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.e("Switch Mode", SwitchMode.Silent, ".");
-    private final Setting<Boolean> currentSlot = this.sgGeneral.b("Current Slot", true, ".");
-    private final Setting<Integer> swordSlot = this.sgGeneral.i("Slot", 1, 1, 9, 1, ".", () -> !this.currentSlot.get());
-    private final Setting<Boolean> silent = this.sgGeneral.b("Silent", true, ".");
-    private final Setting<RenderShape> renderShapeHopper = this.sgRender.e("Hopper Render Shape", RenderShape.Full, "Which parts of render should be rendered.");
+            .enumSetting("Rotation Mode", ObsidianModule.RotationMode.Instant, ".", () -> this.mode.get() == Mode.Dispenser);
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent, ".");
+    private final Setting<Boolean> currentSlot = this.sgGeneral.booleanSetting("Current Slot", true, ".");
+    private final Setting<Integer> swordSlot = this.sgGeneral.intSetting("Slot", 1, 1, 9, 1, ".", () -> !this.currentSlot.get());
+    private final Setting<Boolean> silent = this.sgGeneral.booleanSetting("Silent", true, ".");
+    private final Setting<RenderShape> renderShapeHopper = this.sgRender.enumSetting("Hopper Render Shape", RenderShape.Full, "Which parts of render should be rendered.");
     private final Setting<BlackOutColor> lineColorHopper = this.sgRender
-            .c("Hopper Line Color", new BlackOutColor(255, 255, 255, 255), "Line color of rendered boxes.");
+            .colorSetting("Hopper Line Color", new BlackOutColor(255, 255, 255, 255), "Line color of rendered boxes.");
     private final Setting<BlackOutColor> sideColorHopper = this.sgRender
-            .c("Hopper Side Color", new BlackOutColor(255, 255, 255, 50), "Side color of rendered boxes.");
+            .colorSetting("Hopper Side Color", new BlackOutColor(255, 255, 255, 50), "Side color of rendered boxes.");
     private final Setting<RenderShape> renderShapeShulker = this.sgRender
-            .e("Shulker Render Shape", RenderShape.Full, "Which parts of render should be rendered.");
+            .enumSetting("Shulker Render Shape", RenderShape.Full, "Which parts of render should be rendered.");
     private final Setting<BlackOutColor> lineColorShulker = this.sgRender
-            .c("Shulker Line Color", new BlackOutColor(255, 0, 0, 255), "Line color of rendered boxes.");
+            .colorSetting("Shulker Line Color", new BlackOutColor(255, 0, 0, 255), "Line color of rendered boxes.");
     private final Setting<BlackOutColor> sideColorShulker = this.sgRender
-            .c("Shulker Side Color", new BlackOutColor(255, 0, 0, 50), "Side color of rendered boxes.");
+            .colorSetting("Shulker Side Color", new BlackOutColor(255, 0, 0, 50), "Side color of rendered boxes.");
     private final Setting<RenderShape> renderShapeDispenser = this.sgRender
-            .e("Dispenser Render Shape", RenderShape.Full, "Which parts of render should be rendered.");
+            .enumSetting("Dispenser Render Shape", RenderShape.Full, "Which parts of render should be rendered.");
     private final Setting<BlackOutColor> lineColorDispenser = this.sgRender
-            .c("Dispenser Line Color", new BlackOutColor(255, 255, 255, 255), "Line color of rendered boxes.");
+            .colorSetting("Dispenser Line Color", new BlackOutColor(255, 255, 255, 255), "Line color of rendered boxes.");
     private final Setting<BlackOutColor> sideColorDispenser = this.sgRender
-            .c("Dispenser Side Color", new BlackOutColor(255, 255, 255, 50), "Side color of rendered boxes.");
+            .colorSetting("Dispenser Side Color", new BlackOutColor(255, 255, 255, 50), "Side color of rendered boxes.");
     private final Setting<RenderShape> renderShapeRedstone = this.sgRender
-            .e("Redstone Render Shape", RenderShape.Full, "Which parts of render should be rendered.");
+            .enumSetting("Redstone Render Shape", RenderShape.Full, "Which parts of render should be rendered.");
     private final Setting<BlackOutColor> lineColorRedstone = this.sgRender
-            .c("Redstone Line Color", new BlackOutColor(255, 0, 0, 255), "Line color of rendered boxes.");
+            .colorSetting("Redstone Line Color", new BlackOutColor(255, 0, 0, 255), "Line color of rendered boxes.");
     private final Setting<BlackOutColor> sideColorRedstone = this.sgRender
-            .c("Redstone Side Color", new BlackOutColor(255, 0, 0, 50), "Side color of rendered boxes.");
+            .colorSetting("Redstone Side Color", new BlackOutColor(255, 0, 0, 50), "Side color of rendered boxes.");
     private Direction dispenserDir = null;
     private BlockPos hopperPos = null;
     private BlockPos supportPos = null;

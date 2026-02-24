@@ -27,44 +27,44 @@ public class PacketFly extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgFly = this.addGroup("Fly");
     private final SettingGroup sgPhase = this.addGroup("Phase");
-    private final Setting<Boolean> onGroundSpoof = this.sgGeneral.b("On Ground Spoof", false, "Spoofs on ground.");
-    private final Setting<Boolean> onGround = this.sgGeneral.b("On Ground", false, "Should we tell the server that you are on ground.");
-    private final Setting<BoundsMode> boundsMode = this.sgGeneral.e("Bounds Mode", BoundsMode.Add, "Spoofs on ground.");
+    private final Setting<Boolean> onGroundSpoof = this.sgGeneral.booleanSetting("On Ground Spoof", false, "Spoofs on ground.");
+    private final Setting<Boolean> onGround = this.sgGeneral.booleanSetting("On Ground", false, "Should we tell the server that you are on ground.");
+    private final Setting<BoundsMode> boundsMode = this.sgGeneral.enumSetting("Bounds Mode", BoundsMode.Add, "Spoofs on ground.");
     private final Setting<Boolean> setXZ = this.sgGeneral
-            .b("Set XZ", false, "Doesn't move horizontally and vertically in the same packet.", () -> this.boundsMode.get() == BoundsMode.Set);
+            .booleanSetting("Set XZ", false, "Doesn't move horizontally and vertically in the same packet.", () -> this.boundsMode.get() == BoundsMode.Set);
     public final Setting<Integer> xzBound = this.sgGeneral
-            .i("XZ Bound", 0, -1337, 1337, 1, "Bounds offset horizontally.", () -> this.boundsMode.get() == BoundsMode.Add || this.setXZ.get());
+            .intSetting("XZ Bound", 0, -1337, 1337, 1, "Bounds offset horizontally.", () -> this.boundsMode.get() == BoundsMode.Add || this.setXZ.get());
     private final Setting<Boolean> setY = this.sgGeneral
-            .b("Set Y", true, "Doesn't move horizontally and vertically in the same packet.", () -> this.boundsMode.get() == BoundsMode.Set);
+            .booleanSetting("Set Y", true, "Doesn't move horizontally and vertically in the same packet.", () -> this.boundsMode.get() == BoundsMode.Set);
     public final Setting<Integer> yBound = this.sgGeneral
-            .i("Y Bound", -87, -1337, 1337, 1, "Bounds offset vertically.", () -> this.boundsMode.get() == BoundsMode.Add || this.setY.get());
-    private final Setting<Boolean> strictVertical = this.sgGeneral.b("Strict Vertical", false, "Doesn't move horizontally and vertically in the same packet.");
-    private final Setting<Boolean> syncPacket = this.sgGeneral.b("Sync Packet", false, ".");
-    private final Setting<Boolean> noClip = this.sgGeneral.b("No Clip", true, ".");
-    private final Setting<Boolean> resync = this.sgGeneral.b("Resync", true, ".");
-    private final Setting<Double> packets = this.sgFly.d("Fly Packets", 1.0, 0.0, 10.0, 0.1, "How many packets to send every movement tick.");
-    private final Setting<Double> flySpeed = this.sgFly.d("Fly Speed", 0.2873, 0.0, 1.0, 0.001, "Distance to travel each packet.");
-    private final Setting<Boolean> fastVertical = this.sgFly.b("Fast Vertical Fly", false, "Sends multiple packets every movement tick while going up.");
-    private final Setting<Double> downSpeed = this.sgFly.d("Fly Down Speed", 0.062, 0.0, 10.0, 0.01, "How fast to fly down.");
-    private final Setting<Double> upSpeed = this.sgFly.d("Fly Up Speed", 0.062, 0.0, 10.0, 0.01, "How fast to fly up.");
-    private final Setting<Boolean> flyEffects = this.sgFly.b("Fly Effects", true, ".");
-    private final Setting<Boolean> flyRotate = this.sgFly.b("Fly Rotate", true, "Allows rotating while phasing.");
-    private final Setting<Boolean> stillFlyRotate = this.sgFly.b("Still Fly Rotate", true, ".", this.flyRotate::get);
-    private final Setting<Boolean> antiKick = this.sgFly.b("Anti-Kick", false, "Slowly falls down.");
+            .intSetting("Y Bound", -87, -1337, 1337, 1, "Bounds offset vertically.", () -> this.boundsMode.get() == BoundsMode.Add || this.setY.get());
+    private final Setting<Boolean> strictVertical = this.sgGeneral.booleanSetting("Strict Vertical", false, "Doesn't move horizontally and vertically in the same packet.");
+    private final Setting<Boolean> syncPacket = this.sgGeneral.booleanSetting("Sync Packet", false, ".");
+    private final Setting<Boolean> noClip = this.sgGeneral.booleanSetting("No Clip", true, ".");
+    private final Setting<Boolean> resync = this.sgGeneral.booleanSetting("Resync", true, ".");
+    private final Setting<Double> packets = this.sgFly.doubleSetting("Fly Packets", 1.0, 0.0, 10.0, 0.1, "How many packets to send every movement tick.");
+    private final Setting<Double> flySpeed = this.sgFly.doubleSetting("Fly Speed", 0.2873, 0.0, 1.0, 0.001, "Distance to travel each packet.");
+    private final Setting<Boolean> fastVertical = this.sgFly.booleanSetting("Fast Vertical Fly", false, "Sends multiple packets every movement tick while going up.");
+    private final Setting<Double> downSpeed = this.sgFly.doubleSetting("Fly Down Speed", 0.062, 0.0, 10.0, 0.01, "How fast to fly down.");
+    private final Setting<Double> upSpeed = this.sgFly.doubleSetting("Fly Up Speed", 0.062, 0.0, 10.0, 0.01, "How fast to fly up.");
+    private final Setting<Boolean> flyEffects = this.sgFly.booleanSetting("Fly Effects", true, ".");
+    private final Setting<Boolean> flyRotate = this.sgFly.booleanSetting("Fly Rotate", true, "Allows rotating while phasing.");
+    private final Setting<Boolean> stillFlyRotate = this.sgFly.booleanSetting("Still Fly Rotate", true, ".", this.flyRotate::get);
+    private final Setting<Boolean> antiKick = this.sgFly.booleanSetting("Anti-Kick", false, "Slowly falls down.");
     private final Setting<Double> antiKickAmount = this.sgFly
-            .d("Anti-Kick Multiplier", 1.0, 0.0, 10.0, 1.0, "Fall speed multiplier for antikick (0.04 blocks * multiplier).", this.antiKick::get);
+            .doubleSetting("Anti-Kick Multiplier", 1.0, 0.0, 10.0, 1.0, "Fall speed multiplier for antikick (0.04 blocks * multiplier).", this.antiKick::get);
     private final Setting<Integer> antiKickDelay = this.sgFly
-            .i("Anti-Kick Delay", 10, 1, 100, 1, "Tick delay between moving anti kick packets.", this.antiKick::get);
-    private final Setting<Double> phasePackets = this.sgPhase.d("Phase Packets", 1.0, 0.0, 10.0, 0.1, "How many packets to send every movement tick.");
-    private final Setting<Double> phaseSpeed = this.sgPhase.d("Phase Speed", 0.062, 0.0, 1.0, 0.001, "Distance to travel each packet.");
+            .intSetting("Anti-Kick Delay", 10, 1, 100, 1, "Tick delay between moving anti kick packets.", this.antiKick::get);
+    private final Setting<Double> phasePackets = this.sgPhase.doubleSetting("Phase Packets", 1.0, 0.0, 10.0, 0.1, "How many packets to send every movement tick.");
+    private final Setting<Double> phaseSpeed = this.sgPhase.doubleSetting("Phase Speed", 0.062, 0.0, 1.0, 0.001, "Distance to travel each packet.");
     private final Setting<Boolean> phaseFastVertical = this.sgPhase
-            .b("Fast Vertical Phase", false, "Sends multiple packets every movement tick while going up.");
-    private final Setting<Double> phaseDownSpeed = this.sgPhase.d("Phase Down Speed", 0.062, 0.0, 10.0, 0.01, "How fast to phase down.");
-    private final Setting<Double> phaseUpSpeed = this.sgPhase.d("Phase Up Speed", 0.062, 0.0, 10.0, 0.01, "How fast to phase up.");
-    private final Setting<Boolean> phaseEffects = this.sgPhase.b("Phase Effects", false, ".");
-    private final Setting<Boolean> phaseRotate = this.sgPhase.b("Phase Rotate", true, "Allows rotating while phasing.");
-    private final Setting<Boolean> stillPhaseRotate = this.sgPhase.b("Still Phase Rotate", true, ".", this.phaseRotate::get);
-    private final Setting<Boolean> sneakPhase = this.sgPhase.b("Sneak Phase", true, ".");
+            .booleanSetting("Fast Vertical Phase", false, "Sends multiple packets every movement tick while going up.");
+    private final Setting<Double> phaseDownSpeed = this.sgPhase.doubleSetting("Phase Down Speed", 0.062, 0.0, 10.0, 0.01, "How fast to phase down.");
+    private final Setting<Double> phaseUpSpeed = this.sgPhase.doubleSetting("Phase Up Speed", 0.062, 0.0, 10.0, 0.01, "How fast to phase up.");
+    private final Setting<Boolean> phaseEffects = this.sgPhase.booleanSetting("Phase Effects", false, ".");
+    private final Setting<Boolean> phaseRotate = this.sgPhase.booleanSetting("Phase Rotate", true, "Allows rotating while phasing.");
+    private final Setting<Boolean> stillPhaseRotate = this.sgPhase.booleanSetting("Still Phase Rotate", true, ".", this.phaseRotate::get);
+    private final Setting<Boolean> sneakPhase = this.sgPhase.booleanSetting("Sneak Phase", true, ".");
     private final ThreadLocalRandom random = ThreadLocalRandom.current();
     private final List<PlayerMoveC2SPacket> validPackets = new ArrayList<>();
     public boolean moving = false;

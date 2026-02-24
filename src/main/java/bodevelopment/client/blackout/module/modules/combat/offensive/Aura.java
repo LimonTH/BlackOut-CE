@@ -54,16 +54,16 @@ public class Aura extends MoveUpdateModule {
     private final SettingGroup sgBlocking = this.addGroup("Blocking");
     private final SettingGroup sgDelay = this.addGroup("Delay");
     private final SettingGroup sgRender = this.addGroup("Render");
-    private final Setting<TargetMode> targetMode = this.sgGeneral.e("Mode", TargetMode.Health, "How to pick the target", () -> true);
-    private final Setting<Boolean> checkMaxHP = this.sgGeneral.b("Check Max HP", false, "Checks if target has too much hp.");
-    private final Setting<Integer> maxHp = this.sgGeneral.i("Max HP", 36, 0, 100, 1, "Target's health must be under this value.", this.checkMaxHP::get);
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.e("Switch mode", SwitchMode.Disabled, "How to switch to the sword", () -> true);
-    private final Setting<Boolean> onlyWeapon = this.sgGeneral.b("Only Weapon", true, "Only attacks with weapons");
-    private final Setting<Boolean> ignoreNaked = this.sgGeneral.b("Ignore naked", false, "Doesn't hit naked players");
-    private final Setting<Boolean> tpDisable = this.sgGeneral.b("Disable on TP", false, "Should we disable when teleporting to another world");
+    private final Setting<TargetMode> targetMode = this.sgGeneral.enumSetting("Mode", TargetMode.Health, "How to pick the target", () -> true);
+    private final Setting<Boolean> checkMaxHP = this.sgGeneral.booleanSetting("Check Max HP", false, "Checks if target has too much hp.");
+    private final Setting<Integer> maxHp = this.sgGeneral.intSetting("Max HP", 36, 0, 100, 1, "Target's health must be under this value.", this.checkMaxHP::get);
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch mode", SwitchMode.Disabled, "How to switch to the sword", () -> true);
+    private final Setting<Boolean> onlyWeapon = this.sgGeneral.booleanSetting("Only Weapon", true, "Only attacks with weapons");
+    private final Setting<Boolean> ignoreNaked = this.sgGeneral.booleanSetting("Ignore naked", false, "Doesn't hit naked players");
+    private final Setting<Boolean> tpDisable = this.sgGeneral.booleanSetting("Disable on TP", false, "Should we disable when teleporting to another world");
     private final Setting<RotationMode> rotationMode = this.sgGeneral
-            .e("Rotation mode", RotationMode.OnHit, "When should we rotate. Only active if attack rotations are enabled in rotation settings.", () -> true);
-    private final Setting<List<EntityType<?>>> entities = this.sgGeneral.el(
+            .enumSetting("Rotation mode", RotationMode.OnHit, "When should we rotate. Only active if attack rotations are enabled in rotation settings.", () -> true);
+    private final Setting<List<EntityType<?>>> entities = this.sgGeneral.entityFilterdListSetting(
             "Entities",
             "Entities to attack.",
             type ->
@@ -92,25 +92,25 @@ public class Aura extends MoveUpdateModule {
                     && !type.toString().contains("display"),
             EntityType.PLAYER
     );
-    private final Setting<Double> hitChance = this.sgGeneral.d("Hit Chance", 1.0, 0.0, 1.0, 0.01, ".");
-    private final Setting<Double> expand = this.sgGeneral.d("Expand", 0.0, 0.0, 1.0, 0.01, ".");
-    private final Setting<Integer> extrapolation = this.sgGeneral.i("Extrapolation", 1, 0, 3, 1, ".");
-    private final Setting<Boolean> disableDead = this.sgGeneral.b("Disable Dead", false, "Disables the module if you die");
-    private final Setting<Boolean> ignoreRanges = this.sgGeneral.b("Ignore Ranges", false, "Might be useful in cpvp.");
-    private final Setting<Double> hitHeight = this.sgGeneral.d("Hit Height", 0.8, 0.0, 1.0, 0.01, ".");
-    private final Setting<Double> dynamicHeight = this.sgGeneral.d("Dynamic Height", 0.5, 0.0, 1.0, 0.01, ".");
-    private final Setting<Boolean> critSprint = this.sgGeneral.b("Crit Sprint", true, "Sends stop sprint packet before hitting to make sure you crit.");
-    private final Setting<Double> scanRange = this.sgGeneral.d("Scan Range", 0.0, 0.0, 10.0, 0.1, ".");
-    private final Setting<Double> wallScanRange = this.sgGeneral.d("Wall Scan Range", 0.0, 0.0, 10.0, 0.1, ".");
-    private final Setting<Boolean> teleport = this.sgTeleport.b("Teleport", false, ".");
-    private final Setting<Integer> maxPackets = this.sgTeleport.i("Max Packets", 1, 1, 10, 1, "Maximum amount of tp packets to send (each direction).");
-    private final Setting<Double> maxDistance = this.sgTeleport.d("Max Distance", 5.0, 1.0, 50.0, 0.5, ".");
-    private final Setting<Boolean> tpBack = this.sgTeleport.b("TP Back", false, ".");
-    private final Setting<Boolean> blocking = this.sgBlocking.b("Blocking", false, ".");
-    private final Setting<BlockMode> block = this.sgBlocking.e("Block Mode", BlockMode.Hold, "Blocks with a sword.", this.blocking::get);
-    private final Setting<BlockRenderMode> blockRender = this.sgBlocking.e("Block Render", BlockRenderMode.Disabled, ".", this.blocking::get);
+    private final Setting<Double> hitChance = this.sgGeneral.doubleSetting("Hit Chance", 1.0, 0.0, 1.0, 0.01, ".");
+    private final Setting<Double> expand = this.sgGeneral.doubleSetting("Expand", 0.0, 0.0, 1.0, 0.01, ".");
+    private final Setting<Integer> extrapolation = this.sgGeneral.intSetting("Extrapolation", 1, 0, 3, 1, ".");
+    private final Setting<Boolean> disableDead = this.sgGeneral.booleanSetting("Disable Dead", false, "Disables the module if you die");
+    private final Setting<Boolean> ignoreRanges = this.sgGeneral.booleanSetting("Ignore Ranges", false, "Might be useful in cpvp.");
+    private final Setting<Double> hitHeight = this.sgGeneral.doubleSetting("Hit Height", 0.8, 0.0, 1.0, 0.01, ".");
+    private final Setting<Double> dynamicHeight = this.sgGeneral.doubleSetting("Dynamic Height", 0.5, 0.0, 1.0, 0.01, ".");
+    private final Setting<Boolean> critSprint = this.sgGeneral.booleanSetting("Crit Sprint", true, "Sends stop sprint packet before hitting to make sure you crit.");
+    private final Setting<Double> scanRange = this.sgGeneral.doubleSetting("Scan Range", 0.0, 0.0, 10.0, 0.1, ".");
+    private final Setting<Double> wallScanRange = this.sgGeneral.doubleSetting("Wall Scan Range", 0.0, 0.0, 10.0, 0.1, ".");
+    private final Setting<Boolean> teleport = this.sgTeleport.booleanSetting("Teleport", false, ".");
+    private final Setting<Integer> maxPackets = this.sgTeleport.intSetting("Max Packets", 1, 1, 10, 1, "Maximum amount of tp packets to send (each direction).");
+    private final Setting<Double> maxDistance = this.sgTeleport.doubleSetting("Max Distance", 5.0, 1.0, 50.0, 0.5, ".");
+    private final Setting<Boolean> tpBack = this.sgTeleport.booleanSetting("TP Back", false, ".");
+    private final Setting<Boolean> blocking = this.sgBlocking.booleanSetting("Blocking", false, ".");
+    private final Setting<BlockMode> block = this.sgBlocking.enumSetting("Block Mode", BlockMode.Hold, "Blocks with a sword.", this.blocking::get);
+    private final Setting<BlockRenderMode> blockRender = this.sgBlocking.enumSetting("Block Render", BlockRenderMode.Disabled, ".", this.blocking::get);
     private final Setting<Double> speed = this.sgBlocking
-            .d(
+            .doubleSetting(
                     "Anim Speed",
                     0.5,
                     0.0,
@@ -121,38 +121,38 @@ public class Aura extends MoveUpdateModule {
                             || this.blockRender.get() == BlockRenderMode.Float
                             || this.blockRender.get() == BlockRenderMode.Slap
             );
-    private final Setting<DelayMode> delayMode = this.sgDelay.e("Delay Mode", DelayMode.Smart, ".");
+    private final Setting<DelayMode> delayMode = this.sgDelay.enumSetting("Delay Mode", DelayMode.Smart, ".");
     private final Setting<RandomMode> randomise = this.sgDelay
-            .e("Randomise", RandomMode.Random, "Randomises CPS.", () -> this.delayMode.get() == DelayMode.Basic);
+            .enumSetting("Randomise", RandomMode.Random, "Randomises CPS.", () -> this.delayMode.get() == DelayMode.Basic);
     private final Setting<Double> maxCps = this.sgDelay
-            .d("Max CPS", 12.0, 0.0, 20.0, 0.1, ".", () -> this.delayMode.get() == DelayMode.Basic && this.randomise.get() != RandomMode.Disabled);
+            .doubleSetting("Max CPS", 12.0, 0.0, 20.0, 0.1, ".", () -> this.delayMode.get() == DelayMode.Basic && this.randomise.get() != RandomMode.Disabled);
     private final Setting<Double> minCps = this.sgDelay
-            .d("Min CPS", 8.0, 0.0, 20.0, 0.1, ".", () -> this.delayMode.get() == DelayMode.Basic && this.randomise.get() != RandomMode.Disabled);
+            .doubleSetting("Min CPS", 8.0, 0.0, 20.0, 0.1, ".", () -> this.delayMode.get() == DelayMode.Basic && this.randomise.get() != RandomMode.Disabled);
     private final Setting<Double> cpsSetting = this.sgDelay
-            .d("CPS", 15.0, 0.0, 20.0, 0.1, ".", () -> this.delayMode.get() == DelayMode.Basic && this.randomise.get() == RandomMode.Disabled);
-    private final Setting<Boolean> fatigueSim = this.sgDelay.b("Simulate Fatigue", false, ".", () -> this.delayMode.get() == DelayMode.Basic);
+            .doubleSetting("CPS", 15.0, 0.0, 20.0, 0.1, ".", () -> this.delayMode.get() == DelayMode.Basic && this.randomise.get() == RandomMode.Disabled);
+    private final Setting<Boolean> fatigueSim = this.sgDelay.booleanSetting("Simulate Fatigue", false, ".", () -> this.delayMode.get() == DelayMode.Basic);
     private final Setting<Integer> maxFatigue = this.sgDelay
-            .i("Max Fatigue", 50, 0, 1000, 1, "Max added delay to clicks (milliseconds)", () -> this.delayMode.get() == DelayMode.Basic && this.fatigueSim.get());
+            .intSetting("Max Fatigue", 50, 0, 1000, 1, "Max added delay to clicks (milliseconds)", () -> this.delayMode.get() == DelayMode.Basic && this.fatigueSim.get());
     private final Setting<Integer> fatigueRaise = this.sgDelay
-            .i("Fatigue Raise", 5, 0, 1000, 1, ".", () -> this.delayMode.get() == DelayMode.Basic && this.fatigueSim.get());
+            .intSetting("Fatigue Raise", 5, 0, 1000, 1, ".", () -> this.delayMode.get() == DelayMode.Basic && this.fatigueSim.get());
     private final Setting<Integer> fatigueDecrease = this.sgDelay
-            .i("Fatigue Decrease", 2, 0, 1000, 1, ".", () -> this.delayMode.get() == DelayMode.Basic && this.fatigueSim.get());
-    private final Setting<Double> charge = this.sgDelay.d("Charge", 1.0, 0.0, 1.0, 0.01, ".", () -> this.delayMode.get() == DelayMode.Vanilla);
+            .intSetting("Fatigue Decrease", 2, 0, 1000, 1, ".", () -> this.delayMode.get() == DelayMode.Basic && this.fatigueSim.get());
+    private final Setting<Double> charge = this.sgDelay.doubleSetting("Charge", 1.0, 0.0, 1.0, 0.01, ".", () -> this.delayMode.get() == DelayMode.Vanilla);
     private final Setting<Double> minDelay = this.sgDelay
-            .d("Min Delay", 0.5, 0.0, 1.0, 0.01, ".", () -> this.delayMode.get() == DelayMode.Smart || this.delayMode.get() == DelayMode.Vanilla);
+            .doubleSetting("Min Delay", 0.5, 0.0, 1.0, 0.01, ".", () -> this.delayMode.get() == DelayMode.Smart || this.delayMode.get() == DelayMode.Vanilla);
     private final Setting<Double> randomNegative = this.sgDelay
-            .d("Negative Random", 0.0, 0.0, 1.0, 0.01, ".", () -> this.delayMode.get() == DelayMode.Smart || this.delayMode.get() == DelayMode.Vanilla);
+            .doubleSetting("Negative Random", 0.0, 0.0, 1.0, 0.01, ".", () -> this.delayMode.get() == DelayMode.Smart || this.delayMode.get() == DelayMode.Vanilla);
     private final Setting<Double> randomPositive = this.sgDelay
-            .d("Positive Random", 0.0, 0.0, 1.0, 0.01, ".", () -> this.delayMode.get() == DelayMode.Smart || this.delayMode.get() == DelayMode.Vanilla);
-    private final Setting<Integer> packets = this.sgDelay.i("Packets", 1, 1, 10, 1, ".");
-    private final Setting<Boolean> critSync = this.sgDelay.b("Crit Sync", true, "Delays attacks if you would fall down soon.");
+            .doubleSetting("Positive Random", 0.0, 0.0, 1.0, 0.01, ".", () -> this.delayMode.get() == DelayMode.Smart || this.delayMode.get() == DelayMode.Vanilla);
+    private final Setting<Integer> packets = this.sgDelay.intSetting("Packets", 1, 1, 10, 1, ".");
+    private final Setting<Boolean> critSync = this.sgDelay.booleanSetting("Crit Sync", true, "Delays attacks if you would fall down soon.");
     private final Setting<Double> critVelocity = this.sgDelay
-            .d("Crit Velocity", 0.1, 0.0, 1.0, 0.01, "Attacks when you have reached -x y velocity.", this.critSync::get);
-    private final Setting<Boolean> hitParticles = this.sgRender.b("Hit Particles", false, "Spawn particles when hitting enemy.");
-    private final Setting<Boolean> swing = this.sgRender.b("Swing", true, "Renders swing animation when attacking an entity.");
-    private final Setting<SwingHand> swingHand = this.sgRender.e("Swing Hand", SwingHand.RealHand, "Which hand should be swung.", this.swing::get);
-    private final Setting<RenderMode> renderMode = this.sgRender.e("Render Mode", RenderMode.Hit, ".");
-    private final Setting<Double> renderTime = this.sgRender.d("Render Time", 1.0, 0.0, 10.0, 0.1, ".");
+            .doubleSetting("Crit Velocity", 0.1, 0.0, 1.0, 0.01, "Attacks when you have reached -x y velocity.", this.critSync::get);
+    private final Setting<Boolean> hitParticles = this.sgRender.booleanSetting("Hit Particles", false, "Spawn particles when hitting enemy.");
+    private final Setting<Boolean> swing = this.sgRender.booleanSetting("Swing", true, "Renders swing animation when attacking an entity.");
+    private final Setting<SwingHand> swingHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand, "Which hand should be swung.", this.swing::get);
+    private final Setting<RenderMode> renderMode = this.sgRender.enumSetting("Render Mode", RenderMode.Hit, ".");
+    private final Setting<Double> renderTime = this.sgRender.doubleSetting("Render Time", 1.0, 0.0, 10.0, 0.1, ".");
     private final BoxMultiSetting rendering = BoxMultiSetting.of(this.sgRender, "Box");
     private final RenderList<Box> renderBoxes = RenderList.getList(false);
     private final ExtrapolationMap extrapolationMap = new ExtrapolationMap();

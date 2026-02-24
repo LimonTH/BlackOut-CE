@@ -13,10 +13,10 @@ import net.minecraft.util.math.MathHelper;
 public class FovModifier extends Module {
     private static FovModifier INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Double> fov = this.sgGeneral.d("FOV", 100.0, 10.0, 170.0, 5.0, ".");
-    public final Setting<KeyBind> zoomKey = this.sgGeneral.k("Zoom Key", ".");
-    public final Setting<Double> zoom = this.sgGeneral.d("Zoom FOV", 30.0, 5.0, 100.0, 1.0, ".", () -> this.zoomKey.get().value != null);
-    public final Setting<Double> zoomTime = this.sgGeneral.d("Zoom Time", 0.3, 0.0, 5.0, 0.05, ".", () -> this.zoomKey.get().value != null);
+    public final Setting<Double> fov = this.sgGeneral.doubleSetting("FOV", 100.0, 10.0, 170.0, 5.0, ".");
+    public final Setting<KeyBind> zoomKey = this.sgGeneral.keySetting("Zoom Key", ".");
+    public final Setting<Double> zoom = this.sgGeneral.doubleSetting("Zoom FOV", 30.0, 5.0, 100.0, 1.0, ".", () -> this.zoomKey.get().value != null);
+    public final Setting<Double> zoomTime = this.sgGeneral.doubleSetting("Zoom Time", 0.3, 0.0, 5.0, 0.05, ".", () -> this.zoomKey.get().value != null);
     private double progress = 0.0;
 
     public FovModifier() {

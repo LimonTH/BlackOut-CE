@@ -17,27 +17,27 @@ public class SwingSettings extends SettingsModule {
     private final SettingGroup sgUse = this.addGroup("Use");
     private final SettingGroup sgMining = this.addGroup("Mining");
 
-    public final Setting<Boolean> interact = this.sgInteract.b("Interact Swing", true,
+    public final Setting<Boolean> interact = this.sgInteract.booleanSetting("Interact Swing", true,
             "Performs a hand swing animation when interacting with blocks (chests, levers, etc.) to synchronize visual actions with server-side events.");
-    public final Setting<SwingState> interactState = this.sgInteract.e("Interact State", SwingState.Post,
+    public final Setting<SwingState> interactState = this.sgInteract.enumSetting("Interact State", SwingState.Post,
             "Determines whether the swing packet is sent before (Pre) or after (Post) the interaction packet.", this.interact::get);
 
-    public final Setting<Boolean> blockPlace = this.sgBlockPlace.b("Block Place Swing", true,
+    public final Setting<Boolean> blockPlace = this.sgBlockPlace.booleanSetting("Block Place Swing", true,
             "Triggers the swing animation when placing blocks, making your actions appear legitimate to other players and anti-cheats.");
-    public final Setting<SwingState> blockPlaceState = this.sgBlockPlace.e("Block Place State", SwingState.Post,
+    public final Setting<SwingState> blockPlaceState = this.sgBlockPlace.enumSetting("Block Place State", SwingState.Post,
             "Determines whether the swing packet is sent before or after the block placement packet.", this.blockPlace::get);
 
-    public final Setting<Boolean> attack = this.sgAttack.b("Attack Swing", true,
+    public final Setting<Boolean> attack = this.sgAttack.booleanSetting("Attack Swing", true,
             "Swings your hand when attacking entities. Disabling this may lead to 'NoSwing' flags on some anti-cheats.");
-    public final Setting<SwingState> attackState = this.sgAttack.e("Attack State", SwingState.Post,
+    public final Setting<SwingState> attackState = this.sgAttack.enumSetting("Attack State", SwingState.Post,
             "Determines if the swing animation is processed before or after the attack packet is dispatched.", this.attack::get);
 
-    public final Setting<Boolean> use = this.sgUse.b("Use Swing", false,
+    public final Setting<Boolean> use = this.sgUse.booleanSetting("Use Swing", false,
             "Forces a hand swing animation when using items like food or bows. Typically not required for NCP bypasses but adds visual realism.");
-    public final Setting<SwingState> useState = this.sgUse.e("Use State", SwingState.Post,
+    public final Setting<SwingState> useState = this.sgUse.enumSetting("Use State", SwingState.Post,
             "Controls the timing of the swing animation relative to the item usage packet.", this.use::get);
 
-    public final Setting<MiningSwingState> mining = this.sgMining.e("Mining Swing State", MiningSwingState.Double,
+    public final Setting<MiningSwingState> mining = this.sgMining.enumSetting("Mining Swing State", MiningSwingState.Double,
             "Controls the hand swing logic specifically for mining actions. 'Double' can help with certain block-resetting bypasses.");
 
     public SwingSettings() {

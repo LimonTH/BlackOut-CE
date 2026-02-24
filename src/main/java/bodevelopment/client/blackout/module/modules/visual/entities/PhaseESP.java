@@ -33,20 +33,20 @@ public class PhaseESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgColor = this.addGroup("Color");
 
-    public final Setting<Boolean> bg = this.sgGeneral.b("Background", true, ".");
-    public final Setting<Boolean> rounded = this.sgGeneral.b("Rounded", true, ".", this.bg::get);
-    public final Setting<Boolean> shadow = this.sgGeneral.b("Shadow", true, ".", this.bg::get);
-    private final Setting<Boolean> blur = this.sgGeneral.b("Blur", true, ".", this.bg::get);
-    private final Setting<BlackOutColor> bgClose = this.sgColor.c("Background Close", new BlackOutColor(8, 8, 8, 120), ".", this.bg::get);
-    private final Setting<BlackOutColor> bgFar = this.sgColor.c("Background Far", new BlackOutColor(0, 0, 0, 120), ".", this.bg::get);
-    private final Setting<BlackOutColor> shdwClose = this.sgColor.c("Shadow Close", new BlackOutColor(8, 8, 8, 100), ".", this.bg::get);
-    private final Setting<BlackOutColor> shdwFar = this.sgColor.c("Shadow Far", new BlackOutColor(0, 0, 0, 100), ".", this.bg::get);
-    private final Setting<String> infoText = this.sgGeneral.s("Info Text", "Phased", "What to say on the tag");
-    private final Setting<Double> scale = this.sgGeneral.d("Scale", 1.0, 0.0, 10.0, 0.1, ".");
+    public final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, ".");
+    public final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Rounded", true, ".", this.bg::get);
+    public final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Shadow", true, ".", this.bg::get);
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, ".", this.bg::get);
+    private final Setting<BlackOutColor> bgClose = this.sgColor.colorSetting("Background Close", new BlackOutColor(8, 8, 8, 120), ".", this.bg::get);
+    private final Setting<BlackOutColor> bgFar = this.sgColor.colorSetting("Background Far", new BlackOutColor(0, 0, 0, 120), ".", this.bg::get);
+    private final Setting<BlackOutColor> shdwClose = this.sgColor.colorSetting("Shadow Close", new BlackOutColor(8, 8, 8, 100), ".", this.bg::get);
+    private final Setting<BlackOutColor> shdwFar = this.sgColor.colorSetting("Shadow Far", new BlackOutColor(0, 0, 0, 100), ".", this.bg::get);
+    private final Setting<String> infoText = this.sgGeneral.stringSetting("Info Text", "Phased", "What to say on the tag");
+    private final Setting<Double> scale = this.sgGeneral.doubleSetting("Scale", 1.0, 0.0, 10.0, 0.1, ".");
     private final Setting<Double> scaleInc = this.sgGeneral
-            .d("Scale Increase", 1.0, 0.0, 5.0, 0.05, "How much should the scale increase when enemy is further away.");
-    private final Setting<Double> yOffset = this.sgGeneral.d("Y", 0.0, 0.0, 1.0, 0.01, ".");
-    private final Setting<BlackOutColor> txt = this.sgColor.c("Text Color", new BlackOutColor(255, 255, 255, 255), ".");
+            .doubleSetting("Scale Increase", 1.0, 0.0, 5.0, 0.05, "How much should the scale increase when enemy is further away.");
+    private final Setting<Double> yOffset = this.sgGeneral.doubleSetting("Y", 0.0, 0.0, 1.0, 0.01, ".");
+    private final Setting<BlackOutColor> txt = this.sgColor.colorSetting("Text Color", new BlackOutColor(255, 255, 255, 255), ".");
     private final List<Entity> players = new ArrayList<>();
     private final MatrixStack stack = new MatrixStack();
 

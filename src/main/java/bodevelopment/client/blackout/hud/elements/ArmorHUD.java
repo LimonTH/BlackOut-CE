@@ -19,15 +19,15 @@ import java.awt.*;
 public class ArmorHUD extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgColor = this.addGroup("Color");
-    private final Setting<Boolean> reversed = this.sgGeneral.b("Reversed", false, ".");
-    private final Setting<Boolean> bg = this.sgGeneral.b("Background", true, "Renders a background");
+    private final Setting<Boolean> reversed = this.sgGeneral.booleanSetting("Reversed", false, ".");
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, "Renders a background");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> armorBG = this.sgGeneral.b("Armor BG", true, ".");
-    private final Setting<Boolean> blur = this.sgGeneral.b("Blur", true, "Renders a Blur effect");
-    private final Setting<Boolean> shadow = this.sgGeneral.b("Shadow", true, "Renders a Shadow");
-    private final Setting<Boolean> bar = this.sgGeneral.b("% Bar", false, "Renders a bar");
-    private final Setting<Boolean> text = this.sgGeneral.b("% Text", true, ".");
-    private final Setting<Boolean> centerText = this.sgGeneral.b("Center Text", true, ".");
+    private final Setting<Boolean> armorBG = this.sgGeneral.booleanSetting("Armor BG", true, ".");
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, "Renders a Blur effect");
+    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Shadow", true, "Renders a Shadow");
+    private final Setting<Boolean> bar = this.sgGeneral.booleanSetting("% Bar", false, "Renders a bar");
+    private final Setting<Boolean> text = this.sgGeneral.booleanSetting("% Text", true, ".");
+    private final Setting<Boolean> centerText = this.sgGeneral.booleanSetting("Center Text", true, ".");
     private final RoundedColorMultiSetting armorBar = RoundedColorMultiSetting.of(this.sgGeneral, "Armor Bar");
     private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Text");
 

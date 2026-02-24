@@ -13,7 +13,7 @@ import net.minecraft.util.math.Vec3d;
 
 public class NoFall extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Mode> mode = this.sgGeneral.e("Mode", Mode.Packet, ".", () -> true);
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Packet, ".", () -> true);
     private float fallDist;
     private float lastFallDist = 0.0F;
     private boolean tg = false;

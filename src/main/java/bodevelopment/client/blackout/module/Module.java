@@ -57,9 +57,9 @@ public class Module extends RotationHelper {
         this.description = description;
         this.category = category;
         this.set(this);
-        this.displayName = this.sgModule.s("Name", name, "");
-        this.bind = (KeyBindSetting) Settings.k("Bind", "This module can be toggled by pressing this key.", null);
-        this.bindMode = this.sgModule.e("Bind Mode", BindMode.Toggle, ".");
+        this.displayName = this.sgModule.stringSetting("Name", name, "");
+        this.bind = (KeyBindSetting) Settings.keySetting("Bind", "This module can be toggled by pressing this key.", null);
+        this.bindMode = this.sgModule.enumSetting("Bind Mode", BindMode.Toggle, ".");
         if (subscribe) {
             BlackOut.EVENT_BUS.subscribe(this, this::shouldSkipListeners);
         }

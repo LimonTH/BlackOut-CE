@@ -43,24 +43,24 @@ import java.util.List;
 public class Scaffold extends MoveUpdateModule {
     private static Scaffold INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Boolean> safeWalk = this.sgGeneral.b("Safe Walk", true, "Stops you from falling off.");
+    public final Setting<Boolean> safeWalk = this.sgGeneral.booleanSetting("Safe Walk", true, "Stops you from falling off.");
     private final SettingGroup sgPlacing = this.addGroup("Placing");
     private final SettingGroup sgAttack = this.addGroup("Attack");
     private final SettingGroup sgRender = this.addGroup("Render");
-    private final Setting<Boolean> smart = this.sgGeneral.b("Smart", true, "Only places on blocks that you can reach.");
-    private final Setting<TowerMode> tower = this.sgGeneral.e("Tower", TowerMode.NCP, "Flies up with blocks.");
-    private final Setting<Boolean> towerMoving = this.sgGeneral.b("Moving Tower", false, "Allows you to move while towering.");
-    private final Setting<Boolean> useTimer = this.sgGeneral.b("Use Timer", false, "Should we use timer.");
-    private final Setting<Double> timer = this.sgGeneral.d("Timer", 1.088, 0.0, 10.0, 0.1, "Should we use timer.", this.useTimer::get);
-    private final Setting<Boolean> constantRotate = this.sgGeneral.b("Constant Rotate", false, "Stops you from falling off.");
-    private final Setting<Double> rotationTime = this.sgGeneral.d("Rotation Time", 1.0, 0.0, 1.0, 0.01, "Keeps rotations for x seconds.");
-    private final Setting<Integer> support = this.sgPlacing.i("Support", 3, 0, 5, 1, "Max amount of support blocks.");
-    private final Setting<Boolean> keepY = this.sgGeneral.b("Keep Y", false, ".");
-    private final Setting<Boolean> allowTower = this.sgGeneral.b("Allow Tower", true, "Doesn't keep y while standing still.", this.keepY::get);
-    private final Setting<YawMode> smartYaw = this.sgGeneral.e("Yaw Mode", YawMode.Normal, ".");
-    private final Setting<SwitchMode> switchMode = this.sgPlacing.e("Switch Mode", SwitchMode.Normal, "Method of switching. Silent is the most reliable.");
+    private final Setting<Boolean> smart = this.sgGeneral.booleanSetting("Smart", true, "Only places on blocks that you can reach.");
+    private final Setting<TowerMode> tower = this.sgGeneral.enumSetting("Tower", TowerMode.NCP, "Flies up with blocks.");
+    private final Setting<Boolean> towerMoving = this.sgGeneral.booleanSetting("Moving Tower", false, "Allows you to move while towering.");
+    private final Setting<Boolean> useTimer = this.sgGeneral.booleanSetting("Use Timer", false, "Should we use timer.");
+    private final Setting<Double> timer = this.sgGeneral.doubleSetting("Timer", 1.088, 0.0, 10.0, 0.1, "Should we use timer.", this.useTimer::get);
+    private final Setting<Boolean> constantRotate = this.sgGeneral.booleanSetting("Constant Rotate", false, "Stops you from falling off.");
+    private final Setting<Double> rotationTime = this.sgGeneral.doubleSetting("Rotation Time", 1.0, 0.0, 1.0, 0.01, "Keeps rotations for x seconds.");
+    private final Setting<Integer> support = this.sgPlacing.intSetting("Support", 3, 0, 5, 1, "Max amount of support blocks.");
+    private final Setting<Boolean> keepY = this.sgGeneral.booleanSetting("Keep Y", false, ".");
+    private final Setting<Boolean> allowTower = this.sgGeneral.booleanSetting("Allow Tower", true, "Doesn't keep y while standing still.", this.keepY::get);
+    private final Setting<YawMode> smartYaw = this.sgGeneral.enumSetting("Yaw Mode", YawMode.Normal, ".");
+    private final Setting<SwitchMode> switchMode = this.sgPlacing.enumSetting("Switch Mode", SwitchMode.Normal, "Method of switching. Silent is the most reliable.");
     private final Setting<List<Block>> blocks = this.sgPlacing
-            .bl(
+            .blockListSetting(
                     "Blocks",
                     "Blocks to use.",
                     Blocks.OBSIDIAN,
@@ -70,34 +70,34 @@ public class Scaffold extends MoveUpdateModule {
                     Blocks.OAK_PLANKS,
                     Blocks.TNT
             );
-    private final Setting<Surround.PlaceDelayMode> placeDelayMode = this.sgPlacing.e("Place Delay Mode", Surround.PlaceDelayMode.Ticks, ".");
+    private final Setting<Surround.PlaceDelayMode> placeDelayMode = this.sgPlacing.enumSetting("Place Delay Mode", Surround.PlaceDelayMode.Ticks, ".");
     private final Setting<Integer> placeDelayT = this.sgPlacing
-            .i("Place Tick Delay", 1, 0, 20, 1, "Tick delay between places.", () -> this.placeDelayMode.get() == Surround.PlaceDelayMode.Ticks);
+            .intSetting("Place Tick Delay", 1, 0, 20, 1, "Tick delay between places.", () -> this.placeDelayMode.get() == Surround.PlaceDelayMode.Ticks);
     private final Setting<Double> placeDelayS = this.sgPlacing
-            .d("Place Delay", 0.1, 0.0, 1.0, 0.01, "Delay between places.", () -> this.placeDelayMode.get() == Surround.PlaceDelayMode.Seconds);
-    private final Setting<Integer> places = this.sgPlacing.i("Places", 1, 1, 20, 1, "How many blocks to place each time.");
+            .doubleSetting("Place Delay", 0.1, 0.0, 1.0, 0.01, "Delay between places.", () -> this.placeDelayMode.get() == Surround.PlaceDelayMode.Seconds);
+    private final Setting<Integer> places = this.sgPlacing.intSetting("Places", 1, 1, 20, 1, "How many blocks to place each time.");
     private final Setting<Double> cooldown = this.sgPlacing
-            .d("Cooldown", 0.3, 0.0, 1.0, 0.01, "Waits x seconds before trying to place at the same position if there is more than 1 missing block.");
-    private final Setting<Integer> extrapolation = this.sgPlacing.i("Extrapolation", 3, 1, 20, 1, "Predicts movement.");
-    private final Setting<Boolean> instantRotate = this.sgGeneral.b("Instant Rotate", true, "Ignores rotation speed limit.");
-    private final Setting<Boolean> attack = this.sgAttack.b("Attack", true, "Attacks crystals blocking surround.");
+            .doubleSetting("Cooldown", 0.3, 0.0, 1.0, 0.01, "Waits x seconds before trying to place at the same position if there is more than 1 missing block.");
+    private final Setting<Integer> extrapolation = this.sgPlacing.intSetting("Extrapolation", 3, 1, 20, 1, "Predicts movement.");
+    private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotate", true, "Ignores rotation speed limit.");
+    private final Setting<Boolean> attack = this.sgAttack.booleanSetting("Attack", true, "Attacks crystals blocking surround.");
     private final Setting<Double> attackSpeed = this.sgAttack
-            .d("Attack Speed", 4.0, 0.0, 20.0, 0.05, "How many times to attack every second.", this.attack::get);
-    private final Setting<Double> renderTime = this.sgAttack.d("Render Time", 1.0, 0.0, 5.0, 0.1, "How many times to attack every second.", this.attack::get);
-    private final Setting<Boolean> drawBlocks = this.sgRender.b("Show Blocks", true, "Draws the amount of blocks you have");
-    private final Setting<BlackOutColor> customColor = this.sgRender.c("Text Color", new BlackOutColor(255, 255, 255, 255), "Text Color", this.drawBlocks::get);
-    private final Setting<Boolean> bg = this.sgRender.b("Background", true, "Draws a background", this.drawBlocks::get);
+            .doubleSetting("Attack Speed", 4.0, 0.0, 20.0, 0.05, "How many times to attack every second.", this.attack::get);
+    private final Setting<Double> renderTime = this.sgAttack.doubleSetting("Render Time", 1.0, 0.0, 5.0, 0.1, "How many times to attack every second.", this.attack::get);
+    private final Setting<Boolean> drawBlocks = this.sgRender.booleanSetting("Show Blocks", true, "Draws the amount of blocks you have");
+    private final Setting<BlackOutColor> customColor = this.sgRender.colorSetting("Text Color", new BlackOutColor(255, 255, 255, 255), "Text Color", this.drawBlocks::get);
+    private final Setting<Boolean> bg = this.sgRender.booleanSetting("Background", true, "Draws a background", this.drawBlocks::get);
     private final Setting<BlackOutColor> bgColor = this.sgRender
-            .c("Background Color", new BlackOutColor(0, 0, 0, 50), ".", () -> this.drawBlocks.get() && this.bg.get());
-    private final Setting<Boolean> blur = this.sgRender.b("Block Blur", true, ".", this.drawBlocks::get);
-    private final Setting<Boolean> shadow = this.sgRender.b("Shadow", true, ".", this.drawBlocks::get);
+            .colorSetting("Background Color", new BlackOutColor(0, 0, 0, 50), ".", () -> this.drawBlocks.get() && this.bg.get());
+    private final Setting<Boolean> blur = this.sgRender.booleanSetting("Block Blur", true, ".", this.drawBlocks::get);
+    private final Setting<Boolean> shadow = this.sgRender.booleanSetting("Shadow", true, ".", this.drawBlocks::get);
     private final Setting<BlackOutColor> shadowColor = this.sgRender
-            .c("Shadow Color", new BlackOutColor(0, 0, 0, 100), ".", () -> this.drawBlocks.get() && this.bg.get() && this.shadow.get());
-    private final Setting<Boolean> placeSwing = this.sgRender.b("Place Swing", true, "Renders swing animation when placing a block.");
-    private final Setting<SwingHand> placeHand = this.sgRender.e("Place Swing Hand", SwingHand.RealHand, "Which hand should be swung.", this.placeSwing::get);
-    private final Setting<Boolean> attackSwing = this.sgRender.b("Attack Swing", true, "Renders swing animation when attacking a block.");
-    private final Setting<SwingHand> attackHand = this.sgRender.e("Attack Swing Hand", SwingHand.RealHand, "Which hand should be swung.", this.attackSwing::get);
-    private final Setting<RenderMode> renderMode = this.sgRender.e("Render Mode", RenderMode.Placed, "Which parts should be rendered.");
+            .colorSetting("Shadow Color", new BlackOutColor(0, 0, 0, 100), ".", () -> this.drawBlocks.get() && this.bg.get() && this.shadow.get());
+    private final Setting<Boolean> placeSwing = this.sgRender.booleanSetting("Place Swing", true, "Renders swing animation when placing a block.");
+    private final Setting<SwingHand> placeHand = this.sgRender.enumSetting("Place Swing Hand", SwingHand.RealHand, "Which hand should be swung.", this.placeSwing::get);
+    private final Setting<Boolean> attackSwing = this.sgRender.booleanSetting("Attack Swing", true, "Renders swing animation when attacking a block.");
+    private final Setting<SwingHand> attackHand = this.sgRender.enumSetting("Attack Swing Hand", SwingHand.RealHand, "Which hand should be swung.", this.attackSwing::get);
+    private final Setting<RenderMode> renderMode = this.sgRender.enumSetting("Render Mode", RenderMode.Placed, "Which parts should be rendered.");
     private final BoxMultiSetting rendering = BoxMultiSetting.of(this.sgRender);
     private final MatrixStack stack = new MatrixStack();
     private final TimerList<BlockPos> placed = new TimerList<>(true);

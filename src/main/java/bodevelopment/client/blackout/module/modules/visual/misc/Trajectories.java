@@ -50,16 +50,16 @@ import java.util.function.Function;
 public class Trajectories extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgColor = this.addGroup("Color");
-    public final Setting<Trails.ColorMode> colorMode = this.sgColor.e("Color Mode", Trails.ColorMode.Custom, "What color to use");
+    public final Setting<Trails.ColorMode> colorMode = this.sgColor.enumSetting("Color Mode", Trails.ColorMode.Custom, "What color to use");
     private final Setting<Double> saturation = this.sgColor
-            .d("Rainbow Saturation", 0.8, 0.0, 1.0, 0.1, ".", () -> this.colorMode.get() == Trails.ColorMode.Rainbow);
+            .doubleSetting("Rainbow Saturation", 0.8, 0.0, 1.0, 0.1, ".", () -> this.colorMode.get() == Trails.ColorMode.Rainbow);
     private final Setting<BlackOutColor> clr = this.sgColor
-            .c("Line Color", new BlackOutColor(255, 255, 255, 255), ".", () -> this.colorMode.get() != Trails.ColorMode.Rainbow);
+            .colorSetting("Line Color", new BlackOutColor(255, 255, 255, 255), ".", () -> this.colorMode.get() != Trails.ColorMode.Rainbow);
     private final Setting<BlackOutColor> clr1 = this.sgColor
-            .c("Wave Color", new BlackOutColor(175, 175, 175, 255), ".", () -> this.colorMode.get() != Trails.ColorMode.Rainbow);
-    private final Setting<Integer> maxTicks = this.sgGeneral.i("Max Ticks", 500, 0, 500, 5, ".");
-    private final Setting<Double> fadeLength = this.sgColor.d("Fade Length", 1.0, 0.0, 10.0, 0.1, ".");
-    private final Setting<Boolean> playerVelocity = this.sgGeneral.b("Player Velocity", true, ".");
+            .colorSetting("Wave Color", new BlackOutColor(175, 175, 175, 255), ".", () -> this.colorMode.get() != Trails.ColorMode.Rainbow);
+    private final Setting<Integer> maxTicks = this.sgGeneral.intSetting("Max Ticks", 500, 0, 500, 5, ".");
+    private final Setting<Double> fadeLength = this.sgColor.doubleSetting("Fade Length", 1.0, 0.0, 10.0, 0.1, ".");
+    private final Setting<Boolean> playerVelocity = this.sgGeneral.booleanSetting("Player Velocity", true, ".");
     private final Map<Item, SimulationData> dataMap = new HashMap<>();
 
     public Trajectories() {

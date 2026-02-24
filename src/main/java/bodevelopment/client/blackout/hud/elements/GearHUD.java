@@ -17,12 +17,12 @@ import java.util.List;
 public class GearHUD extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgColor = this.addGroup("Color");
-    private final Setting<Double> textScale = this.sgScale.d("Text Scale", 1.0, 0.0, 5.0, 0.05, ".");
-    private final Setting<Boolean> bg = this.sgGeneral.b("Background", true, "Renders a background");
+    private final Setting<Double> textScale = this.sgScale.doubleSetting("Text Scale", 1.0, 0.0, 5.0, 0.05, ".");
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, "Renders a background");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> blur = this.sgGeneral.b("Blur", true, "Renders a Blur effect");
-    private final Setting<Boolean> shadow = this.sgGeneral.b("Shadow", true, "Renders a Shadow");
-    private final Setting<List<Item>> items = this.sgGeneral.il("Items", ".", Items.END_CRYSTAL, Items.TOTEM_OF_UNDYING);
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, "Renders a Blur effect");
+    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Shadow", true, "Renders a Shadow");
+    private final Setting<List<Item>> items = this.sgGeneral.itemListSetting("Items", ".", Items.END_CRYSTAL, Items.TOTEM_OF_UNDYING);
     private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Text");
 
     public GearHUD() {

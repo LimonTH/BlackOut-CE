@@ -28,9 +28,9 @@ import java.util.List;
 
 public class Tracers extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<List<EntityType<?>>> entityTypes = this.sgGeneral.el("Entities", ".", EntityType.PLAYER);
-    private final Setting<BlackOutColor> line = this.sgGeneral.c("Line Color", new BlackOutColor(255, 255, 255, 100), ".");
-    private final Setting<BlackOutColor> friendLine = this.sgGeneral.c("Friend Line Color", new BlackOutColor(150, 150, 255, 100), ".");
+    private final Setting<List<EntityType<?>>> entityTypes = this.sgGeneral.entityListSetting("Entities", ".", EntityType.PLAYER);
+    private final Setting<BlackOutColor> line = this.sgGeneral.colorSetting("Line Color", new BlackOutColor(255, 255, 255, 100), ".");
+    private final Setting<BlackOutColor> friendLine = this.sgGeneral.colorSetting("Friend Line Color", new BlackOutColor(150, 150, 255, 100), ".");
     private final MatrixStack stack = new MatrixStack();
     private final List<Entity> entities = new ArrayList<>();
 

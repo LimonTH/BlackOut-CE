@@ -14,7 +14,7 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 
 public class SuperKnockback extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Boolean> check = this.sgGeneral.b("Move Check", true, "Checks if you are moving to prevent sprinting in place.");
+    public final Setting<Boolean> check = this.sgGeneral.booleanSetting("Move Check", true, "Checks if you are moving to prevent sprinting in place.");
 
     public SuperKnockback() {
         super("Super Knockback", "Tries to give more KB", SubCategory.MISC_COMBAT, true);

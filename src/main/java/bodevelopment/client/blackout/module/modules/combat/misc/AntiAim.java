@@ -21,23 +21,23 @@ import java.util.concurrent.ThreadLocalRandom;
 public class AntiAim extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgIgnore = this.addGroup("Ignore");
-    private final Setting<Mode> mode = this.sgGeneral.e("Mode", Mode.Custom, ".");
+    private final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Custom, ".");
     private final Setting<YawMode> yawMode = this.sgGeneral
-            .e("Yaw Mode", YawMode.Normal, ".", () -> this.mode.get() != Mode.Spin && this.mode.get() != Mode.Enemy);
-    private final Setting<Double> range = this.sgGeneral.d("Range", 20.0, 0.0, 500.0, 5.0, ".", () -> this.mode.get() == Mode.Enemy);
-    private final Setting<Double> spinSpeed = this.sgGeneral.d("Spin Speed", 5.0, 0.0, 100.0, 1.0, ".", () -> this.mode.get() == Mode.Spin);
-    private final Setting<Double> csgoYawMin = this.sgGeneral.d("CSGO Yaw Min", -180.0, -180.0, 180.0, 1.0, ".", () -> this.mode.get() == Mode.CSGO);
-    private final Setting<Double> csgoYawMax = this.sgGeneral.d("CSGO Yaw Max", 180.0, -180.0, 180.0, 1.0, ".", () -> this.mode.get() == Mode.CSGO);
-    private final Setting<Double> csgoPitchMin = this.sgGeneral.d("CSGO Pitch Min", -90.0, -90.0, 90.0, 1.0, ".", () -> this.mode.get() == Mode.CSGO);
-    private final Setting<Double> csgoPitchMax = this.sgGeneral.d("CSGO Pitch Max", 90.0, -90.0, 90.0, 1.0, ".", () -> this.mode.get() == Mode.CSGO);
+            .enumSetting("Yaw Mode", YawMode.Normal, ".", () -> this.mode.get() != Mode.Spin && this.mode.get() != Mode.Enemy);
+    private final Setting<Double> range = this.sgGeneral.doubleSetting("Range", 20.0, 0.0, 500.0, 5.0, ".", () -> this.mode.get() == Mode.Enemy);
+    private final Setting<Double> spinSpeed = this.sgGeneral.doubleSetting("Spin Speed", 5.0, 0.0, 100.0, 1.0, ".", () -> this.mode.get() == Mode.Spin);
+    private final Setting<Double> csgoYawMin = this.sgGeneral.doubleSetting("CSGO Yaw Min", -180.0, -180.0, 180.0, 1.0, ".", () -> this.mode.get() == Mode.CSGO);
+    private final Setting<Double> csgoYawMax = this.sgGeneral.doubleSetting("CSGO Yaw Max", 180.0, -180.0, 180.0, 1.0, ".", () -> this.mode.get() == Mode.CSGO);
+    private final Setting<Double> csgoPitchMin = this.sgGeneral.doubleSetting("CSGO Pitch Min", -90.0, -90.0, 90.0, 1.0, ".", () -> this.mode.get() == Mode.CSGO);
+    private final Setting<Double> csgoPitchMax = this.sgGeneral.doubleSetting("CSGO Pitch Max", 90.0, -90.0, 90.0, 1.0, ".", () -> this.mode.get() == Mode.CSGO);
     private final Setting<Double> csgoSpeed = this.sgGeneral
-            .d("CSGO Speed", 5.0, 0.0, 50.0, 1.0, "How many times to update rotations each second.", () -> this.mode.get() == Mode.CSGO);
-    private final Setting<Double> customYaw = this.sgGeneral.d("Yaw", 45.0, -180.0, 180.0, 1.0, ".", () -> this.mode.get() == Mode.Custom);
-    private final Setting<Double> customPitch = this.sgGeneral.d("Pitch", 90.0, -90.0, 90.0, 1.0, ".", () -> this.mode.get() == Mode.Custom);
-    private final Setting<IgnoreMode> iExp = this.sgIgnore.e("Ignore Experience", IgnoreMode.Down, ".");
-    private final Setting<IgnoreMode> iPearl = this.sgIgnore.e("Ignore Pearl", IgnoreMode.FullIgnore, ".");
-    private final Setting<IgnoreMode> iBow = this.sgIgnore.e("Ignore Bow", IgnoreMode.FullIgnore, ".");
-    private final Setting<IgnoreMode> iPotion = this.sgIgnore.e("Ignore Potion", IgnoreMode.FullIgnore, ".");
+            .doubleSetting("CSGO Speed", 5.0, 0.0, 50.0, 1.0, "How many times to update rotations each second.", () -> this.mode.get() == Mode.CSGO);
+    private final Setting<Double> customYaw = this.sgGeneral.doubleSetting("Yaw", 45.0, -180.0, 180.0, 1.0, ".", () -> this.mode.get() == Mode.Custom);
+    private final Setting<Double> customPitch = this.sgGeneral.doubleSetting("Pitch", 90.0, -90.0, 90.0, 1.0, ".", () -> this.mode.get() == Mode.Custom);
+    private final Setting<IgnoreMode> iExp = this.sgIgnore.enumSetting("Ignore Experience", IgnoreMode.Down, ".");
+    private final Setting<IgnoreMode> iPearl = this.sgIgnore.enumSetting("Ignore Pearl", IgnoreMode.FullIgnore, ".");
+    private final Setting<IgnoreMode> iBow = this.sgIgnore.enumSetting("Ignore Bow", IgnoreMode.FullIgnore, ".");
+    private final Setting<IgnoreMode> iPotion = this.sgIgnore.enumSetting("Ignore Potion", IgnoreMode.FullIgnore, ".");
     private double spinYaw;
     private long prevCsgo = 0L;
     private double csgoYaw = 0.0;

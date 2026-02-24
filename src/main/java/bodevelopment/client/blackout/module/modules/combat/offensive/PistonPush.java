@@ -36,33 +36,33 @@ import java.util.Comparator;
 
 public class PistonPush extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Redstone> redstone = this.sgGeneral.e("Redstone", Redstone.Block, "What kind of redstone to use", () -> true);
+    public final Setting<Redstone> redstone = this.sgGeneral.enumSetting("Redstone", Redstone.Block, "What kind of redstone to use", () -> true);
     public final Setting<SwitchMode> pistonSwitch = this.sgGeneral
-            .e("Piston modeMode", SwitchMode.Silent, "Method of switching. Silent is the most reliable.", () -> true);
+            .enumSetting("Piston modeMode", SwitchMode.Silent, "Method of switching. Silent is the most reliable.", () -> true);
     public final Setting<SwitchMode> redstoneSwitch = this.sgGeneral
-            .e("Redstone Switch", SwitchMode.Silent, "Method of switching. Silent is the most reliable.", () -> true);
+            .enumSetting("Redstone Switch", SwitchMode.Silent, "Method of switching. Silent is the most reliable.", () -> true);
     private final SettingGroup sgDelay = this.addGroup("Delay");
     private final SettingGroup sgSwing = this.addGroup("Swing");
     private final SettingGroup sgRender = this.addGroup("Render");
-    private final Setting<Boolean> pauseEat = this.sgGeneral.b("PauseEat", false, "Do we stop while eating");
-    private final Setting<Boolean> onlyHole = this.sgGeneral.b("Only Hole", false, "Toggles when enemy gets out of the hole.");
-    private final Setting<Boolean> toggleMove = this.sgGeneral.b("Toggle Move", false, "Toggles when enemy moves.");
+    private final Setting<Boolean> pauseEat = this.sgGeneral.booleanSetting("PauseEat", false, "Do we stop while eating");
+    private final Setting<Boolean> onlyHole = this.sgGeneral.booleanSetting("Only Hole", false, "Toggles when enemy gets out of the hole.");
+    private final Setting<Boolean> toggleMove = this.sgGeneral.booleanSetting("Toggle Move", false, "Toggles when enemy moves.");
     private final Setting<Double> prDelay = this.sgDelay
-            .d("Piston > Redstone", 0.0, 0.0, 20.0, 0.1, "How many seconds to wait between placing piston and redstone.");
+            .doubleSetting("Piston > Redstone", 0.0, 0.0, 20.0, 0.1, "How many seconds to wait between placing piston and redstone.");
     private final Setting<Double> rmDelay = this.sgDelay
-            .d("Redstone > Mine", 0.0, 0.0, 20.0, 0.1, "How many seconds to wait between placing redstone and starting to mine it.");
+            .doubleSetting("Redstone > Mine", 0.0, 0.0, 20.0, 0.1, "How many seconds to wait between placing redstone and starting to mine it.");
     private final Setting<Double> mpDelay = this.sgDelay
-            .d("Mine > Piston", 0.0, 0.0, 20.0, 0.1, "How many seconds to wait after mining the redstone before starting a new cycle.");
-    private final Setting<Boolean> pistonSwing = this.sgSwing.b("Piston Swing", true, "Renders swing animation when placing a piston.");
-    private final Setting<SwingHand> pistonHand = this.sgSwing.e("Piston Hand", SwingHand.RealHand, "Which hand should be swung.", this.pistonSwing::get);
-    private final Setting<Boolean> redstoneSwing = this.sgSwing.b("Redstone Swing", true, "Renders swing animation when placing redstone.");
-    private final Setting<SwingHand> redstoneHand = this.sgSwing.e("Redstone Hand", SwingHand.RealHand, "Which hand should be swung.", this.redstoneSwing::get);
-    private final Setting<RenderShape> pistonShape = this.sgRender.e("Piston Render Shape", RenderShape.Full, "Which parts should be rendered.");
-    private final Setting<BlackOutColor> psColor = this.sgRender.c("Piston Side Color", new BlackOutColor(255, 255, 255, 50), "Color of rendered sides.");
-    private final Setting<BlackOutColor> plColor = this.sgRender.c("Piston Line Color", new BlackOutColor(255, 255, 255, 255), "Color of rendered lines.");
-    private final Setting<RenderShape> redstoneShape = this.sgRender.e("Redstone Render Shape", RenderShape.Full, "Which parts should be rendered.");
-    private final Setting<BlackOutColor> rsColor = this.sgRender.c("Redstone Side Color", new BlackOutColor(255, 0, 0, 50), "Color of rendered sides.");
-    private final Setting<BlackOutColor> rlColor = this.sgRender.c("Redstone Line Color", new BlackOutColor(255, 0, 0, 255), "Color of rendered lines.");
+            .doubleSetting("Mine > Piston", 0.0, 0.0, 20.0, 0.1, "How many seconds to wait after mining the redstone before starting a new cycle.");
+    private final Setting<Boolean> pistonSwing = this.sgSwing.booleanSetting("Piston Swing", true, "Renders swing animation when placing a piston.");
+    private final Setting<SwingHand> pistonHand = this.sgSwing.enumSetting("Piston Hand", SwingHand.RealHand, "Which hand should be swung.", this.pistonSwing::get);
+    private final Setting<Boolean> redstoneSwing = this.sgSwing.booleanSetting("Redstone Swing", true, "Renders swing animation when placing redstone.");
+    private final Setting<SwingHand> redstoneHand = this.sgSwing.enumSetting("Redstone Hand", SwingHand.RealHand, "Which hand should be swung.", this.redstoneSwing::get);
+    private final Setting<RenderShape> pistonShape = this.sgRender.enumSetting("Piston Render Shape", RenderShape.Full, "Which parts should be rendered.");
+    private final Setting<BlackOutColor> psColor = this.sgRender.colorSetting("Piston Side Color", new BlackOutColor(255, 255, 255, 50), "Color of rendered sides.");
+    private final Setting<BlackOutColor> plColor = this.sgRender.colorSetting("Piston Line Color", new BlackOutColor(255, 255, 255, 255), "Color of rendered lines.");
+    private final Setting<RenderShape> redstoneShape = this.sgRender.enumSetting("Redstone Render Shape", RenderShape.Full, "Which parts should be rendered.");
+    private final Setting<BlackOutColor> rsColor = this.sgRender.colorSetting("Redstone Side Color", new BlackOutColor(255, 0, 0, 50), "Color of rendered sides.");
+    private final Setting<BlackOutColor> rlColor = this.sgRender.colorSetting("Redstone Line Color", new BlackOutColor(255, 0, 0, 255), "Color of rendered lines.");
     private long pistonTime = 0L;
     private long redstoneTime = 0L;
     private long mineTime = 0L;

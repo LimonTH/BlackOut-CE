@@ -13,7 +13,7 @@ import net.minecraft.util.math.Vec3d;
 public class SafeWalk extends Module {
     private static SafeWalk INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Boolean> sneak = this.sgGeneral.b("Sneak", false, ".");
+    public final Setting<Boolean> sneak = this.sgGeneral.booleanSetting("Sneak", false, ".");
 
     public SafeWalk() {
         super("Safe Walk", "Doesn't let you die (i would).", SubCategory.MOVEMENT, true);

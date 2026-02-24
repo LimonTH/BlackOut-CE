@@ -21,10 +21,10 @@ public class AuthMe extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgProfiles = this.addGroup("Profiles");
 
-    private final Setting<Integer> profileCount = this.sgGeneral.i("Profiles", 1, 0, 10, 1, "How many account profiles to use");
-    private final Setting<String> defaultPassword = this.sgGeneral.s("Default Password", "topShotta", "Used if no profile matches your nickname");
-    private final Setting<Double> delay = this.sgGeneral.d("Delay", 2.5, 0.0, 5.0, 0.1, "Delay between receiving message and sending one.");
-    private final Setting<Boolean> passwordConfirm = this.sgGeneral.b("Password Confirm", true, "Type password twice for /register");
+    private final Setting<Integer> profileCount = this.sgGeneral.intSetting("Profiles", 1, 0, 10, 1, "How many account profiles to use");
+    private final Setting<String> defaultPassword = this.sgGeneral.stringSetting("Default Password", "topShotta", "Used if no profile matches your nickname");
+    private final Setting<Double> delay = this.sgGeneral.doubleSetting("Delay", 2.5, 0.0, 5.0, 0.1, "Delay between receiving message and sending one.");
+    private final Setting<Boolean> passwordConfirm = this.sgGeneral.booleanSetting("Password Confirm", true, "Type password twice for /register");
 
     private final List<Setting<String>> nicks = new ArrayList<>();
     private final List<Setting<String>> passes = new ArrayList<>();
@@ -39,8 +39,8 @@ public class AuthMe extends Module {
             final int index = i;
             SingleOut<Boolean> visibility = () -> profileCount.get() >= index;
 
-            nicks.add(this.sgProfiles.s("Nick " + i, "Player" + i, "Nickname for profile " + i, visibility));
-            passes.add(this.sgProfiles.s("Password " + i, "pass" + i, "Password for profile " + i, visibility));
+            nicks.add(this.sgProfiles.stringSetting("Nick " + i, "Player" + i, "Nickname for profile " + i, visibility));
+            passes.add(this.sgProfiles.stringSetting("Password " + i, "pass" + i, "Password for profile " + i, visibility));
         }
     }
 

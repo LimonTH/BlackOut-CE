@@ -19,10 +19,10 @@ import net.minecraft.util.math.Vec3d;
 public class TargetStrafe extends Module {
     private static TargetStrafe INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Double> preferredDist = this.sgGeneral.d("Preferred Dist", 1.0, 0.0, 6.0, 0.1, "");
-    private final Setting<Double> approach = this.sgGeneral.d("Approach", 1.0, 0.0, 1.0, 0.01, "");
-    private final Setting<Boolean> auraTarget = this.sgGeneral.b("Aura Target", true, ".");
-    private final Setting<Double> range = this.sgGeneral.d("Range", 4.0, 0.0, 10.0, 0.1, ".", () -> !this.auraTarget.get());
+    private final Setting<Double> preferredDist = this.sgGeneral.doubleSetting("Preferred Dist", 1.0, 0.0, 6.0, 0.1, "");
+    private final Setting<Double> approach = this.sgGeneral.doubleSetting("Approach", 1.0, 0.0, 1.0, 0.01, "");
+    private final Setting<Boolean> auraTarget = this.sgGeneral.booleanSetting("Aura Target", true, ".");
+    private final Setting<Double> range = this.sgGeneral.doubleSetting("Range", 4.0, 0.0, 10.0, 0.1, ".", () -> !this.auraTarget.get());
     private Double bestYaw;
     private double closest;
     private boolean valid;

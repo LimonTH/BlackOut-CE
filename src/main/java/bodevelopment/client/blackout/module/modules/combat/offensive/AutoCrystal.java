@@ -78,16 +78,16 @@ public class AutoCrystal extends Module {
     private final SettingGroup sgCompatibility = this.addGroup("Compatibility");
     private final SettingGroup sgDebug = this.addGroup("Debug");
 
-    public final Setting<Boolean> raytraceBypass = this.sgRaytraceBypass.b("Raytrace Bypass", false, ".");
-    public final Setting<Integer> raytraceDelay = this.sgRaytraceBypass.i("Raytrace Delay", 10, 0, 100, 1, ".", this.raytraceBypass::get);
-    public final Setting<Integer> raytraceTime = this.sgRaytraceBypass.i("Raytrace Time", 15, 0, 100, 1, ".", this.raytraceBypass::get);
-    public final Setting<Integer> raytraceAngle = this.sgRaytraceBypass.i("Raytrace Min Angle", 45, 0, 100, 1, ".", this.raytraceBypass::get);
-    private final Setting<Double> raytraceBypassValue = this.sgCalculation.d("Raytrace Bypass Value", -4.0, -5.0, 5.0, 0.1, ".", this.raytraceBypass::get);
-    private final Setting<Boolean> place = this.sgPlace.b("Place", true, "Places crystals.");
-    private final Setting<Boolean> pauseEatPlace = this.sgPlace.b("Pause Eat Place", false, "Pauses placing while eating.");
-    private final Setting<ActionSpeedMode> placeSpeedMode = this.sgPlace.e("Place Speed Mode", ActionSpeedMode.Sync, ".");
+    public final Setting<Boolean> raytraceBypass = this.sgRaytraceBypass.booleanSetting("Raytrace Bypass", false, ".");
+    public final Setting<Integer> raytraceDelay = this.sgRaytraceBypass.intSetting("Raytrace Delay", 10, 0, 100, 1, ".", this.raytraceBypass::get);
+    public final Setting<Integer> raytraceTime = this.sgRaytraceBypass.intSetting("Raytrace Time", 15, 0, 100, 1, ".", this.raytraceBypass::get);
+    public final Setting<Integer> raytraceAngle = this.sgRaytraceBypass.intSetting("Raytrace Min Angle", 45, 0, 100, 1, ".", this.raytraceBypass::get);
+    private final Setting<Double> raytraceBypassValue = this.sgCalculation.doubleSetting("Raytrace Bypass Value", -4.0, -5.0, 5.0, 0.1, ".", this.raytraceBypass::get);
+    private final Setting<Boolean> place = this.sgPlace.booleanSetting("Place", true, "Places crystals.");
+    private final Setting<Boolean> pauseEatPlace = this.sgPlace.booleanSetting("Pause Eat Place", false, "Pauses placing while eating.");
+    private final Setting<ActionSpeedMode> placeSpeedMode = this.sgPlace.enumSetting("Place Speed Mode", ActionSpeedMode.Sync, ".");
     private final Setting<Double> placeSpeedLimit = this.sgPlace
-            .d(
+            .doubleSetting(
                     "Place Speed Limit",
                     0.0,
                     0.0,
@@ -97,32 +97,32 @@ public class AutoCrystal extends Module {
                     () -> this.placeSpeedMode.get() == ActionSpeedMode.Sync
             );
     private final Setting<Double> constantPlaceSpeed = this.sgPlace
-            .d("Constant Place Speed", 10.0, 0.0, 20.0, 0.1, ".", () -> this.placeSpeedMode.get() == ActionSpeedMode.Sync);
+            .doubleSetting("Constant Place Speed", 10.0, 0.0, 20.0, 0.1, ".", () -> this.placeSpeedMode.get() == ActionSpeedMode.Sync);
     private final Setting<Double> placeSpeed = this.sgPlace
-            .d("Place Speed", 20.0, 0.0, 20.0, 0.1, ".", () -> this.placeSpeedMode.get() == ActionSpeedMode.Normal);
-    private final Setting<DelayMode> placeDelayMode = this.sgPlace.e("Place Delay Mode", DelayMode.Ticks, ".");
+            .doubleSetting("Place Speed", 20.0, 0.0, 20.0, 0.1, ".", () -> this.placeSpeedMode.get() == ActionSpeedMode.Normal);
+    private final Setting<DelayMode> placeDelayMode = this.sgPlace.enumSetting("Place Delay Mode", DelayMode.Ticks, ".");
     private final Setting<Double> placeDelay = this.sgPlace
-            .d("Place Delay", 0.0, 0.0, 1.0, 0.01, ".", () -> this.placeDelayMode.get() == DelayMode.Seconds);
+            .doubleSetting("Place Delay", 0.0, 0.0, 1.0, 0.01, ".", () -> this.placeDelayMode.get() == DelayMode.Seconds);
     private final Setting<Integer> placeDelayTicks = this.sgPlace
-            .i("Place Delay Ticks", 0, 0, 20, 1, ".", () -> this.placeDelayMode.get() == DelayMode.Ticks);
-    private final Setting<Boolean> ahd = this.sgPlace.b("AHD", true, "");
-    private final Setting<Integer> ahdTries = this.sgPlace.i("AHD Tries", 3, 0, 20, 1, "", this.ahd::get);
-    private final Setting<Integer> ahdTime = this.sgPlace.i("AHD Time", 20, 0, 100, 1, "", this.ahd::get);
-    private final Setting<Boolean> ignoreItems = this.sgPlace.b("Ignore Items", true, "");
-    private final Setting<Boolean> ignoreExp = this.sgPlace.b("Ignore Exp", true, "");
+            .intSetting("Place Delay Ticks", 0, 0, 20, 1, ".", () -> this.placeDelayMode.get() == DelayMode.Ticks);
+    private final Setting<Boolean> ahd = this.sgPlace.booleanSetting("AHD", true, "");
+    private final Setting<Integer> ahdTries = this.sgPlace.intSetting("AHD Tries", 3, 0, 20, 1, "", this.ahd::get);
+    private final Setting<Integer> ahdTime = this.sgPlace.intSetting("AHD Time", 20, 0, 100, 1, "", this.ahd::get);
+    private final Setting<Boolean> ignoreItems = this.sgPlace.booleanSetting("Ignore Items", true, "");
+    private final Setting<Boolean> ignoreExp = this.sgPlace.booleanSetting("Ignore Exp", true, "");
     private final Setting<Boolean> requireRotation = this.sgPlace
-            .b("Require Rotation", true, "Places crystals.", () -> SettingUtils.shouldRotate(RotationType.Interact));
-    private final Setting<Boolean> attack = this.sgAttack.b("Attack", true, "Attacks crystals.");
+            .booleanSetting("Require Rotation", true, "Places crystals.", () -> SettingUtils.shouldRotate(RotationType.Interact));
+    private final Setting<Boolean> attack = this.sgAttack.booleanSetting("Attack", true, "Attacks crystals.");
     private final Setting<Integer> attackPackets = this.sgAttack
-            .i("Attack Packets", 1, 0, 5, 1, "Sends this many attack packets each hit. Probably useless but u could test some stuff.");
-    private final Setting<Boolean> pauseEatAttack = this.sgAttack.b("Pause Eat Attack", false, "Pauses attacking while eating.");
-    private final Setting<Boolean> onlyOwn = this.sgAttack.b("Only Own", false, "Only attacks crystals placed by you.");
-    private final Setting<Boolean> antiWeakness = this.sgAttack.b("Anti Weakness", true, ".");
-    private final Setting<ExistedMode> existedCheckMode = this.sgAttack.e("Existed Check Mode", ExistedMode.Client, ".");
+            .intSetting("Attack Packets", 1, 0, 5, 1, "Sends this many attack packets each hit. Probably useless but u could test some stuff.");
+    private final Setting<Boolean> pauseEatAttack = this.sgAttack.booleanSetting("Pause Eat Attack", false, "Pauses attacking while eating.");
+    private final Setting<Boolean> onlyOwn = this.sgAttack.booleanSetting("Only Own", false, "Only attacks crystals placed by you.");
+    private final Setting<Boolean> antiWeakness = this.sgAttack.booleanSetting("Anti Weakness", true, ".");
+    private final Setting<ExistedMode> existedCheckMode = this.sgAttack.enumSetting("Existed Check Mode", ExistedMode.Client, ".");
     private final Setting<DelayMode> existedMode = this.sgAttack
-            .e("Existed Mode", DelayMode.Ticks, "Should crystal existed times be counted in seconds or ticks.");
+            .enumSetting("Existed Mode", DelayMode.Ticks, "Should crystal existed times be counted in seconds or ticks.");
     private final Setting<Double> existed = this.sgAttack
-            .d(
+            .doubleSetting(
                     "Explode Delay",
                     0.0,
                     0.0,
@@ -132,7 +132,7 @@ public class AutoCrystal extends Module {
                     () -> this.existedMode.get() == DelayMode.Seconds
             );
     private final Setting<Integer> existedTicks = this.sgAttack
-            .i(
+            .intSetting(
                     "Explode Delay Ticks",
                     0,
                     0,
@@ -141,9 +141,9 @@ public class AutoCrystal extends Module {
                     "How many ticks should the crystal exist before attacking.",
                     () -> this.existedMode.get() == DelayMode.Ticks
             );
-    private final Setting<ActionSpeedMode> attackSpeedMode = this.sgAttack.e("Attack Speed Mode", ActionSpeedMode.Sync, ".");
+    private final Setting<ActionSpeedMode> attackSpeedMode = this.sgAttack.enumSetting("Attack Speed Mode", ActionSpeedMode.Sync, ".");
     private final Setting<Double> attackSpeedLimit = this.sgAttack
-            .d(
+            .doubleSetting(
                     "Attack Speed Limit",
                     0.0,
                     0.0,
@@ -153,68 +153,68 @@ public class AutoCrystal extends Module {
                     () -> this.attackSpeedMode.get() == ActionSpeedMode.Sync
             );
     private final Setting<Double> constantAttackSpeed = this.sgAttack
-            .d("Constant Attack Speed", 10.0, 0.0, 20.0, 0.1, ".", () -> this.attackSpeedMode.get() == ActionSpeedMode.Sync);
+            .doubleSetting("Constant Attack Speed", 10.0, 0.0, 20.0, 0.1, ".", () -> this.attackSpeedMode.get() == ActionSpeedMode.Sync);
     private final Setting<Double> attackSpeed = this.sgAttack
-            .d("Attack Speed", 20.0, 0.0, 20.0, 0.1, ".", () -> this.attackSpeedMode.get() == ActionSpeedMode.Normal);
+            .doubleSetting("Attack Speed", 20.0, 0.0, 20.0, 0.1, ".", () -> this.attackSpeedMode.get() == ActionSpeedMode.Normal);
     private final Setting<SetDeadMode> setDead = this.sgAttack
-            .e("Set Dead", SetDeadMode.Disabled, "Hides the crystal after hitting it. Not needed since the module already is smart enough.");
-    private final Setting<Double> cpsTime = this.sgAttack.d("Cps Time", 5.0, 1.0, 20.0, 0.1, "Average cps from past x seconds.");
-    private final Setting<Integer> predictAttacks = this.sgIdPredict.i("Predict Attacks", 0, 0, 10, 1, ".");
-    private final Setting<Integer> idStart = this.sgIdPredict.i("Id Start", 1, 1, 5, 1, ".");
-    private final Setting<Integer> predictStep = this.sgIdPredict.i("Predict Step", 1, 1, 5, 1, ".");
+            .enumSetting("Set Dead", SetDeadMode.Disabled, "Hides the crystal after hitting it. Not needed since the module already is smart enough.");
+    private final Setting<Double> cpsTime = this.sgAttack.doubleSetting("Cps Time", 5.0, 1.0, 20.0, 0.1, "Average cps from past x seconds.");
+    private final Setting<Integer> predictAttacks = this.sgIdPredict.intSetting("Predict Attacks", 0, 0, 10, 1, ".");
+    private final Setting<Integer> idStart = this.sgIdPredict.intSetting("Id Start", 1, 1, 5, 1, ".");
+    private final Setting<Integer> predictStep = this.sgIdPredict.intSetting("Predict Step", 1, 1, 5, 1, ".");
     private final Setting<Integer> predictFlexibility = this.sgIdPredict
-            .i("Predict Flexiblity", 2, 0, 10, 1, "Might wanna make high on higher ping and stable server.");
-    private final Setting<Boolean> predictSwing = this.sgIdPredict.b("Predict Swing", true, ".");
-    private final Setting<Boolean> inhibit = this.sgInhibit.b("Inhibit", true, "Ignores crystals after a certain amount of time or attacks.");
+            .intSetting("Predict Flexiblity", 2, 0, 10, 1, "Might wanna make high on higher ping and stable server.");
+    private final Setting<Boolean> predictSwing = this.sgIdPredict.booleanSetting("Predict Swing", true, ".");
+    private final Setting<Boolean> inhibit = this.sgInhibit.booleanSetting("Inhibit", true, "Ignores crystals after a certain amount of time or attacks.");
     private final Setting<Boolean> fullInhibit = this.sgInhibit
-            .b("Full Inhibit", true, "Ignores crystals after a certain amount of time or attacks.", this.inhibit::get);
+            .booleanSetting("Full Inhibit", true, "Ignores crystals after a certain amount of time or attacks.", this.inhibit::get);
     private final Setting<Integer> fullInhibitTicks = this.sgInhibit
-            .i("Full Inhibit Ticks", 100, 0, 400, 5, ".", () -> this.inhibit.get() && this.fullInhibit.get());
+            .intSetting("Full Inhibit Ticks", 100, 0, 400, 5, ".", () -> this.inhibit.get() && this.fullInhibit.get());
     private final Setting<Integer> fullInhibitAttacks = this.sgInhibit
-            .i("Full Inhibit Attacks", 2, 1, 10, 1, ".", () -> this.inhibit.get() && this.fullInhibit.get());
+            .intSetting("Full Inhibit Attacks", 2, 1, 10, 1, ".", () -> this.inhibit.get() && this.fullInhibit.get());
     private final Setting<Boolean> inhibitCollide = this.sgInhibit
-            .b("Inhibit Collide", false, "Doesn't allow place pos to collide with inhibit crystals.", () -> this.inhibit.get() && this.fullInhibit.get());
-    private final Setting<Integer> inhibitTicks = this.sgInhibit.i("Inhibit Ticks", 10, 0, 100, 1, ".");
-    private final Setting<Integer> inhibitAttacks = this.sgInhibit.i("Inhibit Attacks", 1, 1, 10, 1, ".");
+            .booleanSetting("Inhibit Collide", false, "Doesn't allow place pos to collide with inhibit crystals.", () -> this.inhibit.get() && this.fullInhibit.get());
+    private final Setting<Integer> inhibitTicks = this.sgInhibit.intSetting("Inhibit Ticks", 10, 0, 100, 1, ".");
+    private final Setting<Integer> inhibitAttacks = this.sgInhibit.intSetting("Inhibit Attacks", 1, 1, 10, 1, ".");
     private final Setting<Double> slowDamage = this.sgSlow
-            .d("Slow Damage", 3.0, 0.0, 20.0, 0.1, "Switches to slow speed when the target would take under this amount of damage.");
+            .doubleSetting("Slow Damage", 3.0, 0.0, 20.0, 0.1, "Switches to slow speed when the target would take under this amount of damage.");
     private final Setting<Double> slowSpeed = this.sgSlow
-            .d("Slow Speed", 2.0, 0.0, 20.0, 0.1, "How many times should the module place per second when damage is under slow damage.");
-    private final Setting<Double> slowHealth = this.sgSlow.d("Slow Health", 10.0, 0.0, 20.0, 0.5, "Only slow places if enemy has over x health.");
-    private final Setting<KeyBind> holdFacePlace = this.sgFacePlace.k("Hold Face Place", "Faceplaces when holding this key.");
+            .doubleSetting("Slow Speed", 2.0, 0.0, 20.0, 0.1, "How many times should the module place per second when damage is under slow damage.");
+    private final Setting<Double> slowHealth = this.sgSlow.doubleSetting("Slow Health", 10.0, 0.0, 20.0, 0.5, "Only slow places if enemy has over x health.");
+    private final Setting<KeyBind> holdFacePlace = this.sgFacePlace.keySetting("Hold Face Place", "Faceplaces when holding this key.");
     private final Setting<Double> facePlaceHealth = this.sgFacePlace
-            .d("Face Place Health", 0.0, 0.0, 10.0, 0.1, "Automatically face places if enemy has under this much health.");
+            .doubleSetting("Face Place Health", 0.0, 0.0, 10.0, 0.1, "Automatically face places if enemy has under this much health.");
     private final Setting<Double> armorFacePlace = this.sgFacePlace
-            .d("Armor Face Place", 10.0, 0.0, 100.0, 1.0, "Face places if enemy's any armor piece is under this durability.");
-    private final Setting<Double> facePlaceDamage = this.sgFacePlace.d("Face Place Damage", 0.0, 0.0, 10.0, 0.1, "Sets min place and min attack to this.");
-    private final Setting<Boolean> ignoreSlow = this.sgFacePlace.b("Ignore Slow", true, "Doesn't slow place when faceplacing.");
-    private final Setting<Boolean> moveOffset = this.sgRotation.b("Move Offset", true, ".");
-    private final Setting<Double> placeHeight = this.sgRotation.d("Place Height", 1.0, 0.0, 1.0, 0.01, "Height for place rotations.");
-    private final Setting<Double> attackHeight = this.sgRotation.d("Attack Height", 0.0, 0.0, 2.0, 0.01, "Height for attack rotations.");
+            .doubleSetting("Armor Face Place", 10.0, 0.0, 100.0, 1.0, "Face places if enemy's any armor piece is under this durability.");
+    private final Setting<Double> facePlaceDamage = this.sgFacePlace.doubleSetting("Face Place Damage", 0.0, 0.0, 10.0, 0.1, "Sets min place and min attack to this.");
+    private final Setting<Boolean> ignoreSlow = this.sgFacePlace.booleanSetting("Ignore Slow", true, "Doesn't slow place when faceplacing.");
+    private final Setting<Boolean> moveOffset = this.sgRotation.booleanSetting("Move Offset", true, ".");
+    private final Setting<Double> placeHeight = this.sgRotation.doubleSetting("Place Height", 1.0, 0.0, 1.0, 0.01, "Height for place rotations.");
+    private final Setting<Double> attackHeight = this.sgRotation.doubleSetting("Attack Height", 0.0, 0.0, 2.0, 0.01, "Height for attack rotations.");
     private final Setting<ACSwitchMode> switchMode = this.sgSwitch
-            .e("Switch", ACSwitchMode.Disabled, "Mode for switching to crystal in main hand.");
-    private final Setting<SwitchMode> antiWeaknessSwitch = this.sgSwitch.e("Anti-Weakness Switch", SwitchMode.Silent, ".");
+            .enumSetting("Switch", ACSwitchMode.Disabled, "Mode for switching to crystal in main hand.");
+    private final Setting<SwitchMode> antiWeaknessSwitch = this.sgSwitch.enumSetting("Anti-Weakness Switch", SwitchMode.Silent, ".");
     private final Setting<Double> placeSwitchPenalty = this.sgSwitch
-            .d("Place Switch Penalty", 0.0, 0.0, 1.0, 0.05, "Time to wait after switching before placing crystals.");
+            .doubleSetting("Place Switch Penalty", 0.0, 0.0, 1.0, 0.05, "Time to wait after switching before placing crystals.");
     private final Setting<Double> attackSwitchPenalty = this.sgSwitch
-            .d("Attack Switch Penalty", 0.0, 0.0, 1.0, 0.05, "Time to wait after switching before attacking crystals.");
-    private final Setting<Double> minPlace = this.sgDamage.d("Min Place", 5.0, 0.0, 20.0, 0.1, "Minimum damage to place.");
-    private final Setting<Boolean> checkSelfPlacing = this.sgDamage.b("Self Placing", true, "Checks self damage when placing.");
-    private final Setting<Double> maxSelfPlace = this.sgDamage.d("Max Place", 10.0, 0.0, 20.0, 0.1, "Max self damage for placing.", this.checkSelfPlacing::get);
+            .doubleSetting("Attack Switch Penalty", 0.0, 0.0, 1.0, 0.05, "Time to wait after switching before attacking crystals.");
+    private final Setting<Double> minPlace = this.sgDamage.doubleSetting("Min Place", 5.0, 0.0, 20.0, 0.1, "Minimum damage to place.");
+    private final Setting<Boolean> checkSelfPlacing = this.sgDamage.booleanSetting("Self Placing", true, "Checks self damage when placing.");
+    private final Setting<Double> maxSelfPlace = this.sgDamage.doubleSetting("Max Place", 10.0, 0.0, 20.0, 0.1, "Max self damage for placing.", this.checkSelfPlacing::get);
     private final Setting<Double> minSelfRatio = this.sgDamage
-            .d("Min Place Ratio", 2.0, 0.0, 20.0, 0.1, "Min self damage ratio for placing (enemy / self).", this.checkSelfPlacing::get);
-    private final Setting<Boolean> checkFriendPlacing = this.sgDamage.b("Friend Placing", true, "Checks friend damage when placing.");
+            .doubleSetting("Min Place Ratio", 2.0, 0.0, 20.0, 0.1, "Min self damage ratio for placing (enemy / self).", this.checkSelfPlacing::get);
+    private final Setting<Boolean> checkFriendPlacing = this.sgDamage.booleanSetting("Friend Placing", true, "Checks friend damage when placing.");
     private final Setting<Double> maxFriendPlace = this.sgDamage
-            .d("Max Friend Place", 12.0, 0.0, 20.0, 0.1, "Max friend damage for placing.", this.checkFriendPlacing::get);
+            .doubleSetting("Max Friend Place", 12.0, 0.0, 20.0, 0.1, "Max friend damage for placing.", this.checkFriendPlacing::get);
     private final Setting<Double> minFriendRatio = this.sgDamage
-            .d("Min Friend Place Ratio", 1.0, 0.0, 20.0, 0.1, "Min friend damage ratio for placing (enemy / friend).", this.checkFriendPlacing::get);
-    private final Setting<Boolean> checkEnemyAttack = this.sgDamage.b("Enemy Attack", true, "Checks enemy damage when attacking.");
-    private final Setting<Double> minAttack = this.sgDamage.d("Min Attack", 5.0, 0.0, 20.0, 0.1, "Minimum damage to attack.", this.checkEnemyAttack::get);
-    private final Setting<Boolean> checkSelfAttack = this.sgDamage.b("Self Attack", true, "Checks self damage when attacking.");
+            .doubleSetting("Min Friend Place Ratio", 1.0, 0.0, 20.0, 0.1, "Min friend damage ratio for placing (enemy / friend).", this.checkFriendPlacing::get);
+    private final Setting<Boolean> checkEnemyAttack = this.sgDamage.booleanSetting("Enemy Attack", true, "Checks enemy damage when attacking.");
+    private final Setting<Double> minAttack = this.sgDamage.doubleSetting("Min Attack", 5.0, 0.0, 20.0, 0.1, "Minimum damage to attack.", this.checkEnemyAttack::get);
+    private final Setting<Boolean> checkSelfAttack = this.sgDamage.booleanSetting("Self Attack", true, "Checks self damage when attacking.");
     private final Setting<Double> maxSelfAttack = this.sgDamage
-            .d("Max Attack", 10.0, 0.0, 20.0, 0.1, "Max self damage for attacking.", this.checkSelfAttack::get);
+            .doubleSetting("Max Attack", 10.0, 0.0, 20.0, 0.1, "Max self damage for attacking.", this.checkSelfAttack::get);
     private final Setting<Double> minSelfAttackRatio = this.sgDamage
-            .d(
+            .doubleSetting(
                     "Min Attack Ratio",
                     2.0,
                     0.0,
@@ -223,42 +223,42 @@ public class AutoCrystal extends Module {
                     "Min self damage ratio for attacking (enemy / self).",
                     () -> this.checkSelfAttack.get() && this.checkEnemyAttack.get()
             );
-    private final Setting<Boolean> checkFriendAttack = this.sgDamage.b("Friend Attack", true, "Checks friend damage when attacking.");
+    private final Setting<Boolean> checkFriendAttack = this.sgDamage.booleanSetting("Friend Attack", true, "Checks friend damage when attacking.");
     private final Setting<Double> maxFriendAttack = this.sgDamage
-            .d("Max Friend Attack", 12.0, 0.0, 20.0, 0.1, "Max friend damage for attacking.", this.checkFriendAttack::get);
+            .doubleSetting("Max Friend Attack", 12.0, 0.0, 20.0, 0.1, "Max friend damage for attacking.", this.checkFriendAttack::get);
     private final Setting<Double> minFriendAttackRatio = this.sgDamage
-            .d("Min Friend Attack Ratio", 1.0, 0.0, 20.0, 0.1, "Min friend damage ratio for attacking (enemy / friend).", this.checkFriendAttack::get);
-    private final Setting<Double> forcePop = this.sgDamage.d("Force Pop", 0.0, 0.0, 5.0, 0.25, "Ignores damage checks if any enemy will be popped in x hits.");
-    private final Setting<Double> selfPop = this.sgDamage.d("Anti Pop", 1.0, 0.0, 5.0, 0.25, "Ignores damage checks if any enemy will be popped in x hits.");
+            .doubleSetting("Min Friend Attack Ratio", 1.0, 0.0, 20.0, 0.1, "Min friend damage ratio for attacking (enemy / friend).", this.checkFriendAttack::get);
+    private final Setting<Double> forcePop = this.sgDamage.doubleSetting("Force Pop", 0.0, 0.0, 5.0, 0.25, "Ignores damage checks if any enemy will be popped in x hits.");
+    private final Setting<Double> selfPop = this.sgDamage.doubleSetting("Anti Pop", 1.0, 0.0, 5.0, 0.25, "Ignores damage checks if any enemy will be popped in x hits.");
     private final Setting<Double> friendPop = this.sgDamage
-            .d("Anti Friend Pop", 0.0, 0.0, 5.0, 0.25, "Ignores damage checks if any enemy will be popped in x hits.");
-    private final Setting<AntiPopMode> antiPopMode = this.sgDamage.e("Anti Pop Mode", AntiPopMode.Change, ".");
+            .doubleSetting("Anti Friend Pop", 0.0, 0.0, 5.0, 0.25, "Ignores damage checks if any enemy will be popped in x hits.");
+    private final Setting<AntiPopMode> antiPopMode = this.sgDamage.enumSetting("Anti Pop Mode", AntiPopMode.Change, ".");
     private final Setting<Integer> extrapolation = this.sgExtrapolation
-            .i("Extrapolation", 0, 0, 20, 1, "How many ticks of movement should be predicted for enemy damage checks.");
+            .intSetting("Extrapolation", 0, 0, 20, 1, "How many ticks of movement should be predicted for enemy damage checks.");
     private final Setting<Integer> selfExt = this.sgExtrapolation
-            .i("Self Extrapolation", 0, 0, 20, 1, "How many ticks of movement should be predicted for self damage checks.");
-    private final Setting<RangeExtMode> rangeExtMode = this.sgExtrapolation.e("Range Extrapolation Mode", RangeExtMode.Semi, ".");
+            .intSetting("Self Extrapolation", 0, 0, 20, 1, "How many ticks of movement should be predicted for self damage checks.");
+    private final Setting<RangeExtMode> rangeExtMode = this.sgExtrapolation.enumSetting("Range Extrapolation Mode", RangeExtMode.Semi, ".");
     private final Setting<Integer> rangeExt = this.sgExtrapolation
-            .i("Range Extrapolation", 0, 0, 20, 1, "How many ticks of movement should be predicted for attack ranges before placing.");
-    private final Setting<Double> hitboxExpand = this.sgExtrapolation.d("Hitbox Expand", 1.0, 0.0, 2.0, 0.02, "");
-    private final Setting<Boolean> flexibleHitbox = this.sgExtrapolation.b("Flexible Hitbox", false, ".", () -> this.hitboxExpand.get() > 0.0);
-    private final Setting<Boolean> extrapolateHitbox = this.sgExtrapolation.b("Extrapolate Hitbox", false, "");
-    private final Setting<Double> preferHitboxExpand = this.sgExtrapolation.d("Value Hitbox Expand", 2.0, 0.0, 2.0, 0.02, "");
-    private final Setting<Double> hitboxValue = this.sgExtrapolation.d("Hitbox Value", -8.0, -10.0, 10.0, 0.2, ".");
-    private final Setting<Boolean> damageWait = this.sgDamageWait.b("Damage Wait", false, ".");
-    private final Setting<Integer> waitStartExt = this.sgDamageWait.i("Wait Start Extrapolation", 2, 0, 20, 1, ".");
-    private final Setting<Integer> waitEndExt = this.sgDamageWait.i("Wait End Extrapolation", 5, 0, 20, 1, ".");
-    private final Setting<Double> minDifference = this.sgDamageWait.d("Min Difference", 0.0, 0.0, 10.0, 0.1, ".");
-    private final Setting<Integer> maxWait = this.sgDamageWait.i("Max Wait", 3, 0, 20, 1, ".");
-    private final Setting<Boolean> placeSwing = this.sgRender.b("Place Swing", false, "Renders swing animation when placing a crystal.");
-    private final Setting<SwingHand> placeHand = this.sgRender.e("Place Hand", SwingHand.RealHand, "Which hand should be swung.");
-    private final Setting<Boolean> attackSwing = this.sgRender.b("Attack Swing", false, "Renders swing animation when attacking a crystal.");
-    private final Setting<SwingHand> attackHand = this.sgRender.e("Attack Hand", SwingHand.RealHand, "Which hand should be swung.");
-    private final Setting<Boolean> render = this.sgRender.b("Render", true, "Renders box on placement.");
+            .intSetting("Range Extrapolation", 0, 0, 20, 1, "How many ticks of movement should be predicted for attack ranges before placing.");
+    private final Setting<Double> hitboxExpand = this.sgExtrapolation.doubleSetting("Hitbox Expand", 1.0, 0.0, 2.0, 0.02, "");
+    private final Setting<Boolean> flexibleHitbox = this.sgExtrapolation.booleanSetting("Flexible Hitbox", false, ".", () -> this.hitboxExpand.get() > 0.0);
+    private final Setting<Boolean> extrapolateHitbox = this.sgExtrapolation.booleanSetting("Extrapolate Hitbox", false, "");
+    private final Setting<Double> preferHitboxExpand = this.sgExtrapolation.doubleSetting("Value Hitbox Expand", 2.0, 0.0, 2.0, 0.02, "");
+    private final Setting<Double> hitboxValue = this.sgExtrapolation.doubleSetting("Hitbox Value", -8.0, -10.0, 10.0, 0.2, ".");
+    private final Setting<Boolean> damageWait = this.sgDamageWait.booleanSetting("Damage Wait", false, ".");
+    private final Setting<Integer> waitStartExt = this.sgDamageWait.intSetting("Wait Start Extrapolation", 2, 0, 20, 1, ".");
+    private final Setting<Integer> waitEndExt = this.sgDamageWait.intSetting("Wait End Extrapolation", 5, 0, 20, 1, ".");
+    private final Setting<Double> minDifference = this.sgDamageWait.doubleSetting("Min Difference", 0.0, 0.0, 10.0, 0.1, ".");
+    private final Setting<Integer> maxWait = this.sgDamageWait.intSetting("Max Wait", 3, 0, 20, 1, ".");
+    private final Setting<Boolean> placeSwing = this.sgRender.booleanSetting("Place Swing", false, "Renders swing animation when placing a crystal.");
+    private final Setting<SwingHand> placeHand = this.sgRender.enumSetting("Place Hand", SwingHand.RealHand, "Which hand should be swung.");
+    private final Setting<Boolean> attackSwing = this.sgRender.booleanSetting("Attack Swing", false, "Renders swing animation when attacking a crystal.");
+    private final Setting<SwingHand> attackHand = this.sgRender.enumSetting("Attack Hand", SwingHand.RealHand, "Which hand should be swung.");
+    private final Setting<Boolean> render = this.sgRender.booleanSetting("Render", true, "Renders box on placement.");
     private final Setting<RenderMode> renderMode = this.sgRender
-            .e("Render Mode", RenderMode.BlackOut, "What should the render look like.", this.render::get);
+            .enumSetting("Render Mode", RenderMode.BlackOut, "What should the render look like.", this.render::get);
     private final Setting<Double> textScale = this.sgRender
-            .d(
+            .doubleSetting(
                     "Text Size",
                     0.3,
                     0.0,
@@ -271,7 +271,7 @@ public class AutoCrystal extends Module {
                             || this.renderMode.get() == RenderMode.Confirm
             );
     private final Setting<Double> renderTime = this.sgRender
-            .d(
+            .doubleSetting(
                     "Render Time",
                     0.3,
                     0.0,
@@ -283,7 +283,7 @@ public class AutoCrystal extends Module {
                             || this.renderMode.get() == RenderMode.Confirm
             );
     private final Setting<Double> fadeTime = this.sgRender
-            .d(
+            .doubleSetting(
                     "Fade Time",
                     1.0,
                     0.0,
@@ -295,11 +295,11 @@ public class AutoCrystal extends Module {
                             || this.renderMode.get() == RenderMode.Confirm
             );
     private final Setting<Double> animMoveSpeed = this.sgRender
-            .d("Move Speed", 2.0, 0.0, 10.0, 0.1, "How fast should blackout mode box move.", () -> this.renderMode.get() == RenderMode.BlackOut);
+            .doubleSetting("Move Speed", 2.0, 0.0, 10.0, 0.1, "How fast should blackout mode box move.", () -> this.renderMode.get() == RenderMode.BlackOut);
     private final Setting<Double> animMoveExponent = this.sgRender
-            .d("Move Exponent", 3.0, 0.0, 10.0, 0.1, "Moves faster when longer away from the target.", () -> this.renderMode.get() == RenderMode.BlackOut);
+            .doubleSetting("Move Exponent", 3.0, 0.0, 10.0, 0.1, "Moves faster when longer away from the target.", () -> this.renderMode.get() == RenderMode.BlackOut);
     private final Setting<Double> animSizeExponent = this.sgRender
-            .d(
+            .doubleSetting(
                     "Animation Size Exponent",
                     3.0,
                     0.0,
@@ -308,43 +308,43 @@ public class AutoCrystal extends Module {
                     "How fast should blackout mode box grow.",
                     () -> this.renderMode.get() == RenderMode.BlackOut
             );
-    private final Setting<AnimationMode> animationMode = this.sgRender.e("Animation Size Mode", AnimationMode.Full, ".");
+    private final Setting<AnimationMode> animationMode = this.sgRender.enumSetting("Animation Size Mode", AnimationMode.Full, ".");
     private final BoxMultiSetting renderSetting = BoxMultiSetting.of(this.sgRender, "Box");
-    private final Setting<Boolean> renderDamage = this.sgRender.b("Render Damage", true, ".");
-    private final Setting<Boolean> renderExt = this.sgRender.b("Render Extrapolation", false, "Renders boxes at players' predicted positions.");
-    private final Setting<Boolean> renderBoxExt = this.sgRender.b("Render Box Extrapolation", false, "Renders boxes at players' predicted positions.");
-    private final Setting<Boolean> renderSelfExt = this.sgRender.b("Render Self Extrapolation", false, "Renders box at your predicted position.");
-    private final Setting<Double> damageValue = this.sgCalculation.d("Damage Value", 1.0, -5.0, 5.0, 0.1, ".");
-    private final Setting<Double> selfDmgValue = this.sgCalculation.d("Self Damage Value", -1.0, -5.0, 5.0, 0.05, ".");
-    private final Setting<Double> friendDmgValue = this.sgCalculation.d("Friend Damage Value", 0.0, -5.0, 5.0, 0.05, ".");
+    private final Setting<Boolean> renderDamage = this.sgRender.booleanSetting("Render Damage", true, ".");
+    private final Setting<Boolean> renderExt = this.sgRender.booleanSetting("Render Extrapolation", false, "Renders boxes at players' predicted positions.");
+    private final Setting<Boolean> renderBoxExt = this.sgRender.booleanSetting("Render Box Extrapolation", false, "Renders boxes at players' predicted positions.");
+    private final Setting<Boolean> renderSelfExt = this.sgRender.booleanSetting("Render Self Extrapolation", false, "Renders box at your predicted position.");
+    private final Setting<Double> damageValue = this.sgCalculation.doubleSetting("Damage Value", 1.0, -5.0, 5.0, 0.1, ".");
+    private final Setting<Double> selfDmgValue = this.sgCalculation.doubleSetting("Self Damage Value", -1.0, -5.0, 5.0, 0.05, ".");
+    private final Setting<Double> friendDmgValue = this.sgCalculation.doubleSetting("Friend Damage Value", 0.0, -5.0, 5.0, 0.05, ".");
     private final Setting<Double> moveValue = this.sgCalculation
-            .d("Move Dir Value", 0.0, -5.0, 5.0, 0.1, "Adds x value if enemy is moving towards the position.");
+            .doubleSetting("Move Dir Value", 0.0, -5.0, 5.0, 0.1, "Adds x value if enemy is moving towards the position.");
     private final Setting<Double> selfMoveValue = this.sgCalculation
-            .d("Self Move Value", 0.0, -5.0, 5.0, 0.1, "Adds x value if enemy is moving towards the position.");
-    private final Setting<Double> friendMoveValue = this.sgCalculation.d("Friend Move Value", 0.0, -5.0, 5.0, 0.1, ".");
-    private final Setting<Double> rotationValue = this.sgCalculation.d("Rotation Value", 0.0, -5.0, 5.0, 0.1, ".");
-    private final Setting<Double> wallValue = this.sgCalculation.d("Wall Value", 0.0, -5.0, 5.0, 0.1, ".");
-    private final Setting<Double> noRotateValue = this.sgCalculation.d("No Rotate Value", 0.0, -5.0, 5.0, 0.1, ".", SettingUtils::rotationIgnoreEnabled);
-    private final Setting<Integer> maxTargets = this.sgCalculation.i("Max Targets", 3, 1, 10, 1, ".");
-    private final Setting<Boolean> noCollide = this.sgCalculation.b("No Collide", false, "Doesn't place if any crystal is half inside the pos.");
+            .doubleSetting("Self Move Value", 0.0, -5.0, 5.0, 0.1, "Adds x value if enemy is moving towards the position.");
+    private final Setting<Double> friendMoveValue = this.sgCalculation.doubleSetting("Friend Move Value", 0.0, -5.0, 5.0, 0.1, ".");
+    private final Setting<Double> rotationValue = this.sgCalculation.doubleSetting("Rotation Value", 0.0, -5.0, 5.0, 0.1, ".");
+    private final Setting<Double> wallValue = this.sgCalculation.doubleSetting("Wall Value", 0.0, -5.0, 5.0, 0.1, ".");
+    private final Setting<Double> noRotateValue = this.sgCalculation.doubleSetting("No Rotate Value", 0.0, -5.0, 5.0, 0.1, ".", SettingUtils::rotationIgnoreEnabled);
+    private final Setting<Integer> maxTargets = this.sgCalculation.intSetting("Max Targets", 3, 1, 10, 1, ".");
+    private final Setting<Boolean> noCollide = this.sgCalculation.booleanSetting("No Collide", false, "Doesn't place if any crystal is half inside the pos.");
     private final Setting<Boolean> spawningCollide = this.sgCalculation
-            .b("Spawning Collide", false, "Doesn't place if any spawning crystal is half inside the pos.", this.noCollide::get);
-    private final Setting<Boolean> attackCollide = this.sgCalculation.b("Attack Collide", false, ".", this.noCollide::get);
-    private final Setting<Double> antiJitter = this.sgCalculation.d("Anti Jitter", 0.5, 0.0, 5.0, 0.1, "Doesn't place if any crystal is half inside the pos.");
-    private final Setting<Double> antiJitterTime = this.sgCalculation.d("Anti Jitter Time", 0.2, 0.0, 1.0, 0.01, ".", () -> this.antiJitter.get() != 0.0);
-    private final Setting<Double> autoMineCollideValue = this.sgCalculation.d("Auto Mine Collide Value", 0.0, -5.0, 5.0, 0.1, ".");
-    private final Setting<AsyncMode> async = this.sgCalculation.e("Async", AsyncMode.Basic, "");
-    private final Setting<Boolean> rotationFriendly = this.sgCalculation.b("Rotation Friendly", true, ".");
-    private final Setting<Double> rangeValue = this.sgCalculation.d("Range Value", 1.0, -5.0, 5.0, 0.1, ".");
-    private final Setting<Double> rangeStartDist = this.sgCalculation.d("Range Start Dist", 0.0, 0.0, 6.0, 0.1, ".", () -> this.rangeValue.get() != 0.0);
-    private final Setting<Boolean> eco = this.sgCalculation.b("Eco", false, ".");
-    private final Setting<Double> prePlaceProgress = this.sgCompatibility.d("Pre Place Progress", 0.9, 0.0, 1.0, 0.01, ".");
-    private final Setting<Boolean> autoMineAttack = this.sgCompatibility.b("Auto Mine Attack", true, ".");
+            .booleanSetting("Spawning Collide", false, "Doesn't place if any spawning crystal is half inside the pos.", this.noCollide::get);
+    private final Setting<Boolean> attackCollide = this.sgCalculation.booleanSetting("Attack Collide", false, ".", this.noCollide::get);
+    private final Setting<Double> antiJitter = this.sgCalculation.doubleSetting("Anti Jitter", 0.5, 0.0, 5.0, 0.1, "Doesn't place if any crystal is half inside the pos.");
+    private final Setting<Double> antiJitterTime = this.sgCalculation.doubleSetting("Anti Jitter Time", 0.2, 0.0, 1.0, 0.01, ".", () -> this.antiJitter.get() != 0.0);
+    private final Setting<Double> autoMineCollideValue = this.sgCalculation.doubleSetting("Auto Mine Collide Value", 0.0, -5.0, 5.0, 0.1, ".");
+    private final Setting<AsyncMode> async = this.sgCalculation.enumSetting("Async", AsyncMode.Basic, "");
+    private final Setting<Boolean> rotationFriendly = this.sgCalculation.booleanSetting("Rotation Friendly", true, ".");
+    private final Setting<Double> rangeValue = this.sgCalculation.doubleSetting("Range Value", 1.0, -5.0, 5.0, 0.1, ".");
+    private final Setting<Double> rangeStartDist = this.sgCalculation.doubleSetting("Range Start Dist", 0.0, 0.0, 6.0, 0.1, ".", () -> this.rangeValue.get() != 0.0);
+    private final Setting<Boolean> eco = this.sgCalculation.booleanSetting("Eco", false, ".");
+    private final Setting<Double> prePlaceProgress = this.sgCompatibility.doubleSetting("Pre Place Progress", 0.9, 0.0, 1.0, 0.01, ".");
+    private final Setting<Boolean> autoMineAttack = this.sgCompatibility.booleanSetting("Auto Mine Attack", true, ".");
     private final Setting<Double> autoMineAttackProgress = this.sgCompatibility
-            .d("Auto Mine Attack Progress", 0.75, 0.0, 1.0, 0.01, ".", this.autoMineAttack::get);
-    private final Setting<Boolean> debugPlace = this.sgDebug.b("Debug Place", false, ".");
-    private final Setting<Boolean> debugAttack = this.sgDebug.b("Debug Attack", false, ".");
-    private final Setting<Boolean> removeTime = this.sgDebug.b("Remove Time", false, ".");
+            .doubleSetting("Auto Mine Attack Progress", 0.75, 0.0, 1.0, 0.01, ".", this.autoMineAttack::get);
+    private final Setting<Boolean> debugPlace = this.sgDebug.booleanSetting("Debug Place", false, ".");
+    private final Setting<Boolean> debugAttack = this.sgDebug.booleanSetting("Debug Attack", false, ".");
+    private final Setting<Boolean> removeTime = this.sgDebug.booleanSetting("Remove Time", false, ".");
     private final TimerList<Box> spawning = new TimerList<>(true);
     private final TickTimerList<BlockPos> existedTicksList = new TickTimerList<>(true);
     private final TimerList<BlockPos> existedList = new TimerList<>(true);
