@@ -10,6 +10,7 @@ import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.interfaces.mixin.IRaycastContext;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.MoveUpdateModule;
+import bodevelopment.client.blackout.module.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.Notifications;
 import bodevelopment.client.blackout.module.modules.combat.misc.AntiBot;
@@ -46,114 +47,72 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicReference;
 
+// TODO: NEED PATCHES
+@OnlyDev
 public class Aura extends MoveUpdateModule {
     public static AbstractClientPlayerEntity targetedPlayer = null;
     private static Aura INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgTeleport = this.addGroup("Teleport");
     private final SettingGroup sgBlocking = this.addGroup("Blocking");
     private final SettingGroup sgDelay = this.addGroup("Delay");
     private final SettingGroup sgRender = this.addGroup("Render");
-    private final Setting<TargetMode> targetMode = this.sgGeneral.enumSetting("Mode", TargetMode.Health, "How to pick the target", () -> true);
-    private final Setting<Boolean> checkMaxHP = this.sgGeneral.booleanSetting("Check Max HP", false, "Checks if target has too much hp.");
-    private final Setting<Integer> maxHp = this.sgGeneral.intSetting("Max HP", 36, 0, 100, 1, "Target's health must be under this value.", this.checkMaxHP::get);
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch mode", SwitchMode.Disabled, "How to switch to the sword", () -> true);
-    private final Setting<Boolean> onlyWeapon = this.sgGeneral.booleanSetting("Only Weapon", true, "Only attacks with weapons");
-    private final Setting<Boolean> ignoreNaked = this.sgGeneral.booleanSetting("Ignore naked", false, "Doesn't hit naked players");
-    private final Setting<Boolean> tpDisable = this.sgGeneral.booleanSetting("Disable on TP", false, "Should we disable when teleporting to another world");
-    private final Setting<RotationMode> rotationMode = this.sgGeneral
-            .enumSetting("Rotation mode", RotationMode.OnHit, "When should we rotate. Only active if attack rotations are enabled in rotation settings.", () -> true);
-    private final Setting<List<EntityType<?>>> entities = this.sgGeneral.entityFilterdListSetting(
-            "Entities",
-            "Entities to attack.",
-            type ->
-                    type != EntityType.ITEM
-                    && type != EntityType.EXPERIENCE_ORB
-                    && type != EntityType.AREA_EFFECT_CLOUD
-                    && type != EntityType.MARKER
-                    && type != EntityType.POTION
-                    && type != EntityType.LLAMA_SPIT
-                    && type != EntityType.EYE_OF_ENDER
-                    && type != EntityType.DRAGON_FIREBALL
-                    && type != EntityType.FIREWORK_ROCKET
-                    && type != EntityType.ENDER_PEARL
-                    && type != EntityType.FISHING_BOBBER
-                    && type != EntityType.ARROW
-                    && type != EntityType.SPECTRAL_ARROW
-                    && type != EntityType.SNOWBALL
-                    && type != EntityType.SMALL_FIREBALL
-                    && type != EntityType.WITHER_SKULL
-                    && type != EntityType.FALLING_BLOCK
-                    && type != EntityType.TNT
-                    && type != EntityType.EVOKER_FANGS
-                    && type != EntityType.LIGHTNING_BOLT
-                    && type != EntityType.WIND_CHARGE
-                    && type != EntityType.BREEZE_WIND_CHARGE
-                    && !type.toString().contains("display"),
-            EntityType.PLAYER
-    );
-    private final Setting<Double> hitChance = this.sgGeneral.doubleSetting("Hit Chance", 1.0, 0.0, 1.0, 0.01, ".");
-    private final Setting<Double> expand = this.sgGeneral.doubleSetting("Expand", 0.0, 0.0, 1.0, 0.01, ".");
-    private final Setting<Integer> extrapolation = this.sgGeneral.intSetting("Extrapolation", 1, 0, 3, 1, ".");
-    private final Setting<Boolean> disableDead = this.sgGeneral.booleanSetting("Disable Dead", false, "Disables the module if you die");
-    private final Setting<Boolean> ignoreRanges = this.sgGeneral.booleanSetting("Ignore Ranges", false, "Might be useful in cpvp.");
-    private final Setting<Double> hitHeight = this.sgGeneral.doubleSetting("Hit Height", 0.8, 0.0, 1.0, 0.01, ".");
-    private final Setting<Double> dynamicHeight = this.sgGeneral.doubleSetting("Dynamic Height", 0.5, 0.0, 1.0, 0.01, ".");
-    private final Setting<Boolean> critSprint = this.sgGeneral.booleanSetting("Crit Sprint", true, "Sends stop sprint packet before hitting to make sure you crit.");
-    private final Setting<Double> scanRange = this.sgGeneral.doubleSetting("Scan Range", 0.0, 0.0, 10.0, 0.1, ".");
-    private final Setting<Double> wallScanRange = this.sgGeneral.doubleSetting("Wall Scan Range", 0.0, 0.0, 10.0, 0.1, ".");
-    private final Setting<Boolean> teleport = this.sgTeleport.booleanSetting("Teleport", false, ".");
-    private final Setting<Integer> maxPackets = this.sgTeleport.intSetting("Max Packets", 1, 1, 10, 1, "Maximum amount of tp packets to send (each direction).");
-    private final Setting<Double> maxDistance = this.sgTeleport.doubleSetting("Max Distance", 5.0, 1.0, 50.0, 0.5, ".");
-    private final Setting<Boolean> tpBack = this.sgTeleport.booleanSetting("TP Back", false, ".");
-    private final Setting<Boolean> blocking = this.sgBlocking.booleanSetting("Blocking", false, ".");
-    private final Setting<BlockMode> block = this.sgBlocking.enumSetting("Block Mode", BlockMode.Hold, "Blocks with a sword.", this.blocking::get);
-    private final Setting<BlockRenderMode> blockRender = this.sgBlocking.enumSetting("Block Render", BlockRenderMode.Disabled, ".", this.blocking::get);
-    private final Setting<Double> speed = this.sgBlocking
-            .doubleSetting(
-                    "Anim Speed",
-                    0.5,
-                    0.0,
-                    1.0,
-                    0.01,
-                    ".",
-                    () -> this.blocking.get() && this.blockRender.get() == BlockRenderMode.Fan
-                            || this.blockRender.get() == BlockRenderMode.Float
-                            || this.blockRender.get() == BlockRenderMode.Slap
-            );
-    private final Setting<DelayMode> delayMode = this.sgDelay.enumSetting("Delay Mode", DelayMode.Smart, ".");
-    private final Setting<RandomMode> randomise = this.sgDelay
-            .enumSetting("Randomise", RandomMode.Random, "Randomises CPS.", () -> this.delayMode.get() == DelayMode.Basic);
-    private final Setting<Double> maxCps = this.sgDelay
-            .doubleSetting("Max CPS", 12.0, 0.0, 20.0, 0.1, ".", () -> this.delayMode.get() == DelayMode.Basic && this.randomise.get() != RandomMode.Disabled);
-    private final Setting<Double> minCps = this.sgDelay
-            .doubleSetting("Min CPS", 8.0, 0.0, 20.0, 0.1, ".", () -> this.delayMode.get() == DelayMode.Basic && this.randomise.get() != RandomMode.Disabled);
-    private final Setting<Double> cpsSetting = this.sgDelay
-            .doubleSetting("CPS", 15.0, 0.0, 20.0, 0.1, ".", () -> this.delayMode.get() == DelayMode.Basic && this.randomise.get() == RandomMode.Disabled);
-    private final Setting<Boolean> fatigueSim = this.sgDelay.booleanSetting("Simulate Fatigue", false, ".", () -> this.delayMode.get() == DelayMode.Basic);
-    private final Setting<Integer> maxFatigue = this.sgDelay
-            .intSetting("Max Fatigue", 50, 0, 1000, 1, "Max added delay to clicks (milliseconds)", () -> this.delayMode.get() == DelayMode.Basic && this.fatigueSim.get());
-    private final Setting<Integer> fatigueRaise = this.sgDelay
-            .intSetting("Fatigue Raise", 5, 0, 1000, 1, ".", () -> this.delayMode.get() == DelayMode.Basic && this.fatigueSim.get());
-    private final Setting<Integer> fatigueDecrease = this.sgDelay
-            .intSetting("Fatigue Decrease", 2, 0, 1000, 1, ".", () -> this.delayMode.get() == DelayMode.Basic && this.fatigueSim.get());
-    private final Setting<Double> charge = this.sgDelay.doubleSetting("Charge", 1.0, 0.0, 1.0, 0.01, ".", () -> this.delayMode.get() == DelayMode.Vanilla);
-    private final Setting<Double> minDelay = this.sgDelay
-            .doubleSetting("Min Delay", 0.5, 0.0, 1.0, 0.01, ".", () -> this.delayMode.get() == DelayMode.Smart || this.delayMode.get() == DelayMode.Vanilla);
-    private final Setting<Double> randomNegative = this.sgDelay
-            .doubleSetting("Negative Random", 0.0, 0.0, 1.0, 0.01, ".", () -> this.delayMode.get() == DelayMode.Smart || this.delayMode.get() == DelayMode.Vanilla);
-    private final Setting<Double> randomPositive = this.sgDelay
-            .doubleSetting("Positive Random", 0.0, 0.0, 1.0, 0.01, ".", () -> this.delayMode.get() == DelayMode.Smart || this.delayMode.get() == DelayMode.Vanilla);
-    private final Setting<Integer> packets = this.sgDelay.intSetting("Packets", 1, 1, 10, 1, ".");
-    private final Setting<Boolean> critSync = this.sgDelay.booleanSetting("Crit Sync", true, "Delays attacks if you would fall down soon.");
-    private final Setting<Double> critVelocity = this.sgDelay
-            .doubleSetting("Crit Velocity", 0.1, 0.0, 1.0, 0.01, "Attacks when you have reached -x y velocity.", this.critSync::get);
-    private final Setting<Boolean> hitParticles = this.sgRender.booleanSetting("Hit Particles", false, "Spawn particles when hitting enemy.");
-    private final Setting<Boolean> swing = this.sgRender.booleanSetting("Swing", true, "Renders swing animation when attacking an entity.");
-    private final Setting<SwingHand> swingHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand, "Which hand should be swung.", this.swing::get);
-    private final Setting<RenderMode> renderMode = this.sgRender.enumSetting("Render Mode", RenderMode.Hit, ".");
-    private final Setting<Double> renderTime = this.sgRender.doubleSetting("Render Time", 1.0, 0.0, 10.0, 0.1, ".");
-    private final BoxMultiSetting rendering = BoxMultiSetting.of(this.sgRender, "Box");
+
+    private final Setting<TargetMode> targetMode = this.sgGeneral.enumSetting("Target Priority", TargetMode.Health, "Determines which entity is prioritized as the primary target.");
+    private final Setting<Boolean> checkMaxHP = this.sgGeneral.booleanSetting("HP Threshold Check", false, "Enable to filter targets based on their current health.");
+    private final Setting<Integer> maxHp = this.sgGeneral.intSetting("Maximum Health", 36, 0, 100, 1, "Only targets with total health below this value will be attacked.", this.checkMaxHP::get);
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Auto Switch", SwitchMode.Disabled, "Method for automatically switching to a combat weapon.");
+    private final Setting<Boolean> onlyWeapon = this.sgGeneral.booleanSetting("Weapon Filter", true, "Restricts attacks to only occur when holding a valid weapon.");
+    private final Setting<Boolean> ignoreNaked = this.sgGeneral.booleanSetting("Ignore Unarmored", false, "Prevents attacking players who are not wearing any armor.");
+    private final Setting<Boolean> tpDisable = this.sgGeneral.booleanSetting("TP Safety Disable", false, "Automatically disables the module upon server teleports or dimension changes.");
+    private final Setting<RotationMode> rotationMode = this.sgGeneral.enumSetting("Rotation Logic", RotationMode.OnHit, "Defines when the client should look at the target.");
+    private final Setting<List<EntityType<?>>> entities = this.sgGeneral.entityFilterdListSetting("Entity Targets", "List of entity types that the aura is allowed to attack.", type -> type != EntityType.ITEM && type != EntityType.EXPERIENCE_ORB && type != EntityType.AREA_EFFECT_CLOUD && type != EntityType.MARKER && type != EntityType.POTION && type != EntityType.LLAMA_SPIT && type != EntityType.EYE_OF_ENDER && type != EntityType.DRAGON_FIREBALL && type != EntityType.FIREWORK_ROCKET && type != EntityType.ENDER_PEARL && type != EntityType.FISHING_BOBBER && type != EntityType.ARROW && type != EntityType.SPECTRAL_ARROW && type != EntityType.SNOWBALL && type != EntityType.SMALL_FIREBALL && type != EntityType.WITHER_SKULL && type != EntityType.FALLING_BLOCK && type != EntityType.TNT && type != EntityType.EVOKER_FANGS && type != EntityType.LIGHTNING_BOLT && type != EntityType.WIND_CHARGE && type != EntityType.BREEZE_WIND_CHARGE && !type.toString().contains("display"), EntityType.PLAYER);
+    private final Setting<Double> hitChance = this.sgGeneral.doubleSetting("Accuracy Chance", 1.0, 0.0, 1.0, 0.01, "Percentage of intended hits that will actually be sent to the server.");
+    private final Setting<Double> expand = this.sgGeneral.doubleSetting("Hitbox Expansion", 0.0, 0.0, 1.0, 0.01, "Artificially increases the size of the target's hitbox.");
+    private final Setting<Integer> extrapolation = this.sgGeneral.intSetting("Movement Prediction", 1, 0, 3, 1, "The number of ticks to extrapolate the target's current movement.");
+    private final Setting<Boolean> disableDead = this.sgGeneral.booleanSetting("Auto Disable on Death", false, "Disables the module when the player dies.");
+    private final Setting<Boolean> ignoreRanges = this.sgGeneral.booleanSetting("Bypass Range Limits", false, "Ignores standard attack range checks, useful for specific combat scenarios.");
+    private final Setting<Double> hitHeight = this.sgGeneral.doubleSetting("Strike Height", 0.8, 0.0, 1.0, 0.01, "The vertical offset on the target's hitbox to prioritize for hits.");
+    private final Setting<Double> dynamicHeight = this.sgGeneral.doubleSetting("Eye Height Scaling", 0.5, 0.0, 1.0, 0.01, "Adjusts hit height based on your current eye level relative to the target.");
+    private final Setting<Boolean> critSprint = this.sgGeneral.booleanSetting("Sprint Reset Crit", true, "Sends a stop-sprint packet before hitting to ensure a critical hit occurs.");
+    private final Setting<Double> scanRange = this.sgGeneral.doubleSetting("Tracing Range", 0.0, 0.0, 10.0, 0.1, "Maximum distance to scan for targets with a direct line of sight.");
+    private final Setting<Double> wallScanRange = this.sgGeneral.doubleSetting("Wall Tracing Range", 0.0, 0.0, 10.0, 0.1, "Maximum distance to scan for targets behind obstacles.");
+
+    private final Setting<Boolean> teleport = this.sgTeleport.booleanSetting("Teleport Attacks", false, "Enables attacking targets outside of normal range by teleporting.");
+    private final Setting<Integer> maxPackets = this.sgTeleport.intSetting("TP Packet Limit", 1, 1, 10, 1, "Max number of position packets sent to reach the target.");
+    private final Setting<Double> maxDistance = this.sgTeleport.doubleSetting("TP Distance Limit", 5.0, 1.0, 50.0, 0.5, "Maximum total distance allowed for a teleportation attack.");
+    private final Setting<Boolean> tpBack = this.sgTeleport.booleanSetting("Teleport Back", false, "Returns you to your original position after a teleport attack.");
+
+    private final Setting<Boolean> blocking = this.sgBlocking.booleanSetting("Auto Shield/Block", false, "Automatically uses a shield or sword to block incoming damage.");
+    private final Setting<BlockMode> block = this.sgBlocking.enumSetting("Blocking Logic", BlockMode.Hold, "Determines how the blocking action is performed.", this.blocking::get);
+    private final Setting<BlockRenderMode> blockRender = this.sgBlocking.enumSetting("Block Animation", BlockRenderMode.Disabled, "Visual style for the blocking animation.", this.blocking::get);
+    private final Setting<Double> speed = this.sgBlocking.doubleSetting("Animation Speed", 0.5, 0.0, 1.0, 0.01, "Speed of the visual blocking animation.", () -> this.blocking.get() && this.blockRender.get() == BlockRenderMode.Fan || this.blockRender.get() == BlockRenderMode.Float || this.blockRender.get() == BlockRenderMode.Slap);
+
+    private final Setting<DelayMode> delayMode = this.sgDelay.enumSetting("Attack Timing", DelayMode.Smart, "Algorithm used to determine the interval between attacks.");
+    private final Setting<RandomMode> randomise = this.sgDelay.enumSetting("CPS Variation", RandomMode.Random, "Adds randomization to the clicks per second for a more human-like behavior.", () -> this.delayMode.get() == DelayMode.Basic);
+    private final Setting<Double> maxCps = this.sgDelay.doubleSetting("Maximum CPS", 12.0, 0.0, 20.0, 0.1, "Upper limit for clicks per second.", () -> this.delayMode.get() == DelayMode.Basic && this.randomise.get() != RandomMode.Disabled);
+    private final Setting<Double> minCps = this.sgDelay.doubleSetting("Minimum CPS", 8.0, 0.0, 20.0, 0.1, "Lower limit for clicks per second.", () -> this.delayMode.get() == DelayMode.Basic && this.randomise.get() != RandomMode.Disabled);
+    private final Setting<Double> cpsSetting = this.sgDelay.doubleSetting("Constant CPS", 15.0, 0.0, 20.0, 0.1, "The exact number of clicks per second when randomization is off.", () -> this.delayMode.get() == DelayMode.Basic && this.randomise.get() == RandomMode.Disabled);
+    private final Setting<Boolean> fatigueSim = this.sgDelay.booleanSetting("Fatigue Simulation", false, "Gradually slows down CPS over time to mimic human tiredness.", () -> this.delayMode.get() == DelayMode.Basic);
+    private final Setting<Integer> maxFatigue = this.sgDelay.intSetting("Fatigue Ceiling", 50, 0, 1000, 1, "Maximum delay in milliseconds added by fatigue.", () -> this.delayMode.get() == DelayMode.Basic && this.fatigueSim.get());
+    private final Setting<Integer> fatigueRaise = this.sgDelay.intSetting("Fatigue Intensity", 5, 0, 1000, 1, "How much fatigue increases per attack.", () -> this.delayMode.get() == DelayMode.Basic && this.fatigueSim.get());
+    private final Setting<Integer> fatigueDecrease = this.sgDelay.intSetting("Fatigue Recovery", 2, 0, 1000, 1, "How quickly fatigue dissipates when not attacking.", () -> this.delayMode.get() == DelayMode.Basic && this.fatigueSim.get());
+    private final Setting<Double> charge = this.sgDelay.doubleSetting("Attack Charge", 1.0, 0.0, 1.0, 0.01, "Required cooldown percentage before attacking in Vanilla mode.", () -> this.delayMode.get() == DelayMode.Vanilla);
+    private final Setting<Double> minDelay = this.sgDelay.doubleSetting("Minimum Delay", 0.5, 0.0, 1.0, 0.01, "Lowest possible time between attacks.", () -> this.delayMode.get() == DelayMode.Smart || this.delayMode.get() == DelayMode.Vanilla);
+    private final Setting<Double> randomNegative = this.sgDelay.doubleSetting("Jitter Negative", 0.0, 0.0, 1.0, 0.01, "Maximum subtraction from the calculated attack delay.", () -> this.delayMode.get() == DelayMode.Smart || this.delayMode.get() == DelayMode.Vanilla);
+    private final Setting<Double> randomPositive = this.sgDelay.doubleSetting("Jitter Positive", 0.0, 0.0, 1.0, 0.01, "Maximum addition to the calculated attack delay.", () -> this.delayMode.get() == DelayMode.Smart || this.delayMode.get() == DelayMode.Vanilla);
+    private final Setting<Integer> packets = this.sgDelay.intSetting("Attack Packets", 1, 1, 10, 1, "Number of attack packets to send per strike.");
+    private final Setting<Boolean> critSync = this.sgDelay.booleanSetting("Critical Synchronization", true, "Waits for the optimal falling moment to ensure a critical hit.");
+    private final Setting<Double> critVelocity = this.sgDelay.doubleSetting("Crit Fall Velocity", 0.1, 0.0, 1.0, 0.01, "The downward velocity required to trigger a synchronized critical attack.", this.critSync::get);
+
+    private final Setting<Boolean> hitParticles = this.sgRender.booleanSetting("Critical Particles", false, "Spawns particle effects when a target is successfully hit.");
+    private final Setting<Boolean> swing = this.sgRender.booleanSetting("Hand Animation", true, "Renders the arm swing animation on the client.");
+    private final Setting<SwingHand> swingHand = this.sgRender.enumSetting("Swing Arm", SwingHand.RealHand, "Which arm to use for the swing animation.", this.swing::get);
+    private final Setting<RenderMode> renderMode = this.sgRender.enumSetting("Target Rendering", RenderMode.Hit, "Method for highlighting the current target.");
+    private final Setting<Double> renderTime = this.sgRender.doubleSetting("Visual Duration", 1.0, 0.0, 10.0, 0.1, "How long the target highlight remains visible.");
+    private final BoxMultiSetting rendering = BoxMultiSetting.of(this.sgRender, "Target Highlight");
+
     private final RenderList<Box> renderBoxes = RenderList.getList(false);
     private final ExtrapolationMap extrapolationMap = new ExtrapolationMap();
     public boolean isBlocking = false;
@@ -170,7 +129,7 @@ public class Aura extends MoveUpdateModule {
     private Box renderBox = new Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
     public Aura() {
-        super("Aura", "Pokes people automatically.", SubCategory.OFFENSIVE);
+        super("Aura", "Automatically engages nearby entities using advanced targeting and timing algorithms.", SubCategory.OFFENSIVE);
         INSTANCE = this;
     }
 

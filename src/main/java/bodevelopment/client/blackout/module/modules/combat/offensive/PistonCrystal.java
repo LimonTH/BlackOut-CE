@@ -7,6 +7,7 @@ import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
+import bodevelopment.client.blackout.module.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.Notifications;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -40,62 +41,66 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+// TODO: NEED PATCHES
+@OnlyDev
 public class PistonCrystal extends Module {
-    public static AbstractClientPlayerEntity targetedPlayer = null;
     private static PistonCrystal INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgDelay = this.addGroup("Delay");
     private final SettingGroup sgSwitch = this.addGroup("Switch");
     private final SettingGroup sgToggle = this.addGroup("Toggle");
     private final SettingGroup sgSwing = this.addGroup("Swing");
     private final SettingGroup sgRender = this.addGroup("Render");
-    private final Setting<Boolean> pauseEat = this.sgGeneral.booleanSetting("Pause Eat", false, "Pauses when eating.");
-    private final Setting<Boolean> fire = this.sgGeneral.booleanSetting("Fire", false, "Uses fire to blow up the crystal.");
-    private final Setting<Redstone> redstone = this.sgGeneral.enumSetting("Redstone", Redstone.Torch, "What kind of redstone to use.");
-    private final Setting<Boolean> alwaysAttack = this.sgGeneral.booleanSetting("Always Attack", false, "Attacks all crystals blocking crystal placing.");
-    private final Setting<Double> attackSpeed = this.sgGeneral.doubleSetting("Attack Speed", 4.0, 0.0, 20.0, 0.1, "Attacks all crystals blocking crystal placing.");
-    private final Setting<Boolean> pauseOffGround = this.sgGeneral.booleanSetting("Pause Off Ground", true, ".");
-    private final Setting<Double> pcDelay = this.sgDelay
-            .doubleSetting("Piston > Crystal", 0.0, 0.0, 1.0, 0.01, "How many seconds to wait between placing piston and crystal.");
-    private final Setting<Double> cfDelay = this.sgDelay
-            .doubleSetting("Crystal > Fire", 0.25, 0.0, 1.0, 0.01, "How many seconds to wait between placing a crystal and placing fire.");
-    private final Setting<Double> crDelay = this.sgDelay
-            .doubleSetting("Crystal > Redstone", 0.25, 0.0, 1.0, 0.01, "How many seconds to wait between placing a crystal and placing redstone.");
-    private final Setting<Double> rmDelay = this.sgDelay
-            .doubleSetting("Redstone > Mine", 0.25, 0.0, 1.0, 0.01, "How many seconds to wait between placing redstone and starting to mine.");
-    private final Setting<Double> raDelay = this.sgDelay
-            .doubleSetting("Redstone > Attack", 0.1, 0.0, 1.0, 0.01, "How many seconds to wait between placing redstone and attacking a crystal.");
-    private final Setting<Double> mpDelay = this.sgDelay
-            .doubleSetting("Mine > Piston", 0.25, 0.0, 1.0, 0.01, "How many seconds to wait after mining the redstone before starting a new cycle.");
-    private final Setting<SwitchMode> crystalSwitch = this.sgSwitch.enumSetting("Crystal Switch", SwitchMode.Normal, "Method of switching. Silent is the most reliable.");
-    private final Setting<SwitchMode> pistonSwitch = this.sgSwitch.enumSetting("Piston Switch", SwitchMode.Normal, "Method of switching. Silent is the most reliable.");
-    private final Setting<SwitchMode> redstoneSwitch = this.sgSwitch
-            .enumSetting("Redstone Switch", SwitchMode.Normal, "Method of switching. Silent is the most reliable.");
-    private final Setting<SwitchMode> fireSwitch = this.sgSwitch.enumSetting("Fire Switch", SwitchMode.Normal, "Method of switching. Silent is the most reliable.");
-    private final Setting<Boolean> toggleMove = this.sgToggle.booleanSetting("Toggle Move", false, "Disables when moved.");
-    private final Setting<Boolean> toggleEnemyMove = this.sgToggle.booleanSetting("Toggle Enemy Move", false, "Disables when enemy moved.");
-    private final Setting<Boolean> crystalSwing = this.sgSwing.booleanSetting("Crystal Swing", false, "Renders swing animation when placing a crystal.");
-    private final Setting<SwingHand> crystalHand = this.sgSwing.enumSetting("Crystal Hand", SwingHand.RealHand, "Which hand should be swung.", this.crystalSwing::get);
-    private final Setting<Boolean> attackSwing = this.sgSwing.booleanSetting("Attack Swing", false, "Renders swing animation when attacking a crystal.");
-    private final Setting<SwingHand> attackHand = this.sgSwing.enumSetting("Attack Hand", SwingHand.RealHand, "Which hand should be swung.", this.attackSwing::get);
-    private final Setting<Boolean> pistonSwing = this.sgSwing.booleanSetting("Piston Swing", false, "Renders swing animation when placing a piston.");
-    private final Setting<SwingHand> pistonHand = this.sgSwing.enumSetting("Piston Hand", SwingHand.RealHand, "Which hand should be swung.", this.pistonSwing::get);
-    private final Setting<Boolean> redstoneSwing = this.sgSwing.booleanSetting("Redstone Swing", false, "Renders swing animation when placing redstone.");
-    private final Setting<SwingHand> redstoneHand = this.sgSwing.enumSetting("Redstone Hand", SwingHand.RealHand, "Which hand should be swung.", this.redstoneSwing::get);
-    private final Setting<Boolean> fireSwing = this.sgSwing.booleanSetting("Fire Swing", false, "Renders swing animation when placing fire.");
-    private final Setting<SwingHand> fireHand = this.sgSwing.enumSetting("Fire Hand", SwingHand.RealHand, "Which hand should be swung.", this.fireSwing::get);
-    private final Setting<Double> crystalHeight = this.sgRender.doubleSetting("Crystal Height", 0.25, -1.0, 1.0, 0.05, "Height of crystal render.");
-    private final Setting<RenderShape> crystalShape = this.sgRender.enumSetting("Crystal Shape", RenderShape.Full, "Which parts should be rendered.");
-    private final Setting<BlackOutColor> crystalLineColor = this.sgRender.colorSetting("Crystal Line Color", new BlackOutColor(255, 0, 0, 255), ".");
-    private final Setting<BlackOutColor> crystalSideColor = this.sgRender.colorSetting("Crystal Side Color", new BlackOutColor(255, 0, 0, 50), ".");
-    private final Setting<Double> pistonHeight = this.sgRender.doubleSetting("Piston Height", 1.0, -1.0, 1.0, 0.05, "Height of crystal render.");
-    private final Setting<RenderShape> pistonShape = this.sgRender.enumSetting("Pistonl Shape", RenderShape.Full, "Which parts should be rendered.");
-    private final Setting<BlackOutColor> pistonLineColor = this.sgRender.colorSetting("Piston Line Color", new BlackOutColor(255, 255, 255, 255), ".");
-    private final Setting<BlackOutColor> pistonSideColor = this.sgRender.colorSetting("Piston Side Color", new BlackOutColor(255, 255, 255, 50), ".");
-    private final Setting<Double> redstoneHeight = this.sgRender.doubleSetting("Redstone Height", 1.0, -1.0, 1.0, 0.05, "Height of crystal render.");
-    private final Setting<RenderShape> redstoneShape = this.sgRender.enumSetting("Redstone Shape", RenderShape.Full, "Which parts should be rendered.");
-    private final Setting<BlackOutColor> redstoneLineColor = this.sgRender.colorSetting("Redstone Line Color", new BlackOutColor(255, 0, 0, 255), ".");
-    private final Setting<BlackOutColor> redstoneSideColor = this.sgRender.colorSetting("Redstone Side Color", new BlackOutColor(255, 0, 0, 50), ".");
+
+    private final Setting<Boolean> pauseEat = this.sgGeneral.booleanSetting("Pause on Consume", false, "Suspends operations while eating or drinking.");
+    private final Setting<Boolean> fire = this.sgGeneral.booleanSetting("Ignition", false, "Uses fire to immediately detonate the crystal upon reaching the target.");
+    private final Setting<Redstone> redstone = this.sgGeneral.enumSetting("Redstone Type", Redstone.Torch, "The redstone component used to power the piston.");
+    private final Setting<Boolean> alwaysAttack = this.sgGeneral.booleanSetting("Clear Obstructions", false, "Continuously attacks any crystals that obstruct the placement path.");
+    private final Setting<Double> attackSpeed = this.sgGeneral.doubleSetting("Attack Frequency", 4.0, 0.0, 20.0, 0.1, "The speed at which obstructing crystals are attacked.");
+    private final Setting<Boolean> pauseOffGround = this.sgGeneral.booleanSetting("Grounded Only", true, "Suspends the module when the player is airborne to maintain precision.");
+
+    private final Setting<Double> pcDelay = this.sgDelay.doubleSetting("Piston-to-Crystal Delay", 0.0, 0.0, 1.0, 0.01, "The wait time between placing the piston and the crystal.");
+    private final Setting<Double> cfDelay = this.sgDelay.doubleSetting("Crystal-to-Fire Delay", 0.25, 0.0, 1.0, 0.01, "The wait time between placing the crystal and ignition.");
+    private final Setting<Double> crDelay = this.sgDelay.doubleSetting("Crystal-to-Redstone Delay", 0.25, 0.0, 1.0, 0.01, "The wait time between placing the crystal and the redstone source.");
+    private final Setting<Double> rmDelay = this.sgDelay.doubleSetting("Redstone-to-Mine Delay", 0.25, 0.0, 1.0, 0.01, "The wait time between placing redstone and initiating the mining process.");
+    private final Setting<Double> raDelay = this.sgDelay.doubleSetting("Redstone-to-Attack Delay", 0.1, 0.0, 1.0, 0.01, "The wait time between powering the piston and attacking the crystal.");
+    private final Setting<Double> mpDelay = this.sgDelay.doubleSetting("Cycle Reset Delay", 0.25, 0.0, 1.0, 0.01, "The wait time after a successful cycle before starting the next placement.");
+
+    private final Setting<SwitchMode> crystalSwitch = this.sgSwitch.enumSetting("Crystal Switch", SwitchMode.Normal, "The method used to select End Crystals in the hotbar.");
+    private final Setting<SwitchMode> pistonSwitch = this.sgSwitch.enumSetting("Piston Switch", SwitchMode.Normal, "The method used to select Pistons in the hotbar.");
+    private final Setting<SwitchMode> redstoneSwitch = this.sgSwitch.enumSetting("Redstone Switch", SwitchMode.Normal, "The method used to select redstone sources in the hotbar.");
+    private final Setting<SwitchMode> fireSwitch = this.sgSwitch.enumSetting("Fire Switch", SwitchMode.Normal, "The method used to select flint and steel in the hotbar.");
+
+    private final Setting<Boolean> toggleMove = this.sgToggle.booleanSetting("Auto-Disable on Move", false, "Disables the module if the player moves from their current position.");
+    private final Setting<Boolean> toggleEnemyMove = this.sgToggle.booleanSetting("Auto-Disable on Target Move", false, "Disables the module if the enemy moves away.");
+
+    private final Setting<Boolean> crystalSwing = this.sgSwing.booleanSetting("Crystal Swing", false, "Visualizes the arm swing when placing a crystal.");
+    private final Setting<SwingHand> crystalHand = this.sgSwing.enumSetting("Crystal Arm", SwingHand.RealHand, "The arm used for crystal placement animations.");
+    private final Setting<Boolean> attackSwing = this.sgSwing.booleanSetting("Attack Swing", false, "Visualizes the arm swing when attacking.");
+    private final Setting<SwingHand> attackHand = this.sgSwing.enumSetting("Attack Arm", SwingHand.RealHand, "The arm used for attack animations.");
+    private final Setting<Boolean> pistonSwing = this.sgSwing.booleanSetting("Piston Swing", false, "Visualizes the arm swing when placing a piston.");
+    private final Setting<SwingHand> pistonHand = this.sgSwing.enumSetting("Piston Arm", SwingHand.RealHand, "The arm used for piston placement animations.");
+    private final Setting<Boolean> redstoneSwing = this.sgSwing.booleanSetting("Redstone Swing", false, "Visualizes the arm swing when placing redstone.");
+    private final Setting<SwingHand> redstoneHand = this.sgSwing.enumSetting("Redstone Arm", SwingHand.RealHand, "The arm used for redstone placement animations.");
+    private final Setting<Boolean> fireSwing = this.sgSwing.booleanSetting("Fire Swing", false, "Visualizes the arm swing when using flint and steel.");
+    private final Setting<SwingHand> fireHand = this.sgSwing.enumSetting("Fire Arm", SwingHand.RealHand, "The arm used for fire placement animations.");
+
+    private final Setting<Double> crystalHeight = this.sgRender.doubleSetting("Crystal Render Height", 0.25, -1.0, 1.0, 0.05, "The vertical scale of the crystal placement highlight.");
+    private final Setting<RenderShape> crystalShape = this.sgRender.enumSetting("Crystal Highlight Shape", RenderShape.Full, "The geometry used to render the crystal target box.");
+    private final Setting<BlackOutColor> crystalLineColor = this.sgRender.colorSetting("Crystal Outline Color", new BlackOutColor(255, 0, 0, 255), "The color of the crystal highlight edges.");
+    private final Setting<BlackOutColor> crystalSideColor = this.sgRender.colorSetting("Crystal Fill Color", new BlackOutColor(255, 0, 0, 50), "The color of the crystal highlight faces.");
+    private final Setting<Double> pistonHeight = this.sgRender.doubleSetting("Piston Render Height", 1.0, -1.0, 1.0, 0.05, "The vertical scale of the piston placement highlight.");
+    private final Setting<RenderShape> pistonShape = this.sgRender.enumSetting("Piston Highlight Shape", RenderShape.Full, "The geometry used to render the piston target box.");
+    private final Setting<BlackOutColor> pistonLineColor = this.sgRender.colorSetting("Piston Outline Color", new BlackOutColor(255, 255, 255, 255), "The color of the piston highlight edges.");
+    private final Setting<BlackOutColor> pistonSideColor = this.sgRender.colorSetting("Piston Fill Color", new BlackOutColor(255, 255, 255, 50), "The color of the piston highlight faces.");
+    private final Setting<Double> redstoneHeight = this.sgRender.doubleSetting("Redstone Render Height", 1.0, -1.0, 1.0, 0.05, "The vertical scale of the redstone placement highlight.");
+    private final Setting<RenderShape> redstoneShape = this.sgRender.enumSetting("Redstone Highlight Shape", RenderShape.Full, "The geometry used to render the redstone target box.");
+    private final Setting<BlackOutColor> redstoneLineColor = this.sgRender.colorSetting("Redstone Outline Color", new BlackOutColor(255, 0, 0, 255), "The color of the redstone highlight edges.");
+    private final Setting<BlackOutColor> redstoneSideColor = this.sgRender.colorSetting("Redstone Fill Color", new BlackOutColor(255, 0, 0, 50), "The color of the redstone highlight faces.");
+
+    // TODO: prevTarget, startedMining не используется
+    public static AbstractClientPlayerEntity targetedPlayer = null;
     private final TimerList<Entity> attacked = new TimerList<>(true);
     public BlockPos crystalPos = null;
     private long lastAttack = 0L;
@@ -145,7 +150,7 @@ public class PistonCrystal extends Module {
     private long prevNotification = 0L;
 
     public PistonCrystal() {
-        super("Piston Crystal", "Pushes crystals into your enemies to deal massive damage.", SubCategory.OFFENSIVE, true);
+        super("Piston Crystal", "Utilizes pistons to force End Crystals into the target's space for unavoidable explosive damage.", SubCategory.OFFENSIVE, true);
         INSTANCE = this;
     }
 

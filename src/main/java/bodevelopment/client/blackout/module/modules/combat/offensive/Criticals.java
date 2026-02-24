@@ -7,6 +7,7 @@ import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.mixin.accessors.AccessorInteractEntityC2SPacket;
 import bodevelopment.client.blackout.module.Module;
+import bodevelopment.client.blackout.module.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -20,18 +21,21 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
+// TODO: NEED PATCHES
+@OnlyDev
 public class Criticals extends Module {
     private static Criticals INSTANCE;
 
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Packet, "How to crit.");
-    private final Setting<Integer> spoofTime = this.sgGeneral.intSetting("Spoof Time", 500, 0, 2500, 50, "For Strict mode.", () -> this.mode.get() == Mode.Strict);
+
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Bypass Mode", Mode.Packet, "The method used to trick the server into registering a critical hit.");
+    private final Setting<Integer> spoofTime = this.sgGeneral.intSetting("Spoof Duration", 500, 0, 2500, 50, "The duration in milliseconds to maintain a false falling state for Strict mode.", () -> this.mode.get() == Mode.Strict);
 
     private boolean shouldSpoof = false;
     private long prevJump = 0L;
 
     public Criticals() {
-        super("Criticals", "Deals critical hits", SubCategory.OFFENSIVE, true);
+        super("Criticals", "Forces every attack to be a critical hit by manipulating the player's vertical position or movement packets.", SubCategory.OFFENSIVE, true);
         INSTANCE = this;
     }
 

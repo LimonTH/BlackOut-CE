@@ -23,18 +23,21 @@ import net.minecraft.util.math.Vec3d;
 
 public class BackTrack extends Module {
     private static BackTrack INSTANCE;
+
+    private final SettingGroup sgGeneral = this.addGroup("General");
+
+    public final Setting<Integer> time = this.sgGeneral.intSetting("Backtrack Ticks", 5, 0, 20, 1, "The amount of ticks an entity's hitbox is preserved after a hit.");
+    public final Setting<Integer> maxTime = this.sgGeneral.intSetting("Maximum Spoof Ticks", 50, 0, 100, 1, "The maximum duration to maintain a spoofed hitbox position.");
+    private final Setting<RenderShape> renderShape = this.sgGeneral.enumSetting("Render Shape", RenderShape.Full, "Determines which geometric components of the backtrack box are rendered.");
+    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Outline Color", new BlackOutColor(255, 0, 0, 255), "The color of the box outlines for backtracked positions.");
+    private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Fill Color", new BlackOutColor(255, 0, 0, 50), "The color of the box faces for backtracked positions.");
+
     public final TickTimerList<Pair<OtherClientPlayerEntity, Box>> hit = new TickTimerList<>(false);
     public final TickTimerList<Pair<OtherClientPlayerEntity, Box>> spoofed = new TickTimerList<>(false);
     public final TimerMap<OtherClientPlayerEntity, Vec3d> realPositions = new TimerMap<>(false);
-    private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Integer> time = this.sgGeneral.intSetting("Ticks", 5, 0, 20, 1, ".");
-    public final Setting<Integer> maxTime = this.sgGeneral.intSetting("Max Ticks", 50, 0, 100, 1, ".");
-    private final Setting<RenderShape> renderShape = this.sgGeneral.enumSetting("Render Shape", RenderShape.Full, "Which parts of render should be rendered.");
-    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Line Color", new BlackOutColor(255, 0, 0, 255), "Line color of rendered boxes.");
-    private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Side Color", new BlackOutColor(255, 0, 0, 50), "Side color of rendered boxes.");
 
     public BackTrack() {
-        super("Back Track", ".", SubCategory.OFFENSIVE, true);
+        super("Back Track", "Compensates for latency by allowing you to hit an entity's previous position.", SubCategory.OFFENSIVE, true);
         INSTANCE = this;
     }
 

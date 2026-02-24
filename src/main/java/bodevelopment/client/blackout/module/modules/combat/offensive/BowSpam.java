@@ -15,11 +15,12 @@ import net.minecraft.util.Hand;
 public class BowSpam extends Module {
     private static BowSpam INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Integer> charge = this.sgGeneral.intSetting("Charge", 3, 3, 20, 1, "How long to charge until releasing");
-    public final Setting<Boolean> fast = this.sgGeneral.booleanSetting("Instant", false, "Instantly restarts using after stopping. Might not lose charge.");
+
+    public final Setting<Integer> charge = this.sgGeneral.intSetting("Charge Duration", 3, 3, 20, 1, "The number of ticks to charge the bow before releasing the arrow.");
+    public final Setting<Boolean> fast = this.sgGeneral.booleanSetting("Instant Draw", false, "Immediately begins drawing the next arrow after release to maximize projectile throughput.");
 
     public BowSpam() {
-        super("Bow Spam", "Automatically releases arrows", SubCategory.OFFENSIVE, true);
+        super("Bow Spam", "Automatically releases bow tension at optimized intervals to maximize fire rate.", SubCategory.OFFENSIVE, true);
         INSTANCE = this;
     }
 

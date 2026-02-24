@@ -10,6 +10,7 @@ import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
+import bodevelopment.client.blackout.module.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -43,51 +44,55 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
 
+// TODO: NEED PATCHES
+@OnlyDev
 public class AnchorAura extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
     public final SettingGroup sgDamage = this.addGroup("Damage");
     public final SettingGroup sgExtrapolation = this.addGroup("Extrapolation");
     public final SettingGroup sgRender = this.addGroup("Render");
-    private final Setting<Double> enemyDistance = this.sgGeneral.doubleSetting("Enemy Distance", 10.0, 0.0, 100.0, 1.0, ".");
-    private final Setting<Double> placeSpeed = this.sgGeneral.doubleSetting("Place Speed", 4.0, 0.0, 20.0, 0.1, ".");
-    private final Setting<Double> interactSpeed = this.sgGeneral.doubleSetting("Load Speed", 2.0, 0.0, 20.0, 0.1, ".");
-    private final Setting<Double> explodeSpeed = this.sgGeneral.doubleSetting("Explode Speed", 2.0, 0.0, 20.0, 0.1, ".");
-    private final Setting<SwitchMode> switchMode = this.sgGeneral
-            .enumSetting("Switch Mode", SwitchMode.Silent, "Method of switching. Silent is the most reliable but delays crystals on some servers.");
-    private final Setting<Double> minPlace = this.sgDamage.doubleSetting("Min Place", 5.0, 0.0, 20.0, 0.1, "Minimum damage to place.");
-    private final Setting<Boolean> checkSelfPlacing = this.sgDamage.booleanSetting("Self Placing", true, "Checks self damage when placing.");
-    private final Setting<Double> maxSelfPlace = this.sgDamage.doubleSetting("Max Place", 10.0, 0.0, 20.0, 0.1, "Max self damage for placing.", this.checkSelfPlacing::get);
-    private final Setting<Double> minSelfRatio = this.sgDamage
-            .doubleSetting("Min Place Ratio", 2.0, 0.0, 20.0, 0.1, "Min self damage ratio for placing (enemy / self).", this.checkSelfPlacing::get);
-    private final Setting<Boolean> checkFriendPlacing = this.sgDamage.booleanSetting("Friend Placing", true, "Checks friend damage when placing.");
-    private final Setting<Double> maxFriendPlace = this.sgDamage
-            .doubleSetting("Max Friend Place", 12.0, 0.0, 20.0, 0.1, "Max friend damage for placing.", this.checkFriendPlacing::get);
-    private final Setting<Double> minFriendRatio = this.sgDamage
-            .doubleSetting("Min Friend Place Ratio", 1.0, 0.0, 20.0, 0.1, "Min friend damage ratio for placing (enemy / friend).", this.checkFriendPlacing::get);
-    private final Setting<Boolean> checkEnemyExplode = this.sgDamage.booleanSetting("Enemy Explode", true, "Checks enemy damage when attacking.");
-    private final Setting<Double> minExplode = this.sgDamage.doubleSetting("Min Explode", 5.0, 0.0, 20.0, 0.1, "Minimum damage to attack.", this.checkEnemyExplode::get);
-    private final Setting<Boolean> checkSelfExplode = this.sgDamage.booleanSetting("Self Explode", true, "Checks self damage when attacking.");
-    private final Setting<Double> maxSelfExplode = this.sgDamage
-            .doubleSetting("Max Explode", 10.0, 0.0, 20.0, 0.1, "Max self damage for attacking.", this.checkSelfExplode::get);
-    private final Setting<Double> minSelfExplodeRatio = this.sgDamage
-            .doubleSetting("Min Explode Ratio", 2.0, 0.0, 20.0, 0.1, "Min self damage ratio for attacking (enemy / self).", this.checkSelfExplode::get);
-    private final Setting<Boolean> checkFriendExplode = this.sgDamage.booleanSetting("Friend Explode", true, "Checks friend damage when attacking.");
-    private final Setting<Double> maxFriendExplode = this.sgDamage
-            .doubleSetting("Max Friend Explode", 12.0, 0.0, 20.0, 0.1, "Max friend damage for attacking.", this.checkFriendExplode::get);
-    private final Setting<Double> minFriendExplodeRatio = this.sgDamage
-            .doubleSetting("Min Friend Explode Ratio", 1.0, 0.0, 20.0, 0.1, "Min friend damage ratio for attacking (enemy / friend).", this.checkFriendExplode::get);
-    private final Setting<Double> forcePop = this.sgDamage.doubleSetting("Force Pop", 0.0, 0.0, 5.0, 0.25, "Ignores damage checks if any enemy will be popped in x hits.");
-    private final Setting<Double> selfPop = this.sgDamage.doubleSetting("Anti Pop", 1.0, 0.0, 5.0, 0.25, "Ignores damage checks if any enemy will be popped in x hits.");
-    private final Setting<Double> friendPop = this.sgDamage
-            .doubleSetting("Anti Friend Pop", 0.0, 0.0, 5.0, 0.25, "Ignores damage checks if any enemy will be popped in x hits.");
-    private final Setting<Integer> extrapolation = this.sgExtrapolation.intSetting("Extrapolation", 0, 0, 20, 1, ".");
-    private final Setting<Integer> selfExtrapolation = this.sgExtrapolation.intSetting("Self Extrapolation", 0, 0, 20, 1, ".");
-    private final Setting<Integer> hitboxExtrapolation = this.sgExtrapolation.intSetting("Hitbox Extrapolation", 0, 0, 20, 1, ".");
-    private final Setting<Boolean> placeSwing = this.sgRender.booleanSetting("Place Swing", false, "Renders swing animation when placing a crystal.");
-    private final Setting<SwingHand> placeHand = this.sgRender.enumSetting("Place Hand", SwingHand.RealHand, "Which hand should be swung.");
-    private final Setting<RenderShape> renderShape = this.sgRender.enumSetting("Render Shape", RenderShape.Full, "Which parts of render should be rendered.");
-    private final Setting<BlackOutColor> lineColor = this.sgRender.colorSetting("Line Color", new BlackOutColor(255, 0, 0, 255), "Line color of rendered boxes.");
-    private final Setting<BlackOutColor> sideColor = this.sgRender.colorSetting("Side Color", new BlackOutColor(255, 0, 0, 50), "Side color of rendered boxes.");
+
+    private final Setting<Double> enemyDistance = this.sgGeneral.doubleSetting("Target Distance", 10.0, 0.0, 100.0, 1.0, "The maximum distance to scan for potential targets.");
+    private final Setting<Double> placeSpeed = this.sgGeneral.doubleSetting("Place Speed", 4.0, 0.0, 20.0, 0.1, "How many anchors to place per second.");
+    private final Setting<Double> interactSpeed = this.sgGeneral.doubleSetting("Load Speed", 2.0, 0.0, 20.0, 0.1, "How many Glowstone Dusts to put into anchors per second.");
+    private final Setting<Double> explodeSpeed = this.sgGeneral.doubleSetting("Explode Speed", 2.0, 0.0, 20.0, 0.1, "How many anchors to trigger per second.");
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent, "The method used to swap to anchors and glowstone.");
+
+    private final Setting<Double> minPlace = this.sgDamage.doubleSetting("Min Place Damage", 5.0, 0.0, 20.0, 0.1, "Minimum damage required to initiate anchor placement.");
+    private final Setting<Boolean> checkSelfPlacing = this.sgDamage.booleanSetting("Self Safety Check", true, "Calculates potential self-damage when placing.");
+    private final Setting<Double> maxSelfPlace = this.sgDamage.doubleSetting("Max Self Place", 10.0, 0.0, 20.0, 0.1, "Maximum allowed self-damage for placement.", this.checkSelfPlacing::get);
+    private final Setting<Double> minSelfRatio = this.sgDamage.doubleSetting("Min Place Ratio", 2.0, 0.0, 20.0, 0.1, "Required damage ratio (Enemy / Self) for placing.", this.checkSelfPlacing::get);
+
+    private final Setting<Boolean> checkFriendPlacing = this.sgDamage.booleanSetting("Friend Safety Check", true, "Prevents placing if it would significantly damage allies.");
+    private final Setting<Double> maxFriendPlace = this.sgDamage.doubleSetting("Max Friend Place", 12.0, 0.0, 20.0, 0.1, "Max allowed damage to friends during placement.", this.checkFriendPlacing::get);
+    private final Setting<Double> minFriendRatio = this.sgDamage.doubleSetting("Min Friend Place Ratio", 1.0, 0.0, 20.0, 0.1, "Required damage ratio (Enemy / Friend) for placing.", this.checkFriendPlacing::get);
+
+    private final Setting<Boolean> checkEnemyExplode = this.sgDamage.booleanSetting("Enemy Explode Check", true, "Ensures the explosion deals enough damage to the target.");
+    private final Setting<Double> minExplode = this.sgDamage.doubleSetting("Min Explode Damage", 5.0, 0.0, 20.0, 0.1, "Minimum damage required to trigger the explosion.", this.checkEnemyExplode::get);
+
+    private final Setting<Boolean> checkSelfExplode = this.sgDamage.booleanSetting("Self Explode Check", true, "Calculates self-damage before triggering the explosion.");
+    private final Setting<Double> maxSelfExplode = this.sgDamage.doubleSetting("Max Self Explode", 10.0, 0.0, 20.0, 0.1, "Maximum allowed self-damage for explosions.", this.checkSelfExplode::get);
+    private final Setting<Double> minSelfExplodeRatio = this.sgDamage.doubleSetting("Min Explode Ratio", 2.0, 0.0, 20.0, 0.1, "Required damage ratio (Enemy / Self) for attacking.", this.checkSelfExplode::get);
+
+    private final Setting<Boolean> checkFriendExplode = this.sgDamage.booleanSetting("Friend Explode Check", true, "Calculates allied damage before triggering the explosion.");
+    private final Setting<Double> maxFriendExplode = this.sgDamage.doubleSetting("Max Friend Explode", 12.0, 0.0, 20.0, 0.1, "Max allowed damage to friends during explosions.", this.checkFriendExplode::get);
+    private final Setting<Double> minFriendExplodeRatio = this.sgDamage.doubleSetting("Min Friend Explode Ratio", 1.0, 0.0, 20.0, 0.1, "Required damage ratio (Enemy / Friend) for attacking.", this.checkFriendExplode::get);
+
+    private final Setting<Double> forcePop = this.sgDamage.doubleSetting("Force Pop", 0.0, 0.0, 5.0, 0.25, "Bypasses damage checks if the explosion is likely to pop a totem.");
+    private final Setting<Double> selfPop = this.sgDamage.doubleSetting("Anti Self-Pop", 1.0, 0.0, 5.0, 0.25, "Strictness of self-pop prevention.");
+    private final Setting<Double> friendPop = this.sgDamage.doubleSetting("Anti Friend-Pop", 0.0, 0.0, 5.0, 0.25, "Strictness of allied-pop prevention.");
+
+    private final Setting<Integer> extrapolation = this.sgExtrapolation.intSetting("Enemy Prediction", 0, 0, 20, 1, "The amount of ticks to predict enemy movement.");
+    private final Setting<Integer> selfExtrapolation = this.sgExtrapolation.intSetting("Self Prediction", 0, 0, 20, 1, "The amount of ticks to predict your own movement.");
+    private final Setting<Integer> hitboxExtrapolation = this.sgExtrapolation.intSetting("Hitbox Prediction", 0, 0, 20, 1, "The amount of ticks to predict the entity hitbox size.");
+
+    private final Setting<Boolean> placeSwing = this.sgRender.booleanSetting("Swing Animation", false, "Renders a hand swing animation when interacting.");
+    private final Setting<SwingHand> placeHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand, "Which hand to perform the animation with.");
+    private final Setting<RenderShape> renderShape = this.sgRender.enumSetting("Render Shape", RenderShape.Full, "Visual style of the target block highlights.");
+    private final Setting<BlackOutColor> lineColor = this.sgRender.colorSetting("Outline Color", new BlackOutColor(255, 0, 0, 255), "The color of the box outlines.");
+    private final Setting<BlackOutColor> sideColor = this.sgRender.colorSetting("Side Color", new BlackOutColor(255, 0, 0, 50), "The color of the box faces.");
+
+    // TODO: target не используется
     private final ExtrapolationMap extMap = new ExtrapolationMap();
     private final ExtrapolationMap hitboxMap = new ExtrapolationMap();
     private final List<PlayerEntity> enemies = new ArrayList<>();
@@ -116,9 +121,8 @@ public class AnchorAura extends Module {
     private boolean bestIsLoaded = false;
 
     public AnchorAura() {
-        super("Anchor Aura", "Places and blows up anchors.", SubCategory.OFFENSIVE, true);
+        super("Anchor Aura", "Automatically places, charges, and detonates Respawn Anchors for high offensive damage.", SubCategory.OFFENSIVE, true);
     }
-
     @Event
     public void onTick(TickEvent.Post event) {
         if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
