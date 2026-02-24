@@ -33,52 +33,53 @@ import java.util.Comparator;
 import java.util.List;
 
 public class HoleFill extends Module {
-    public static boolean placing = false;
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgSelf = this.addGroup("Self");
     private final SettingGroup sgPlacing = this.addGroup("Placing");
     private final SettingGroup sgRender = this.addGroup("Render");
     private final SettingGroup sgHole = this.addGroup("Hole");
-    private final Setting<Boolean> near = this.sgGeneral.booleanSetting("Near", true, ".");
-    private final Setting<Double> nearDistance = this.sgGeneral.doubleSetting("Near Distance", 3.0, 0.0, 10.0, 0.1, ".");
-    private final Setting<Integer> nearExt = this.sgGeneral.intSetting("Extrapolation", 5, 0, 20, 1, ".");
-    private final Setting<Integer> selfExt = this.sgGeneral.intSetting("Self Extrapolation", 2, 0, 20, 1, ".");
-    private final Setting<Boolean> above = this.sgGeneral.booleanSetting("Above", true, "Only places if target is above the hole.");
-    private final Setting<Boolean> ignoreHole = this.sgGeneral.booleanSetting("Ignore Hole", true, "Doesn't place if enemy is in a hole.");
-    private final Setting<Boolean> ignoreSelfHole = this.sgSelf.booleanSetting("Ignore Self Hole", true, "Allows filling near you if you are in a hole.");
-    private final Setting<Boolean> selfAbove = this.sgSelf.booleanSetting("Self Above", true, "Allows filling near you if you aren't above the hole.");
-    private final Setting<Double> selfDistance = this.sgSelf.doubleSetting("Self Distance", 3.0, 0.0, 10.0, 0.1, "Holes must be out of this range.");
-    private final Setting<Boolean> efficient = this.sgSelf.booleanSetting("Efficient", true, "Only places if the hole is closer to target than to us.");
-    private final Setting<Boolean> pauseEat = this.sgPlacing.booleanSetting("Pause Eat", false, ".");
-    private final Setting<SwitchMode> switchMode = this.sgPlacing
-            .enumSetting("Switch Mode", SwitchMode.Silent, "Method of switching. Silent is the most reliable but delays crystals on some servers.");
-    private final Setting<Surround.PlaceDelayMode> placeDelayMode = this.sgPlacing
-            .enumSetting("Place Delay Mode", Surround.PlaceDelayMode.Ticks, "Method of switching. Silent is the most reliable but delays crystals on some servers.");
-    private final Setting<Integer> placeDelayT = this.sgPlacing
-            .intSetting("Place Tick Delay", 1, 0, 20, 1, "Tick delay between places.", () -> this.placeDelayMode.get() == Surround.PlaceDelayMode.Ticks);
-    private final Setting<Double> placeDelayS = this.sgPlacing
-            .doubleSetting("Place Delay", 0.1, 0.0, 1.0, 0.01, "Delay between places.", () -> this.placeDelayMode.get() == Surround.PlaceDelayMode.Seconds);
-    private final Setting<Integer> places = this.sgPlacing.intSetting("Places", 1, 1, 20, 1, "How many blocks to place each time.");
-    private final Setting<Double> cooldown = this.sgPlacing
-            .doubleSetting("Cooldown", 0.3, 0.0, 1.0, 0.01, "Waits x seconds before trying to place at the same position if there is more than 1 missing block.");
-    private final Setting<List<Block>> blocks = this.sgPlacing.blockListSetting("Blocks", "Blocks to use.", Blocks.OBSIDIAN);
-    private final Setting<Integer> boxExtrapolation = this.sgPlacing.intSetting("Box Extrapolation", 1, 0, 20, 1, "Enemy hitbox extrapolation");
-    private final Setting<Boolean> single = this.sgHole.booleanSetting("Single", true, "Fills 1x1 holes.");
-    private final Setting<Boolean> doubleHole = this.sgHole.booleanSetting("Double", true, "Fills 2x1 holes.");
-    private final Setting<Boolean> quad = this.sgHole.booleanSetting("Quad", true, "Fills 2x2 holes.");
-    private final Setting<Boolean> placeSwing = this.sgRender.booleanSetting("Swing", true, "Renders swing animation when placing a block.");
-    private final Setting<SwingHand> placeHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand, "Which hand should be swung.", this.placeSwing::get);
-    private final Setting<Double> renderTime = this.sgRender.doubleSetting("Render Time", 0.3, 0.0, 5.0, 0.1, "How long the box should remain in full alpha.");
-    private final Setting<Double> fadeTime = this.sgRender.doubleSetting("Fade Time", 1.0, 0.0, 5.0, 0.1, "How long the box should remain in full alpha.");
-    private final Setting<RenderShape> renderShape = this.sgRender.enumSetting("Render Shape", RenderShape.Full, "Which parts of boxes should be rendered.");
-    private final Setting<BlackOutColor> lineColor = this.sgRender.colorSetting("Line Color", new BlackOutColor(255, 0, 0, 255), ".");
-    private final Setting<BlackOutColor> sideColor = this.sgRender.colorSetting("Side Color", new BlackOutColor(255, 0, 0, 50), ".");
+
+    private final Setting<Boolean> near = this.sgGeneral.booleanSetting("Near", true, "Only fills holes if enemies are nearby.");
+    private final Setting<Double> nearDistance = this.sgGeneral.doubleSetting("Near Distance", 3.0, 0.0, 10.0, 0.1, "Max distance between an enemy and a hole.");
+    private final Setting<Integer> nearExt = this.sgGeneral.intSetting("Extrapolation", 5, 0, 20, 1, "Predicts enemy movement (in ticks).");
+    private final Setting<Integer> selfExt = this.sgGeneral.intSetting("Self Extrapolation", 2, 0, 20, 1, "Predicts your own movement.");
+    private final Setting<Boolean> above = this.sgGeneral.booleanSetting("Above", true, "Only places if the target is above the hole level.");
+    private final Setting<Boolean> ignoreHole = this.sgGeneral.booleanSetting("Ignore Hole", true, "Won't waste blocks if the enemy is already inside a hole.");
+
+    private final Setting<Boolean> ignoreSelfHole = this.sgSelf.booleanSetting("Ignore Self Hole", true, "Allows filling holes even when you are in one.");
+    private final Setting<Boolean> selfAbove = this.sgSelf.booleanSetting("Self Above", true, "Allows filling near you if you aren't directly above the hole.");
+    private final Setting<Double> selfDistance = this.sgSelf.doubleSetting("Self Distance", 3.0, 0.0, 10.0, 0.1, "Minimum safety buffer around you.");
+    private final Setting<Boolean> efficient = this.sgSelf.booleanSetting("Efficient", true, "Only places if the hole is closer to the enemy than to you.");
+
+    private final Setting<Boolean> pauseEat = this.sgPlacing.booleanSetting("Pause Eat", false, "Pauses filling while you are eating/gapping.");
+    private final Setting<SwitchMode> switchMode = this.sgPlacing.enumSetting("Switch Mode", SwitchMode.Silent, "Method of switching to obsidian.");
+    private final Setting<Surround.PlaceDelayMode> placeDelayMode = this.sgPlacing.enumSetting("Place Delay Mode", Surround.PlaceDelayMode.Ticks, "Timing unit (Ticks/Seconds).");
+    private final Setting<Integer> placeDelayT = this.sgPlacing.intSetting("Place Tick Delay", 1, 0, 20, 1, "Delay in ticks between placements.", () -> this.placeDelayMode.get() == Surround.PlaceDelayMode.Ticks);
+    private final Setting<Double> placeDelayS = this.sgPlacing.doubleSetting("Place Delay", 0.1, 0.0, 1.0, 0.01, "Delay in seconds.", () -> this.placeDelayMode.get() == Surround.PlaceDelayMode.Seconds);
+    private final Setting<Integer> places = this.sgPlacing.intSetting("Places", 1, 1, 20, 1, "How many blocks to place per cycle.");
+    private final Setting<Double> cooldown = this.sgPlacing.doubleSetting("Cooldown", 0.3, 0.0, 1.0, 0.01, "Cooldown before retrying the same position.");
+    private final Setting<List<Block>> blocks = this.sgPlacing.blockListSetting("Blocks", "Blocks to use for filling.", Blocks.OBSIDIAN);
+    private final Setting<Integer> boxExtrapolation = this.sgPlacing.intSetting("Box Extrapolation", 1, 0, 20, 1, "Inflates enemy hitbox for collision checks.");
+
+    private final Setting<Boolean> single = this.sgHole.booleanSetting("Single", true, "Fill 1x1 holes.");
+    private final Setting<Boolean> doubleHole = this.sgHole.booleanSetting("Double", true, "Fill 2x1 holes.");
+    private final Setting<Boolean> quad = this.sgHole.booleanSetting("Quad", true, "Fill 2x2 holes.");
+
+    private final Setting<Boolean> placeSwing = this.sgRender.booleanSetting("Swing", true, "Renders hand swing animation.");
+    private final Setting<SwingHand> placeHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand, "Which hand to swing.", this.placeSwing::get);
+    private final Setting<Double> renderTime = this.sgRender.doubleSetting("Render Time", 0.3, 0.0, 5.0, 0.1, "Time the box stays fully visible.");
+    private final Setting<Double> fadeTime = this.sgRender.doubleSetting("Fade Time", 1.0, 0.0, 5.0, 0.1, "Time it takes for the box to fade out.");
+    private final Setting<RenderShape> renderShape = this.sgRender.enumSetting("Render Shape", RenderShape.Full, "Style of the rendered box.");
+    private final Setting<BlackOutColor> lineColor = this.sgRender.colorSetting("Line Color", new BlackOutColor(255, 0, 0, 255), "Line color of the box.");
+    private final Setting<BlackOutColor> sideColor = this.sgRender.colorSetting("Side Color", new BlackOutColor(255, 0, 0, 50), "Side color of the box.");
+
     private final List<BlockPos> holes = new ArrayList<>();
     private final TimerList<BlockPos> timers = new TimerList<>(true);
     private final RenderList<BlockPos> render = RenderList.getList(false);
     private final ExtrapolationMap nearPosition = new ExtrapolationMap();
     private final ExtrapolationMap boxes = new ExtrapolationMap();
     private Hand hand = null;
+    public static boolean placing = false;
     private int blocksLeft = 0;
     private int placesLeft = 0;
     private FindResult result = null;
@@ -91,7 +92,7 @@ public class HoleFill extends Module {
     private long holeTime = 0L;
 
     public HoleFill() {
-        super("Hole Fill", "Automatically is a cunt to your enemies.", SubCategory.MISC_COMBAT, true);
+        super("Hole Fill", "Automatically fills nearby holes with obsidian to keep enemies vulnerable on the surface.", SubCategory.MISC_COMBAT, true);
     }
 
     @Event

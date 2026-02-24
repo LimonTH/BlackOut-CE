@@ -20,14 +20,22 @@ import java.util.Random;
 
 public class Insults extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Integer> range = this.sgGeneral.intSetting("Range", 25, 0, 50, 1, ".");
-    public final Setting<Integer> tickDelay = this.sgGeneral.intSetting("Tick Delay", 50, 0, 100, 1, ".");
     private final SettingGroup sgKill = this.addGroup("Kill");
-    public final Setting<Boolean> kill = this.sgKill.booleanSetting("Kill", true, "Should we send a message when enemy dies");
-    public final Setting<MessageMode> killMsgMode = this.sgKill
-            .enumSetting("Kill Message Mode", MessageMode.Exhibition, "What kind of messages to send.", () -> true);
     private final SettingGroup sgPop = this.addGroup("Pop");
-    public final Setting<Boolean> pop = this.sgPop.booleanSetting("Pop", true, "Should we send a message when enemy pops a totem");
+
+    public final Setting<Integer> range = this.sgGeneral.intSetting("Range", 25, 0, 50, 1,
+            "The radius around you to look for deaths or totem pops.");
+    public final Setting<Integer> tickDelay = this.sgGeneral.intSetting("Tick Delay", 50, 0, 100, 1,
+            "How long to wait between sending messages to avoid being kicked for spam.");
+
+    public final Setting<Boolean> kill = this.sgKill.booleanSetting("Kill", true,
+            "Automatically sends an insult message when a nearby enemy dies.");
+    public final Setting<MessageMode> killMsgMode = this.sgKill.enumSetting("Kill Message Mode", MessageMode.Exhibition,
+            "Selects the style of insult (Blackout, Exhibition, NoClue, or Nostalgia).");
+
+    public final Setting<Boolean> pop = this.sgPop.booleanSetting("Pop", true,
+            "Sends a message when an enemy uses (pops) a Totem of Undying.");
+
     private final Random r = new Random();
     private final List<Message> messageQueue = new LinkedList<>();
     private final String[] insults = new String[]{
@@ -280,7 +288,7 @@ public class Insults extends Module {
     private int timer = 0;
 
     public Insults() {
-        super("Insults", "Insults people after killing them", SubCategory.MISC_COMBAT, true);
+        super("Insults", "Automatically sends toxic messages to enemies after killing them or popping their totems.", SubCategory.MISC_COMBAT, true);
     }
 
     @Override

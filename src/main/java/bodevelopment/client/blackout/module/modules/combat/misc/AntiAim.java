@@ -21,30 +21,46 @@ import java.util.concurrent.ThreadLocalRandom;
 public class AntiAim extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgIgnore = this.addGroup("Ignore");
-    private final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Custom, ".");
-    private final Setting<YawMode> yawMode = this.sgGeneral
-            .enumSetting("Yaw Mode", YawMode.Normal, ".", () -> this.mode.get() != Mode.Spin && this.mode.get() != Mode.Enemy);
-    private final Setting<Double> range = this.sgGeneral.doubleSetting("Range", 20.0, 0.0, 500.0, 5.0, ".", () -> this.mode.get() == Mode.Enemy);
-    private final Setting<Double> spinSpeed = this.sgGeneral.doubleSetting("Spin Speed", 5.0, 0.0, 100.0, 1.0, ".", () -> this.mode.get() == Mode.Spin);
-    private final Setting<Double> csgoYawMin = this.sgGeneral.doubleSetting("CSGO Yaw Min", -180.0, -180.0, 180.0, 1.0, ".", () -> this.mode.get() == Mode.CSGO);
-    private final Setting<Double> csgoYawMax = this.sgGeneral.doubleSetting("CSGO Yaw Max", 180.0, -180.0, 180.0, 1.0, ".", () -> this.mode.get() == Mode.CSGO);
-    private final Setting<Double> csgoPitchMin = this.sgGeneral.doubleSetting("CSGO Pitch Min", -90.0, -90.0, 90.0, 1.0, ".", () -> this.mode.get() == Mode.CSGO);
-    private final Setting<Double> csgoPitchMax = this.sgGeneral.doubleSetting("CSGO Pitch Max", 90.0, -90.0, 90.0, 1.0, ".", () -> this.mode.get() == Mode.CSGO);
-    private final Setting<Double> csgoSpeed = this.sgGeneral
-            .doubleSetting("CSGO Speed", 5.0, 0.0, 50.0, 1.0, "How many times to update rotations each second.", () -> this.mode.get() == Mode.CSGO);
-    private final Setting<Double> customYaw = this.sgGeneral.doubleSetting("Yaw", 45.0, -180.0, 180.0, 1.0, ".", () -> this.mode.get() == Mode.Custom);
-    private final Setting<Double> customPitch = this.sgGeneral.doubleSetting("Pitch", 90.0, -90.0, 90.0, 1.0, ".", () -> this.mode.get() == Mode.Custom);
-    private final Setting<IgnoreMode> iExp = this.sgIgnore.enumSetting("Ignore Experience", IgnoreMode.Down, ".");
-    private final Setting<IgnoreMode> iPearl = this.sgIgnore.enumSetting("Ignore Pearl", IgnoreMode.FullIgnore, ".");
-    private final Setting<IgnoreMode> iBow = this.sgIgnore.enumSetting("Ignore Bow", IgnoreMode.FullIgnore, ".");
-    private final Setting<IgnoreMode> iPotion = this.sgIgnore.enumSetting("Ignore Potion", IgnoreMode.FullIgnore, ".");
+
+    private final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Custom,
+            "The movement pattern of your head (Spin, Random, or Fixed).");
+    private final Setting<YawMode> yawMode = this.sgGeneral.enumSetting("Yaw Mode", YawMode.Normal,
+            "How the horizontal rotation is calculated (Absolute or Relative).", () -> this.mode.get() != Mode.Spin && this.mode.get() != Mode.Enemy);
+    private final Setting<Double> range = this.sgGeneral.doubleSetting("Range", 20.0, 0.0, 500.0, 5.0,
+            "The distance within which the module will track enemies for rotations.", () -> this.mode.get() == Mode.Enemy);
+    private final Setting<Double> spinSpeed = this.sgGeneral.doubleSetting("Spin Speed", 5.0, 0.0, 100.0, 1.0,
+            "How fast your character spins (only for Spin mode).", () -> this.mode.get() == Mode.Spin);
+    private final Setting<Double> csgoYawMin = this.sgGeneral.doubleSetting("CSGO Yaw Min", -180.0, -180.0, 180.0, 1.0,
+            "Minimum random horizontal angle for CSGO jitter mode.", () -> this.mode.get() == Mode.CSGO);
+    private final Setting<Double> csgoYawMax = this.sgGeneral.doubleSetting("CSGO Yaw Max", 180.0, -180.0, 180.0, 1.0,
+            "Maximum random horizontal angle for CSGO jitter mode.", () -> this.mode.get() == Mode.CSGO);
+    private final Setting<Double> csgoPitchMin = this.sgGeneral.doubleSetting("CSGO Pitch Min", -90.0, -90.0, 90.0, 1.0,
+            "Minimum random vertical angle.", () -> this.mode.get() == Mode.CSGO);
+    private final Setting<Double> csgoPitchMax = this.sgGeneral.doubleSetting("CSGO Pitch Max", 90.0, -90.0, 90.0, 1.0,
+            "Maximum random vertical angle.", () -> this.mode.get() == Mode.CSGO);
+    private final Setting<Double> csgoSpeed = this.sgGeneral.doubleSetting("CSGO Speed", 5.0, 0.0, 50.0, 1.0,
+            "Frequency of rotation updates per second.", () -> this.mode.get() == Mode.CSGO);
+    private final Setting<Double> customYaw = this.sgGeneral.doubleSetting("Yaw", 45.0, -180.0, 180.0, 1.0,
+            "Fixed horizontal angle for Custom mode.", () -> this.mode.get() == Mode.Custom);
+    private final Setting<Double> customPitch = this.sgGeneral.doubleSetting("Pitch", 90.0, -90.0, 90.0, 1.0,
+            "Fixed vertical angle for Custom mode.", () -> this.mode.get() == Mode.Custom);
+
+    private final Setting<IgnoreMode> iExp = this.sgIgnore.enumSetting("Ignore Experience", IgnoreMode.Down,
+            "Rotation behavior while throwing XP bottles.");
+    private final Setting<IgnoreMode> iPearl = this.sgIgnore.enumSetting("Ignore Pearl", IgnoreMode.FullIgnore,
+            "Disables Anti-Aim when throwing pearls to prevent failed teleports.");
+    private final Setting<IgnoreMode> iBow = this.sgIgnore.enumSetting("Ignore Bow", IgnoreMode.FullIgnore,
+            "Disables Anti-Aim while using a bow to allow aiming.");
+    private final Setting<IgnoreMode> iPotion = this.sgIgnore.enumSetting("Ignore Potion", IgnoreMode.FullIgnore,
+            "Rotation behavior while throwing potions.");
+
     private double spinYaw;
     private long prevCsgo = 0L;
     private double csgoYaw = 0.0;
     private double csgoPitch = 0.0;
 
     public AntiAim() {
-        super("Anti Aim", "Funi conter stik module.", SubCategory.MISC_COMBAT, true);
+        super("Anti Aim", "Spoofs your rotations on the server to make you harder to hit or just to look funny.", SubCategory.MISC_COMBAT, true);
     }
 
     @Override

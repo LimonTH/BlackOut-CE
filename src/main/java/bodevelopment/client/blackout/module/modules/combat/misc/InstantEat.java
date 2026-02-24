@@ -24,16 +24,23 @@ import java.util.function.Supplier;
 
 public class InstantEat extends Module {
     private static InstantEat INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<PacketMode> packetMode = this.sgGeneral.enumSetting("Packet Mode", PacketMode.Full, ".");
-    private final Setting<Integer> packets = this.sgGeneral.intSetting("Packets", 32, 0, 50, 1, ".");
-    private final Setting<List<Item>> items = this.sgGeneral.itemListSetting("Items", ".", Items.GOLDEN_APPLE);
+
+    private final Setting<PacketMode> packetMode = this.sgGeneral.enumSetting("Packet Mode", PacketMode.Full,
+            "The type of movement packet to spam. 'Full' is the most reliable, while 'Rotation' or 'Position' might bypass specific checks.");
+    private final Setting<Integer> packets = this.sgGeneral.intSetting("Packets", 32, 0, 50, 1,
+            "How many packets to send in one tick. Since eating normally takes 32 ticks, sending 32 packets finishes the process instantly.");
+    private final Setting<List<Item>> items = this.sgGeneral.itemListSetting("Items",
+            "Which food items should be eaten instantly.", Items.GOLDEN_APPLE);
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent,
+            "The method used to switch to the food item. Silent allows you to eat without stopping your current weapon use.");
+
     private final Predicate<ItemStack> predicate = itemStack -> this.items.get().contains(itemStack.getItem());
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent, ".");
     private final int packetsSent = 0;
 
     public InstantEat() {
-        super("Instant Eat", "Instantly eats a food item (for 1.8)", SubCategory.MISC_COMBAT, true);
+        super("Instant Eat", "Instantly consumes food items in a single tick using packet saturation. (for v1.8)", SubCategory.MISC_COMBAT, true);
         INSTANCE = this;
     }
 

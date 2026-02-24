@@ -28,18 +28,18 @@ public class PearlPhase extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
     public final SettingGroup sgRender = this.addGroup("Render");
 
-    public final Setting<SwitchMode> ccSwitchMode = this.sgGeneral.enumSetting("CC Switch Mode", SwitchMode.Normal, "Switch method for CC blocks.");
-    public final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Normal, "Switch method for pearl.");
-    public final Setting<Integer> pitch = this.sgGeneral.intSetting("Pitch", 85, -90, 90, 1, "How deep down to look.");
-    private final Setting<Boolean> ccBypass = this.sgGeneral.booleanSetting("CC Bypass", false, "Bypass CC anti-delay by placing a block first.");
-    private final Setting<ObsidianModule.RotationMode> rotationMode = this.sgGeneral.enumSetting("Rotation Mode", ObsidianModule.RotationMode.Normal, "Rotation method.");
-    private final Setting<Boolean> swing = this.sgRender.booleanSetting("Swing", false, "Swing animation.");
-    private final Setting<SwingHand> swingHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand, "Hand to swing.");
+    public final Setting<SwitchMode> ccSwitchMode = this.sgGeneral.enumSetting("CC Switch Mode", SwitchMode.Normal, "Method used to switch to bypass blocks.");
+    public final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Normal, "Method used to switch to ender pearls.");
+    public final Setting<Integer> pitch = this.sgGeneral.intSetting("Pitch", 85, -90, 90, 1, "The downward angle for the throw. 85 is recommended for most clips.");
+    private final Setting<Boolean> ccBypass = this.sgGeneral.booleanSetting("CC Bypass", false, "Attempts to bypass pearl delay by placing a block beneath you first.");
+    private final Setting<ObsidianModule.RotationMode> rotationMode = this.sgGeneral.enumSetting("Rotation Mode", ObsidianModule.RotationMode.Normal, "How rotations should be handled during the phase.");
+    private final Setting<Boolean> swing = this.sgRender.booleanSetting("Swing", false, "Enables client-side swing animation upon throwing.");
+    private final Setting<SwingHand> swingHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand, "Determines which hand performs the swing animation.", this.swing::get);
 
     private boolean placed = false;
 
     public PearlPhase() {
-        super("Pearl Phase", "Throws a pearl to phase through blocks", SubCategory.MISC_COMBAT, true);
+        super("Pearl Phase", "Automates precision pearl throws to clip through block collisions and phase into holes.", SubCategory.MISC_COMBAT, true);
     }
 
     @Override

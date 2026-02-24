@@ -13,13 +13,15 @@ import net.minecraft.util.math.Direction;
 import java.util.Comparator;
 
 public class AutoTrap extends ObsidianModule {
-    private final Setting<TrapMode> trapMode = this.sgGeneral.enumSetting("Trap Mode", TrapMode.Both, "");
+    private final Setting<TrapMode> trapMode = this.sgGeneral.enumSetting("Trap Mode", TrapMode.Both,
+            "Determines which parts of the enemy to cover. 'Top' places a block above their head, 'Eyes' covers the sides.");
+
     private final Direction[] directions = new Direction[]{
             Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST, Direction.UP
     };
 
     public AutoTrap() {
-        super("Auto Trap", "Covers enemies in blocks.", SubCategory.MISC_COMBAT);
+        super("Auto Trap", "Encases nearby enemies in obsidian to restrict their movement and prevent them from escaping holes.", SubCategory.MISC_COMBAT);
     }
 
     @Override
