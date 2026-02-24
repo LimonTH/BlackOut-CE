@@ -2,7 +2,6 @@ package bodevelopment.client.blackout.module.setting.multisettings;
 
 import bodevelopment.client.blackout.enums.RoundedColorMode;
 import bodevelopment.client.blackout.interfaces.functional.SingleOut;
-import bodevelopment.client.blackout.module.modules.client.ThemeSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
@@ -20,20 +19,28 @@ public class RoundedColorMultiSetting {
 
     private RoundedColorMultiSetting(SettingGroup sg, RoundedColorMode dm, BlackOutColor dt, BlackOutColor dw, SingleOut<Boolean> visible, String name) {
         String text = name == null ? "Rounded" : name;
-        this.mode = sg.enumSetting(text + " Color Mode", dm, ".");
-        this.roundedColor = sg.colorSetting(
-                text + " Color", dt, ".", () -> (this.mode.get() == RoundedColorMode.Static || this.mode.get() == RoundedColorMode.Wave) && visible.get()
-        );
-        this.waveColor = sg.colorSetting(text + " Wave Color", dw, ".", () -> this.mode.get() == RoundedColorMode.Wave && visible.get());
-        this.shadowColor = sg.colorSetting(text + " Shadow Color", dt, ".", () -> this.mode.get() == RoundedColorMode.Static && visible.get());
-        this.saturation = sg.doubleSetting(text + " Saturation", 1.0, 0.1, 1.0, 0.1, ".", () -> this.mode.get() == RoundedColorMode.Rainbow && visible.get());
+
+        this.mode = sg.enumSetting(text + " Color Mode", dm,
+                "The coloring style for the rounded element: Static, Wave (two colors), or Rainbow.");
+        this.roundedColor = sg.colorSetting(text + " Color", dt,
+                "The primary color for Static mode or the starting color for the Wave effect.",
+                () -> (this.mode.get() == RoundedColorMode.Static || this.mode.get() == RoundedColorMode.Wave) && visible.get());
+        this.waveColor = sg.colorSetting(text + " Wave Color", dw,
+                "The second color that the element cycles towards in Wave mode.",
+                () -> this.mode.get() == RoundedColorMode.Wave && visible.get());
+        this.shadowColor = sg.colorSetting(text + " Shadow Color", dt,
+                "The color of the outer glow/shadow effect in Static mode.",
+                () -> this.mode.get() == RoundedColorMode.Static && visible.get());
+        this.saturation = sg.doubleSetting(text + " Saturation", 1.0, 0.1, 1.0, 0.1,
+                "Controls how vivid the colors are in Rainbow mode.",
+                () -> this.mode.get() == RoundedColorMode.Rainbow && visible.get());
         this.frequency = sg.doubleSetting(
                 text + " Frequency",
                 1.0,
                 0.1,
                 10.0,
                 0.1,
-                ".",
+                "Determines how many color cycles appear across the element's surface.",
                 () -> (this.mode.get() == RoundedColorMode.Wave || this.mode.get() == RoundedColorMode.Rainbow) && visible.get()
         );
         this.speed = sg.doubleSetting(
@@ -42,7 +49,7 @@ public class RoundedColorMultiSetting {
                 0.1,
                 10.0,
                 0.1,
-                ".",
+                "Determines how fast the colors shift or cycle across the element.",
                 () -> (this.mode.get() == RoundedColorMode.Wave || this.mode.get() == RoundedColorMode.Rainbow) && visible.get()
         );
     }

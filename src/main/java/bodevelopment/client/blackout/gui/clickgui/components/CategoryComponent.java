@@ -13,6 +13,7 @@ import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.GuiRenderUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.math.MathHelper;
 
 import java.awt.*;
 
@@ -34,8 +35,9 @@ public class CategoryComponent extends Component {
         float targetAnim = active ? 1f : (hovered ? 0.3f : 0f);
         float targetOffset = active ? 5f : (hovered ? 3f : 0f);
 
-        animation = (float) Math.min(1, animation + (targetAnim - animation) * 0.2);
-        textOffset = (float) Math.min(10, textOffset + (targetOffset - textOffset) * 0.2);
+        float speed = frameTime * 15f;
+        animation = MathHelper.stepTowards(animation, targetAnim, speed);
+        textOffset = MathHelper.stepTowards(textOffset, targetOffset, speed);
 
         float fontScale = GuiSettings.getInstance().fontScale.get().floatValue();
         float categoryScale = fontScale * 2.0F;
@@ -55,7 +57,7 @@ public class CategoryComponent extends Component {
 
                 float fogRadius = (float) GuiSettings.getInstance().selectorGlow.get() * 2.5F;
                 int fogColor = ColorUtils.withAlpha(barColor, (int) (animation * 60));
-
+                this.stack.translate(0, 0, 1.0);
                 RenderUtils.rounded(this.stack, this.x + 5.5F, this.y - currentBarHeight / 2.0F, 0.5F, currentBarHeight, 1.0F, fogRadius, fogColor, fogColor);
 
                 int coreColor = ColorUtils.withAlpha(barColor, (int) (animation * 255));
