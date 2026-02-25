@@ -16,11 +16,12 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class HudElement {
+    public final List<SettingGroup> settingGroups = new ArrayList<>();
+
     protected final SettingGroup sgScale = this.addGroup("Sizing");
 
     private final Setting<Double> scale = this.sgScale.doubleSetting("Master Scale", 1.0, 0.1, 10.0, 0.1, "The global scale multiplier applied to this interface element.");
 
-    public final List<SettingGroup> settingGroups = new ArrayList<>();
     public final String name;
     public final String description;
     public float x = 0.0F;

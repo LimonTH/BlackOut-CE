@@ -73,7 +73,7 @@ public class ArmorHUD extends HudElement {
 
             if (itemStack.isEmpty()) continue;
 
-            RenderUtils.renderItem(stack, itemStack, xOffset, 1.0F, 16.0F);
+            RenderUtils.renderItem(stack, itemStack, xOffset, 1.0F, 16.0F, 500.0F, false);
 
             if (itemStack.isDamageable()) {
                 float durabilityValue = (float) (itemStack.getMaxDamage() - itemStack.getDamage()) / itemStack.getMaxDamage();
