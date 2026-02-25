@@ -25,21 +25,21 @@ import java.util.List;
 
 public class SoundESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<FilterMode> filterMode = this.sgGeneral.enumSetting("Filter Mode", FilterMode.Whitelist, ".");
-    private final Setting<List<SoundEvent>> sounds = this.sgGeneral
-            .registrySetting("Sounds", ".", Registries.SOUND_EVENT, sound -> sound.getId().getPath(), SoundEvents.ENTITY_GENERIC_EXPLODE.value());
-    private final Setting<BlackOutColor> color = this.sgGeneral.colorSetting("Color", new BlackOutColor(255, 255, 255, 255), ".");
-    private final Setting<Double> fadeIn = this.sgGeneral.doubleSetting("Fade In", 0.1, 0.0, 10.0, 0.1, ".");
-    private final Setting<Double> renderTime = this.sgGeneral.doubleSetting("Render Time", 0.2, 0.0, 10.0, 0.1, ".");
-    private final Setting<Double> fadeOut = this.sgGeneral.doubleSetting("Fade Out", 0.5, 0.0, 10.0, 0.1, ".");
-    private final Setting<Double> scale = this.sgGeneral.doubleSetting("Scale", 1.0, 0.0, 10.0, 0.1, ".");
-    private final Setting<Double> scaleInc = this.sgGeneral
-            .doubleSetting("Scale Increase", 1.0, 0.0, 5.0, 0.05, "How much should the scale increase when enemy is further away.");
+
+    private final Setting<FilterMode> filterMode = this.sgGeneral.enumSetting("Filter Logic", FilterMode.Whitelist, "Determines whether the sounds list acts as an inclusion or exclusion filter.");
+    private final Setting<List<SoundEvent>> sounds = this.sgGeneral.registrySetting("Tracked Sounds", "The specific sound events to be visualized in the world.", Registries.SOUND_EVENT, sound -> sound.getId().getPath(), SoundEvents.ENTITY_GENERIC_EXPLODE.value());
+    private final Setting<BlackOutColor> color = this.sgGeneral.colorSetting("Text Color", new BlackOutColor(255, 255, 255, 255), "The color and transparency of the rendered sound labels.");
+    private final Setting<Double> fadeIn = this.sgGeneral.doubleSetting("Fade-In Duration", 0.1, 0.0, 10.0, 0.1, "The time in seconds for the label to reach full opacity.");
+    private final Setting<Double> renderTime = this.sgGeneral.doubleSetting("Dwell Duration", 0.2, 0.0, 10.0, 0.1, "The amount of time the label remains at full opacity before fading.");
+    private final Setting<Double> fadeOut = this.sgGeneral.doubleSetting("Fade-Out Duration", 0.5, 0.0, 10.0, 0.1, "The time in seconds for the label to disappear completely.");
+    private final Setting<Double> scale = this.sgGeneral.doubleSetting("Base Scale", 1.0, 0.0, 10.0, 0.1, "The initial size multiplier for the text labels.");
+    private final Setting<Double> scaleInc = this.sgGeneral.doubleSetting("Distance Scaling", 1.0, 0.0, 5.0, 0.05, "Adjusts label size based on distance to ensure visibility from afar.");
+
     private final RenderList<SoundRender> renderList = RenderList.getList(false);
     private final MatrixStack stack = new MatrixStack();
 
     public SoundESP() {
-        super("Sound ESP", ".", SubCategory.WORLD, true);
+        super("Sound ESP", "Captures and displays localized sound events as spatial text labels, providing visual situational awareness for audio cues.", SubCategory.WORLD, true);
     }
 
     @Event

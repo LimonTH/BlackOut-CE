@@ -13,17 +13,20 @@ import net.minecraft.client.util.math.MatrixStack;
 
 public class Crosshair extends Module {
     private static Crosshair INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Boolean> remove = this.sgGeneral.booleanSetting("Remove", false, "Stops the crosshair from rendering");
-    private final Setting<Integer> dist = this.sgGeneral.intSetting("Distance", 5, 0, 25, 1, ".", () -> !this.remove.get());
-    private final Setting<Integer> width = this.sgGeneral.intSetting("Width", 1, 1, 5, 1, ".", () -> !this.remove.get());
-    private final Setting<Integer> length = this.sgGeneral.intSetting("Length", 10, 0, 50, 1, ".", () -> !this.remove.get());
-    private final Setting<BlackOutColor> color = this.sgGeneral.colorSetting("Color", new BlackOutColor(255, 255, 255, 225), ".", () -> !this.remove.get());
-    public final Setting<Boolean> t = this.sgGeneral.booleanSetting("T shape", false, ".");
+
+    public final Setting<Boolean> remove = this.sgGeneral.booleanSetting("Hide Vanilla", false, "Suppresses the rendering of the default Minecraft crosshair.");
+    private final Setting<Integer> dist = this.sgGeneral.intSetting("Gap Size", 5, 0, 25, 1, "The distance between the center of the screen and the start of the crosshair lines.", () -> !this.remove.get());
+    private final Setting<Integer> width = this.sgGeneral.intSetting("Stroke Thickness", 1, 1, 5, 1, "The pixel width of each crosshair segment.", () -> !this.remove.get());
+    private final Setting<Integer> length = this.sgGeneral.intSetting("Segment Length", 10, 0, 50, 1, "The pixel height/length of each crosshair segment.", () -> !this.remove.get());
+    private final Setting<BlackOutColor> color = this.sgGeneral.colorSetting("Reticle Color", new BlackOutColor(255, 255, 255, 225), "The color and transparency of the custom crosshair.", () -> !this.remove.get());
+    public final Setting<Boolean> t = this.sgGeneral.booleanSetting("T-Style Configuration", false, "Removes the top segment of the crosshair to create a 'T' shape.");
+
     private final MatrixStack stack = new MatrixStack();
 
     public Crosshair() {
-        super("Crosshair", "Modifies the games crosshair", SubCategory.MISC_VISUAL, true);
+        super("Crosshair", "Replaces or modifies the standard targeting reticle with a custom geometric crosshair.", SubCategory.MISC_VISUAL, true);
         INSTANCE = this;
     }
 

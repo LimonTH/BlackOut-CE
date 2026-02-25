@@ -12,13 +12,13 @@ import net.minecraft.entity.effect.StatusEffects;
 
 public class Brightness extends Module {
     private static Brightness INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Gamma,
-            "The method to increase brightness: Gamma (manipulates lightmap) or Effect (Night Vision).");
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Illumination Mode", Mode.Gamma, "The technical approach used to enhance visibility in low-light environments.");
 
     public Brightness() {
-        super("Brightness", "Illuminates the world and removes darkness.", SubCategory.WORLD, true);
+        super("Brightness", "Provides artificial illumination by either injecting status effects or overriding the client-side lightmap gamma.", SubCategory.WORLD, true);
         INSTANCE = this;
     }
 

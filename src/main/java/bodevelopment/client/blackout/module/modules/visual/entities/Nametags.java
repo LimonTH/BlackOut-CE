@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.manager.managers.StatsManager;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.combat.misc.AntiBot;
-import bodevelopment.client.blackout.module.modules.visual.misc.Freecam;
+import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.BackgroundMultiSetting;
@@ -46,44 +46,49 @@ import java.util.List;
 
 public class Nametags extends Module {
     private static Nametags INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Boolean> ping = this.sgGeneral.booleanSetting("Show Ping", true, ".");
-    public final Setting<Boolean> pops = this.sgGeneral.booleanSetting("Show Pops", true, ".");
-    public final Setting<Boolean> showId = this.sgGeneral.booleanSetting("Show Id", false, "");
-    public final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Rounded", true, ".");
-    public final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Shadow", true, ".");
     private final SettingGroup sgItems = this.addGroup("Items");
     private final SettingGroup sgEnchantments = this.addGroup("Enchantments");
     private final SettingGroup sgColor = this.addGroup("Color");
-    public final Setting<ColorMode> colorMode = this.sgColor.enumSetting("Mode", ColorMode.Dynamic, "What style to use");
-    private final Setting<BlackOutColor> hp = this.sgColor
-            .colorSetting("Health Color", new BlackOutColor(150, 150, 150, 255), ".", () -> this.colorMode.get() == ColorMode.Custom);
-    private final Setting<Double> scale = this.sgGeneral.doubleSetting("Scale", 1.0, 0.0, 10.0, 0.1, ".");
-    private final Setting<Double> scaleInc = this.sgGeneral
-            .doubleSetting("Scale Increase", 1.0, 0.0, 5.0, 0.05, "How much should the scale increase when enemy is further away.");
-    private final Setting<Double> yOffset = this.sgGeneral.doubleSetting("Y", 0.0, 0.0, 1.0, 0.01, ".");
-    private final Setting<NameMode> nameMode = this.sgGeneral.enumSetting("Name Mode", NameMode.EntityName, "");
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, ".");
-    private final Setting<List<EntityType<?>>> entityTypes = this.sgGeneral.entityListSetting("Entities", ".", EntityType.PLAYER);
-    private final Setting<Boolean> armor = this.sgItems.booleanSetting("Armor", false, ".");
-    private final Setting<Boolean> hand = this.sgItems.booleanSetting("Hands", false, ".");
-    private final Setting<Double> itemScale = this.sgItems.doubleSetting("Item Scale", 1.0, 0.0, 3.0, 0.03, ".");
-    private final Setting<Double> itemOffset = this.sgItems.doubleSetting("Item Offset", 1.0, 0.0, 2.0, 0.02, ".");
-    private final Setting<Double> itemSeparation = this.sgItems.doubleSetting("Item Separation", 0.0, 0.0, 5.0, 0.05, ".");
-    private final Setting<FilterMode> filterMode = this.sgEnchantments.enumSetting("Enchantment Mode", FilterMode.Blacklist, ".");
-    private final Setting<List<RegistryKey<Enchantment>>> enchantments = this.sgEnchantments
-            .listSetting("Enchantments", ".", EnchantmentNames.enchantments, EnchantmentNames::getLongName);
-    private final Setting<Boolean> drawEnchants = this.sgEnchantments.booleanSetting("Draw Enchants", false, ".");
-    private final Setting<Boolean> enchantsAbove = this.sgEnchantments.booleanSetting("Enchantments Above", true, ".", this.drawEnchants::get);
-    private final Setting<Boolean> shortNames = this.sgEnchantments.booleanSetting("Short Names", true, ".", this.drawEnchants::get);
-    private final Setting<Double> enchantScale = this.sgEnchantments.doubleSetting("Enchantment Scale", 0.5, 0.0, 2.0, 0.02, ".", this.drawEnchants::get);
-    private final Setting<Double> compact = this.sgEnchantments.doubleSetting("Compact Enchantments", 0.0, 0.0, 1.0, 0.01, ".", this.drawEnchants::get);
-    private final Setting<Boolean> center = this.sgEnchantments.booleanSetting("Center Enchantments", true, ".", this.drawEnchants::get);
-    private final Setting<Double> enchantmentsOffset = this.sgEnchantments
-            .doubleSetting("Enchantments Offset", 0.0, 0.0, 1.0, 0.01, ".", () -> this.drawEnchants.get() && !this.center.get());
-    private final Setting<BlackOutColor> txt = this.sgColor.colorSetting("Text Color", new BlackOutColor(255, 255, 255, 255), ".");
-    private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, "Nametag");
-    private final Setting<BlackOutColor> friendColor = this.sgColor.colorSetting("Friend Color", new BlackOutColor(150, 150, 255, 255), ".");
+
+
+    public final Setting<Boolean> ping = this.sgGeneral.booleanSetting("Network Latency", true, "Displays the player's current ping in milliseconds.");
+    public final Setting<Boolean> pops = this.sgGeneral.booleanSetting("Totem Pops", true, "Tracks and displays how many Totems of Undying the player has consumed in combat.");
+    public final Setting<Boolean> showId = this.sgGeneral.booleanSetting("Entity Index", false, "Renders the internal Minecraft entity ID.");
+    public final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Curved Geometry", true, "Applies rounding to the corners of the nametag background.");
+    public final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Drop Shadow", true, "Renders a shadow behind the background to increase depth and contrast.");
+    private final Setting<Double> scale = this.sgGeneral.doubleSetting("Base Scale", 1.0, 0.0, 10.0, 0.1, "The primary size of the nametag overlay.");
+    private final Setting<Double> scaleInc = this.sgGeneral.doubleSetting("Distance Compensation", 1.0, 0.0, 5.0, 0.05, "Increases nametag size based on distance to maintain legibility at long ranges.");
+    private final Setting<Double> yOffset = this.sgGeneral.doubleSetting("Vertical Translation", 0.0, 0.0, 1.0, 0.01, "Adjusts the height of the tag above the entity's head.");
+    private final Setting<NameMode> nameMode = this.sgGeneral.enumSetting("Label Format", NameMode.EntityName, "Toggles between the entity's raw name and their formatted display name.");
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Blur", true, "Applies a blur effect behind the nametag for better legibility against complex backgrounds.");
+    private final Setting<List<EntityType<?>>> entityTypes = this.sgGeneral.entityListSetting("Target Filters", "Specifies which entity types will receive custom nametags.", EntityType.PLAYER);
+    private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, "Nametag Background");
+
+    private final Setting<Boolean> armor = this.sgItems.booleanSetting("Armor Inventory", false, "Displays the player's equipped armor slots above the nametag.");
+    private final Setting<Boolean> hand = this.sgItems.booleanSetting("Held Equipment", false, "Displays the items held in the player's main and off-hand.");
+    private final Setting<Double> itemScale = this.sgItems.doubleSetting("Icon Scale", 1.0, 0.0, 3.0, 0.03, "The rendering size of the item icons.");
+    private final Setting<Double> itemOffset = this.sgItems.doubleSetting("Item Vertical Offset", 1.0, 0.0, 2.0, 0.02, "Adjusts the spacing between the nametag and the item icons.");
+    private final Setting<Double> itemSeparation = this.sgItems.doubleSetting("Item Horizontal Spacing", 0.0, 0.0, 5.0, 0.05, "Adjusts the gap between individual inventory items.");
+
+    private final Setting<FilterMode> filterMode = this.sgEnchantments.enumSetting("Enchantment Filtering", FilterMode.Blacklist, "Determines how the enchantment list is processed.");
+    private final Setting<List<RegistryKey<Enchantment>>> enchantments = this.sgEnchantments.listSetting("Enchantment Filter", "The list of enchantments to either include or exclude from the tag.", EnchantmentNames.enchantments, EnchantmentNames::getLongName);
+    private final Setting<Boolean> drawEnchants = this.sgEnchantments.booleanSetting("Render Enchantments", false, "Displays enchantment abbreviations and levels on the equipment icons.");
+    private final Setting<Boolean> enchantsAbove = this.sgEnchantments.booleanSetting("Stack Direction", true, "Renders enchantment text above the items when enabled, below when disabled.", this.drawEnchants::get);
+    private final Setting<Boolean> shortNames = this.sgEnchantments.booleanSetting("Abbreviate Names", true, "Uses shortened names for enchantments (e.g., 'Prot' instead of 'Protection').", this.drawEnchants::get);
+    private final Setting<Double> enchantScale = this.sgEnchantments.doubleSetting("Text Scale", 0.5, 0.0, 2.0, 0.02, "The size of the enchantment text.", this.drawEnchants::get);
+    private final Setting<Double> compact = this.sgEnchantments.doubleSetting("Vertical Compression", 0.0, 0.0, 1.0, 0.01, "Reduces line height between enchantment entries.", this.drawEnchants::get);
+    private final Setting<Boolean> center = this.sgEnchantments.booleanSetting("Alignment", true, "Centers the enchantment text over the item icon.", this.drawEnchants::get);
+    private final Setting<Double> enchantmentsOffset = this.sgEnchantments.doubleSetting("Horizontal Offset", 0.0, 0.0, 1.0, 0.01, "Manually adjusts horizontal text placement when centering is disabled.", () -> this.drawEnchants.get() && !this.center.get());
+
+    public final Setting<ColorMode> colorMode = this.sgColor.enumSetting("Palette Logic", ColorMode.Dynamic, "Determines whether colors are static or health-dependent.");
+    private final Setting<BlackOutColor> hp = this.sgColor.colorSetting("Health Accent", new BlackOutColor(150, 150, 150, 255), "The color used for health indicators when using a fixed palette.", () -> this.colorMode.get() == ColorMode.Custom);
+    private final Setting<BlackOutColor> txt = this.sgColor.colorSetting("Primary Text Color", new BlackOutColor(255, 255, 255, 255), "The default color for names and info.");
+    private final Setting<BlackOutColor> friendColor = this.sgColor.colorSetting("Friendship Palette", new BlackOutColor(150, 150, 255, 255), "The color applied to entities identified as friends.");
+
+
+
     private final MatrixStack stack = new MatrixStack();
     private final List<Entity> entities = new ArrayList<>();
     private final List<Component> components = new ArrayList<>();
@@ -91,7 +96,7 @@ public class Nametags extends Module {
     private float offset;
 
     public Nametags() {
-        super("Nametags", "Renders custom nametags", SubCategory.ENTITIES, true);
+        super("Nametags", "Replaces standard entity labels with highly customizable overlays showing health, equipment, and network statistics.", SubCategory.ENTITIES, true);
         INSTANCE = this;
     }
 
@@ -315,7 +320,7 @@ public class Nametags extends Module {
         } else if (!this.entityTypes.get().contains(entity.getType())) {
             return false;
         } else {
-            return entity != BlackOut.mc.player || Freecam.getInstance().enabled;
+            return entity != BlackOut.mc.player || FreeCam.getInstance().enabled;
         }
     }
 

@@ -25,14 +25,16 @@ import org.joml.Matrix4f;
 
 public class Sight extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Double> lineWidth = this.sgGeneral.doubleSetting("Line Width", 1.5, 0.5, 5.0, 0.05, ".");
-    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Line Color", new BlackOutColor(255, 0, 0, 255), "");
-    private final Setting<Double> fadeIn = this.sgGeneral.doubleSetting("Fade In", 1.0, 0.0, 50.0, 0.5, "");
-    private final Setting<Double> length = this.sgGeneral.doubleSetting("Length", 5.0, 0.0, 50.0, 0.5, "");
+
+    private final Setting<Double> lineWidth = this.sgGeneral.doubleSetting("Stroke Weight", 1.5, 0.5, 5.0, 0.05, "The thickness of the rendered view vector lines.");
+    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Line Palette", new BlackOutColor(255, 0, 0, 255), "The primary color for the gaze indicators.");
+    private final Setting<Double> fadeIn = this.sgGeneral.doubleSetting("Proximal Fade", 1.0, 0.0, 50.0, 0.5, "The distance from the player's eyes where the line starts to transition from transparent to opaque.");
+    private final Setting<Double> length = this.sgGeneral.doubleSetting("Vector Magnitude", 5.0, 0.0, 50.0, 0.5, "The maximum distance the sight line extends before termination.");
+
     private final MatrixStack stack = new MatrixStack();
 
     public Sight() {
-        super("Sight", "Shows where people are looking at.", SubCategory.ENTITIES, true);
+        super("Sight", "Traces the visual trajectory of other players by rendering gaze vectors that reflect their current pitch and yaw.", SubCategory.ENTITIES, true);
     }
 
     @Event

@@ -23,12 +23,14 @@ import java.util.List;
 
 public class BoxESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<List<EntityType<?>>> entityTypes = this.sgGeneral.entityListSetting("Entities", ".", EntityType.PLAYER);
+
+    private final Setting<List<EntityType<?>>> entityTypes = this.sgGeneral.entityListSetting("Targeted Entities", "Specifies which entity categories will be highlighted by the ESP.", EntityType.PLAYER);
     private final BoxMultiSetting rendering = BoxMultiSetting.of(this.sgGeneral);
+
     private final List<Entity> entities = new ArrayList<>();
 
     public BoxESP() {
-        super("Box ESP", "Extra Sensory Perception with boxes!", SubCategory.ENTITIES, true);
+        super("Box ESP", "Renders three-dimensional axis-aligned bounding boxes around entities to grant visual awareness through terrain and obstructions.", SubCategory.ENTITIES, true);
     }
 
     @Event

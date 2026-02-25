@@ -4,7 +4,7 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.combat.misc.AntiBot;
-import bodevelopment.client.blackout.module.modules.visual.misc.Freecam;
+import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.BackgroundMultiSetting;
@@ -116,7 +116,7 @@ public class Radar extends HudElement {
         if (antiBot.enabled && antiBot.mode.get() == AntiBot.HandlingMode.Ignore && entity instanceof AbstractClientPlayerEntity player && antiBot.getBots().contains(player)) {
             return false;
         } else {
-            return entity != BlackOut.mc.player || Freecam.getInstance().enabled;
+            return entity != BlackOut.mc.player || FreeCam.getInstance().enabled;
         }
     }
 

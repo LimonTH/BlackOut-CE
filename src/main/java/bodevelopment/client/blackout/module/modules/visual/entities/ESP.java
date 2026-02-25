@@ -34,26 +34,28 @@ import java.util.function.Function;
 public class ESP extends Module {
     private static ESP INSTANCE;
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Boolean> renderName = this.sgGeneral.booleanSetting("Render Name", false, ".");
-    private final Setting<NameMode> nameMode = this.sgGeneral.enumSetting("Name Mode", NameMode.EntityName, "", this.renderName::get);
-    private final Setting<List<EntityType<?>>> entityTypes = this.sgGeneral.entityListSetting("Entities", ".", EntityType.PLAYER);
-    private final Setting<Boolean> hp = this.sgGeneral.booleanSetting("Show HP", true, ".");
-    private final Setting<BlackOutColor> mxhp = this.sgGeneral.colorSetting("Max HP Color", new BlackOutColor(115, 115, 255, 200), ".", this.hp::get);
-    private final Setting<BlackOutColor> mnhp = this.sgGeneral.colorSetting("Min HP Color", new BlackOutColor(255, 30, 30, 200), ".", this.hp::get);
-    private final Setting<Boolean> box = this.sgGeneral.booleanSetting("Box", true, "Draws a box around the entity");
-    private final Setting<Boolean> fill = this.sgGeneral.booleanSetting("Box Fill", false, "Fills the box");
-    private final Setting<Boolean> fadeFill = this.sgGeneral.booleanSetting("Fade Fill", false, ".", this.fill::get);
-    private final Setting<BlackOutColor> fillColor = this.sgGeneral.colorSetting("Fill Color", new BlackOutColor(255, 255, 255, 50), ".", this.fill::get);
-    private final Setting<Boolean> renderItem = this.sgGeneral.booleanSetting("Render Item", false, ".");
-    private final Setting<BlackOutColor> txt = this.sgGeneral.colorSetting("Text Color", new BlackOutColor(255, 255, 255, 255), ".");
-    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Line Color", new BlackOutColor(255, 255, 255, 200), ".");
-    private final Setting<BlackOutColor> fadeColor = this.sgGeneral.colorSetting("Line Fade Color", new BlackOutColor(16, 16, 16, 200), ".");
+
+    public final Setting<Boolean> renderName = this.sgGeneral.booleanSetting("Entity Labels", false, "Renders the name or display tag of the entity above their position.");
+    private final Setting<NameMode> nameMode = this.sgGeneral.enumSetting("Label Format", NameMode.EntityName, "Determines whether to use the internal entity name or the formatted display name.", this.renderName::get);
+    private final Setting<List<EntityType<?>>> entityTypes = this.sgGeneral.entityListSetting("Target Filters", "Specifies which entity types will trigger the ESP rendering.", EntityType.PLAYER);
+    private final Setting<Boolean> hp = this.sgGeneral.booleanSetting("Vitality Bar", true, "Displays a vertical health bar next to the entity's bounding box.");
+    private final Setting<BlackOutColor> mxhp = this.sgGeneral.colorSetting("Full Health Color", new BlackOutColor(115, 115, 255, 200), "The color of the health bar when the entity is at maximum health.", this.hp::get);
+    private final Setting<BlackOutColor> mnhp = this.sgGeneral.colorSetting("Critical Health Color", new BlackOutColor(255, 30, 30, 200), "The color of the health bar as the entity's health approaches zero.", this.hp::get);
+    private final Setting<Boolean> box = this.sgGeneral.booleanSetting("Bounding Outline", true, "Draws a 2D rectangular frame around the entity's projected spatial bounds.");
+    private final Setting<Boolean> fill = this.sgGeneral.booleanSetting("Interior Fill", false, "Applies a solid or translucent color to the area inside the bounding outline.");
+    private final Setting<Boolean> fadeFill = this.sgGeneral.booleanSetting("Gradient Fill", false, "Applies a top-to-bottom transparency gradient to the interior fill.", this.fill::get);
+    private final Setting<BlackOutColor> fillColor = this.sgGeneral.colorSetting("Fill Shade", new BlackOutColor(255, 255, 255, 50), "The color used for the interior fill of the ESP box.", this.fill::get);
+    private final Setting<Boolean> renderItem = this.sgGeneral.booleanSetting("Equipment Overlay", false, "Displays the name of the item currently held in the entity's main hand.");
+    private final Setting<BlackOutColor> txt = this.sgGeneral.colorSetting("Text Palette", new BlackOutColor(255, 255, 255, 255), "The color for labels and item text.");
+    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Outline Palette", new BlackOutColor(255, 255, 255, 200), "The primary color of the bounding frame.");
+    private final Setting<BlackOutColor> fadeColor = this.sgGeneral.colorSetting("Secondary Outline Palette", new BlackOutColor(16, 16, 16, 200), "The secondary color used for vertical line fading and gradients.");
+
     private final MatrixStack stack = new MatrixStack();
     private final List<Entity> entities = new ArrayList<>();
     private float progress = 0.0F;
 
     public ESP() {
-        super("ESP", "Extra Sensory Perception", SubCategory.ENTITIES, true);
+        super("ESP", "Provides enhanced visual feedback by rendering informative 2D overlays and bounding boxes around entities through obstacles.", SubCategory.ENTITIES, true);
         INSTANCE = this;
     }
 

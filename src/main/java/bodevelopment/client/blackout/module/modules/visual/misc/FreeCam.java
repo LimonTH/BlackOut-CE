@@ -11,24 +11,27 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import net.minecraft.client.input.KeyboardInput;
 import net.minecraft.util.math.Vec3d;
 
-public class Freecam extends Module {
-    private static Freecam INSTANCE;
-    public final Vec3d velocity = new Vec3d(0.0, 0.0, 0.0);
+public class FreeCam extends Module {
+    private static FreeCam INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Normal, ".");
-    private final Setting<Double> speedH = this.sgGeneral.doubleSetting("Horizontal Speed", 1.0, 0.1, 10.0, 0.1, ".");
-    private final Setting<Double> speedV = this.sgGeneral.doubleSetting("Vertical Speed", 1.0, 0.1, 10.0, 0.1, ".");
+
+    private final Setting<Mode> mode = this.sgGeneral.enumSetting("Movement Mode", Mode.Normal, "The interpolation logic used for camera translation.");
+    private final Setting<Double> speedH = this.sgGeneral.doubleSetting("Horizontal Velocity", 1.0, 0.1, 10.0, 0.1, "The movement speed multiplier for the lateral X and Z axes.");
+    private final Setting<Double> speedV = this.sgGeneral.doubleSetting("Vertical Velocity", 1.0, 0.1, 10.0, 0.1, "The movement speed multiplier for the vertical Y axis.");
+
+    public final Vec3d velocity = new Vec3d(0.0, 0.0, 0.0);
     public Vec3d pos = Vec3d.ZERO;
     private float moveYaw;
     private float vertical;
     private boolean move;
 
-    public Freecam() {
-        super("Freecam", "Allows your camera to move without you moving.", SubCategory.MISC_VISUAL, true);
+    public FreeCam() {
+        super("Freecam", "Detaches the camera from the player entity, allowing independent exploration of the environment while maintaining the player's position.", SubCategory.MISC_VISUAL, true);
         INSTANCE = this;
     }
 
-    public static Freecam getInstance() {
+    public static FreeCam getInstance() {
         return INSTANCE;
     }
 
@@ -86,6 +89,27 @@ public class Freecam extends Module {
                 ((IVec3d) this.velocity).blackout_Client$set(x, y, z);
                 movement = this.velocity.multiply(this.speedH.get(), this.speedV.get(), this.speedH.get());
                 break;
+            case Directional:
+                double rYaw = Math.toRadians(yaw);
+                double rPitch = Math.toRadians(-pitch);
+
+                double cosPitch = Math.cos(rPitch);
+                double sinPitch = Math.sin(rPitch);
+                double cosYaw = Math.cos(rYaw);
+                double sinYaw = Math.sin(rYaw);
+
+                double lookX = -sinYaw * cosPitch;
+                double lookY = sinPitch;
+                double lookZ = cosYaw * cosPitch;
+
+                Vec3d direction = new Vec3d(lookX, lookY, lookZ);
+
+                if (this.move) {
+                    movement = direction.multiply(this.speedH.get());
+                } else {
+                    movement = new Vec3d(0, this.vertical * this.speedV.get(), 0);
+                }
+                break;
             default:
                 return this.pos;
         }
@@ -125,6 +149,7 @@ public class Freecam extends Module {
 
     public enum Mode {
         Normal,
-        Smooth
+        Smooth,
+        Directional
     }
 }

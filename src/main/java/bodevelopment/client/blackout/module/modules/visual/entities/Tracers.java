@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.combat.misc.AntiBot;
-import bodevelopment.client.blackout.module.modules.visual.misc.Freecam;
+import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
@@ -28,14 +28,16 @@ import java.util.List;
 
 public class Tracers extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<List<EntityType<?>>> entityTypes = this.sgGeneral.entityListSetting("Entities", ".", EntityType.PLAYER);
-    private final Setting<BlackOutColor> line = this.sgGeneral.colorSetting("Line Color", new BlackOutColor(255, 255, 255, 100), ".");
-    private final Setting<BlackOutColor> friendLine = this.sgGeneral.colorSetting("Friend Line Color", new BlackOutColor(150, 150, 255, 100), ".");
+
+    private final Setting<List<EntityType<?>>> entityTypes = this.sgGeneral.entityListSetting("Target Filters", "Specifies which entity types will have tracking lines drawn toward them.", EntityType.PLAYER);
+    private final Setting<BlackOutColor> line = this.sgGeneral.colorSetting("Default Tracer Color", new BlackOutColor(255, 255, 255, 100), "The color of the tracer lines for standard entities.");
+    private final Setting<BlackOutColor> friendLine = this.sgGeneral.colorSetting("Friend Tracer Color", new BlackOutColor(150, 150, 255, 100), "The color of the tracer lines for entities on your friend list.");
+
     private final MatrixStack stack = new MatrixStack();
     private final List<Entity> entities = new ArrayList<>();
 
     public Tracers() {
-        super("Tracers", "Traces to other entities", SubCategory.ENTITIES, true);
+        super("Tracers", "Draws directional lines from the center of the screen to entities to provide spatial awareness of their locations.", SubCategory.ENTITIES, true);
     }
 
     @Event
@@ -96,7 +98,7 @@ public class Tracers extends Module {
         } else if (!this.entityTypes.get().contains(entity.getType())) {
             return false;
         } else {
-            return entity != BlackOut.mc.player || Freecam.getInstance().enabled;
+            return entity != BlackOut.mc.player || FreeCam.getInstance().enabled;
         }
     }
 }

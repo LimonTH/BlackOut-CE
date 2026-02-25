@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.module.modules.visual.misc;
 
 import bodevelopment.client.blackout.module.Module;
+import bodevelopment.client.blackout.module.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.RegistryNames;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -12,27 +13,32 @@ import net.minecraft.util.Arm;
 
 import java.util.List;
 
+// TODO: NEED PATCHES
+@OnlyDev
 public class NoRender extends Module {
     private static NoRender INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Boolean> wallOverlay = this.sgGeneral.booleanSetting("Wall Overlay", true, "Doesn't cover your whole screen while inside a wall.");
-    public final Setting<Boolean> waterOverlay = this.sgGeneral.booleanSetting("Water Overlay", true, "Doesn't render water overlay.");
-    public final Setting<Boolean> fireOverlay = this.sgGeneral.booleanSetting("Fire Overlay", true, "Doesn't render fire overlay.");
-    public final Setting<Boolean> effectOverlay = this.sgGeneral.booleanSetting("Effect Overlay", true, "Doesn't render effect overlay.");
-    public final Setting<Boolean> totem = this.sgGeneral.booleanSetting("Totem", true, "Doesn't render totem of undying after popping.");
-    public final Setting<Boolean> pumpkin = this.sgGeneral.booleanSetting("Pumpkin Overlay", true, "Doesn't render the pumpkin overlay.");
-    public final Setting<Boolean> crystalBase = this.sgGeneral.booleanSetting("Crystal Base", true, "Doesn't render the bedrock slab under end crystals.");
     private final SettingGroup sgItems = this.addGroup("Items");
-    public final Setting<Boolean> helmet = this.sgItems.booleanSetting("Helmet", false, ".");
-    public final Setting<Boolean> chestplate = this.sgItems.booleanSetting("Chestplate", false, ".");
-    public final Setting<Boolean> leggings = this.sgItems.booleanSetting("Leggings", false, ".");
-    public final Setting<Boolean> boots = this.sgItems.booleanSetting("Boots", false, ".");
-    public final Setting<Boolean> left = this.sgItems.booleanSetting("Left Hand", false, ".");
-    public final Setting<Boolean> right = this.sgItems.booleanSetting("Right Hand", false, ".");
-    private final Setting<List<ParticleType<?>>> particles = this.sgGeneral.registrySetting("Particles", ".", Registries.PARTICLE_TYPE, RegistryNames::get);
+
+    public final Setting<Boolean> wallOverlay = this.sgGeneral.booleanSetting("Block Overlays", true, "Prevents visual obstruction when the camera is inside solid blocks.");
+    public final Setting<Boolean> waterOverlay = this.sgGeneral.booleanSetting("Submersion Overlay", true, "Suppresses the blue texture overlay when submerged in water.");
+    public final Setting<Boolean> fireOverlay = this.sgGeneral.booleanSetting("Combustion Overlay", true, "Suppresses the flame animation overlay when the player is on fire.");
+    public final Setting<Boolean> effectOverlay = this.sgGeneral.booleanSetting("Status Overlays", true, "Disables visual HUD effects caused by status conditions like nausea or blindness.");
+    public final Setting<Boolean> totem = this.sgGeneral.booleanSetting("Totem Animation", true, "Suppresses the Totem of Undying animation that normally covers the screen upon use.");
+    public final Setting<Boolean> pumpkin = this.sgGeneral.booleanSetting("Pumpkin Mask", true, "Removes the carved pumpkin vignette from the HUD.");
+    public final Setting<Boolean> crystalBase = this.sgGeneral.booleanSetting("Crystal Pedestal", true, "Prevents the rendering of the obsidian/bedrock base underneath End Crystals.");
+
+    public final Setting<Boolean> helmet = this.sgItems.booleanSetting("Cranial Armor", false, "Hides the helmet model on entities.");
+    public final Setting<Boolean> chestplate = this.sgItems.booleanSetting("Torso Armor", false, "Hides the chestplate model on entities.");
+    public final Setting<Boolean> leggings = this.sgItems.booleanSetting("Leg Armor", false, "Hides the legging models on entities.");
+    public final Setting<Boolean> boots = this.sgItems.booleanSetting("Footwear", false, "Hides the boot models on entities.");
+    public final Setting<Boolean> left = this.sgItems.booleanSetting("Off-Hand Model", false, "Stops the left hand/item from rendering in first and third person.");
+    public final Setting<Boolean> right = this.sgItems.booleanSetting("Main-Hand Model", false, "Stops the right hand/item from rendering in first and third person.");
+    private final Setting<List<ParticleType<?>>> particles = this.sgGeneral.registrySetting("Particle Filter", "A list of specific particle types that will not be rendered in the game world.", Registries.PARTICLE_TYPE, RegistryNames::get);
 
     public NoRender() {
-        super("No Render", "Doesn't render some stuff.", SubCategory.MISC_VISUAL, true);
+        super("No Render", "Selectively disables the rendering of various overlays, entity parts, and environmental particles to increase visibility and performance.", SubCategory.MISC_VISUAL, true);
         INSTANCE = this;
     }
 

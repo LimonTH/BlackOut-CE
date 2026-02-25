@@ -10,27 +10,31 @@ import net.minecraft.util.Hand;
 
 public class SwingModifier extends Module {
     private static SwingModifier INSTANCE;
-    private static boolean mainSwinging = false;
+
     private final SettingGroup sgMainHand = this.addGroup("Main Hand");
     private final SettingGroup sgOffHand = this.addGroup("Off Hand");
-    private final Setting<Double> mainSpeed = this.sgMainHand.doubleSetting("Main Speed", 1.0, 0.0, 10.0, 0.05, "Speed of swinging.");
-    private final Setting<Double> mainStart = this.sgMainHand.doubleSetting("Main Start", 0.0, 0.0, 10.0, 0.05, "Starts swing at this progress.");
-    private final Setting<Double> mainEnd = this.sgMainHand.doubleSetting("Main End", 1.0, 0.0, 10.0, 0.05, "Ends swing at this progress.");
-    private final Setting<Double> mainStartY = this.sgMainHand.doubleSetting("Main Start Y", 0.0, -10.0, 10.0, 0.05, "Hand Y value in the beginning.");
-    private final Setting<Double> mainEndY = this.sgMainHand.doubleSetting("Main End Y", 0.0, -10.0, 10.0, 0.05, "Hand Y value in the end.");
-    private final Setting<Boolean> mainReset = this.sgMainHand.booleanSetting("Main Reset", false, "Resets swing when swinging again.");
-    private final Setting<Double> offSpeed = this.sgOffHand.doubleSetting("Off Speed", 1.0, 0.0, 10.0, 0.05, "Speed of swinging.");
-    private final Setting<Double> offStart = this.sgOffHand.doubleSetting("Off Start", 0.0, 0.0, 10.0, 0.05, "Starts swing at this progress.");
-    private final Setting<Double> offEnd = this.sgOffHand.doubleSetting("Off End", 1.0, 0.0, 10.0, 0.05, "Ends swing at this progress.");
-    private final Setting<Double> offStartY = this.sgOffHand.doubleSetting("Off Start Y", 0.0, -10.0, 10.0, 0.05, "Hand Y value in the beginning.");
-    private final Setting<Double> offEndY = this.sgOffHand.doubleSetting("Off End Y", 0.0, -10.0, 10.0, 0.05, "Hand Y value in the end.");
-    private final Setting<Boolean> offReset = this.sgOffHand.booleanSetting("Off Reset", false, "Resets swing when swinging again.");
+
+    private final Setting<Double> mainSpeed = this.sgMainHand.doubleSetting("Swing Velocity", 1.0, 0.0, 10.0, 0.05, "The temporal speed multiplier for the main-hand animation cycle.");
+    private final Setting<Double> mainStart = this.sgMainHand.doubleSetting("Initial Frame", 0.0, 0.0, 10.0, 0.05, "The normalized animation progress at which the main-hand swing begins.");
+    private final Setting<Double> mainEnd = this.sgMainHand.doubleSetting("Terminal Frame", 1.0, 0.0, 10.0, 0.05, "The normalized animation progress at which the main-hand swing concludes.");
+    private final Setting<Double> mainStartY = this.sgMainHand.doubleSetting("Initial Y-Offset", 0.0, -10.0, 10.0, 0.05, "The starting vertical position of the hand during the swing animation.");
+    private final Setting<Double> mainEndY = this.sgMainHand.doubleSetting("Terminal Y-Offset", 0.0, -10.0, 10.0, 0.05, "The ending vertical position of the hand during the swing animation.");
+    private final Setting<Boolean> mainReset = this.sgMainHand.booleanSetting("Sequence Reset", false, "Immediately restarts the animation if another swing action is triggered before completion.");
+
+    private final Setting<Double> offSpeed = this.sgOffHand.doubleSetting("Swing Velocity", 1.0, 0.0, 10.0, 0.05, "The temporal speed multiplier for the off-hand animation cycle.");
+    private final Setting<Double> offStart = this.sgOffHand.doubleSetting("Initial Frame", 0.0, 0.0, 10.0, 0.05, "The normalized animation progress at which the off-hand swing begins.");
+    private final Setting<Double> offEnd = this.sgOffHand.doubleSetting("Terminal Frame", 1.0, 0.0, 10.0, 0.05, "The normalized animation progress at which the off-hand swing concludes.");
+    private final Setting<Double> offStartY = this.sgOffHand.doubleSetting("Initial Y-Offset", 0.0, -10.0, 10.0, 0.05, "The starting vertical position of the hand during the swing animation.");
+    private final Setting<Double> offEndY = this.sgOffHand.doubleSetting("Terminal Y-Offset", 0.0, -10.0, 10.0, 0.05, "The ending vertical position of the hand during the swing animation.");
+    private final Setting<Boolean> offReset = this.sgOffHand.booleanSetting("Sequence Reset", false, "Immediately restarts the animation if another swing action is triggered before completion.");
+
+    private static boolean mainSwinging = false;
     private float mainProgress = 0.0F;
     private boolean offSwinging = false;
     private float offProgress = 0.0F;
 
     public SwingModifier() {
-        super("Swing Modifier", "Modifies swing rendering.", SubCategory.MISC_VISUAL, true);
+        super("Swing Modifier", "Provides granular control over the hand-swing animation interpolate, allowing for custom speeds, vertical offsets, and animation keyframes.", SubCategory.MISC_VISUAL, true);
         INSTANCE = this;
     }
 

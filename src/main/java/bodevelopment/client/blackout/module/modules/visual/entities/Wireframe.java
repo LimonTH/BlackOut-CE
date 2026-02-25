@@ -25,13 +25,15 @@ import java.util.List;
 
 public class Wireframe extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<RenderShape> renderShape = this.sgGeneral.enumSetting("Render Shape", RenderShape.Full, ".");
-    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Line Color", new BlackOutColor(255, 0, 0, 255), ".");
-    private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Side Color", new BlackOutColor(255, 0, 0, 50), ".");
+
+    private final Setting<RenderShape> renderShape = this.sgGeneral.enumSetting("Mesh Mode", RenderShape.Full, "Defines which geometric components of the player model are rendered (outlines, faces, or both).");
+    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Wireframe Color", new BlackOutColor(255, 0, 0, 255), "The color and opacity of the polygonal edges.");
+    private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Surface Color", new BlackOutColor(255, 0, 0, 50), "The color and opacity of the model's polygon faces.");
+
     private final List<AbstractClientPlayerEntity> player = new ArrayList<>();
 
     public Wireframe() {
-        super("Wireframe", "Draws a wireframe of players", SubCategory.ENTITIES, true);
+        super("Wireframe", "Renders a structural shell over player entities to visualize their model geometry and joint rotations.", SubCategory.ENTITIES, true);
     }
 
     @Event
@@ -49,7 +51,14 @@ public class Wireframe extends Module {
 
     public boolean shouldRender(Entity entity) {
         AntiBot antiBot = AntiBot.getInstance();
-        return (!antiBot.enabled || antiBot.mode.get() != AntiBot.HandlingMode.Ignore || !antiBot.getBots().contains(entity)) && entity != BlackOut.mc.player;
+
+        if (antiBot.enabled && antiBot.mode.get() == AntiBot.HandlingMode.Ignore) {
+            if (entity instanceof AbstractClientPlayerEntity playerx && antiBot.getBots().contains(playerx)) {
+                return false;
+            }
+        }
+
+        return entity != BlackOut.mc.player;
     }
 
     @Event

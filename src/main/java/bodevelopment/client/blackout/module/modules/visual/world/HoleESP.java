@@ -26,22 +26,23 @@ import java.util.List;
 
 public class HoleESP extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Double> range = this.sgGeneral.doubleSetting("Range", 8.0, 0.0, 10.0, 0.1, "Maximum range to a hole.");
-    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Line Color", new BlackOutColor(255, 0, 0, 255), "Line color of rendered boxes.");
-    private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Side Color", new BlackOutColor(255, 0, 0, 50), "Side color of rendered boxes.");
-    private final Setting<Boolean> bottomLines = this.sgGeneral.booleanSetting("Bottom Lines", true, "Renders lines in hole bottom.");
-    private final Setting<Boolean> bottomSide = this.sgGeneral.booleanSetting("Bottom Side", true, "Renders bottom plane.");
-    private final Setting<Boolean> fadeLines = this.sgGeneral.booleanSetting("Fade Lines", true, "Renders lines in fade.");
-    private final Setting<Boolean> fadeSides = this.sgGeneral.booleanSetting("Fade Sides", true, "Renders sides in fade.");
-    private final Setting<Double> minHeight = this.sgGeneral.doubleSetting("Min Height", 0.5, -1.0, 1.0, 0.05, ".");
-    private final Setting<Double> maxHeight = this.sgGeneral.doubleSetting("Max Height", 1.0, -1.0, 1.0, 0.05, "How tall should the fade be.");
-    private final Setting<Double> breathingSpeed = this.sgGeneral
-            .doubleSetting("Breathing Speed", 1.0, 0.0, 10.0, 0.1, ".", () -> !this.minHeight.get().equals(this.maxHeight.get()));
+
+    private final Setting<Double> range = this.sgGeneral.doubleSetting("Detection Radius", 8.0, 0.0, 10.0, 0.1, "The maximum distance from the player to scan for defensive holes.");
+    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Wireframe Color", new BlackOutColor(255, 0, 0, 255), "The color of the structural edges for the hole highlights.");
+    private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Surface Color", new BlackOutColor(255, 0, 0, 50), "The fill color for the faces of the hole highlights.");
+    private final Setting<Boolean> bottomLines = this.sgGeneral.booleanSetting("Base Outlines", true, "Renders the wireframe for the floor of the hole.");
+    private final Setting<Boolean> bottomSide = this.sgGeneral.booleanSetting("Base Surface", true, "Renders the solid plane for the floor of the hole.");
+    private final Setting<Boolean> fadeLines = this.sgGeneral.booleanSetting("Vertical Outlines", true, "Renders rising wireframe edges that fade out vertically.");
+    private final Setting<Boolean> fadeSides = this.sgGeneral.booleanSetting("Gradient Sides", true, "Renders rising vertical surfaces with a transparency gradient.");
+    private final Setting<Double> minHeight = this.sgGeneral.doubleSetting("Minimum Altitude", 0.5, -1.0, 1.0, 0.05, "The lower bound for the volumetric highlight height.");
+    private final Setting<Double> maxHeight = this.sgGeneral.doubleSetting("Maximum Altitude", 1.0, -1.0, 1.0, 0.05, "The upper bound for the volumetric highlight height.");
+    private final Setting<Double> breathingSpeed = this.sgGeneral.doubleSetting("Oscillation Frequency", 1.0, 0.0, 10.0, 0.1, "The speed of the 'breathing' animation that fluctuates the highlight height.", () -> !this.minHeight.get().equals(this.maxHeight.get()));
+
     private final List<Hole> holes = new ArrayList<>();
     private long prevCalc = 0L;
 
     public HoleESP() {
-        super("Hole ESP", "Highlights holes near you.", SubCategory.WORLD, true);
+        super("Hole ESP", "Visualizes safe defensive positions (obsidian/bedrock holes) with customizable volumetric rendering and breathing animations.", SubCategory.WORLD, true);
     }
 
     public static void fadePlane(

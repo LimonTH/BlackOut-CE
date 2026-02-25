@@ -136,7 +136,7 @@ public abstract class MixinGameRenderer {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;raycast(DFZ)Lnet/minecraft/util/hit/HitResult;")
     )
     private HitResult raycast(Entity instance, double maxDistance, float tickDelta, boolean includeFluids) {
-        Freecam freecam = Freecam.getInstance();
+        FreeCam freecam = FreeCam.getInstance();
         if (!freecam.enabled) {
             return instance.raycast(maxDistance, tickDelta, includeFluids);
         } else {
@@ -152,7 +152,7 @@ public abstract class MixinGameRenderer {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getCameraPosVec(F)Lnet/minecraft/util/math/Vec3d;")
     )
     private Vec3d cameraPos(Entity instance, float tickDelta) {
-        Freecam freecam = Freecam.getInstance();
+        FreeCam freecam = FreeCam.getInstance();
         return freecam.enabled ? freecam.pos : instance.getCameraPosVec(tickDelta);
     }
 

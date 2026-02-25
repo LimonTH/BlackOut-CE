@@ -13,17 +13,20 @@ import net.minecraft.util.math.Vec3d;
 
 public class PlayerModifier extends Module {
     private static PlayerModifier INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Boolean> setLeaning = this.sgGeneral.booleanSetting("Set Leaning", false, ".");
-    private final Setting<Double> leaning = this.sgGeneral.doubleSetting("Leaning", 0.0, 0.0, 1.0, 0.01, ".", this.setLeaning::get);
-    private final Setting<Boolean> moveLeaning = this.sgGeneral.booleanSetting("Move Leaning", true, ".", this.setLeaning::get);
-    public final Setting<Boolean> forceSneak = this.sgGeneral.booleanSetting("Force Sneak", true, ".");
-    public final Setting<Boolean> noAnimations = this.sgGeneral.booleanSetting("No Animations", true, ".");
-    public final Setting<Boolean> noSwing = this.sgGeneral.booleanSetting("No Swing", true, ".");
+
+    public final Setting<Boolean> setLeaning = this.sgGeneral.booleanSetting("Override Leaning", false, "Enables custom torso tilt/leaning animations for player models.");
+    private final Setting<Double> leaning = this.sgGeneral.doubleSetting("Tilt Intensity", 0.0, 0.0, 1.0, 0.01, "The maximum angle of the leaning effect.", this.setLeaning::get);
+    private final Setting<Boolean> moveLeaning = this.sgGeneral.booleanSetting("Kinetic Leaning", true, "Dynamically adjusts the tilt based on the player's movement velocity and direction.", this.setLeaning::get);
+    public final Setting<Boolean> forceSneak = this.sgGeneral.booleanSetting("Persistent Sneaking", true, "Forces the client-side model to render in a crouching pose regardless of server state.");
+    public final Setting<Boolean> noAnimations = this.sgGeneral.booleanSetting("Disable Animations", true, "Prevents the rendering of limb movements, resulting in a static model pose.");
+    public final Setting<Boolean> noSwing = this.sgGeneral.booleanSetting("Suppress Swing", true, "Disables the hand-swing animation when using items or attacking.");
+
     private final TimerMap<PlayerEntity, Float> leaningMap = new TimerMap<>(true);
 
     public PlayerModifier() {
-        super("Player Modifier", "Modifies players.", SubCategory.ENTITIES, false);
+        super("Player Modifier", "Manipulates the visual state and procedural animations of player entities for aesthetic or tactical purposes.", SubCategory.ENTITIES, false);
         INSTANCE = this;
     }
 
