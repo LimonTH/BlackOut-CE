@@ -22,6 +22,7 @@
     "mixins.MixinClientPlayerInteractionManager",
     "mixins.MixinClientPlayNetworkHandler",
     "mixins.MixinClientWorld",
+    "mixins.MixinCreativeInventoryScreen",
     "mixins.MixinEndCrystalEntityRenderer",
     "mixins.MixinEntityRenderDispatcher",
     "mixins.MixinEntityRenderer",
