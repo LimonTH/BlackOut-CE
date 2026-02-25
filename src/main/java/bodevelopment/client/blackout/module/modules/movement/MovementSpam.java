@@ -14,11 +14,13 @@ import net.minecraft.util.math.Vec3d;
 
 public class MovementSpam extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Integer> packets = this.sgGeneral.intSetting("Packets", 1, 1, 10, 1, ".");
+
+    private final Setting<Integer> packets = this.sgGeneral.intSetting("Packet Multiplier", 1, 1, 10, 1, "The number of duplicate movement packets to send each tick.");
+
     private int packetsSent;
 
     public MovementSpam() {
-        super("Movement Spam", "Sends movement packets at prev pos to do funny stuff.", SubCategory.MOVEMENT, true);
+        super("Movement Spam", "Redundantly transmits player movement packets to the server to manipulate network occupancy or trigger specific server-side behaviors.", SubCategory.MOVEMENT, true);
     }
 
     @Override

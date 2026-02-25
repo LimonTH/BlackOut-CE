@@ -13,13 +13,15 @@ import bodevelopment.client.blackout.util.OLEPOSSUtils;
 
 public class AntiVoid extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Motion, ".", () -> true);
-    private final Setting<Double> d = this.sgGeneral.doubleSetting("Activation Distance", 2.5, 0.0, 10.0, 0.5, ".");
-    private final Setting<Boolean> voidCheck = this.sgGeneral.booleanSetting("Void Check", true, ".");
+
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Motion, "The method used to prevent falling into the void.");
+    private final Setting<Double> d = this.sgGeneral.doubleSetting("Activation Distance", 2.5, 0.0, 10.0, 0.5, "The fall distance required before the anti-void logic triggers.");
+    private final Setting<Boolean> voidCheck = this.sgGeneral.booleanSetting("Void Check", true, "Only activates if there are no solid blocks directly beneath the player.");
+
     private double prevOG = 0.0;
 
     public AntiVoid() {
-        super("Anti Void", "Helps people with braindamage not fall off bridges.", SubCategory.MOVEMENT, true);
+        super("Anti Void", "Prevents the player from falling into the void by manipulating vertical movement or position.", SubCategory.MOVEMENT, true);
     }
 
     @Override

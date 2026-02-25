@@ -7,7 +7,7 @@ public class NoJumpDelay extends Module {
     private static NoJumpDelay INSTANCE;
 
     public NoJumpDelay() {
-        super("No Jump Delay", "Removes wait time between jumps.", SubCategory.MOVEMENT, false);
+        super("No Jump Delay", "Eliminates the internal exhaustion cooldown between consecutive jumps, allowing for immediate lift-off upon landing.", SubCategory.MOVEMENT, false);
         INSTANCE = this;
     }
 

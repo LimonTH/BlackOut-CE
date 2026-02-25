@@ -205,7 +205,7 @@ public class OLEPOSSUtils {
 
     public static <T> List<T> reverse(List<T> list) {
         List<T> l = new ArrayList<>();
-        list.forEach(t -> l.add(0, t));
+        list.forEach(t -> l.addFirst(t));
         return l;
     }
 

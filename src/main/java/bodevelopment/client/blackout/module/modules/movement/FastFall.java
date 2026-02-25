@@ -17,17 +17,19 @@ import org.joml.Vector2i;
 
 public class FastFall extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> onlyHole = this.sgGeneral.booleanSetting("Only Hole", false, "Falls faster when above a hole.");
-    private final Setting<Boolean> jumpHole = this.sgGeneral.booleanSetting("Jump Hole", false, "Falls into holes even when you were falling.");
-    private final Setting<Double> fallSpeed = this.sgGeneral.doubleSetting("Fall Speed", 1.0, 0.0, 10.0, 0.1, "How many blocks to fall each second.");
-    private final Setting<Boolean> rbDisable = this.sgGeneral.booleanSetting("Rubberband Disable", true, "Disables fast fall if you rubberband.");
+
+    private final Setting<Boolean> onlyHole = this.sgGeneral.booleanSetting("Only Above Holes", false, "Limits the increased fall speed to when the player is directly positioned over a hole.");
+    private final Setting<Boolean> jumpHole = this.sgGeneral.booleanSetting("Hole Forcing", false, "Forces the player into a hole even if they are currently in the upward phase of a jump.");
+    private final Setting<Double> fallSpeed = this.sgGeneral.doubleSetting("Vertical Velocity", 1.0, 0.0, 10.0, 0.1, "The downward speed applied in blocks per second.");
+    private final Setting<Boolean> rbDisable = this.sgGeneral.booleanSetting("Anti-Rubberband", true, "Temporarily suspends the module if a server-side position setback (rubberband) is detected.");
+
     private boolean jumping = false;
     private Vector2i jumpPos = new Vector2i(0, 0);
     private boolean rubberbanded = false;
     private long rbTime = 0L;
 
     public FastFall() {
-        super("Fast Fall", "Falls faster.", SubCategory.MOVEMENT, true);
+        super("Fast Fall", "Increases downward acceleration to reach the ground or enter defensive holes more rapidly.", SubCategory.MOVEMENT, true);
     }
 
     @Override

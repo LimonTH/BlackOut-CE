@@ -6,38 +6,34 @@ import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
+import bodevelopment.client.blackout.module.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
 import net.minecraft.util.math.MathHelper;
 
+// TODO: NEED PATCHES
+@OnlyDev
 public class ElytraFly extends Module {
     private static ElytraFly INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgSpeed = this.addGroup("Speed");
 
-    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Control, "How to sprint");
-    private final Setting<Integer> bounceDelay = this.sgSpeed
-            .intSetting("Bounce Delay", 1, 0, 20, 1, "How many blocks to move each tick horizontally.", () -> this.mode.get() == Mode.Bounce);
-    private final Setting<Double> slowPitch = this.sgSpeed
-            .doubleSetting("Slow Pitch", 50.0, 0.0, 90.0, 1.0, "How many blocks to move each tick horizontally.", () -> this.mode.get() == Mode.Bounce);
-    private final Setting<Double> fastPitch = this.sgSpeed
-            .doubleSetting("Fast Pitch", 35.0, 0.0, 90.0, 1.0, "How many blocks to move each tick horizontally.", () -> this.mode.get() == Mode.Bounce);
-    private final Setting<Double> horizontal = this.sgSpeed
-            .doubleSetting("Horizontal Speed", 1.0, 0.0, 5.0, 0.1, "How many blocks to move each tick horizontally.", () -> this.mode.get() == Mode.Wasp);
-    private final Setting<Double> up = this.sgSpeed
-            .doubleSetting("Up Speed", 1.0, 0.0, 5.0, 0.1, "How many blocks to move up each tick.", () -> this.mode.get() == Mode.Wasp);
-    private final Setting<Double> speed = this.sgSpeed
-            .doubleSetting("Speed", 1.0, 0.0, 5.0, 0.1, "How many blocks to move up each tick.", () -> this.mode.get() == Mode.Control);
-    private final Setting<Double> upMultiplier = this.sgSpeed
-            .doubleSetting("Up Multiplier", 1.0, 0.0, 5.0, 0.1, "How many times faster should we fly up.", () -> this.mode.get() == Mode.Control);
-    private final Setting<Double> down = this.sgSpeed
-            .doubleSetting("Down Speed", 1.0, 0.0, 5.0, 0.1, "How many blocks to move down each tick.", () -> this.mode.get() == Mode.Control);
-    private final Setting<Boolean> smartFall = this.sgSpeed
-            .booleanSetting("Smart Fall", true, "Only falls down when looking down.", () -> this.mode.get() == Mode.Wasp);
-    private final Setting<Double> fallSpeed = this.sgSpeed
-            .doubleSetting("Fall Speed", 0.01, 0.0, 1.0, 0.1, "How many blocks to fall down each tick.", () -> this.mode.get() == Mode.Control);
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Flight Mode", Mode.Control, "The logic used to handle Elytra movement.");
+
+    private final Setting<Integer> bounceDelay = this.sgSpeed.intSetting("Activation Delay", 1, 0, 20, 1, "The number of ticks to wait before re-deploying the Elytra during a bounce jump.", () -> this.mode.get() == Mode.Bounce);
+    private final Setting<Double> slowPitch = this.sgSpeed.doubleSetting("Min Speed Pitch", 50.0, 0.0, 90.0, 1.0, "The camera pitch used when moving at lower velocities in Bounce mode.", () -> this.mode.get() == Mode.Bounce);
+    private final Setting<Double> fastPitch = this.sgSpeed.doubleSetting("Max Speed Pitch", 35.0, 0.0, 90.0, 1.0, "The camera pitch used when moving at higher velocities in Bounce mode.", () -> this.mode.get() == Mode.Bounce);
+    private final Setting<Double> horizontal = this.sgSpeed.doubleSetting("Lateral Speed", 1.0, 0.0, 5.0, 0.1, "The horizontal movement velocity while flying.", () -> this.mode.get() == Mode.Wasp);
+    private final Setting<Double> up = this.sgSpeed.doubleSetting("Ascent Speed", 1.0, 0.0, 5.0, 0.1, "The vertical velocity when ascending.", () -> this.mode.get() == Mode.Wasp);
+    private final Setting<Double> speed = this.sgSpeed.doubleSetting("Base Speed", 1.0, 0.0, 5.0, 0.1, "The constant travel speed while maintaining level flight.", () -> this.mode.get() == Mode.Control);
+    private final Setting<Double> upMultiplier = this.sgSpeed.doubleSetting("Ascent Multiplier", 1.0, 0.0, 5.0, 0.1, "Increases the vertical thrust applied when pulling up.", () -> this.mode.get() == Mode.Control);
+    private final Setting<Double> down = this.sgSpeed.doubleSetting("Descent Speed", 1.0, 0.0, 5.0, 0.1, "The vertical velocity when fast-descending via the sneak key.", () -> this.mode.get() == Mode.Control);
+    private final Setting<Boolean> smartFall = this.sgSpeed.booleanSetting("Directional Gravity", true, "Only applies downward gravity when looking below the horizon.", () -> this.mode.get() == Mode.Wasp);
+    private final Setting<Double> fallSpeed = this.sgSpeed.doubleSetting("Glide Descent", 0.01, 0.0, 1.0, 0.1, "The constant rate of descent while gliding forward.", () -> this.mode.get() == Mode.Control);
+
     private boolean moving;
     private float yaw;
     private float pitch;
@@ -48,7 +44,7 @@ public class ElytraFly extends Module {
     private boolean sus;
 
     public ElytraFly() {
-        super("Elytra Fly", ".", SubCategory.MOVEMENT, true);
+        super("Elytra Fly", "Provides various methods of powered flight and improved control while using an Elytra.", SubCategory.MOVEMENT, true);
         INSTANCE = this;
     }
 

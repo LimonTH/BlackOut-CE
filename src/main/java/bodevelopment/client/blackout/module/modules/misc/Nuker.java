@@ -183,7 +183,7 @@ public class Nuker extends Module {
             }
         }
 
-        return this.instants.size() > 0 ? this.instants.get(0).getLeft() : bestPos;
+        return !this.instants.isEmpty() ? this.instants.getFirst().getLeft() : bestPos;
     }
 
     private double getProgress() {

@@ -10,12 +10,14 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 
 public class Sprint extends Module {
     private static Sprint INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<SprintMode> sprintMode = this.sgGeneral.enumSetting("Mode", SprintMode.Vanilla, "How to sprint");
-    public final Setting<Boolean> hungerCheck = this.sgGeneral.booleanSetting("HungerCheck", true, "Do we check if we have enough hunger to sprint");
+
+    public final Setting<SprintMode> sprintMode = this.sgGeneral.enumSetting("Sprinting Mode", SprintMode.Vanilla, "The logic used to determine when the sprinting state should be active.");
+    public final Setting<Boolean> hungerCheck = this.sgGeneral.booleanSetting("Exhaustion Validation", true, "Prevents sprinting attempts when food levels are too low to sustain the state.");
 
     public Sprint() {
-        super("Sprint", "Makes you sprint", SubCategory.MOVEMENT, true);
+        super("Sprint", "Automatically engages the player's sprinting state to maximize movement speed without manual input.", SubCategory.MOVEMENT, true);
         INSTANCE = this;
     }
 

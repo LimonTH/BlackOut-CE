@@ -21,28 +21,32 @@ import org.apache.commons.lang3.mutable.MutableDouble;
 
 public class LongJump extends Module {
     private static LongJump INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgDamageBoost = this.addGroup("Damage Boost");
-    private final Setting<Double> jumpPower = this.sgGeneral.doubleSetting("Jump Power", 0.424, 0.38, 0.44, 0.001, ".");
-    private final Setting<Double> boost = this.sgGeneral.doubleSetting("Boost", 1.0, 0.0, 3.0, 0.01, ".");
-    private final Setting<Double> timer = this.sgGeneral.doubleSetting("Timer", 1.0, 0.05, 10.0, 0.05, ".");
-    private final Setting<Boolean> effects = this.sgGeneral.booleanSetting("Effects", true, ".");
-    private final Setting<Double> friction = this.sgGeneral.doubleSetting("Friction", 0.93, 0.8, 1.0, 0.001, ".");
-    private final Setting<Integer> chargeTicks = this.sgGeneral.intSetting("Charge Ticks", 5, 0, 20, 1, ".");
-    private final Setting<Double> chargeMotion = this.sgGeneral.doubleSetting("Charge Motion", 0.05, 0.0, 1.0, 0.01, ".");
-    private final Setting<Boolean> chargeSprint = this.sgGeneral.booleanSetting("Charge Sprint", true, ".");
-    private final Setting<Integer> jumps = this.sgGeneral.intSetting("Jumps", 1, 0, 20, 1, ".");
-    private final Setting<Double> boostMulti = this.sgGeneral.doubleSetting("Boost Multi", 1.6, 0.0, 5.0, 0.05, "Multiplies movement by x when jumping.");
-    private final Setting<Double> boostDiv = this.sgGeneral.doubleSetting("Boost Div", 1.6, 0.0, 5.0, 0.05, "Divides movement by x after jumping.");
-    private final Setting<Double> effectMultiplier = this.sgGeneral.doubleSetting("Effect Multiplier", 1.0, 0.0, 2.0, 0.02, ".");
-    private final Setting<Boolean> ncpSpeed = this.sgGeneral.booleanSetting("NCP Min Speed", true, ".");
-    private final Setting<Double> minSpeed = this.sgGeneral.doubleSetting("Min Speed", 0.3, 0.0, 1.0, 0.01, ".", () -> !this.ncpSpeed.get());
-    private final Setting<Boolean> damageBoost = this.sgDamageBoost.booleanSetting("Damage Boost", false, ".");
-    private final Setting<Boolean> stackingBoost = this.sgDamageBoost.booleanSetting("Stacking Boost", false, ".");
-    private final Setting<Boolean> directionalBoost = this.sgDamageBoost.booleanSetting("Directional Boost", true, ".");
-    private final Setting<Double> boostFactor = this.sgDamageBoost.doubleSetting("Boost Factor", 1.0, 0.0, 5.0, 0.05, ".");
-    private final Setting<Double> boostTime = this.sgDamageBoost.doubleSetting("Boost Time", 0.5, 0.0, 2.0, 0.02, ".");
-    private final Setting<Double> maxDamageBoost = this.sgDamageBoost.doubleSetting("Max Damage Boost", 0.5, 0.0, 5.0, 0.05, ".");
+
+    private final Setting<Double> jumpPower = this.sgGeneral.doubleSetting("Jump Strength", 0.424, 0.38, 0.44, 0.001, "The initial upward vertical velocity applied during the jump.");
+    private final Setting<Double> boost = this.sgGeneral.doubleSetting("Launch Speed", 1.0, 0.0, 3.0, 0.01, "The base horizontal velocity applied at the start of the jump.");
+    private final Setting<Double> timer = this.sgGeneral.doubleSetting("Timer Override", 1.0, 0.05, 10.0, 0.05, "Modifies the game tick rate to extend the jump duration or speed.");
+    private final Setting<Boolean> effects = this.sgGeneral.booleanSetting("Status Scaling", true, "Scales the jump distance based on active status effects like Speed or Slowness.");
+    private final Setting<Double> friction = this.sgGeneral.doubleSetting("Air Friction", 0.93, 0.8, 1.0, 0.001, "The multiplier applied to horizontal velocity while in the air.");
+    private final Setting<Integer> chargeTicks = this.sgGeneral.intSetting("Preparation Ticks", 5, 0, 20, 1, "The amount of time the player stays on the ground to build momentum before launching.");
+    private final Setting<Double> chargeMotion = this.sgGeneral.doubleSetting("Preparation Motion", 0.05, 0.0, 1.0, 0.01, "The movement speed during the preparation phase.");
+    private final Setting<Boolean> chargeSprint = this.sgGeneral.booleanSetting("Force Sprinting", true, "Ensures the player is sprinting during the preparation phase.");
+    private final Setting<Integer> jumps = this.sgGeneral.intSetting("Jump Limit", 1, 0, 20, 1, "The number of consecutive long jumps to perform before disabling.");
+    private final Setting<Double> boostMulti = this.sgGeneral.doubleSetting("Ascent Multiplier", 1.6, 0.0, 5.0, 0.05, "Multiplies the horizontal velocity at the moment of jumping.");
+    private final Setting<Double> boostDiv = this.sgGeneral.doubleSetting("Descent Dampener", 1.6, 0.0, 5.0, 0.05, "Reduces horizontal velocity after the initial jump phase to prevent anti-cheat flags.");
+    private final Setting<Double> effectMultiplier = this.sgGeneral.doubleSetting("Effect Intensity", 1.0, 0.0, 2.0, 0.02, "Adjusts how much status effects influence the total distance.");
+    private final Setting<Boolean> ncpSpeed = this.sgGeneral.booleanSetting("Standard Min Speed", true, "Limits minimum air speed to standard NCP-safe values (0.2873).");
+    private final Setting<Double> minSpeed = this.sgGeneral.doubleSetting("Custom Min Speed", 0.3, 0.0, 1.0, 0.01, "The minimum horizontal velocity maintained while in the air.", () -> !this.ncpSpeed.get());
+
+    private final Setting<Boolean> damageBoost = this.sgDamageBoost.booleanSetting("Explosive Scaling", false, "Converts incoming damage (explosions/velocity) into additional jump distance.");
+    private final Setting<Boolean> stackingBoost = this.sgDamageBoost.booleanSetting("Additive Stacking", false, "Allows multiple instances of damage to add together for a larger boost.");
+    private final Setting<Boolean> directionalBoost = this.sgDamageBoost.booleanSetting("Vector Filtering", true, "Only applies damage boosts that align with the player's current movement direction.");
+    private final Setting<Double> boostFactor = this.sgDamageBoost.doubleSetting("Damage Multiplier", 1.0, 0.0, 5.0, 0.05, "The factor by which incoming velocity is multiplied.");
+    private final Setting<Double> boostTime = this.sgDamageBoost.doubleSetting("Boost Window", 0.5, 0.0, 2.0, 0.02, "The duration in seconds that a damage boost remains active.");
+    private final Setting<Double> maxDamageBoost = this.sgDamageBoost.doubleSetting("Velocity Cap", 0.5, 0.0, 5.0, 0.05, "The maximum horizontal speed gain allowed from a damage boost.");
+
     private final TimerList<Double> boosts = new TimerList<>(true);
     private int phase = 0;
     private Vec3d prevMovement = new Vec3d(0.0, 0.0, 0.0);
@@ -52,7 +56,7 @@ public class LongJump extends Module {
     private long prevRubberband = 0L;
 
     public LongJump() {
-        super("Long Jump", "Jumps but long.", SubCategory.MOVEMENT, true);
+        super("Long Jump", "Combines high horizontal velocity with specialized jump logic to cover large gaps and bypass anti-cheat checks.", SubCategory.MOVEMENT, true);
         INSTANCE = this;
     }
 

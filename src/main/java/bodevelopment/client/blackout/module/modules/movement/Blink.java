@@ -18,21 +18,24 @@ import net.minecraft.util.math.Vec3d;
 
 public class Blink extends Module {
     private static Blink INSTANCE;
+
     public final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<BlinkMode> blinkMode = this.sgGeneral.enumSetting("Mode", BlinkMode.Normal, ".");
-    private final Setting<Integer> packets = this.sgGeneral.intSetting("Packets", 10, 0, 50, 1, "Disabled after sending this many packets.");
-    private final Setting<Integer> ticks = this.sgGeneral.intSetting("Ticks", 100, 0, 100, 1, ".");
-    private final Setting<Boolean> disableSurround = this.sgGeneral.booleanSetting("Disable On Surround", false, ".");
-    private final Setting<Boolean> render = this.sgGeneral.booleanSetting("Render", true, ".");
-    private final Setting<RenderShape> renderShape = this.sgGeneral.enumSetting("Render Shape", RenderShape.Full, "Which parts should be rendered.");
-    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Line Color", new BlackOutColor(255, 0, 0, 255), ".");
-    private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Side Color", new BlackOutColor(255, 0, 0, 50), ".");
+
+    private final Setting<BlinkMode> blinkMode = this.sgGeneral.enumSetting("Blink Mode", BlinkMode.Normal, "The condition under which packets are delayed.");
+    private final Setting<Integer> packets = this.sgGeneral.intSetting("Max Packets", 10, 0, 50, 1, "Automatically disables the module after buffering this many packets. Set to 0 for no limit.");
+    private final Setting<Integer> ticks = this.sgGeneral.intSetting("Max Ticks", 100, 0, 100, 1, "The maximum duration in ticks the module can remain active.");
+    private final Setting<Boolean> disableSurround = this.sgGeneral.booleanSetting("Disable On Surround", false, "Disables Blink when the Surround module is activated to prevent synchronization issues.");
+    private final Setting<Boolean> render = this.sgGeneral.booleanSetting("Render Ghost", true, "Renders a box at your last server-side position.");
+    private final Setting<RenderShape> renderShape = this.sgGeneral.enumSetting("Render Shape", RenderShape.Full, "The visual style of the ghost player representation.");
+    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Outline Color", new BlackOutColor(255, 0, 0, 255), "The color of the ghost's box outline.");
+    private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Fill Color", new BlackOutColor(255, 0, 0, 50), "The color of the ghost's box faces.");
+
     private int delayed = 0;
     private Box box = null;
     private int time = 0;
 
     public Blink() {
-        super("Blink", "Basically fakes huge lag.", SubCategory.MOVEMENT, true);
+        super("Blink", "Suspends outgoing movement packets to simulate network latency, allowing you to effectively 'teleport' when disabled.", SubCategory.MOVEMENT, true);
         INSTANCE = this;
     }
 

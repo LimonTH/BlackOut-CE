@@ -18,11 +18,14 @@ import net.minecraft.util.math.Vec3d;
 
 public class TargetStrafe extends Module {
     private static TargetStrafe INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Double> preferredDist = this.sgGeneral.doubleSetting("Preferred Dist", 1.0, 0.0, 6.0, 0.1, "");
-    private final Setting<Double> approach = this.sgGeneral.doubleSetting("Approach", 1.0, 0.0, 1.0, 0.01, "");
-    private final Setting<Boolean> auraTarget = this.sgGeneral.booleanSetting("Aura Target", true, ".");
-    private final Setting<Double> range = this.sgGeneral.doubleSetting("Range", 4.0, 0.0, 10.0, 0.1, ".", () -> !this.auraTarget.get());
+
+    private final Setting<Double> preferredDist = this.sgGeneral.doubleSetting("Orbital Radius", 1.0, 0.0, 6.0, 0.1, "The target distance to maintain from the entity while strafing.");
+    private final Setting<Double> approach = this.sgGeneral.doubleSetting("Approach Rate", 1.0, 0.0, 1.0, 0.01, "The speed at which the module adjusts the orbital radius to match the Preferred Distance.");
+    private final Setting<Boolean> auraTarget = this.sgGeneral.booleanSetting("Aura Sync", true, "Automatically targets the entity currently selected by the Kill Aura module.");
+    private final Setting<Double> range = this.sgGeneral.doubleSetting("Search Range", 4.0, 0.0, 10.0, 0.1, "The maximum distance to look for a potential target when not synced with Aura.", () -> !this.auraTarget.get());
+
     private Double bestYaw;
     private double closest;
     private boolean valid;
@@ -31,7 +34,7 @@ public class TargetStrafe extends Module {
     private PlayerEntity target;
 
     public TargetStrafe() {
-        super("Target Strafe", "Spins around enemies.", SubCategory.MOVEMENT, true);
+        super("Target Strafe", "Maintains a circular orbital path around a target to maximize evasion during combat.", SubCategory.MOVEMENT, true);
         INSTANCE = this;
     }
 

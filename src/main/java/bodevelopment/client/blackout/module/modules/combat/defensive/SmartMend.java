@@ -67,7 +67,7 @@ public class SmartMend extends Module {
         List<EquipmentSlot> mended = this.getMended();
         if (InvUtils.find(true, true, ItemStack::isEmpty).wasFound()) {
             if (!mended.isEmpty()) {
-                EquipmentSlot equipmentSlot = mended.get(0);
+                EquipmentSlot equipmentSlot = mended.getFirst();
                 if (!(System.currentTimeMillis() - this.prevMove < 1000.0 / this.moveSpeed.get())) {
                     if (!this.delays.contains(equipmentSlot)) {
                         int slot = 8 - equipmentSlot.getEntitySlotId();
@@ -76,7 +76,7 @@ public class SmartMend extends Module {
                         }
 
                         this.move(equipmentSlot, slot);
-                        mended.remove(0);
+                        mended.removeFirst();
                         this.prevMove = System.currentTimeMillis();
                     }
                 }
@@ -88,7 +88,7 @@ public class SmartMend extends Module {
         this.moveBack
                 .removeIf(equipmentSlotx -> this.wornSince.containsKey(equipmentSlotx) && System.currentTimeMillis() - this.wornSince.get(equipmentSlotx) > 500L);
         if (!this.moveBack.isEmpty()) {
-            EquipmentSlot equipmentSlot = this.moveBack.get(0);
+            EquipmentSlot equipmentSlot = this.moveBack.getFirst();
             if (!this.wornSince.containsKey(equipmentSlot)) {
                 if (!(System.currentTimeMillis() - this.prevMove < 1000.0 / this.moveSpeed.get())) {
                     if (!this.delays.contains(equipmentSlot)) {

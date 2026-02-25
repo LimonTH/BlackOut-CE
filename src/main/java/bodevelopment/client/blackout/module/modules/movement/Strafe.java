@@ -37,52 +37,60 @@ public class Strafe extends Module {
     private final SettingGroup sgFriction = this.addGroup("Friction");
     private final SettingGroup sgDamageBoost = this.addGroup("Damage Boost");
     private final SettingGroup sgPause = this.addGroup("Pause");
-    public final Setting<Speed.LiquidMode> pauseWater = this.sgPause.enumSetting("Pause Water", Speed.LiquidMode.Touching, ".", () -> true);
-    public final Setting<Speed.LiquidMode> pauseLava = this.sgPause.enumSetting("Pause Lava", Speed.LiquidMode.Touching, ".", () -> true);
-    private final Setting<Boolean> useOffsets = this.sgGeneral.booleanSetting("Use Offsets", false, "Uses offsets from blackout/strafe-offsets.txt");
-    private final Setting<Boolean> offsetEffects = this.sgGeneral
-            .booleanSetting("Offset Effects", true, "Uses offsets from blackout/strafe-offsets.txt", this.useOffsets::get);
-    private final Setting<Boolean> strictCollisions = this.sgGeneral.booleanSetting("Strict Collisions", true, ".");
-    private final Setting<Boolean> onlyOG = this.sgGeneral.booleanSetting("Only On Ground", false, ".");
-    private final Setting<Double> jumpPower = this.sgGeneral.doubleSetting("Jump Power", 0.42, 0.0, 1.0, 0.01, ".");
-    private final Setting<Double> boost = this.sgGeneral.doubleSetting("Boost", 0.36, 0.0, 1.0, 0.01, ".");
-    private final Setting<Boolean> resetBoost = this.sgGeneral.booleanSetting("Reset Boost", true, ".");
-    private final Setting<Double> boostMulti = this.sgGeneral.doubleSetting("Boost Multi", 1.6, 0.0, 5.0, 0.05, "Multiplies movement by x when jumping.");
-    private final Setting<Double> boostDiv = this.sgGeneral.doubleSetting("Boost Div", 1.6, 0.0, 5.0, 0.05, "Divides movement by x after jumping.");
-    private final Setting<Double> effectMultiplier = this.sgGeneral.doubleSetting("Effect Multiplier", 1.0, 0.0, 2.0, 0.02, ".");
-    private final Setting<Boolean> instantStop = this.sgGeneral.booleanSetting("Instant Stop", false, ".");
-    private final Setting<Boolean> fastFall = this.sgFastFall.booleanSetting("Fast Fall", false, ".");
-    private final Setting<Integer> jumpTicks = this.sgFastFall.intSetting("Jump Ticks", 3, 0, 20, 1, "Ticks off ground before fast falling.");
-    private final Setting<Integer> fallSpeed = this.sgFastFall.intSetting("Fall Speed", 0, 0, 10, 1, ".");
-    private final Setting<Boolean> spoofOG = this.sgFastFall.booleanSetting("Spoof On Ground", false, ".");
-    private final Setting<Boolean> stopFall = this.sgFastFall.booleanSetting("Stop Fall", false, ".");
-    private final Setting<Boolean> useTimer = this.sgTimer.booleanSetting("Use Timer", false, ".");
-    private final Setting<Boolean> ncpTimer = this.sgTimer.booleanSetting("Start NCP Timer", true, ".", this.useTimer::get);
-    private final Setting<Double> timer = this.sgTimer.doubleSetting("Start Timer", 1.08, 0.5, 2.0, 0.01, ".", () -> this.useTimer.get() && !this.ncpTimer.get());
-    private final Setting<Boolean> endNcpTimer = this.sgTimer.booleanSetting("End NCP Timer", true, ".", this.useTimer::get);
-    private final Setting<Double> endTimer = this.sgTimer.doubleSetting("End Timer", 1.08, 0.5, 2.0, 0.01, ".", () -> this.useTimer.get() && !this.endNcpTimer.get());
-    private final Setting<Integer> timerStartProgress = this.sgTimer.intSetting("Timer Start Progress", 0, 0, 40, 1, ".");
-    private final Setting<Integer> timerEndProgress = this.sgTimer.intSetting("Timer End Progress", 10, 0, 40, 1, ".");
-    private final Setting<Boolean> ncpSpeed = this.sgLimit.booleanSetting("NCP Min Speed", true, ".");
-    private final Setting<Double> minSpeed = this.sgLimit.doubleSetting("Min Speed", 0.3, 0.0, 1.0, 0.01, ".", () -> !this.ncpSpeed.get());
-    private final Setting<Double> maxSpeed = this.sgLimit.doubleSetting("Max Speed", 0.0, 0.0, 5.0, 0.05, ".");
-    private final Setting<Boolean> effectMaxSpeed = this.sgLimit.booleanSetting("Effect Max Speed", true, "", () -> this.maxSpeed.get() > 0.0);
-    private final Setting<Double> maxDamageBoost = this.sgLimit.doubleSetting("Max Damage Boost", 0.5, 0.0, 5.0, 0.05, ".");
-    private final Setting<Boolean> vanillaFriction = this.sgFriction.booleanSetting("Vanilla Friction", true, ".");
-    private final Setting<Double> startFriction = this.sgFriction.doubleSetting("Start Friction", 0.98, 0.9, 1.0, 0.001, ".", () -> !this.vanillaFriction.get());
-    private final Setting<Double> endFriction = this.sgFriction.doubleSetting("End Friction", 0.98, 0.9, 1.0, 0.001, ".", () -> !this.vanillaFriction.get());
-    private final Setting<Integer> startProgress = this.sgFriction.intSetting("Start Progress", 0, 0, 40, 1, ".", () -> !this.vanillaFriction.get());
-    private final Setting<Integer> endProgress = this.sgFriction.intSetting("End Progress", 10, 0, 40, 1, ".", () -> !this.vanillaFriction.get());
-    private final Setting<Boolean> damageBoost = this.sgDamageBoost.booleanSetting("Damage Boost", false, ".");
-    private final Setting<Boolean> addBoost = this.sgDamageBoost.booleanSetting("Add Boost", false, ".");
-    private final Setting<Boolean> stackingBoost = this.sgDamageBoost.booleanSetting("Stacking Boost", false, ".");
-    private final Setting<Boolean> directionalBoost = this.sgDamageBoost.booleanSetting("Directional Boost", true, ".");
-    private final Setting<Double> boostFactor = this.sgDamageBoost.doubleSetting("Boost Factor", 1.0, 0.0, 5.0, 0.05, ".");
-    private final Setting<Double> boostTime = this.sgDamageBoost.doubleSetting("Boost Time", 0.5, 0.0, 2.0, 0.02, ".");
-    private final Setting<Integer> latencyTicks = this.sgDamageBoost.intSetting("Latency Ticks", 0, 0, 10, 1, ".");
-    private final Setting<Boolean> pauseSneak = this.sgPause.booleanSetting("Pause Sneak", true, ".");
-    private final Setting<Boolean> pauseElytra = this.sgPause.booleanSetting("Pause Elytra", true, ".");
-    private final Setting<Boolean> pauseFly = this.sgPause.booleanSetting("Pause Fly", true, ".");
+
+    public final Setting<Speed.LiquidMode> pauseWater = this.sgPause.enumSetting("Water Interaction", Speed.LiquidMode.Touching, "Behavioral state when in contact with water.");
+    public final Setting<Speed.LiquidMode> pauseLava = this.sgPause.enumSetting("Lava Interaction", Speed.LiquidMode.Touching, "Behavioral state when in contact with lava.");
+
+    private final Setting<Boolean> useOffsets = this.sgGeneral.booleanSetting("Coordinate Offsets", false, "Applies pre-defined movement values from the external strafe-offsets.txt configuration.");
+    private final Setting<Boolean> offsetEffects = this.sgGeneral.booleanSetting("Scale Offsets", true, "Multiplies configured offsets based on active status effects like Speed or Slowness.", this.useOffsets::get);
+    private final Setting<Boolean> strictCollisions = this.sgGeneral.booleanSetting("Collision Reset", true, "Immediately recalculates velocity vectors upon making contact with a horizontal block face.");
+    private final Setting<Boolean> onlyOG = this.sgGeneral.booleanSetting("Ground Restricted", false, "Only applies strafing logic while the player is making contact with the ground.");
+    private final Setting<Double> jumpPower = this.sgGeneral.doubleSetting("Launch Force", 0.42, 0.0, 1.0, 0.01, "The initial vertical velocity applied during an automated jump.");
+    private final Setting<Double> boost = this.sgGeneral.doubleSetting("Base Impulse", 0.36, 0.0, 1.0, 0.01, "The core horizontal velocity added during a jump maneuver.");
+    private final Setting<Boolean> resetBoost = this.sgGeneral.booleanSetting("Momentum Reset", true, "Clears existing horizontal velocity before applying a new jump boost.");
+    private final Setting<Double> boostMulti = this.sgGeneral.doubleSetting("Jump Multiplier", 1.6, 0.0, 5.0, 0.05, "The factor by which horizontal speed is increased at the peak of a jump.");
+    private final Setting<Double> boostDiv = this.sgGeneral.doubleSetting("Landing Friction", 1.6, 0.0, 5.0, 0.05, "The factor by which speed is reduced upon the first airborne tick to stabilize movement.");
+    private final Setting<Double> effectMultiplier = this.sgGeneral.doubleSetting("Status Scaling", 1.0, 0.0, 2.0, 0.02, "Adjusts how significantly movement potions impact the final velocity.");
+    private final Setting<Boolean> instantStop = this.sgGeneral.booleanSetting("Zero Inertia", false, "Forces all horizontal momentum to zero when movement inputs are released.");
+
+    private final Setting<Boolean> fastFall = this.sgFastFall.booleanSetting("Downward Acceleration", false, "Artificially increases falling speed after a set airborne duration.");
+    private final Setting<Integer> jumpTicks = this.sgFastFall.intSetting("Airborne Threshold", 3, 0, 20, 1, "The number of ticks spent in the air before Fast Fall initiates.");
+    private final Setting<Integer> fallSpeed = this.sgFastFall.intSetting("Terminal Velocity", 0, 0, 10, 1, "The downward force applied during a fast fall.");
+    private final Setting<Boolean> spoofOG = this.sgFastFall.booleanSetting("Ground Spoofing", false, "Transmits a false on-ground state to the server to reset fall distance or momentum.");
+    private final Setting<Boolean> stopFall = this.sgFastFall.booleanSetting("Vertical Brake", false, "Halts horizontal movement entirely during a fast fall execution.");
+
+    private final Setting<Boolean> useTimer = this.sgTimer.booleanSetting("Tick Manipulation", false, "Modifies the client clock speed to optimize movement packet throughput.");
+    private final Setting<Boolean> ncpTimer = this.sgTimer.booleanSetting("Start NCP Clock", true, "Uses the standard 1.088 NoCheatPlus timer value at the start of movement.", this.useTimer::get);
+    private final Setting<Double> timer = this.sgTimer.doubleSetting("Initial Clock", 1.08, 0.5, 2.0, 0.01, "The custom starting timer value.", () -> this.useTimer.get() && !this.ncpTimer.get());
+    private final Setting<Boolean> endNcpTimer = this.sgTimer.booleanSetting("End NCP Clock", true, "Transitions to the 1.088 timer value at the end of the movement cycle.", this.useTimer::get);
+    private final Setting<Double> endTimer = this.sgTimer.doubleSetting("Terminal Clock", 1.08, 0.5, 2.0, 0.01, "The custom ending timer value.", () -> this.useTimer.get() && !this.endNcpTimer.get());
+    private final Setting<Integer> timerStartProgress = this.sgTimer.intSetting("Timer Lead-In", 0, 0, 40, 1, "The tick progress required to start the timer transition.");
+    private final Setting<Integer> timerEndProgress = this.sgTimer.intSetting("Timer Lead-Out", 10, 0, 40, 1, "The tick progress at which the timer transition completes.");
+
+    private final Setting<Boolean> ncpSpeed = this.sgLimit.booleanSetting("NCP Floor", true, "Enforces the minimum velocity required to bypass NCP strafe checks.");
+    private final Setting<Double> minSpeed = this.sgLimit.doubleSetting("Minimum Velocity", 0.3, 0.0, 1.0, 0.01, "The lowest horizontal speed the module will allow.", () -> !this.ncpSpeed.get());
+    private final Setting<Double> maxSpeed = this.sgLimit.doubleSetting("Velocity Ceiling", 0.0, 0.0, 5.0, 0.05, "The absolute maximum horizontal speed allowed (0 for unlimited).");
+    private final Setting<Boolean> effectMaxSpeed = this.sgLimit.booleanSetting("Status Cap", true, "Applies speed status effects to the maximum velocity limit.", () -> this.maxSpeed.get() > 0.0);
+    private final Setting<Double> maxDamageBoost = this.sgLimit.doubleSetting("Kinetic Cap", 0.5, 0.0, 5.0, 0.05, "The maximum velocity gain permitted from external damage or explosions.");
+
+    private final Setting<Boolean> vanillaFriction = this.sgFriction.booleanSetting("Standard Friction", true, "Uses the default Minecraft physics for momentum decay.");
+    private final Setting<Double> startFriction = this.sgFriction.doubleSetting("Initial Momentum", 0.98, 0.9, 1.0, 0.001, "The friction coefficient at the start of the strafe cycle.", () -> !this.vanillaFriction.get());
+    private final Setting<Double> endFriction = this.sgFriction.doubleSetting("Terminal Momentum", 0.98, 0.9, 1.0, 0.001, "The friction coefficient at the end of the strafe cycle.", () -> !this.vanillaFriction.get());
+    private final Setting<Integer> startProgress = this.sgFriction.intSetting("Friction Lead-In", 0, 0, 40, 1, "Ticks required to begin interpolating friction.", () -> !this.vanillaFriction.get());
+    private final Setting<Integer> endProgress = this.sgFriction.intSetting("Friction Lead-Out", 10, 0, 40, 1, "Ticks at which interpolation to Terminal Momentum is complete.", () -> !this.vanillaFriction.get());
+
+    private final Setting<Boolean> damageBoost = this.sgDamageBoost.booleanSetting("Kinetic Amplification", false, "Converts incoming damage knockback into forward horizontal velocity.");
+    private final Setting<Boolean> addBoost = this.sgDamageBoost.booleanSetting("Additive Impulse", false, "Sums damage boost with current velocity rather than taking the maximum value.");
+    private final Setting<Boolean> stackingBoost = this.sgDamageBoost.booleanSetting("Impulse Stacking", false, "Allows multiple instances of damage to accumulate velocity simultaneously.");
+    private final Setting<Boolean> directionalBoost = this.sgDamageBoost.booleanSetting("Vector Filtering", true, "Only applies damage boosts that align with the player's current movement vector.");
+    private final Setting<Double> boostFactor = this.sgDamageBoost.doubleSetting("Impulse Multiplier", 1.0, 0.0, 5.0, 0.05, "The strength of the velocity gain from incoming damage.");
+    private final Setting<Double> boostTime = this.sgDamageBoost.doubleSetting("Impulse Duration", 0.5, 0.0, 2.0, 0.02, "The time window during which a damage boost remains active.");
+    private final Setting<Integer> latencyTicks = this.sgDamageBoost.intSetting("Velocity Buffer", 0, 0, 10, 1, "Compensates for network latency by using historical velocity data for boost calculation.");
+
+    private final Setting<Boolean> pauseSneak = this.sgPause.booleanSetting("Inhibit on Sneak", true, "Suspends movement logic while sneaking.");
+    private final Setting<Boolean> pauseElytra = this.sgPause.booleanSetting("Inhibit on Flight", true, "Suspends movement logic while flying with an Elytra.");
+    private final Setting<Boolean> pauseFly = this.sgPause.booleanSetting("Inhibit on Creative", true, "Suspends movement logic while in creative flight.");
+
     private final List<Offset> offsets = new ArrayList<>();
     private final TimerList<Double> boosts = new TimerList<>(true);
     private final List<Vec3d> velocities = new ArrayList<>();
@@ -95,9 +103,8 @@ public class Strafe extends Module {
     private boolean waiting = false;
     private boolean setTimer = false;
     private double boostAmount = 0.0;
-
     public Strafe() {
-        super("Strafe", "Automatically jumps and moves fast.", SubCategory.MOVEMENT, true);
+        super("Strafe", "Enhances airborne and ground-based movement by manipulating air friction, jump impulses, and kinetic damage feedback.", SubCategory.MOVEMENT, true);
     }
 
     @Override
@@ -140,7 +147,7 @@ public class Strafe extends Module {
                     .player
                     .getPos()
                     .subtract(BlackOut.mc.player.prevX, BlackOut.mc.player.prevY, BlackOut.mc.player.prevZ);
-            this.velocities.add(0, this.prevMovement);
+            this.velocities.addFirst(this.prevMovement);
             OLEPOSSUtils.limitList(this.velocities, 10);
             if (this.strictCollisions.get()) {
                 this.velocity = this.prevMovement.horizontalLength() - this.boostAmount;

@@ -33,20 +33,21 @@ import java.util.List;
 
 public class BurrowTrap extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Blocks", "Blocks to use.", Blocks.OBSIDIAN);
-    public final Setting<Boolean> useTimer = this.sgGeneral.booleanSetting("Use Timer", true, ".");
-    public final Setting<Double> timer = this.sgGeneral.doubleSetting("Timer", 2.0, 0.0, 5.0, 0.05, ".", this.useTimer::get);
-    private final Setting<SwitchMode> switchMode = this.sgGeneral
-            .enumSetting("Switch Mode", SwitchMode.Silent, "Method of switching. Silent is the most reliable but delays crystals on some servers.");
-    private final Setting<Boolean> packet = this.sgGeneral.booleanSetting("Packet", false, ".");
-    private final Setting<Boolean> instantRotation = this.sgGeneral.booleanSetting("Instant Rotation", true, ".");
+
+    public final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Filter Blocks", "The blocks allowed to be used for the burrowing process.", Blocks.OBSIDIAN);
+    public final Setting<Boolean> useTimer = this.sgGeneral.booleanSetting("Enable Timer", true, "Utilizes a temporary game speed increase to accelerate the burrowing sequence.");
+    public final Setting<Double> timer = this.sgGeneral.doubleSetting("Timer Speed", 2.0, 0.0, 5.0, 0.05, "The factor by which the game tick rate is increased.", this.useTimer::get);
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Strategy", SwitchMode.Silent, "The method used to swap to the burrow block. Silent provides the best compatibility with anti-cheat.");
+    private final Setting<Boolean> packet = this.sgGeneral.booleanSetting("Packet Placement", false, "Uses packet-based logic to place the block, potentially bypassing certain interaction checks.");
+    private final Setting<Boolean> instantRotation = this.sgGeneral.booleanSetting("Instant Rotate", true, "Forces the player's rotation to the placement target immediately within a single tick.");
+
     private final double[] offsets = new double[]{0.42, 0.3332, 0.2468};
     private BlockPos pos = null;
     private int progress = 0;
     private boolean placed = false;
 
     public BurrowTrap() {
-        super("Burrow Trap", "Burrows without lagback.", SubCategory.MOVEMENT, true);
+        super("Burrow Trap", "Quickly clips the player into a block at their current feet position to prevent being pushed or damaged.", SubCategory.MOVEMENT, true);
     }
 
     @Override

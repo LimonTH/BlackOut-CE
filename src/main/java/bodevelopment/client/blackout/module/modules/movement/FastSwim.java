@@ -14,20 +14,22 @@ import net.minecraft.registry.tag.FluidTags;
 public class FastSwim extends Module {
     private final SettingGroup sgSpeed = this.addGroup("Speed");
     private final SettingGroup sgVertical = this.addGroup("Vertical");
-    private final Setting<Double> waterTouching = this.sgSpeed.doubleSetting("Water Touching", 0.5, 0.0, 2.0, 0.02, ".");
-    private final Setting<Double> waterSubmerged = this.sgSpeed.doubleSetting("Water Submerged", 0.5, 0.0, 2.0, 0.02, ".");
-    private final Setting<Double> waterDiving = this.sgSpeed.doubleSetting("Water Diving", 0.5, 0.0, 2.0, 0.02, ".");
-    private final Setting<Double> lavaTouching = this.sgSpeed.doubleSetting("Lava Touching", 0.5, 0.0, 2.0, 0.02, ".");
-    private final Setting<Double> lavaSubmerged = this.sgSpeed.doubleSetting("Lava Submerged", 0.5, 0.0, 2.0, 0.02, ".");
-    private final Setting<Boolean> stillVertical = this.sgVertical.booleanSetting("Still Vertical", true, ".");
-    private final Setting<Boolean> modifyVertical = this.sgVertical.booleanSetting("Modify Vertical", false, ".");
-    private final Setting<Double> waterUp = this.sgVertical.doubleSetting("Water Up", 0.5, 0.0, 2.0, 0.02, ".", this.modifyVertical::get);
-    private final Setting<Double> waterDown = this.sgVertical.doubleSetting("Water Down", 0.5, 0.0, 2.0, 0.02, ".", this.modifyVertical::get);
-    private final Setting<Double> lavaUp = this.sgVertical.doubleSetting("Lava Up", 0.5, 0.0, 2.0, 0.02, ".", this.modifyVertical::get);
-    private final Setting<Double> lavaDown = this.sgVertical.doubleSetting("Lava Down", 0.5, 0.0, 2.0, 0.02, ".", this.modifyVertical::get);
+
+    private final Setting<Double> waterTouching = this.sgSpeed.doubleSetting("Water Surface Speed", 0.5, 0.0, 2.0, 0.02, "Horizontal movement speed when partially in water.");
+    private final Setting<Double> waterSubmerged = this.sgSpeed.doubleSetting("Water Submerged Speed", 0.5, 0.0, 2.0, 0.02, "Horizontal movement speed when fully underwater.");
+    private final Setting<Double> waterDiving = this.sgSpeed.doubleSetting("Water Sprint Speed", 0.5, 0.0, 2.0, 0.02, "Movement speed when in the swimming (sprint) animation.");
+    private final Setting<Double> lavaTouching = this.sgSpeed.doubleSetting("Lava Surface Speed", 0.5, 0.0, 2.0, 0.02, "Horizontal movement speed when partially in lava.");
+    private final Setting<Double> lavaSubmerged = this.sgSpeed.doubleSetting("Lava Submerged Speed", 0.5, 0.0, 2.0, 0.02, "Horizontal movement speed when fully submerged in lava.");
+
+    private final Setting<Boolean> stillVertical = this.sgVertical.booleanSetting("Anti-Drift", true, "Prevents vertical drifting by setting vertical velocity to zero when no input is detected.");
+    private final Setting<Boolean> modifyVertical = this.sgVertical.booleanSetting("Custom Vertical", false, "Allows manual control over ascent and descent speeds.");
+    private final Setting<Double> waterUp = this.sgVertical.doubleSetting("Water Ascent", 0.5, 0.0, 2.0, 0.02, "Upward velocity in water.", this.modifyVertical::get);
+    private final Setting<Double> waterDown = this.sgVertical.doubleSetting("Water Descent", 0.5, 0.0, 2.0, 0.02, "Downward velocity in water.", this.modifyVertical::get);
+    private final Setting<Double> lavaUp = this.sgVertical.doubleSetting("Lava Ascent", 0.5, 0.0, 2.0, 0.02, "Upward velocity in lava.", this.modifyVertical::get);
+    private final Setting<Double> lavaDown = this.sgVertical.doubleSetting("Lava Descent", 0.5, 0.0, 2.0, 0.02, "Downward velocity in lava.", this.modifyVertical::get);
 
     public FastSwim() {
-        super("Fast Swim", "Swims faster guh", SubCategory.MOVEMENT, true);
+        super("Fast Swim", "Accelerates movement through fluid blocks like water and lava by overriding default friction and buoyancy.", SubCategory.MOVEMENT, true);
     }
 
     @Event
