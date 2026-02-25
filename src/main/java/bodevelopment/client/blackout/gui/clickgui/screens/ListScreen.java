@@ -106,6 +106,7 @@ public class ListScreen<T> extends ClickGuiScreen {
                 if (setting.get().contains(item)) setting.get().remove(item);
                 else setting.get().add(item);
                 Managers.CONFIG.saveAll();
+                setting.checkChange();
             }
         }
     }

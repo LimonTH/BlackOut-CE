@@ -80,5 +80,6 @@ public class ListSetting<T> extends Setting<List<T>> {
                 this.get().add(names.get(string));
             }
         }
+        this.checkChange();
     }
 }

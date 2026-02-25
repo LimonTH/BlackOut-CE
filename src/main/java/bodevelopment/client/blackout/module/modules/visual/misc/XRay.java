@@ -35,7 +35,12 @@ public class XRay extends Module {
             Blocks.DEEPSLATE_REDSTONE_ORE,
             Blocks.LAPIS_ORE,
             Blocks.DEEPSLATE_LAPIS_ORE
-    );
+    ).onChanged(v -> {
+        if (this.enabled && BlackOut.mc.worldRenderer != null) {
+            BlackOut.mc.worldRenderer.reload();
+        }
+    });
+
     public XRay() {
         super("Xray", "Modifies world rendering to isolate selected blocks by applying selective transparency to common terrain blocks.", SubCategory.MISC_VISUAL, true);
         INSTANCE = this;

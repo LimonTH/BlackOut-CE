@@ -17,10 +17,12 @@ public class MixinAbstractBlock {
         XRay xray = XRay.getInstance();
         if (xray != null && xray.enabled) {
             boolean isTarget = xray.isTarget(state.getBlock());
+            boolean isTargetFrom = xray.isTarget(stateFrom.getBlock());
+
             if (isTarget) {
-                cir.setReturnValue(false);
+                cir.setReturnValue(isTargetFrom);
             } else {
-                cir.setReturnValue(!xray.isTarget(stateFrom.getBlock()));
+                cir.setReturnValue(true);
             }
         }
     }
