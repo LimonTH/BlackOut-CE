@@ -47,7 +47,6 @@
     "mixins.MixinParticleManager",
     "mixins.MixinPlayerEntityRenderer",
     "mixins.MixinPlayerHeldItemFeatureRenderer",
-    "mixins.MixinRenderLayers",
     "mixins.MixinRenderTickCounter",
     "mixins.MixinScreen",
     "mixins.MixinSoundSystem",
