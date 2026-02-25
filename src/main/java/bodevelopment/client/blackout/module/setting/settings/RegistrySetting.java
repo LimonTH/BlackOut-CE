@@ -86,6 +86,7 @@ public class RegistrySetting<T> extends ListSetting<T> {
                 this.get().add(this.registry.get(id));
             }
         }
+        this.checkChange();
     }
 
     public Registry<T> getRegistry() {

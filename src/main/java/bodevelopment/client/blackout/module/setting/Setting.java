@@ -6,6 +6,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.client.util.math.MatrixStack;
 
+import java.util.function.Consumer;
+
 public class Setting<T> {
     public final String name;
     public final String description;
@@ -18,6 +20,7 @@ public class Setting<T> {
     protected double my = 0.0;
     protected float width = 0.0F;
     protected float frameTime = 0.0F;
+    private Consumer<T> changeListener = null;
     protected MatrixStack stack = null;
 
     public Setting(String name, T val, String description, SingleOut<Boolean> visible) {
@@ -34,6 +37,7 @@ public class Setting<T> {
 
     protected void setValue(T value) {
         this.value = value;
+        this.checkChange();
     }
 
     public boolean isVisible() {
@@ -60,6 +64,17 @@ public class Setting<T> {
     }
 
     public void onKey(int key, boolean pressed) {
+    }
+
+    public Setting<T> onChanged(Consumer<T> listener) {
+        this.changeListener = listener;
+        return this;
+    }
+
+    public void checkChange() {
+        if (this.changeListener != null) {
+            this.changeListener.accept(this.value);
+        }
     }
 
     public float getHeight() {
