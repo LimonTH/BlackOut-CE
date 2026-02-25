@@ -12,14 +12,16 @@ import java.awt.*;
 
 public class ThemeTest extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> useBlur = this.sgGeneral.booleanSetting("Blur", true, "Uses a blur effect", () -> true);
-    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Shadow", true, ".", () -> true);
+
+    private final Setting<Boolean> useBlur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a real-time blur effect behind the theme samples for visual depth.");
+    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Drop Shadow", true, "Renders a subtle shadow effect around the theme containers.");
+
     private int i = 0;
     private float x = 0.0F;
     private float y = 0.0F;
 
     public ThemeTest() {
-        super("Theme Test", ".");
+        super("Theme Test", "A specialized diagnostic tool used to preview and compare all available client color themes simultaneously.");
         this.setSize(10.0F, 10.0F);
     }
 

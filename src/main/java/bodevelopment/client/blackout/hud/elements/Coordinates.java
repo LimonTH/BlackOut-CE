@@ -18,20 +18,23 @@ import java.util.List;
 public class Coordinates extends HudElement {
     public final SettingGroup sgGeneral = this.addGroup("General");
     public final SettingGroup sgColor = this.addGroup("Color");
-    private final Setting<Boolean> otherWorld = this.sgGeneral.booleanSetting("Show Other world", true, ".");
-    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, "Renders a background");
+
+    private final Setting<Boolean> otherWorld = this.sgGeneral.booleanSetting("Cross-Dimension Tracking", true, "Calculates and displays relative coordinates for the corresponding dimension (Nether/Overworld ratio).");
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Backdrop", true, "Renders a background panel behind the coordinate text.");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, ".");
-    private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Rounded", true, "Renders a background", () -> this.bg.get() || this.blur.get());
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Text");
-    private final TextColorMultiSetting infoColor = TextColorMultiSetting.of(this.sgColor, "Info");
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a real-time blur effect to the background for improved legibility.");
+    private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Bezel Rounding", true, "Smooths the corners of the background and blur layers.", () -> this.bg.get() || this.blur.get());
+
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Value Palette");
+    private final TextColorMultiSetting infoColor = TextColorMultiSetting.of(this.sgColor, "Label Palette");
+
     private final List<Component> components = new ArrayList<>();
     private float offset = 0.0F;
     private int i = 0;
     private boolean drawingOther = false;
 
     public Coordinates() {
-        super("Coordinates", "Shows your current coordinates");
+        super("Coordinates", "Displays your current spatial position in the world, with support for real-time dimension scaling.");
         this.setSize(10.0F, 10.0F);
     }
 

@@ -36,26 +36,23 @@ public class TargetHUD extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgColor = this.addGroup("Color");
 
-    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Blackout, ".");
-    public final Setting<ArmorCount> countMode = this.sgGeneral
-            .enumSetting("Armor Count Mode", ArmorCount.Average, ".", () -> this.mode.get() == Mode.BlackoutNew);
-    private final Setting<Boolean> hp = this.sgGeneral.booleanSetting("HP text", false, ".", () -> this.mode.get() == Mode.Blackout);
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, ".", () -> this.mode.get() != Mode.Exhibition);
-    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Shadow", true, ".", () -> this.mode.get() != Mode.Exhibition);
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Visual Interface", Mode.Blackout, "The aesthetic layout and theme used for target visualization.");
+    public final Setting<ArmorCount> countMode = this.sgGeneral.enumSetting("Durability Logic", ArmorCount.Average, "Determines whether to display the average armor integrity or highlight the weakest piece.", () -> this.mode.get() == Mode.BlackoutNew);
+    private final Setting<Boolean> hp = this.sgGeneral.booleanSetting("Value Readout", false, "Renders numeric health values alongside the health bar.", () -> this.mode.get() == Mode.Blackout);
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a real-time blur effect to the background panel for depth.", () -> this.mode.get() != Mode.Exhibition);
+    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Structural Shadow", true, "Adds a subtle shadow around the element to simulate elevation.", () -> this.mode.get() != Mode.Exhibition);
+    private final Setting<TargetMode> targetMode = this.sgGeneral.enumSetting("Acquisition Logic", TargetMode.ModuleTarget, "Determines how the element selects which player to track.");
+    private final Setting<Double> targetRange = this.sgGeneral.doubleSetting("Scanning Radius", 20.0, 0.0, 200.0, 2.0, "The maximum distance to search for a target when using Closest mode.", () -> this.targetMode.get() == TargetMode.Closest);
+    private final Setting<RenderType> renderType = this.sgGeneral.enumSetting("Projection Type", RenderType.Hud, "Determines if the HUD is pinned to the screen or projected into the 3D world near the player.");
+    private final Setting<Double> renderHeight = this.sgGeneral.doubleSetting("Vertical Offset", 0.75, 0.0, 1.0, 0.05, "The height relative to the target's hitbox where the HUD is rendered in 3D mode.", () -> this.renderType.get() == RenderType.Player);
+    private final Setting<Double> dist = this.sgGeneral.doubleSetting("Depth Offset", 0.25, 0.0, 1.0, 0.05, "The distance from the target's center to project the HUD in 3D space.", () -> this.renderType.get() == RenderType.Player);
+
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgColor, () -> this.mode.get() != Mode.ExhibitionNew, null);
-    private final Setting<BlackOutColor> secondaryColor = this.sgColor
-            .colorSetting("Secondary Text Color", new BlackOutColor(220, 60, 90, 255), ".", () -> this.mode.get() == Mode.Arsenic);
+    private final Setting<BlackOutColor> secondaryColor = this.sgColor.colorSetting("Accent Palette", new BlackOutColor(220, 60, 90, 255), "A secondary color used for specific thematic elements.", () -> this.mode.get() == Mode.Arsenic);
     private final RoundedColorMultiSetting armorBar = RoundedColorMultiSetting.of(this.sgColor, () -> this.mode.get() == Mode.BlackoutNew, "Armor Bar");
-    private final Setting<TargetMode> targetMode = this.sgGeneral.enumSetting("Target Mode", TargetMode.ModuleTarget, ".");
-    private final Setting<Double> targetRange = this.sgGeneral
-            .doubleSetting("Target Range", 20.0, 0.0, 200.0, 2.0, ".", () -> this.targetMode.get() == TargetMode.Closest);
-    private final Setting<RenderType> renderType = this.sgGeneral.enumSetting("Render Type", RenderType.Hud, ".");
-    private final Setting<Double> renderHeight = this.sgGeneral
-            .doubleSetting("Render Height", 0.75, 0.0, 1.0, 0.05, ".", () -> this.renderType.get() == RenderType.Player);
-    private final Setting<Double> dist = this.sgGeneral
-            .doubleSetting("Distance From Target", 0.25, 0.0, 1.0, 0.05, ".", () -> this.renderType.get() == RenderType.Player);
-    private final Setting<BlackOutColor> textColor = this.sgColor.colorSetting("Text Color", new BlackOutColor(255, 255, 255, 255), "Text Color");
-    private final RoundedColorMultiSetting healthBar = RoundedColorMultiSetting.of(this.sgColor, "Bar");
+    private final Setting<BlackOutColor> textColor = this.sgColor.colorSetting("Text Palette", new BlackOutColor(255, 255, 255, 255), "The primary color for names and data readouts.");
+    private final RoundedColorMultiSetting healthBar = RoundedColorMultiSetting.of(this.sgColor, "Health Bar");
+
     private float delta = 0.0F;
     private float progress = 0.0F;
     private float armorProgress = 0.0F;
@@ -65,7 +62,7 @@ public class TargetHUD extends HudElement {
     private Identifier renderSkin;
 
     public TargetHUD() {
-        super("Target HUD", ".");
+        super("Target HUD", "Displays an advanced status overlay for the current combat target, featuring health, armor, and player head renders.");
         this.setSize(10.0F, 10.0F);
         BlackOut.EVENT_BUS.subscribe(this, () -> false);
     }
@@ -578,6 +575,7 @@ public class TargetHUD extends HudElement {
         Lowest
     }
 
+    // TODO: ColorMode нигде не используется
     public enum ColorMode {
         Dynamic,
         Rainbow,

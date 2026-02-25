@@ -12,12 +12,14 @@ import net.minecraft.client.util.math.MatrixStack;
 public class TextElement extends HudElement {
     public final SettingGroup sgGeneral = this.addGroup("General");
     public final SettingGroup sgColor = this.addGroup("Color");
-    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, "Renders a background");
+
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Backdrop", true, "Enables the rendering of a solid or gradient background layer.");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, "Renders a Blur effect");
-    private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Rounded", true, "Renders a background", () -> this.bg.get() || this.blur.get());
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Text");
-    private final TextColorMultiSetting infoColor = TextColorMultiSetting.of(this.sgColor, "Info");
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Blur", true, "Applies a real-time blur effect behind the element for improved legibility.");
+    private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Rounded Corners", true, "Smooths the edges of the background and blur layers using a rounding radius.", () -> this.bg.get() || this.blur.get());
+
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Primary Text");
+    private final TextColorMultiSetting infoColor = TextColorMultiSetting.of(this.sgColor, "Secondary Info");
 
     public TextElement(String name, String description) {
         super(name, description);

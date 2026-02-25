@@ -17,26 +17,26 @@ import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
 import java.awt.*;
 
 public class SessionInfo extends HudElement {
-    private static final long startTime = System.currentTimeMillis();
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Text");
-    private final Setting<Style> style = this.sgGeneral.enumSetting("Style", Style.Blackout, ".");
-    private final Setting<Boolean> bar = this.sgGeneral.booleanSetting("Bar", true, ".", () -> this.style.get() == Style.Blackout);
-    private final Setting<BlackOutColor> barColor = this.sgGeneral
-            .colorSetting("Bar Color", new BlackOutColor(255, 255, 255, 255), ".", () -> this.style.get() == Style.Blackout && this.bar.get());
-    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, ".", () -> this.style.get() == Style.Blackout);
+
+    public final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Label Color");
+    private final Setting<Style> style = this.sgGeneral.enumSetting("Visual Theme", Style.Blackout, "The aesthetic layout of the session tracker (Modern 'Blackout' vs. legacy 'Exhibition').");
+    private final Setting<Boolean> bar = this.sgGeneral.booleanSetting("Header Separator", true, "Renders a horizontal line beneath the title for structural definition.", () -> this.style.get() == Style.Blackout);
+    private final Setting<BlackOutColor> barColor = this.sgGeneral.colorSetting("Separator Color", new BlackOutColor(255, 255, 255, 255), "The color palette for the header separator line.", () -> this.style.get() == Style.Blackout && this.bar.get());
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Enable Backdrop", true, "Renders a background panel behind the session statistics.", () -> this.style.get() == Style.Blackout);
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, ".", () -> this.style.get() == Style.Blackout);
-    private final Setting<Mode> mode = this.sgGeneral.enumSetting("Kill Count Mode", Mode.Chat, "How to count Kills");
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a real-time blur effect to the background for improved contrast.", () -> this.style.get() == Style.Blackout);
+    private final Setting<Mode> mode = this.sgGeneral.enumSetting("Elimination Tracking", Mode.Chat, "The logic used to detect player kills (Parsing chat logs or listening to game events).");
+
+    private static final long startTime = System.currentTimeMillis();
     private int kills = 0;
     private int deaths = 0;
     private float height = 0.0F;
     private float width = 0.0F;
     private String ip = "";
     private boolean isDead = false;
-
     public SessionInfo() {
-        super("Session Info", "Shows you information about your current play session");
+        super("Session Info", "Visualizes real-time metrics for the current play session, including uptime, server address, and combat statistics.");
         this.setSize(10.0F, 10.0F);
         BlackOut.EVENT_BUS.subscribe(this, () -> false);
     }

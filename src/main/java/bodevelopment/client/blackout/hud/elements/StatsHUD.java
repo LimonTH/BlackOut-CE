@@ -19,21 +19,23 @@ import java.util.function.Predicate;
 public class StatsHUD extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgData = this.addGroup("Data");
-    private final Setting<TargetMode> targetMode = this.sgGeneral.enumSetting("Target", TargetMode.Enemy, ".");
-    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, ".");
+
+    private final Setting<TargetMode> targetMode = this.sgGeneral.enumSetting("Target Focus", TargetMode.Enemy, "The criteria used to select which player's statistics are displayed.");
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Enable Backdrop", true, "Renders a background panel behind the player metadata.");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, ".");
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Text");
-    private final Setting<Boolean> hole = this.sgData.booleanSetting("In Hole", true, ".");
-    private final Setting<Boolean> phased = this.sgData.booleanSetting("Phased", true, ".");
-    private final Setting<Boolean> pops = this.sgData.booleanSetting("Pops", true, ".");
-    private final Setting<Boolean> eaten = this.sgData.booleanSetting("Eaten", true, ".");
-    private final Setting<Boolean> bottles = this.sgData.booleanSetting("Bottles", true, ".");
-    private final Setting<Boolean> moved = this.sgData.booleanSetting("Moved", true, ".");
-    private final Setting<Boolean> damage = this.sgData.booleanSetting("Damage Taken", true, ".");
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a real-time blur effect to the background for enhanced UI contrast.");
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Label Palette");
+
+    private final Setting<Boolean> hole = this.sgData.booleanSetting("Hole Chronology", true, "Displays the total duration the target has occupied a hole.");
+    private final Setting<Boolean> phased = this.sgData.booleanSetting("Phase Tracking", true, "Displays the total duration the target has been in a phased or clipped state.");
+    private final Setting<Boolean> pops = this.sgData.booleanSetting("Totem Registry", true, "Tracks the total number of Totems of Undying consumed by the target.");
+    private final Setting<Boolean> eaten = this.sgData.booleanSetting("Consumption Tracker", true, "Displays the amount of food or Golden Apples consumed.");
+    private final Setting<Boolean> bottles = this.sgData.booleanSetting("Expended Bottles", true, "Tracks the number of Experience Bottles thrown by the target.");
+    private final Setting<Boolean> moved = this.sgData.booleanSetting("Spatical Displacement", true, "Tracks the total distance in blocks the target has traveled.");
+    private final Setting<Boolean> damage = this.sgData.booleanSetting("Accrued Damage", true, "Displays the total amount of health lost during the current tracking session.");
 
     public StatsHUD() {
-        super("Stats", ".");
+        super("Stats", "Displays comprehensive real-time combat and movement metadata for the selected target.");
         this.setSize(50.0F, 50.0F);
         BlackOut.EVENT_BUS.subscribe(this, () -> false);
     }

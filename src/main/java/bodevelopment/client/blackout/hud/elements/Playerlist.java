@@ -29,15 +29,17 @@ import java.util.List;
 
 public class Playerlist extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<NameMode> nameMode = this.sgGeneral.enumSetting("Name Mode", NameMode.EntityName, "");
-    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, "Renders a background");
+
+    private final Setting<NameMode> nameMode = this.sgGeneral.enumSetting("Label Protocol", NameMode.EntityName, "Determines whether to show formatted display names or raw entity names.");
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Backdrop", true, "Renders a background panel behind the player statistics.");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, "Renders a Blur effect");
-    private final Setting<Boolean> dynamic = this.sgGeneral.booleanSetting("Use dynamic info colors", false, ".");
-    private final Setting<BlackOutColor> good = this.sgGeneral.colorSetting("Good", new BlackOutColor(0, 225, 0, 255), ".", this.dynamic::get);
-    private final Setting<BlackOutColor> bad = this.sgGeneral.colorSetting("Bad", new BlackOutColor(150, 0, 0, 255), ".", this.dynamic::get);
-    private final Setting<Boolean> showPops = this.sgGeneral.booleanSetting("Show totem pops", false, ".");
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Text");
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a real-time blur effect to the backdrop for improved data legibility.");
+    private final Setting<Boolean> dynamic = this.sgGeneral.booleanSetting("Contextual Coloring", false, "Dynamically colors health, ping, and pop values based on their severity.");
+    private final Setting<BlackOutColor> good = this.sgGeneral.colorSetting("Positive Threshold", new BlackOutColor(0, 225, 0, 255), "The color assigned to healthy states (High health, low ping).", this.dynamic::get);
+    private final Setting<BlackOutColor> bad = this.sgGeneral.colorSetting("Negative Threshold", new BlackOutColor(150, 0, 0, 255), "The color assigned to critical states (Low health, high ping).", this.dynamic::get);
+    private final Setting<Boolean> showPops = this.sgGeneral.booleanSetting("Track Totem Pops", false, "Enables a column to track the number of Totems of Undying used by each player.");
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Header Palette");
+
     private final List<Entity> players = new ArrayList<>();
     private float currentLongest = 0.0F;
     private float longest = 0.0F;
@@ -47,7 +49,7 @@ public class Playerlist extends HudElement {
     private float y = 0.0F;
 
     public Playerlist() {
-        super("Playerlist", ".");
+        super("Playerlist", "Provides a comprehensive real-time overview of nearby players, including skin icons, health, latency, and totem usage.");
         this.setSize(10.0F, 10.0F);
         BlackOut.EVENT_BUS.subscribe(this, () -> false);
     }
@@ -56,7 +58,7 @@ public class Playerlist extends HudElement {
     public void render() {
         if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
             this.stack.push();
-            this.setSize(this.bgLength > 10.0F ? this.bgLength : 10.0F, this.y + 6.0F);
+            this.setSize(Math.max(this.bgLength, 10.0F), this.y + 6.0F);
             this.currentLongest = BlackOut.FONT.getWidth("PlayersHealthPing" + (this.showPops.get() ? "pops" : ""));
             this.currentLongestPing = BlackOut.FONT.getWidth("Ping");
             if (this.blur.get()) {

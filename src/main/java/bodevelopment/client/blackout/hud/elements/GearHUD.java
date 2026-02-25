@@ -17,16 +17,18 @@ import java.util.List;
 public class GearHUD extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgColor = this.addGroup("Color");
-    private final Setting<Double> textScale = this.sgScale.doubleSetting("Text Scale", 1.0, 0.0, 5.0, 0.05, ".");
-    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, "Renders a background");
+
+    // TODO: shadow нигде не используется
+    private final Setting<Double> textScale = this.sgScale.doubleSetting("Label Scale", 1.0, 0.0, 5.0, 0.05, "The size multiplier for the numerical item counters.");
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Backdrop", true, "Renders a background panel behind the gear list.");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, "Renders a Blur effect");
-    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Shadow", true, "Renders a Shadow");
-    private final Setting<List<Item>> items = this.sgGeneral.itemListSetting("Items", ".", Items.END_CRYSTAL, Items.TOTEM_OF_UNDYING);
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Text");
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a blur effect to the background for increased UI depth.");
+    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Drop Shadow", true, "Adds a subtle shadow to the background for better structural definition.");
+    private final Setting<List<Item>> items = this.sgGeneral.itemListSetting("Tracked Items", "The specific inventory items to monitor and display in the HUD.", Items.END_CRYSTAL, Items.TOTEM_OF_UNDYING);
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Counter Color");
 
     public GearHUD() {
-        super("Gear HUD", ".");
+        super("Gear HUD", "Monitors and displays the total count of specific items within the player's inventory, such as crystals or totems.");
         this.setSize(32.0F, 64.0F);
     }
 

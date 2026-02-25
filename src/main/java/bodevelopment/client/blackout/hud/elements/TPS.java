@@ -6,7 +6,7 @@ import bodevelopment.client.blackout.manager.Managers;
 
 public class TPS extends TextElement {
     public TPS() {
-        super("TPS", "Shows current server TPS");
+        super("TPS", "Displays the current server-side Ticks Per Second (TPS) to monitor game state synchronization.");
         this.setSize(10.0F, 10.0F);
     }
 

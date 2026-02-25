@@ -5,8 +5,9 @@ import bodevelopment.client.blackout.hud.TextElement;
 import net.minecraft.client.network.PlayerListEntry;
 
 public class Ping extends TextElement {
+
     public Ping() {
-        super("Ping", "Shows your current ping on screen");
+        super("Ping", "Displays the round-trip latency between the client and the server in milliseconds.");
         this.setSize(10.0F, 10.0F);
     }
 
