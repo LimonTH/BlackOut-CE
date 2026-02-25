@@ -284,7 +284,6 @@ public class MainMenu {
     public void onMouse(MouseButtonEvent buttonEvent) {
         if (BlackOut.mc.currentScreen instanceof TitleScreen && (this.clickGui.isOpen() || ClickGui.popUpDelta > 0.1F)) {
             this.updateWindowData();
-            buttonEvent.cancel();
             this.clickGui.onClick(buttonEvent);
             return;
         }

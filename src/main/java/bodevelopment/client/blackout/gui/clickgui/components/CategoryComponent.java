@@ -44,7 +44,7 @@ public class CategoryComponent extends Component {
         float fontScale = GuiSettings.getInstance().fontScale.get().floatValue();
         float categoryScale = fontScale * 2.0F;
 
-        float baseInnerHeight = (BlackOut.FONT.getHeight() * categoryScale) + (4.0F * fontScale);
+        float baseInnerHeight = (BlackOut.FONT.getHeight() * categoryScale) + (8.0F * fontScale);
         float shaderPadding = (6.0F + 2.0F) * fontScale;
         float currentExpansion = animation * EXPANSION_AMOUNT * fontScale;
         float rectH = baseInnerHeight + currentExpansion;

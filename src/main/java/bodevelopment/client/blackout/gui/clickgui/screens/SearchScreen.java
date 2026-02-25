@@ -37,28 +37,24 @@ public class SearchScreen extends ClickGuiScreen {
     public void render() {
         float fs = GuiSettings.getInstance().fontScale.get().floatValue();
         float fieldHeight = 45.0F * fs;
-
-        this.textField.render(this.stack, 1.8F * fs, this.mx, this.my, 20.0F, 20.0F, this.width - 40.0F, fieldHeight, 5.0F, 2.0F, Color.WHITE, GuiColorUtils.bg1);
-
-        float startY = 35.0F + fieldHeight;
         float entryHeight = 40.0F * fs;
-
         float spacing = 4.0F * fs;
 
-        float yPos = startY - this.scroll.get() + SHADER_PADDING;
+        float moduleGap = (SHADER_PADDING * 2) + spacing;
+
+        float startY = 20.0F + fieldHeight;
+        float yPos = startY + moduleGap - this.scroll.get();
 
         for (Module module : results) {
             if (yPos > this.height) break;
 
-            if (yPos + entryHeight > startY - SHADER_PADDING) {
-
+            if (yPos + entryHeight > 0) {
                 boolean hovered = this.mx > 20.0F && this.mx < this.width - 20.0F && this.my > yPos && this.my < yPos + entryHeight;
                 int bgColor = hovered ? ColorUtils.withAlpha(GuiColorUtils.bg1.getRGB(), 180) : ColorUtils.withAlpha(GuiColorUtils.bg1.getRGB(), 100);
 
                 RenderUtils.rounded(this.stack, 20.0F, yPos, this.width - 40.0F, entryHeight, RADIUS, SHADOW, bgColor, ColorUtils.SHADOW100I);
 
                 int textColor = module.enabled ? GuiRenderUtils.getGuiColors(1.0F).getRGB() : Color.LIGHT_GRAY.getRGB();
-
                 BlackOut.FONT.text(this.stack, module.getDisplayName(), 1.8F * fs, 35.0F, yPos + (entryHeight / 2.0F), textColor, false, true);
 
                 String category = module.category.name();
@@ -67,8 +63,10 @@ public class SearchScreen extends ClickGuiScreen {
                 BlackOut.FONT.text(this.stack, category, catScale, this.width - 35.0F - catWidth, yPos + (entryHeight / 2.0F), Color.GRAY.getRGB(), false, true);
             }
 
-            yPos += entryHeight + (SHADER_PADDING * 2) + spacing;
+            yPos += entryHeight + moduleGap;
         }
+
+        this.textField.render(this.stack, 1.8F * fs, this.mx, this.my, 20.0F, 20.0F, this.width - 40.0F, fieldHeight, 5.0F, 2.0F, Color.WHITE, GuiColorUtils.bg1);
     }
 
     @Override
@@ -93,11 +91,10 @@ public class SearchScreen extends ClickGuiScreen {
             if (button == 0 && this.textField.click(button, state)) return;
 
             float fs = GuiSettings.getInstance().fontScale.get().floatValue();
-            float startY = 35.0F + (45.0F * fs);
             float entryHeight = 40.0F * fs;
             float spacing = 4.0F * fs;
 
-            float yPos = startY - this.scroll.get() + SHADER_PADDING;
+            float yPos = (20.0F + 45.0F * fs) + ((SHADER_PADDING * 2) + 4.0F * fs) - this.scroll.get();
 
             for (Module module : results) {
                 if (this.mx > 20.0F && this.mx < this.width - 20.0F && this.my > yPos && this.my < yPos + entryHeight) {

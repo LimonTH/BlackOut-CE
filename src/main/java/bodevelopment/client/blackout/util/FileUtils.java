@@ -142,26 +142,33 @@ public class FileUtils {
         }
     }
 
-    public static void openDirectory(File folder){
+    public static void openDirectory(File folder) {
         if (!folder.exists()) {
             folder.mkdirs();
         }
+
+        if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+            try {
+                Desktop.getDesktop().open(folder);
+                return;
+            } catch (IOException e) {
+                BOLogger.error("Desktop API failed, trying manual launch...", e);
+            }
+        }
+
         String path = folder.getAbsolutePath();
         String os = System.getProperty("os.name").toLowerCase();
 
         try {
             if (os.contains("win")) {
-                new ProcessBuilder("explorer.exe", path).start();
-            } else if (os.contains("nix") || os.contains("nux") || os.contains("mac")) {
-                String command = os.contains("mac") ? "open" : "xdg-open";
-                new ProcessBuilder(command, path).start();
+                new ProcessBuilder("cmd", "/c", "start", "", path).start();
+            } else if (os.contains("mac")) {
+                new ProcessBuilder("open", path).start();
             } else {
-                if (Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().open(folder);
-                }
+                new ProcessBuilder("xdg-open", path).start();
             }
         } catch (IOException e) {
-            BOLogger.error("Failed to open directory " + path + " with error: ", e);
+            BOLogger.error("Failed to open directory " + path, e);
         }
     }
 
@@ -169,7 +176,7 @@ public class FileUtils {
         try {
             URI uri = new java.net.URI(url);
 
-            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(java.awt.Desktop.Action.BROWSE)) {
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
                 Desktop.getDesktop().browse(uri);
             } else {
                 String os = System.getProperty("os.name").toLowerCase();
