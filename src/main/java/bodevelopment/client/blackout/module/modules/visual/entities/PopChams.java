@@ -22,20 +22,22 @@ import org.joml.Quaternionf;
 
 public class PopChams extends Module {
     private static PopChams INSTANCE;
-    private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Double> time = this.sgGeneral.doubleSetting("Time", 1.0, 0.0, 5.0, 0.05, ".");
-    private final Setting<Double> y = this.sgGeneral.doubleSetting("Y", 0.0, -5.0, 5.0, 0.1, ".");
-    private final Setting<Double> scale = this.sgGeneral.doubleSetting("Scale", 1.0, 0.0, 5.0, 0.1, ".");
-    private final Setting<Boolean> enemy = this.sgGeneral.booleanSetting("Enemy", true, ".");
-    private final Setting<Boolean> friends = this.sgGeneral.booleanSetting("Friends", true, ".");
-    private final Setting<Boolean> self = this.sgGeneral.booleanSetting("Self", false, ".");
-    private final Setting<RenderShape> renderShape = this.sgGeneral.enumSetting("Render Shape", RenderShape.Full, "Which parts of boxes should be rendered.");
-    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Line Color", new BlackOutColor(255, 255, 255, 255), "Fill Color");
-    private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Side Color", new BlackOutColor(255, 255, 255, 50), "Side Color");
-    private final TimerList<Pop> pops = new TimerList<>(true);
 
+    private final SettingGroup sgGeneral = this.addGroup("General");
+
+    private final Setting<Double> time = this.sgGeneral.doubleSetting("Lifespan", 1.0, 0.0, 5.0, 0.05, "The duration in seconds that the phantom model remains visible.");
+    private final Setting<Double> y = this.sgGeneral.doubleSetting("Vertical Drift", 0.0, -5.0, 5.0, 0.1, "Applies a vertical offset or upward travel to the rendered model.");
+    private final Setting<Double> scale = this.sgGeneral.doubleSetting("Geometry Scale", 1.0, 0.0, 5.0, 0.1, "The size multiplier for the rendered pop phantom.");
+    private final Setting<Boolean> enemy = this.sgGeneral.booleanSetting("Hostile Targets", true, "Generates chams when a non-friendly player consumes a totem.");
+    private final Setting<Boolean> friends = this.sgGeneral.booleanSetting("Friendly Targets", true, "Generates chams when a whitelisted friend consumes a totem.");
+    private final Setting<Boolean> self = this.sgGeneral.booleanSetting("Self Trigger", false, "Generates chams when you consume a totem.");
+    private final Setting<RenderShape> renderShape = this.sgGeneral.enumSetting("Mesh Mode", RenderShape.Full, "Defines which geometric components (faces, lines, or both) of the player model are rendered.");
+    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Wireframe Color", new BlackOutColor(255, 255, 255, 255), "The color of the model's outer edges.");
+    private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Face Color", new BlackOutColor(255, 255, 255, 50), "The color applied to the polygon faces of the model.");
+
+    private final TimerList<Pop> pops = new TimerList<>(true);
     public PopChams() {
-        super("Pop Chams", ".", SubCategory.ENTITIES, true);
+        super("Pop Chams", "Renders a temporary, translucent phantom of a player's model at the exact position where they 'popped' a Totem of Undying.", SubCategory.ENTITIES, true);
         INSTANCE = this;
     }
 

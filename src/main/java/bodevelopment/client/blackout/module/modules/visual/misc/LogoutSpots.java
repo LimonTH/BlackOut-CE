@@ -40,22 +40,26 @@ import java.util.UUID;
 
 public class LogoutSpots extends Module {
     private static LogoutSpots INSTANCE;
+
     private final SettingGroup sgRendering = this.addGroup("Rendering");
     private final SettingGroup sgInfo = this.addGroup("Info");
-    private final Setting<Boolean> model = this.sgRendering.booleanSetting("Model", false, ".");
-    private final Setting<RenderShape> renderShape = this.sgRendering.enumSetting("Render Shape", RenderShape.Full, ".");
-    private final Setting<BlackOutColor> lineColor = this.sgRendering.colorSetting("Line Color", new BlackOutColor(255, 0, 0, 255), ".");
-    private final Setting<BlackOutColor> sideColor = this.sgRendering.colorSetting("Side Color", new BlackOutColor(255, 0, 0, 50), ".");
-    private final Setting<Double> maxTime = this.sgRendering.doubleSetting("Max Time", 60.0, 0.0, 100.0, 1.0, ".");
-    private final Setting<Double> fadeTime = this.sgRendering.doubleSetting("Fade Time", 20.0, 0.0, 100.0, 1.0, ".");
-    private final Setting<Double> infoScale = this.sgRendering.doubleSetting("Info Scale", 1.0, 0.0, 2.0, 0.1, ".");
-    private final Setting<Boolean> name = this.sgInfo.booleanSetting("Names", true, ".");
-    private final Setting<Boolean> armor = this.sgInfo.booleanSetting("Armor", false, ".");
-    private final Setting<Boolean> items = this.sgInfo.booleanSetting("Items", false, ".");
-    private final Setting<Boolean> health = this.sgInfo.booleanSetting("Health", false, ".");
-    private final Setting<Boolean> ping = this.sgInfo.booleanSetting("Ping", false, ".");
-    private final Setting<Boolean> pops = this.sgInfo.booleanSetting("Pops", false, ".");
-    private final Setting<Boolean> time = this.sgInfo.booleanSetting("Time", false, ".");
+
+    private final Setting<Boolean> model = this.sgRendering.booleanSetting("Avatar Mesh", false, "Renders a frozen 3D model of the player at their logout coordinates.");
+    private final Setting<RenderShape> renderShape = this.sgRendering.enumSetting("Bounding Shape", RenderShape.Full, "Defines the geometric style of the spot's highlight.");
+    private final Setting<BlackOutColor> lineColor = this.sgRendering.colorSetting("Outline Color", new BlackOutColor(255, 0, 0, 255), "The color of the wireframe edges for the logout spot.");
+    private final Setting<BlackOutColor> sideColor = this.sgRendering.colorSetting("Surface Color", new BlackOutColor(255, 0, 0, 50), "The color applied to the polygon faces of the logout spot.");
+    private final Setting<Double> maxTime = this.sgRendering.doubleSetting("Retention Period", 60.0, 0.0, 100.0, 1.0, "How long in seconds the spot remains fully visible.");
+    private final Setting<Double> fadeTime = this.sgRendering.doubleSetting("Dissipation Period", 20.0, 0.0, 100.0, 1.0, "The duration of the alpha-out transition after the retention period ends.");
+    private final Setting<Double> infoScale = this.sgRendering.doubleSetting("HUD Scale", 1.0, 0.0, 2.0, 0.1, "The size multiplier for the floating information labels.");
+
+    private final Setting<Boolean> name = this.sgInfo.booleanSetting("Display Username", true, "Shows the player's name above their logout spot.");
+    private final Setting<Boolean> armor = this.sgInfo.booleanSetting("Armor HUD", false, "Displays the armor the player was wearing at the time of disconnection.");
+    private final Setting<Boolean> items = this.sgInfo.booleanSetting("Held Items", false, "Displays the items in the player's main and off-hand.");
+    private final Setting<Boolean> health = this.sgInfo.booleanSetting("Vitality Stats", false, "Shows the player's remaining health and absorption.");
+    private final Setting<Boolean> ping = this.sgInfo.booleanSetting("Latency", false, "Shows the player's connection ping recorded at logout.");
+    private final Setting<Boolean> pops = this.sgInfo.booleanSetting("Totem Counts", false, "Displays the number of totems used by the player during the session.");
+    private final Setting<Boolean> time = this.sgInfo.booleanSetting("Logout Timer", false, "Shows a live timer indicating how long ago the player disconnected.");
+
     private final List<Spot> spots = new ArrayList<>();
     private final TimerMap<UUID, ItemStack[]> prevItems = new TimerMap<>(true);
     private final TimerList<UUID> removedUUIDs = new TimerList<>(true);
@@ -64,7 +68,7 @@ public class LogoutSpots extends Module {
     private float alphaMulti;
 
     public LogoutSpots() {
-        super("Logout Spots", "Traces to other entities", SubCategory.MISC_VISUAL, true);
+        super("Logout Spots", "Records and highlights the exact coordinates where players disconnect from the server, displaying their last known equipment and status.", SubCategory.MISC_VISUAL, true);
         INSTANCE = this;
     }
 

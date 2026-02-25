@@ -7,7 +7,7 @@ import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.combat.misc.AntiBot;
-import bodevelopment.client.blackout.module.modules.visual.misc.Freecam;
+import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
@@ -33,25 +33,26 @@ public class PhaseESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgColor = this.addGroup("Color");
 
-    public final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, ".");
-    public final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Rounded", true, ".", this.bg::get);
-    public final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Shadow", true, ".", this.bg::get);
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, ".", this.bg::get);
-    private final Setting<BlackOutColor> bgClose = this.sgColor.colorSetting("Background Close", new BlackOutColor(8, 8, 8, 120), ".", this.bg::get);
-    private final Setting<BlackOutColor> bgFar = this.sgColor.colorSetting("Background Far", new BlackOutColor(0, 0, 0, 120), ".", this.bg::get);
-    private final Setting<BlackOutColor> shdwClose = this.sgColor.colorSetting("Shadow Close", new BlackOutColor(8, 8, 8, 100), ".", this.bg::get);
-    private final Setting<BlackOutColor> shdwFar = this.sgColor.colorSetting("Shadow Far", new BlackOutColor(0, 0, 0, 100), ".", this.bg::get);
-    private final Setting<String> infoText = this.sgGeneral.stringSetting("Info Text", "Phased", "What to say on the tag");
-    private final Setting<Double> scale = this.sgGeneral.doubleSetting("Scale", 1.0, 0.0, 10.0, 0.1, ".");
-    private final Setting<Double> scaleInc = this.sgGeneral
-            .doubleSetting("Scale Increase", 1.0, 0.0, 5.0, 0.05, "How much should the scale increase when enemy is further away.");
-    private final Setting<Double> yOffset = this.sgGeneral.doubleSetting("Y", 0.0, 0.0, 1.0, 0.01, ".");
-    private final Setting<BlackOutColor> txt = this.sgColor.colorSetting("Text Color", new BlackOutColor(255, 255, 255, 255), ".");
+    public final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background Plate", true, "Renders a background panel behind the phase indicator text.");
+    public final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Curved Geometry", true, "Applies rounding to the corners of the background plate.", this.bg::get);
+    public final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Drop Shadow", true, "Renders a soft shadow behind the plate to improve visual depth.", this.bg::get);
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Blur", true, "Applies a blur effect behind the tag to enhance legibility against complex terrain.", this.bg::get);
+    private final Setting<String> infoText = this.sgGeneral.stringSetting("Indicator Label", "Phased", "The custom text to display when a player is detected inside blocks.");
+    private final Setting<Double> scale = this.sgGeneral.doubleSetting("Base Scale", 1.0, 0.0, 10.0, 0.1, "The primary size of the indicator overlay.");
+    private final Setting<Double> scaleInc = this.sgGeneral.doubleSetting("Distance Compensation", 1.0, 0.0, 5.0, 0.05, "Dynamically increases the label scale as the distance to the target increases.");
+    private final Setting<Double> yOffset = this.sgGeneral.doubleSetting("Vertical Translation", 0.0, 0.0, 1.0, 0.01, "Adjusts the vertical placement of the indicator relative to the entity's position.");
+
+    private final Setting<BlackOutColor> bgClose = this.sgColor.colorSetting("Proximal Background", new BlackOutColor(8, 8, 8, 120), "The background color applied when the target is at close range.", this.bg::get);
+    private final Setting<BlackOutColor> bgFar = this.sgColor.colorSetting("Distal Background", new BlackOutColor(0, 0, 0, 120), "The background color applied when the target is at maximum render distance.", this.bg::get);
+    private final Setting<BlackOutColor> shdwClose = this.sgColor.colorSetting("Proximal Shadow", new BlackOutColor(8, 8, 8, 100), "The shadow color applied when the target is at close range.", this.bg::get);
+    private final Setting<BlackOutColor> shdwFar = this.sgColor.colorSetting("Distal Shadow", new BlackOutColor(0, 0, 0, 100), "The shadow color applied when the target is at maximum render distance.", this.bg::get);
+    private final Setting<BlackOutColor> txt = this.sgColor.colorSetting("Label Palette", new BlackOutColor(255, 255, 255, 255), "The color of the indicator text.");
+
     private final List<Entity> players = new ArrayList<>();
     private final MatrixStack stack = new MatrixStack();
 
     public PhaseESP() {
-        super("Phase ESP", "Renders a text on players if they are phased", SubCategory.ENTITIES, true);
+        super("Phase ESP", "Displays specialized indicators over players who are currently intersecting with solid blocks or 'phasing'.", SubCategory.ENTITIES, true);
     }
 
     private String getText() {
@@ -129,7 +130,7 @@ public class PhaseESP extends Module {
             } else if (!OLEPOSSUtils.inside(entity, entity.getBoundingBox().contract(0.04, 0.06, 0.04))) {
                 return false;
             } else {
-                return entity != BlackOut.mc.player || Freecam.getInstance().enabled;
+                return entity != BlackOut.mc.player || FreeCam.getInstance().enabled;
             }
         }
     }

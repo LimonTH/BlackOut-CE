@@ -27,18 +27,20 @@ import java.util.List;
 
 public class SourceESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> water = this.sgGeneral.booleanSetting("Water", true, ".");
-    private final Setting<Boolean> lava = this.sgGeneral.booleanSetting("Lava", true, ".");
-    private final Setting<Double> range = this.sgGeneral.doubleSetting("Range", 8.0, 0.0, 10.0, 0.1, ".");
-    private final Setting<Integer> bloom = this.sgGeneral.intSetting("Bloom", 3, 0, 10, 1, ".");
-    private final Setting<BlackOutColor> fillColor = this.sgGeneral.colorSetting("Fill Color", new BlackOutColor(255, 0, 0, 50), "");
-    private final Setting<BlackOutColor> bloomColor = this.sgGeneral.colorSetting("Bloom Color", new BlackOutColor(255, 0, 0, 150), "");
+
+    private final Setting<Boolean> water = this.sgGeneral.booleanSetting("Detect Water", true, "Identifies and highlights stationary water source blocks.");
+    private final Setting<Boolean> lava = this.sgGeneral.booleanSetting("Detect Lava", true, "Identifies and highlights stationary lava source blocks.");
+    private final Setting<Double> range = this.sgGeneral.doubleSetting("Search Radius", 8.0, 0.0, 10.0, 0.1, "The maximum distance from the player to scan for fluid sources.");
+    private final Setting<Integer> bloom = this.sgGeneral.intSetting("Bloom Diffusion", 3, 0, 10, 1, "The radius of the post-processing glow effect applied to the highlights.");
+    private final Setting<BlackOutColor> fillColor = this.sgGeneral.colorSetting("Core Color", new BlackOutColor(255, 0, 0, 50), "The internal color and opacity of the highlighted fluid volume.");
+    private final Setting<BlackOutColor> bloomColor = this.sgGeneral.colorSetting("Glow Color", new BlackOutColor(255, 0, 0, 150), "The color of the outer bloom effect.");
+
     private final BlackOutColor white = new BlackOutColor(255, 255, 255, 255);
     private final List<Pair<BlockPos, Boolean>> sources = new ArrayList<>();
     private long prevCalc = 0L;
 
     public SourceESP() {
-        super("Source ESP", "Highlights water and lava sources.", SubCategory.WORLD, true);
+        super("Source ESP", "Utilizes spatial analysis to locate and visually isolate fluid source blocks from flowing liquids.", SubCategory.WORLD, true);
     }
 
     @Event

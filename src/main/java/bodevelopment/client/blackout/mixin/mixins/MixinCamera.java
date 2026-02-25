@@ -2,7 +2,7 @@ package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
 import bodevelopment.client.blackout.module.modules.visual.misc.CameraModifier;
-import bodevelopment.client.blackout.module.modules.visual.misc.Freecam;
+import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
 import bodevelopment.client.blackout.module.modules.visual.misc.Spectate;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import net.minecraft.client.render.Camera;
@@ -73,7 +73,7 @@ public abstract class MixinCamera {
         ci.cancel();
         CameraModifier modifier = CameraModifier.getInstance();
         Spectate spectate = Spectate.getInstance();
-        Freecam freecam = Freecam.getInstance();
+        FreeCam freecam = FreeCam.getInstance();
         this.ready = true;
         this.area = area;
         this.focusedEntity = focusedEntity;

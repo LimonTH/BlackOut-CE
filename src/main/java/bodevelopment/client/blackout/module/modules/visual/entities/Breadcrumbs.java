@@ -24,23 +24,25 @@ import java.awt.*;
 public class Breadcrumbs extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgColor = this.addGroup("Color");
-    public final Setting<ColorMode> colorMode = this.sgColor.enumSetting("Color Mode", ColorMode.Custom, "What color to use");
-    private final Setting<Double> saturation = this.sgColor
-            .doubleSetting("Rainbow Saturation", 0.8, 0.0, 1.0, 0.1, ".", () -> this.colorMode.get() == ColorMode.Rainbow);
-    private final Setting<Integer> iAlpha = this.sgColor.intSetting("Inside Alpha", 150, 0, 255, 1, ".", () -> this.colorMode.get() == ColorMode.Rainbow);
-    private final Setting<Integer> oAlpha = this.sgColor.intSetting("Outside Alpha", 50, 0, 255, 1, ".", () -> this.colorMode.get() == ColorMode.Rainbow);
-    private final Setting<Boolean> onlyMoving = this.sgGeneral.booleanSetting("Only Moving", true, ".");
-    private final Setting<Double> size = this.sgGeneral.doubleSetting("Size", 3.0, 1.0, 10.0, 0.1, ".");
-    private final Setting<Double> delay = this.sgGeneral.doubleSetting("Delay", 0.1, 0.0, 3.0, 0.01, ".");
-    private final Setting<Double> renderTime = this.sgGeneral.doubleSetting("Render Time", 3.0, 0.001, 20.0, 0.05, ".");
-    private final Setting<BlackOutColor> clr = this.sgColor.colorSetting("Inside Color", new BlackOutColor(255, 255, 255, 100), ".");
-    private final Setting<BlackOutColor> clr1 = this.sgColor.colorSetting("Outside Color", new BlackOutColor(175, 175, 175, 100), ".");
+
+    private final Setting<Boolean> onlyMoving = this.sgGeneral.booleanSetting("Motion Filtering", true, "Prevents the accumulation of particles while the player is stationary.");
+    private final Setting<Double> size = this.sgGeneral.doubleSetting("Particle Scale", 3.0, 1.0, 10.0, 0.1, "The diameter of the rendered trail dots.");
+    private final Setting<Double> delay = this.sgGeneral.doubleSetting("Sampling Interval", 0.1, 0.0, 3.0, 0.01, "The time frequency (in seconds) for dropping a new position marker.");
+    private final Setting<Double> renderTime = this.sgGeneral.doubleSetting("Persistence Duration", 3.0, 0.001, 20.0, 0.05, "The total lifespan of each particle before it is culled from the buffer.");
+
+    private final Setting<BlackOutColor> clr = this.sgColor.colorSetting("Core Color", new BlackOutColor(255, 255, 255, 100), "The primary color applied to the particle center.");
+    private final Setting<BlackOutColor> clr1 = this.sgColor.colorSetting("Aura Color", new BlackOutColor(175, 175, 175, 100), "The secondary color applied to the particle boundary.");
+    public final Setting<ColorMode> colorMode = this.sgColor.enumSetting("Chroma Mode", ColorMode.Custom, "The color distribution algorithm used for the trail particles.");
+    private final Setting<Double> saturation = this.sgColor.doubleSetting("Rainbow Saturation", 0.8, 0.0, 1.0, 0.1, "The intensity of the color palette when using Rainbow mode.", () -> this.colorMode.get() == ColorMode.Rainbow);
+    private final Setting<Integer> iAlpha = this.sgColor.intSetting("Core Opacity", 150, 0, 255, 1, "The transparency level of the inner particle dot.", () -> this.colorMode.get() == ColorMode.Rainbow);
+    private final Setting<Integer> oAlpha = this.sgColor.intSetting("Aura Opacity", 50, 0, 255, 1, "The transparency level of the outer particle glow.", () -> this.colorMode.get() == ColorMode.Rainbow);
+
     private final MatrixStack stack = new MatrixStack();
     private final RenderList<Vec3d> list = RenderList.getList(true);
     private long lastAddition = System.currentTimeMillis();
 
     public Breadcrumbs() {
-        super("Breadcrumbs", "Draws a trail behind you with particless", SubCategory.ENTITIES, true);
+        super("Breadcrumbs", "Visualizes the player's historical trajectory by rendering a persistent trail of color-coded particles.", SubCategory.ENTITIES, true);
     }
 
     @Event

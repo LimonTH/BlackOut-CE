@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.module.modules.movement.NoSlow;
 import bodevelopment.client.blackout.module.modules.movement.Sprint;
 import bodevelopment.client.blackout.module.modules.movement.TickShift;
 import bodevelopment.client.blackout.module.modules.movement.Velocity;
-import bodevelopment.client.blackout.module.modules.visual.misc.Freecam;
+import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
 import bodevelopment.client.blackout.module.modules.visual.misc.SwingModifier;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
@@ -177,7 +177,7 @@ public abstract class MixinClientPlayerEntity {
         if ((Object) this != BlackOut.mc.player) {
             instance.tick(slowDown, slowDownFactor);
         } else {
-            Freecam freecam = Freecam.getInstance();
+            FreeCam freecam = FreeCam.getInstance();
             if (freecam.enabled) {
                 freecam.resetInput((KeyboardInput) instance);
             } else {

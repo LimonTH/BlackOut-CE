@@ -26,18 +26,21 @@ import org.apache.commons.lang3.tuple.Triple;
 public class MineESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRender = this.addGroup("Render");
-    private final Setting<Double> range = this.sgGeneral.doubleSetting("Range", 10.0, 0.0, 50.0, 0.5, "Only renders inside this range.");
-    private final Setting<Boolean> accurateTime = this.sgGeneral.booleanSetting("Accurate Time", false, ".");
-    private final Setting<ToolMaterials> pickaxeMaterial = this.sgGeneral.enumSetting("Pickaxe Material", ToolMaterials.NETHERITE, ".", this.accurateTime::get);
-    private final Setting<Integer> pickaxeEfficiency = this.sgGeneral.intSetting("Pickaxe Efficiency", 5, 0, 5, 1, ".", this.accurateTime::get);
-    private final Setting<Double> fadeIn = this.sgGeneral.doubleSetting("Fade In Time", 2.0, 0.0, 20.0, 0.1, ".", () -> !this.accurateTime.get());
-    private final Setting<Double> renderTime = this.sgGeneral.doubleSetting("Render Time", 4.0, 0.0, 20.0, 0.1, ".");
-    private final Setting<Double> fadeOut = this.sgGeneral.doubleSetting("Fade Out Time", 2.0, 0.0, 20.0, 0.1, ".");
+
+    private final Setting<Double> range = this.sgGeneral.doubleSetting("Visual Range", 10.0, 0.0, 50.0, 0.5, "The maximum distance at which mining indicators will be rendered.");
+    private final Setting<Boolean> accurateTime = this.sgGeneral.booleanSetting("Predictive Timing", false, "Calculates the exact mining duration based on a simulated tool and efficiency level.");
+    private final Setting<ToolMaterials> pickaxeMaterial = this.sgGeneral.enumSetting("Simulated Tool", ToolMaterials.NETHERITE, "The tool material used to calculate the predicted block breaking time.", this.accurateTime::get);
+    private final Setting<Integer> pickaxeEfficiency = this.sgGeneral.intSetting("Efficiency Level", 5, 0, 5, 1, "The Efficiency enchantment level used for the predictive timing calculation.", this.accurateTime::get);
+    private final Setting<Double> fadeIn = this.sgGeneral.doubleSetting("Static Scale Time", 2.0, 0.0, 20.0, 0.1, "The duration it takes for the box to scale to full size when predictive timing is disabled.", () -> !this.accurateTime.get());
+    private final Setting<Double> renderTime = this.sgGeneral.doubleSetting("Dwell Time", 4.0, 0.0, 20.0, 0.1, "The amount of time the highlight remains at full size before beginning to fade.");
+    private final Setting<Double> fadeOut = this.sgGeneral.doubleSetting("Opacity Fade Time", 2.0, 0.0, 20.0, 0.1, "The duration over which the highlight disappears after the mining action is complete.");
+
     private final BoxMultiSetting box = BoxMultiSetting.of(this.sgRender);
+
     private final RenderList<Triple<BlockPos, Integer, Double>> renders = RenderList.getList(false);
 
     public MineESP() {
-        super("Mine ESP", "Renders a box at blocks being mined by other players.", SubCategory.WORLD, true);
+        super("Mine ESP", "Interprets block-breaking packets from the server to highlight blocks currently being mined by other players.", SubCategory.WORLD, true);
     }
 
     @Event

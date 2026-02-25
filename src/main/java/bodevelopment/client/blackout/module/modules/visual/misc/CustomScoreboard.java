@@ -18,28 +18,30 @@ import java.util.Collection;
 
 public class CustomScoreboard extends Module {
     private static CustomScoreboard INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Boolean> remove = this.sgGeneral.booleanSetting("Remove", false, "Stops the scoreboard from rendering");
-    public final Setting<Boolean> useFont = this.sgGeneral.booleanSetting("Use CustomFont", true, ".", () -> !this.remove.get());
-    public final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, ".", () -> !this.remove.get());
-    public final Setting<Boolean> background = this.sgGeneral.booleanSetting("Background", true, ".", () -> !this.remove.get());
-    public final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Shadow", true, ".", () -> !this.remove.get() && this.background.get());
     private final SettingGroup sgColor = this.addGroup("Color");
-    public final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, () -> this.useFont.get() && !this.remove.get(), "Text");
-    public final Setting<BlackOutColor> bgColor = this.sgColor
-            .colorSetting("Background Color", new BlackOutColor(0, 0, 0, 50), ".", () -> this.background.get() && !this.remove.get());
-    public final Setting<BlackOutColor> shadowColor = this.sgColor
-            .colorSetting("Shadow Color", new BlackOutColor(0, 0, 0, 100), ".", () -> this.background.get() && this.shadow.get() && !this.remove.get());
-    private final Setting<Double> scale = this.sgGeneral.doubleSetting("Scale", 1.0, 0.0, 10.0, 0.05, "0");
-    private final Setting<Integer> addedY = this.sgGeneral.intSetting("Added Y", 0, 0, 500, 10, ".");
+
+    public final Setting<Boolean> remove = this.sgGeneral.booleanSetting("Disable Rendering", false, "Completely prevents the scoreboard from appearing on the HUD.");
+    public final Setting<Boolean> useFont = this.sgGeneral.booleanSetting("Custom Font Engine", true, "Switches from the vanilla font renderer to the client's high-definition font system.", () -> !this.remove.get());
+    public final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Blur", true, "Applies a background blur effect behind the scoreboard for enhanced contrast.", () -> !this.remove.get());
+    public final Setting<Boolean> background = this.sgGeneral.booleanSetting("Plate Background", true, "Renders a solid or semi-transparent background panel behind the scoreboard data.", () -> !this.remove.get());
+    public final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Outer Shadow", true, "Applies a soft drop shadow to the background plate.", () -> !this.remove.get() && this.background.get());
+    private final Setting<Double> scale = this.sgGeneral.doubleSetting("Visual Scale", 1.0, 0.0, 10.0, 0.05, "Adjusts the overall size of the scoreboard element.");
+    private final Setting<Integer> addedY = this.sgGeneral.intSetting("Vertical Offset", 0, 0, 500, 10, "Adjusts the vertical placement of the scoreboard on the HUD.");
+
+    public final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, () -> this.useFont.get() && !this.remove.get(), "Label Palette");
+    public final Setting<BlackOutColor> bgColor = this.sgColor.colorSetting("Plate Color", new BlackOutColor(0, 0, 0, 50), "The base color of the scoreboard background.", () -> this.background.get() && !this.remove.get());
+    public final Setting<BlackOutColor> shadowColor = this.sgColor.colorSetting("Shadow Tint", new BlackOutColor(0, 0, 0, 100), "The color applied to the background's drop shadow.", () -> this.background.get() && this.shadow.get() && !this.remove.get());
+
+
     private final MatrixStack stack = new MatrixStack();
     public String objectiveName;
     public Color objectiveColor;
     public Collection<String> texts;
     private float y = 0.0F;
-
     public CustomScoreboard() {
-        super("Scoreboard", "Modifies the games scoreboard", SubCategory.MISC_VISUAL, true);
+        super("Scoreboard", "Provides extensive customization for the in-game scoreboard, including font overrides, background effects, and scaling.", SubCategory.MISC_VISUAL, true);
         INSTANCE = this;
     }
 

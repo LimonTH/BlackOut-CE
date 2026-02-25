@@ -14,31 +14,35 @@ import net.minecraft.util.math.Box;
 
 public class CrystalChams extends Module {
     private static CrystalChams INSTANCE;
+
     public final SettingGroup sgGeneral = this.addGroup("General");
     public final SettingGroup sgSync = this.addGroup("Sync");
-    public final Setting<Boolean> spawnAnimation = this.sgGeneral.booleanSetting("Spawn Animation", false, "Try it and see.");
-    public final Setting<Double> animationTime = this.sgGeneral.doubleSetting("Animation Time", 0.5, 0.0, 1.0, 0.01, "Try it and see.", this.spawnAnimation::get);
-    public final Setting<Double> scale = this.sgGeneral.doubleSetting("Scale", 1.0, 0.0, 10.0, 0.1, "Try it and see.");
-    public final Setting<Double> bounce = this.sgGeneral.doubleSetting("Bounce", 0.5, 0.0, 10.0, 0.1, "Try it and see.");
-    public final Setting<Double> bounceSpeed = this.sgGeneral.doubleSetting("Bounce Speed", 1.0, 0.0, 10.0, 0.1, "Try it and see.");
-    public final Setting<Double> rotationSpeed = this.sgGeneral.doubleSetting("Rotation Speed", 1.0, 0.0, 10.0, 0.1, "Try it and see.");
-    public final Setting<Double> y = this.sgGeneral.doubleSetting("Y", 0.0, -5.0, 5.0, 0.1, "Try it and see.");
-    public final Setting<RenderShape> coreRenderShape = this.sgGeneral.enumSetting("Core Render Shape", RenderShape.Full, "Try it and see.");
-    public final Setting<BlackOutColor> coreLineColor = this.sgGeneral.colorSetting("Core Line Color", new BlackOutColor(255, 0, 0, 255), "Try it and see.");
-    public final Setting<BlackOutColor> coreSideColor = this.sgGeneral.colorSetting("Core Side Color", new BlackOutColor(255, 0, 0, 50), "Try it and see.");
-    public final Setting<RenderShape> renderShape = this.sgGeneral.enumSetting("Middle Render Shape", RenderShape.Full, "Try it and see.");
-    public final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Middle Line Color", new BlackOutColor(255, 0, 0, 255), "Try it and see.");
-    public final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Middle Side Color", new BlackOutColor(255, 0, 0, 50), "Try it and see.");
-    public final Setting<RenderShape> outerRenderShape = this.sgGeneral.enumSetting("Outer Render Shape", RenderShape.Full, "Try it and see.");
-    public final Setting<BlackOutColor> outerLineColor = this.sgGeneral.colorSetting("Outer Line Color", new BlackOutColor(255, 0, 0, 255), "Try it and see.");
-    public final Setting<BlackOutColor> outerSideColor = this.sgGeneral.colorSetting("Outer Side Color", new BlackOutColor(255, 0, 0, 50), "Try it and see.");
-    public final Setting<Boolean> bounceSync = this.sgSync.booleanSetting("Bounce Sync", false, "Try it and see.");
-    public final Setting<Boolean> rotationSync = this.sgSync.booleanSetting("Rotation Sync", false, "Try it and see.");
+
+    public final Setting<Boolean> spawnAnimation = this.sgGeneral.booleanSetting("Growth Animation", false, "Smoothly scales the crystal up upon its initial instantiation.");
+    public final Setting<Double> animationTime = this.sgGeneral.doubleSetting("Interpolation Period", 0.5, 0.0, 1.0, 0.01, "The duration in seconds for the spawn animation to complete.", this.spawnAnimation::get);
+    public final Setting<Double> scale = this.sgGeneral.doubleSetting("Geometry Scale", 1.0, 0.0, 10.0, 0.1, "The global size multiplier for the End Crystal's rendering cubes.");
+    public final Setting<Double> bounce = this.sgGeneral.doubleSetting("Vertical Amplitude", 0.5, 0.0, 10.0, 0.1, "The maximum height of the floating oscillation animation.");
+    public final Setting<Double> bounceSpeed = this.sgGeneral.doubleSetting("Oscillation Frequency", 1.0, 0.0, 10.0, 0.1, "The rate at which the crystal moves up and down.");
+    public final Setting<Double> rotationSpeed = this.sgGeneral.doubleSetting("Angular Velocity", 1.0, 0.0, 10.0, 0.1, "The speed at which the crystal's interior and exterior layers rotate.");
+    public final Setting<Double> y = this.sgGeneral.doubleSetting("Vertical Offset", 0.0, -5.0, 5.0, 0.1, "Adjusts the base Y-level elevation of the entity model.");
+    public final Setting<RenderShape> coreRenderShape = this.sgGeneral.enumSetting("Inner Mesh Type", RenderShape.Full, "Defines the primitive mesh rendering mode for the central core.");
+    public final Setting<BlackOutColor> coreLineColor = this.sgGeneral.colorSetting("Inner Wireframe Color", new BlackOutColor(255, 0, 0, 255), "The color applied to the edges of the core cube.");
+    public final Setting<BlackOutColor> coreSideColor = this.sgGeneral.colorSetting("Inner Face Color", new BlackOutColor(255, 0, 0, 50), "The color applied to the polygon faces of the core cube.");
+    public final Setting<RenderShape> renderShape = this.sgGeneral.enumSetting("Median Mesh Type", RenderShape.Full, "Defines the primitive mesh rendering mode for the middle layer.");
+    public final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Median Wireframe Color", new BlackOutColor(255, 0, 0, 255), "The color applied to the edges of the middle cube.");
+    public final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Median Face Color", new BlackOutColor(255, 0, 0, 50), "The color applied to the polygon faces of the middle cube.");
+    public final Setting<RenderShape> outerRenderShape = this.sgGeneral.enumSetting("Shell Mesh Type", RenderShape.Full, "Defines the primitive mesh rendering mode for the outermost layer.");
+    public final Setting<BlackOutColor> outerLineColor = this.sgGeneral.colorSetting("Shell Wireframe Color", new BlackOutColor(255, 0, 0, 255), "The color applied to the edges of the outer shell.");
+    public final Setting<BlackOutColor> outerSideColor = this.sgGeneral.colorSetting("Shell Face Color", new BlackOutColor(255, 0, 0, 50), "The color applied to the polygon faces of the outer shell.");
+
+    public final Setting<Boolean> bounceSync = this.sgSync.booleanSetting("Global Oscillation Sync", false, "Synchronizes the vertical bounce timing across all rendered crystals.");
+    public final Setting<Boolean> rotationSync = this.sgSync.booleanSetting("Global Angular Sync", false, "Synchronizes the rotation timing across all rendered crystals.");
+
     private final Box box = new Box(-0.25, -0.25, -0.25, 0.25, 0.25, 0.25);
     public int age = 0;
 
     public CrystalChams() {
-        super("Crystal Chams", "Modifies the appearance of crystals.", SubCategory.ENTITIES, true);
+        super("Crystal Chams", "Customizes the geometric rendering and animations of End Crystal entities for enhanced visibility.", SubCategory.ENTITIES, true);
         INSTANCE = this;
     }
 

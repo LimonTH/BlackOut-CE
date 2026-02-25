@@ -50,20 +50,20 @@ import java.util.function.Function;
 public class Trajectories extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgColor = this.addGroup("Color");
-    public final Setting<Trails.ColorMode> colorMode = this.sgColor.enumSetting("Color Mode", Trails.ColorMode.Custom, "What color to use");
-    private final Setting<Double> saturation = this.sgColor
-            .doubleSetting("Rainbow Saturation", 0.8, 0.0, 1.0, 0.1, ".", () -> this.colorMode.get() == Trails.ColorMode.Rainbow);
-    private final Setting<BlackOutColor> clr = this.sgColor
-            .colorSetting("Line Color", new BlackOutColor(255, 255, 255, 255), ".", () -> this.colorMode.get() != Trails.ColorMode.Rainbow);
-    private final Setting<BlackOutColor> clr1 = this.sgColor
-            .colorSetting("Wave Color", new BlackOutColor(175, 175, 175, 255), ".", () -> this.colorMode.get() != Trails.ColorMode.Rainbow);
-    private final Setting<Integer> maxTicks = this.sgGeneral.intSetting("Max Ticks", 500, 0, 500, 5, ".");
-    private final Setting<Double> fadeLength = this.sgColor.doubleSetting("Fade Length", 1.0, 0.0, 10.0, 0.1, ".");
-    private final Setting<Boolean> playerVelocity = this.sgGeneral.booleanSetting("Player Velocity", true, ".");
+
+    private final Setting<Integer> maxTicks = this.sgGeneral.intSetting("Simulation Depth", 500, 0, 500, 5, "The maximum number of physics steps to calculate for the projected path.");
+    private final Setting<Boolean> playerVelocity = this.sgGeneral.booleanSetting("Inertia Compensation", true, "Includes the player's current movement velocity in the initial projectile calculation.");
+
+    public final Setting<Trails.ColorMode> colorMode = this.sgColor.enumSetting("Color Logic", Trails.ColorMode.Custom, "The algorithmic style used to calculate the trajectory line colors.");
+    private final Setting<Double> saturation = this.sgColor.doubleSetting("Rainbow Saturation", 0.8, 0.0, 1.0, 0.1, "The color richness of the rainbow cycle.", () -> this.colorMode.get() == Trails.ColorMode.Rainbow);
+    private final Setting<BlackOutColor> clr = this.sgColor.colorSetting("Primary Color", new BlackOutColor(255, 255, 255, 255), "The main color of the trajectory path.", () -> this.colorMode.get() != Trails.ColorMode.Rainbow);
+    private final Setting<BlackOutColor> clr1 = this.sgColor.colorSetting("Wave Secondary", new BlackOutColor(175, 175, 175, 255), "The secondary color used for wave interpolation.", () -> this.colorMode.get() != Trails.ColorMode.Rainbow);
+    private final Setting<Double> fadeLength = this.sgColor.doubleSetting("Start Fade Distance", 1.0, 0.0, 10.0, 0.1, "The distance from the player where the trajectory line begins to fade into full opacity.");
+
     private final Map<Item, SimulationData> dataMap = new HashMap<>();
 
     public Trajectories() {
-        super("Trajectories", "Draws a trajectory when holding throwable items or a bow.", SubCategory.MISC_VISUAL, true);
+        super("Trajectories", "Predicts and renders the flight path of projectiles, accounting for gravity, drag, and initial velocity.", SubCategory.MISC_VISUAL, true);
         this.initMap();
     }
 
@@ -429,7 +429,7 @@ public class Trajectories extends Module {
         this.put(
                 0.25,
                 0.25,
-                (stack, tickDelta) -> OLEPOSSUtils.getLerpedPos(BlackOut.mc.player, tickDelta.floatValue())
+                (stack, tickDelta) -> OLEPOSSUtils.getLerpedPos(BlackOut.mc.player, tickDelta)
                         .add(0.0, BlackOut.mc.player.getEyeHeight(BlackOut.mc.player.getPose()) - 0.1, 0.0),
                 stack -> exp,
                 (box, vel) -> {
@@ -444,7 +444,7 @@ public class Trajectories extends Module {
         this.put(
                 0.25,
                 0.25,
-                (stack, tickDelta) -> OLEPOSSUtils.getLerpedPos(BlackOut.mc.player, tickDelta.floatValue())
+                (stack, tickDelta) -> OLEPOSSUtils.getLerpedPos(BlackOut.mc.player, tickDelta)
                         .add(0.0, BlackOut.mc.player.getEyeHeight(BlackOut.mc.player.getPose()) - 0.1, 0.0),
                 stack -> snowball,
                 (box, vel) -> {

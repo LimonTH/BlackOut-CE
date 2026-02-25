@@ -10,36 +10,41 @@ import net.minecraft.util.math.RotationAxis;
 
 public class ViewModel extends Module {
     private static ViewModel INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Double> fov = this.sgGeneral.doubleSetting("Hand FOV", 70.0, 10.0, 170.0, 5.0, ".");
-    private final SettingGroup sgMain = this.addGroup("Main");
-    private final SettingGroup sgOff = this.addGroup("Off");
-    private final Setting<Boolean> renderMain = this.sgMain.booleanSetting("Render Main", true, "");
-    private final Setting<Double> mainX = this.sgMain.doubleSetting("Main X", 0.0, -1.0, 1.0, 0.02, "");
-    private final Setting<Double> mainY = this.sgMain.doubleSetting("Main Y", 0.0, -1.0, 1.0, 0.02, "");
-    private final Setting<Double> mainZ = this.sgMain.doubleSetting("Main Z", 0.0, -1.0, 1.0, 0.02, "");
-    private final Setting<Double> mainScaleX = this.sgMain.doubleSetting("Main Scale X", 1.0, 0.0, 2.0, 0.02, "");
-    private final Setting<Double> mainScaleY = this.sgMain.doubleSetting("Main Scale Y", 1.0, 0.0, 2.0, 0.02, "");
-    private final Setting<Double> mainScaleZ = this.sgMain.doubleSetting("Main Scale Z", 1.0, 0.0, 2.0, 0.02, "");
-    private final Setting<Double> mainRotX = this.sgMain.doubleSetting("Main Rotation X", 0.0, -180.0, 180.0, 5.0, "");
-    private final Setting<Double> mainRotY = this.sgMain.doubleSetting("Main Rotation Y", 0.0, -180.0, 180.0, 5.0, "");
-    private final Setting<Double> mainRotZ = this.sgMain.doubleSetting("Main Rotation Z", 0.0, -180.0, 180.0, 5.0, "");
-    private final Setting<Double> mainRotSpeedX = this.sgMain.doubleSetting("Main Rotation Speed X", 0.0, -180.0, 180.0, 5.0, "");
-    private final Setting<Double> mainRotSpeedY = this.sgMain.doubleSetting("Main Rotation Speed Y", 0.0, -180.0, 180.0, 5.0, "");
-    private final Setting<Double> mainRotSpeedZ = this.sgMain.doubleSetting("Main Rotation Speed Z", 0.0, -180.0, 180.0, 5.0, "");
-    private final Setting<Boolean> renderOff = this.sgOff.booleanSetting("Render Off", true, "");
-    private final Setting<Double> offX = this.sgOff.doubleSetting("Off X", 0.0, -1.0, 1.0, 0.02, "");
-    private final Setting<Double> offY = this.sgOff.doubleSetting("Off Y", 0.0, -1.0, 1.0, 0.02, "");
-    private final Setting<Double> offZ = this.sgOff.doubleSetting("Off Z", 0.0, -1.0, 1.0, 0.02, "");
-    private final Setting<Double> offScaleX = this.sgOff.doubleSetting("Off Scale X", 1.0, 0.0, 2.0, 0.02, "");
-    private final Setting<Double> offScaleY = this.sgOff.doubleSetting("Off Scale Y", 1.0, 0.0, 2.0, 0.02, "");
-    private final Setting<Double> offScaleZ = this.sgOff.doubleSetting("Off Scale Z", 1.0, 0.0, 2.0, 0.02, "");
-    private final Setting<Double> offRotX = this.sgOff.doubleSetting("Off Rotation X", 0.0, -180.0, 180.0, 5.0, "");
-    private final Setting<Double> offRotY = this.sgOff.doubleSetting("Off Rotation Y", 0.0, -180.0, 180.0, 5.0, "");
-    private final Setting<Double> offRotZ = this.sgOff.doubleSetting("Off Rotation Z", 0.0, -180.0, 180.0, 5.0, "");
-    private final Setting<Double> offRotSpeedX = this.sgOff.doubleSetting("Off Rotation Speed X", 0.0, -180.0, 180.0, 5.0, "");
-    private final Setting<Double> offRotSpeedY = this.sgOff.doubleSetting("Off Rotation Speed Y", 0.0, -180.0, 180.0, 5.0, "");
-    private final Setting<Double> offRotSpeedZ = this.sgOff.doubleSetting("Off Rotation Speed Z", 0.0, -180.0, 180.0, 5.0, "");
+    private final SettingGroup sgMain = this.addGroup("Main Hand");
+    private final SettingGroup sgOff = this.addGroup("Off Hand");
+
+    public final Setting<Double> fov = this.sgGeneral.doubleSetting("Focal Length", 70.0, 10.0, 170.0, 5.0, "The field of view specifically applied to the first-person hand and item rendering.");
+
+    private final Setting<Boolean> renderMain = this.sgMain.booleanSetting("Show Main", true, "Whether to render the main-hand model.");
+    private final Setting<Double> mainX = this.sgMain.doubleSetting("Offset X", 0.0, -1.0, 1.0, 0.02, "Lateral translation of the main hand.");
+    private final Setting<Double> mainY = this.sgMain.doubleSetting("Offset Y", 0.0, -1.0, 1.0, 0.02, "Vertical translation of the main hand.");
+    private final Setting<Double> mainZ = this.sgMain.doubleSetting("Offset Z", 0.0, -1.0, 1.0, 0.02, "Depth translation of the main hand.");
+    private final Setting<Double> mainScaleX = this.sgMain.doubleSetting("Scale X", 1.0, 0.0, 2.0, 0.02, "Horizontal scale multiplier.");
+    private final Setting<Double> mainScaleY = this.sgMain.doubleSetting("Scale Y", 1.0, 0.0, 2.0, 0.02, "Vertical scale multiplier.");
+    private final Setting<Double> mainScaleZ = this.sgMain.doubleSetting("Scale Z", 1.0, 0.0, 2.0, 0.02, "Depth scale multiplier.");
+    private final Setting<Double> mainRotX = this.sgMain.doubleSetting("Pitch Rotation", 0.0, -180.0, 180.0, 5.0, "Static X-axis rotation.");
+    private final Setting<Double> mainRotY = this.sgMain.doubleSetting("Yaw Rotation", 0.0, -180.0, 180.0, 5.0, "Static Y-axis rotation.");
+    private final Setting<Double> mainRotZ = this.sgMain.doubleSetting("Roll Rotation", 0.0, -180.0, 180.0, 5.0, "Static Z-axis rotation.");
+    private final Setting<Double> mainRotSpeedX = this.sgMain.doubleSetting("Pitch Velocity", 0.0, -180.0, 180.0, 5.0, "Continuous rotation speed around the X-axis.");
+    private final Setting<Double> mainRotSpeedY = this.sgMain.doubleSetting("Yaw Velocity", 0.0, -180.0, 180.0, 5.0, "Continuous rotation speed around the Y-axis.");
+    private final Setting<Double> mainRotSpeedZ = this.sgMain.doubleSetting("Roll Velocity", 0.0, -180.0, 180.0, 5.0, "Continuous rotation speed around the Z-axis.");
+
+    private final Setting<Boolean> renderOff = this.sgOff.booleanSetting("Show Off", true, "Whether to render the off-hand model.");
+    private final Setting<Double> offX = this.sgOff.doubleSetting("Offset X", 0.0, -1.0, 1.0, 0.02, "Lateral translation of the off hand.");
+    private final Setting<Double> offY = this.sgOff.doubleSetting("Offset Y", 0.0, -1.0, 1.0, 0.02, "Vertical translation of the off hand.");
+    private final Setting<Double> offZ = this.sgOff.doubleSetting("Offset Z", 0.0, -1.0, 1.0, 0.02, "Depth translation of the off hand.");
+    private final Setting<Double> offScaleX = this.sgOff.doubleSetting("Scale X", 1.0, 0.0, 2.0, 0.02, "Horizontal scale multiplier.");
+    private final Setting<Double> offScaleY = this.sgOff.doubleSetting("Scale Y", 1.0, 0.0, 2.0, 0.02, "Vertical scale multiplier.");
+    private final Setting<Double> offScaleZ = this.sgOff.doubleSetting("Scale Z", 1.0, 0.0, 2.0, 0.02, "Depth scale multiplier.");
+    private final Setting<Double> offRotX = this.sgOff.doubleSetting("Pitch Rotation", 0.0, -180.0, 180.0, 5.0, "Static X-axis rotation.");
+    private final Setting<Double> offRotY = this.sgOff.doubleSetting("Yaw Rotation", 0.0, -180.0, 180.0, 5.0, "Static Y-axis rotation.");
+    private final Setting<Double> offRotZ = this.sgOff.doubleSetting("Roll Rotation", 0.0, -180.0, 180.0, 5.0, "Static Z-axis rotation.");
+    private final Setting<Double> offRotSpeedX = this.sgOff.doubleSetting("Pitch Velocity", 0.0, -180.0, 180.0, 5.0, "Continuous rotation speed around the X-axis.");
+    private final Setting<Double> offRotSpeedY = this.sgOff.doubleSetting("Yaw Velocity", 0.0, -180.0, 180.0, 5.0, "Continuous rotation speed around the Y-axis.");
+    private final Setting<Double> offRotSpeedZ = this.sgOff.doubleSetting("Roll Velocity", 0.0, -180.0, 180.0, 5.0, "Continuous rotation speed around the Z-axis.");
+
     private float mainRotationX = 0.0F;
     private float mainRotationY = 0.0F;
     private float mainRotationZ = 0.0F;
@@ -50,7 +55,7 @@ public class ViewModel extends Module {
     private long offTime = 0L;
 
     public ViewModel() {
-        super("View Model", "Modifies where hands and held items are rendered.", SubCategory.MISC_VISUAL, false);
+        super("View Model", "Grants precise control over the first-person hand and item camera transformations, including translation, scaling, and rotation.", SubCategory.MISC_VISUAL, false);
         INSTANCE = this;
     }
 

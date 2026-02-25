@@ -23,17 +23,20 @@ import java.util.List;
 
 public class Spectate extends Module {
     private static Spectate INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> ignoreFriends = this.sgGeneral.booleanSetting("Ignore Friends", true, "Doesn't spectate friends.");
-    private final Setting<KeyBind> forwardKey = this.sgGeneral.keySetting("Forward", ".");
-    private final Setting<KeyBind> backKey = this.sgGeneral.keySetting("Back", ".");
+
+    private final Setting<Boolean> ignoreFriends = this.sgGeneral.booleanSetting("Exclude Friends", true, "Prevents the spectator cycle from including players on your friend list.");
+    private final Setting<KeyBind> forwardKey = this.sgGeneral.keySetting("Next Target", "The hotkey used to cycle to the next available player in the sequence.");
+    private final Setting<KeyBind> backKey = this.sgGeneral.keySetting("Previous Target", "The hotkey used to cycle to the previous player in the sequence.");
+
     private final List<PlayerEntity> playerEntities = new ArrayList<>();
     private final MatrixStack stack = new MatrixStack();
     private PlayerEntity target;
     private int prevI = 0;
 
     public Spectate() {
-        super("Spectate", ".", SubCategory.MISC_VISUAL, true);
+        super("Spectate", "Allows you to view the world from the perspective of other players without changing your actual world position.", SubCategory.MISC_VISUAL, true);
         INSTANCE = this;
     }
 

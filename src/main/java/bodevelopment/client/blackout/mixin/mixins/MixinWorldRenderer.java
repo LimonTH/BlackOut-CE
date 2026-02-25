@@ -1,6 +1,6 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
-import bodevelopment.client.blackout.module.modules.visual.misc.Freecam;
+import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
 import bodevelopment.client.blackout.module.modules.visual.world.Ambience;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.WorldRenderer;
@@ -16,7 +16,7 @@ public class MixinWorldRenderer {
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;isThirdPerson()Z"))
     private boolean ignoreRender(Camera instance) {
-        return Freecam.getInstance().enabled || instance.isThirdPerson();
+        return FreeCam.getInstance().enabled || instance.isThirdPerson();
     }
 
     @Inject(

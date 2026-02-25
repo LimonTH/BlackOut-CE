@@ -18,13 +18,14 @@ import java.util.List;
 
 public class FeetESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<List<EntityType<?>>> entities = this.sgGeneral.entityListSetting("Entities", ".", EntityType.PLAYER);
-    private final Setting<RenderShape> renderShape = this.sgGeneral.enumSetting("Render Shape", RenderShape.Full, "Which parts of boxes should be rendered.");
-    private final Setting<BlackOutColor> fill = this.sgGeneral.colorSetting("Fill Color", new BlackOutColor(255, 255, 255, 80), "Fill Color");
-    private final Setting<BlackOutColor> line = this.sgGeneral.colorSetting("Line Color", new BlackOutColor(255, 255, 255, 120), "Line Color");
+
+    private final Setting<List<EntityType<?>>> entities = this.sgGeneral.entityListSetting("Target Filters", "Specifies which entity categories will have their base coordinates highlighted.", EntityType.PLAYER);
+    private final Setting<RenderShape> renderShape = this.sgGeneral.enumSetting("Mesh Mode", RenderShape.Full, "Defines which geometric components (faces, lines, or both) are rendered for the foot-level box.");
+    private final Setting<BlackOutColor> fill = this.sgGeneral.colorSetting("Interior Color", new BlackOutColor(255, 255, 255, 80), "The color and transparency of the polygon faces at the entity's feet.");
+    private final Setting<BlackOutColor> line = this.sgGeneral.colorSetting("Outline Color", new BlackOutColor(255, 255, 255, 120), "The color and transparency of the wireframe edges at the entity's feet.");
 
     public FeetESP() {
-        super("FeetESP", "Shows the feet hitbox does not show feet pictures", SubCategory.ENTITIES, true);
+        super("Feet ESP", "Renders a discrete bounding box at the base of entities to highlight their exact ground position and collision footprint.", SubCategory.ENTITIES, true);
     }
 
     @Event

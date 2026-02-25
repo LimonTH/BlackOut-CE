@@ -24,14 +24,17 @@ import java.util.Map;
 
 public class Highlight extends Module {
     private static Highlight INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<RenderMode> mode = this.sgGeneral.enumSetting("Mode", RenderMode.Fade, ".");
-    private final Setting<Double> moveSpeed = this.sgGeneral.doubleSetting("Move Speed", 1.0, 1.0, 10.0, 0.1, ".", () -> this.mode.get() == RenderMode.Move);
-    private final Setting<RenderShape> shape = this.sgGeneral.enumSetting("Render Shape", RenderShape.Sides, ".");
-    private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Side Color", new BlackOutColor(255, 0, 0, 50), "");
-    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Line Color", new BlackOutColor(255, 0, 0, 255), "");
-    private final Setting<Double> fadeIn = this.sgGeneral.doubleSetting("Fade In Speed", 2.0, 0.0, 20.0, 0.2, "");
-    private final Setting<Double> fadeOut = this.sgGeneral.doubleSetting("Fade Out Speed", 1.0, 0.0, 20.0, 0.2, "");
+
+    private final Setting<RenderMode> mode = this.sgGeneral.enumSetting("Animation Mode", RenderMode.Fade, "The visual style used to transition between highlighted blocks.");
+    private final Setting<Double> moveSpeed = this.sgGeneral.doubleSetting("Translation Speed", 1.0, 1.0, 10.0, 0.1, "The speed at which the selection box slides toward the new target.", () -> this.mode.get() == RenderMode.Move);
+    private final Setting<RenderShape> shape = this.sgGeneral.enumSetting("Mesh Mode", RenderShape.Sides, "Determines which geometric components of the highlighted box are rendered.");
+    private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Face Palette", new BlackOutColor(255, 0, 0, 50), "The color applied to the polygonal faces of the selection box.");
+    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Edge Palette", new BlackOutColor(255, 0, 0, 255), "The color applied to the wireframe edges of the selection box.");
+    private final Setting<Double> fadeIn = this.sgGeneral.doubleSetting("Opacity Attack", 2.0, 0.0, 20.0, 0.2, "How quickly the highlight reaches maximum visibility.");
+    private final Setting<Double> fadeOut = this.sgGeneral.doubleSetting("Opacity Decay", 1.0, 0.0, 20.0, 0.2, "How quickly the highlight vanishes after moving your crosshair.");
+
     private final Map<BlockPos, MutableDouble> alphas = new HashMap<>();
     private Vec3d middle = null;
     private Vec3d targetPos = null;
@@ -44,7 +47,7 @@ public class Highlight extends Module {
     private double alpha = 0.0;
 
     public Highlight() {
-        super("Highlight", ".", SubCategory.MISC_VISUAL, true);
+        super("Highlight", "Draws a customizable geometric box around the block currently targeted by your crosshair.", SubCategory.MISC_VISUAL, true);
         INSTANCE = this;
     }
 

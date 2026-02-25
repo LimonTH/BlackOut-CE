@@ -18,23 +18,21 @@ import java.awt.*;
 
 public class HandESP extends Module {
     private static HandESP INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<ColorMode> colormode = this.sgGeneral.enumSetting("Mode", ColorMode.Custom, "What style to use");
-    private final Setting<Double> saturation = this.sgGeneral
-            .doubleSetting("Rainbow Saturation", 0.8, 0.0, 1.0, 0.1, ".", () -> this.colormode.get() == ColorMode.Rainbow);
-    private final Setting<Double> waveSpeed = this.sgGeneral
-            .doubleSetting("Wave Speed", 2.0, 0.0, 10.0, 0.1, "Slower wave effect", () -> this.colormode.get() == ColorMode.Wave);
-    private final Setting<Double> waveLength = this.sgGeneral
-            .doubleSetting("Wave Length", 2.0, 0.0, 5.0, 0.1, "Longer wave effect", () -> this.colormode.get() == ColorMode.Wave);
-    private final Setting<BlackOutColor> waveColor = this.sgGeneral
-            .colorSetting("Wave Color", new BlackOutColor(125, 125, 125, 255), "Text Color For The Wave", () -> this.colormode.get() == ColorMode.Wave);
-    private final Setting<Integer> dist = this.sgGeneral.intSetting("Distance", 5, 1, 10, 1, ".");
-    private final Setting<Boolean> texture = this.sgGeneral.booleanSetting("Texture", false, ".");
-    private final Setting<BlackOutColor> outsideColor = this.sgGeneral.colorSetting("Outside Color", new BlackOutColor(255, 0, 0, 255), ".");
-    private final Setting<BlackOutColor> insideColor = this.sgGeneral.colorSetting("Inside Color", new BlackOutColor(255, 0, 0, 50), ".");
+
+    public final Setting<ColorMode> colormode = this.sgGeneral.enumSetting("Color Logic", ColorMode.Custom, "The algorithmic style used to calculate the shader colors.");
+    private final Setting<Double> saturation = this.sgGeneral.doubleSetting("Rainbow Intensity", 0.8, 0.0, 1.0, 0.1, "The color richness of the rainbow cycle.", () -> this.colormode.get() == ColorMode.Rainbow);
+    private final Setting<Double> waveSpeed = this.sgGeneral.doubleSetting("Oscillation Speed", 2.0, 0.0, 10.0, 0.1, "How fast the colors transition in Wave mode.", () -> this.colormode.get() == ColorMode.Wave);
+    private final Setting<Double> waveLength = this.sgGeneral.doubleSetting("Oscillation Scale", 2.0, 0.0, 5.0, 0.1, "The spatial frequency of the color wave.", () -> this.colormode.get() == ColorMode.Wave);
+    private final Setting<BlackOutColor> waveColor = this.sgGeneral.colorSetting("Wave Secondary", new BlackOutColor(125, 125, 125, 255), "The secondary color used for wave interpolation.", () -> this.colormode.get() == ColorMode.Wave);
+    private final Setting<Integer> dist = this.sgGeneral.intSetting("Bloom Radius", 5, 1, 10, 1, "The pixel width and intensity of the outer glow effect.");
+    private final Setting<Boolean> texture = this.sgGeneral.booleanSetting("Overlay Texture", false, "Whether to blend the original hand texture with the interior shader color.");
+    private final Setting<BlackOutColor> outsideColor = this.sgGeneral.colorSetting("Outline Palette", new BlackOutColor(255, 0, 0, 255), "The color of the glowing silhouette.");
+    private final Setting<BlackOutColor> insideColor = this.sgGeneral.colorSetting("Interior Palette", new BlackOutColor(255, 0, 0, 50), "The color applied to the hand model itself.");
 
     public HandESP() {
-        super("Hand ESP", "Modifies how hands are rendered.", SubCategory.MISC_VISUAL, true);
+        super("Hand ESP", "Applies post-processing shaders to the view-model (hands and items) to create glowing outlines or custom textures.", SubCategory.MISC_VISUAL, true);
         INSTANCE = this;
     }
 
