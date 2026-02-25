@@ -10,7 +10,7 @@ public class CatGirl extends HudElement {
     public final SettingGroup sgGeneral = this.addGroup("General");
 
     public CatGirl() {
-        super("Cat Girl", "Literally a cat girl.");
+        super("Cat Girl", "Renders a static decorative texture overlay on the HUD interface.");
         TextureRenderer t = BOTextures.getCat2Renderer();
         this.setSize(t.getWidth() / 4.0F, t.getHeight() / 4.0F);
     }

@@ -27,19 +27,17 @@ import java.util.Map.Entry;
 
 public class TabGui extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<ColorMode> selectorMode = this.sgGeneral.enumSetting("Selector Mode", ColorMode.Custom, ".");
-    private final Setting<BlackOutColor> selectorColor = this.sgGeneral
-            .colorSetting("Selector Color", new BlackOutColor(125, 125, 125, 255), "Base color for the selector", () -> this.selectorMode.get() != ColorMode.Rainbow);
-    private final Setting<Double> waveSpeed = this.sgGeneral
-            .doubleSetting("Wave Speed", 2.0, 0.0, 10.0, 0.1, "Speed for the wave effect", () -> this.selectorMode.get() == ColorMode.Wave);
-    private final Setting<BlackOutColor> waveColor = this.sgGeneral
-            .colorSetting("Wave Color", new BlackOutColor(125, 125, 125, 255), "Color For The Wave", () -> this.selectorMode.get() == ColorMode.Wave);
-    private final Setting<Double> saturation = this.sgGeneral
-            .doubleSetting("Rainbow Saturation", 0.8, 0.0, 1.0, 0.1, ".", () -> this.selectorMode.get() == ColorMode.Rainbow);
-    public final Setting<BlackOutColor> textDisabled = this.sgGeneral.colorSetting("Disabled Text", new BlackOutColor(150, 150, 150, 255), ".");
+
+    public final Setting<ColorMode> selectorMode = this.sgGeneral.enumSetting("Selection Logic", ColorMode.Custom, "Determines the visual animation style for the active menu selector.");
+    private final Setting<BlackOutColor> selectorColor = this.sgGeneral.colorSetting("Primary Accent", new BlackOutColor(125, 125, 125, 255), "The base color for the selection bar when not using rainbow effects.", () -> this.selectorMode.get() != ColorMode.Rainbow);
+    private final Setting<Double> waveSpeed = this.sgGeneral.doubleSetting("Oscillation Speed", 2.0, 0.0, 10.0, 0.1, "The frequency of the color transition when in Wave mode.", () -> this.selectorMode.get() == ColorMode.Wave);
+    private final Setting<BlackOutColor> waveColor = this.sgGeneral.colorSetting("Secondary Accent", new BlackOutColor(125, 125, 125, 255), "The target color for the secondary phase of the wave animation.", () -> this.selectorMode.get() == ColorMode.Wave);
+    private final Setting<Double> saturation = this.sgGeneral.doubleSetting("Chroma Intensity", 0.8, 0.0, 1.0, 0.1, "The color saturation level for the rainbow animation profile.", () -> this.selectorMode.get() == ColorMode.Rainbow);
+    public final Setting<BlackOutColor> textDisabled = this.sgGeneral.colorSetting("Inactive Palette", new BlackOutColor(150, 150, 150, 255), "The text color used for modules that are currently disabled.");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, null);
-    private final Setting<Integer> bloomIntensity = this.sgGeneral.intSetting("Selector Bloom Intensity", 1, 0, 2, 1, ".");
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Enabled Text");
+    private final Setting<Integer> bloomIntensity = this.sgGeneral.intSetting("Selection Glow", 1, 0, 2, 1, "The strength of the bloom/glow effect surrounding the active selector.");
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Active Palette");
+
     private final Map<Module, MutableDouble> moduleMap = new HashMap<>();
     private int selectedModule = 0;
     private int selectedParentId = 0;
@@ -51,12 +49,10 @@ public class TabGui extends HudElement {
     private int opened = 0;
 
     public TabGui() {
-        super("Tab GUI", ".");
-
+        super("Tab GUI", "An arrow-key navigated hierarchical menu for rapidly toggling client modules without opening a full ClickGUI.");
         for (Module module : Managers.MODULES.getModules()) {
             this.moduleMap.put(module, new MutableDouble(module.enabled ? 1.0 : 0.0));
         }
-
         this.setSize(75.0F, (BlackOut.FONT.getHeight() + 10.0F) * ParentCategory.categories.size());
         BlackOut.EVENT_BUS.subscribe(this, () -> false);
     }
@@ -163,17 +159,12 @@ public class TabGui extends HudElement {
     }
 
     private void renderSelector(float x, float y) {
-        Color color = Color.WHITE;
-        switch (this.selectorMode.get()) {
-            case Custom:
-                color = this.selectorColor.get().getColor();
-                break;
-            case Rainbow:
-                color = new Color(ColorUtils.getRainbow(4.0F, this.saturation.get().floatValue(), 1.0F, 150L));
-                break;
-            case Wave:
-                color = ColorUtils.getWave(this.selectorColor.get().getColor(), this.waveColor.get().getColor(), this.waveSpeed.get(), 1.0, 1);
-        }
+        Color color = switch (this.selectorMode.get()) {
+            case Custom -> this.selectorColor.get().getColor();
+            case Rainbow -> new Color(ColorUtils.getRainbow(4.0F, this.saturation.get().floatValue(), 1.0F, 150L));
+            case Wave ->
+                    ColorUtils.getWave(this.selectorColor.get().getColor(), this.waveColor.get().getColor(), this.waveSpeed.get(), 1.0, 1);
+        };
 
         RenderUtils.rounded(
                 this.stack,

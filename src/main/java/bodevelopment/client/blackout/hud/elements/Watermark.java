@@ -19,44 +19,19 @@ import java.util.Date;
 
 public class Watermark extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Clean, "What style to use", () -> true);
-    private final Setting<String> extraText = this.sgGeneral
-            .stringSetting("Extra Text", "", "Added text to the client name", () -> this.mode.get() == Mode.Exhibition && BlackOut.TYPE.isDevBuild());
-    public final Setting<SigmaMode> sigmaMode = this.sgGeneral
-            .enumSetting("Sigma Mode", SigmaMode.SigmaJello, "What Sigma style to use", () -> this.mode.get() == Mode.Sigma);
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(
-            this.sgGeneral,
-            () -> this.mode.get() == Mode.Clean
-                    || this.mode.get() == Mode.Simple
-                    || this.mode.get() == Mode.Exhibition
-                    || this.mode.get() == Mode.KassuK,
-            "Text"
-    );
-    private final Setting<BlackOutColor> secondaryColor = this.sgGeneral
-            .colorSetting(
-                    "Secondary Color",
-                    new BlackOutColor(255, 255, 255, 255),
-                    ".",
-                    () -> this.mode.get() == Mode.Simple || this.mode.get() == Mode.Exhibition
-            );
-    private final Setting<Boolean> blur = this.sgGeneral
-            .booleanSetting("Blur", true, ".", () -> this.mode.get() == Mode.Clean || this.mode.get() == Mode.KassuK);
-    private final Setting<Boolean> bg = this.sgGeneral
-            .booleanSetting("Background", true, ".", () -> this.mode.get() == Mode.Clean || this.mode.get() == Mode.KassuK);
-    private final Setting<Boolean> bold = this.sgGeneral.booleanSetting("Bold Font", true, ".", () -> this.mode.get() == Mode.Simple);
-    private final BackgroundMultiSetting background = BackgroundMultiSetting.of(
-            this.sgGeneral,
-            () -> this.mode.get() != Mode.Exhibition
-                    && this.mode.get() != Mode.Virtue
-                    && this.mode.get() != Mode.Remix
-                    && this.mode.get() != Mode.Sigma
-                    && this.mode.get() != Mode.Simple
-                    && this.mode.get() != Mode.GameSense,
-            null
-    );
+
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Visual Theme", Mode.Clean, "The aesthetic style used to display the client branding.");
+    private final Setting<String> extraText = this.sgGeneral.stringSetting("Developer Suffix", "", "Appends custom text after the client name (Visible in developer builds only).", () -> this.mode.get() == Mode.Exhibition && BlackOut.TYPE.isDevBuild());
+    public final Setting<SigmaMode> sigmaMode = this.sgGeneral.enumSetting("Sigma Variation", SigmaMode.SigmaJello, "Switches between the classic Jello or the 'Sugma' variation.", () -> this.mode.get() == Mode.Sigma);
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, () -> this.mode.get() == Mode.Clean || this.mode.get() == Mode.Simple || this.mode.get() == Mode.Exhibition || this.mode.get() == Mode.KassuK, "Primary Palette");
+    private final Setting<BlackOutColor> secondaryColor = this.sgGeneral.colorSetting("Accent Palette", new BlackOutColor(255, 255, 255, 255), "The color used for version numbers or secondary text elements.", () -> this.mode.get() == Mode.Simple || this.mode.get() == Mode.Exhibition);
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a blur effect to the background for improved contrast.", () -> this.mode.get() == Mode.Clean || this.mode.get() == Mode.KassuK);
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Enable Backdrop", true, "Renders a background panel behind the watermark text.", () -> this.mode.get() == Mode.Clean || this.mode.get() == Mode.KassuK);
+    private final Setting<Boolean> bold = this.sgGeneral.booleanSetting("Bold Typography", true, "Utilizes a thicker font weight for the client name.", () -> this.mode.get() == Mode.Simple);
+    private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, () -> this.mode.get() != Mode.Exhibition && this.mode.get() != Mode.Virtue && this.mode.get() != Mode.Remix && this.mode.get() != Mode.Sigma && this.mode.get() != Mode.Simple && this.mode.get() != Mode.GameSense, null);
 
     public Watermark() {
-        super("Watermark", "Renders the client watermark");
+        super("Watermark", "Displays the client name, version, and current session data in various classic and modern styles.");
         this.setSize(10.0F, 10.0F);
     }
 

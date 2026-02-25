@@ -7,10 +7,10 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import java.time.LocalTime;
 
 public class Welcomer extends TextElement {
-    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Simple, ".");
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Greeting Logic", Mode.Simple, "Determines whether to use a static welcome message or a time-of-day specific greeting.");
 
     public Welcomer() {
-        super("Welcomer", "Says hello to you");
+        super("Welcomer", "Displays a personalized greeting and welcome message on the HUD based on the current system time.");
         this.setSize(10.0F, 10.0F);
     }
 

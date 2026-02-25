@@ -10,7 +10,7 @@ public class MewingGuide extends HudElement {
     public final SettingGroup sgGeneral = this.addGroup("General");
 
     public MewingGuide() {
-        super("Mewing Guide", "Helps you mog all of the block game oppz");
+        super("Mewing Guide", "Displays a graphical reference for facial posture techniques to optimize your player character's aesthetic presence.");
         TextureRenderer t = BOTextures.getMewingIconRenderer();
         if (t != null) {
             this.setSize(t.getWidth() / 4.0F, t.getHeight() / 4.0F);

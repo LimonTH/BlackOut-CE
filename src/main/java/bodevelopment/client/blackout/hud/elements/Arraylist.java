@@ -26,27 +26,28 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 public class Arraylist extends HudElement {
-    public static Map<Module, MutableFloat> deltaMap = new HashMap<>();
     public final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<BracketMode> brackets = this.sgGeneral.enumSetting("Bracket Style", BracketMode.None, ".");
-    private final Setting<FilterMode> filterMode = this.sgGeneral.enumSetting("Filter Mode", FilterMode.Blacklist, ".");
-    private final Setting<List<Module>> moduleList = this.sgGeneral
-            .listSetting("Modules", "Only renders these modules.", Managers.MODULES.getModules(), module -> module.name);
-    private final Setting<Boolean> drawInfo = this.sgGeneral.booleanSetting("Show Info", true, ".");
-    private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Rounded", true, "Renders a rounded background (cool af)");
-    private final Setting<Boolean> sideBar = this.sgGeneral.booleanSetting("Side bar", true, "Renders a sidebar", () -> !this.rounded.get());
-    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, "Renders a background");
-    private final Setting<BlackOutColor> bgColor = this.sgGeneral.colorSetting("Background Color", new BlackOutColor(0, 0, 0, 50), ".", this.bg::get);
-    private final Setting<Boolean> useBlur = this.sgGeneral.booleanSetting("Blur", true, "Uses a blur effect", () -> true);
-    private final Setting<Integer> bloomIntensity = this.sgGeneral.intSetting("Bloom Intensity", 3, 0, 10, 1, ".");
-    private final Setting<BlackOutColor> bloomColor = this.sgGeneral.colorSetting("Bloom Color", new BlackOutColor(0, 0, 0, 100), "", () -> this.bloomIntensity.get() > 0);
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Text");
-    private final Setting<BlackOutColor> customInfoColor = this.sgGeneral.colorSetting("Info Color", new BlackOutColor(150, 150, 150, 255), "Info text color.", () -> true);
+
+    public final Setting<BracketMode> brackets = this.sgGeneral.enumSetting("Metadata Brackets", BracketMode.None, "The character set used to enclose module-specific information (e.g., [Speed] vs (Speed)).");
+    private final Setting<FilterMode> filterMode = this.sgGeneral.enumSetting("Visibility Logic", FilterMode.Blacklist, "Determines whether the module list acts as an inclusion or exclusion filter.");
+    private final Setting<List<Module>> moduleList = this.sgGeneral.listSetting("Module Filter", "The specific modules to be prioritized or ignored based on the visibility logic.", Managers.MODULES.getModules(), module -> module.name);
+    private final Setting<Boolean> drawInfo = this.sgGeneral.booleanSetting("Display Metadata", true, "Renders additional state information next to the module name (e.g., the current Aura mode).");
+    private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Dynamic Rounding", true, "Applies modern rounded-rect aesthetics to each module background.");
+    private final Setting<Boolean> sideBar = this.sgGeneral.booleanSetting("Accent Strip", true, "Renders a thin vertical line on the edge of the list for structural definition.", () -> !this.rounded.get());
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Enable Backdrop", true, "Renders a solid or semi-transparent surface behind the text labels.");
+    private final Setting<BlackOutColor> bgColor = this.sgGeneral.colorSetting("Backdrop Color", new BlackOutColor(0, 0, 0, 50), "The color and alpha transparency of the module backgrounds.", this.bg::get);
+    private final Setting<Boolean> useBlur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a blur effect behind the list to isolate it from world-space movement.");
+    private final Setting<Integer> bloomIntensity = this.sgGeneral.intSetting("Glow Magnitude", 3, 0, 10, 1, "The radius of the additive bloom shader applied to the list.");
+    private final Setting<BlackOutColor> bloomColor = this.sgGeneral.colorSetting("Glow Palette", new BlackOutColor(0, 0, 0, 100), "The color applied to the additive bloom layer.", () -> this.bloomIntensity.get() > 0);
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Primary Label");
+    private final Setting<BlackOutColor> customInfoColor = this.sgGeneral.colorSetting("Metadata Palette", new BlackOutColor(150, 150, 150, 255), "The color used specifically for the metadata/info text.");
+
+    public static Map<Module, MutableFloat> deltaMap = new HashMap<>();
     private int i = 0;
     private String info = "";
 
     public Arraylist() {
-        super("Arraylist", "Shows currently enabled modules.");
+        super("Arraylist", "Visualizes active features using a sorted, animated list with advanced post-processing shaders including bloom and blur.");
         this.setSize(75.0F, 125.0F);
     }
 

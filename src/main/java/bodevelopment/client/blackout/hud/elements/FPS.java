@@ -5,7 +5,7 @@ import bodevelopment.client.blackout.hud.TextElement;
 
 public class FPS extends TextElement {
     public FPS() {
-        super("FPS", "Shows your current FPS on screen");
+        super("FPS", "Displays the client's current frames per second to monitor graphical performance.");
         this.setSize(10.0F, 10.0F);
     }
 

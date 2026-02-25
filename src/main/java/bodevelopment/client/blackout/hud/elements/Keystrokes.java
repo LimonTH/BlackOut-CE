@@ -12,18 +12,18 @@ import net.minecraft.client.option.KeyBinding;
 
 public class Keystrokes extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Boolean> useBlur = this.sgGeneral.booleanSetting("Blur", true, "Uses a blur effect", () -> true);
-    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Shadow", true, ".", () -> true);
-    private final Setting<BlackOutColor> shadowColor = this.sgGeneral.colorSetting("Shadow Color", new BlackOutColor(0, 0, 0, 100), "Shadow Color", this.shadow::get);
-    private final Setting<BlackOutColor> pressedShadow = this.sgGeneral
-            .colorSetting("Pressed Shadow", new BlackOutColor(255, 255, 255, 100), "Pressed Shadow Color", this.shadow::get);
-    private final Setting<BlackOutColor> txtdColor = this.sgGeneral.colorSetting("Text Color", new BlackOutColor(255, 255, 255, 255), ".");
-    private final Setting<BlackOutColor> pressedtxtColor = this.sgGeneral.colorSetting("Pressed Text Color", new BlackOutColor(175, 175, 175, 255), ".");
-    private final Setting<BlackOutColor> backgroundColor = this.sgGeneral.colorSetting("Background Color", new BlackOutColor(0, 0, 0, 50), "Background Color");
-    private final Setting<BlackOutColor> pressedColor = this.sgGeneral.colorSetting("Pressed Color", new BlackOutColor(255, 255, 255, 50), "Pressed Color");
+
+    private final Setting<Boolean> useBlur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a real-time blur effect behind the keys for visual depth.");
+    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Structural Shadow", true, "Adds a subtle shadow around each key to simulate elevation.");
+    private final Setting<BlackOutColor> shadowColor = this.sgGeneral.colorSetting("Idle Shadow", new BlackOutColor(0, 0, 0, 100), "The shadow color when a key is not being pressed.");
+    private final Setting<BlackOutColor> pressedShadow = this.sgGeneral.colorSetting("Active Shadow", new BlackOutColor(255, 255, 255, 100), "The shadow color when a key is actively held down.");
+    private final Setting<BlackOutColor> txtdColor = this.sgGeneral.colorSetting("Idle Text", new BlackOutColor(255, 255, 255, 255), "The color of the key labels in their default state.");
+    private final Setting<BlackOutColor> pressedtxtColor = this.sgGeneral.colorSetting("Active Text", new BlackOutColor(175, 175, 175, 255), "The color of the key labels when the key is pressed.");
+    private final Setting<BlackOutColor> backgroundColor = this.sgGeneral.colorSetting("Idle Surface", new BlackOutColor(0, 0, 0, 50), "The background color of the keys in their default state.");
+    private final Setting<BlackOutColor> pressedColor = this.sgGeneral.colorSetting("Active Surface", new BlackOutColor(255, 255, 255, 50), "The background color of the keys when actively pressed.");
 
     public Keystrokes() {
-        super("Keystrokes", "Shows your keystrokes");
+        super("Keystrokes", "Displays a real-time visual representation of movement and jump key inputs.");
         this.setSize(10.0F, 10.0F);
     }
 

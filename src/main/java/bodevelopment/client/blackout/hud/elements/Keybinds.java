@@ -17,19 +17,21 @@ import java.util.List;
 
 public class Keybinds extends HudElement {
     public final SettingGroup sgGeneral = this.addGroup("General");
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Text");
-    private final Setting<BlackOutColor> bindColor = this.sgGeneral.colorSetting("Bind Color", new BlackOutColor(128, 128, 128, 50), ".");
-    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, "Renders a background");
+
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Label Color");
+    private final Setting<BlackOutColor> bindColor = this.sgGeneral.colorSetting("Hotkey Color", new BlackOutColor(128, 128, 128, 50), "The color used for the key designation text.");
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Backdrop", true, "Renders a background panel behind the active keybind list.");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, ".");
-    private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Rounded", true, "", () -> this.bg.get() || this.blur.get());
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a blur effect to the background for increased visual separation.");
+    private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Bezel Rounding", true, "Smooths the corners of the background and blur layers.", () -> this.bg.get() || this.blur.get());
+
     private int i = 0;
     private boolean checked = false;
     private float width = 0.0F;
     private float length = 0.0F;
 
     public Keybinds() {
-        super("Keybinds", "Shows currently enabled bound modules.");
+        super("Keybinds", "Displays a real-time list of currently active modules that have an assigned hotkey.");
         this.setSize(10.0F, 10.0F);
     }
 

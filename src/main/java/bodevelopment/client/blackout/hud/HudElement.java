@@ -16,11 +16,13 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class HudElement {
+    protected final SettingGroup sgScale = this.addGroup("Sizing");
+
+    private final Setting<Double> scale = this.sgScale.doubleSetting("Master Scale", 1.0, 0.1, 10.0, 0.1, "The global scale multiplier applied to this interface element.");
+
     public final List<SettingGroup> settingGroups = new ArrayList<>();
     public final String name;
     public final String description;
-    protected final SettingGroup sgScale = this.addGroup("Scale");
-    private final Setting<Double> scale = this.sgScale.doubleSetting("Scale", 1.0, 0.1, 10.0, 0.1, ".");
     public float x = 0.0F;
     public float y = 0.0F;
     public int id;
@@ -30,7 +32,6 @@ public class HudElement {
     protected MatrixStack stack;
     private float width = 0.0F;
     private float height = 0.0F;
-
     public HudElement(String name, String description) {
         this.name = name;
         this.description = description;

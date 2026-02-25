@@ -19,20 +19,23 @@ import java.awt.*;
 public class ArmorHUD extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgColor = this.addGroup("Color");
-    private final Setting<Boolean> reversed = this.sgGeneral.booleanSetting("Reversed", false, ".");
-    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Background", true, "Renders a background");
+
+    // TODO: armorBG нигде не используется
+    private final Setting<Boolean> reversed = this.sgGeneral.booleanSetting("Invert Order", false, "Flips the rendering sequence of armor pieces from Helmet-to-Boots to Boots-to-Helmet.");
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Backdrop", true, "Renders a background panel behind the armor icons.");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> armorBG = this.sgGeneral.booleanSetting("Armor BG", true, ".");
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur", true, "Renders a Blur effect");
-    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Shadow", true, "Renders a Shadow");
-    private final Setting<Boolean> bar = this.sgGeneral.booleanSetting("% Bar", false, "Renders a bar");
-    private final Setting<Boolean> text = this.sgGeneral.booleanSetting("% Text", true, ".");
-    private final Setting<Boolean> centerText = this.sgGeneral.booleanSetting("Center Text", true, ".");
-    private final RoundedColorMultiSetting armorBar = RoundedColorMultiSetting.of(this.sgGeneral, "Armor Bar");
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Text");
+    private final Setting<Boolean> armorBG = this.sgGeneral.booleanSetting("Slot Overlay", true, "Renders a distinct background for each individual armor slot.");
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Blur", true, "Applies a blur effect behind the element for visual depth.");
+    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Drop Shadow", true, "Adds a subtle shadow effect to the background panel.");
+    private final Setting<Boolean> bar = this.sgGeneral.booleanSetting("Durability Bar", false, "Visualizes remaining durability as a horizontal progress bar.");
+    private final Setting<Boolean> text = this.sgGeneral.booleanSetting("Percentage Text", true, "Displays the remaining durability as a numerical percentage.");
+    private final Setting<Boolean> centerText = this.sgGeneral.booleanSetting("Align Center", true, "Centers the durability text relative to the armor icon.");
+    private final RoundedColorMultiSetting armorBar = RoundedColorMultiSetting.of(this.sgGeneral, "Bar Palette");
+
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Text Palette");
 
     public ArmorHUD() {
-        super("Armor HUD", ".");
+        super("Armor HUD", "Displays a live overview of your equipped armor pieces, including item icons and precise durability monitoring.");
         this.setSize(80.0F, 19.0F);
     }
 
