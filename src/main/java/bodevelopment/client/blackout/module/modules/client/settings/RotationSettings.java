@@ -404,7 +404,7 @@ public class RotationSettings extends SettingsModule {
         if (length <= 1) {
             return this.averageSpeed.get();
         } else {
-            FloatFloatPair prev = list.get(0);
+            FloatFloatPair prev = list.getFirst();
             double total = 0.0;
 
             for (int i = 1; i < length; i++) {

@@ -8,11 +8,13 @@ import net.minecraft.util.math.Box;
 
 public class CollisionShrink extends Module {
     private static CollisionShrink INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final Setting<Integer> shrinkAmount = this.sgGeneral.intSetting("Shrink Amount", 1, 1, 10, 1, ".");
+
+    private final Setting<Integer> shrinkAmount = this.sgGeneral.intSetting("Compression Level", 1, 1, 10, 1, "The intensity of the bounding box contraction. Higher values increase the likelihood of phasing through block edges.");
 
     public CollisionShrink() {
-        super("Collision Shrink", "Shrinks your bounding box to phase inside walls.", SubCategory.MOVEMENT, false);
+        super("Collision Shrink", "Slightly contracts your horizontal bounding box to allow for clipping through narrow gaps or block corners.", SubCategory.MOVEMENT, false);
         INSTANCE = this;
     }
 

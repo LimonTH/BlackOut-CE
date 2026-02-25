@@ -12,20 +12,24 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 
 public class TickShift extends Module {
     private static TickShift INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<SmoothMode> smooth = this.sgGeneral.enumSetting("Smoothness", SmoothMode.Exponent, ".");
-    public final Setting<Integer> packets = this.sgGeneral.intSetting("Packets", 20, 0, 100, 1, "How many packets to store for later use.");
-    public final Setting<Double> timer = this.sgGeneral.doubleSetting("Timer", 2.0, 0.0, 10.0, 0.1, "How many packets to send every movement tick.");
     private final SettingGroup sgCharge = this.addGroup("Charge");
-    public final Setting<ChargeMode> chargeMode = this.sgCharge.enumSetting("Charge Mode", ChargeMode.Strict, ".");
-    public final Setting<Double> chargeSpeed = this.sgCharge.doubleSetting("Charge Speed", 1.0, 0.0, 5.0, 0.05, ".");
-    private final Setting<Boolean> step = this.sgGeneral.booleanSetting("Use Step", false, ".");
+
+    public final Setting<SmoothMode> smooth = this.sgGeneral.enumSetting("Interpolation Mode", SmoothMode.Exponent, "The mathematical curve used to transition the timer back to its base value.");
+    public final Setting<Integer> packets = this.sgGeneral.intSetting("Packet Capacity", 20, 0, 100, 1, "The maximum number of game ticks that can be stored while stationary.");
+    public final Setting<Double> timer = this.sgGeneral.doubleSetting("Shift Intensity", 2.0, 0.0, 10.0, 0.1, "The clock speed multiplier applied when discharging stored packets.");
+    private final Setting<Boolean> step = this.sgGeneral.booleanSetting("Synchronize Step", false, "Allows the Step module to utilize the accelerated timer for faster elevation changes.");
+
+    public final Setting<ChargeMode> chargeMode = this.sgCharge.enumSetting("Accumulation Logic", ChargeMode.Strict, "Defines the conditions required to begin storing game ticks.");
+    public final Setting<Double> chargeSpeed = this.sgCharge.doubleSetting("Charge Velocity", 1.0, 0.0, 5.0, 0.05, "The rate at which the packet buffer is filled.");
+
     public double unSent = 0.0;
     private boolean lastMoving = false;
     private boolean shouldResetTimer = false;
 
     public TickShift() {
-        super("Tick Shift", "Stores packets when standing still and uses them when you start moving.", SubCategory.MOVEMENT, true);
+        super("Tick Shift", "Accumulates unused game ticks while stationary and discharges them upon movement to achieve a burst of speed.", SubCategory.MOVEMENT, true);
         INSTANCE = this;
     }
 

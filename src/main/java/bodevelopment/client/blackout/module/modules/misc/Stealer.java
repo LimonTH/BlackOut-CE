@@ -260,7 +260,7 @@ public class Stealer extends Module {
         this.movesLeft = this.movesLeft + this.speed.get() / 20.0;
 
         while ((this.movesLeft > 0.0 || this.instant.get()) && !this.movable.isEmpty()) {
-            this.move(handler, this.movable.remove(0));
+            this.move(handler, this.movable.removeFirst());
         }
 
         this.movesLeft = Math.min(this.movesLeft, 1.0);

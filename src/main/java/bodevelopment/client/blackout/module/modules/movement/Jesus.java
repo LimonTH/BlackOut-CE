@@ -19,17 +19,17 @@ import net.minecraft.registry.tag.FluidTags;
 
 public class Jesus extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.NCP, ".", () -> true);
-    private final Setting<Boolean> toggle = this.sgGeneral
-            .booleanSetting("Anti Rubberband", true, "Tries to prevent extra rubberbanding", () -> this.mode.get() == Mode.NCP_Fast);
-    private final Setting<Double> bob = this.sgGeneral.doubleSetting("Bob force", 0.005, 0.0, 1.0, 0.005, "How much to bob", () -> this.mode.get() == Mode.NCP_Fast);
-    private final Setting<Double> waterSpeed = this.sgGeneral
-            .doubleSetting("Water speed", 1.175, 0.0, 2.0, 0.005, "0.265 is generally better", () -> this.mode.get() == Mode.NCP_Fast);
+
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Bypass Mode", Mode.NCP, "The specific anti-cheat bypass logic to use for walking on fluids.");
+    private final Setting<Boolean> toggle = this.sgGeneral.booleanSetting("Anti-Rubberband", true, "Automatically reduces speed upon detecting a server-side position setback to maintain stability.", () -> this.mode.get() == Mode.NCP_Fast);
+    private final Setting<Double> bob = this.sgGeneral.doubleSetting("Buoyancy Force", 0.005, 0.0, 1.0, 0.005, "The upward vertical velocity applied to keep the player above the fluid surface.", () -> this.mode.get() == Mode.NCP_Fast);
+    private final Setting<Double> waterSpeed = this.sgGeneral.doubleSetting("Surface Velocity", 1.175, 0.0, 2.0, 0.005, "The horizontal movement speed while traversing the surface of the fluid.", () -> this.mode.get() == Mode.NCP_Fast);
+
     private boolean inWater = false;
     private boolean isSlowed = false;
 
     public Jesus() {
-        super("Jesus", "Walks on water", SubCategory.MOVEMENT, true);
+        super("Jesus", "Allows the player to walk on the surface of water and lava as if they were solid blocks.", SubCategory.MOVEMENT, true);
     }
 
     @Override

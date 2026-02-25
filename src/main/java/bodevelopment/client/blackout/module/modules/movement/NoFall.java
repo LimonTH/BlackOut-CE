@@ -13,14 +13,16 @@ import net.minecraft.util.math.Vec3d;
 
 public class NoFall extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Mode", Mode.Packet, ".", () -> true);
+
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Bypass Mode", Mode.Packet, "The logic used to trick the server into resetting fall distance.");
+
     private float fallDist;
     private float lastFallDist = 0.0F;
     private boolean tg = false;
     private boolean grim = false;
 
     public NoFall() {
-        super("NoFall", "Prevents fall damage", SubCategory.MOVEMENT, true);
+        super("No Fall", "Protects the player from taking fall damage by spoofing on-ground status or manipulating packet flow.", SubCategory.MOVEMENT, true);
     }
 
     @Override

@@ -18,19 +18,22 @@ import net.minecraft.util.math.Vec3d;
 
 public class PhaseWalk extends Module {
     private static PhaseWalk INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Boolean> useTimer = this.sgGeneral.booleanSetting("Use Timer", false, "Uses timer when stepping.");
-    public final Setting<Double> timer = this.sgGeneral.doubleSetting("Timer", 1.5, 0.0, 10.0, 0.1, "Packet multiplier.", this.useTimer::get);
-    private final Setting<Boolean> stopRotation = this.sgGeneral.booleanSetting("Stop Rotation", true, ".");
-    private final Setting<Integer> preTicks = this.sgGeneral.intSetting("Pre Ticks", 1, 0, 20, 1, ".", this.stopRotation::get);
-    private final Setting<Integer> postTicks = this.sgGeneral.intSetting("Post Ticks", 1, 0, 20, 1, ".", this.stopRotation::get);
-    private final Setting<Boolean> syncPacket = this.sgGeneral.booleanSetting("Sync Packet", true, ".");
-    private final Setting<Boolean> phasedCheck = this.sgGeneral.booleanSetting("Phased Check", true, ".");
-    private final Setting<Boolean> onGroundCheck = this.sgGeneral.booleanSetting("On Ground Check", true, ".");
-    private final Setting<Boolean> descend = this.sgGeneral.booleanSetting("Descend", true, ".");
-    private final Setting<Boolean> ascend = this.sgGeneral.booleanSetting("Ascend", true, ".");
-    private final Setting<Boolean> stopWait = this.sgGeneral.booleanSetting("Stop Wait", true, ".");
-    private final Setting<Boolean> resync = this.sgGeneral.booleanSetting("Resync", true, ".");
+
+    public final Setting<Boolean> useTimer = this.sgGeneral.booleanSetting("Timer Synchronization", false, "Engages the client-side timer to accelerate packet throughput during phasing maneuvers.");
+    public final Setting<Double> timer = this.sgGeneral.doubleSetting("Timer Multiplier", 1.5, 0.0, 10.0, 0.1, "The factor by which game speed is increased.", this.useTimer::get);
+    private final Setting<Boolean> stopRotation = this.sgGeneral.booleanSetting("Rotation Lock", true, "Prevents look-direction updates during sensitive phase transitions to avoid server-side setbacks.");
+    private final Setting<Integer> preTicks = this.sgGeneral.intSetting("Transition Lead", 1, 0, 20, 1, "The number of ticks to wait for rotations to stabilize before initiating movement.", this.stopRotation::get);
+    private final Setting<Integer> postTicks = this.sgGeneral.intSetting("Transition Recovery", 1, 0, 20, 1, "The number of ticks to remain locked after movement to ensure the server processes the phase.", this.stopRotation::get);
+    private final Setting<Boolean> syncPacket = this.sgGeneral.booleanSetting("Force Sync", true, "Transmits a coordinate verification packet to force the server to acknowledge the new position.");
+    private final Setting<Boolean> phasedCheck = this.sgGeneral.booleanSetting("Collision Validation", true, "Only applies phase logic when the player's bounding box is actively intersecting a block.");
+    private final Setting<Boolean> onGroundCheck = this.sgGeneral.booleanSetting("Ground Validation", true, "Restricts phasing movement to when the player is making contact with the ground.");
+    private final Setting<Boolean> descend = this.sgGeneral.booleanSetting("Auto Descend", true, "Enables specialized vertical phasing through floors when sneaking.");
+    private final Setting<Boolean> ascend = this.sgGeneral.booleanSetting("Auto Ascend", true, "Enables specialized vertical phasing through ceilings when jumping.");
+    private final Setting<Boolean> stopWait = this.sgGeneral.booleanSetting("Static Wait", true, "Completely halts horizontal velocity during the rotation lead-in phase.");
+    private final Setting<Boolean> resync = this.sgGeneral.booleanSetting("Position Resync", true, "Sends a final boundary-reset packet upon disabling to prevent rubberbands.");
+
     private boolean waitingForPhase = false;
     private int sincePhase = 0;
     private int sinceRotation = 0;
@@ -45,7 +48,7 @@ public class PhaseWalk extends Module {
     private boolean rubberbanded = false;
 
     public PhaseWalk() {
-        super("Phase Walk", ".", SubCategory.MOVEMENT, true);
+        super("Phase Walk", "Allows the player to travel through solid blocks by synchronizing small movement increments with boundary-reset packets.", SubCategory.MOVEMENT, true);
         INSTANCE = this;
     }
 

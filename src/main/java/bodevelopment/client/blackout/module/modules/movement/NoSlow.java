@@ -19,21 +19,22 @@ import net.minecraft.util.Hand;
 
 public class NoSlow extends Module {
     private static NoSlow INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgStrict = this.addGroup("Strict");
-    private final Setting<Boolean> blocking = this.sgGeneral.booleanSetting("Blocking", false, ".");
-    private final Setting<Boolean> using = this.sgGeneral.booleanSetting("Using", false, ".");
-    private final Setting<Boolean> strict = this.sgStrict.booleanSetting("Strict", false, "Sends switch packets to bypass NCP noslow checks.");
-    private final Setting<Boolean> grim = this.sgStrict
-            .booleanSetting("Grim", false, "Switches to a different slot instead of sending switch packet to the current one.", this.strict::get);
-    private final Setting<Boolean> single = this.sgStrict
-            .booleanSetting("Single Packet", true, "Only sends 1 switch packet after starting to eat. Works on most servers that require this module.", this.strict::get);
-    private final Setting<Integer> delay = this.sgStrict
-            .intSetting("Delay", 1, 1, 20, 1, "Tick delay between switch packets.", () -> !this.single.get() && this.strict.get());
+
+    private final Setting<Boolean> blocking = this.sgGeneral.booleanSetting("Sword Blocking", false, "Prevents the movement penalty while blocking with a sword.");
+    private final Setting<Boolean> using = this.sgGeneral.booleanSetting("Item Usage", false, "Prevents the movement penalty while consuming food, potions, or using other items.");
+
+    private final Setting<Boolean> strict = this.sgStrict.booleanSetting("NCP Bypass", false, "Synchronizes slot updates with item usage to bypass stricter Anti-Cheat checks.");
+    private final Setting<Boolean> grim = this.sgStrict.booleanSetting("Grim Strategy", false, "Utilizes alternative slot switching logic specifically designed for the Grim Anti-Cheat.", this.strict::get);
+    private final Setting<Boolean> single = this.sgStrict.booleanSetting("Single Sync", true, "Sends only a single synchronization packet upon item usage initiation.", this.strict::get);
+    private final Setting<Integer> delay = this.sgStrict.intSetting("Sync Interval", 1, 1, 20, 1, "The tick delay between repeated synchronization packets.", () -> !this.single.get() && this.strict.get());
+
     private int timer = 0;
 
     public NoSlow() {
-        super("No Slow", "Prevents slowing down.", SubCategory.MOVEMENT, true);
+        super("No Slow", "Negates the movement speed reduction usually applied when using items or blocking.", SubCategory.MOVEMENT, true);
         INSTANCE = this;
     }
 

@@ -126,8 +126,8 @@ public class Quiver extends Module {
     private boolean updateMoving() {
         if (BlackOut.mc.player.currentScreenHandler instanceof PlayerScreenHandler && !this.actions.isEmpty()) {
             while (this.movesLeft > 0.0 && !this.actions.isEmpty()) {
-                this.click(this.actions.get(0));
-                this.actions.remove(0);
+                this.click(this.actions.getFirst());
+                this.actions.removeFirst();
                 this.movesLeft--;
             }
             if (this.actions.isEmpty() && this.closeInv.get() && BlackOut.mc.player.currentScreenHandler instanceof PlayerScreenHandler) {

@@ -17,16 +17,16 @@ import java.util.List;
 
 public class Step extends Module {
     private static Step INSTANCE;
+
     public final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<StepMode> stepMode = this.sgGeneral.enumSetting("Step Mode", StepMode.NCP, ".");
-    public final Setting<Boolean> slow = this.sgGeneral.booleanSetting("Slow", false, "Moves up slowly.", () -> this.stepMode.get() != StepMode.Vanilla);
-    public final Setting<Boolean> useTimer = this.sgGeneral
-            .booleanSetting("Use Timer", false, "Uses timer when stepping.", () -> this.slow.get() && this.stepMode.get() != StepMode.Vanilla);
-    public final Setting<Double> timer = this.sgGeneral
-            .doubleSetting("Timer", 2.0, 0.0, 10.0, 0.1, "Packet multiplier.", () -> this.slow.get() && this.stepMode.get() != StepMode.Vanilla && this.useTimer.get());
-    public final Setting<Double> cooldown = this.sgGeneral
-            .doubleSetting("Cooldown", 0.0, 0.0, 1.0, 0.01, "Time between steps.", () -> this.stepMode.get() != StepMode.Vanilla);
-    public final Setting<Double> height = this.sgGeneral.doubleSetting("Height", 2.0, 0.0, 4.0, 0.05, ".");
+
+    public final Setting<StepMode> stepMode = this.sgGeneral.enumSetting("Elevation Logic", StepMode.NCP, "Determines the packet sequence used to transition between different heights.");
+    public final Setting<Boolean> slow = this.sgGeneral.booleanSetting("Interpolated Step", false, "Spreads the elevation packets over multiple ticks to mimic natural movement.", () -> this.stepMode.get() != StepMode.Vanilla);
+    public final Setting<Boolean> useTimer = this.sgGeneral.booleanSetting("Tick Synchronization", false, "Engages the client timer during the stepping process to maintain velocity.", () -> this.slow.get() && this.stepMode.get() != StepMode.Vanilla);
+    public final Setting<Double> timer = this.sgGeneral.doubleSetting("Timer Intensity", 2.0, 0.0, 10.0, 0.1, "The multiplier applied to game speed while stepping.", () -> this.slow.get() && this.stepMode.get() != StepMode.Vanilla && this.useTimer.get());
+    public final Setting<Double> cooldown = this.sgGeneral.doubleSetting("Activation Delay", 0.0, 0.0, 1.0, 0.01, "The minimum time interval required between successful step executions.", () -> this.stepMode.get() != StepMode.Vanilla);
+    public final Setting<Double> height = this.sgGeneral.doubleSetting("Maximum Rise", 2.0, 0.0, 4.0, 0.05, "The maximum vertical distance the module is permitted to traverse.");
+
     public boolean shouldResetTimer = false;
     public int stepProgress = -1;
     public int sinceStep = 0;
@@ -36,7 +36,7 @@ public class Step extends Module {
     public Vec3d prevMovement = Vec3d.ZERO;
 
     public Step() {
-        super("Step", "Makes you sprint", SubCategory.MOVEMENT, true);
+        super("Step", "Allows the player to instantly ascend blocks of varying heights without jumping by utilizing coordinate packet offsets.", SubCategory.MOVEMENT, true);
         INSTANCE = this;
     }
 

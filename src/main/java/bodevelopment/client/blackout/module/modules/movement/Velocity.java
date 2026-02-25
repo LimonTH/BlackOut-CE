@@ -33,34 +33,32 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class Velocity extends Module {
     private static Velocity INSTANCE;
+
     private final SettingGroup sgKnockback = this.addGroup("Knockback");
-    public final Setting<Mode> mode = this.sgKnockback.enumSetting("Mode", Mode.Simple, ".");
-    public final Setting<Double> horizontal = this.sgKnockback
-            .doubleSetting("Horizontal", 0.0, 0.0, 1.0, 0.01, "Multiplier for horizontal knockback.", () -> this.mode.get() == Mode.Simple);
-    public final Setting<Double> vertical = this.sgKnockback
-            .doubleSetting("Vertical", 0.0, 0.0, 1.0, 0.01, "Multiplier for vertical knockback.", () -> this.mode.get() == Mode.Simple);
-    public final Setting<Double> hChance = this.sgKnockback
-            .doubleSetting("Horizontal Chance", 1.0, 0.0, 1.0, 0.01, "Chance for horizontal knockback.", () -> this.mode.get() == Mode.Simple);
-    public final Setting<Double> vChance = this.sgKnockback
-            .doubleSetting("Vertical Chance", 1.0, 0.0, 1.0, 0.01, "Chance for vertical knockback.", () -> this.mode.get() == Mode.Simple);
-    public final Setting<Double> chance = this.sgKnockback
-            .doubleSetting("Chance", 1.0, 0.0, 1.0, 0.01, "Chance for knockback.", () -> this.mode.get() == Mode.Grim);
-    private final Setting<Boolean> single = this.sgKnockback.booleanSetting("Single", true, ".", () -> this.mode.get() == Mode.Grim);
-    private final Setting<Integer> minDelay = this.sgKnockback.intSetting("Min Delay", 0, 0, 20, 1, ".", () -> this.mode.get() == Mode.Delayed);
-    private final Setting<Integer> maxDelay = this.sgKnockback.intSetting("Max Delay", 10, 0, 20, 1, ".", () -> this.mode.get() == Mode.Delayed);
-    private final Setting<Boolean> delayExplosion = this.sgKnockback.booleanSetting("Delay Explosion", false, ".", () -> this.mode.get() == Mode.Delayed);
-    public final Setting<Boolean> fishingHook = this.sgKnockback.booleanSetting("Fishing Hook", true, ".");
     private final SettingGroup sgPush = this.addGroup("Push");
-    public final Setting<PushMode> entityPush = this.sgPush.enumSetting("Entity Push", PushMode.Ignore, "Prevents you from being pushed by entities.");
-    public final Setting<Double> acceleration = this.sgPush
-            .doubleSetting("Acceleration", 1.0, 0.0, 2.0, 0.02, ".", () -> this.entityPush.get() == PushMode.Accelerate);
-    public final Setting<Boolean> blockPush = this.sgPush.booleanSetting("Block Push", true, "Prevents you from being pushed by blocks.");
-    private final Setting<Boolean> explosions = this.sgKnockback.booleanSetting("Explosions", true, ".");
+
+    public final Setting<Mode> mode = this.sgKnockback.enumSetting("Reduction Mode", Mode.Simple, "The algorithm used to process incoming velocity packets.");
+    public final Setting<Double> horizontal = this.sgKnockback.doubleSetting("Horizontal Factor", 0.0, 0.0, 1.0, 0.01, "The percentage of horizontal impulse to retain (0% is full cancel).", () -> this.mode.get() == Mode.Simple);
+    public final Setting<Double> vertical = this.sgKnockback.doubleSetting("Vertical Factor", 0.0, 0.0, 1.0, 0.01, "The percentage of vertical impulse to retain.", () -> this.mode.get() == Mode.Simple);
+    public final Setting<Double> hChance = this.sgKnockback.doubleSetting("Horizontal Probability", 1.0, 0.0, 1.0, 0.01, "The likelihood that horizontal reduction will be applied to a packet.", () -> this.mode.get() == Mode.Simple);
+    public final Setting<Double> vChance = this.sgKnockback.doubleSetting("Vertical Probability", 1.0, 0.0, 1.0, 0.01, "The likelihood that vertical reduction will be applied to a packet.", () -> this.mode.get() == Mode.Simple);
+    public final Setting<Double> chance = this.sgKnockback.doubleSetting("Execution Chance", 1.0, 0.0, 1.0, 0.01, "The overall probability of the velocity cancellation triggering.", () -> this.mode.get() == Mode.Grim);
+    private final Setting<Boolean> single = this.sgKnockback.booleanSetting("Buffered Mode", true, "Consolidates multiple velocity updates into a single correction to reduce packet overhead.", () -> this.mode.get() == Mode.Grim);
+    private final Setting<Integer> minDelay = this.sgKnockback.intSetting("Minimum Latency", 0, 0, 20, 1, "Minimum tick delay before the velocity packet is released.", () -> this.mode.get() == Mode.Delayed);
+    private final Setting<Integer> maxDelay = this.sgKnockback.intSetting("Maximum Latency", 10, 0, 20, 1, "Maximum tick delay before the velocity packet is released.", () -> this.mode.get() == Mode.Delayed);
+    private final Setting<Boolean> delayExplosion = this.sgKnockback.booleanSetting("Buffer Explosions", false, "Applies the latency delay to explosion-based velocity updates.", () -> this.mode.get() == Mode.Delayed);
+    public final Setting<Boolean> fishingHook = this.sgKnockback.booleanSetting("Hook Immunity", true, "Negates knockback from fishing rod hooks.");
+    private final Setting<Boolean> explosions = this.sgKnockback.booleanSetting("Explosive Immunity", true, "Applies velocity reduction logic to TNT and crystal explosions.");
+
+    public final Setting<PushMode> entityPush = this.sgPush.enumSetting("Entity Collision", PushMode.Ignore, "Determines the interaction logic when colliding with other entities.");
+    public final Setting<Double> acceleration = this.sgPush.doubleSetting("Force Multiplier", 1.0, 0.0, 2.0, 0.02, "The strength of the repulsive force applied during entity collisions.", () -> this.entityPush.get() == PushMode.Accelerate);
+    public final Setting<Boolean> blockPush = this.sgPush.booleanSetting("Block Collision", true, "Prevents kinetic energy from blocks (like pistons) from moving the player.");
+
     private final TickTimerList<Pair<Vec3d, Boolean>> delayed = new TickTimerList<>(false);
     public boolean grim = false;
 
     public Velocity() {
-        super("Velocity", "Modifies knockback taken.", SubCategory.MOVEMENT, true);
+        super("Velocity", "Mitigates or negates knockback received from entities, projectiles, and environmental hazards.", SubCategory.MOVEMENT, true);
         INSTANCE = this;
     }
 
@@ -231,15 +229,12 @@ public class Velocity extends Module {
     }
 
     private boolean validForCollisions(Entity entity) {
-        if (entity instanceof FakePlayerEntity) {
-            return false;
-        } else if (entity instanceof BoatEntity) {
-            return true;
-        } else if (entity instanceof MinecartEntity) {
-            return true;
-        } else {
-            return entity instanceof LivingEntity && !(entity instanceof ArmorStandEntity);
-        }
+        return switch (entity) {
+            case FakePlayerEntity fakePlayerEntity -> false;
+            case BoatEntity boatEntity -> true;
+            case MinecartEntity minecartEntity -> true;
+            default -> entity instanceof LivingEntity && !(entity instanceof ArmorStandEntity);
+        };
     }
 
     private int getDelay() {
