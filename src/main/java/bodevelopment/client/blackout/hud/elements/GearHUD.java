@@ -58,7 +58,7 @@ public class GearHUD extends HudElement {
             for (Item item : this.items.get()) {
                 int amount = this.getAmount(item);
                 this.textColor.render(this.stack, String.valueOf(amount), this.textScale.get().floatValue(), textWidth / 2.0F, 8.0F, true, true);
-                RenderUtils.renderItem(this.stack, item.getDefaultStack(), textWidth, 0.0F, 16.0F);
+                RenderUtils.renderItem(this.stack, item.getDefaultStack(), textWidth, 0.0F, 16.0F, 500.0F, true);
                 this.stack.translate(0.0F, 22.0F, 0.0F);
             }
 
