@@ -13,9 +13,9 @@ A highly customizable and optimized Minecraft utility client, modernized and mai
 
 ## 🛠 Current TASKS (TODO)
 
-- `Paste modules description`
 - `Create localization settings(RUS/ENG)`
-- `Fix the logic for rendering items on the screen (they seem to render in the dark)`
+- `@OnlyDev need fixes`
+
 ---
 
 ## 💻 Tech Stack
@@ -70,9 +70,8 @@ Since I am developing this project solo, any feedback or bug reports are highly 
 
 ## 🛠 Текущие ЗАДАЧИ (TODO)
 
-- `Вставить описания для всех модулей`
 - `Создать настройки локализации (RUS/ENG)`
-- `Починить логику рендеринга предметов на экране (они как будто бы в темноте рендерятся)`
+- `@OnlyDev нужны фиксы`
 
 ---
 
