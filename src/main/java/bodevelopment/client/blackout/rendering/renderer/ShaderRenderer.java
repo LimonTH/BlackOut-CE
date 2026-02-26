@@ -5,6 +5,7 @@ import bodevelopment.client.blackout.rendering.shader.Shader;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.render.BufferRenderer;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
@@ -143,7 +144,12 @@ public class ShaderRenderer extends Renderer {
             GL13C.glActiveTexture(33984);
         }
 
-        shader.render(this.renderBuffer, setup);
+        if (shader != null) {
+            shader.render(this.renderBuffer, setup);
+        } else {
+            BufferRenderer.draw(this.renderBuffer.end());
+        }
+
         RenderSystem.disableBlend();
     }
 }
