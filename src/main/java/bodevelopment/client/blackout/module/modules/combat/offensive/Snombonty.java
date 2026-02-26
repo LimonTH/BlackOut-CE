@@ -83,6 +83,18 @@ public class Snombonty extends MoveUpdateModule {
         super("Snombonty", "Rapidly spams snowballs or eggs at entities using advanced trajectory prediction.", SubCategory.OFFENSIVE);
     }
 
+    @Override
+    public void onEnable() {
+        this.target = null;
+        this.throwsLeft = 0;
+    }
+
+    @Override
+    public void onDisable() {
+        this.target = null;
+        this.extMap.clear();
+    }
+
     @Event
     public void onRender(RenderEvent.World.Post event) {
         if (BlackOut.mc.player != null && BlackOut.mc.world != null && this.target != null) {
@@ -175,6 +187,11 @@ public class Snombonty extends MoveUpdateModule {
     }
 
     private void update(boolean allowAction) {
+        if (BlackOut.mc.player == null || BlackOut.mc.world == null) {
+            this.target = null;
+            this.targetBox = null;
+            return;
+        }
         this.throwsLeft = this.throwsLeft + this.throwSpeed.get() / 20.0;
         this.result = this.switchMode.get().find(this.predicate);
         this.throwUpdate(allowAction);
@@ -182,26 +199,30 @@ public class Snombonty extends MoveUpdateModule {
     }
 
     private void throwUpdate(boolean allowAction) {
+        if (!BlackOut.mc.player.isAlive()) return;
+
         Hand hand = OLEPOSSUtils.getHand(this.predicate);
-        if (hand != null || this.result.wasFound()) {
+        if (hand != null || (this.result != null && this.result.wasFound())) {
             if (this.rotate((float) this.yaw, (float) this.pitch, 0.0, 10.0, RotationType.Other.withInstant(this.instantRotate.get()), "throwing")) {
                 if (allowAction) {
-                    if (hand == null) {
-                        if (this.result.wasFound()) {
-                            this.balls = Math.min((int) Math.floor(this.throwsLeft), this.result.amount());
-                        }
-                    } else {
+
+                    if (hand != null) {
                         this.balls = this.getBalls(hand);
+                    } else if (this.result.wasFound()) {
+                        this.balls = Math.min((int) Math.floor(this.throwsLeft), this.result.amount());
                     }
 
-                    while (this.balls > 0) {
+                    int maxIterations = 64;
+                    while (this.balls > 0 && maxIterations > 0) {
                         this.throwSnowBall(hand);
                         this.balls--;
                         this.throwsLeft--;
+                        maxIterations--;
                     }
 
                     if (this.switched) {
                         this.switchMode.get().swapBack();
+                        this.switched = false;
                     }
                 }
             }
@@ -229,21 +250,34 @@ public class Snombonty extends MoveUpdateModule {
     private void findTarget() {
         this.target = null;
         double dist = 10000.0;
+        double maxRange = this.range.get();
 
         for (Entity entity : BlackOut.mc.world.getEntities()) {
-            if (entity != BlackOut.mc.player && entity instanceof LivingEntity && (!this.onlyPlayers.get() || entity instanceof PlayerEntity)) {
-                Box box = entity instanceof AbstractClientPlayerEntity pl && this.extMap.contains(pl) ? this.extMap.get(pl) : entity.getBoundingBox();
-                double d = BlackOut.mc.player.getPos().distanceTo(BoxUtils.feet(box));
-                if (!(this.range.get() > 0.0) || !(d > this.range.get())) {
-                    Rotation rotation = ProjectileUtils.calcShootingRotation(
-                            BlackOut.mc.player.getEyePos(), BoxUtils.middle(entity.getBoundingBox()), 1.5, this.playerVelocity.get(), this.snowballVelocity
-                    );
-                    if (rotation.pitch() != 0.0F && !(rotation.pitch() < -85.0F) && d < dist) {
-                        this.yaw = rotation.yaw();
-                        this.pitch = rotation.pitch();
-                        this.target = entity;
-                        dist = d;
-                    }
+            if (entity == BlackOut.mc.player || !(entity instanceof LivingEntity living) || !living.isAlive()) continue;
+
+            if (this.onlyPlayers.get() && !(entity instanceof PlayerEntity)) continue;
+
+            double d = BlackOut.mc.player.getPos().distanceTo(entity.getPos());
+            if (maxRange > 0.0 && d > maxRange) continue;
+
+            if (d < dist) {
+                Box box = entity instanceof AbstractClientPlayerEntity pl && this.extMap.contains(pl)
+                        ? this.extMap.get(pl)
+                        : entity.getBoundingBox();
+
+                Rotation rotation = ProjectileUtils.calcShootingRotation(
+                        BlackOut.mc.player.getEyePos(),
+                        BoxUtils.middle(box),
+                        1.5,
+                        this.playerVelocity.get(),
+                        this.snowballVelocity
+                );
+
+                if (rotation.pitch() != 0.0F && rotation.pitch() >= -85.0F) {
+                    this.yaw = rotation.yaw();
+                    this.pitch = rotation.pitch();
+                    this.target = entity;
+                    dist = d;
                 }
             }
         }

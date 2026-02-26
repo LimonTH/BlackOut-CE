@@ -817,45 +817,54 @@ public class RenderUtils {
     }
 
     public static void circle(MatrixStack stack, float x, float y, float radius, int color) {
-        rounded(stack, x, y, 0.0F, 0.0F, radius, 0.0F, color, 0);
+        Matrix4f matrix4f = stack.peek().getPositionMatrix();
+        float a = (float) (color >> 24 & 255) / 255.0F;
+        float r = (float) (color >> 16 & 255) / 255.0F;
+        float g = (float) (color >> 8 & 255) / 255.0F;
+        float b = (float) (color & 255) / 255.0F;
+
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+
+        BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_FAN, VertexFormats.POSITION_COLOR);
+        bufferBuilder.vertex(matrix4f, x, y, 0.0F).color(r, g, b, a);
+
+        for (int i = 0; i <= 360; i++) {
+            float rad = (float) Math.toRadians(i);
+            bufferBuilder.vertex(matrix4f, x + (float) Math.cos(rad) * radius, y + (float) Math.sin(rad) * radius, 0.0F)
+                    .color(r, g, b, a);
+        }
+
+        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+        RenderSystem.disableBlend();
     }
 
     public static void circle2(MatrixStack stack, float x, float y, float radius, int color) {
-        Renderer.setMatrices(stack);
-        ShaderRenderer sr = ShaderRenderer.getInstance();
-
-        float a = (float) (color >> 24 & 255) / 255.0F;
-        float r = (float) (color >> 16 & 255) / 255.0F;
-        float g = (float) (color >> 8 & 255) / 255.0F;
-        float b = (float) (color & 255) / 255.0F;
-
-        sr.startRender(stack, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.DrawMode.LINE_STRIP, VertexFormats.POSITION_COLOR);
-
-        for (int i = 0; i <= 360; i++) {
-            float angle = (float) Math.toRadians(i);
-            sr.vertex2D(x + (float)Math.cos(angle) * radius, y + (float)Math.sin(angle) * radius).color(r, g, b, a);
-        }
-
-        sr.endRender(null, null);
+        circle3(stack, x, y, radius, color, 360);
     }
 
-    public static void circle2(MatrixStack stack, float x, float y, float radius, int color, int angle) {
-        Renderer.setMatrices(stack);
-        ShaderRenderer sr = ShaderRenderer.getInstance();
-
+    public static void circle3(MatrixStack stack, float x, float y, float radius, int color, int angle) {
+        Matrix4f matrix = stack.peek().getPositionMatrix();
         float a = (float) (color >> 24 & 255) / 255.0F;
         float r = (float) (color >> 16 & 255) / 255.0F;
         float g = (float) (color >> 8 & 255) / 255.0F;
         float b = (float) (color & 255) / 255.0F;
 
-        sr.startRender(stack, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.DrawMode.LINE_STRIP, VertexFormats.POSITION_COLOR);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+
+        BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.LINE_STRIP, VertexFormats.POSITION_COLOR);
 
         for (int i = 0; i <= angle; i++) {
-            float ang = (float) Math.toRadians(i);
-            sr.vertex2D(x + (float)Math.cos(ang) * radius, y + (float)Math.sin(ang) * radius).color(r, g, b, a);
+            float rad = (float) Math.toRadians(i);
+            bufferBuilder.vertex(matrix, x + (float) Math.cos(rad) * radius, y + (float) Math.sin(rad) * radius, 0.0F)
+                    .color(r, g, b, a);
         }
 
-        sr.endRender(null, null);
+        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+        RenderSystem.disableBlend();
     }
 
     public static void texturedQuad(Identifier identifier, MatrixStack stack, float x, float y, float w, float h, int color) {
