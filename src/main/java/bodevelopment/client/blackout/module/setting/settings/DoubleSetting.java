@@ -37,8 +37,11 @@ public class DoubleSetting extends Setting<Double> {
 
     @Override
     public float render() {
+        float sliderPadding = 10.0F;
+        float sliderWidth = this.width - (sliderPadding * 2.0F);
+
         if (this.moving) {
-            this.sliderPos = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.mx, this.x + 10, this.x + this.width - 10.0F), 0.0, 1.0);
+            this.sliderPos = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.mx, this.x + sliderPadding, this.x + this.width - sliderPadding), 0.0, 1.0);
             float val = (float) MathHelper.lerp(this.sliderPos, this.min, this.max);
             this.setValue(Math.round(val / this.step) * this.step);
         } else {
@@ -48,23 +51,36 @@ public class DoubleSetting extends Setting<Double> {
         if (Float.isNaN(this.sliderAnim)) {
             this.sliderAnim = this.sliderPos;
         }
-
         this.sliderAnim = MathHelper.clamp(MathHelper.clampedLerp(this.sliderAnim, this.sliderPos, this.frameTime * 20.0F), 0.0F, 1.0F);
-        BlackOut.FONT.text(this.stack, this.name, 2.0F, this.x + 5, this.y + 9, GuiColorUtils.getSettingText(this.y), false, true);
+
+        float textScale = 2.0F;
+        float baseH = 26.0F;
+        float middleY = this.y + (baseH / 2.0F);
+
+        float fontHeight = BlackOut.FONT.getHeight() * textScale;
+        float topTextY = middleY - (fontHeight / 2.0F);
+
+        BlackOut.FONT.text(this.stack, this.name, textScale, this.x + 5.0F, topTextY, GuiColorUtils.getSettingText(this.y), false, true);
+
         if (SelectedComponent.is(this.id)) {
             try {
                 this.setValue(Double.parseDouble(this.textField.getContent().replace(",", ".")));
-            } catch (NumberFormatException ignored) {
-            }
+            } catch (NumberFormatException ignored) {}
         } else {
             this.textField.setContent(String.format(java.util.Locale.US, "%." + this.decimals + "f", this.get()));
         }
 
+        float fieldWidth = 40.0F;
+        float fieldHeight = 10.0F;
+        float fieldX = this.x + this.width - fieldWidth - 5.0F;
+
+        float fieldY = middleY - (fieldHeight / 2.0F) - 5.5F;
+
         this.textField.setActive(SelectedComponent.is(this.id));
-        this.textField
-                .render(
-                        this.stack, 2.0F, this.mx, this.my, this.x + this.width - 55.0F, this.y + 4, 40.0F, 10.0F, 2.0F, 5.0F, GuiColorUtils.getSettingText(this.y), CLEAR
-                );
+        this.textField.render(
+                this.stack, textScale, this.mx, this.my, fieldX, fieldY, fieldWidth, fieldHeight, 2.0F, 5.0F, GuiColorUtils.getSettingText(this.y), CLEAR
+        );
+
         RenderUtils.rounded(this.stack, this.x + 10, this.y + 25, this.width - 20.0F, 0.0F, 6.0F, 2.0F, new Color(0, 0, 0, 50).getRGB(), ColorUtils.SHADOW100I);
         RenderUtils.rounded(
                 this.stack,
@@ -77,6 +93,7 @@ public class DoubleSetting extends Setting<Double> {
                 GuiColorUtils.getSettingText(this.y).getRGB(),
                 ColorUtils.SHADOW100I
         );
+
         return this.getHeight();
     }
 

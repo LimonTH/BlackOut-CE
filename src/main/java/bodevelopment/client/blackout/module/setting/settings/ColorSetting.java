@@ -30,11 +30,37 @@ public class ColorSetting extends Setting<BlackOutColor> {
 
     @Override
     public float render() {
-        BlackOut.FONT.text(this.stack, this.name, 2.0F, this.x + 5, this.y + 9, GuiColorUtils.getSettingText(this.y), false, true);
-        float ry = this.y + 9;
+        float textScale = 2.0F;
+        float h = this.getHeight();
+        float middleY = this.y + (h / 2.0F);
+
+        float fontHeight = BlackOut.FONT.getHeight() * textScale;
+
+        float textY = middleY - (fontHeight / 2.0F);
+
+        BlackOut.FONT.text(this.stack, this.name, textScale, this.x + 5.0F, textY, GuiColorUtils.getSettingText(this.y), false, true);
+
+        float rectWidth = 25.0F;
+        float rectHeight = 8.0F;
+        float rectX = this.x + this.width - rectWidth - 5.0F;
+
+        float rectRenderY = middleY - (rectHeight / 2.0F) - 5.5F;
+
         int color = this.get().withAlpha(255).getRGB();
-        RenderUtils.rounded(this.stack, this.x + this.width - 34.0F, ry - 4.0F, 25.0F, 8.0F, 3.0F, 4.0F, color, color);
-        return this.getHeight();
+
+        RenderUtils.rounded(
+                this.stack,
+                rectX,
+                rectRenderY,
+                rectWidth,
+                rectHeight,
+                3.0F,
+                4.0F,
+                color,
+                color
+        );
+
+        return h;
     }
 
     @Override

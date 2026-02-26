@@ -27,22 +27,37 @@ public class BoolSetting extends Setting<Boolean> {
             this.progress = MathHelper.lerp(Math.min(this.frameTime * 20.0F, 1.0F), this.progress, target);
         }
 
-        BlackOut.FONT.text(this.stack, this.name, 2.0F, this.x + 5, this.y + 9, GuiColorUtils.getSettingText(this.y), false, true);
+        float textScale = 2.0F;
+        float h = this.getHeight();
+        float middleY = this.y + (h / 2.0F);
+
+        float fontHeight = BlackOut.FONT.getHeight() * textScale;
+        float textY = middleY - (fontHeight / 2.0F);
+
+        BlackOut.FONT.text(this.stack, this.name, textScale, this.x + 5.0F, textY, GuiColorUtils.getSettingText(this.y), false, true);
+
+        float toggleWidth = 16.0F;
+        // Изменил с 5.0F на 10.0F, чтобы было вровень с остальными
+        float toggleX = this.x + this.width - toggleWidth - 10.0F;
+
+        float toggleRenderY = middleY - 5.5F;
+
         RenderUtils.rounded(
                 this.stack,
-                this.x + this.width - 30.0F,
-                this.y + 9,
-                16.0F,
+                toggleX,
+                toggleRenderY,
+                toggleWidth,
                 0.0F,
                 8.0F,
                 0.0F,
                 ColorUtils.lerpColor(this.progress, GuiColorUtils.getDisabledBindBG(this.y), GuiColorUtils.getEnabledBindBG(this.y)).getRGB(),
                 ColorUtils.SHADOW100I
         );
+
         RenderUtils.rounded(
                 this.stack,
-                this.x + this.width - 30.0F + this.progress * 16.0F,
-                this.y + 9,
+                toggleX + (this.progress * toggleWidth),
+                toggleRenderY,
                 0.0F,
                 0.0F,
                 8.0F,
@@ -50,7 +65,8 @@ public class BoolSetting extends Setting<Boolean> {
                 ColorUtils.lerpColor(this.progress, GuiColorUtils.getDisabledBindDot(this.y), GuiColorUtils.getEnabledBindDot(this.y)).getRGB(),
                 ColorUtils.SHADOW100I
         );
-        return this.getHeight();
+
+        return h;
     }
 
     @Override
@@ -59,9 +75,8 @@ public class BoolSetting extends Setting<Boolean> {
             this.setValue(!this.get());
             Managers.CONFIG.saveAll();
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 
     @Override

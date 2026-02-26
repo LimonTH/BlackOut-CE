@@ -9,7 +9,6 @@ import bodevelopment.client.blackout.module.modules.client.GuiSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.settings.KeyBindSetting;
-import bodevelopment.client.blackout.module.setting.settings.StringSetting;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
@@ -47,6 +46,8 @@ public class ModuleComponent extends Component {
         };
 
         for (SettingGroup group : settingGroups) {
+            if (group.settings.stream().noneMatch(Setting::isVisible)) continue;
+
             length += switch (GuiSettings.getInstance().settingGroup.get()) {
                 case Line, None -> 40.0F * fs;
                 case Shadow -> 45.0F * fs;
@@ -59,7 +60,6 @@ public class ModuleComponent extends Component {
                 }
             }
         }
-
         return length;
     }
 
@@ -111,6 +111,9 @@ public class ModuleComponent extends Component {
 
         for (int i = 0; i < this.module.settingGroups.size(); i++) {
             SettingGroup settingGroup = this.module.settingGroups.get(i);
+
+            if (!hasVisibleSettings(settingGroup)) continue;
+
             if (this.l >= this.maxLength) return;
 
             float yPos = this.y + this.l;
@@ -127,8 +130,16 @@ public class ModuleComponent extends Component {
                 if (setting.isVisible()) categoryHeight += setting.getHeight();
             }
 
+            boolean isReallyLast = true;
+            for (int j = i + 1; j < this.module.settingGroups.size(); j++) {
+                if (hasVisibleSettings(this.module.settingGroups.get(j))) {
+                    isReallyLast = false;
+                    break;
+                }
+            }
+
             if (yPos > -height - categoryHeight - 30.0F) {
-                this.renderSettingGroup(settingGroup, i == this.module.settingGroups.size() - 1);
+                this.renderSettingGroup(settingGroup, isReallyLast);
             }
 
             this.l += height;
@@ -136,10 +147,21 @@ public class ModuleComponent extends Component {
         }
     }
 
+    private boolean hasVisibleSettings(SettingGroup group) {
+        for (Setting<?> setting : group.settings) {
+            if (setting.isVisible()) return true;
+        }
+        return false;
+    }
+
     private void renderSetting(Setting<?> setting, float currentMx, float currentMy) {
         if (setting.isVisible()) {
             float height = setting.getHeight();
-            int posY = (int) (this.y + this.l);
+            float posY = this.y + this.l;
+
+            float padding = 8.0F;
+            float settingX = this.x + padding;
+            float settingWidth = this.width - (padding * 2.0F);
 
             if (currentMx > this.x && currentMx < this.x + this.width && currentMy > posY && currentMy < posY + height) {
                 if (setting.description != null && !setting.description.isEmpty()) {
@@ -148,7 +170,17 @@ public class ModuleComponent extends Component {
             }
 
             boolean shouldRender = this.l < this.maxLength && posY >= -height && posY <= ClickGui.height + height;
-            this.l = this.l + setting.onRender(this.stack, this.frameTime, this.width - 10.0F, this.x + 5, posY, currentMx, currentMy, shouldRender);
+
+            this.l = this.l + setting.onRender(
+                    this.stack,
+                    this.frameTime,
+                    settingWidth,
+                    settingX,
+                    posY,
+                    currentMx,
+                    currentMy,
+                    shouldRender
+            );
         }
     }
 
@@ -369,21 +401,17 @@ public class ModuleComponent extends Component {
         if (Managers.CLICK_GUI.CLICK_GUI.openedScreen != null) return false;
         if (this.module.category != ClickGui.selectedCategory) return false;
 
-        if (this.module.toggleable() && this.module.bind.get().isInside()) return true;
+        if (SelectedComponent.isSelected()) return true;
+
+        if (this.module.bind != null && this.module.bind.get().isInside()) return true;
 
         if (this.opened) {
             for (SettingGroup sg : this.module.settingGroups) {
                 for (Setting<?> s : sg.settings) {
                     if (!s.isVisible()) continue;
 
-                    if (s instanceof StringSetting ss) {
-                        if (SelectedComponent.is(ss.getId())) return true;
-                    }
-
                     if (s instanceof KeyBindSetting kbs) {
-                        if (SelectedComponent.is(kbs.getId())) {
-                            return true;
-                        }
+                        if (kbs.get().isInside()) return true;
                     }
                 }
             }

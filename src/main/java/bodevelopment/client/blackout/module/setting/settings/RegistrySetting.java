@@ -51,10 +51,31 @@ public class RegistrySetting<T> extends ListSetting<T> {
 
     @Override
     public float render() {
-        BlackOut.FONT.text(this.stack, this.name, 2.0F, this.x + 5, this.y + 9, GuiColorUtils.getSettingText(this.y), false, true);
+        float textScale = 2.0F;
+        float baseH = 26.0F;
+        float middleY = this.y + (baseH / 2.0F);
+
+        float fontHeight = BlackOut.FONT.getHeight() * textScale;
+        float nameY = middleY - (fontHeight / 2.0F);
+
+        BlackOut.FONT.text(this.stack, this.name, textScale, this.x + 5.0F, nameY, GuiColorUtils.getSettingText(this.y), false, true);
+
         String text = String.valueOf(this.get().size());
-        BlackOut.FONT
-                .text(this.stack, text, 2.0F, this.x + this.width - BlackOut.FONT.getWidth(text) * 2.0F, this.y + 9, GuiColorUtils.getSettingText(this.y), false, true);
+
+        float valueX = this.x + this.width - 10.0F;
+        float textWidth = BlackOut.FONT.getWidth(text) * textScale;
+
+        BlackOut.FONT.text(
+                this.stack,
+                text,
+                textScale,
+                valueX - textWidth,
+                nameY,
+                GuiColorUtils.getSettingText(this.y),
+                false,
+                true
+        );
+
         return this.getHeight();
     }
 
