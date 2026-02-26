@@ -19,7 +19,7 @@ public class SafeMyFPS extends Module {
     private long lowFpsTime = -1;
 
     public SafeMyFPS() {
-        super("Safe FPS", "Emergency switch to save your FPS.", SubCategory.MISC, true);
+        super("Safe FPS", "Emergency switch to save your FPS. (Pls, use only when configuring modules)", SubCategory.MISC, true);
     }
 
     @Event
