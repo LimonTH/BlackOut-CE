@@ -22,11 +22,35 @@ public class StringSetting extends Setting<String> {
 
     @Override
     public float render() {
-        BlackOut.FONT.text(this.stack, this.name, 2.0F, this.x + 5, this.y + 9, GuiColorUtils.getSettingText(this.y), false, true);
-        this.textField
-                .render(this.stack, 1.8F, this.mx, this.my, this.x + 15, this.y + 35, this.width - 30.0F, 0.0F, 12.0F, 6.0F, Color.WHITE, GuiColorUtils.bg2);
+        float textScale = 2.0F;
+        float baseH = 26.0F;
+        float middleY = this.y + (baseH / 2.0F);
+
+        float fontHeight = BlackOut.FONT.getHeight() * textScale;
+        float nameY = middleY - (fontHeight / 2.0F);
+
+        BlackOut.FONT.text(this.stack, this.name, textScale, this.x + 5.0F, nameY, GuiColorUtils.getSettingText(this.y), false, true);
+
+        float fieldWidth = this.width - 20.0F;
+        float fieldX = this.x + 10.0F;
+        float fieldY = this.y + 28.0F;
 
         this.textField.setActive(SelectedComponent.is(this.id));
+        this.textField.render(
+                this.stack,
+                1.8F,
+                this.mx,
+                this.my,
+                fieldX,
+                fieldY,
+                fieldWidth,
+                15.0F,
+                4.0F,
+                6.0F,
+                Color.WHITE,
+                GuiColorUtils.bg2
+        );
+
         return this.getHeight();
     }
 

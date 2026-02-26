@@ -16,6 +16,9 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.ParentCategory;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.GuiSettings;
+import bodevelopment.client.blackout.module.setting.Setting;
+import bodevelopment.client.blackout.module.setting.SettingGroup;
+import bodevelopment.client.blackout.module.setting.settings.EnumSetting;
 import bodevelopment.client.blackout.rendering.framebuffer.GuiAlphaFrameBuffer;
 import bodevelopment.client.blackout.rendering.renderer.ColorRenderer;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
@@ -213,6 +216,45 @@ public class ClickGui extends Screen {
 
         this.renderCategories(this.frameTime);
         frameBuffer.end(Math.min(popUpDelta * 1.5F, 1.0F));
+
+        boolean isOverDropdown = false;
+        for (ModuleComponent mc : this.moduleComponents) {
+            if (mc.module.category == selectedCategory && mc.opened) {
+                for (SettingGroup group : mc.module.settingGroups) {
+                    for (Setting<?> s : group.settings) {
+                        if (s instanceof EnumSetting<?> es && es.isChoosing()) {
+                            float listWidth = es.getWi() + 10.0F;
+                            float listX = es.getX() + es.getWidth() - listWidth - es.getXOffset() - 5.0F;
+                            float listY = es.getY() + 26.0F;
+                            float listHeight = (es.getValues().length - 1) * 20.0F;
+
+                            if (this.mx >= listX && this.mx <= listX + listWidth && this.my >= listY && this.my <= listY + listHeight) {
+                                isOverDropdown = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (isOverDropdown) break;
+                }
+            }
+            if (isOverDropdown) break;
+        }
+
+        if (isOverDropdown) {
+            hoveredDescription = null;
+        }
+
+        for (ModuleComponent mc : this.moduleComponents) {
+            if (mc.module.category == selectedCategory && mc.opened) {
+                for (SettingGroup group : mc.module.settingGroups) {
+                    for (Setting<?> s : group.settings) {
+                        if (s instanceof EnumSetting<?> es && es.isChoosing()) {
+                            es.renderDropdown();
+                        }
+                    }
+                }
+            }
+        }
 
         if (hoveredDescription != null && !hoveredDescription.isEmpty()) {
             if (!hoveredDescription.equals(lastDescription)) {

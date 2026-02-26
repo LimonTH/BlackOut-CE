@@ -20,8 +20,15 @@ public class KeyBindSetting extends Setting<KeyBind> {
 
     @Override
     public float render() {
-        BlackOut.FONT.text(this.stack, this.name, 2.0F, this.x + 5, this.y + 12.5F, GuiColorUtils.getSettingText(this.y), false, true);
-        this.get().render(this.stack, this.x + this.width - 21.0F, this.y + 12, this.x + this.width, this.mx, this.my);
+        float textScale = 2.0F;
+        float baseH = 26.0F;
+        float middleY = this.y + (baseH / 2.0F);
+
+        float fontHeight = BlackOut.FONT.getHeight() * textScale;
+        float nameY = middleY - (fontHeight / 2.0F);
+        BlackOut.FONT.text(this.stack, this.name, textScale, this.x + 5.0F, nameY, GuiColorUtils.getSettingText(this.y), false, true);
+        this.get().render(this.stack, this.x + this.width - 21.0F, this.y + 10, this.x + this.width, this.mx, this.my);
+
         return this.getHeight();
     }
 
@@ -46,7 +53,7 @@ public class KeyBindSetting extends Setting<KeyBind> {
 
     @Override
     public float getHeight() {
-        return 30.0F;
+        return 28.0F;
     }
 
     @Override

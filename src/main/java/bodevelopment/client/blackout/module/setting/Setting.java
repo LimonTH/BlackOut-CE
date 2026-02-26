@@ -14,8 +14,8 @@ public class Setting<T> {
     protected final T defaultValue;
     private final SingleOut<Boolean> visible;
     protected T value;
-    protected int x = 0;
-    protected int y = 0;
+    protected float x = 0;
+    protected float y = 0;
     protected double mx = 0.0;
     protected double my = 0.0;
     protected float width = 0.0F;
@@ -31,6 +31,18 @@ public class Setting<T> {
         this.value = val;
     }
 
+    public float getWidth() {
+        return this.width;
+    }
+
+    public float getX() {
+        return this.x;
+    }
+
+    public float getY() {
+        return this.y;
+    }
+
     public T get() {
         return this.value;
     }
@@ -44,7 +56,7 @@ public class Setting<T> {
         return this.visible == null || this.visible.get();
     }
 
-    public float onRender(MatrixStack stack, float frameTime, float width, int x, int y, double mx, double my, boolean shouldRender) {
+    public float onRender(MatrixStack stack, float frameTime, float width, float x, float y, double mx, double my, boolean shouldRender) {
         this.stack = stack;
         this.frameTime = frameTime;
         this.x = x;
