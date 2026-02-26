@@ -822,7 +822,7 @@ public class RenderUtils {
         float r = (float) (color >> 16 & 255) / 255.0F;
         float g = (float) (color >> 8 & 255) / 255.0F;
         float b = (float) (color & 255) / 255.0F;
-
+        // TODO: Notifications работают с ним
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
@@ -850,7 +850,7 @@ public class RenderUtils {
         float r = (float) (color >> 16 & 255) / 255.0F;
         float g = (float) (color >> 8 & 255) / 255.0F;
         float b = (float) (color & 255) / 255.0F;
-
+        // TODO: не знаю, работает ли он, но в Snombonty точно нет, может быт ьв 2D рендеринге он будет работать, завтра посмотрим
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
