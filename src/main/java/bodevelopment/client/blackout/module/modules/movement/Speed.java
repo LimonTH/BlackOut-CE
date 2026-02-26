@@ -159,17 +159,24 @@ public class Speed extends Module {
     }
 
     private double getNewVelocity() {
+        double baseSpeed = MovementUtils.getSpeed(this.getSpeed());
+
         return switch (this.mode.get()) {
-            case NCPOld ->
-                    BlackOut.mc.player.isOnGround() ? 0.2873 * this.speedMulti.get() : this.prevVelocity() * 0.9691111111;
+            case NCPOld -> {
+                if (BlackOut.mc.player.isOnGround()) {
+                    yield baseSpeed * this.speedMulti.get();
+                }
+                // Используем strict friction для обхода NCP
+                yield this.prevVelocity() * (this.strict.get() ? 0.91 : 0.98);
+            }
             case Instant -> OLEPOSSUtils.approach(
                     this.prevMovement.horizontalLength(),
-                    MovementUtils.getSpeed(this.getSpeed()),
-                    MovementUtils.getSpeed(this.getSpeed()) / this.accelerationTicks.get()
+                    baseSpeed,
+                    baseSpeed / Math.max(1, this.accelerationTicks.get())
             );
-            case Vanilla -> 0.0;
-            case Verus -> BlackOut.mc.player.isOnGround() ? 0.55 : 0.349;
-            case Vulcan -> 0.2872;
+            case Vanilla -> baseSpeed * vanillaSpeed.get();
+            case Verus -> BlackOut.mc.player.isOnGround() ? 0.612 : 0.355; // Verus чуть быстрее
+            case Vulcan -> BlackOut.mc.player.isOnGround() ? 0.485 : 0.325;
         };
     }
 
