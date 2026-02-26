@@ -28,7 +28,7 @@ public class Ambience extends Module {
     private final Setting<FogShape> shape = this.sgFog.enumSetting("Fog Geometry", FogShape.SPHERE, "The mathematical projection used to calculate fog density (Sphere or Cylinder).", () -> this.modifyFog.get() && !this.removeFog.get());
     private final Setting<Double> distance = this.sgFog.doubleSetting("Fog Offset", 25.0, 0.0, 100.0, 1.0, "The distance from the camera at which the fog begins to obstruct vision.", () -> this.modifyFog.get() && !this.removeFog.get());
     private final Setting<Double> fading = this.sgFog.doubleSetting("Fog Falloff", 25.0, 0.0, 250.0, 1.0, "The distance over which the fog transitions from transparent to fully opaque.", () -> this.modifyFog.get() && !this.removeFog.get());
-    public final Setting<BlackOutColor> color = this.sgFog.colorSetting("Fog Palette", new BlackOutColor(255, 0, 0, 255), "The color applied to the atmospheric fog layer.", () -> this.modifyFog.get() && !this.removeFog.get());
+    public final Setting<BlackOutColor> color = this.sgFog.colorSetting("Fog Color", new BlackOutColor(255, 0, 0, 255), "The color applied to the atmospheric fog layer.", () -> this.modifyFog.get() && !this.removeFog.get());
     public final Setting<Boolean> thickFog = this.sgFog.booleanSetting("High Density", true, "Forces fog rendering even in conditions where it would normally be minimal.", this.modifyFog::get);
 
     public Ambience() {

@@ -30,8 +30,8 @@ public class Highlight extends Module {
     private final Setting<RenderMode> mode = this.sgGeneral.enumSetting("Animation Mode", RenderMode.Fade, "The visual style used to transition between highlighted blocks.");
     private final Setting<Double> moveSpeed = this.sgGeneral.doubleSetting("Translation Speed", 1.0, 1.0, 10.0, 0.1, "The speed at which the selection box slides toward the new target.", () -> this.mode.get() == RenderMode.Move);
     private final Setting<RenderShape> shape = this.sgGeneral.enumSetting("Mesh Mode", RenderShape.Sides, "Determines which geometric components of the highlighted box are rendered.");
-    private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Face Palette", new BlackOutColor(255, 0, 0, 50), "The color applied to the polygonal faces of the selection box.");
-    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Edge Palette", new BlackOutColor(255, 0, 0, 255), "The color applied to the wireframe edges of the selection box.");
+    private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Face Color", new BlackOutColor(255, 0, 0, 50), "The color applied to the polygonal faces of the selection box.");
+    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Edge Color", new BlackOutColor(255, 0, 0, 255), "The color applied to the wireframe edges of the selection box.");
     private final Setting<Double> fadeIn = this.sgGeneral.doubleSetting("Opacity Attack", 2.0, 0.0, 20.0, 0.2, "How quickly the highlight reaches maximum visibility.");
     private final Setting<Double> fadeOut = this.sgGeneral.doubleSetting("Opacity Decay", 1.0, 0.0, 20.0, 0.2, "How quickly the highlight vanishes after moving your crosshair.");
 

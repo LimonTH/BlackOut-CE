@@ -38,7 +38,7 @@ public class Playerlist extends HudElement {
     private final Setting<BlackOutColor> good = this.sgGeneral.colorSetting("Positive Threshold", new BlackOutColor(0, 225, 0, 255), "The color assigned to healthy states (High health, low ping).", this.dynamic::get);
     private final Setting<BlackOutColor> bad = this.sgGeneral.colorSetting("Negative Threshold", new BlackOutColor(150, 0, 0, 255), "The color assigned to critical states (Low health, high ping).", this.dynamic::get);
     private final Setting<Boolean> showPops = this.sgGeneral.booleanSetting("Track Totem Pops", false, "Enables a column to track the number of Totems of Undying used by each player.");
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Header Palette");
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Header Color");
 
     private final List<Entity> players = new ArrayList<>();
     private float currentLongest = 0.0F;

@@ -162,11 +162,6 @@ public class HudEditorSettings {
         }
     }
 
-    private void updateMoving(float deltaX, float deltaY) {
-        this.x += deltaX;
-        this.y += deltaY;
-    }
-
     public boolean onMouse(int button, boolean pressed) {
         if (this.openedElement == null) {
             this.moving = false;
@@ -226,11 +221,36 @@ public class HudEditorSettings {
         }
     }
 
+    private void updateMoving(float deltaX, float deltaY) {
+        var window = net.minecraft.client.MinecraftClient.getInstance().getWindow();
+        float screenW = (float) window.getWidth();
+        float screenH = (float) window.getHeight();
+
+        this.x += deltaX;
+        this.y += deltaY;
+
+        this.x = MathHelper.clamp(this.x, 0, screenW - 275.0F);
+
+        float currentHeight = Math.max(this.length, 30.0F);
+        this.y = MathHelper.clamp(this.y, 0, screenH - currentHeight);
+    }
+
     public void set(HudElement hudElement) {
+        if (hudElement == null) {
+            this.openedElement = null;
+            return;
+        }
         this.openTime = System.currentTimeMillis();
         this.openedElement = hudElement;
-        this.x = this.mx;
-        this.y = this.my;
+
+        var window = net.minecraft.client.MinecraftClient.getInstance().getWindow();
+        float screenW = (float) window.getWidth();
+        float screenH = (float) window.getHeight();
+
+        float expectedLength = ModuleComponent.getLength(hudElement.settingGroups) + 30.0F;
+
+        this.x = MathHelper.clamp(this.mx, 0, screenW - 275.0F);
+        this.y = MathHelper.clamp(this.my, 0, screenH - expectedLength);
     }
 
     private void renderBG() {
@@ -317,7 +337,6 @@ public class HudEditorSettings {
         float rectX = this.mx + 15;
         float rectY = this.my + 15;
 
-        // Отрисовка
         this.stack.push();
         this.stack.translate(0, 0, 900);
 
@@ -334,5 +353,13 @@ public class HudEditorSettings {
             currentY += lineHeight + spacing;
         }
         this.stack.pop();
+    }
+
+    public HudElement getOpenedElement() {
+        return this.openedElement;
+    }
+
+    public void setOpenedElement(HudElement element) {
+        this.openedElement = element;
     }
 }

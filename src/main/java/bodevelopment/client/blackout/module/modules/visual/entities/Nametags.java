@@ -82,10 +82,10 @@ public class Nametags extends Module {
     private final Setting<Boolean> center = this.sgEnchantments.booleanSetting("Alignment", true, "Centers the enchantment text over the item icon.", this.drawEnchants::get);
     private final Setting<Double> enchantmentsOffset = this.sgEnchantments.doubleSetting("Horizontal Offset", 0.0, 0.0, 1.0, 0.01, "Manually adjusts horizontal text placement when centering is disabled.", () -> this.drawEnchants.get() && !this.center.get());
 
-    public final Setting<ColorMode> colorMode = this.sgColor.enumSetting("Palette Logic", ColorMode.Dynamic, "Determines whether colors are static or health-dependent.");
+    public final Setting<ColorMode> colorMode = this.sgColor.enumSetting("Color Logic", ColorMode.Dynamic, "Determines whether colors are static or health-dependent.");
     private final Setting<BlackOutColor> hp = this.sgColor.colorSetting("Health Accent", new BlackOutColor(150, 150, 150, 255), "The color used for health indicators when using a fixed palette.", () -> this.colorMode.get() == ColorMode.Custom);
     private final Setting<BlackOutColor> txt = this.sgColor.colorSetting("Primary Text Color", new BlackOutColor(255, 255, 255, 255), "The default color for names and info.");
-    private final Setting<BlackOutColor> friendColor = this.sgColor.colorSetting("Friendship Palette", new BlackOutColor(150, 150, 255, 255), "The color applied to entities identified as friends.");
+    private final Setting<BlackOutColor> friendColor = this.sgColor.colorSetting("Friendship Color", new BlackOutColor(150, 150, 255, 255), "The color applied to entities identified as friends.");
 
 
 

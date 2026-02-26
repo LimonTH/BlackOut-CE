@@ -46,7 +46,7 @@ public class PhaseESP extends Module {
     private final Setting<BlackOutColor> bgFar = this.sgColor.colorSetting("Distal Background", new BlackOutColor(0, 0, 0, 120), "The background color applied when the target is at maximum render distance.", this.bg::get);
     private final Setting<BlackOutColor> shdwClose = this.sgColor.colorSetting("Proximal Shadow", new BlackOutColor(8, 8, 8, 100), "The shadow color applied when the target is at close range.", this.bg::get);
     private final Setting<BlackOutColor> shdwFar = this.sgColor.colorSetting("Distal Shadow", new BlackOutColor(0, 0, 0, 100), "The shadow color applied when the target is at maximum render distance.", this.bg::get);
-    private final Setting<BlackOutColor> txt = this.sgColor.colorSetting("Label Palette", new BlackOutColor(255, 255, 255, 255), "The color of the indicator text.");
+    private final Setting<BlackOutColor> txt = this.sgColor.colorSetting("Label Color", new BlackOutColor(255, 255, 255, 255), "The color of the indicator text.");
 
     private final List<Entity> players = new ArrayList<>();
     private final MatrixStack stack = new MatrixStack();

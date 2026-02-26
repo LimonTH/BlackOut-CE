@@ -37,7 +37,6 @@ public class BoolSetting extends Setting<Boolean> {
         BlackOut.FONT.text(this.stack, this.name, textScale, this.x + 5.0F, textY, GuiColorUtils.getSettingText(this.y), false, true);
 
         float toggleWidth = 16.0F;
-        // Изменил с 5.0F на 10.0F, чтобы было вровень с остальными
         float toggleX = this.x + this.width - toggleWidth - 10.0F;
 
         float toggleRenderY = middleY - 5.5F;

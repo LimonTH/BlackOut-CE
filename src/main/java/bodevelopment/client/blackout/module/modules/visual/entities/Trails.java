@@ -33,17 +33,18 @@ public class Trails extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgColor = this.addGroup("Color");
 
-    public final Setting<ColorMode> colorMode = this.sgColor.enumSetting("Color Logic", ColorMode.Custom, "Determines the color behavior of the rendered trails.");
-    private final Setting<Double> speed = this.sgColor.doubleSetting("Oscillation Speed", 1.0, 0.1, 10.0, 0.1, "How quickly the colors cycle in Wave mode.", () -> this.colorMode.get() == ColorMode.Wave);
-    private final Setting<Double> saturation = this.sgColor.doubleSetting("Rainbow Intensity", 0.8, 0.0, 1.0, 0.1, "The color richness of the rainbow effect.", () -> this.colorMode.get() == ColorMode.Rainbow);
-    private final Setting<BlackOutColor> clr = this.sgColor.colorSetting("Primary Palette", new BlackOutColor(255, 255, 255, 255), "The main color for custom and wave modes.", () -> this.colorMode.get() != ColorMode.Rainbow);
-    private final Setting<BlackOutColor> clr1 = this.sgColor.colorSetting("Secondary Palette", new BlackOutColor(175, 175, 175, 255), "The secondary color used for wave interpolation.", () -> this.colorMode.get() != ColorMode.Rainbow);
     private final Setting<List<EntityType<?>>> entities = this.sgGeneral.entityListSetting("Target Filters", "Specifies which entity types will leave trails.", EntityType.ENDER_PEARL);
     private final Setting<HeightMode> renderHeight = this.sgGeneral.enumSetting("Vertical Anchor", HeightMode.Feet, "Determines the vertical offset of the trail relative to the entity.");
     private final Setting<Double> renderTime = this.sgGeneral.doubleSetting("Static Duration", 0.0, 0.0, 10.0, 0.1, "The amount of time in seconds the trail remains at full opacity.");
     private final Setting<Double> fadeTime = this.sgGeneral.doubleSetting("Dissipation Time", 5.0, 0.0, 10.0, 0.1, "The duration of the transparency transition before the trail segment is removed.");
     private final Setting<Double> maxFrequency = this.sgGeneral.doubleSetting("Sampling Rate", 40.0, 1.0, 100.0, 1.0, "Limits how many position points are recorded per second.");
     private final Setting<Double> lineWidth = this.sgGeneral.doubleSetting("Stroke Weight", 2.5, 0.5, 5.0, 0.05, "The thickness of the rendered trail lines.");
+
+    public final Setting<ColorMode> colorMode = this.sgColor.enumSetting("Color Logic", ColorMode.Custom, "Determines the color behavior of the rendered trails.");
+    private final Setting<Double> speed = this.sgColor.doubleSetting("Oscillation Speed", 1.0, 0.1, 10.0, 0.1, "How quickly the colors cycle in Wave mode.", () -> this.colorMode.get() == ColorMode.Wave);
+    private final Setting<Double> saturation = this.sgColor.doubleSetting("Rainbow Intensity", 0.8, 0.0, 1.0, 0.1, "The color richness of the rainbow effect.", () -> this.colorMode.get() == ColorMode.Rainbow);
+    private final Setting<BlackOutColor> clr = this.sgColor.colorSetting("Primary Color", new BlackOutColor(255, 255, 255, 255), "The main color for custom and wave modes.", () -> this.colorMode.get() != ColorMode.Rainbow);
+    private final Setting<BlackOutColor> clr1 = this.sgColor.colorSetting("Secondary Color", new BlackOutColor(175, 175, 175, 255), "The secondary color used for wave interpolation.", () -> this.colorMode.get() != ColorMode.Rainbow);
 
     private final Map<Entity, Line> map = new HashMap<>();
     private long prevAdd = 0L;

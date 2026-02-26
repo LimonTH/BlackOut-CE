@@ -48,9 +48,9 @@ public class TargetHUD extends HudElement {
     private final Setting<Double> dist = this.sgGeneral.doubleSetting("Depth Offset", 0.25, 0.0, 1.0, 0.05, "The distance from the target's center to project the HUD in 3D space.", () -> this.renderType.get() == RenderType.Player);
 
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgColor, () -> this.mode.get() != Mode.ExhibitionNew, null);
-    private final Setting<BlackOutColor> secondaryColor = this.sgColor.colorSetting("Accent Palette", new BlackOutColor(220, 60, 90, 255), "A secondary color used for specific thematic elements.", () -> this.mode.get() == Mode.Arsenic);
+    private final Setting<BlackOutColor> secondaryColor = this.sgColor.colorSetting("Accent Color", new BlackOutColor(220, 60, 90, 255), "A secondary color used for specific thematic elements.", () -> this.mode.get() == Mode.Arsenic);
     private final RoundedColorMultiSetting armorBar = RoundedColorMultiSetting.of(this.sgColor, () -> this.mode.get() == Mode.BlackoutNew, "Armor Bar");
-    private final Setting<BlackOutColor> textColor = this.sgColor.colorSetting("Text Palette", new BlackOutColor(255, 255, 255, 255), "The primary color for names and data readouts.");
+    private final Setting<BlackOutColor> textColor = this.sgColor.colorSetting("Text Color", new BlackOutColor(255, 255, 255, 255), "The primary color for names and data readouts.");
     private final RoundedColorMultiSetting healthBar = RoundedColorMultiSetting.of(this.sgColor, "Health Bar");
 
     private float delta = 0.0F;

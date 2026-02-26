@@ -33,10 +33,10 @@ public class TabGui extends HudElement {
     private final Setting<Double> waveSpeed = this.sgGeneral.doubleSetting("Oscillation Speed", 2.0, 0.0, 10.0, 0.1, "The frequency of the color transition when in Wave mode.", () -> this.selectorMode.get() == ColorMode.Wave);
     private final Setting<BlackOutColor> waveColor = this.sgGeneral.colorSetting("Secondary Accent", new BlackOutColor(125, 125, 125, 255), "The target color for the secondary phase of the wave animation.", () -> this.selectorMode.get() == ColorMode.Wave);
     private final Setting<Double> saturation = this.sgGeneral.doubleSetting("Chroma Intensity", 0.8, 0.0, 1.0, 0.1, "The color saturation level for the rainbow animation profile.", () -> this.selectorMode.get() == ColorMode.Rainbow);
-    public final Setting<BlackOutColor> textDisabled = this.sgGeneral.colorSetting("Inactive Palette", new BlackOutColor(150, 150, 150, 255), "The text color used for modules that are currently disabled.");
+    public final Setting<BlackOutColor> textDisabled = this.sgGeneral.colorSetting("Inactive Color", new BlackOutColor(150, 150, 150, 255), "The text color used for modules that are currently disabled.");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, null);
     private final Setting<Integer> bloomIntensity = this.sgGeneral.intSetting("Selection Glow", 1, 0, 2, 1, "The strength of the bloom/glow effect surrounding the active selector.");
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Active Palette");
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Active Color");
 
     private final Map<Module, MutableDouble> moduleMap = new HashMap<>();
     private int selectedModule = 0;

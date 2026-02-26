@@ -28,8 +28,8 @@ public class HandESP extends Module {
     private final Setting<BlackOutColor> waveColor = this.sgGeneral.colorSetting("Wave Secondary", new BlackOutColor(125, 125, 125, 255), "The secondary color used for wave interpolation.", () -> this.colormode.get() == ColorMode.Wave);
     private final Setting<Integer> dist = this.sgGeneral.intSetting("Bloom Radius", 5, 1, 10, 1, "The pixel width and intensity of the outer glow effect.");
     private final Setting<Boolean> texture = this.sgGeneral.booleanSetting("Overlay Texture", false, "Whether to blend the original hand texture with the interior shader color.");
-    private final Setting<BlackOutColor> outsideColor = this.sgGeneral.colorSetting("Outline Palette", new BlackOutColor(255, 0, 0, 255), "The color of the glowing silhouette.");
-    private final Setting<BlackOutColor> insideColor = this.sgGeneral.colorSetting("Interior Palette", new BlackOutColor(255, 0, 0, 50), "The color applied to the hand model itself.");
+    private final Setting<BlackOutColor> outsideColor = this.sgGeneral.colorSetting("Outline Color", new BlackOutColor(255, 0, 0, 255), "The color of the glowing silhouette.");
+    private final Setting<BlackOutColor> insideColor = this.sgGeneral.colorSetting("Interior Color", new BlackOutColor(255, 0, 0, 50), "The color applied to the hand model itself.");
 
     public HandESP() {
         super("Hand ESP", "Applies post-processing shaders to the view-model (hands and items) to create glowing outlines or custom textures.", SubCategory.MISC_VISUAL, true);

@@ -184,7 +184,12 @@ public class HudEditor extends Screen {
                         this.picked.clear();
                         this.selectedElements.clear();
                         HudElement element = this.holdElement();
-                        this.settings.set(element);
+
+                        if (element != null) {
+                            this.settings.set(element);
+                        } else {
+                            this.settings.setOpenedElement(null);
+                        }
                     }
                 }
             }
@@ -267,6 +272,22 @@ public class HudEditor extends Screen {
         float offsetX = this.mx - x;
         float offsetY = this.my - y;
         return offsetX >= 0.0F && offsetY >= 0.0F && offsetX <= w && offsetY <= h;
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == 256) {
+            if (this.settings.getOpenedElement() != null) {
+                this.settings.setOpenedElement(null);
+                return true;
+            }
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean shouldCloseOnEsc() {
+        return this.settings.getOpenedElement() == null;
     }
 
     private enum State {

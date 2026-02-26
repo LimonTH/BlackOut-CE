@@ -18,8 +18,8 @@ public class TextElement extends HudElement {
     private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Blur", true, "Applies a real-time blur effect behind the element for improved legibility.");
     private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Rounded Corners", true, "Smooths the edges of the background and blur layers using a rounding radius.", () -> this.bg.get() || this.blur.get());
 
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Primary Text");
-    private final TextColorMultiSetting infoColor = TextColorMultiSetting.of(this.sgColor, "Secondary Info");
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Text");
+    private final TextColorMultiSetting infoColor = TextColorMultiSetting.of(this.sgColor, "Info");
 
     public TextElement(String name, String description) {
         super(name, description);

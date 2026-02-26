@@ -30,9 +30,9 @@ public class ArmorHUD extends HudElement {
     private final Setting<Boolean> bar = this.sgGeneral.booleanSetting("Durability Bar", false, "Visualizes remaining durability as a horizontal progress bar.");
     private final Setting<Boolean> text = this.sgGeneral.booleanSetting("Percentage Text", true, "Displays the remaining durability as a numerical percentage.");
     private final Setting<Boolean> centerText = this.sgGeneral.booleanSetting("Align Center", true, "Centers the durability text relative to the armor icon.");
-    private final RoundedColorMultiSetting armorBar = RoundedColorMultiSetting.of(this.sgGeneral, "Bar Palette");
+    private final RoundedColorMultiSetting armorBar = RoundedColorMultiSetting.of(this.sgGeneral, "Bar Color");
 
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Text Palette");
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Text Color");
 
     public ArmorHUD() {
         super("Armor HUD", "Displays a live overview of your equipped armor pieces, including item icons and precise durability monitoring.");
