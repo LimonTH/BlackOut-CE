@@ -17,6 +17,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
@@ -27,7 +28,17 @@ public class SoundESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
 
     private final Setting<FilterMode> filterMode = this.sgGeneral.enumSetting("Filter Logic", FilterMode.Whitelist, "Determines whether the sounds list acts as an inclusion or exclusion filter.");
-    private final Setting<List<SoundEvent>> sounds = this.sgGeneral.registrySetting("Tracked Sounds", "The specific sound events to be visualized in the world.", Registries.SOUND_EVENT, sound -> sound.getId().getPath(), SoundEvents.ENTITY_GENERIC_EXPLODE.value());
+    private final Setting<List<SoundEvent>> sounds = this.sgGeneral.registrySetting(
+            "Tracked Sounds",
+            "The specific sound events to be visualized in the world.",
+            Registries.SOUND_EVENT,
+            sound -> {
+                String key = "subtitles." + sound.getId().toTranslationKey();
+                String translated = net.minecraft.text.Text.translatable(key).getString();
+                return translated.equals(key) ? sound.getId().getPath() : translated;
+            },
+            SoundEvents.ENTITY_GENERIC_EXPLODE.value()
+    );
     private final Setting<BlackOutColor> color = this.sgGeneral.colorSetting("Text Color", new BlackOutColor(255, 255, 255, 255), "The color and transparency of the rendered sound labels.");
     private final Setting<Double> fadeIn = this.sgGeneral.doubleSetting("Fade-In Duration", 0.1, 0.0, 10.0, 0.1, "The time in seconds for the label to reach full opacity.");
     private final Setting<Double> renderTime = this.sgGeneral.doubleSetting("Dwell Duration", 0.2, 0.0, 10.0, 0.1, "The amount of time the label remains at full opacity before fading.");
@@ -45,14 +56,23 @@ public class SoundESP extends Module {
     @Event
     public void onSound(PlaySoundEvent event) {
         SoundInstance instance = event.sound;
-        if (this.filterMode.get() != FilterMode.Blacklist || !this.contains(instance)) {
-            if (this.filterMode.get() != FilterMode.Whitelist || this.contains(instance)) {
-                this.renderList
-                        .add(
-                                new SoundRender(instance.getX(), instance.getY(), instance.getZ(), instance.getId().getPath()),
-                                this.fadeIn.get() + this.renderTime.get() + this.fadeOut.get()
-                        );
+
+        boolean contains = this.contains(instance);
+        if ((this.filterMode.get() == FilterMode.Blacklist && !contains) ||
+                (this.filterMode.get() == FilterMode.Whitelist && contains)) {
+
+            String translationKey = "subtitles." + instance.getId().toTranslationKey();
+
+            String localizedName = Text.translatable(translationKey).getString();
+
+            if (localizedName.equals(translationKey)) {
+                localizedName = instance.getId().getPath();
             }
+
+            this.renderList.add(
+                    new SoundRender(instance.getX(), instance.getY(), instance.getZ(), localizedName),
+                    this.fadeIn.get() + this.renderTime.get() + this.fadeOut.get()
+            );
         }
     }
 
