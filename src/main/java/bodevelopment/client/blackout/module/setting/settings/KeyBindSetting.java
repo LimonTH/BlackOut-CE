@@ -34,7 +34,12 @@ public class KeyBindSetting extends Setting<KeyBind> {
 
     @Override
     public boolean onMouse(int key, boolean pressed) {
+        float oldMy = (float) this.my;
+        this.my += 5.5F;
         boolean interacted = this.get().onMouse(key, pressed);
+
+        this.my = oldMy;
+
         if (interacted) {
             SelectedComponent.setId(this.id);
         }

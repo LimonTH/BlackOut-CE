@@ -111,11 +111,16 @@ public class IntSetting extends Setting<Integer> {
             return true;
         }
 
+        float clickOffset = -5.5F;
+
         if (this.textField.click(0, true)) {
             SelectedComponent.setId(this.id);
             return true;
         }
-        else if (this.mx > this.x && this.mx < this.x + this.width && this.my > this.y && this.my < this.y + this.getHeight()) {
+
+        if (this.mx > this.x && this.mx < this.x + this.width
+                && this.my > this.y + clickOffset && this.my < this.y + this.getHeight() + clickOffset) {
+
             if (SelectedComponent.is(this.id)) {
                 SelectedComponent.reset();
             }
@@ -123,8 +128,7 @@ public class IntSetting extends Setting<Integer> {
             this.moving = true;
             Managers.CONFIG.saveAll();
             return true;
-        }
-        else {
+        } else {
             if (SelectedComponent.is(this.id)) {
                 SelectedComponent.reset();
             }

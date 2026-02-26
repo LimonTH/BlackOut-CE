@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.enums.SwitchMode;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
@@ -9,11 +10,11 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
+import bodevelopment.client.blackout.randomstuff.FindResult;
+import bodevelopment.client.blackout.util.InvUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -38,6 +39,7 @@ public class ElytraFly extends Module {
     private final Setting<Integer> cruiseAltitude = this.sgSpeed.intSetting("Target Altitude", 180, 0, 320, 1, "The desired Y-level maintained by the automated gliding algorithm.", () -> mode.get() == Mode.Glide);
     private final Setting<Integer> stallThreshold = this.sgSpeed.intSetting("Stall Velocity", 14, 5, 40, 1, "The speed floor that triggers a kinetic dive to regain momentum.", () -> mode.get() == Mode.Glide);
     private final Setting<Integer> momentumThreshold = this.sgSpeed.intSetting("climb Velocity", 27, 10, 60, 1, "The speed ceiling that triggers an ascent to convert kinetic energy into altitude.", () -> mode.get() == Mode.Glide);
+    private final Setting<Double> glidePitchStep = this.sgSpeed.doubleSetting("Glide Pitch Speed", 10.0, 1.0, 40.0, 0.5, "How fast the camera rotates to the target pitch in Glide mode.", () -> mode.get() == Mode.Glide);
 
     private final Setting<Double> pitchLerp = this.sgRotation.doubleSetting("Angular Interpolation", 0.1, 0.01, 1.0, 0.01, "The smoothness of pitch transitions when calculating speed-based orientation.", () -> mode.get() == Mode.Bounce);
     private final Setting<Double> slowPitch = this.sgRotation.doubleSetting("Stall Orientation", 50.0, 0.0, 90.0, 0.5, "The pitch angle targeted during low-velocity flight phases.", () -> mode.get() == Mode.Bounce);
@@ -49,9 +51,9 @@ public class ElytraFly extends Module {
     private final Setting<Boolean> idleWobble = this.sgRotation.booleanSetting("Procedural Oscillation", true, "Applies a gentle sinusoidal movement to simulate hovering while stationary.", () -> mode.get() == Mode.Rotation);
 
     private final Setting<Boolean> autoRocket = this.sgAutomation.booleanSetting("Kinetic Injection", true, "Automatically deploys firework rockets to maintain flight momentum.", () -> mode.get() == Mode.Glide);
+    private final Setting<SwitchMode> rocketSwitchMode = this.sgAutomation.enumSetting("Rocket Switch Mode", SwitchMode.Silent, "How the client switches to fireworks.", () -> autoRocket.get() && mode.get() == Mode.Glide);
     private final Setting<Integer> rocketCooldown = this.sgAutomation.intSetting("Propulsion Interval", 3500, 500, 10000, 100, "The minimum time in milliseconds between automated rocket deployments.", () -> (autoRocket.get() && mode.get() == Mode.Glide));
-    private final Setting<Boolean> deepScan = this.sgAutomation.booleanSetting("Inventory Retrieval", true, "Allows the module to pull rockets from the main inventory into the hotbar.", () -> (autoRocket.get() && mode.get() == Mode.Glide));
-
+    private final Setting<Boolean> showRockets = this.sgAutomation.booleanSetting("Show Rocket Count", true, "Displays remaining fireworks in the module info.");
     private boolean moving;
     private float yaw, lerpedPitch;
     private int sinceFalling, sinceJump;
@@ -77,7 +79,15 @@ public class ElytraFly extends Module {
 
     @Override
     public String getInfo() {
-        return mode.get().name() + (mode.get() == Mode.Glide ? String.format(" [%.1f]", currentSpeedAvg) : "");
+        String info = mode.get().name();
+        if (mode.get() == Mode.Glide) {
+            info += String.format(" [%.1f]", currentSpeedAvg);
+            if (showRockets.get()) {
+                int rockets = InvUtils.count(true, true, stack -> stack.isOf(Items.FIREWORK_ROCKET));
+                info += " " + rockets;
+            }
+        }
+        return info;
     }
 
     @Event
@@ -124,7 +134,7 @@ public class ElytraFly extends Module {
         }
     }
 
-    private void handleBounceMove(MoveEvent.Pre event) {
+    private void handleBounceMove(MoveEvent.Pre ignored) {
         if (BlackOut.mc.player.isFallFlying() && !this.sus) {
             float target = getPitch();
             lerpedPitch = (float) MathHelper.lerp(pitchLerp.get(), lerpedPitch, target);
@@ -132,19 +142,29 @@ public class ElytraFly extends Module {
         }
     }
 
-    private void handleGlide(MoveEvent.Pre event) {
+    private void handleGlide(MoveEvent.Pre ignored) {
         if (!BlackOut.mc.player.isFallFlying()) return;
+
         double playerY = BlackOut.mc.player.getY();
         long currentTime = System.currentTimeMillis();
-        if (!climbingToTarget && playerY < cruiseAltitude.get() - 60) climbingToTarget = true;
+
+        if (!climbingToTarget && playerY < cruiseAltitude.get() - 10) {
+            climbingToTarget = true;
+        }
 
         GlideState state;
         if (climbingToTarget) {
             state = GlideState.CLIMB;
+
             if (autoRocket.get() && currentTime - lastRocketTime >= rocketCooldown.get()) {
-                if (useRocket()) lastRocketTime = currentTime;
+                if (useRocket()) {
+                    lastRocketTime = currentTime;
+                }
             }
-            if (playerY >= cruiseAltitude.get()) climbingToTarget = false;
+
+            if (playerY >= cruiseAltitude.get() + 2) {
+                climbingToTarget = false;
+            }
         } else {
             if (currentSpeedAvg <= stallThreshold.get()) glideState = GlideState.DIVE;
             else if (currentSpeedAvg >= momentumThreshold.get()) glideState = GlideState.CRUISE;
@@ -152,14 +172,22 @@ public class ElytraFly extends Module {
         }
 
         float targetPitch;
-        if (state == GlideState.DIVE) targetPitch = diveAngle.get().floatValue();
-        else if (state == GlideState.CLIMB) targetPitch = -climbAngle.get().floatValue();
-        else {
+        if (state == GlideState.DIVE) {
+            targetPitch = diveAngle.get().floatValue();
+        } else if (state == GlideState.CLIMB) {
+            float baseClimb = -climbAngle.get().floatValue();
+            targetPitch = (currentSpeedAvg < 15) ? baseClimb / 2f : baseClimb;
+        } else {
             cruisePhase += 0.019;
             double tri = 2.0 * Math.abs(2.0 * (cruisePhase - Math.floor(cruisePhase + 0.5))) - 1.0;
             targetPitch = (float) -(4.0 + (8.0 * (0.5 * (tri + 1.0))));
         }
-        BlackOut.mc.player.setPitch(MathHelper.stepTowards(BlackOut.mc.player.getPitch(), targetPitch, 5));
+
+        BlackOut.mc.player.setPitch(MathHelper.stepTowards(
+                BlackOut.mc.player.getPitch(),
+                targetPitch,
+                glidePitchStep.get().floatValue())
+        );
     }
 
     private void handleRotation(MoveEvent.Pre event) {
@@ -196,22 +224,22 @@ public class ElytraFly extends Module {
     }
 
     private boolean useRocket() {
-        int slot = -1;
-        for (int i = 0; i < (deepScan.get() ? 36 : 9); i++) {
-            if (BlackOut.mc.player.getInventory().getStack(i).isOf(Items.FIREWORK_ROCKET)) { slot = i; break; }
-        }
-        if (slot == -1) return false;
-        int old = BlackOut.mc.player.getInventory().selectedSlot;
-        if (slot < 9) {
-            Managers.PACKET.sendInstantly(new UpdateSelectedSlotC2SPacket(slot));
+        FindResult result = rocketSwitchMode.get().find(stack -> stack.isOf(Items.FIREWORK_ROCKET));
+        if (!result.wasFound()) return false;
+
+        if (BlackOut.mc.player.getMainHandStack().isOf(Items.FIREWORK_ROCKET)) {
             BlackOut.mc.interactionManager.interactItem(BlackOut.mc.player, Hand.MAIN_HAND);
-            Managers.PACKET.sendInstantly(new UpdateSelectedSlotC2SPacket(old));
-        } else {
-            BlackOut.mc.interactionManager.clickSlot(0, slot, old, SlotActionType.SWAP, BlackOut.mc.player);
-            BlackOut.mc.interactionManager.interactItem(BlackOut.mc.player, Hand.MAIN_HAND);
-            BlackOut.mc.interactionManager.clickSlot(0, slot, old, SlotActionType.SWAP, BlackOut.mc.player);
+            return true;
         }
-        return true;
+
+        if (rocketSwitchMode.get().swap(result.slot())) {
+
+            BlackOut.mc.interactionManager.interactItem(BlackOut.mc.player, Hand.MAIN_HAND);
+            rocketSwitchMode.get().swapBack();
+            return true;
+        }
+
+        return false;
     }
 
     public float getPitch() {

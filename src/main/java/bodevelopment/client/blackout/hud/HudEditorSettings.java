@@ -303,8 +303,8 @@ public class HudEditorSettings {
         }
     }
 
-    private java.util.List<String> wrapText(String text, float maxWidth) {
-        java.util.List<String> lines = new ArrayList<>();
+    private List<String> wrapText(String text, float maxWidth) {
+        List<String> lines = new ArrayList<>();
         String[] words = text.split(" ");
         StringBuilder currentLine = new StringBuilder();
 
