@@ -9,9 +9,14 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 
 public class GuiSettings extends SettingsModule {
     private static GuiSettings INSTANCE;
+
+    private final SettingGroup sgScreens = this.addGroup("Screens");
     private final SettingGroup sgStyle = this.addGroup("Style");
     private final SettingGroup sgOpen = this.addGroup("Open");
     private final SettingGroup sgClosed = this.addGroup("Closed");
+
+    public final Setting<Boolean> searchScreen = this.sgScreens.booleanSetting("Search Screen", true,
+            "Allows opening the search menu by typing any letter while in ClickGUI.");
 
     public final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgStyle, TextColorMode.Wave, () -> true,
             "Text");

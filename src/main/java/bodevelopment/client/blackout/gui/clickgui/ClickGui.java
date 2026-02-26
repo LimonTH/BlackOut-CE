@@ -721,7 +721,7 @@ public class ClickGui extends Screen {
         boolean isModifier = (key == GLFW.GLFW_KEY_LEFT_SHIFT || key == GLFW.GLFW_KEY_RIGHT_SHIFT || key == GLFW.GLFW_KEY_LEFT_CONTROL || key == GLFW.GLFW_KEY_RIGHT_CONTROL || key == GLFW.GLFW_KEY_LEFT_ALT || key == GLFW.GLFW_KEY_RIGHT_ALT);
         boolean isForbidden = (key == GLFW.GLFW_KEY_ESCAPE || key == GLFW.GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_BACKSPACE || key == GLFW.GLFW_KEY_TAB);
 
-        if (keyName != null && !isModifier && !isForbidden) {
+        if (GuiSettings.getInstance().searchScreen.get() && keyName != null && !isModifier && !isForbidden) {
             this.setScreen(new SearchScreen(key));
         }
     }
