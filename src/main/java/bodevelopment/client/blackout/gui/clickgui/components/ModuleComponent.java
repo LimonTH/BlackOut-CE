@@ -163,7 +163,10 @@ public class ModuleComponent extends Component {
             float settingX = this.x + padding;
             float settingWidth = this.width - (padding * 2.0F);
 
-            if (currentMx > this.x && currentMx < this.x + this.width && currentMy > posY && currentMy < posY + height) {
+            float hoverDetectionY = posY - 5.5F;
+
+            if (currentMx > this.x && currentMx < this.x + this.width &&
+                    currentMy > hoverDetectionY && currentMy < hoverDetectionY + height) {
                 if (setting.description != null && !setting.description.isEmpty()) {
                     ClickGui.hoveredDescription = setting.description;
                 }
@@ -171,7 +174,7 @@ public class ModuleComponent extends Component {
 
             boolean shouldRender = this.l < this.maxLength && posY >= -height && posY <= ClickGui.height + height;
 
-            this.l = this.l + setting.onRender(
+            float renderedHeight = setting.onRender(
                     this.stack,
                     this.frameTime,
                     settingWidth,
@@ -181,6 +184,8 @@ public class ModuleComponent extends Component {
                     currentMy,
                     shouldRender
             );
+
+            this.l += renderedHeight;
         }
     }
 
