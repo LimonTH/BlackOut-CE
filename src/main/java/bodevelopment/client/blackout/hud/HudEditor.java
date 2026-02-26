@@ -184,9 +184,7 @@ public class HudEditor extends Screen {
                         this.picked.clear();
                         this.selectedElements.clear();
                         HudElement element = this.holdElement();
-                        if (element != null) {
-                            this.settings.set(element);
-                        }
+                        this.settings.set(element);
                     }
                 }
             }
