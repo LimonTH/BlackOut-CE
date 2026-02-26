@@ -6,269 +6,176 @@ import bodevelopment.client.blackout.event.events.BlockStateEvent;
 import bodevelopment.client.blackout.event.events.GameJoinEvent;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
-import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import bodevelopment.client.blackout.randomstuff.BlackOutColor;
-import bodevelopment.client.blackout.randomstuff.ShaderSetup;
-import bodevelopment.client.blackout.rendering.framebuffer.FrameBuffer;
-import bodevelopment.client.blackout.rendering.renderer.Renderer;
-import bodevelopment.client.blackout.rendering.shader.Shaders;
+import bodevelopment.client.blackout.module.setting.multisettings.BoxMultiSetting;
 import bodevelopment.client.blackout.util.BoxUtils;
-import bodevelopment.client.blackout.util.render.Render3DUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.block.Block;
-import net.minecraft.client.render.*;
 import net.minecraft.client.world.ClientChunkManager;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.WorldChunk;
-import org.joml.Matrix4f;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.*;
 
 public class Search extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRender = this.addGroup("Visuals");
 
-    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Target Blocks", "The specific block types to locate and highlight in the world.");
-    private final Setting<Boolean> dynamicBox = this.sgGeneral.booleanSetting("Voxel Bounds", true, "Adjusts the highlight box to match the exact shape of the block (e.g., chests or slabs) rather than a full cube.");
-    private final Setting<Boolean> instantScan = this.sgGeneral.booleanSetting("Force Scan", false, "Immediately scans all loaded chunks instead of processing them incrementally.");
-    private final Setting<Integer> scanSpeed = this.sgGeneral.intSetting("Iteration Rate", 1, 1, 10, 1, "The number of chunks processed per frame during a background scan.", () -> !this.instantScan.get());
+    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Target Blocks", "The specific block types to locate.");
+    private final Setting<Boolean> dynamicBox = this.sgGeneral.booleanSetting("Voxel Bounds", true, "Adjusts highlight to match the exact block shape.");
+    private final Setting<Boolean> instantScan = this.sgGeneral.booleanSetting("Force Scan", false, "Scans all loaded chunks immediately.");
+    private final Setting<Integer> scanSpeed = this.sgGeneral.intSetting("Iteration Rate", 1, 1, 10, 1, "Chunks per frame during scan.", () -> !this.instantScan.get());
+    private final Setting<Boolean> onlyExposed = this.sgGeneral.booleanSetting("Culling", false, "Only highlights blocks exposed to air.");
 
-    private final Setting<BlackOutColor> fillColor = this.sgRender.colorSetting("Highlight Color", new BlackOutColor(255, 0, 0, 50), "The base color and opacity of the block highlight.");
-    private final Setting<Integer> bloom = this.sgRender.intSetting("Glow Intensity", 5, 0, 10, 1, "The strength of the bloom/glow effect applied to highlighted blocks.");
-    private final Setting<BlackOutColor> bloomColor = this.sgRender.colorSetting("Glow Color", new BlackOutColor(255, 0, 0, 100), "The color of the outer glow effect.");
-    private final Setting<Boolean> onlyExposed = this.sgRender.booleanSetting("Culling", false, "Only highlights blocks that are adjacent to at least one non-opaque block (exposed to air).");
+    private final BoxMultiSetting rendering = BoxMultiSetting.of(this.sgRender);
 
-    private final List<BlockPos> positions = Collections.synchronizedList(new ArrayList<>());
-    private final List<ChunkPos> toScan = new ArrayList<>();
-    private final List<ChunkPos> prevChunks = new ArrayList<>();
+    private final Map<BlockPos, Box> positions = new ConcurrentHashMap<>();
+    private final Set<ChunkPos> prevChunks = new HashSet<>();
+    private final Queue<ChunkPos> toScan = new ConcurrentLinkedQueue();
+
+    private final ForkJoinPool pool = new ForkJoinPool();
 
     public Search() {
-        super("Search", "Locates and highlights specific block types using a threaded chunk-scanning algorithm and post-processing shaders.", SubCategory.WORLD, true);
+        super("Search", "Locates blocks using all CPU cores and advanced palette culling.", SubCategory.WORLD, true);
     }
 
     @Override
-    public void onEnable() {
-        this.reset();
-    }
+    public void onEnable() { this.reset(); }
 
     @Event
-    public void onJoin(GameJoinEvent event) {
-        this.reset();
-    }
+    public void onJoin(GameJoinEvent event) { this.reset(); }
 
     @Event
     public void onTick(TickEvent.Post event) {
         if (BlackOut.mc.world != null) {
             this.checkChunks();
+            this.find();
         }
     }
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        this.find();
-        this.render();
-    }
-
-    @Event
-    public void onRenderHud(RenderEvent.Hud.Pre event) {
-        FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("search");
-        FrameBuffer bloomBuffer = Managers.FRAME_BUFFER.getBuffer("search-bloom");
-        RenderUtils.renderBufferWith(buffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.fillColor.get().getRGB())));
-        if (this.bloom.get() > 0) {
-            bloomBuffer.clear(0.0F, 0.0F, 0.0F, 1.0F);
-            bloomBuffer.bind(true);
-            RenderUtils.renderBufferWith(buffer, Shaders.screentex, new ShaderSetup(setup -> setup.set("alpha", 1.0F)));
-            bloomBuffer.unbind();
-            RenderUtils.blurBufferBW("search-bloom", this.bloom.get() + 1);
-            bloomBuffer.bind(true);
-            Renderer.setTexture(buffer.getTexture(), 1);
-            RenderUtils.renderBufferWith(bloomBuffer, Shaders.subtract, new ShaderSetup(setup -> {
-                setup.set("uTexture0", 0);
-                setup.set("uTexture1", 1);
-            }));
-            bloomBuffer.unbind();
-            RenderUtils.renderBufferWith(bloomBuffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.bloomColor.get().getRGB())));
-        }
+        positions.values().forEach(rendering::render);
     }
 
     @Event
     public void onState(BlockStateEvent event) {
-        if (BlackOut.mc.world != null && BlackOut.mc.player != null) {
+        if (BlackOut.mc.world != null) {
             this.onBlock(event.state.getBlock(), event.pos, true);
         }
     }
 
     private void reset() {
         this.prevChunks.clear();
+        this.toScan.clear();
         this.positions.clear();
     }
 
-    private void checkChunks() {
-        List<ChunkPos> current = new ArrayList<>();
-        ClientChunkManager.ClientChunkMap map = BlackOut.mc.world.getChunkManager().chunks;
-
-        for (int i = 0; i < map.chunks.length(); i++) {
-            WorldChunk chunk = map.chunks.get(i);
-            if (chunk != null) {
-                ChunkPos pos = chunk.getPos();
-                if (!this.prevChunks.contains(pos)) {
-                    this.addScan(pos);
-                }
-
-                this.prevChunks.remove(pos);
-                current.add(pos);
-            }
-        }
-
-        this.prevChunks.forEach(this::unScan);
-        this.prevChunks.clear();
-        this.prevChunks.addAll(current);
-    }
-
-    private void unScan(ChunkPos pos) {
-        this.toScan.remove(pos);
-        this.positions
-                .removeIf(
-                        block -> block.getX() >= pos.getStartX()
-                                && block.getX() <= pos.getEndX()
-                                && block.getZ() >= pos.getStartZ()
-                                && block.getZ() <= pos.getEndZ()
-                );
-    }
-
-    private void render() {
-        FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("search");
-        buffer.clear(0.0F, 0.0F, 0.0F, 1.0F);
-        buffer.bind(true);
-        Render3DUtils.matrices.push();
-        Render3DUtils.setRotation(Render3DUtils.matrices);
-        Render3DUtils.start();
-        Matrix4f matrix4f = Render3DUtils.matrices.peek().getPositionMatrix();
-        Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-        BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-        this.positions.forEach(pos -> this.renderBox(bufferBuilder, matrix4f, pos, camPos));
-        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
-        Render3DUtils.end();
-        Render3DUtils.matrices.pop();
-        buffer.unbind();
-    }
-
-    private void renderBox(BufferBuilder bufferBuilder, Matrix4f matrix4f, BlockPos pos, Vec3d camPos) {
-        Box box = this.getBox(pos);
-        float minX = (float) (box.minX - camPos.x);
-        float maxX = (float) (box.maxX - camPos.x);
-        float minY = (float) (box.minY - camPos.y);
-        float maxY = (float) (box.maxY - camPos.y);
-        float minZ = (float) (box.minZ - camPos.z);
-        float maxZ = (float) (box.maxZ - camPos.z);
-        this.drawQuads(bufferBuilder, matrix4f, minX, maxX, minY, maxY, minZ, maxZ);
-    }
-
-    private void drawQuads(BufferBuilder bufferBuilder, Matrix4f matrix4f, float minX, float maxX, float minY, float maxY, float minZ, float maxZ) {
-        if (minY > 0.0F) {
-            this.vertex(bufferBuilder, matrix4f, minX, minY, minZ);
-            this.vertex(bufferBuilder, matrix4f, maxX, minY, minZ);
-            this.vertex(bufferBuilder, matrix4f, maxX, minY, maxZ);
-            this.vertex(bufferBuilder, matrix4f, minX, minY, maxZ);
-        } else if (maxY < 0.0F) {
-            this.vertex(bufferBuilder, matrix4f, minX, maxY, minZ);
-            this.vertex(bufferBuilder, matrix4f, maxX, maxY, minZ);
-            this.vertex(bufferBuilder, matrix4f, maxX, maxY, maxZ);
-            this.vertex(bufferBuilder, matrix4f, minX, maxY, maxZ);
-        }
-
-        if (minX > 0.0F) {
-            this.vertex(bufferBuilder, matrix4f, minX, minY, minZ);
-            this.vertex(bufferBuilder, matrix4f, minX, maxY, minZ);
-            this.vertex(bufferBuilder, matrix4f, minX, maxY, maxZ);
-            this.vertex(bufferBuilder, matrix4f, minX, minY, maxZ);
-        } else if (maxX < 0.0F) {
-            this.vertex(bufferBuilder, matrix4f, maxX, minY, minZ);
-            this.vertex(bufferBuilder, matrix4f, maxX, maxY, minZ);
-            this.vertex(bufferBuilder, matrix4f, maxX, maxY, maxZ);
-            this.vertex(bufferBuilder, matrix4f, maxX, minY, maxZ);
-        }
-
-        if (minZ > 0.0F) {
-            this.vertex(bufferBuilder, matrix4f, minX, minY, minZ);
-            this.vertex(bufferBuilder, matrix4f, minX, maxY, minZ);
-            this.vertex(bufferBuilder, matrix4f, maxX, maxY, minZ);
-            this.vertex(bufferBuilder, matrix4f, maxX, minY, minZ);
-        } else if (maxZ < 0.0F) {
-            this.vertex(bufferBuilder, matrix4f, minX, minY, maxZ);
-            this.vertex(bufferBuilder, matrix4f, minX, maxY, maxZ);
-            this.vertex(bufferBuilder, matrix4f, maxX, maxY, maxZ);
-            this.vertex(bufferBuilder, matrix4f, maxX, minY, maxZ);
-        }
-    }
-
-    private void vertex(BufferBuilder bufferBuilder, Matrix4f matrix4f, float x, float y, float z) {
-        bufferBuilder.vertex(matrix4f, x, y, z).color(1.0F, 1.0F, 1.0F, 1.0F).normal(0.0F, 0.0F, 0.0F);
-    }
-
-    private Box getBox(BlockPos pos) {
-        if (this.dynamicBox.get()) {
-            VoxelShape shape = BlackOut.mc.world.getBlockState(pos).getOutlineShape(BlackOut.mc.world, pos);
-            if (!shape.isEmpty()) {
-                return shape.getBoundingBox().offset(pos);
-            }
-        }
-
-        return BoxUtils.get(pos);
-    }
-
     private void find() {
-        if (this.instantScan.get()) {
-            this.toScan.forEach(this::scan);
-            this.toScan.clear();
-        } else {
-            for (int i = 0; i < this.scanSpeed.get(); i++) {
-                if (this.toScan.isEmpty()) {
-                    return;
-                }
+        if (toScan.isEmpty()) return;
 
-                this.scan(this.toScan.getFirst());
-                this.toScan.removeFirst();
-            }
+        int limit = instantScan.get() ? toScan.size() : scanSpeed.get();
+        for (int i = 0; i < limit; i++) {
+            if (toScan.isEmpty()) break;
+            ChunkPos pos = toScan.remove();
+
+            pool.execute(() -> this.scan(pos));
         }
     }
 
     private void scan(ChunkPos pos) {
-        for (int x = pos.getStartX(); x <= pos.getEndX(); x++) {
-            for (int y = -64; y <= 319; y++) {
-                for (int z = pos.getStartZ(); z <= pos.getEndZ(); z++) {
-                    BlockPos p = new BlockPos(x, y, z);
-                    if (this.blocks.get().contains(BlackOut.mc.world.getBlockState(p).getBlock())) {
-                        this.positions.add(p);
+        try {
+            var chunkView = BlackOut.mc.world.getChunkManager().getChunk(pos.x, pos.z);
+            if (!(chunkView instanceof WorldChunk chunk) || chunk.isEmpty()) {
+                return;
+            }
+            ChunkSection[] sections = chunk.getSectionArray();
+
+            for (int i = 0; i < sections.length; i++) {
+                ChunkSection section = sections[i];
+                if (section == null || section.isEmpty()) continue;
+
+                if (!section.getBlockStateContainer().hasAny(state -> this.blocks.get().contains(state.getBlock()))) {
+                    continue;
+                }
+
+                int startX = pos.getStartX();
+                int startZ = pos.getStartZ();
+                int minY = chunk.getBottomY() + (i * 16);
+
+                List<FoundBlock> batch = new ArrayList<>();
+
+                for (int y = 0; y < 16; y++) {
+                    for (int x = 0; x < 16; x++) {
+                        for (int z = 0; z < 16; z++) {
+                            var state = section.getBlockState(x, y, z);
+                            if (this.blocks.get().contains(state.getBlock())) {
+                                batch.add(new FoundBlock(state.getBlock(), new BlockPos(startX + x, minY + y, startZ + z)));
+                            }
+                        }
                     }
                 }
+
+                if (!batch.isEmpty()) {
+                    BlackOut.mc.execute(() -> {
+                        for (FoundBlock fb : batch) {
+                            this.onBlock(fb.block(), fb.pos, false);
+                        }
+                    });
+                }
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    private void checkChunks() {
+        ClientChunkManager.ClientChunkMap map = BlackOut.mc.world.getChunkManager().chunks;
+        Set<ChunkPos> currentChunks = new HashSet<>();
+
+        for (int i = 0; i < map.chunks.length(); i++) {
+            WorldChunk chunk = map.chunks.get(i);
+            if (chunk != null) currentChunks.add(chunk.getPos());
+        }
+
+        for (ChunkPos pos : currentChunks) {
+            if (!prevChunks.contains(pos)) {
+                if (!toScan.contains(pos)) toScan.add(pos);
             }
         }
+
+        prevChunks.removeIf(pos -> {
+            if (!currentChunks.contains(pos)) {
+                this.unScan(pos);
+                return true;
+            }
+            return false;
+        });
+        prevChunks.addAll(currentChunks);
     }
 
-    private void addScan(ChunkPos pos) {
-        if (!this.toScan.contains(pos)) {
-            this.toScan.add(pos);
-        }
+    private void unScan(ChunkPos pos) {
+        this.toScan.remove(pos);
+        this.positions.keySet().removeIf(p ->
+                p.getX() >= pos.getStartX() && p.getX() <= pos.getEndX() &&
+                        p.getZ() >= pos.getStartZ() && p.getZ() <= pos.getEndZ()
+        );
     }
 
-    private void onBlock(Block block, BlockPos pos, boolean first) {
+    private void onBlock(Block block, BlockPos pos, boolean updateNeighbors) {
         boolean valid = this.blocks.get().contains(block);
+
         if (valid && this.onlyExposed.get()) {
             valid = false;
-
             for (Direction dir : Direction.values()) {
-                BlockPos offsetPos = pos.offset(dir);
-                if (!BlackOut.mc.world.getBlockState(offsetPos).getBlock().settings.opaque) {
+                if (!BlackOut.mc.world.getBlockState(pos.offset(dir)).isOpaque()) {
                     valid = true;
                     break;
                 }
@@ -276,18 +183,28 @@ public class Search extends Module {
         }
 
         if (valid) {
-            if (!this.positions.contains(pos)) {
-                this.positions.add(pos);
+            if (!this.positions.containsKey(pos)) {
+                this.positions.put(pos, this.getBox(pos));
             }
         } else {
             this.positions.remove(pos);
         }
 
-        if (first) {
-            for (Direction dirx : Direction.values()) {
-                BlockPos offsetPos = pos.offset(dirx);
+        if (updateNeighbors) {
+            for (Direction dir : Direction.values()) {
+                BlockPos offsetPos = pos.offset(dir);
                 this.onBlock(BlackOut.mc.world.getBlockState(offsetPos).getBlock(), offsetPos, false);
             }
         }
     }
+
+    private Box getBox(BlockPos pos) {
+        if (this.dynamicBox.get()) {
+            VoxelShape shape = BlackOut.mc.world.getBlockState(pos).getOutlineShape(BlackOut.mc.world, pos);
+            if (!shape.isEmpty()) return shape.getBoundingBox().offset(pos);
+        }
+        return BoxUtils.get(pos);
+    }
+
+    private record FoundBlock(Block block, BlockPos pos) {}
 }
