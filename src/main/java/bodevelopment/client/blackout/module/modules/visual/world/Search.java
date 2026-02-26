@@ -29,19 +29,19 @@ public class Search extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRender = this.addGroup("Visuals");
 
-    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Target Blocks", "The specific block types to locate.");
-    private final Setting<Boolean> dynamicBox = this.sgGeneral.booleanSetting("Voxel Bounds", true, "Adjusts highlight to match the exact block shape.");
-    private final Setting<Boolean> instantScan = this.sgGeneral.booleanSetting("Force Scan", false, "Scans all loaded chunks immediately.");
-    private final Setting<Integer> scanSpeed = this.sgGeneral.intSetting("Iteration Rate", 1, 1, 10, 1, "Chunks per frame during scan.", () -> !this.instantScan.get());
-    private final Setting<Boolean> onlyExposed = this.sgGeneral.booleanSetting("Culling", false, "Only highlights blocks exposed to air.");
-
-    private final BoxMultiSetting rendering = BoxMultiSetting.of(this.sgRender);
-
     private final Map<BlockPos, Box> positions = new ConcurrentHashMap<>();
     private final Set<ChunkPos> prevChunks = new HashSet<>();
-    private final Queue<ChunkPos> toScan = new ConcurrentLinkedQueue();
+    private final Queue<ChunkPos> toScan = new ConcurrentLinkedQueue<>();
 
     private final ForkJoinPool pool = new ForkJoinPool();
+
+    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Target Blocks", "The specific block types to locate.");
+    private final Setting<Boolean> dynamicBox = this.sgGeneral.booleanSetting("Voxel Bounds", true, "Adjusts highlight to match the exact block shape.").onChanged(ignored -> refresh());
+    private final Setting<Boolean> instantScan = this.sgGeneral.booleanSetting("Force Scan", false, "Scans all loaded chunks immediately.");
+    private final Setting<Integer> scanSpeed = this.sgGeneral.intSetting("Iteration Rate", 1, 1, 10, 1, "Chunks per frame during scan.", () -> !this.instantScan.get());
+    private final Setting<Boolean> onlyExposed = this.sgGeneral.booleanSetting("Culling", false, "Only highlights blocks exposed to air.").onChanged(ignored -> refresh());;
+
+    private final BoxMultiSetting rendering = BoxMultiSetting.of(this.sgRender);
 
     public Search() {
         super("Search", "Locates blocks using all CPU cores and advanced palette culling.", SubCategory.WORLD, true);
@@ -77,6 +77,16 @@ public class Search extends Module {
         this.prevChunks.clear();
         this.toScan.clear();
         this.positions.clear();
+    }
+
+    private void refresh() {
+        if (BlackOut.mc.world == null) return;
+        positions.clear();
+        for (ChunkPos pos : prevChunks) {
+            if (!toScan.contains(pos)) {
+                toScan.add(pos);
+            }
+        }
     }
 
     private void find() {
