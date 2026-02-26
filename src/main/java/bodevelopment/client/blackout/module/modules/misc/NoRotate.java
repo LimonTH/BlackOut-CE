@@ -12,6 +12,9 @@ public class NoRotate extends Module {
 
     public final Setting<NoRotateMode> mode = this.sgGeneral.enumSetting("Bypass Mode", NoRotateMode.Cancel, "Determines how server-mandated rotation packets are handled during a rubberband or teleport event.");
 
+    public float relYaw = 0;
+    public float relPitch = 0;
+
     public NoRotate() {
         super("No Rotate", "Prevents the server from forcefully resetting your camera rotation, helping maintain focus during movement desync.", SubCategory.MISC, false);
         INSTANCE = this;
@@ -29,6 +32,7 @@ public class NoRotate extends Module {
     public enum NoRotateMode {
         Cancel,
         Set,
-        Spoof
+        Spoof,
+        Rel
     }
 }

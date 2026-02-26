@@ -24,8 +24,8 @@ public abstract class MixinHandledScreen implements IHandledScreen {
         return this.focusedSlot;
     }
 
-    @Inject(method = "render", at = @At("TAIL"))
-    private void onRenderPost(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    @Inject(method = "drawMouseoverTooltip", at = @At("TAIL"))
+    private void onDrawTooltipPost(DrawContext context, int mouseX, int mouseY, CallbackInfo ci) {
         ShulkerViewer module = ShulkerViewer.getInstance();
         if (module != null && module.enabled) {
             module.renderOnTop(context, mouseX, mouseY);

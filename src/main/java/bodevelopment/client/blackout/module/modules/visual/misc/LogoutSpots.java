@@ -37,6 +37,7 @@ import org.joml.Quaternionf;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class LogoutSpots extends Module {
     private static LogoutSpots INSTANCE;
@@ -60,7 +61,7 @@ public class LogoutSpots extends Module {
     private final Setting<Boolean> pops = this.sgInfo.booleanSetting("Totem Counts", false, "Displays the number of totems used by the player during the session.");
     private final Setting<Boolean> time = this.sgInfo.booleanSetting("Logout Timer", false, "Shows a live timer indicating how long ago the player disconnected.");
 
-    private final List<Spot> spots = new ArrayList<>();
+    private final List<Spot> spots = new CopyOnWriteArrayList<>();
     private final TimerMap<UUID, ItemStack[]> prevItems = new TimerMap<>(true);
     private final TimerList<UUID> removedUUIDs = new TimerList<>(true);
     private final TimerList<AbstractClientPlayerEntity> removedEntities = new TimerList<>(true);

@@ -1,7 +1,6 @@
 package bodevelopment.client.blackout.module.modules.visual.misc;
 
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.module.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.RegistryNames;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -13,8 +12,6 @@ import net.minecraft.util.Arm;
 
 import java.util.List;
 
-// TODO: NEED PATCHES
-@OnlyDev
 public class NoRender extends Module {
     private static NoRender INSTANCE;
 

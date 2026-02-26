@@ -1,7 +1,6 @@
 package bodevelopment.client.blackout.module.modules.visual.world;
 
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.module.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -9,8 +8,6 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.render.FogShape;
 
-// TODO: NEED PATCHES
-@OnlyDev
 public class Ambience extends Module {
     private static Ambience INSTANCE;
 
