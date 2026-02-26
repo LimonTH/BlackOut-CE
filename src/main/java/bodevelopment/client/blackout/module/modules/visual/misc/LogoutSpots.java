@@ -29,6 +29,7 @@ import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
@@ -139,6 +140,9 @@ public class LogoutSpots extends Module {
         Camera camera = BlackOut.mc.gameRenderer.getCamera();
         Vec3d camPos = camera.getPos();
 
+        // 1. ОБЯЗАТЕЛЬНО: Подготавливаем систему рендеринга
+        Render3DUtils.start();
+
         this.spots.removeIf(spot -> {
             UUID uuid = spot.player.getGameProfile().getId();
             if (!spot.seen && this.anyPlayerMatches(uuid)) spot.setSeen();
@@ -146,17 +150,10 @@ public class LogoutSpots extends Module {
             this.setAlpha(spot);
             if (this.alphaMulti <= 0.0F) return true;
 
-            event.stack.push();
-
-            event.stack.loadIdentity();
-            event.stack.multiply(new Quaternionf(camera.getRotation()).conjugate());
-
-            double x = spot.x - camPos.x;
-            double y = spot.y - camPos.y;
-            double z = spot.z - camPos.z;
-            event.stack.translate((float) x, (float) y, (float) z);
-
             if (this.model.get()) {
+                event.stack.push();
+                event.stack.translate(spot.x - camPos.x, spot.y - camPos.y, spot.z - camPos.z);
+
                 WireframeRenderer.renderServerPlayer(
                         event.stack,
                         spot.player,
@@ -164,23 +161,33 @@ public class LogoutSpots extends Module {
                         this.lineColor.get().alphaMulti(this.alphaMulti),
                         this.sideColor.get().alphaMulti(this.alphaMulti),
                         this.renderShape.get(),
-                        0f,
-                        0,
-                        1f
+                        0f, 0, 1f
                 );
+                event.stack.pop();
             } else {
+                Box rawBox = spot.player.getBoundingBox();
+                Box absoluteBox = new net.minecraft.util.math.Box(
+                        spot.x - (rawBox.getLengthX() / 2.0),
+                        spot.y,
+                        spot.z - (rawBox.getLengthZ() / 2.0),
+                        spot.x + (rawBox.getLengthX() / 2.0),
+                        spot.y + rawBox.getLengthY(),
+                        spot.z + (rawBox.getLengthZ() / 2.0)
+                );
+
                 Render3DUtils.box(
-                        spot.player.getBoundingBox().offset(-spot.player.getX(), -spot.player.getY(), -spot.player.getZ()),
+                        absoluteBox,
                         this.sideColor.get().alphaMulti(this.alphaMulti),
                         this.lineColor.get().alphaMulti(this.alphaMulti),
                         this.renderShape.get()
                 );
             }
-            event.stack.pop();
 
             long lifetime = (long) ((this.maxTime.get() + this.fadeTime.get()) * 1000.0);
             return (System.currentTimeMillis() - spot.logTime) > lifetime;
         });
+
+        Render3DUtils.end();
     }
 
     @Event
