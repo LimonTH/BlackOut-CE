@@ -112,7 +112,7 @@ public class EnumSetting<T extends Enum<?>> extends Setting<T> {
         BlackOut.FONT.text(this.stack, this.name, textScale, this.x + 5.0F, nameY, GuiColorUtils.getSettingText(this.y), false, true);
 
         float valueX = this.x + this.width - this.wi / 2.0F - 10.0F - this.xOffset;
-        float valueY = middleY - (fontHeight / 2.0F) + 1.0F;
+        float valueY = middleY - (fontHeight / 2.0F);
         BlackOut.FONT.text(this.stack, this.get().name(), textScale, valueX, valueY, GuiColorUtils.getSettingText(this.y), true, true);
         return this.getHeight();
     }

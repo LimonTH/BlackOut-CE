@@ -24,7 +24,7 @@ public class StatsHUD extends HudElement {
     private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Enable Backdrop", true, "Renders a background panel behind the player metadata.");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
     private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a real-time blur effect to the background for enhanced UI contrast.");
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Label Palette");
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Label Color");
 
     private final Setting<Boolean> hole = this.sgData.booleanSetting("Hole Chronology", true, "Displays the total duration the target has occupied a hole.");
     private final Setting<Boolean> phased = this.sgData.booleanSetting("Phase Tracking", true, "Displays the total duration the target has been in a phased or clipped state.");

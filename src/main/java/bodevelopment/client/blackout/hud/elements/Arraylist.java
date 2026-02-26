@@ -38,9 +38,9 @@ public class Arraylist extends HudElement {
     private final Setting<BlackOutColor> bgColor = this.sgGeneral.colorSetting("Backdrop Color", new BlackOutColor(0, 0, 0, 50), "The color and alpha transparency of the module backgrounds.", this.bg::get);
     private final Setting<Boolean> useBlur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a blur effect behind the list to isolate it from world-space movement.");
     private final Setting<Integer> bloomIntensity = this.sgGeneral.intSetting("Glow Magnitude", 3, 0, 10, 1, "The radius of the additive bloom shader applied to the list.");
-    private final Setting<BlackOutColor> bloomColor = this.sgGeneral.colorSetting("Glow Palette", new BlackOutColor(0, 0, 0, 100), "The color applied to the additive bloom layer.", () -> this.bloomIntensity.get() > 0);
+    private final Setting<BlackOutColor> bloomColor = this.sgGeneral.colorSetting("Glow Color", new BlackOutColor(0, 0, 0, 100), "The color applied to the additive bloom layer.", () -> this.bloomIntensity.get() > 0);
     private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Primary Label");
-    private final Setting<BlackOutColor> customInfoColor = this.sgGeneral.colorSetting("Metadata Palette", new BlackOutColor(150, 150, 150, 255), "The color used specifically for the metadata/info text.");
+    private final Setting<BlackOutColor> customInfoColor = this.sgGeneral.colorSetting("Metadata Color", new BlackOutColor(150, 150, 150, 255), "The color used specifically for the metadata/info text.");
 
     public static Map<Module, MutableFloat> deltaMap = new HashMap<>();
     private int i = 0;

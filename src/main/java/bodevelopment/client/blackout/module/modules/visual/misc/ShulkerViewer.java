@@ -32,7 +32,7 @@ public class ShulkerViewer extends Module {
     private final Setting<Boolean> showEmpty = this.sgGeneral.booleanSetting("Display Empty Slots", false, "Determines whether unoccupied inventory slots are rendered within the preview.");
     private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Ambient Occlusion", true, "Renders a soft drop shadow behind the preview window for depth simulation.");
     private final Setting<Integer> round = this.sgGeneral.intSetting("Corner Radius", 5, 0, 15, 1, "Defines the curvature of the preview window corners.");
-    private final Setting<BlackOutColor> bgColor = this.sgGeneral.colorSetting("Surface Palette", new BlackOutColor(GuiColorUtils.bg1.getRed(), GuiColorUtils.bg1.getGreen(), GuiColorUtils.bg1.getBlue(), 200), "The base background color and opacity of the content panel.");
+    private final Setting<BlackOutColor> bgColor = this.sgGeneral.colorSetting("Surface Color", new BlackOutColor(GuiColorUtils.bg1.getRed(), GuiColorUtils.bg1.getGreen(), GuiColorUtils.bg1.getBlue(), 200), "The base background color and opacity of the content panel.");
     public ShulkerViewer() {
         super("Shulker Viewer", "Projects a high-fidelity itemized preview of Shulker Box contents directly within the inventory interface.", SubCategory.MISC_VISUAL, true);
         INSTANCE = this;

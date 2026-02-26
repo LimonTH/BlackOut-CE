@@ -25,8 +25,8 @@ public class Coordinates extends HudElement {
     private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a real-time blur effect to the background for improved legibility.");
     private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Bezel Rounding", true, "Smooths the corners of the background and blur layers.", () -> this.bg.get() || this.blur.get());
 
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Value Palette");
-    private final TextColorMultiSetting infoColor = TextColorMultiSetting.of(this.sgColor, "Label Palette");
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Value Color");
+    private final TextColorMultiSetting infoColor = TextColorMultiSetting.of(this.sgColor, "Label Color");
 
     private final List<Component> components = new ArrayList<>();
     private float offset = 0.0F;

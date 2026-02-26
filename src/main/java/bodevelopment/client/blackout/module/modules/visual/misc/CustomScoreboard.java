@@ -30,7 +30,7 @@ public class CustomScoreboard extends Module {
     private final Setting<Double> scale = this.sgGeneral.doubleSetting("Visual Scale", 1.0, 0.0, 10.0, 0.05, "Adjusts the overall size of the scoreboard element.");
     private final Setting<Integer> addedY = this.sgGeneral.intSetting("Vertical Offset", 0, 0, 500, 10, "Adjusts the vertical placement of the scoreboard on the HUD.");
 
-    public final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, () -> this.useFont.get() && !this.remove.get(), "Label Palette");
+    public final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, () -> this.useFont.get() && !this.remove.get(), "Label Color");
     public final Setting<BlackOutColor> bgColor = this.sgColor.colorSetting("Plate Color", new BlackOutColor(0, 0, 0, 50), "The base color of the scoreboard background.", () -> this.background.get() && !this.remove.get());
     public final Setting<BlackOutColor> shadowColor = this.sgColor.colorSetting("Shadow Tint", new BlackOutColor(0, 0, 0, 100), "The color applied to the background's drop shadow.", () -> this.background.get() && this.shadow.get() && !this.remove.get());
 

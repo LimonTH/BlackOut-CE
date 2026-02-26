@@ -25,8 +25,8 @@ import java.util.List;
 public class SkeletonESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Neutral Palette", new BlackOutColor(255, 0, 0, 255), "The color applied to the bone structure of standard players.");
-    private final Setting<BlackOutColor> friendColor = this.sgGeneral.colorSetting("Friendship Palette", new BlackOutColor(0, 255, 255, 255), "The color applied to the bone structure of players on your friend list.");
+    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Neutral Color", new BlackOutColor(255, 0, 0, 255), "The color applied to the bone structure of standard players.");
+    private final Setting<BlackOutColor> friendColor = this.sgGeneral.colorSetting("Friendship Color", new BlackOutColor(0, 255, 255, 255), "The color applied to the bone structure of players on your friend list.");
 
     public SkeletonESP() {
         super("Skeleton ESP", "Renders a simplified stick-figure representation of other players' skeletal structures by connecting their joint positions.", SubCategory.ENTITIES, true);

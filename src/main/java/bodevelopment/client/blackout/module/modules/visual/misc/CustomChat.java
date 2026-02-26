@@ -12,7 +12,7 @@ public class CustomChat extends Module {
 
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    public final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Label Palette");
+    public final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Label Color");
     public final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Blur", true, "Applies a blur effect behind the chat window to improve legibility.");
     public final Setting<Boolean> background = this.sgGeneral.booleanSetting("Custom Background", true, "Enables a specialized background plate for the chat history.");
     public final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Drop Shadow", true, "Renders a soft shadow beneath the background plate.", this.background::get);

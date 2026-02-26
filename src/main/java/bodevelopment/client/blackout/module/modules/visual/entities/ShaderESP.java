@@ -32,8 +32,8 @@ public class ShaderESP extends Module {
     public final Setting<List<EntityType<?>>> entities = this.sgGeneral.entityListSetting("Target Filters", "Specifies which entity types will be processed by the shader pipeline.");
     public final Setting<Boolean> texture = this.sgGeneral.booleanSetting("Render Original", true, "Whether to render the original entity texture alongside the shader effect.");
     private final Setting<Integer> bloom = this.sgGeneral.intSetting("Bloom Radius", 3, 1, 10, 1, "The intensity and spread of the glow effect around entities.");
-    private final Setting<BlackOutColor> outsideColor = this.sgGeneral.colorSetting("Outline Palette", new BlackOutColor(255, 0, 0, 255), "The color of the outer glowing silhouette.");
-    private final Setting<BlackOutColor> insideColor = this.sgGeneral.colorSetting("Interior Palette", new BlackOutColor(255, 0, 0, 50), "The color applied to the entity's model body.");
+    private final Setting<BlackOutColor> outsideColor = this.sgGeneral.colorSetting("Outline Color", new BlackOutColor(255, 0, 0, 255), "The color of the outer glowing silhouette.");
+    private final Setting<BlackOutColor> insideColor = this.sgGeneral.colorSetting("Interior Color", new BlackOutColor(255, 0, 0, 50), "The color applied to the entity's model body.");
 
     public static boolean ignore = false;
     private final BufferBuilderStorage storage = new BufferBuilderStorage(69);

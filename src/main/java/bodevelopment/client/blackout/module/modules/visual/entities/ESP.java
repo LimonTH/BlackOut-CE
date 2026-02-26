@@ -46,9 +46,9 @@ public class ESP extends Module {
     private final Setting<Boolean> fadeFill = this.sgGeneral.booleanSetting("Gradient Fill", false, "Applies a top-to-bottom transparency gradient to the interior fill.", this.fill::get);
     private final Setting<BlackOutColor> fillColor = this.sgGeneral.colorSetting("Fill Shade", new BlackOutColor(255, 255, 255, 50), "The color used for the interior fill of the ESP box.", this.fill::get);
     private final Setting<Boolean> renderItem = this.sgGeneral.booleanSetting("Equipment Overlay", false, "Displays the name of the item currently held in the entity's main hand.");
-    private final Setting<BlackOutColor> txt = this.sgGeneral.colorSetting("Text Palette", new BlackOutColor(255, 255, 255, 255), "The color for labels and item text.");
-    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Outline Palette", new BlackOutColor(255, 255, 255, 200), "The primary color of the bounding frame.");
-    private final Setting<BlackOutColor> fadeColor = this.sgGeneral.colorSetting("Secondary Outline Palette", new BlackOutColor(16, 16, 16, 200), "The secondary color used for vertical line fading and gradients.");
+    private final Setting<BlackOutColor> txt = this.sgGeneral.colorSetting("Text Color", new BlackOutColor(255, 255, 255, 255), "The color for labels and item text.");
+    private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Outline Color", new BlackOutColor(255, 255, 255, 200), "The primary color of the bounding frame.");
+    private final Setting<BlackOutColor> fadeColor = this.sgGeneral.colorSetting("Secondary Outline Color", new BlackOutColor(16, 16, 16, 200), "The secondary color used for vertical line fading and gradients.");
 
     private final MatrixStack stack = new MatrixStack();
     private final List<Entity> entities = new ArrayList<>();
