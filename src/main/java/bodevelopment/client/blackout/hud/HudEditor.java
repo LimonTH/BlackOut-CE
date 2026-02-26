@@ -16,6 +16,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.MathHelper;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -78,8 +79,11 @@ public class HudEditor extends Screen {
 
             if (this.state == State.Moving) {
                 for (HudElement element : this.picked) {
-                    element.x += deltaX;
-                    element.y += deltaY;
+                    float newX = element.x + deltaX;
+                    float newY = element.y + deltaY;
+
+                    element.x = MathHelper.clamp(newX, 0.0F, 1000.0F - element.getWidth());
+                    element.y = MathHelper.clamp(newY, 0.0F, this.screenHeight - element.getHeight());
                 }
             }
 
@@ -214,8 +218,13 @@ public class HudEditor extends Screen {
     public void onListClick(HudElement element) {
         Managers.CONFIG.save(ConfigType.HUD);
         Managers.CONFIG.save(ConfigType.Binds);
-        element.x = this.mx - element.getWidth() / 2.0F;
-        element.y = this.my - element.getHeight() / 2.0F;
+
+        float targetX = this.mx - element.getWidth() / 2.0F;
+        float targetY = this.my - element.getHeight() / 2.0F;
+
+        element.x = MathHelper.clamp(targetX, 0.0F, 1000.0F - element.getWidth());
+        element.y = MathHelper.clamp(targetY, 0.0F, this.screenHeight - element.getHeight());
+
         this.picked.clear();
         this.picked.add(element);
     }
