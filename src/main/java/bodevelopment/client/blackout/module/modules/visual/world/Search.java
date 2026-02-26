@@ -35,16 +35,16 @@ import java.util.List;
 public class Search extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRender = this.addGroup("Visuals");
-    // TODO: sgRender нигде не используется
 
     private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Target Blocks", "The specific block types to locate and highlight in the world.");
     private final Setting<Boolean> dynamicBox = this.sgGeneral.booleanSetting("Voxel Bounds", true, "Adjusts the highlight box to match the exact shape of the block (e.g., chests or slabs) rather than a full cube.");
     private final Setting<Boolean> instantScan = this.sgGeneral.booleanSetting("Force Scan", false, "Immediately scans all loaded chunks instead of processing them incrementally.");
     private final Setting<Integer> scanSpeed = this.sgGeneral.intSetting("Iteration Rate", 1, 1, 10, 1, "The number of chunks processed per frame during a background scan.", () -> !this.instantScan.get());
-    private final Setting<BlackOutColor> fillColor = this.sgGeneral.colorSetting("Highlight Color", new BlackOutColor(255, 0, 0, 50), "The base color and opacity of the block highlight.");
-    private final Setting<Integer> bloom = this.sgGeneral.intSetting("Glow Intensity", 5, 0, 10, 1, "The strength of the bloom/glow effect applied to highlighted blocks.");
-    private final Setting<BlackOutColor> bloomColor = this.sgGeneral.colorSetting("Glow Palette", new BlackOutColor(255, 0, 0, 100), "The color of the outer glow effect.");
-    private final Setting<Boolean> onlyExposed = this.sgGeneral.booleanSetting("Culling", false, "Only highlights blocks that are adjacent to at least one non-opaque block (exposed to air).");
+
+    private final Setting<BlackOutColor> fillColor = this.sgRender.colorSetting("Highlight Color", new BlackOutColor(255, 0, 0, 50), "The base color and opacity of the block highlight.");
+    private final Setting<Integer> bloom = this.sgRender.intSetting("Glow Intensity", 5, 0, 10, 1, "The strength of the bloom/glow effect applied to highlighted blocks.");
+    private final Setting<BlackOutColor> bloomColor = this.sgRender.colorSetting("Glow Color", new BlackOutColor(255, 0, 0, 100), "The color of the outer glow effect.");
+    private final Setting<Boolean> onlyExposed = this.sgRender.booleanSetting("Culling", false, "Only highlights blocks that are adjacent to at least one non-opaque block (exposed to air).");
 
     private final List<BlockPos> positions = Collections.synchronizedList(new ArrayList<>());
     private final List<ChunkPos> toScan = new ArrayList<>();
