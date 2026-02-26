@@ -10,6 +10,7 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.block.ShulkerBoxBlock;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -51,11 +52,11 @@ public class ShulkerViewer extends Module {
         DefaultedList<ItemStack> items = DefaultedList.ofSize(27, ItemStack.EMPTY);
         container.copyTo(items);
 
-        renderBlackOutGui(context, mouseX, mouseY, items, hoveredStack.getName().getString());
+        renderGui(context, mouseX, mouseY, items, hoveredStack.getName().getString());
     }
 
-    private void renderBlackOutGui(DrawContext context, int mouseX, int mouseY, DefaultedList<ItemStack> items, String name) {
-        MatrixStack stack = context.getMatrices();
+    private void renderGui(DrawContext context, int mouseX, int mouseY, DefaultedList<ItemStack> items, String name) {
+        context.draw();
 
         float s = scale.get().floatValue();
         float width = (162 + 10) * s;
@@ -69,13 +70,17 @@ public class ShulkerViewer extends Module {
         if (posY + height > BlackOut.mc.getWindow().getScaledHeight()) posY = BlackOut.mc.getWindow().getScaledHeight() - height - 5;
         if (posY < 5) posY = 5;
 
+        MatrixStack stack = context.getMatrices();
+
+        RenderSystem.enableBlend();
+        RenderSystem.disableDepthTest();
+
         stack.push();
-        stack.translate(0, 0, 800.0f);
+        stack.translate(0, 0, 1000.0F);
 
         if (shadow.get()) {
             RenderUtils.roundedShadow(stack, posX, posY, width, height, round.get().floatValue(), 15.0F, new Color(0, 0, 0, 100).getRGB());
         }
-
         RenderUtils.rounded(stack, posX, posY, width, height, round.get().floatValue(), 1.0F, bgColor.get().getRGB(), ColorUtils.SHADOW100I);
 
         float textScale = 1.2F * s;
@@ -87,14 +92,16 @@ public class ShulkerViewer extends Module {
 
             int row = i / 9;
             int col = i % 9;
-
             float itemX = posX + (5 + col * 18) * s;
             float itemY = posY + headerHeight + (2 + row * 18) * s;
 
-            RenderUtils.renderItem(stack, itemStack, itemX, itemY, 16.0F * s, 800.0F, true);
+            RenderUtils.renderItem(stack, itemStack, itemX, itemY, 16.0F * s, 1000.0F, true);
         }
 
         stack.pop();
+
+        RenderSystem.enableDepthTest();
+        context.draw();
     }
 
     private ItemStack getHoveredStack(Screen screen) {

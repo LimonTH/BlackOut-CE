@@ -36,7 +36,11 @@ public class MixinClientPlayNetworkHandler {
 
     @Redirect(method = "onPlayerPositionLook", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setYaw(F)V"))
     private void rubberbandYaw(PlayerEntity instance, float v) {
-        if (!NoRotate.getInstance().enabled) {
+        NoRotate noRotate = NoRotate.getInstance();
+
+        if (noRotate.enabled && noRotate.mode.get() == NoRotate.NoRotateMode.Rel) {
+            noRotate.relYaw = v - instance.getYaw();
+        } else if (!noRotate.enabled) {
             instance.setYaw(v);
         }
 
@@ -45,7 +49,11 @@ public class MixinClientPlayNetworkHandler {
 
     @Redirect(method = "onPlayerPositionLook", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setPitch(F)V"))
     private void rubberbandPitch(PlayerEntity instance, float v) {
-        if (!NoRotate.getInstance().enabled) {
+        NoRotate noRotate = NoRotate.getInstance();
+
+        if (noRotate.enabled && noRotate.mode.get() == NoRotate.NoRotateMode.Rel) {
+            noRotate.relPitch = v - instance.getPitch();
+        } else if (!noRotate.enabled) {
             instance.setPitch(v);
         }
 
@@ -63,15 +71,26 @@ public class MixinClientPlayNetworkHandler {
             instance.send(moveC2SPacket);
         } else {
             switch (noRotate.mode.get()) {
+                case Cancel:
+                    return;
                 case Set:
-                    instance.send(moveC2SPacket);
-                    break;
                 case Spoof:
                     ((AccessorPlayerMoveC2SPacket) moveC2SPacket).setYaw(this.lastServerYaw);
                     ((AccessorPlayerMoveC2SPacket) moveC2SPacket).setPitch(this.lastServerPitch);
-                    instance.send(moveC2SPacket);
+                    break;
+                case Rel:
+                    ((AccessorPlayerMoveC2SPacket) moveC2SPacket).setYaw(this.lastServerYaw);
+                    ((AccessorPlayerMoveC2SPacket) moveC2SPacket).setPitch(this.lastServerPitch);
+
+                    BlackOut.mc.player.setYaw(BlackOut.mc.player.getYaw() + noRotate.relYaw);
+                    BlackOut.mc.player.setPitch(BlackOut.mc.player.getPitch() + noRotate.relPitch);
+
+                    noRotate.relYaw = 0;
+                    noRotate.relPitch = 0;
+                    break;
             }
         }
+        instance.send(moveC2SPacket);
     }
 
     @Redirect(method = "onWorldTimeUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;setTimeOfDay(J)V"))
