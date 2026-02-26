@@ -37,14 +37,19 @@ public class SafeMyFPS extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.world == null || !BlackOut.mc.isWindowFocused()) {
+        if (BlackOut.mc.world == null) return;
+        boolean focused = BlackOut.mc.isWindowFocused();
+        if (!focused) {
             lowFpsTime = -1;
             return;
         }
-
         int currentFps = BlackOut.mc.getCurrentFps();
-
         if (currentFps < minFps.get()) {
+            if (BlackOut.mc.options.getMaxFps().getValue() <= minFps.get()) {
+                lowFpsTime = -1;
+                return;
+            }
+
             if (lowFpsTime == -1) {
                 lowFpsTime = System.currentTimeMillis();
             } else if (System.currentTimeMillis() - lowFpsTime > delay.get() * 1000) {
@@ -60,7 +65,7 @@ public class SafeMyFPS extends Module {
         Module culprit = history.pop();
 
         if (culprit != null && culprit.enabled) {
-            culprit.disable("FPS Disabled " + culprit.name, 3, Notifications.Type.Alert);
+            culprit.disable("FPS Disabled " + culprit.getDisplayName(), 3, Notifications.Type.Alert);
 
             lowFpsTime = -1;
         }
