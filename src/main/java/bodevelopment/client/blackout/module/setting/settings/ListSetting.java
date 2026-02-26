@@ -54,7 +54,11 @@ public class ListSetting<T> extends Setting<List<T>> {
 
     @Override
     public boolean onMouse(int key, boolean pressed) {
-        if (key == 0 && pressed && this.mx > this.x && this.mx < this.x + this.width && this.my > this.y && this.my < this.y + this.getHeight()) {
+        float clickOffset = -5.5F;
+
+        if (key == 0 && pressed && this.mx > this.x && this.mx < this.x + this.width
+                && this.my > this.y + clickOffset && this.my < this.y + this.getHeight() + clickOffset) {
+
             Managers.CLICK_GUI.openScreen(new ListScreen<>(this, this.getName));
             return true;
         } else {

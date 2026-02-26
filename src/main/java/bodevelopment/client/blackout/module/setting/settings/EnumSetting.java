@@ -125,12 +125,17 @@ public class EnumSetting<T extends Enum<?>> extends Setting<T> {
     @Override
     public boolean onMouse(int key, boolean pressed) {
         if (key == 0 && pressed) {
-            boolean mainHover = this.mx > this.x && this.mx < this.x + this.width && this.my > this.y && this.my < this.y + 26.0F;
+            float clickOffset = -5.5F;
 
-            float listHeight = (this.values.length - 1) * 20.0F;
-            boolean listHover = this.choosing && this.mx > this.x + this.width - this.wi - this.xOffset - 15.0F
-                    && this.mx < this.x + this.width
-                    && this.my > this.y + 26.0F && this.my < this.y + 26.0F + listHeight;
+            boolean mainHover = this.mx > this.x && this.mx < this.x + this.width
+                    && this.my > this.y + clickOffset && this.my < this.y + 26.0F + clickOffset;
+
+            float entryHeight = 20.0F;
+            float listHeight = (this.values.length - 1) * entryHeight;
+            float listX = this.x + this.width - (this.wi + 10.0F) - this.xOffset - 2.5F;
+
+            boolean listHover = this.choosing && this.mx > listX && this.mx < listX + (this.wi + 10.0F)
+                    && this.my > this.y + 26.0F + clickOffset && this.my < this.y + 26.0F + listHeight + clickOffset;
 
             if (mainHover) {
                 this.choosing = !this.choosing;
