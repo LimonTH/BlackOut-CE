@@ -35,7 +35,11 @@ public class TimerMap<E, T> {
     }
 
     public T get(E key) {
-        return this.timers.get(key).value;
+        var entry = timers.get(key);
+        if (entry == null) {
+            return null;
+        }
+        return entry.value;
     }
 
     public void clear() {

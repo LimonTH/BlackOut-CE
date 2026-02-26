@@ -105,11 +105,13 @@ public class CategoryComponent extends Component {
     }
 
     @Override
-    public void onMouse(int button, boolean pressed) {
+    public boolean onMouse(int button, boolean pressed) {
         if (button == 0 && pressed && isHovered()) {
             ClickGui.selectedCategory = this.category;
             Managers.CLICK_GUI.CLICK_GUI.setScreen(null);
+            return true;
         }
+        return false;
     }
 
     public float getAnimation() {

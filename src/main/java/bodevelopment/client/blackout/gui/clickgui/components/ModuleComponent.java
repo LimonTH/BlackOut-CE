@@ -300,33 +300,46 @@ public class ModuleComponent extends Component {
     }
 
     @Override
-    public void onMouse(int button, boolean pressed) {
-        if (Managers.CLICK_GUI.CLICK_GUI.openedScreen != null) return;
+    public boolean onMouse(int button, boolean pressed) {
+        if (Managers.CLICK_GUI.CLICK_GUI.openedScreen != null) return false;
 
         if (this.module.toggleable() && this.module.bind.get().onMouse(button, pressed)) {
-            return;
+            return true;
         }
 
-        if (!(this.my < this.y)) {
-            if (this.mx > this.x && this.mx < this.x + this.width && pressed && this.my < this.y + this.getHeight()) {
-                if (button == 1) {
-                    this.opened = !this.opened;
-                } else if (button == 0) {
-                    this.module.toggle();
-                    Managers.CONFIG.saveModule(this.module);
+        if (this.mx > this.x && this.mx < this.x + this.width && pressed && this.my > this.y && this.my < this.y + this.getHeight()) {
+            if (button == 1) {
+                this.opened = !this.opened;
+            } else if (button == 0) {
+                this.module.toggle();
+                Managers.CONFIG.saveModule(this.module);
+            }
+            return true;
+        }
+
+        boolean isAnyEnumChoosing = false;
+        for (SettingGroup group : this.module.settingGroups) {
+            for (Setting<?> setting : group.settings) {
+                if (setting instanceof bodevelopment.client.blackout.module.setting.settings.EnumSetting<?> es && es.isChoosing()) {
+                    isAnyEnumChoosing = true;
+                    break;
                 }
-            } else {
-                if (this.mx > this.x && this.mx < this.x + this.width && this.my < this.y + this.maxLength || !pressed) {
-                    for (SettingGroup group : this.module.settingGroups) {
-                        for (Setting<?> setting : group.settings) {
-                            if (setting.isVisible() && setting.onMouse(button, pressed) && pressed) {
-                                return;
-                            }
+            }
+        }
+
+        if ((this.mx > this.x && this.mx < this.x + this.width && this.my < this.y + this.maxLength) || isAnyEnumChoosing || !pressed) {
+            for (SettingGroup group : this.module.settingGroups) {
+                for (Setting<?> setting : group.settings) {
+                    if (setting.isVisible()) {
+                        if (setting.onMouse(button, pressed)) {
+                            return true;
                         }
                     }
                 }
             }
         }
+
+        return false; // Никто не кликнут
     }
 
     private void updateAnimation() {
