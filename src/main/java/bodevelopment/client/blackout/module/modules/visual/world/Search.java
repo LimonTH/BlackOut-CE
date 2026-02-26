@@ -35,7 +35,7 @@ public class Search extends Module {
 
     private final ForkJoinPool pool = new ForkJoinPool();
 
-    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Target Blocks", "The specific block types to locate.");
+    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Target Blocks", "The specific block types to locate.").onChanged(ignored -> refresh());;
     private final Setting<Boolean> dynamicBox = this.sgGeneral.booleanSetting("Voxel Bounds", true, "Adjusts highlight to match the exact block shape.").onChanged(ignored -> refresh());
     private final Setting<Boolean> instantScan = this.sgGeneral.booleanSetting("Force Scan", false, "Scans all loaded chunks immediately.");
     private final Setting<Integer> scanSpeed = this.sgGeneral.intSetting("Iteration Rate", 1, 1, 10, 1, "Chunks per frame during scan.", () -> !this.instantScan.get());

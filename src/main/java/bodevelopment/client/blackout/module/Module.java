@@ -5,6 +5,7 @@ import bodevelopment.client.blackout.enums.BindMode;
 import bodevelopment.client.blackout.enums.SwingHand;
 import bodevelopment.client.blackout.enums.SwingState;
 import bodevelopment.client.blackout.enums.SwingType;
+import bodevelopment.client.blackout.event.events.ModuleEvent;
 import bodevelopment.client.blackout.helpers.RotationHelper;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.client.Notifications;
@@ -102,6 +103,7 @@ public class Module extends RotationHelper {
 
     public void enable(String message, int time, boolean sendNotification) {
         if (!this.enabled) {
+            BlackOut.EVENT_BUS.post(new ModuleEvent.Enable(this));
             this.onEnable();
             this.enabled = true;
             this.toggleTime = System.currentTimeMillis();
@@ -142,6 +144,7 @@ public class Module extends RotationHelper {
 
     private void doDisable(String message, int time, Notifications.Type type, Boolean sendNotification) {
         if (this.enabled) {
+            BlackOut.EVENT_BUS.post(new ModuleEvent.Disable(this));
             this.onDisable();
             this.enabled = false;
             this.toggleTime = System.currentTimeMillis();
