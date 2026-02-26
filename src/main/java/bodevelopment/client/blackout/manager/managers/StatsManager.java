@@ -63,7 +63,6 @@ public class StatsManager extends Manager {
 
     @Event
     public void onReceive(PacketEvent.Receive.Pre event) {
-        // (Totem Pops)
         if (event.packet instanceof EntityStatusS2CPacket packet && packet.getStatus() == 35) {
             if (packet.getEntity(BlackOut.mc.world) instanceof AbstractClientPlayerEntity player) {
                 TrackerData data = this.getStats(player);
@@ -71,7 +70,6 @@ public class StatsManager extends Manager {
             }
         }
 
-        // (Burp sound)
         if (event.packet instanceof PlaySoundS2CPacket packet) {
             if (packet.getSound().value().equals(SoundEvents.ENTITY_PLAYER_BURP)) {
                 AbstractClientPlayerEntity closest = this.getClosest(
@@ -82,7 +80,6 @@ public class StatsManager extends Manager {
             }
         }
 
-        // (Mending Tracker)
         if (event.packet instanceof EntityEquipmentUpdateS2CPacket packet) {
             if (BlackOut.mc.world.getEntityById(packet.getEntityId()) instanceof AbstractClientPlayerEntity player) {
                 packet.getEquipmentList().forEach(pair -> {
@@ -113,7 +110,12 @@ public class StatsManager extends Manager {
     }
 
     private AbstractClientPlayerEntity getClosest(ToDoubleFunction<AbstractClientPlayerEntity> function) {
-        return BlackOut.mc.world.getPlayers().stream().min(Comparator.comparingDouble(function)).orElse(null);
+        if (BlackOut.mc.world == null || BlackOut.mc.world.getPlayers().isEmpty()) {
+            return null;
+        }
+        return BlackOut.mc.world.getPlayers().stream()
+                .min(Comparator.comparingDouble(function))
+                .orElse(null);
     }
 
     public void reset() {
@@ -121,12 +123,16 @@ public class StatsManager extends Manager {
     }
 
     public TrackerData getStats(AbstractClientPlayerEntity player) {
+        if (player == null || player.getGameProfile() == null) {
+            return null;
+        }
+
         UUID uuid = player.getGameProfile().getId();
         if (!this.dataMap.containsKey(uuid)) {
             return null;
         } else {
             TrackerMap map = this.dataMap.get(uuid);
-            return !map.is(player) ? null : map.get().data();
+            return (map == null || !map.is(player)) ? null : map.get().data();
         }
     }
 

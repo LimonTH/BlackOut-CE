@@ -573,6 +573,19 @@ public class ClickGui extends Screen {
                 return;
             }
 
+            if (isAnyEnumChoosing() || this.mouseOnModules()) {
+                SelectedComponent.reset();
+
+                for (ModuleComponent module : this.moduleComponents) {
+                    if (module.module.category == selectedCategory) {
+                        if (module.onMouse(button, pressed)) {
+                            return;
+                        }
+                    }
+                }
+                return;
+            }
+
             if (this.mouseOnScale()) {
                 if (button == 0) {
                     this.scaling = true;
@@ -583,14 +596,6 @@ public class ClickGui extends Screen {
             } else if (this.mouseOnCategories()) {
                 this.categoryComponents.forEach(c -> c.onMouse(button, pressed));
                 SelectedComponent.reset();
-            } else if (this.mouseOnModules()) {
-                SelectedComponent.reset();
-
-                this.moduleComponents.forEach(module -> {
-                    if (module.module.category == selectedCategory) {
-                        module.onMouse(button, pressed);
-                    }
-                });
             } else if (this.mouseOnName() && button == 0) {
                 this.moving = true;
                 this.offsetX = this.mx;
@@ -745,7 +750,23 @@ public class ClickGui extends Screen {
     }
 
     private boolean mouseOnModules() {
+        if (isAnyEnumChoosing()) {
+            return this.mx > 190.0 && this.mx < width;
+        }
         return this.my > -10.0 && this.my < height + 10.0F && this.mx > 190.0 && this.mx < width;
+    }
+
+    private boolean isAnyEnumChoosing() {
+        for (ModuleComponent mc : this.moduleComponents) {
+            if (mc.module.category == selectedCategory && mc.opened) {
+                for (SettingGroup group : mc.module.settingGroups) {
+                    for (Setting<?> s : group.settings) {
+                        if (s instanceof EnumSetting<?> es && es.isChoosing()) return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private boolean mouseOnName() {

@@ -33,7 +33,8 @@ public class Component {
         return 0.0F;
     }
 
-    public void onMouse(int button, boolean state) {
+    public boolean onMouse(int button, boolean state) {
+        return false;
     }
 
     public void onKey(int key, boolean state) {
