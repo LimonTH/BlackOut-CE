@@ -48,6 +48,17 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicReference;
 
 // TODO: NEED PATCHES
+// TODO: пересмотреть target selection: добавить защиту от резких switch (stickiness/priority lock).
+// TODO: добавить безопасный reset состояния (isBlocking/isAttacking/target) при disable/teleport.
+// TODO: унифицировать rotationMode и hitHeight/dynamicHeight для предотвращения desync.
+// TODO: добавить обработку shield usage/axe switch при блоке цели.
+// TODO: улучшить проверку line-of-sight и wallScanRange, чтобы не бить через невидимые блоки.
+// TODO: добавить контроль частоты пакетов при teleport-атаках (anti-cheat safe limit).
+// TODO: расширить ignoreNaked: учитывать offhand/elytra и кастомные моды брони.
+// TODO: доработать fatigueSim: сбрасывать fatigue при смене цели/паузе.
+// TODO: добавить защиту от критов при наличии Slow Falling/levitation.
+// TODO: пересмотреть renderBox/RenderList, чтобы корректно очищать старые targets.
+// TODO: обработать конфликт с AntiBot/Teams в момент смены мира/перезахода.
 @OnlyDev
 public class Aura extends MoveUpdateModule {
     public static AbstractClientPlayerEntity targetedPlayer = null;

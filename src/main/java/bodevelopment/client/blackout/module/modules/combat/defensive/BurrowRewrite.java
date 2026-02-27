@@ -31,6 +31,16 @@ import java.util.List;
 import java.util.function.Predicate;
 
 // TODO: NEED PATCHES
+// TODO: проверить, почему настройки checkCollisions/attack/smartRotate не используются и внедрить их в логику.
+// TODO: добавить проверку коллизий с сущностями перед тик-джампом и перед placement.
+// TODO: реализовать зачистку кристаллов/энтити в ногах перед установкой блока (attack).
+// TODO: учесть smartRotate при выборе RotationType и ограничить резкие повороты.
+// TODO: добавить проверку replaceable блока и защиту от постановки в невалидные позиции.
+// TODO: синхронизировать reset Timer при disable/ошибках, чтобы не оставлять изменённый таймер.
+// TODO: добавить отдельный cooldown/lock после rubberband, чтобы избежать повторного спама пакетов.
+// TODO: учесть античита-профили (например, Grim/Matrix) и отдельные пресеты высоты calcY.
+// TODO: добавить обработку серверных correction packets кроме PlayerPositionLookS2CPacket (fallback).
+// TODO: добавить логирование/feedback причины отказа (нет блока, коллизия, rotation fail).
 @OnlyDev
 public class BurrowRewrite extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
