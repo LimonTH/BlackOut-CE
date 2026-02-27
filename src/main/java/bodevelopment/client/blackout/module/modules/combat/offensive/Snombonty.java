@@ -23,7 +23,9 @@ import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -35,6 +37,7 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
+import org.joml.Matrix4f;
 
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -107,42 +110,20 @@ public class Snombonty extends MoveUpdateModule {
 
     private void renderSpread(float tickDelta) {
         Vec3d cameraPos = BlackOut.mc.gameRenderer.getCamera().getPos();
-        double x = MathHelper.lerp(
-                tickDelta, (this.prevBox.minX + this.prevBox.maxX) / 2.0, (this.targetBox.minX + this.targetBox.maxX) / 2.0
-        )
-                - cameraPos.x;
-        double y = MathHelper.lerp(tickDelta, this.prevBox.minY, this.targetBox.minY)
-                - cameraPos.y
-                + this.target.getHeight() / 2.0F;
-        double z = MathHelper.lerp(
-                tickDelta, (this.prevBox.minZ + this.prevBox.maxZ) / 2.0, (this.targetBox.minZ + this.targetBox.maxZ) / 2.0
-        )
-                - cameraPos.z;
+
+        double x = MathHelper.lerp(tickDelta, (this.prevBox.minX + this.prevBox.maxX) / 2.0, (this.targetBox.minX + this.targetBox.maxX) / 2.0) - cameraPos.x;
+        double y = MathHelper.lerp(tickDelta, this.prevBox.minY, this.targetBox.minY) - cameraPos.y;
+        double z = MathHelper.lerp(tickDelta, (this.prevBox.minZ + this.prevBox.maxZ) / 2.0, (this.targetBox.minZ + this.targetBox.maxZ) / 2.0) - cameraPos.z;
+
         this.stack.push();
         Render3DUtils.setRotation(this.stack);
-        double pitch = RotationUtils.getPitch(
-                BlackOut.mc.gameRenderer.getCamera().getPos().add(x, y, z), BlackOut.mc.gameRenderer.getCamera().getPos()
-        );
-        this.stack.translate(x, y, z);
-        this.stack.scale(1.0F, -1.0F, 1.0F);
-        this.stack
-                .multiply(
-                        RotationAxis.POSITIVE_Y
-                                .rotation(
-                                        -(
-                                                (float) Math.toRadians(
-                                                        RotationUtils.getYaw(
-                                                                BlackOut.mc.gameRenderer.getCamera().getPos().add(x, y, z), BlackOut.mc.gameRenderer.getCamera().getPos(), 0.0
-                                                        )
-                                                )
-                                        )
-                                )
-                );
-        this.stack.multiply(RotationAxis.POSITIVE_X.rotation(-((float) Math.toRadians(pitch))));
-        GlStateManager._disableDepthTest();
-        GlStateManager._enableBlend();
-        GlStateManager._disableCull();
-        RenderUtils.circle2(this.stack, 0.0F, 0.0F, (float) (Math.sqrt(x * x + y * y + z * z) * 0.0174), this.spreadColor.get().getColor().getRGB());
+
+        BlackOutColor color = this.spreadColor.get();
+
+        Vec3d targetPos = new Vec3d(x, y, z);
+        float radius = (float) (new Vec3d(x, y, z).length() * 0.0174);
+
+        Render3DUtils.fillCircle(this.stack, targetPos, radius, color.getRGB(), 360, Render3DUtils.Orientation.XZ);
         this.stack.pop();
     }
 
