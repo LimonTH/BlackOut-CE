@@ -113,106 +113,34 @@ public class Trajectories extends Module {
 
     private void draw(SimulationData data, double[] velocity, ItemStack itemStack, float tickDelta, MatrixStack stack) {
         HitResult hitResult = this.drawLine(data, velocity, itemStack, tickDelta, stack);
+
         if (hitResult != null) {
-            Matrix4f matrix4f = stack.peek().getPositionMatrix();
-            Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
-            RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-            Tessellator tessellator = Tessellator.getInstance();
-            BuiltBuffer builtBuffer = null;
             Color color = this.getColor();
-            float r = color.getRed() / 255.0F;
-            float g = color.getGreen() / 255.0F;
-            float b = color.getBlue() / 255.0F;
-            float a = color.getAlpha() / 255.0F;
+            int rgb = color.getRGB();
+            double radius = 0.25;
+
             if (hitResult instanceof BlockHitResult blockHitResult) {
-                BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINE_STRIP, VertexFormats.POSITION_COLOR);                Vec3d pos = blockHitResult.getPos().subtract(camPos);
-                double width = 0.25;
-                switch (blockHitResult.getSide()) {
-                    case DOWN:
-                    case UP:
-                        this.renderCircle(
-                                bufferBuilder,
-                                matrix4f,
-                                rad -> (float) (pos.x + Math.cos(rad) * width),
-                                rad -> (float) pos.y,
-                                rad -> (float) (pos.z + Math.sin(rad) * width),
-                                r,
-                                g,
-                                b,
-                                a
-                        );
-                        break;
-                    case NORTH:
-                    case SOUTH:
-                        this.renderCircle(
-                                bufferBuilder,
-                                matrix4f,
-                                rad -> (float) (pos.x + Math.cos(rad) * width),
-                                rad -> (float) (pos.y + Math.sin(rad) * width),
-                                rad -> (float) pos.z,
-                                r,
-                                g,
-                                b,
-                                a
-                        );
-                        break;
-                    case WEST:
-                    case EAST:
-                        this.renderCircle(
-                                bufferBuilder,
-                                matrix4f,
-                                rad -> (float) pos.x,
-                                rad -> (float) (pos.y + Math.cos(rad) * width),
-                                rad -> (float) (pos.z + Math.sin(rad) * width),
-                                r,
-                                g,
-                                b,
-                                a
-                        );
-                }
-                builtBuffer = bufferBuilder.end();
+                Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
+                Vec3d pos = blockHitResult.getPos().subtract(camPos);
+
+                Render3DUtils.Orientation orientation = switch (blockHitResult.getSide()) {
+                    case DOWN, UP -> Render3DUtils.Orientation.XZ;
+                    case NORTH, SOUTH -> Render3DUtils.Orientation.XY;
+                    case WEST, EAST -> Render3DUtils.Orientation.YZ;
+                };
+
+                Render3DUtils.circle(stack, pos, radius, rgb, 360, orientation);
+
+                int fillCol = (color.getAlpha() / 4 << 24) | (rgb & 0x00FFFFFF);
+                Render3DUtils.fillCircle(stack, pos, radius, fillCol, 360, orientation);
 
             } else if (hitResult instanceof EntityHitResult entityHitResult) {
-                BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
+                Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
                 Box box = OLEPOSSUtils.getLerpedBox(entityHitResult.getEntity(), tickDelta)
                         .offset(-camPos.x, -camPos.y, -camPos.z);
-                Render3DUtils.drawOutlines(
-                        stack,
-                        bufferBuilder,
-                        (float) box.minX,
-                        (float) box.minY,
-                        (float) box.minZ,
-                        (float) box.maxX,
-                        (float) box.maxY,
-                        (float) box.maxZ,
-                        r,
-                        g,
-                        b,
-                        a
-                );
-                builtBuffer = bufferBuilder.end();
-            }
 
-            if (builtBuffer != null) {
-                BufferRenderer.drawWithGlobalProgram(builtBuffer);
+                Render3DUtils.renderOutlines(stack, box, rgb);
             }
-        }
-    }
-
-    private void renderCircle(
-            BufferBuilder bufferBuilder,
-            Matrix4f matrix4f,
-            Function<Double, Float> x,
-            Function<Double, Float> y,
-            Function<Double, Float> z,
-            float r,
-            float g,
-            float b,
-            float a
-    ) {
-        for (double ar = 0.0; ar <= 360.0; ar += 9.0) {
-            double rad = Math.toRadians(ar);
-            bufferBuilder.vertex(matrix4f, x.apply(rad), y.apply(rad), z.apply(rad)).color(r, g, b, a);
         }
     }
 
@@ -319,20 +247,14 @@ public class Trajectories extends Module {
     }
 
     private Color getColor() {
-        Color color = Color.WHITE;
-        switch (this.colorMode.get()) {
-            case Custom:
-                color = this.clr.get().getColor();
-                break;
-            case Rainbow:
+        return switch (this.colorMode.get()) {
+            case Custom -> this.clr.get().getColor();
+            case Rainbow -> {
                 int rainbowColor = ColorUtils.getRainbow(4.0F, this.saturation.get().floatValue(), 1.0F, 150L);
-                color = new Color(rainbowColor >> 16 & 0xFF, rainbowColor >> 8 & 0xFF, rainbowColor & 0xFF, this.clr.get().alpha);
-                break;
-            case Wave:
-                color = ColorUtils.getWave(this.clr.get().getColor(), this.clr1.get().getColor(), 1.0, 1.0, 1);
-        }
-
-        return color;
+                yield new Color(rainbowColor >> 16 & 0xFF, rainbowColor >> 8 & 0xFF, rainbowColor & 0xFF, this.clr.get().alpha);
+            }
+            case Wave -> ColorUtils.getWave(this.clr.get().getColor(), this.clr1.get().getColor(), 1.0, 1.0, 1);
+        };
     }
 
     private double[] getVelocity(double[] d, float yaw, double simulation) {
