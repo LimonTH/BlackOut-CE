@@ -320,6 +320,77 @@ public class Render3DUtils {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
+    public static void circle(MatrixStack stack, Vec3d pos, double radius, int color, int angle, Orientation orientation) {
+        float a = (float) (color >> 24 & 255) / 255.0F;
+        float r = (float) (color >> 16 & 255) / 255.0F;
+        float g = (float) (color >> 8 & 255) / 255.0F;
+        float b = (float) (color & 255) / 255.0F;
+
+        if (a <= 0.0F) return;
+
+        start();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+
+        Matrix4f matrix = stack.peek().getPositionMatrix();
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINE_STRIP, VertexFormats.POSITION_COLOR);
+
+        for (int i = 0; i <= angle; i++) {
+            float rad = (float) Math.toRadians(i);
+            float cos = (float) Math.cos(rad) * (float) radius;
+            float sin = (float) Math.sin(rad) * (float) radius;
+
+            switch (orientation) {
+                case XY -> bufferBuilder.vertex(matrix, (float)pos.x + cos, (float)pos.y + sin, (float)pos.z).color(r, g, b, a);
+                case XZ -> bufferBuilder.vertex(matrix, (float)pos.x + cos, (float)pos.y, (float)pos.z + sin).color(r, g, b, a);
+                case YZ -> bufferBuilder.vertex(matrix, (float)pos.x, (float)pos.y + cos, (float)pos.z + sin).color(r, g, b, a);
+            }
+        }
+
+        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+        end();
+    }
+
+    public static void fillCircle(MatrixStack stack, Vec3d pos, double radius, int color, int angle, Orientation orientation) {
+        float a = (float) (color >> 24 & 255) / 255.0F;
+        float r = (float) (color >> 16 & 255) / 255.0F;
+        float g = (float) (color >> 8 & 255) / 255.0F;
+        float b = (float) (color & 255) / 255.0F;
+
+        if (a <= 0.0F) return;
+
+        start();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+
+        Matrix4f matrix = stack.peek().getPositionMatrix();
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.TRIANGLE_FAN, VertexFormats.POSITION_COLOR);
+
+        bufferBuilder.vertex(matrix, (float)pos.x, (float)pos.y, (float)pos.z).color(r, g, b, a);
+
+        for (int i = 0; i <= angle; i += 10) {
+            float rad = (float) Math.toRadians(i);
+            float cos = (float) Math.cos(rad) * (float) radius;
+            float sin = (float) Math.sin(rad) * (float) radius;
+
+            switch (orientation) {
+                case XY -> bufferBuilder.vertex(matrix, (float)pos.x + cos, (float)pos.y + sin, (float)pos.z).color(r, g, b, a);
+                case XZ -> bufferBuilder.vertex(matrix, (float)pos.x + cos, (float)pos.y, (float)pos.z + sin).color(r, g, b, a);
+                case YZ -> bufferBuilder.vertex(matrix, (float)pos.x, (float)pos.y + cos, (float)pos.z + sin).color(r, g, b, a);
+            }
+        }
+
+        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+        end();
+    }
+
+    public enum Orientation {
+        XY,
+        XZ,
+        YZ
+    }
+
+
     public static void setRotation(MatrixStack stack) {
         stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(BlackOut.mc.gameRenderer.getCamera().getPitch()));
         stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(BlackOut.mc.gameRenderer.getCamera().getYaw() + 180.0F));

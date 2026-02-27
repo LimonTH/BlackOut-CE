@@ -822,7 +822,7 @@ public class RenderUtils {
         float r = (float) (color >> 16 & 255) / 255.0F;
         float g = (float) (color >> 8 & 255) / 255.0F;
         float b = (float) (color & 255) / 255.0F;
-        // TODO: Notifications работают с ним
+
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
@@ -840,20 +840,21 @@ public class RenderUtils {
         RenderSystem.disableBlend();
     }
 
-    public static void circle2(MatrixStack stack, float x, float y, float radius, int color) {
-        circle3(stack, x, y, radius, color, 360);
-    }
-
-    public static void circle3(MatrixStack stack, float x, float y, float radius, int color, int angle) {
+    public static void angledCircle(MatrixStack stack, float x, float y, float radius, int color, int angle) {
         Matrix4f matrix = stack.peek().getPositionMatrix();
         float a = (float) (color >> 24 & 255) / 255.0F;
         float r = (float) (color >> 16 & 255) / 255.0F;
         float g = (float) (color >> 8 & 255) / 255.0F;
         float b = (float) (color & 255) / 255.0F;
-        // TODO: не знаю, работает ли он, но в Snombonty точно нет, может быт ьв 2D рендеринге он будет работать, завтра посмотрим
+
+        if (a <= 0.0F) return;
+
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+
+        RenderSystem.disableDepthTest();
+        RenderSystem.disableCull();
 
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.LINE_STRIP, VertexFormats.POSITION_COLOR);
 
@@ -864,6 +865,9 @@ public class RenderUtils {
         }
 
         BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+
+        RenderSystem.enableCull();
+        RenderSystem.enableDepthTest();
         RenderSystem.disableBlend();
     }
 
