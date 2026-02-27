@@ -22,6 +22,15 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
 // TODO: NEED PATCHES
+// TODO: добавить общий cooldown на crit packets, чтобы не флагаться на burst-атаках.
+// TODO: учитывать задержку сервера и reset shouldSpoof при teleport/correction пакете.
+// TODO: добавить проверки окружения (slime, honey, web) где крит не должен отправляться.
+// TODO: расширить проверку hasSpace (2.1) с учётом collidable blocks и bounding box.
+// TODO: синхронизировать режимы с Aura/AutoCrystal, чтобы не конфликтовать.
+// TODO: добавить fallback, если player не на земле, но event приходит из packet spoof.
+// TODO: добавить оптимизацию для Grim/Matrix с более безопасными микросдвигами.
+// TODO: обновить Strict режим: ограничить spoofTime при движении и reset при input.
+// TODO: добавить опцию исключать certain entity types (armor stands, ender crystals).
 @OnlyDev
 public class Criticals extends Module {
     private static Criticals INSTANCE;

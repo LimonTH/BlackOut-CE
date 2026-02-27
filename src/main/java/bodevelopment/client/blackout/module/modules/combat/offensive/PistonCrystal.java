@@ -42,6 +42,16 @@ import java.util.Comparator;
 import java.util.List;
 
 // TODO: NEED PATCHES
+// TODO: убрать неиспользуемые prevTarget/startedMining или внедрить их в процесс.
+// TODO: добавить стабильный reset состояния при disable/teleport/смене мира.
+// TODO: добавить проверку наличия ресурсов (piston/crystal/redstone/fire) до старта цикла.
+// TODO: улучшить anti-cheat safety: лимит пакетов и safe delays при частых сбоях.
+// TODO: привести order фаз к детерминированному состоянию (piston->crystal->redstone->mine).
+// TODO: добавить fallback при fail rotateBlock (recalc positions, retry N раз).
+// TODO: пересмотреть alwaysAttack/attackSpeed чтобы не атаковать свой crystal до place.
+// TODO: исключить конфликт с AutoMine и синхронизировать minePos/startedMining.
+// TODO: добавить контроль fire logic (не ставить fire в воздух/без crystal).
+// TODO: очистка render/targetedPlayer при потере цели, чтобы не оставлять визуальные хвосты.
 @OnlyDev
 public class PistonCrystal extends Module {
     private static PistonCrystal INSTANCE;

@@ -19,11 +19,7 @@ import bodevelopment.client.blackout.randomstuff.Rotation;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.ProjectileUtils;
-import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
@@ -35,9 +31,7 @@ import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Matrix4f;
 
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -123,7 +117,7 @@ public class Snombonty extends MoveUpdateModule {
         Vec3d targetPos = new Vec3d(x, y, z);
         float radius = (float) (new Vec3d(x, y, z).length() * 0.0174);
 
-        Render3DUtils.fillCircle(this.stack, targetPos, radius, color.getRGB(), 360, Render3DUtils.Orientation.XZ);
+        Render3DUtils.circle(this.stack, targetPos, radius, color.getRGB(), 360, Render3DUtils.Orientation.XZ);
         this.stack.pop();
     }
 

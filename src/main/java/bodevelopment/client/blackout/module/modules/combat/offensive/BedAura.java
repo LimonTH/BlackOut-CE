@@ -44,6 +44,17 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 // TODO: Need Patches
+// TODO: задействовать existed/existedTicks/waitExt либо удалить их (сейчас не используются).
+// TODO: привести rotate/serverDir/rotationMode к единому флоу, исключить двойные ротации.
+// TODO: добавить строгую проверку replaceable + collision при noHitbox=false.
+// TODO: добавить защиту от установки в блоках, где beds запрещены (overworld, end).
+// TODO: оптимизировать calc() чтобы не сканировать куб целиком каждый тик.
+// TODO: синхронизировать damageWait и extrapolation, чтобы избежать stale damage.
+// TODO: добавить настройку ограничения спама packets при explodeSpeed=0.
+// TODO: пересмотреть renderDamage и анимации (animMoveSpeed/exponent) — сейчас не влияют.
+// TODO: добавить fallback при провале rotateBlock (retry/skip with cooldown).
+// TODO: учесть AntiBot/Teams при выборе targets.
+// TODO: добавить reset render boxes при потере цели/смене мира.
 @OnlyDev
 public class BedAura extends Module {
     private static BedAura INSTANCE;

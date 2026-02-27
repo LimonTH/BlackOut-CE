@@ -45,6 +45,16 @@ import java.util.Map.Entry;
 import java.util.function.Predicate;
 
 // TODO: NEED PATCHES
+// TODO: убрать неиспользуемое поле target или интегрировать его в расчёт приоритетов.
+// TODO: оптимизировать calc() чтобы не переборить куб полностью каждый тик (budget/time-slice).
+// TODO: добавить явный reset состояния при смене измерения/disable (placePos/explodePos/flags).
+// TODO: синхронизировать friend/enemy damage проверки с актуальным hp (cache invalidation).
+// TODO: добавить проверку доступности якоря/глоустона перед началом цикла.
+// TODO: добавить защиту от двойного interact/explode при лаге клиента.
+// TODO: расширить inRangeToEnemies для учёта hitbox extrapolation.
+// TODO: обработать блоки с водой/снегом, где respawn anchor не валиден.
+// TODO: добавить fallback при провале rotateBlock (другая dir/позиция).
+// TODO: очистка render состояния при потере цели/отсутствии валидной позиции.
 @OnlyDev
 public class AnchorAura extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
