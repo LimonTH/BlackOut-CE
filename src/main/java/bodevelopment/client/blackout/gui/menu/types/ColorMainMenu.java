@@ -34,15 +34,13 @@ public class ColorMainMenu implements MainMenuRenderer { // (ThemeMainMenu)
 
         ThemeSettings theme = ThemeSettings.getInstance();
         MainMenuSettings settings = MainMenuSettings.getInstance();
-
+        this.renderAllIconButtons(stack, height, renderMx, renderMy);
+        this.renderDevs();
         this.changelogRenderer.render(stack, renderMx, renderMy,
                 true,
                 new Color(theme.getMain(180)),
                 new Color(theme.getSecond(180)),
                 settings.speed.get().floatValue());
-
-        this.renderAllIconButtons(stack, height, renderMx, renderMy);
-        this.renderDevs();
     }
 
     private void renderAnimatedSplash(MatrixStack stack, String text1, String text2, float progress) {

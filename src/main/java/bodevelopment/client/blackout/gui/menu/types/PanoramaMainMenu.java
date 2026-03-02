@@ -38,10 +38,9 @@ public class PanoramaMainMenu implements MainMenuRenderer {
         this.renderButtons(stack, renderMx, renderMy);
         BlackOut.BOLD_FONT.text(stack, BlackOut.NAME, 8.5F, 0.0F, -250.0F, Color.WHITE.getRGB(), true, true);
         this.renderAnimatedSplash(stack, text1, text2, progress);
-        this.changelogRenderer.render(stack, renderMx, renderMy, false, null, null, 0);
-
         this.renderAllIconButtons(stack, height, renderMx, renderMy);
         this.renderDevs();
+        this.changelogRenderer.render(stack, renderMx, renderMy, false, null, null, 0);
     }
 
     private void renderAnimatedSplash(MatrixStack stack, String text1, String text2, float progress) {
