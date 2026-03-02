@@ -18,6 +18,16 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
 // TODO: NEED PATCHES
+// TODO: исправить условие в onTick: должно быть && для player/world (сейчас ||).
+// TODO: добавить reset таймера при pause/teleport и при смене режима.
+// TODO: привести useTimer к единому флоу: не оставлять setTimer=true без reset.
+// TODO: добавить защиту от движения в блоках/вебах (anti-cheat safety).
+// TODO: добавить учёт статуса Slowness/Speed, чтобы корректно масштабировать baseSpeed.
+// TODO: пересмотреть boost logic (stepBoost) чтобы не накопить слишком высокий velocity.
+// TODO: добавить проверку collision/ceiling в NCPOld при setY.
+// TODO: добавить cooldown на повторную активацию после остановки (anti-flag).
+// TODO: учесть elytra/flight transitions, чтобы не оставлять Timer изменённым.
+// TODO: добавить debug/telemetry для измерения реальной скорости.
 @OnlyDev
 public class Speed extends Module {
     private static Speed INSTANCE;

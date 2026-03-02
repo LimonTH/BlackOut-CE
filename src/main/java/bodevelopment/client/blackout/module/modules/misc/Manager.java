@@ -33,6 +33,16 @@ import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 
 // TODO: NEED PATCHES
+// TODO: добавить единый state reset при закрытии инвентаря/disable/teleport.
+// TODO: пересмотреть canUpdate(): учитывать контейнеры, чтобы не ломать чужие GUI.
+// TODO: добавить защиту от конфликтов с AutoArmor/AutoTotem/прочими менеджерами.
+// TODO: оптимизировать поиск слотов (кеширование) для больших инвентарей.
+// TODO: добавить корректную обработку толькоInv + silentInstant (не дергать курсор).
+// TODO: улучшить badArmor/badWeapons сравнение (энчант/атрибуты/прочность).
+// TODO: добавить ограничения на drop-поток, чтобы не спамить пакеты.
+// TODO: пересмотреть replenishMemory для случаев, когда стек заменён другим предметом.
+// TODO: учесть shulker/containers, чтобы не выкидывать содержимое случайно.
+// TODO: добавить логирование причины stopRotations/инвентарных остановок.
 @OnlyDev
 public class Manager extends Module {
     private static Manager INSTANCE;

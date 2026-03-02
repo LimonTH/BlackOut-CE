@@ -13,6 +13,7 @@ import bodevelopment.client.blackout.interfaces.functional.EpicInterface;
 import bodevelopment.client.blackout.keys.KeyBind;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
+import bodevelopment.client.blackout.module.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.settings.SwingSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -43,6 +44,8 @@ import net.minecraft.util.shape.VoxelShape;
 import java.util.ArrayList;
 import java.util.List;
 
+// TODO: NEW PATCHES
+@OnlyDev
 public class AutoMine extends Module {
     private static AutoMine INSTANCE;
 
