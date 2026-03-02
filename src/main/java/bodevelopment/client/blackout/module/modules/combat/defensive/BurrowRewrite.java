@@ -35,30 +35,30 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.List;
 import java.util.function.Predicate;
-
 public class BurrowRewrite extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRubberband = this.addGroup("Rubberband");
 
-    private final Setting<BurrowMode> mode = this.sgGeneral.enumSetting("Mode", BurrowMode.Offset, ".");
-    private final Setting<Boolean> checkCollisions = this.sgGeneral.booleanSetting("Check Entities", true, ".");
-    private final Setting<Boolean> attack = this.sgGeneral.booleanSetting("Attack", true, ".");
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent, "Method of switching.");
-    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Blocks", "Blocks to use.", Blocks.OBSIDIAN, Blocks.ENDER_CHEST);
+    private final Setting<BurrowMode> mode = this.sgGeneral.enumSetting("Execution Mode", BurrowMode.Offset, "The method used to force the server to desync the player's position after block placement.");
+    private final Setting<Boolean> checkCollisions = this.sgGeneral.booleanSetting("Collision Check", true, "Prevents activation if entities are obstructing the target coordinates.");
+    private final Setting<Boolean> attack = this.sgGeneral.booleanSetting("Auto Attack", true, "Attempts to clear obstructing entities like End Crystals before initiating the burrow.");
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Swap Logic", SwitchMode.Silent, "The inventory management method used to select the required block.");
+    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Block Registry", "A prioritized list of blocks to use for the burrowing process.", Blocks.OBSIDIAN, Blocks.ENDER_CHEST);
+    private final Setting<Boolean> instant = this.sgGeneral.booleanSetting("Zero-Tick", true, "Executes the entire jump, placement, and offset sequence within a single game tick.");
+    private final Setting<Boolean> useTimer = this.sgGeneral.booleanSetting("Timer Modulation", false, "Modifies the game clock speed to accelerate the jump sequence.", () -> !this.instant.get());
+    private final Setting<Double> timer = this.sgGeneral.doubleSetting("Timer Speed", 1.0, 1.0, 5.0, 0.05, "The multiplier applied to the game timer during execution.", () -> !this.instant.get() && this.useTimer.get());
+    private final Setting<Boolean> smartRotate = this.sgGeneral.booleanSetting("Smart Orientation", true, "Dynamically calculates rotations to ensure block placement validity.");
+    private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotation", true, "Forces the rotation to complete immediately without interpolation.");
+    private final Setting<Integer> jumpTicks = this.sgGeneral.intSetting("Airborne Duration", 4, 3, 10, 1, "The number of ticks simulated or spent in the air to reach sufficient height.");
+    private final Setting<Double> cooldown = this.sgGeneral.doubleSetting("Activation Cooldown", 1.0, 0.0, 5.0, 0.05, "Minimum delay between consecutive burrow attempts.");
+
+    private final Setting<Double> offset = this.sgRubberband.doubleSetting("Teleport Offset", 1.0, -10.0, 10.0, 0.2, "The vertical distance used to trigger a server-side rubberband effect.", () -> this.mode.get() == BurrowMode.Offset);
+    private final Setting<Integer> packets = this.sgRubberband.intSetting("Packet Burst", 1, 1, 20, 1, "The number of redundant position packets sent to ensure desynchronization.", () -> this.mode.get() == BurrowMode.Offset);
+    private final Setting<Boolean> smooth = this.sgRubberband.booleanSetting("Kinetic Smoothing", false, "Maintains movement momentum post-burrow to avoid immediate velocity resets.");
+    private final Setting<Boolean> syncPacket = this.sgRubberband.booleanSetting("State Synchronization", false, "Sends an additional full movement packet to align client and server states.", this.smooth::get);
+
     private final Predicate<ItemStack> predicate = stack -> stack.getItem() instanceof BlockItem blockItem
             && this.blocks.get().contains(blockItem.getBlock());
-    private final Setting<Boolean> instant = this.sgGeneral.booleanSetting("Instant", true, ".");
-    private final Setting<Boolean> useTimer = this.sgGeneral.booleanSetting("Use Timer", false, ".", () -> !this.instant.get());
-    private final Setting<Double> timer = this.sgGeneral.doubleSetting("Timer", 1.0, 1.0, 5.0, 0.05, ".", () -> !this.instant.get() && this.useTimer.get());
-    private final Setting<Boolean> smartRotate = this.sgGeneral.booleanSetting("Smart Rotate", true, ".");
-    private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotate", true, ".");
-    private final Setting<Integer> jumpTicks = this.sgGeneral.intSetting("Jump Ticks", 3, 3, 10, 1, ".");
-    private final Setting<Double> cooldown = this.sgGeneral.doubleSetting("Cooldown", 1.0, 0.0, 5.0, 0.05, ".");
-
-    private final Setting<Double> offset = this.sgRubberband.doubleSetting("Offset", 1.0, -10.0, 10.0, 0.2, ".", () -> this.mode.get() == BurrowMode.Offset);
-    private final Setting<Integer> packets = this.sgRubberband.intSetting("Packets", 1, 1, 20, 1, ".", () -> this.mode.get() == BurrowMode.Offset);
-    private final Setting<Boolean> smooth = this.sgRubberband.booleanSetting("Smooth", false, "Enabled scaffold after burrowing.");
-    private final Setting<Boolean> syncPacket = this.sgRubberband.booleanSetting("Sync Packet", false, ".", this.smooth::get);
 
     private boolean shouldCancel = true;
     private int tick = 0;
@@ -69,7 +69,7 @@ public class BurrowRewrite extends Module {
     private boolean modifiedTimer = false;
 
     public BurrowRewrite() {
-        super("Burrow Rewrite", ".", SubCategory.DEFENSIVE, true);
+        super("Burrow Rewrite", "A modernized defensive module that forces the player inside a block to prevent knockback and projectile damage.", SubCategory.DEFENSIVE, true);
     }
 
     @Override
@@ -188,14 +188,6 @@ public class BurrowRewrite extends Module {
 
         Vec3d prevPos = BlackOut.mc.player.getPos();
         BlackOut.mc.player.setPosition(this.startPos.add(0.0, this.calcY(), 0.0));
-        BlockPos pos = BlockPos.ofFloored(this.startPos);
-        if (!this.canAttempt(pos)) {
-            BlackOut.mc.player.setPosition(prevPos);
-            this.tick = -1;
-            this.resetTimer();
-            return;
-        }
-
         PlaceData data = this.getPlaceData();
         if (data.valid()) {
             boolean rotated = this.rotateBlockIfNeeded(data, "placing");
@@ -212,10 +204,7 @@ public class BurrowRewrite extends Module {
     }
 
     private void place(PlaceData data) {
-        if (!this.canAttempt(data.pos())) {
-            return;
-        }
-
+        System.out.println(data);
         Hand hand = OLEPOSSUtils.getHand(this.predicate);
         if (hand == null) {
             FindResult result = this.switchMode.get().find(this.predicate);
