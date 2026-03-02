@@ -15,82 +15,68 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.randomstuff.PlaceData;
+import bodevelopment.client.blackout.util.BoxUtils;
+import bodevelopment.client.blackout.util.EntityUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.ItemEntity;
+import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.List;
 import java.util.function.Predicate;
 
-// TODO: NEED PATCHES
-// TODO: проверить, почему настройки checkCollisions/attack/smartRotate не используются и внедрить их в логику.
-// TODO: добавить проверку коллизий с сущностями перед тик-джампом и перед placement.
-// TODO: реализовать зачистку кристаллов/энтити в ногах перед установкой блока (attack).
-// TODO: учесть smartRotate при выборе RotationType и ограничить резкие повороты.
-// TODO: добавить проверку replaceable блока и защиту от постановки в невалидные позиции.
-// TODO: синхронизировать reset Timer при disable/ошибках, чтобы не оставлять изменённый таймер.
-// TODO: добавить отдельный cooldown/lock после rubberband, чтобы избежать повторного спама пакетов.
-// TODO: учесть античита-профили (например, Grim/Matrix) и отдельные пресеты высоты calcY.
-// TODO: добавить обработку серверных correction packets кроме PlayerPositionLookS2CPacket (fallback).
-// TODO: добавить логирование/feedback причины отказа (нет блока, коллизия, rotation fail).
-@OnlyDev
 public class BurrowRewrite extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRubberband = this.addGroup("Rubberband");
 
-    // TODO: checkCollisions, attack и smartRotate нигде не используются
-    private final Setting<BurrowMode> mode = this.sgGeneral.enumSetting("Mode", BurrowMode.Offset,
-            "How to handle the rubberband effect. 'Offset' teleports you, while 'Cancel' tries to disrupt server-side positioning.");
-    private final Setting<Boolean> checkCollisions = this.sgGeneral.booleanSetting("Check Entities", true,
-            "Prevents burrowing if there are entities (like other players) that would block the placement.");
-    private final Setting<Boolean> attack = this.sgGeneral.booleanSetting("Attack", true,
-            "Automatically clears crystals or other obstacles in your feet before placing the block.");
-    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent,
-            "Inventory bypass method. 'Silent' is best for servers with strict switch checks.");
-    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Blocks",
-            "Blocks to use for self-fill. Obsidian and Ender Chests are standard choices.", Blocks.OBSIDIAN, Blocks.ENDER_CHEST);
-    private final Setting<Boolean> instant = this.sgGeneral.booleanSetting("Instant", true,
-            "Performs the entire burrow sequence in a single tick. Desyncs less on most servers.");
-    private final Setting<Boolean> useTimer = this.sgGeneral.booleanSetting("Use Timer", false,
-            "Slows down or speeds up game time during the jump to assist with placement timing.", () -> !this.instant.get());
-    private final Setting<Double> timer = this.sgGeneral.doubleSetting("Timer", 1.0, 1.0, 5.0, 0.05,
-            "The game speed multiplier to use during the burrow jump.", () -> !this.instant.get() && this.useTimer.get());
-    private final Setting<Boolean> smartRotate = this.sgGeneral.booleanSetting("Smart Rotate", true,
-            "Calculates the most efficient rotation to place the block without triggering anti-cheat flags.");
-    private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotate", true,
-            "Sends rotation packets instantly rather than smoothly interpolating them.");
-    private final Setting<Integer> jumpTicks = this.sgGeneral.intSetting("Jump Ticks", 3, 3, 10, 1,
-            "How many ticks to wait or simulate air-time before placing the block.");
-
-    private final Setting<Double> offset = this.sgRubberband.doubleSetting("Offset", 1.0, -10.0, 10.0, 0.2,
-            "The vertical distance to teleport you after placement. Positive values move you up, negative move you down.",
-            () -> this.mode.get() == BurrowMode.Offset);
-    private final Setting<Integer> packets = this.sgRubberband.intSetting("Packets", 1, 1, 20, 1,
-            "How many teleport packets to send. Higher values can help bypass strict rubberband checks.",
-            () -> this.mode.get() == BurrowMode.Offset);
-    private final Setting<Boolean> smooth = this.sgRubberband.booleanSetting("Smooth", false,
-            "Attempts to smooth out the movement after burrowing to prevent 'lag-back' visual glitches.");
-    private final Setting<Boolean> syncPacket = this.sgRubberband.booleanSetting("Sync Packet", false,
-            "Sends an extra movement packet to synchronize your position with the server more accurately.", this.smooth::get);
-
+    private final Setting<BurrowMode> mode = this.sgGeneral.enumSetting("Mode", BurrowMode.Offset, ".");
+    private final Setting<Boolean> checkCollisions = this.sgGeneral.booleanSetting("Check Entities", true, ".");
+    private final Setting<Boolean> attack = this.sgGeneral.booleanSetting("Attack", true, ".");
+    private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Switch Mode", SwitchMode.Silent, "Method of switching.");
+    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Blocks", "Blocks to use.", Blocks.OBSIDIAN, Blocks.ENDER_CHEST);
     private final Predicate<ItemStack> predicate = stack -> stack.getItem() instanceof BlockItem blockItem
             && this.blocks.get().contains(blockItem.getBlock());
+    private final Setting<Boolean> instant = this.sgGeneral.booleanSetting("Instant", true, ".");
+    private final Setting<Boolean> useTimer = this.sgGeneral.booleanSetting("Use Timer", false, ".", () -> !this.instant.get());
+    private final Setting<Double> timer = this.sgGeneral.doubleSetting("Timer", 1.0, 1.0, 5.0, 0.05, ".", () -> !this.instant.get() && this.useTimer.get());
+    private final Setting<Boolean> smartRotate = this.sgGeneral.booleanSetting("Smart Rotate", true, ".");
+    private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotate", true, ".");
+    private final Setting<Integer> jumpTicks = this.sgGeneral.intSetting("Jump Ticks", 3, 3, 10, 1, ".");
+    private final Setting<Double> cooldown = this.sgGeneral.doubleSetting("Cooldown", 1.0, 0.0, 5.0, 0.05, ".");
+
+    private final Setting<Double> offset = this.sgRubberband.doubleSetting("Offset", 1.0, -10.0, 10.0, 0.2, ".", () -> this.mode.get() == BurrowMode.Offset);
+    private final Setting<Integer> packets = this.sgRubberband.intSetting("Packets", 1, 1, 20, 1, ".", () -> this.mode.get() == BurrowMode.Offset);
+    private final Setting<Boolean> smooth = this.sgRubberband.booleanSetting("Smooth", false, "Enabled scaffold after burrowing.");
+    private final Setting<Boolean> syncPacket = this.sgRubberband.booleanSetting("Sync Packet", false, ".", this.smooth::get);
+
     private boolean shouldCancel = true;
     private int tick = 0;
     private Vec3d startPos = Vec3d.ZERO;
     private long prevFinish = 0L;
+    private long lastNotify = 0L;
+    private long lastAttack = 0L;
     private boolean modifiedTimer = false;
 
     public BurrowRewrite() {
-        super("Burrow Rewrite", "Glitch yourself inside a block to become immune to crystal damage.", SubCategory.DEFENSIVE, true);
+        super("Burrow Rewrite", ".", SubCategory.DEFENSIVE, true);
+    }
+
+    @Override
+    public void onDisable() {
+        this.resetTimer();
+        this.shouldCancel = false;
+        this.tick = -1;
     }
 
     @Event
@@ -103,9 +89,20 @@ public class BurrowRewrite extends Module {
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (!OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().stretch(0.0, this.calcY(), 0.0))
-                && System.currentTimeMillis() - this.prevFinish >= 1000L
-                && !this.notFound()) {
+        if (BlackOut.mc.player == null || BlackOut.mc.world == null) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        boolean ready = now - this.prevFinish >= (long) (this.cooldown.get() * 1000.0);
+        boolean outside = !OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().stretch(0.0, this.calcY(), 0.0));
+        if (outside && ready && !this.notFound()) {
+            BlockPos pos = BlockPos.ofFloored(BlackOut.mc.player.getPos());
+            if (!this.canAttempt(pos)) {
+                this.resetTimer();
+                return;
+            }
+
             if (!this.instant.get() && this.useTimer.get()) {
                 this.modifiedTimer = true;
                 Timer.set(this.timer.get().floatValue());
@@ -123,6 +120,7 @@ public class BurrowRewrite extends Module {
                     PlaceData data = this.preInstant(prevPos);
                     BlackOut.mc.player.setPosition(prevPos);
                     if (data == null) {
+                        this.resetTimer();
                         return;
                     }
 
@@ -153,32 +151,33 @@ public class BurrowRewrite extends Module {
                 this.tickJumping();
             }
         } else {
-            if (this.modifiedTimer) {
-                this.modifiedTimer = false;
-                Timer.reset();
-            }
+            this.resetTimer();
         }
     }
 
     private boolean notFound() {
         if (OLEPOSSUtils.getHand(this.predicate) == null && !this.switchMode.get().find(this.predicate).wasFound()) {
+            this.resetTimer();
             this.disable("no blocks found");
             return true;
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     private PlaceData preInstant(Vec3d prevPos) {
-        PlaceData data = SettingUtils.getPlaceData(BlockPos.ofFloored(prevPos));
-        if (!data.valid()) {
+        BlockPos pos = BlockPos.ofFloored(prevPos);
+        if (!this.canAttempt(pos)) {
             return null;
-        } else {
-            return SettingUtils.shouldRotate(RotationType.BlockPlace)
-                    && !this.rotateBlock(data, RotationType.BlockPlace.withInstant(this.instantRotate.get()), "block")
-                    ? null
-                    : data;
         }
+
+        PlaceData data = SettingUtils.getPlaceData(pos);
+        if (!data.valid()) {
+            this.notifyFailure("invalid position");
+            return null;
+        }
+
+        return this.rotateBlockIfNeeded(data, "block") ? data : null;
     }
 
     private void tickJumping() {
@@ -189,9 +188,17 @@ public class BurrowRewrite extends Module {
 
         Vec3d prevPos = BlackOut.mc.player.getPos();
         BlackOut.mc.player.setPosition(this.startPos.add(0.0, this.calcY(), 0.0));
+        BlockPos pos = BlockPos.ofFloored(this.startPos);
+        if (!this.canAttempt(pos)) {
+            BlackOut.mc.player.setPosition(prevPos);
+            this.tick = -1;
+            this.resetTimer();
+            return;
+        }
+
         PlaceData data = this.getPlaceData();
         if (data.valid()) {
-            boolean rotated = this.rotateBlock(data, RotationType.BlockPlace.withInstant(this.instantRotate.get()), "placing");
+            boolean rotated = this.rotateBlockIfNeeded(data, "placing");
             if (lastTick) {
                 if (rotated) {
                     this.place(data);
@@ -205,10 +212,15 @@ public class BurrowRewrite extends Module {
     }
 
     private void place(PlaceData data) {
+        if (!this.canAttempt(data.pos())) {
+            return;
+        }
+
         Hand hand = OLEPOSSUtils.getHand(this.predicate);
         if (hand == null) {
             FindResult result = this.switchMode.get().find(this.predicate);
             if (!result.wasFound() || !this.switchMode.get().swap(result.slot())) {
+                this.notifyFailure("no blocks found");
                 return;
             }
         }
@@ -265,6 +277,85 @@ public class BurrowRewrite extends Module {
         }
 
         return y;
+    }
+
+    private boolean rotateBlockIfNeeded(PlaceData data, String label) {
+        RotationType type = RotationType.BlockPlace.withInstant(this.instantRotate.get());
+        boolean shouldRotate = this.smartRotate.get() || SettingUtils.shouldRotate(RotationType.BlockPlace);
+        if (!shouldRotate) {
+            return true;
+        }
+
+        if (!this.rotateBlock(data, type, label)) {
+            this.notifyFailure("rotation failed");
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean canAttempt(BlockPos pos) {
+        if (!OLEPOSSUtils.replaceable(pos)) {
+            this.notifyFailure("position blocked");
+            return false;
+        }
+
+        if (this.checkCollisions.get()) {
+            if (this.attack.get()) {
+                this.attackBlockingEntities(pos);
+            }
+
+            if (this.hasBlockingEntities(pos)) {
+                this.notifyFailure("entity collision");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean hasBlockingEntities(BlockPos pos) {
+        Box box = BoxUtils.get(pos);
+        return EntityUtils.intersects(box, entity ->
+                !entity.isSpectator()
+                        && entity != BlackOut.mc.player
+                        && !(entity instanceof ItemEntity)
+                        && !(this.attack.get() && entity instanceof EndCrystalEntity));
+    }
+
+    private void attackBlockingEntities(BlockPos pos) {
+        if (System.currentTimeMillis() - this.lastAttack < 100L) {
+            return;
+        }
+
+        Box crystalBox = OLEPOSSUtils.getCrystalBox(pos);
+        List<Entity> crystals = EntityUtils.getEntities(crystalBox, entity -> entity instanceof EndCrystalEntity);
+        if (crystals.isEmpty()) {
+            return;
+        }
+
+        for (Entity entity : crystals) {
+            this.attackEntity(entity);
+        }
+
+        this.lastAttack = System.currentTimeMillis();
+    }
+
+    private void resetTimer() {
+        if (this.modifiedTimer) {
+            this.modifiedTimer = false;
+            Timer.reset();
+        }
+    }
+
+    private void notifyFailure(String reason) {
+        long now = System.currentTimeMillis();
+        if (now - this.lastNotify < 750L) {
+            return;
+        }
+
+        this.lastNotify = now;
+        this.sendMessage("Burrow: " + reason);
     }
 
     public enum BurrowMode {
