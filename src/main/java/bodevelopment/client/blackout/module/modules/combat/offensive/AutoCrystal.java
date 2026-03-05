@@ -1181,6 +1181,9 @@ public class AutoCrystal extends Module {
                     return System.currentTimeMillis() - this.lastPlace > 1000.0 / this.getPlaceSpeed(this.constantPlaceSpeed.get());
                 }
             case Normal:
+                if (!this.shouldSlow() && !this.isBlocked(this.placePos)) {
+                    return true;
+                }
                 return System.currentTimeMillis() - this.lastPlace > 1000.0 / this.getPlaceSpeed(this.placeSpeed.get());
             default:
                 return true;

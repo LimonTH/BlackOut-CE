@@ -15,7 +15,8 @@ import net.minecraft.util.shape.VoxelShape;
 
 import java.util.List;
 
-public class Step extends Module {
+public class
+Step extends Module {
     private static Step INSTANCE;
 
     public final SettingGroup sgGeneral = this.addGroup("General");
@@ -69,10 +70,6 @@ public class Step extends Module {
     @Event
     public void onTick(TickEvent.Pre event) {
         this.sinceStep++;
-    }
-
-    public boolean isActive() {
-        return this.enabled || HoleSnap.getInstance().shouldStep() || TickShift.getInstance().shouldStep();
     }
 
     public boolean cooldownCheck() {

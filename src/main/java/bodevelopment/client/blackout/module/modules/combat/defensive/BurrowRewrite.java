@@ -10,6 +10,7 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
+import bodevelopment.client.blackout.module.modules.client.Notifications;
 import bodevelopment.client.blackout.module.modules.misc.Timer;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -31,10 +32,13 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.List;
 import java.util.function.Predicate;
+
+@OnlyDev
 public class BurrowRewrite extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRubberband = this.addGroup("Rubberband");
@@ -51,11 +55,16 @@ public class BurrowRewrite extends Module {
     private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotation", true, "Forces the rotation to complete immediately without interpolation.");
     private final Setting<Integer> jumpTicks = this.sgGeneral.intSetting("Airborne Duration", 4, 3, 10, 1, "The number of ticks simulated or spent in the air to reach sufficient height.");
     private final Setting<Double> cooldown = this.sgGeneral.doubleSetting("Activation Cooldown", 1.0, 0.0, 5.0, 0.05, "Minimum delay between consecutive burrow attempts.");
+    private final Setting<Boolean> autoDisable = this.sgGeneral.booleanSetting("Auto Disable", true, "Automatically disables the module after successful burrow placement.");
 
     private final Setting<Double> offset = this.sgRubberband.doubleSetting("Teleport Offset", 1.0, -10.0, 10.0, 0.2, "The vertical distance used to trigger a server-side rubberband effect.", () -> this.mode.get() == BurrowMode.Offset);
     private final Setting<Integer> packets = this.sgRubberband.intSetting("Packet Burst", 1, 1, 20, 1, "The number of redundant position packets sent to ensure desynchronization.", () -> this.mode.get() == BurrowMode.Offset);
     private final Setting<Boolean> smooth = this.sgRubberband.booleanSetting("Kinetic Smoothing", false, "Maintains movement momentum post-burrow to avoid immediate velocity resets.");
     private final Setting<Boolean> syncPacket = this.sgRubberband.booleanSetting("State Synchronization", false, "Sends an additional full movement packet to align client and server states.", this.smooth::get);
+
+    private final Direction[] burrowDirections = new Direction[]{
+            Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST
+    };
 
     private final Predicate<ItemStack> predicate = stack -> stack.getItem() instanceof BlockItem blockItem
             && this.blocks.get().contains(blockItem.getBlock());
@@ -63,6 +72,7 @@ public class BurrowRewrite extends Module {
     private boolean shouldCancel = true;
     private int tick = 0;
     private Vec3d startPos = Vec3d.ZERO;
+    private double maxHeight = 0.0;
     private long prevFinish = 0L;
     private long lastNotify = 0L;
     private long lastAttack = 0L;
@@ -141,6 +151,7 @@ public class BurrowRewrite extends Module {
                 } else {
                     this.tick = 0;
                     this.startPos = BlackOut.mc.player.getPos();
+                    this.maxHeight = this.startPos.getY();
                     event.setY(this, 0.42F);
                     BlackOut.mc.player.jump();
                 }
@@ -166,12 +177,17 @@ public class BurrowRewrite extends Module {
     }
 
     private PlaceData preInstant(Vec3d prevPos) {
-        BlockPos pos = BlockPos.ofFloored(prevPos);
-        if (!this.canAttempt(pos)) {
+        BlockPos bestPos = this.findBestBurrowPos(prevPos);
+        if (bestPos == null) {
+            this.notifyFailure("no valid burrow position");
             return null;
         }
 
-        PlaceData data = SettingUtils.getPlaceData(pos);
+        if (!this.canAttempt(bestPos)) {
+            return null;
+        }
+
+        PlaceData data = SettingUtils.getPlaceData(bestPos);
         if (!data.valid()) {
             this.notifyFailure("invalid position");
             return null;
@@ -181,30 +197,46 @@ public class BurrowRewrite extends Module {
     }
 
     private void tickJumping() {
-        boolean lastTick = ++this.tick == this.jumpTicks.get();
-        if (lastTick) {
+        this.tick++;
+        
+        double currentY = BlackOut.mc.player.getY();
+        double velocityY = BlackOut.mc.player.getVelocity().y;
+
+        if (currentY > this.maxHeight) {
+            this.maxHeight = currentY;
+        }
+
+        boolean startedFalling = currentY < this.maxHeight - 0.05;
+        boolean closeToGround = currentY <= this.startPos.getY() + 0.2;
+        if (startedFalling && closeToGround) {
+            PlaceData data = this.getPlaceData();
+            if (data.valid()) {
+                boolean rotated = this.rotateBlockIfNeeded(data, "placing");
+                if (rotated) {
+                    this.place(data);
+                    this.tick = -1;
+                    return;
+                }
+            } else {
+                PlaceData altData = this.getPlaceDataForCurrentPos();
+                if (altData.valid()) {
+                    boolean rotated = this.rotateBlockIfNeeded(altData, "placing");
+                    if (rotated) {
+                        this.place(altData);
+                        this.tick = -1;
+                        return;
+                    }
+                }
+            }
             this.tick = -1;
         }
 
-        Vec3d prevPos = BlackOut.mc.player.getPos();
-        BlackOut.mc.player.setPosition(this.startPos.add(0.0, this.calcY(), 0.0));
-        PlaceData data = this.getPlaceData();
-        if (data.valid()) {
-            boolean rotated = this.rotateBlockIfNeeded(data, "placing");
-            if (lastTick) {
-                if (rotated) {
-                    this.place(data);
-                }
-
-                this.tick = -1;
-            }
-
-            BlackOut.mc.player.setPosition(prevPos);
+        if (this.tick > this.jumpTicks.get() * 2) {
+            this.tick = -1;
         }
     }
 
     private void place(PlaceData data) {
-        System.out.println(data);
         Hand hand = OLEPOSSUtils.getHand(this.predicate);
         if (hand == null) {
             FindResult result = this.switchMode.get().find(this.predicate);
@@ -216,12 +248,17 @@ public class BurrowRewrite extends Module {
 
         this.prevFinish = System.currentTimeMillis();
         this.placeBlock(hand, data);
+        
         if (this.mode.get() == BurrowMode.Offset) {
             this.rubberband();
         }
 
         if (hand == null) {
             this.switchMode.get().swapBack();
+        }
+
+        if (this.autoDisable.get()) {
+            this.silentDisable();
         }
     }
 
@@ -256,6 +293,38 @@ public class BurrowRewrite extends Module {
         return SettingUtils.getPlaceData(BlockPos.ofFloored(this.startPos));
     }
 
+    private PlaceData getPlaceDataForCurrentPos() {
+        return SettingUtils.getPlaceData(BlockPos.ofFloored(BlackOut.mc.player.getPos()));
+    }
+
+    private BlockPos findBestBurrowPos(Vec3d playerPos) {
+        BlockPos basePos = BlockPos.ofFloored(playerPos);
+
+        if (OLEPOSSUtils.replaceable(basePos) && this.canAttempt(basePos)) {
+            return basePos;
+        }
+
+        for (Direction dir : this.burrowDirections) {
+            if (dir == Direction.DOWN) continue;
+            
+            BlockPos sidePos = basePos.offset(dir);
+            if (OLEPOSSUtils.replaceable(sidePos) && this.canAttempt(sidePos)) {
+                Box playerBox = BlackOut.mc.player.getBoundingBox();
+                Box blockBox = BoxUtils.get(sidePos);
+                if (playerBox.intersects(blockBox)) {
+                    return sidePos;
+                }
+            }
+        }
+
+        BlockPos upPos = basePos.up();
+        if (OLEPOSSUtils.replaceable(upPos) && this.canAttempt(upPos)) {
+            return upPos;
+        }
+        
+        return null;
+    }
+
     private float calcY() {
         float velocity = 0.42F;
         float y = 0.0F;
@@ -271,16 +340,10 @@ public class BurrowRewrite extends Module {
     private boolean rotateBlockIfNeeded(PlaceData data, String label) {
         RotationType type = RotationType.BlockPlace.withInstant(this.instantRotate.get());
         boolean shouldRotate = this.smartRotate.get() || SettingUtils.shouldRotate(RotationType.BlockPlace);
-        if (!shouldRotate) {
-            return true;
-        }
 
-        if (!this.rotateBlock(data, type, label)) {
-            this.notifyFailure("rotation failed");
-            return false;
-        }
+        if (!shouldRotate) return true;
 
-        return true;
+        return this.rotateBlock(data, type, label);
     }
 
     private boolean canAttempt(BlockPos pos) {
@@ -344,8 +407,10 @@ public class BurrowRewrite extends Module {
         }
 
         this.lastNotify = now;
-        this.sendMessage("Burrow: " + reason);
+        this.sendNotification("Burrow: " + reason, reason, "Burrow Alert", Notifications.Type.Alert, 2.0);
     }
+
+
 
     public enum BurrowMode {
         Offset,

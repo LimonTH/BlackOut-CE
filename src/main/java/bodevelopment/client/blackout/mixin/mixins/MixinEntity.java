@@ -6,10 +6,7 @@ import bodevelopment.client.blackout.event.events.RemoveEvent;
 import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
 import bodevelopment.client.blackout.module.modules.legit.HitCrystal;
 import bodevelopment.client.blackout.module.modules.misc.Timer;
-import bodevelopment.client.blackout.module.modules.movement.CollisionShrink;
-import bodevelopment.client.blackout.module.modules.movement.Step;
-import bodevelopment.client.blackout.module.modules.movement.TargetStrafe;
-import bodevelopment.client.blackout.module.modules.movement.Velocity;
+import bodevelopment.client.blackout.module.modules.movement.*;
 import bodevelopment.client.blackout.util.SettingUtils;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MovementType;
@@ -80,12 +77,16 @@ public abstract class MixinEntity {
 
     @Inject(method = "adjustMovementForCollisions(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;", at = @At("HEAD"), cancellable = true)
     private void doStepStuff(Vec3d movement, CallbackInfoReturnable<Vec3d> cir) {
-        if ((Object) this == BlackOut.mc.player) {
-            Step step = Step.getInstance();
-            if (step.isActive()) {
-                cir.setReturnValue(this.getStep(step, movement));
-                cir.cancel();
-            }
+        if ((Object) this != BlackOut.mc.player) return;
+
+        Step step = Step.getInstance();
+
+        boolean holeSnapStep = HoleSnap.getInstance().enabled && HoleSnap.getInstance().shouldStep();
+        boolean tickShiftStep = TickShift.getInstance().enabled && TickShift.getInstance().shouldStep();
+
+        if (step.enabled || holeSnapStep || tickShiftStep) {
+            cir.setReturnValue(this.getStep(step, movement));
+            cir.cancel();
         }
     }
 
