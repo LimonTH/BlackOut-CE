@@ -157,28 +157,36 @@ public class InvUtils {
         }
     }
 
-    public static void pickSwap(int slot) {
+    public static boolean pickSwap(int slot) {
+        if (slot < 0 || slot >= 36) return false;
         pickSlot = slot;
         sendPick(slot, false);
+        return true;
     }
 
-    public static void pickSwapInstantly(int slot) {
+    public static boolean pickSwapInstantly(int slot) {
+        if (slot < 0 || slot >= 36) return false;
         pickSlot = slot;
         sendPick(slot, true);
+        return true;
     }
 
-    public static void pickSwapBack() {
+    public static boolean pickSwapBack() {
         if (pickSlot >= 0) {
             sendPick(pickSlot, false);
             pickSlot = -1;
+            return true;
         }
+        return false;
     }
 
-    public static void pickSwapBackInstantly() {
+    public static boolean pickSwapBackInstantly() {
         if (pickSlot >= 0) {
             sendPick(pickSlot, true);
             pickSlot = -1;
+            return true;
         }
+        return false;
     }
 
     private static void sendPick(int slot, boolean instant) {
@@ -201,62 +209,91 @@ public class InvUtils {
         }
     }
 
-    public static void invSwap(int slot) {
-        clickSlot(slot, Managers.PACKET.slot, SlotActionType.SWAP);
-        slots = new int[]{slot, Managers.PACKET.slot};
+    public static boolean invSwap(int slot) {
+        if (slot < 0 || slot >= 36) return false;
+        // Используем текущий выбранный слот игрока
+        int currentSlot = BlackOut.mc.player.getInventory().selectedSlot;
+        clickSlot(slot, currentSlot, SlotActionType.SWAP);
+        slots = new int[]{slot, currentSlot};
+        // Обновляем Managers.PACKET.slot, если он рассинхронизирован
+        if (Managers.PACKET.slot != currentSlot) {
+            Managers.PACKET.slot = currentSlot;
+        }
+        return true;
     }
 
-    public static void invSwapInstantly(int slot) {
-        clickSlotInstantly(slot, Managers.PACKET.slot, SlotActionType.SWAP);
-        slots = new int[]{slot, Managers.PACKET.slot};
+    public static boolean invSwapInstantly(int slot) {
+        if (slot < 0 || slot >= 36) return false;
+        // Используем текущий выбранный слот игрока
+        int currentSlot = BlackOut.mc.player.getInventory().selectedSlot;
+        clickSlotInstantly(slot, currentSlot, SlotActionType.SWAP);
+        slots = new int[]{slot, currentSlot};
+        // Обновляем Managers.PACKET.slot, если он рассинхронизирован
+        if (Managers.PACKET.slot != currentSlot) {
+            Managers.PACKET.slot = currentSlot;
+        }
+        return true;
     }
 
-    public static void invSwapBack() {
+    public static boolean invSwapBack() {
         if (slots != null) {
             clickSlot(slots[0], slots[1], SlotActionType.SWAP);
+            return true;
         }
+        return false;
     }
 
-    public static void invSwapBackInstantly() {
+    public static boolean invSwapBackInstantly() {
         if (slots != null) {
             clickSlotInstantly(slots[0], slots[1], SlotActionType.SWAP);
+            return true;
         }
+        return false;
     }
 
-    public static void swap(int to) {
+    public static boolean swap(int to) {
         prevSlot = BlackOut.mc.player.getInventory().selectedSlot;
         BlackOut.mc.player.getInventory().selectedSlot = to;
-        syncSlot(false);
+        return syncSlot(false);
     }
 
-    public static void swapInstantly(int to) {
+    public static boolean swapInstantly(int to) {
         prevSlot = BlackOut.mc.player.getInventory().selectedSlot;
         BlackOut.mc.player.getInventory().selectedSlot = to;
-        syncSlot(true);
+        return syncSlot(true);
     }
 
-    private static void syncSlot(boolean instant) {
+    private static boolean syncSlot(boolean instant) {
         int i = BlackOut.mc.player.getInventory().selectedSlot;
+        // Всегда отправляем пакет, если слот изменился
         if (i != Managers.PACKET.slot) {
             if (instant) {
                 Managers.PACKET.sendInstantly(new UpdateSelectedSlotC2SPacket(i));
             } else {
                 Managers.PACKET.sendPacket(new UpdateSelectedSlotC2SPacket(i));
             }
+            // Обновляем состояние сразу после отправки
+            Managers.PACKET.slot = i;
+            return true;
         }
+        return false;
     }
 
-    public static void swapBack() {
+    public static boolean swapBack() {
         if (prevSlot >= 0) {
-            swap(prevSlot);
+            boolean sent = swap(prevSlot);
             prevSlot = -1;
+            return sent;
         }
+        return false;
     }
 
-    public static void swapBackInstantly() {
+    public static boolean swapBackInstantly() {
         if (prevSlot >= 0) {
-            swapInstantly(prevSlot);
+            boolean sent = swapInstantly(prevSlot);
             prevSlot = -1;
+            return sent;
         }
+        return false;
     }
 }

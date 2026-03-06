@@ -68,7 +68,6 @@ public class ConfigManager extends Manager {
         }
 
         if (shouldSave
-                && !Managers.MODULES.getModules().isEmpty()
                 && System.currentTimeMillis() > this.previousSave + 10000L
                 && !(BlackOut.mc.currentScreen instanceof ClickGui)
                 && !(BlackOut.mc.currentScreen instanceof HudEditor)) {
@@ -94,8 +93,31 @@ public class ConfigManager extends Manager {
     public void readConfigs() {
         FileUtils.addFolder("configs");
 
+        String mainConfigName = this.getConfigs()[0];
+
         for (ConfigType type : ConfigType.values()) {
             this.readConfig(this.getConfigs()[type.ordinal()], type);
+        }
+
+        this.readExtra(mainConfigName);
+    }
+
+    private void readExtra(String config) {
+        JsonObject object = FileUtils.readElement("configs", config + ".json") instanceof JsonObject jsonObject ? jsonObject : null;
+        if (object == null) return;
+
+        if (object.has("hud")) {
+            Managers.HUD.clear();
+            this.readHudElements(object.getAsJsonObject("hud"));
+        }
+
+        if (object.has("binds")) {
+            JsonObject bindObject = object.getAsJsonObject("binds");
+            Managers.MODULES.getModules().forEach(module -> {
+                if (bindObject.has(module.getFileName())) {
+                    module.bind.read(bindObject.getAsJsonObject(module.getFileName()));
+                }
+            });
         }
     }
 
@@ -124,24 +146,6 @@ public class ConfigManager extends Manager {
                     });
                 }
                 break;
-            case HUD:
-                Managers.HUD.clear();
-                if (object.has("hud") && object.get("hud") instanceof JsonObject hudObject) {
-                    this.readHudElements(hudObject);
-                }
-                break;
-            case Binds:
-                if (object.has("binds") && object.get("binds") instanceof JsonObject bindObject) {
-                    Managers.MODULES.getModules().forEach(module -> {
-                        if (bindObject.has(module.getFileName()) && bindObject.get(module.getFileName()) instanceof JsonObject moduleObject) {
-                            module.bind.read(moduleObject);
-                        } else {
-                            module.bind.reset();
-                        }
-                    });
-                } else {
-                    Managers.MODULES.getModules().forEach(module -> module.bind.reset());
-                }
         }
     }
 
@@ -201,87 +205,66 @@ public class ConfigManager extends Manager {
     }
 
     public void writeConfig(String name, ConfigType type) {
-        FileUtils.addFile("configs", name + ".json");
-        JsonObject prevObject;
-        if (FileUtils.readElement("configs", name + ".json") instanceof JsonObject object) {
-            prevObject = object;
-        } else {
-            prevObject = null;
-        }
-
-        boolean prevFound = prevObject != null;
         JsonObject configObject = new JsonObject();
-        configObject.addProperty("description", prevFound && prevObject.has("description") ? prevObject.get("description").getAsString() : "");
-        JsonObject timeObject = new JsonObject();
+        configObject.addProperty("description", "BlackOut Config");
+
         LocalDateTime time = LocalDateTime.now(ZoneOffset.UTC);
+        JsonObject timeObject = new JsonObject();
         timeObject.addProperty("year", time.getYear());
         timeObject.addProperty("month", time.getMonthValue());
         timeObject.addProperty("day", time.getDayOfMonth());
         timeObject.addProperty("hour", time.getHour());
         timeObject.addProperty("minute", time.getMinute());
-        timeObject.addProperty("second", time.getSecond());
         configObject.add("lastSave", timeObject);
-        JsonObject moduleObject = new JsonObject();
-        if (type.predicate != null) {
-            Managers.MODULES.getModules().stream().filter(type.predicate).forEach(module -> this.writeModule(module, moduleObject));
-        }
 
         for (ConfigType configType : ConfigType.values()) {
             if (configType.predicate != null) {
-                String key = configType.name();
-                if (configType == type) {
-                    configObject.add(key, moduleObject);
-                } else if (prevFound && prevObject.has(key)) {
-                    if (prevObject.get(key) instanceof JsonObject object) {
-                        configObject.add(key, object);
-                    } else {
-                        configObject.add(key, new JsonObject());
-                    }
-                } else {
-                    configObject.add(key, new JsonObject());
-                }
+                JsonObject categoryObject = new JsonObject();
+                Managers.MODULES.getModules().stream()
+                        .filter(configType.predicate)
+                        .forEach(module -> {
+                            JsonObject moduleJson = new JsonObject();
+                            // Записываем статус и настройки модуля
+                            this.writeSettings(module, moduleJson);
+                            categoryObject.add(module.getFileName(), moduleJson);
+                        });
+                configObject.add(configType.name(), categoryObject);
             }
         }
 
-        if (type == ConfigType.HUD) {
-            JsonObject hudObject = new JsonObject();
-            Managers.HUD.forEachElement((id, element) -> this.writeHudElement(element, id, hudObject));
-            configObject.add("hud", hudObject);
-        } else if (prevFound && prevObject.has("hud") && prevObject.get("hud") instanceof JsonObject object) {
-            configObject.add("hud", object);
-        } else {
-            configObject.add("hud", new JsonObject());
-        }
+        JsonObject hudObject = new JsonObject();
+        Managers.HUD.forEachElement((id, element) -> {
+            this.writeHudElement(element, id, hudObject);
+        });
+        configObject.add("hud", hudObject);
 
-        if (type == ConfigType.Binds) {
-            JsonObject bindObject = new JsonObject();
-            Managers.MODULES.getModules().forEach(module -> {
-                JsonObject jsonObject = new JsonObject();
-                module.bind.write(jsonObject);
-                bindObject.add(module.getFileName(), jsonObject);
-            });
-            configObject.add("binds", bindObject);
-        } else if (prevFound && prevObject.has("binds") && prevObject.get("binds") instanceof JsonObject object) {
-            configObject.add("binds", object);
-        } else {
-            configObject.add("binds", new JsonObject());
-        }
+        JsonObject bindsObject = new JsonObject();
+        Managers.MODULES.getModules().forEach(module -> {
+            JsonObject bJson = new JsonObject();
+            module.bind.write(bJson);
+            bindsObject.add(module.getFileName(), bJson);
+        });
+        configObject.add("binds", bindsObject);
 
         FileUtils.write(FileUtils.getFile("configs", name + ".json"), configObject);
+
         this.previousSave = System.currentTimeMillis();
-        this.toSave[type.ordinal()] = false;
+        Arrays.fill(this.toSave, false);
     }
 
     private void writeHudElement(HudElement element, int id, JsonObject jsonObject) {
-        String fileName = element.getClass().getSimpleName();
+        String key = element.getClass().getSimpleName() + "-" + id;
+
         JsonObject object = new JsonObject();
-        JsonObject settingsObject = new JsonObject();
         object.addProperty("enabled", element.enabled);
         object.addProperty("positionX", element.x);
         object.addProperty("positionY", element.y);
-        this.writeSettings(element, settingsObject);
+
+        JsonObject settingsObject = new JsonObject();
+        element.writeSettings(settingsObject);
         object.add("settings", settingsObject);
-        jsonObject.add(fileName + "-" + id, object);
+
+        jsonObject.add(key, object);
     }
 
     private void writeModule(Module module, JsonObject jsonObject) {

@@ -40,11 +40,10 @@ public class HUDManager extends Manager {
 
     public Class<? extends HudElement> getClass(String name) {
         for (Pair<String, Class<? extends HudElement>> pair : this.elements) {
-            if (pair.getLeft().equals(name)) {
+            if (pair.getLeft().equals(name) || pair.getRight().getSimpleName().equals(name)) {
                 return pair.getRight();
             }
         }
-
         return null;
     }
 
@@ -169,13 +168,13 @@ public class HUDManager extends Manager {
     public void add(HudElement element) {
         this.add(element.getClass());
 
-        for (int i = 1; i < 1000; i++) {
-            if (!this.loaded.containsKey(i)) {
-                this.loaded.put(i, element);
-                element.id = i;
-                return;
-            }
+        int newId = 0;
+        while (this.loaded.containsKey(newId)) {
+            newId++;
         }
+
+        element.id = newId;
+        this.loaded.put(newId, element);
     }
 
     private void toggle() {

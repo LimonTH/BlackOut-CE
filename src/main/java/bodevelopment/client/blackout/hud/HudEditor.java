@@ -295,6 +295,13 @@ public class HudEditor extends Screen {
     }
 
     @Override
+    public void close() {
+        Managers.CONFIG.save(ConfigType.HUD);
+        Managers.CONFIG.save(ConfigType.Binds);
+        super.close();
+    }
+
+    @Override
     public boolean shouldCloseOnEsc() {
         return this.settings.getOpenedElement() == null;
     }

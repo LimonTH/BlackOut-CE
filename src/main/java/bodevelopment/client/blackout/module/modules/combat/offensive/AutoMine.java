@@ -671,7 +671,6 @@ public class AutoMine extends Module {
     private void updateMining() {
         if (this.minePos == null || this.startedThisTick) return;
 
-        // Find best tool for the block
         FindResult best = this.findBestSlot(stack ->
                 BlockUtils.getBlockBreakingDelta(
                         stack, this.ncpState(), this.minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
@@ -682,7 +681,6 @@ public class AutoMine extends Module {
                 ? BlackOut.mc.player.getInventory().getStack(best.slot())
                 : ItemStack.EMPTY;
 
-        // Progress update
         if (this.ncpProgress.get()) {
             this.minedFor++;
         } else {
@@ -691,11 +689,9 @@ public class AutoMine extends Module {
             );
         }
 
-        // Check if block can be broken
         boolean canBreak = this.minedCheck(bestStack);
 
-        if (canBreak && this.damageSyncCheck()) {
-            // Determine if player is already holding the best tool
+        if (canBreak) {
             boolean holding = ItemStack.areEqual(Managers.PACKET.getStack(), bestStack);
             this.mineEndUpdate(holding, best.slot());
         } else if (this.almostMined(bestStack) && SettingUtils.endMineRot()) {
@@ -718,7 +714,10 @@ public class AutoMine extends Module {
 
     private void mineEndUpdate(boolean holding, int slot) {
         EndCrystalEntity crystalAt = this.endCrystalAt(this.crystalPos);
-        if (!this.notPressed() && !this.ignored(this.minePos)) {
+
+        boolean shouldCheckPress = this.mineType == MineType.Manual;
+        
+        if ((!shouldCheckPress || !this.notPressed()) && !this.ignored(this.minePos)) {
             switch (this.mineType) {
                 case Cev:
                     if (crystalAt == null) {
@@ -726,12 +725,9 @@ public class AutoMine extends Module {
                             return;
                         }
 
-                        if (!this.placeCrystal(this.crystalPos.down())) {
-                            return;
-                        }
-
+                        this.placeCrystal(this.crystalPos.down());
                         if (!this.antiAntiCev.get()) {
-                            return;
+                            // В обычном режиме разрушаем даже если кристалл не разместился
                         }
                     }
                     break;
@@ -741,12 +737,9 @@ public class AutoMine extends Module {
                             return;
                         }
 
-                        if (!this.placeCrystal(this.crystalPos.down())) {
-                            return;
-                        }
-
+                        this.placeCrystal(this.crystalPos.down());
                         if (!this.antiAntiTrapCev.get()) {
-                            return;
+                            // В обычном режиме разрушаем даже если кристалл не разместился
                         }
                     }
                     break;
@@ -759,18 +752,15 @@ public class AutoMine extends Module {
                             return;
                         }
 
-                        if (!this.placeCrystal(this.crystalPos.down())) {
-                            return;
-                        }
-
+                        this.placeCrystal(this.crystalPos.down());
                         if (!this.antiAntiSurroundCev.get()) {
-                            return;
+                            // В обычном режиме разрушаем даже если кристалл не разместился
                         }
                     }
                     break;
                 case AutoCity:
-                    if (crystalAt == null && this.placeCrystal.get() && !this.placeCrystal(this.crystalPos.down())) {
-                        return;
+                    if (crystalAt == null && this.placeCrystal.get()) {
+                        this.placeCrystal(this.crystalPos.down());
                     }
             }
 
@@ -808,10 +798,8 @@ public class AutoMine extends Module {
             boolean isSilent = this.pickaxeSwitch.get() == SwitchMode.Silent || this.pickaxeSwitch.get() == SwitchMode.PickSilent;
             boolean switched = false;
 
-            // Perform swap if needed and mode supports it
             if (!holding && slot != -1 && slot != currentSlot) {
                 switched = this.pickaxeSwitch.get().swap(slot);
-                // If swap method didn't handle packet switching (should not happen for enabled modes)
                 if (!switched && this.pickaxeSwitch.get() != SwitchMode.Disabled) {
                     Managers.PACKET.sendPacket(new UpdateSelectedSlotC2SPacket(slot));
                     switched = true;
@@ -830,11 +818,9 @@ public class AutoMine extends Module {
             }
             Managers.BLOCK.set(this.minePos, Blocks.AIR, true, true);
 
-            // Swap back for silent modes only (Silent, PickSilent, InvSwitch)
             if (switched && (isSilent || this.pickaxeSwitch.get() == SwitchMode.InvSwitch)) {
                 this.pickaxeSwitch.get().swapBack();
             }
-            // For Normal mode, slot stays changed (no swap back)
 
             this.finalizeMining();
         }
