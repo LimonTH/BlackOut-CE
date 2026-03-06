@@ -263,9 +263,27 @@ public class HudEditorSettings {
 
         for (int i = 0; i < this.openedElement.settingGroups.size(); i++) {
             SettingGroup settingGroup = this.openedElement.settingGroups.get(i);
-            this.renderSettingGroup(settingGroup, i == this.openedElement.settingGroups.size() - 1);
+
+            if (!hasVisibleSettings(settingGroup)) continue;
+
+            boolean isReallyLast = true;
+            for (int j = i + 1; j < this.openedElement.settingGroups.size(); j++) {
+                if (hasVisibleSettings(this.openedElement.settingGroups.get(j))) {
+                    isReallyLast = false;
+                    break;
+                }
+            }
+
+            this.renderSettingGroup(settingGroup, isReallyLast);
             settingGroup.settings.forEach(this::renderSetting);
         }
+    }
+
+    private boolean hasVisibleSettings(SettingGroup group) {
+        for (Setting<?> setting : group.settings) {
+            if (setting.isVisible()) return true;
+        }
+        return false;
     }
 
     private void renderEnumDropdowns() {
@@ -336,6 +354,14 @@ public class HudEditorSettings {
 
         float rectX = this.mx + 15;
         float rectY = this.my + 15;
+
+        var window = net.minecraft.client.MinecraftClient.getInstance().getWindow();
+        if (rectX + finalWidth + 20 > window.getWidth()) {
+            rectX = this.mx - finalWidth - 20;
+        }
+        if (rectY + finalHeight + 20 > window.getHeight()) {
+            rectY = this.my - finalHeight - 20;
+        }
 
         this.stack.push();
         this.stack.translate(0, 0, 900);

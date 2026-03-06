@@ -22,64 +22,38 @@ public enum SwitchMode {
         this.inventory = i;
     }
 
-    public void swapBack() {
-        switch (this) {
-            case Silent:
-                InvUtils.swapBack();
-                break;
-            case InvSwitch:
-                InvUtils.invSwapBack();
-                break;
-            case PickSilent:
-                InvUtils.pickSwapBack();
-        }
-    }
-
-    public boolean swap(int slot) {
+    public boolean swapBack() {
         return switch (this) {
-            case Silent, Normal -> {
-                InvUtils.swap(slot);
-                yield true;
-            }
-            case InvSwitch -> {
-                InvUtils.invSwap(slot);
-                yield true;
-            }
-            case PickSilent -> {
-                InvUtils.pickSwap(slot);
-                yield true;
-            }
+            case Silent -> InvUtils.swapBack();
+            case InvSwitch -> InvUtils.invSwapBack();
+            case PickSilent -> InvUtils.pickSwapBack();
             default -> false;
         };
     }
 
-    public void swapBackInstantly() {
-        switch (this) {
-            case Silent:
-                InvUtils.swapBackInstantly();
-                break;
-            case InvSwitch:
-                InvUtils.invSwapBackInstantly();
-                break;
-            case PickSilent:
-                InvUtils.pickSwapBackInstantly();
-        }
+    public boolean swap(int slot) {
+        return switch (this) {
+            case Silent, Normal -> InvUtils.swap(slot);
+            case InvSwitch -> InvUtils.invSwap(slot);
+            case PickSilent -> InvUtils.pickSwap(slot);
+            default -> false;
+        };
+    }
+
+    public boolean swapBackInstantly() {
+        return switch (this) {
+            case Silent -> InvUtils.swapBackInstantly();
+            case InvSwitch -> InvUtils.invSwapBackInstantly();
+            case PickSilent -> InvUtils.pickSwapBackInstantly();
+            default -> false;
+        };
     }
 
     public boolean swapInstantly(int slot) {
         return switch (this) {
-            case Silent, Normal -> {
-                InvUtils.swapInstantly(slot);
-                yield true;
-            }
-            case InvSwitch -> {
-                InvUtils.invSwapInstantly(slot);
-                yield true;
-            }
-            case PickSilent -> {
-                InvUtils.pickSwapInstantly(slot);
-                yield true;
-            }
+            case Silent, Normal -> InvUtils.swapInstantly(slot);
+            case InvSwitch -> InvUtils.invSwapInstantly(slot);
+            case PickSilent -> InvUtils.pickSwapInstantly(slot);
             default -> false;
         };
     }

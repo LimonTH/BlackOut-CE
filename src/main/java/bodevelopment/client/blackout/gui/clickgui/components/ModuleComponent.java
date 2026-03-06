@@ -339,7 +339,7 @@ public class ModuleComponent extends Component {
             }
         }
 
-        return false; // Никто не кликнут
+        return false;
     }
 
     private void updateAnimation() {
