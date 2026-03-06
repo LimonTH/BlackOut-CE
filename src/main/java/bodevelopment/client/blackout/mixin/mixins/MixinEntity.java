@@ -81,8 +81,8 @@ public abstract class MixinEntity {
 
         Step step = Step.getInstance();
 
-        boolean holeSnapStep = HoleSnap.getInstance().enabled && HoleSnap.getInstance().shouldStep();
-        boolean tickShiftStep = TickShift.getInstance().enabled && TickShift.getInstance().shouldStep();
+        boolean holeSnapStep = HoleSnap.getInstance().enabled && HoleSnap.getInstance().shouldStep() && step.enabled;
+        boolean tickShiftStep = TickShift.getInstance().enabled && TickShift.getInstance().shouldStep() && step.enabled;
 
         if (step.enabled || holeSnapStep || tickShiftStep) {
             cir.setReturnValue(this.getStep(step, movement));

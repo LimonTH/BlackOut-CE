@@ -60,6 +60,8 @@ Step extends Module {
         }
 
         this.shouldResetTimer = false;
+        this.stepProgress = -1;
+        this.offsets = null;
     }
 
     @Override
