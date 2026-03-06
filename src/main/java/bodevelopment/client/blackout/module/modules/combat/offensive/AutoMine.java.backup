@@ -671,32 +671,24 @@ public class AutoMine extends Module {
     private void updateMining() {
         if (this.minePos == null || this.startedThisTick) return;
 
-        // Find best tool for the block
         FindResult best = this.findBestSlot(stack ->
-                BlockUtils.getBlockBreakingDelta(
-                        stack, this.ncpState(), this.minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
-                )
+                BlockUtils.getBlockBreakingDelta(stack, this.ncpState(), this.minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get())
         );
 
         ItemStack bestStack = (best.slot() >= 0 && best.slot() < BlackOut.mc.player.getInventory().size())
                 ? BlackOut.mc.player.getInventory().getStack(best.slot())
                 : ItemStack.EMPTY;
 
-        // Progress update
         if (this.ncpProgress.get()) {
             this.minedFor++;
         } else {
-            this.progress += BlockUtils.getBlockBreakingDelta(
-                    bestStack, this.ncpState(), this.minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
-            );
+            this.progress += BlockUtils.getBlockBreakingDelta(bestStack, this.ncpState(), this.minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get());
         }
 
-        // Check if block can be broken
         boolean canBreak = this.minedCheck(bestStack);
 
         if (canBreak && this.damageSyncCheck()) {
-            // Determine if player is already holding the best tool
-            boolean holding = ItemStack.areEqual(Managers.PACKET.getStack(), bestStack);
+            boolean holding = Managers.PACKET.getStack().equals(bestStack);
             this.mineEndUpdate(holding, best.slot());
         } else if (this.almostMined(bestStack) && SettingUtils.endMineRot()) {
             this.preRotate();
@@ -806,16 +798,9 @@ public class AutoMine extends Module {
 
             int currentSlot = BlackOut.mc.player.getInventory().selectedSlot;
             boolean isSilent = this.pickaxeSwitch.get() == SwitchMode.Silent || this.pickaxeSwitch.get() == SwitchMode.PickSilent;
-            boolean switched = false;
 
-            // Perform swap if needed and mode supports it
             if (!holding && slot != -1 && slot != currentSlot) {
-                switched = this.pickaxeSwitch.get().swap(slot);
-                // If swap method didn't handle packet switching (should not happen for enabled modes)
-                if (!switched && this.pickaxeSwitch.get() != SwitchMode.Disabled) {
-                    Managers.PACKET.sendPacket(new UpdateSelectedSlotC2SPacket(slot));
-                    switched = true;
-                }
+                Managers.PACKET.sendPacket(new UpdateSelectedSlotC2SPacket(slot));
             }
 
             this.sendSequenced(s -> new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, this.minePos, dir, s));
@@ -830,11 +815,9 @@ public class AutoMine extends Module {
             }
             Managers.BLOCK.set(this.minePos, Blocks.AIR, true, true);
 
-            // Swap back for silent modes only (Silent, PickSilent, InvSwitch)
-            if (switched && (isSilent || this.pickaxeSwitch.get() == SwitchMode.InvSwitch)) {
-                this.pickaxeSwitch.get().swapBack();
+            if (!holding && slot != -1 && isSilent) {
+                Managers.PACKET.sendPacket(new UpdateSelectedSlotC2SPacket(currentSlot));
             }
-            // For Normal mode, slot stays changed (no swap back)
 
             this.finalizeMining();
         }

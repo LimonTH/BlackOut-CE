@@ -198,7 +198,7 @@ public class BurrowRewrite extends Module {
 
     private void tickJumping() {
         this.tick++;
-        
+
         double currentY = BlackOut.mc.player.getY();
         double velocityY = BlackOut.mc.player.getVelocity().y;
 
@@ -248,7 +248,7 @@ public class BurrowRewrite extends Module {
 
         this.prevFinish = System.currentTimeMillis();
         this.placeBlock(hand, data);
-        
+
         if (this.mode.get() == BurrowMode.Offset) {
             this.rubberband();
         }
@@ -306,7 +306,7 @@ public class BurrowRewrite extends Module {
 
         for (Direction dir : this.burrowDirections) {
             if (dir == Direction.DOWN) continue;
-            
+
             BlockPos sidePos = basePos.offset(dir);
             if (OLEPOSSUtils.replaceable(sidePos) && this.canAttempt(sidePos)) {
                 Box playerBox = BlackOut.mc.player.getBoundingBox();
@@ -321,7 +321,7 @@ public class BurrowRewrite extends Module {
         if (OLEPOSSUtils.replaceable(upPos) && this.canAttempt(upPos)) {
             return upPos;
         }
-        
+
         return null;
     }
 

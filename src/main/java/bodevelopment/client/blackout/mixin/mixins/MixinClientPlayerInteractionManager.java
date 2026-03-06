@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
-import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine;
 import bodevelopment.client.blackout.module.modules.misc.AntiRotationSync;
@@ -18,7 +17,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -58,7 +57,7 @@ public abstract class MixinClientPlayerInteractionManager {
     public abstract ActionResult interactBlock(ClientPlayerEntity player, Hand hand, BlockHitResult hitResult);
 
     @Shadow
-    protected abstract void sendSequencedPacket(ClientWorld world, SequencedPacketCreator packetCreator);
+    public abstract void sendSequencedPacket(ClientWorld world, SequencedPacketCreator packetCreator);
 
     @Shadow
     public abstract boolean breakBlock(BlockPos pos);
@@ -221,15 +220,18 @@ public abstract class MixinClientPlayerInteractionManager {
         }
 
         instance.sendSequencedPacket(world, (sequence) -> {
-            creator.predict(sequence);
+            Packet<?> originalPacket = creator.predict(sequence);
+            Hand hand = Hand.MAIN_HAND;
 
-            return new PlayerMoveC2SPacket.Full(
-                    BlackOut.mc.player.getX(),
-                    BlackOut.mc.player.getY(),
-                    BlackOut.mc.player.getZ(),
-                    Managers.ROTATION.prevYaw,
-                    Managers.ROTATION.prevPitch,
-                    Managers.PACKET.isOnGround()
+            if (originalPacket instanceof PlayerInteractItemC2SPacket interactPacket) {
+                hand = interactPacket.getHand();
+            }
+
+            return new PlayerInteractItemC2SPacket(
+                hand, 
+                sequence, 
+                Managers.ROTATION.prevYaw, 
+                Managers.ROTATION.prevPitch
             );
         });
     }

@@ -8,16 +8,12 @@ import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.randomstuff.FakePlayerEntity;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.DamageUtils;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.SwordItem;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Hand;
@@ -166,27 +162,16 @@ public class FakePlayerManager extends Manager {
     }
 
     private float getDamage(Entity target) {
-        float baseDamage = (float) BlackOut.mc.player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
-
-        DamageSource playerAttackSource = BlackOut.mc.player.getDamageSources().playerAttack(BlackOut.mc.player);
-
-        float enchantmentDamage = EnchantmentHelper.getDamage(
-                null,
-                BlackOut.mc.player.getMainHandStack(),
-                target,
-                playerAttackSource,
-                0.0F
-        );
+        float damage = (float) DamageUtils.itemDamage(BlackOut.mc.player.getMainHandStack());
 
         float cooldown = BlackOut.mc.player.getAttackCooldownProgress(0.5F);
-
-        float currentDamage = baseDamage * (0.2F + cooldown * cooldown * 0.8F);
+        float currentDamage = damage * (0.2F + cooldown * cooldown * 0.8F);
 
         if (isCrit(cooldown, target)) {
             currentDamage *= 1.5F;
         }
 
-        return currentDamage + (enchantmentDamage * cooldown);
+        return currentDamage;
     }
 
     private boolean isCrit(float cooldown, Entity target) {
