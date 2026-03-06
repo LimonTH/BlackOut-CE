@@ -60,21 +60,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
-// TODO: NEED PATCHES
-// TODO: оптимизировать расчёт урона/поиска позиций (кеширование, ранний выход, лимит на тик).
-// TODO: разгрузить основную нить: часть калькуляций вынести в batched режим с контролем времени.
-// TODO: учесть десинхрон при raytraceBypass и добавить cooldown/rollback при фейле.
-// TODO: добавить защиту от спама пакетов при high CPS и строгих античитах (adaptive throttle).
-// TODO: валидировать target crystal state (alive/removed) перед атакой и перед setDead.
-// TODO: доработать id-predict: предикт оффсет должен сбрасываться при лаге/телепорте.
-// TODO: синхронизировать взаимодействие с Suicide/other modules чтобы избегать конфликтов.
-// TODO: пересмотреть logic inhibit/fullInhibit чтобы не блокировать выгодные дубли.
-// TODO: добавить чёткий приоритет для face-place vs. slow logic, чтобы избежать флипа.
-// TODO: добавить проверку смены измерения/серверной телепортации и автоматический reset state.
-// TODO: улучшить обработку anti-weakness swap (fallback на оружие + проверка durability).
-// TODO: добавить профили ротаций (Instant/Smooth/Hybrid) и интегрировать requireRotation.
-// TODO: добавить явный лимит на количество target-entities в extrapolationMap (memory bound).
-// TODO: унифицировать Place/Attack delay в один таймерный объект для предотвращения drift.
 @OnlyDev
 public class AutoCrystal extends Module {
     private static AutoCrystal INSTANCE;
@@ -327,6 +312,10 @@ public class AutoCrystal extends Module {
     public void onEnable() {
         this.placePos = null;
         this.shouldCalc = true;
+    }
+
+    @Override
+    public void onDisable() {
     }
 
     @Override
@@ -873,13 +862,14 @@ public class AutoCrystal extends Module {
                         return false;
                     }
                     break;
-                case Normal:
-                    if (System.currentTimeMillis() - this.lastAttack <= 1000.0 / this.attackSpeed.get()) {
-                        return false;
-                    }
-            }
+            case Normal:
+                if (System.currentTimeMillis() - this.lastAttack <= 1000.0 / this.attackSpeed.get()) {
+                    return false;
+                }
+                break;
+        }
 
-            if (this.startAntiWeakness()) {
+        if (this.startAntiWeakness()) {
                 return false;
             } else {
                 this.attack(this.targetCrystal.getId(), this.targetCrystal.getPos(), false);
@@ -1181,9 +1171,6 @@ public class AutoCrystal extends Module {
                     return System.currentTimeMillis() - this.lastPlace > 1000.0 / this.getPlaceSpeed(this.constantPlaceSpeed.get());
                 }
             case Normal:
-                if (!this.shouldSlow() && !this.isBlocked(this.placePos)) {
-                    return true;
-                }
                 return System.currentTimeMillis() - this.lastPlace > 1000.0 / this.getPlaceSpeed(this.placeSpeed.get());
             default:
                 return true;
@@ -1913,4 +1900,5 @@ public class AutoCrystal extends Module {
         Render,
         Full
     }
+
 }

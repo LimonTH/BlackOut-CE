@@ -1,9 +1,9 @@
 package bodevelopment.client.blackout.util;
 
-import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import net.minecraft.util.math.MathHelper;
+import bodevelopment.client.blackout.hud.HudElement;
 
 import java.awt.*;
 
