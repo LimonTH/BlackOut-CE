@@ -80,13 +80,15 @@ public abstract class MixinEntity {
         if ((Object) this != BlackOut.mc.player) return;
 
         Step step = Step.getInstance();
+        HoleSnap holeSnap = HoleSnap.getInstance();
+        TickShift tickShift = TickShift.getInstance();
 
-        boolean holeSnapStep = HoleSnap.getInstance().enabled && HoleSnap.getInstance().shouldStep() && step.enabled;
-        boolean tickShiftStep = TickShift.getInstance().enabled && TickShift.getInstance().shouldStep() && step.enabled;
+        boolean isStepActive = step.enabled;
+        boolean isHoleSnapActive = holeSnap.enabled && holeSnap.shouldStep();
+        boolean isTickShiftActive = tickShift.enabled && tickShift.shouldStep();
 
-        if (step.enabled || holeSnapStep || tickShiftStep) {
+        if (isStepActive || isHoleSnapActive || isTickShiftActive) {
             cir.setReturnValue(this.getStep(step, movement));
-            cir.cancel();
         }
     }
 
