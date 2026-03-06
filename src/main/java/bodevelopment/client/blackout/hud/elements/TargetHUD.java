@@ -160,7 +160,6 @@ public class TargetHUD extends HudElement {
         this.stack.scale(renderScale, renderScale, 1.0F);
         float prevAlpha = Renderer.getAlpha();
         Renderer.setAlpha(renderScale);
-        this.stack.push();
         this.stack.translate(this.getRenderWidth() / -2.0F, this.getRenderHeight() / -2.0F, 0.0F);
 
         float width;
@@ -544,30 +543,40 @@ public class TargetHUD extends HudElement {
     }
 
     private float getDurability(PlayerEntity entity) {
-        float durability = 0.0F;
-        int armors = 0;
-        float lowest = 1.0F;
+        float totalDurability = 0.0F;
+        int armorPieces = 0;
+        float lowestDurability = 1.0F;
+        boolean hasAnyArmor = false;
 
         for (int i = 0; i < 4; i++) {
-            if (entity.getInventory().getArmorStack(i).isEmpty()) {
-                lowest = 0.0F;
+            ItemStack itemStack = entity.getInventory().getArmorStack(i);
+
+            if (itemStack.isEmpty()) {
+                if (this.countMode.get() == ArmorCount.Lowest) {
+                    lowestDurability = 0.0F;
+                }
+                continue;
+            }
+
+            hasAnyArmor = true;
+            armorPieces++;
+
+            float currentItemDurability = (float) (itemStack.getMaxDamage() - itemStack.getDamage()) / itemStack.getMaxDamage();
+
+            if (this.countMode.get() == ArmorCount.Average) {
+                totalDurability += currentItemDurability;
             } else {
-                ItemStack itemStack = entity.getInventory().getArmorStack(i);
-                armors++;
-                switch (this.countMode.get()) {
-                    case Average:
-                        durability += Math.round((float) ((itemStack.getMaxDamage() - itemStack.getDamage()) * 100) / itemStack.getMaxDamage());
-                        return durability / 100.0F / armors;
-                    case Lowest:
-                        durability = Math.round((float) ((itemStack.getMaxDamage() - itemStack.getDamage()) * 100) / itemStack.getMaxDamage()) / 100.0F;
-                        if (durability < lowest) {
-                            lowest = durability;
-                        }
+                if (currentItemDurability < lowestDurability) {
+                    lowestDurability = currentItemDurability;
                 }
             }
         }
 
-        return lowest;
+        if (!hasAnyArmor) return 0.0F;
+
+        return (this.countMode.get() == ArmorCount.Average)
+                ? (totalDurability / armorPieces)
+                : lowestDurability;
     }
 
     public enum ArmorCount {
