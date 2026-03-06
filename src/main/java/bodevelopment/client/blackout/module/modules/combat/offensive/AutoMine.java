@@ -407,6 +407,14 @@ public class AutoMine extends Module {
 
         for (PlayerEntity player : this.enemies) {
             BlockPos pos = new BlockPos(player.getBlockX(), (int) Math.ceil(player.getBoundingBox().maxY), player.getBlockZ());
+            // Проверка расстояния до врага: блок должен быть прямо над врагом, расстояние по горизонтали должно быть 0
+            double horizontalDist = Math.sqrt(
+                Math.pow(pos.getX() - player.getX(), 2) + Math.pow(pos.getZ() - player.getZ(), 2)
+            );
+            if (horizontalDist > 0.5) {
+                continue; // Блок не прямо над врагом
+            }
+            
             if (!this.invalidCev(pos, player, this.minCevDamage, this.maxCevDamage, this.cevDamageCheck)) {
                 if (pos.equals(this.minePos)) {
                     return new Target(pos, pos.up(), MineType.Cev, this.cevPriority.get().priority, player);
@@ -547,7 +555,7 @@ public class AutoMine extends Module {
                     return new Target(pos, null, MineType.AntiBurrow, this.antiBurrowPriority.get().priority, player);
                 }
 
-                if (!this.ignored(pos) && BlockUtils.mineable(pos)) {
+                if (!this.ignored(pos) && BlockUtils.mineable(pos) && this.crystalBlock(pos, false)) {
                     double distance = this.getDist(pos);
                     if (!(distance >= bestDist)) {
                         best = pos;
@@ -606,6 +614,8 @@ public class AutoMine extends Module {
         } else if (cev && bottom == Blocks.BEDROCK) {
             return false;
         } else if (!(this.getBlock(pos.up()) instanceof AirBlock)) {
+            return false;
+        } else if (bottom instanceof AirBlock) {
             return false;
         } else {
             return this.isInstant(pos) || bottom == Blocks.OBSIDIAN || bottom == Blocks.BEDROCK;
