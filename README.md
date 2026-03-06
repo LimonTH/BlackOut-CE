@@ -76,7 +76,13 @@ Since I am developing this project solo, any feedback or bug reports are highly 
 - `Auto Mine не может сломать блок если не держать в руках инструмент который выбрал сам модуль`
 - `FullBright показывает тени от блоков и не даёт яркости в закрытом пространстве`
 - `FakePlayer умирает, не успевая заменить тотем в руке`
+- `HUD сбрасывает свои конфигурации при перезапуске игры`
+- `при вклчюении target HUD в HUD, там ничего не отображается когда включаешь худ, а также то что уже настроил перестает отображаться, фикситься перезапуском`
 - `Кристалке нужен бейз плейс =)`
+
+- `Baritone compat: конфликтует в редиректах, там надо инжекты сделать, в MixinLivingEntity в методе sprintJumpYaw
+в MixinMinecraftClient в методе redirectCurrentScreen`
+- `Sodium compat: ...`
 
 ---
 
