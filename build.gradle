@@ -13,12 +13,10 @@ base {
 
 repositories {
 	mavenCentral()
-	maven {
-		url = "https://repo.spongepowered.org/repository/maven-public/"
-	}
-	maven {
-		url = "https://files.minecraftforge.net/maven"
-	}
+	maven { url = "https://repo.spongepowered.org/repository/maven-public/"}
+	maven { url = "https://files.minecraftforge.net/maven" }
+	maven { url 'https://jitpack.io' }
+	maven { url 'https://maven.fabricmc.net/' }
 }
 
 loom {
@@ -42,6 +40,7 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	compileOnly 'com.google.errorprone:error_prone_annotations:2.47.0'
+	implementation 'com.github.LlamaLad7.MixinExtras:mixinextras-common:0.2.2'
 }
 
 processResources {
