@@ -183,6 +183,13 @@ public abstract class MixinGameRenderer {
         }
     }
 
+    @Inject(method = "tiltViewWhenHurt", at = @At("HEAD"), cancellable = true)
+    private void onHurtCameraEffect(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
+        if (NoBobbing.getInstance().enabled && NoBobbing.getInstance().noHurtCam.get()) {
+            ci.cancel();
+        }
+    }
+
     @Unique
     private double getFOV(boolean changing, FovModifier fovModifier) {
         if (this.isRenderingPanorama()) {
