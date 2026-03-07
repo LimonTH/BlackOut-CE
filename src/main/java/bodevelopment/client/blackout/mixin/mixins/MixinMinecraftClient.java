@@ -93,9 +93,13 @@ public abstract class MixinMinecraftClient implements IMinecraftClient {
     private Perspective setPerspective(Perspective instance) {
         CameraModifier modifier = CameraModifier.getInstance();
         if (modifier != null && modifier.enabled && modifier.noInverse.get()) {
-            return instance == Perspective.FIRST_PERSON ? Perspective.THIRD_PERSON_BACK : Perspective.FIRST_PERSON;
+            if (instance == Perspective.FIRST_PERSON) {
+                return Perspective.THIRD_PERSON_BACK;
+            } else {
+                return Perspective.FIRST_PERSON;
+            }
         } else {
-            return instance;
+            return instance.next();
         }
     }
 

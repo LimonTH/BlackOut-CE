@@ -5,6 +5,7 @@ import bodevelopment.client.blackout.gui.TextField;
 import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
 import bodevelopment.client.blackout.interfaces.functional.EpicInterface;
 import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.module.modules.client.GuiSettings;
 import bodevelopment.client.blackout.module.setting.settings.ListSetting;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
@@ -139,16 +140,30 @@ public class ListScreen<T> extends ClickGuiScreen {
     }
 
     private void renderSearch() {
+        float fs = GuiSettings.getInstance().fontScale.get().floatValue();
+
         this.progress = (textField.isActive() || !textField.isEmpty())
                 ? Math.min(progress + frameTime * 4.0, 1.0)
                 : Math.max(progress - frameTime * 4.0, 0.0);
 
         if (progress > 0.01) {
-            float fs = 1.6F;
-            this.textField.render(this.stack, fs, mx, my,
-                    width / 2f - 100, height - 85, 200, 40, 10, 5,
+            float textScale = 1.8F * fs;
+
+            float fieldWidth = 350.0F * fs;
+
+            this.textField.render(
+                    this.stack,
+                    textScale,
+                    mx, my,
+                    width / 2f - (fieldWidth / 2f),
+                    height - 110.0F,
+                    fieldWidth,
+                    0.0F,
+                    15.0F,
+                    10.0F,
                     ColorUtils.withAlpha(Color.WHITE, (int) (progress * 255)),
-                    ColorUtils.withAlpha(GuiColorUtils.bg2, (int) (progress * 200)));
+                    ColorUtils.withAlpha(GuiColorUtils.bg2, (int) (progress * 220))
+            );
         }
     }
 
