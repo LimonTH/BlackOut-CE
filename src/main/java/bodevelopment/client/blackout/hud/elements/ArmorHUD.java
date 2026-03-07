@@ -19,31 +19,37 @@ public class ArmorHUD extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgColor = this.addGroup("Color");
 
-    // TODO: armorBG нигде не используется
-    private final Setting<Boolean> reversed = this.sgGeneral.booleanSetting("Invert Order", false, "Flips the rendering sequence of armor pieces from Helmet-to-Boots to Boots-to-Helmet.");
-    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Backdrop", true, "Renders a background panel behind the armor icons.");
+    private final Setting<Boolean> reversed = this.sgGeneral.booleanSetting("Invert Order", false, "Flips the rendering sequence of armor pieces.");
+    private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Backdrop", true, "Renders a background panel.");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> armorBG = this.sgGeneral.booleanSetting("Slot Overlay", true, "Renders a distinct background for each individual armor slot.");
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Blur", true, "Applies a blur effect behind the element for visual depth.");
-    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Drop Shadow", true, "Adds a subtle shadow effect to the background panel.");
-    private final Setting<Boolean> bar = this.sgGeneral.booleanSetting("Durability Bar", false, "Visualizes remaining durability as a horizontal progress bar.");
-    private final Setting<Boolean> text = this.sgGeneral.booleanSetting("Percentage Text", true, "Displays the remaining durability as a numerical percentage.");
-    private final Setting<Boolean> centerText = this.sgGeneral.booleanSetting("Align Center", true, "Centers the durability text relative to the armor icon.");
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Blur", true, "Applies a blur effect.");
+    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Drop Shadow", true, "Adds a subtle shadow effect.");
+    private final Setting<Boolean> bar = this.sgGeneral.booleanSetting("Durability Bar", false, "Visualizes remaining durability as a bar.");
+    private final Setting<Boolean> text = this.sgGeneral.booleanSetting("Percentage Text", true, "Displays durability as percentage.");
+    private final Setting<Boolean> centerText = this.sgGeneral.booleanSetting("Align Center", true, "Centers the durability text.");
     private final RoundedColorMultiSetting armorBar = RoundedColorMultiSetting.of(this.sgGeneral, "Bar Color");
-
     private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Text Color");
 
     public ArmorHUD() {
-        super("Armor HUD", "Displays a live overview of your equipped armor pieces, including item icons and precise durability monitoring.");
-        this.setSize(80.0F, 19.0F);
+        super("Armor HUD", "Displays a live overview of your equipped armor pieces.");
+        this.setSize(88.0F, 18.0F);
     }
 
+    @Override
     public void render() {
         if (BlackOut.mc.player == null || BlackOut.mc.world == null) return;
         if (!armorFound()) return;
 
-        float bgHeight = this.bar.get() ? 24.0F : 18.0F;
-        this.setSize(88.0F, bgHeight);
+        int armorCount = 0;
+        for (int i = 0; i < 4; i++) {
+            if (!BlackOut.mc.player.getInventory().armor.get(i).isEmpty()) armorCount++;
+        }
+
+        if (armorCount == 0) return;
+
+        float bgWidth = 2.0F + (armorCount * 22.0F);
+        float bgHeight = this.bar.get() ? 22.0F : 18.0F;
+        this.setSize(bgWidth, bgHeight);
 
         this.stack.push();
         this.draw(this.stack);
@@ -51,7 +57,7 @@ public class ArmorHUD extends HudElement {
     }
 
     private void draw(MatrixStack stack) {
-        float width = 88.0F;
+        float width = this.getWidth();
         float height = this.getHeight();
 
         if (this.blur.get()) {
@@ -70,9 +76,10 @@ public class ArmorHUD extends HudElement {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         BlackOut.mc.gameRenderer.getLightmapTextureManager().disable();
 
+        int renderedIdx = 0;
         for (int i = 0; i < 4; i++) {
             ItemStack itemStack = BlackOut.mc.player.getInventory().armor.get(this.reversed.get() ? i : 3 - i);
-            float xOffset = 2 + (22 * i);
+            float xOffset = 2 + (22 * renderedIdx);
 
             if (itemStack.isEmpty()) continue;
 
@@ -80,31 +87,31 @@ public class ArmorHUD extends HudElement {
 
             if (itemStack.isDamageable()) {
                 float durabilityValue = (float) (itemStack.getMaxDamage() - itemStack.getDamage()) / itemStack.getMaxDamage();
-                int durabilityPercentage = Math.round(durabilityValue * 100.0f);
 
                 if (this.text.get()) {
+                    int durabilityPercentage = Math.round(durabilityValue * 100.0f);
                     String textStr = durabilityPercentage + "%";
-                    this.textColor.render(stack, textStr, 0.6F, xOffset + (this.centerText.get() ? 8 : 0), 14.0F, this.centerText.get(), true);
+                    this.textColor.render(stack, textStr, 0.6F, xOffset + (this.centerText.get() ? 8 : 0), 13.0F, this.centerText.get(), true);
                 }
 
                 if (this.bar.get()) {
                     Color bgColor = new Color(0, 0, 0, 120);
-                    RenderUtils.rounded(stack, xOffset, height - 3, 16, 1.5F, 1.0F, 0.0F, bgColor.getRGB(), bgColor.getRGB());
-                    this.armorBar.render(stack, xOffset, height - 3, 16 * durabilityValue, 1.5F, 1.0F, 0.0F);
+                    float barY = 18.5F;
+                    RenderUtils.rounded(stack, xOffset, barY, 16.0F, 1.5F, 1.0F, 0.0F, bgColor.getRGB(), bgColor.getRGB());
+
+                    float barWidth = Math.max(0.5F, 16.0F * durabilityValue);
+                    this.armorBar.render(stack, xOffset, barY, barWidth, 1.5F, 1.0F, 0.0F);
                 }
             }
+            renderedIdx++;
         }
         BlackOut.mc.getBufferBuilders().getEntityVertexConsumers().draw();
     }
 
     private boolean armorFound() {
         for (int i = 0; i < 4; i++) {
-            ItemStack itemStack = BlackOut.mc.player.getInventory().armor.get(i);
-            if (!itemStack.isEmpty()) {
-                return true;
-            }
+            if (!BlackOut.mc.player.getInventory().armor.get(i).isEmpty()) return true;
         }
-
         return false;
     }
 }
