@@ -173,12 +173,6 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
                     }
 
                     if (this.isDead()) {
-                        if (!this.getOffHandStack().isOf(Items.TOTEM_OF_UNDYING)) {
-                            this.setStackInHand(Hand.OFF_HAND, Items.TOTEM_OF_UNDYING.getDefaultStack());
-                            this.sinceSwap = 0;
-                            this.popped++;
-                        }
-                        
                         if (!this.tryUseTotem(source)) {
                             SoundEvent soundEvent = this.getDeathSound();
                             if (bl2 && soundEvent != null) {
@@ -229,15 +223,9 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
         FakeplayerSettings fakeplayerSettings = FakeplayerSettings.getInstance();
 
         if (!this.getOffHandStack().isOf(Items.TOTEM_OF_UNDYING)) {
-            if (fakeplayerSettings.swapDelay.get() == 0) {
-                if (this.popped < fakeplayerSettings.totems.get() || fakeplayerSettings.unlimitedTotems.get()) {
-                    this.swapToOffhand();
-                }
-            } else {
-                if (++this.sinceSwap > fakeplayerSettings.swapDelay.get()
-                        && (this.popped < fakeplayerSettings.totems.get() || fakeplayerSettings.unlimitedTotems.get())) {
-                    this.swapToOffhand();
-                }
+            if (++this.sinceSwap > fakeplayerSettings.swapDelay.get()
+                    && (this.popped < fakeplayerSettings.totems.get() || fakeplayerSettings.unlimitedTotems.get())) {
+                this.swapToOffhand();
             }
         } else {
             this.sinceSwap = 0;
