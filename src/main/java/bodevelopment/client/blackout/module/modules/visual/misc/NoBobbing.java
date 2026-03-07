@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 public class NoBobbing extends Module {
     private static NoBobbing INSTANCE;
 
-    public final SettingGroup sgGeneral = new SettingGroup("General");
+    public final SettingGroup sgGeneral = this.addGroup("General");
 
     public final Setting<Boolean> noHurtCam = this.sgGeneral.booleanSetting("No Hurt Cam", true, "Removes the camera shake when taking damage.");
 
