@@ -38,10 +38,10 @@ public class Velocity extends Module {
 
     public final Setting<Mode> mode = this.sgKnockback.enumSetting("Reduction Mode", Mode.Simple, "The algorithm used to process incoming velocity packets.");
     public final Setting<Double> horizontal = this.sgKnockback.doubleSetting("Horizontal Factor", 0.0, 0.0, 1.0, 0.01,
-            "The percentage of horizontal impulse to retain (0% is full cancel).",
+            "The percentage of horizontal impulse to retain. (1.00 is full cancel)",
             () -> this.mode.get() == Mode.Simple || this.mode.get() == Mode.Matrix_AAC);
     public final Setting<Double> vertical = this.sgKnockback.doubleSetting("Vertical Factor", 0.0, 0.0, 1.0, 0.01,
-            "The percentage of vertical impulse to retain.",
+            "The percentage of vertical impulse to retain. (1.00 is full cancel)",
             () -> this.mode.get() == Mode.Simple || this.mode.get() == Mode.Matrix_AAC);
     public final Setting<Double> hChance = this.sgKnockback.doubleSetting("Horizontal Probability", 1.0, 0.0, 1.0, 0.01,
             "The likelihood that horizontal reduction will be applied to a packet.",
