@@ -83,6 +83,7 @@ public class ClickGui extends Screen {
     private String lastDescription = null;
     private long hoverTime = 0L;
     private float descAlpha = 0.0F;
+    private boolean guiStateChanged = false;
 
     public ClickGui() {
         super(Text.of("Click GUI"));
@@ -844,5 +845,21 @@ public class ClickGui extends Screen {
 
     public boolean isAnimating() {
         return this.open || popUpDelta > 0.01F;
+    }
+    
+    public float getModuleScroll() {
+        return this.moduleScroll.get();
+    }
+    
+    public void setModuleScroll(float value) {
+        this.moduleScroll.set(value);
+    }
+    
+    public float getCategoryScroll() {
+        return this.categoryScroll.get();
+    }
+    
+    public void setCategoryScroll(float value) {
+        this.categoryScroll.set(value);
     }
 }

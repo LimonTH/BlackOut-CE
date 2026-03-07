@@ -132,6 +132,13 @@ public class ConfigManager extends Manager {
                 }
             });
         }
+
+        // Load ClickGUI state
+        if (object.has("clickGuiState")) {
+            JsonObject clickGuiStateObject = object.getAsJsonObject("clickGuiState");
+            ClickGuiState state = ClickGuiState.fromJson(clickGuiStateObject);
+            state.applyToCurrent();
+        }
     }
 
     public void readConfig(String config, ConfigType type) {
@@ -257,6 +264,10 @@ public class ConfigManager extends Manager {
             bindsObject.add(module.getFileName(), bJson);
         });
         configObject.add("binds", bindsObject);
+
+        // Save ClickGUI state
+        JsonObject clickGuiStateObject = ClickGuiState.captureCurrent().toJson();
+        configObject.add("clickGuiState", clickGuiStateObject);
 
         FileUtils.write(FileUtils.getFile("configs", name + ".json"), configObject);
 
