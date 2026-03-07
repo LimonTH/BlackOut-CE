@@ -95,6 +95,14 @@ public class PacketManager extends Manager {
         }
     }
 
+    public void syncRotation(float yaw, float pitch) {
+        this.sendInstantly(new PlayerMoveC2SPacket.LookAndOnGround(yaw, pitch, this.isOnGround()));
+    }
+
+    public boolean isQueueHeavy() {
+        return grimQueue.size() > 10;
+    }
+
     @Event
     public void onEntityAdd(EntityAddEvent.Post event) {
         if (event.entity instanceof EndCrystalEntity entity && this.own.contains(entity.getBlockPos())) {
@@ -218,21 +226,16 @@ public class PacketManager extends Manager {
     private boolean shouldBeDelayed(Packet<?> packet) {
         if (!SettingUtils.grimPackets()) {
             return false;
-        } else if (packet instanceof PlayerInteractEntityC2SPacket) {
-            return true;
-        } else if (packet instanceof PlayerInteractBlockC2SPacket) {
-            return true;
-        } else if (packet instanceof PlayerInteractItemC2SPacket) {
-            return true;
-        } else if (packet instanceof PlayerActionC2SPacket) {
-            return true;
-        } else if (packet instanceof HandSwingC2SPacket) {
-            return true;
-        } else if (packet instanceof UpdateSelectedSlotC2SPacket) {
-            return true;
-        } else {
-            return packet instanceof ClickSlotC2SPacket || packet instanceof PickFromInventoryC2SPacket;
         }
+        return packet instanceof PlayerInteractEntityC2SPacket
+                || packet instanceof PlayerInteractBlockC2SPacket
+                || packet instanceof PlayerInteractItemC2SPacket
+                || packet instanceof PlayerActionC2SPacket
+                || packet instanceof HandSwingC2SPacket
+                || packet instanceof UpdateSelectedSlotC2SPacket
+                || packet instanceof ClickSlotC2SPacket
+                || packet instanceof PickFromInventoryC2SPacket
+                || packet instanceof PlayerInputC2SPacket;
     }
 
     public boolean isOnGround() {
