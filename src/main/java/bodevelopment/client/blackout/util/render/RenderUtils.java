@@ -16,6 +16,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.model.BakedModel;
 import net.minecraft.client.render.model.json.ModelTransformationMode;
+import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.PlayerScreenHandler;
@@ -76,66 +77,40 @@ public class RenderUtils {
         );
     }
 
+
+
     public static void renderItem(MatrixStack stack, ItemStack itemStack, float x, float y, float scale, float zOffset, boolean overlay) {
         if (itemStack.isEmpty()) return;
 
-        BakedModel bakedModel = BlackOut.mc.getItemRenderer().getModel(itemStack, BlackOut.mc.world, BlackOut.mc.player, 0);
+        Matrix4f matrix = stack.peek().getPositionMatrix();
+        float absX = matrix.get(3, 0) + x * matrix.get(0, 0);
+        float absY = matrix.get(3, 1) + y * matrix.get(1, 1);
+        float hudScale = matrix.get(0, 0);
 
-        stack.push();
-        stack.translate(x + 8.0F, y + 8.0F, 150.0F + zOffset);
-        stack.scale(scale, -scale, scale);
+        DrawContext context = new DrawContext(BlackOut.mc, BlackOut.mc.getBufferBuilders().getEntityVertexConsumers());
+        context.getMatrices().push();
 
-        boolean isSideLit = bakedModel.isSideLit();
-        if (!isSideLit) DiffuseLighting.disableGuiDepthLighting();
-        else DiffuseLighting.enableGuiDepthLighting();
+        float totalScale = hudScale * (scale / 16.0F);
+        context.getMatrices().translate(0, 0, zOffset);
 
-        BlackOut.mc.getItemRenderer().renderItem(
-                itemStack,
-                ModelTransformationMode.GUI,
-                false,
-                stack,
-                BlackOut.mc.getBufferBuilders().getEntityVertexConsumers(),
-                15728880,
-                OverlayTexture.DEFAULT_UV,
-                bakedModel
-        );
+        float scaledX = absX / totalScale;
+        float scaledY = absY / totalScale;
+        float offsetX = scaledX - (int) scaledX;
+        float offsetY = scaledY - (int) scaledY;
 
-        BlackOut.mc.getBufferBuilders().getEntityVertexConsumers().draw();
+        context.getMatrices().scale(totalScale, totalScale, totalScale);
+        context.getMatrices().translate(offsetX, offsetY, 0);
 
-        if (!isSideLit) DiffuseLighting.enableGuiDepthLighting();
-        stack.pop();
+        int drawX = (int) scaledX;
+        int drawY = (int) scaledY;
 
+        context.drawItem(itemStack, drawX, drawY);
         if (overlay) {
-            stack.push();
-            stack.translate(x, y, 200.0F + zOffset);
-
-            if (itemStack.getCount() != 1) {
-                String countText = String.valueOf(itemStack.getCount());
-                BlackOut.mc.textRenderer.draw(
-                        countText,
-                        17 - BlackOut.mc.textRenderer.getWidth(countText),
-                        9,
-                        0xFFFFFF,
-                        true,
-                        stack.peek().getPositionMatrix(),
-                        BlackOut.mc.getBufferBuilders().getEntityVertexConsumers(),
-                        TextRenderer.TextLayerType.NORMAL,
-                        0,
-                        15728880
-                );
-            }
-
-            if (itemStack.isItemBarVisible()) {
-                int i = itemStack.getItemBarStep();
-                int j = itemStack.getItemBarColor();
-
-                RenderUtils.quad(stack, 2, 13, 13, 2, 0xFF000000);
-                RenderUtils.quad(stack, 2, 13, i, 1, j | 0xFF000000);
-            }
-
-            BlackOut.mc.getBufferBuilders().getEntityVertexConsumers().draw();
-            stack.pop();
+            context.drawItemInSlot(BlackOut.mc.textRenderer, itemStack, drawX, drawY);
         }
+
+        context.draw();
+        context.getMatrices().pop();
     }
 
     public static void scissor(float x, float y, float w, float h) {

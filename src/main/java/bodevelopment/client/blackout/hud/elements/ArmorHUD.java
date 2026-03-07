@@ -10,9 +10,7 @@ import bodevelopment.client.blackout.module.setting.multisettings.TextColorMulti
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
 
 import java.awt.*;
@@ -67,8 +65,10 @@ public class ArmorHUD extends HudElement {
 
         BlackOut.mc.getBufferBuilders().getEntityVertexConsumers().draw();
         RenderSystem.enableDepthTest();
-
-        DiffuseLighting.enableGuiDepthLighting();
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        BlackOut.mc.gameRenderer.getLightmapTextureManager().disable();
 
         for (int i = 0; i < 4; i++) {
             ItemStack itemStack = BlackOut.mc.player.getInventory().armor.get(this.reversed.get() ? i : 3 - i);
@@ -76,7 +76,7 @@ public class ArmorHUD extends HudElement {
 
             if (itemStack.isEmpty()) continue;
 
-            RenderUtils.renderItem(stack, itemStack, xOffset, 1.0F, 16.0F, 500.0F, false);
+            RenderUtils.renderItem(stack, itemStack, xOffset, 1.0F, 16.0F, 100.0F, false);
 
             if (itemStack.isDamageable()) {
                 float durabilityValue = (float) (itemStack.getMaxDamage() - itemStack.getDamage()) / itemStack.getMaxDamage();
