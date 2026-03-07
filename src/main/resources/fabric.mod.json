@@ -27,5 +27,11 @@
     "java": ">=${java_version}",
     "minecraft": ">=${minecraft_version}",
     "fabricloader": ">=${loader_version}"
+  },
+
+  "suggests": {
+    "sodium": ">=0.5.13",
+    "baritone": ">=1.11.2",
+    "iris": ">=1.8.8"
   }
 }
