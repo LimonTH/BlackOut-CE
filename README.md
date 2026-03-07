@@ -76,9 +76,8 @@ Since I am developing this project solo, any feedback or bug reports are highly 
 - `FakePlayer умирает, не успевая заменить тотем в руке`
 - `AutoCrystal нужен бейз плейс =)`
 - `ускорить clip в Phase модуле`
-
-- `Aura добавить белый список разрешённых инструментов - оружия для ауры`
-- `Aura добавить ползунок для настройки количества одновременно атакуемых целей в ауре`
+- `Aura добавить itemList скак белый список разрешаемых интчрументов, котроыми можно атаковать сущность`
+- `Aura добавить ползунок, intSetting который будет отвечат ьза количество атакуемых сущностей одновременно`
 - `Baritone compat: конфликтует в редиректах, там надо инжекты сделать, в MixinLivingEntity в методе sprintJumpYaw
 в MixinMinecraftClient в методе redirectCurrentScreen`
 - `Sodium compat: ...`

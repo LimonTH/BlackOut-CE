@@ -19,7 +19,6 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.BoxMultiSetting;
 import bodevelopment.client.blackout.randomstuff.ExtrapolationMap;
-import bodevelopment.client.blackout.randomstuff.Pair;
 import bodevelopment.client.blackout.randomstuff.timers.RenderList;
 import bodevelopment.client.blackout.util.DamageUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
@@ -34,7 +33,6 @@ import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.AxeItem;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
 import net.minecraft.item.ToolItem;
@@ -77,8 +75,6 @@ public class Aura extends MoveUpdateModule {
     private final Setting<Integer> maxHp = this.sgGeneral.intSetting("Maximum Health", 36, 0, 100, 1, "Only targets with total health below this value will be attacked.", this.checkMaxHP::get);
     private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Auto Switch", SwitchMode.Disabled, "Method for automatically switching to a combat weapon.");
     private final Setting<Boolean> onlyWeapon = this.sgGeneral.booleanSetting("Weapon Filter", true, "Restricts attacks to only occur when holding a valid weapon.");
-    private final Setting<List<Item>> allowedItems = this.sgGeneral.itemListSetting("Allowed Items", "Whitelist of tools/weapons that are allowed for attacking (empty = any tool).");
-    private final Setting<Integer> maxTargets = this.sgGeneral.intSetting("Max Targets", 1, 1, 10, 1, "Maximum number of entities to attack simultaneously.");
     private final Setting<Boolean> ignoreNaked = this.sgGeneral.booleanSetting("Ignore Unarmored", false, "Prevents attacking players who are not wearing any armor.");
     private final Setting<Boolean> tpDisable = this.sgGeneral.booleanSetting("TP Safety Disable", false, "Automatically disables the module upon server teleports or dimension changes.");
     private final Setting<RotationMode> rotationMode = this.sgGeneral.enumSetting("Rotation Logic", RotationMode.OnHit, "Defines when the client should look at the target.");
@@ -140,8 +136,7 @@ public class Aura extends MoveUpdateModule {
     private int fatigue = 0;
     private int timeOG = 0;
     private double random;
-    private final List<Entity> targets = new ArrayList<>();
-    private Entity target = null;
+    private volatile Entity target = null;
     private Box renderBox = new Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
     public Aura() {
@@ -167,14 +162,7 @@ public class Aura extends MoveUpdateModule {
 
     @Override
     public String getInfo() {
-        if (this.targets.isEmpty()) {
-            return null;
-        }
-        if (this.targets.size() == 1) {
-            Entity t = this.targets.getFirst();
-            return t.getName().getString().length() > 16 ? "Attacking" : t.getName().getString();
-        }
-        return "Attacking " + this.targets.size();
+        return this.target == null ? null : (this.target.getName().getString().length() > 16 ? "Attacking" : this.target.getName().getString());
     }
 
     @Override
@@ -385,7 +373,7 @@ public class Aura extends MoveUpdateModule {
     }
 
     private void attackTarget() {
-        if (this.targets.isEmpty()) return;
+        if (this.target == null) return;
 
         this.isAttacking = true;
         if (this.holdingSword() && this.block.get() == BlockMode.Spam && this.blocking.get()) {
@@ -396,14 +384,12 @@ public class Aura extends MoveUpdateModule {
         this.random = this.randomise.get().get();
         SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
 
-        List<Vec3d> positions = null;
-        if (this.target != null && !SettingUtils.inAttackRange(this.target.getBoundingBox()) && this.teleport.get()) {
-            positions = this.getPath(this.target);
-            if (positions != null) {
-                positions.forEach(posx -> this.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(posx.getX(), posx.getY(), posx.getZ(), false)));
-                if (this.tpBack.get()) {
-                    BlackOut.mc.player.setPosition(positions.getLast());
-                }
+        List<Vec3d> positions = !SettingUtils.inAttackRange(this.target.getBoundingBox()) && this.teleport.get() ? this.getPath(this.target) : null;
+
+        if (positions != null) {
+            positions.forEach(posx -> this.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(posx.getX(), posx.getY(), posx.getZ(), false)));
+            if (this.tpBack.get()) {
+                BlackOut.mc.player.setPosition(positions.getLast());
             }
         }
 
@@ -421,26 +407,24 @@ public class Aura extends MoveUpdateModule {
                 this.sendPacket(new ClientCommandC2SPacket(BlackOut.mc.player, ClientCommandC2SPacket.Mode.STOP_SPRINTING));
             }
 
-            for (Entity currentTarget : this.targets) {
-                if (!currentTarget.isAlive() || currentTarget.isRemoved()) {
-                    continue;
+            for (int i = 0; i < this.packets.get(); i++) {
+                if (!this.target.isAlive() || this.target.isRemoved()) {
+                    break;
                 }
 
-                if (currentTarget instanceof EndCrystalEntity && Managers.ENTITY.isDead(currentTarget.getId())) {
-                    continue;
+                if (this.target instanceof EndCrystalEntity && Managers.ENTITY.isDead(this.target.getId())) {
+                    break;
                 }
 
-                for (int i = 0; i < this.packets.get(); i++) {
-                    this.sendPacket(PlayerInteractEntityC2SPacket.attack(currentTarget, BlackOut.mc.player.isSneaking()));
-                }
-
-                if (currentTarget instanceof EndCrystalEntity) {
-                    Managers.ENTITY.setSemiDead(currentTarget.getId());
-                }
+                this.sendPacket(PlayerInteractEntityC2SPacket.attack(this.target, BlackOut.mc.player.isSneaking()));
             }
 
             if (shouldCritSprint) {
                 this.sendPacket(new ClientCommandC2SPacket(BlackOut.mc.player, ClientCommandC2SPacket.Mode.START_SPRINTING));
+            }
+
+            if (this.target instanceof EndCrystalEntity) {
+                Managers.ENTITY.setSemiDead(this.target.getId());
             }
 
             this.spawnParticles();
@@ -461,7 +445,7 @@ public class Aura extends MoveUpdateModule {
             this.startBlocking();
         }
 
-        if (this.renderMode.get() == RenderMode.Hit && this.renderBox != null) {
+        if (this.renderMode.get() == RenderMode.Hit) {
             this.renderBoxes.add(this.renderBox, this.renderTime.get());
         }
 
@@ -473,23 +457,6 @@ public class Aura extends MoveUpdateModule {
 
     private boolean holdingSword() {
         return Managers.PACKET.getStack().getItem() instanceof SwordItem;
-    }
-
-    private boolean holdingAllowedWeapon() {
-        ItemStack stack = Managers.PACKET.getStack();
-        if (this.allowedItems.get().isEmpty()) {
-            return stack.getItem() instanceof ToolItem;
-        } else {
-            return this.allowedItems.get().contains(stack.getItem());
-        }
-    }
-
-    private boolean isAllowedWeapon(ItemStack stack) {
-        if (this.allowedItems.get().isEmpty()) {
-            return stack.getItem() instanceof ToolItem;
-        } else {
-            return this.allowedItems.get().contains(stack.getItem());
-        }
     }
 
     private boolean chanceCheck() {
@@ -508,7 +475,7 @@ public class Aura extends MoveUpdateModule {
 
         for (int i = 0; i < (inventory ? BlackOut.mc.player.getInventory().size() + 1 : 9); i++) {
             ItemStack stack = BlackOut.mc.player.getInventory().getStack(i);
-            if (!this.onlyWeapon.get() || this.isAllowedWeapon(stack)) {
+            if (!this.onlyWeapon.get() || stack.getItem() instanceof SwordItem || stack.getItem() instanceof AxeItem) {
                 double dmg = DamageUtils.itemDamage(stack);
                 if (dmg > hDmg) {
                     slot = i;
@@ -521,11 +488,9 @@ public class Aura extends MoveUpdateModule {
     }
 
     private void updateTarget() {
-        this.targets.clear();
+        AtomicReference<Double> value = new AtomicReference<>(0.0);
+        this.target = null;
         this.extrapolationMap.update(entity -> this.extrapolation.get());
-
-        List<Pair<Entity, Double>> candidates = new ArrayList<>();
-        
         BlackOut.mc.world.getEntities().forEach(entity -> {
             if (this.entities.get().contains(entity.getType()) && entity != BlackOut.mc.player) {
                 if (entity instanceof ItemEntity ||
@@ -550,54 +515,54 @@ public class Aura extends MoveUpdateModule {
                             10000.0 - Math.abs(RotationUtils.yawAngle(BlackOut.mc.player.getYaw(), RotationUtils.getYaw(entity)));
                     case Distance -> 10000.0 - BlackOut.mc.player.getPos().distanceTo(entity.getPos());
                 };
-                
-                if (entity instanceof LivingEntity livingEntity) {
-                    if (livingEntity.isRemoved() || !livingEntity.isAlive()) return;
-                    if (livingEntity.getHealth() <= 0.0F) {
-                        return;
-                    }
-                    if (livingEntity.isSpectator()) {
-                        return;
-                    }
-                    if (!this.inScanRange(entity) && !this.inRange(entity)) {
-                        return;
-                    }
-                }
+                if (!(val <= value.get())) {
+                    if (entity instanceof LivingEntity livingEntity) {
+                        if (livingEntity.isRemoved() || !livingEntity.isAlive()) return;
+                        if (livingEntity.getHealth() <= 0.0F) {
+                            return;
+                        }
 
-                if (entity instanceof AbstractClientPlayerEntity player) {
-                    AntiBot antiBot = AntiBot.getInstance();
-                    Teams teams = Teams.getInstance();
-                    if (antiBot.enabled && antiBot.mode.get() == AntiBot.HandlingMode.Ignore && antiBot.getBots().contains(player)) {
-                        return;
-                    }
-                    if (teams.enabled && teams.isTeammate(player)) {
-                        return;
-                    }
-                    if (this.ignoreNaked.get() && !this.getArmor(player)) {
-                        return;
-                    }
-                    if ((player.getHealth() + player.getAbsorptionAmount()) > this.maxHp.get().intValue()) {
-                        if (this.checkMaxHP.get()) {
+                        if (livingEntity.isSpectator()) {
+                            return;
+                        }
+
+                        if (!this.inScanRange(entity) && !this.inRange(entity)) {
                             return;
                         }
                     }
-                    if (Managers.FRIENDS.isFriend(player)) {
-                        return;
+
+                    if (entity instanceof AbstractClientPlayerEntity player) {
+                        AntiBot antiBot = AntiBot.getInstance();
+                        Teams teams = Teams.getInstance();
+                        if (antiBot.enabled && antiBot.mode.get() == AntiBot.HandlingMode.Ignore && antiBot.getBots().contains(player)) {
+                            return;
+                        }
+
+                        if (teams.enabled && teams.isTeammate(player)) {
+                            return;
+                        }
+
+                        if (this.ignoreNaked.get() && !this.getArmor(player)) {
+                            return;
+                        }
+
+                        if ((player.getHealth() + player.getAbsorptionAmount()) > this.maxHp.get().intValue())
+                            if (this.checkMaxHP.get()) {
+                                return;
+                            }
+
+                        if (Managers.FRIENDS.isFriend(player)) {
+                            return;
+                        }
+                    }
+
+                    if (val > value.get()) {
+                        this.target = entity;
+                        value.set(val);
                     }
                 }
-
-                candidates.add(new Pair<>(entity, val));
             }
         });
-
-        candidates.sort((a, b) -> Double.compare(b.getRight(), a.getRight()));
-
-        int limit = Math.min(candidates.size(), this.maxTargets.get());
-        for (int i = 0; i < limit; i++) {
-            this.targets.add(candidates.get(i).getLeft());
-        }
-
-        this.target = this.targets.isEmpty() ? null : this.targets.getFirst();
     }
 
     private boolean inScanRange(Entity entity) {
