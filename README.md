@@ -74,10 +74,6 @@ Since I am developing this project solo, any feedback or bug reports are highly 
 - `@OnlyDev нужны фиксы`
 - `Auto Mine не может сломать блок если не держать в руках инструмент который выбрал сам модуль`
 - `AutoCrystal нужен бейз плейс =)`
-- `ускорить clip в Phase модуле`
-- `Baritone compat: конфликтует в редиректах, там надо инжекты сделать, в MixinLivingEntity в методе sprintJumpYaw
-в MixinMinecraftClient в методе redirectCurrentScreen`
-- `Sodium compat: ...`
 
 ---
 

@@ -93,6 +93,18 @@ public class ConfigManager extends Manager {
     public void readConfigs() {
         FileUtils.addFolder("configs");
 
+        // Проверяем существование файлов конфигов и корректируем имена
+        for (ConfigType type : ConfigType.values()) {
+            String configName = this.getConfigs()[type.ordinal()];
+            if (!FileUtils.exists("configs", configName + ".json")) {
+                // Если файл конфига не существует, используем "default"
+                this.getConfigs()[type.ordinal()] = "default";
+            }
+        }
+
+        // Сохраняем обновленные имена в config.txt
+        this.set();
+
         String mainConfigName = this.getConfigs()[0];
 
         for (ConfigType type : ConfigType.values()) {
@@ -183,7 +195,7 @@ public class ConfigManager extends Manager {
             if (jsonObject.has("enabled")) {
                 hudElement.enabled = jsonObject.get("enabled").getAsBoolean();
             } else {
-                hudElement.enabled = true;
+                hudElement.enabled = false;
             }
 
             float scale = 0.5625F;
