@@ -37,18 +37,10 @@ public class Velocity extends Module {
     private final SettingGroup sgPush = this.addGroup("Push");
 
     public final Setting<Mode> mode = this.sgKnockback.enumSetting("Reduction Mode", Mode.Simple, "The algorithm used to process incoming velocity packets.");
-    public final Setting<Double> horizontal = this.sgKnockback.doubleSetting("Horizontal Factor", 0.0, 0.0, 1.0, 0.01,
-            "The percentage of horizontal impulse to retain. (1.00 is full cancel)",
-            () -> this.mode.get() == Mode.Simple || this.mode.get() == Mode.Matrix_AAC);
-    public final Setting<Double> vertical = this.sgKnockback.doubleSetting("Vertical Factor", 0.0, 0.0, 1.0, 0.01,
-            "The percentage of vertical impulse to retain. (1.00 is full cancel)",
-            () -> this.mode.get() == Mode.Simple || this.mode.get() == Mode.Matrix_AAC);
-    public final Setting<Double> hChance = this.sgKnockback.doubleSetting("Horizontal Probability", 1.0, 0.0, 1.0, 0.01,
-            "The likelihood that horizontal reduction will be applied to a packet.",
-            () -> this.mode.get() == Mode.Simple || this.mode.get() == Mode.Matrix_AAC);
-    public final Setting<Double> vChance = this.sgKnockback.doubleSetting("Vertical Probability", 1.0, 0.0, 1.0, 0.01,
-            "The likelihood that vertical reduction will be applied to a packet.",
-            () -> this.mode.get() == Mode.Simple || this.mode.get() == Mode.Matrix_AAC);
+    public final Setting<Double> horizontal = this.sgKnockback.doubleSetting("Horizontal Factor", 0.0, 0.0, 1.0, 0.01, "The percentage of horizontal impulse to retain. (1.00 is full cancel)", () -> this.mode.get() == Mode.Simple || this.mode.get() == Mode.Matrix_AAC);
+    public final Setting<Double> vertical = this.sgKnockback.doubleSetting("Vertical Factor", 0.0, 0.0, 1.0, 0.01, "The percentage of vertical impulse to retain. (1.00 is full cancel)", () -> this.mode.get() == Mode.Simple || this.mode.get() == Mode.Matrix_AAC);
+    public final Setting<Double> hChance = this.sgKnockback.doubleSetting("Horizontal Probability", 1.0, 0.0, 1.0, 0.01, "The likelihood that horizontal reduction will be applied to a packet.", () -> this.mode.get() == Mode.Simple || this.mode.get() == Mode.Matrix_AAC);
+    public final Setting<Double> vChance = this.sgKnockback.doubleSetting("Vertical Probability", 1.0, 0.0, 1.0, 0.01, "The likelihood that vertical reduction will be applied to a packet.", () -> this.mode.get() == Mode.Simple || this.mode.get() == Mode.Matrix_AAC);
     public final Setting<Double> chance = this.sgKnockback.doubleSetting("Execution Chance", 1.0, 0.0, 1.0, 0.01, "The overall probability of the velocity cancellation triggering.", () -> this.mode.get() == Mode.Grim);
     private final Setting<Boolean> single = this.sgKnockback.booleanSetting("Buffered Mode", true, "Consolidates multiple velocity updates into a single correction to reduce packet overhead.", () -> this.mode.get() == Mode.Grim);
     private final Setting<Integer> minDelay = this.sgKnockback.intSetting("Minimum Latency", 0, 0, 20, 1, "Minimum tick delay before the velocity packet is released.", () -> this.mode.get() == Mode.Delayed);

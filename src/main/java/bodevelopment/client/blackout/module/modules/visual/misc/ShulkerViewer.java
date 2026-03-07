@@ -95,7 +95,7 @@ public class ShulkerViewer extends Module {
             float itemX = posX + (5 + col * 18) * s;
             float itemY = posY + headerHeight + (2 + row * 18) * s;
 
-            RenderUtils.renderItem(stack, itemStack, itemX, itemY, 16.0F * s, 1000.0F, true);
+            RenderUtils.renderItem(stack, itemStack, itemX, itemY, 16.0F * s, 500.0F, true);
         }
 
         stack.pop();
