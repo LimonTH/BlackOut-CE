@@ -7,6 +7,8 @@ import bodevelopment.client.blackout.module.modules.movement.NoJumpDelay;
 import bodevelopment.client.blackout.module.modules.movement.Speed;
 import bodevelopment.client.blackout.module.modules.visual.entities.PlayerModifier;
 import bodevelopment.client.blackout.util.SettingUtils;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -40,29 +42,39 @@ public abstract class MixinLivingEntity {
         return NoJumpDelay.getInstance().enabled ? 0 : constant;
     }
 
-    @Redirect(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F"))
-    private float sprintJumpYaw(LivingEntity instance) {
-        return instance == BlackOut.mc.player && SettingUtils.grimMovement() ? Managers.ROTATION.moveLookYaw : instance.getYaw();
+    @WrapOperation(
+            method = "jump",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F")
+    )
+    private float wrapSprintJumpYaw(LivingEntity instance, Operation<Float> original) {
+        if (instance != BlackOut.mc.player || !SettingUtils.grimMovement()) {
+            return original.call(instance);
+        }
+        return Managers.ROTATION.moveLookYaw;
     }
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F", ordinal = 0))
-    private float yaw1(LivingEntity instance) {
-        return (Object) this != BlackOut.mc.player ? instance.getYaw() : this.getModifiedYaw(instance);
+    @WrapOperation(
+            method = "tick",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F", ordinal = 0)
+    )
+    private float wrapYaw1(LivingEntity instance, Operation<Float> original) {
+        return (Object) this != BlackOut.mc.player ? original.call(instance) : this.getModifiedYaw(instance, original);
     }
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F", ordinal = 1))
-    private float yaw2(LivingEntity instance) {
-        return (Object) this != BlackOut.mc.player ? instance.getYaw() : this.getModifiedYaw(instance);
+    @WrapOperation(
+            method = "tick",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F", ordinal = 1)
+    )
+    private float wrapYaw2(LivingEntity instance, Operation<Float> original) {
+        return (Object) this != BlackOut.mc.player ? original.call(instance) : this.getModifiedYaw(instance, original);
     }
 
-    @Redirect(method = "turnHead", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F"))
-    private float yaw(LivingEntity instance) {
-        return (Object) this != BlackOut.mc.player ? instance.getYaw() : this.getModifiedYaw(instance);
-    }
-
-    @Unique
-    private float getModifiedYaw(LivingEntity livingEntity) {
-        return livingEntity == BlackOut.mc.player && Managers.ROTATION.yawActive() ? Managers.ROTATION.renderYaw : livingEntity.getYaw();
+    @WrapOperation(
+            method = "turnHead",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F")
+    )
+    private float wrapTurnHeadYaw(LivingEntity instance, Operation<Float> original) {
+        return (Object) this != BlackOut.mc.player ? original.call(instance) : this.getModifiedYaw(instance, original);
     }
 
     @Redirect(method = "getMovementSpeed(F)F", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getMovementSpeed()F"))
@@ -109,5 +121,13 @@ public abstract class MixinLivingEntity {
                 this.jump();
             }
         }
+    }
+
+    @Unique
+    private float getModifiedYaw(LivingEntity livingEntity, Operation<Float> original) {
+        if (livingEntity == BlackOut.mc.player && Managers.ROTATION.yawActive()) {
+            return Managers.ROTATION.renderYaw;
+        }
+        return original.call(livingEntity);
     }
 }

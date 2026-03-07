@@ -20,6 +20,8 @@ import bodevelopment.client.blackout.randomstuff.CustomChatScreen;
 import bodevelopment.client.blackout.randomstuff.timers.TickTimerList;
 import bodevelopment.client.blackout.util.SettingUtils;
 import bodevelopment.client.blackout.util.SharedFeatures;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Overlay;
 import net.minecraft.client.gui.screen.Screen;
@@ -75,12 +77,13 @@ public abstract class MixinMinecraftClient implements IMinecraftClient {
     @Shadow
     protected abstract void doItemUse();
 
-    @Redirect(
+    @WrapOperation(
             method = "openChatScreen",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;setScreen(Lnet/minecraft/client/gui/screen/Screen;)V")
     )
-    private void redirectChat(MinecraftClient instance, Screen screen) {
-        instance.setScreen(CustomChat.getInstance().enabled ? new CustomChatScreen() : screen);
+    private void wrapChat(MinecraftClient instance, Screen screen, Operation<Void> original) {
+        Screen targetScreen = CustomChat.getInstance().enabled ? new CustomChatScreen() : screen;
+        original.call(instance, targetScreen);
     }
 
     @Redirect(
@@ -96,17 +99,22 @@ public abstract class MixinMinecraftClient implements IMinecraftClient {
         }
     }
 
-    @Redirect(
+    @WrapOperation(
             method = "tick",
             at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;currentScreen:Lnet/minecraft/client/gui/screen/Screen;", ordinal = 6, opcode = Opcodes.GETFIELD)
     )
-    private Screen redirectCurrentScreen(MinecraftClient instance) {
-        return SharedFeatures.shouldSilentScreen() ? null : instance.currentScreen;
+    private Screen wrapCurrentScreen(MinecraftClient instance, Operation<Screen> original) {
+        Screen current = original.call(instance);
+        return SharedFeatures.shouldSilentScreen() ? null : current;
     }
 
-    @Redirect(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;overlay:Lnet/minecraft/client/gui/screen/Overlay;", opcode = Opcodes.GETFIELD))
-    private Overlay redirectOverlay(MinecraftClient instance) {
-        return SharedFeatures.shouldSilentScreen() ? null : instance.getOverlay();
+    @WrapOperation(
+            method = "tick",
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;overlay:Lnet/minecraft/client/gui/screen/Overlay;", opcode = Opcodes.GETFIELD)
+    )
+    private Overlay wrapOverlay(MinecraftClient instance, Operation<Overlay> original) {
+        Overlay overlay = original.call(instance);
+        return SharedFeatures.shouldSilentScreen() ? null : overlay;
     }
 
     @Inject(method = "tick", at = @At("HEAD"))
