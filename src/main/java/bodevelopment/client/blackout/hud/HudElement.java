@@ -110,11 +110,11 @@ public class HudElement {
     }
 
     public float getWidth() {
-        return this.width * this.getScale();
+        return this.width;
     }
 
     public float getHeight() {
-        return this.height * this.getScale();
+        return this.height;
     }
 
     protected static class Component {
