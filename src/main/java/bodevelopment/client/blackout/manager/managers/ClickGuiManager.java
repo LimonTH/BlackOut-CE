@@ -23,14 +23,14 @@ public class ClickGuiManager extends Manager {
         if (!event.pressed || BlackOut.mc.player == null || BlackOut.mc.world == null) return;
 
         if (event.key == 344) {
-            if (BlackOut.mc.currentScreen == null || BlackOut.mc.currentScreen instanceof ClickGui) {
+            if (BlackOut.mc.currentScreen == null || Managers.CLICK_GUI.CLICK_GUI.isOpen()) {
                 this.toggle();
             }
         }
     }
 
     public void openScreen(ClickGuiScreen screen) {
-        if (BlackOut.mc.currentScreen instanceof ClickGui || BlackOut.mc.currentScreen instanceof TitleScreen) {
+        if (Managers.CLICK_GUI.CLICK_GUI.isOpen() || BlackOut.mc.currentScreen instanceof TitleScreen) {
             this.CLICK_GUI.setScreen(screen);
         } else {
             Managers.HUD.HUD_EDITOR.setScreen(screen);

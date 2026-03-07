@@ -53,7 +53,7 @@ public class HudElement {
     }
 
     public void renderElement(MatrixStack stack, float frameTime) {
-        if (this.enabled || BlackOut.mc.currentScreen instanceof HudEditor) {
+        if (this.enabled || HudEditor.isOpen()) {
             this.frameTime = frameTime;
             this.stack = stack;
             this.pushStack(stack);

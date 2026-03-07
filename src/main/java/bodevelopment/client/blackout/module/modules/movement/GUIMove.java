@@ -6,6 +6,7 @@ import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.gui.clickgui.ClickGui;
 import bodevelopment.client.blackout.hud.HudEditor;
+import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -111,8 +112,8 @@ public class GUIMove extends Module {
                 || BlackOut.mc.currentScreen instanceof AnvilScreen
                 || BlackOut.mc.currentScreen instanceof AbstractCommandBlockScreen
                 || BlackOut.mc.currentScreen instanceof BookEditScreen
-                || BlackOut.mc.currentScreen instanceof ClickGui
-                || BlackOut.mc.currentScreen instanceof HudEditor
+                || Managers.CLICK_GUI.CLICK_GUI.isOpen()
+                || HudEditor.isOpen()
                 || BlackOut.mc.currentScreen instanceof StructureBlockScreen) return true;
 
         if (BlackOut.mc.currentScreen instanceof CreativeInventoryScreen screen) {

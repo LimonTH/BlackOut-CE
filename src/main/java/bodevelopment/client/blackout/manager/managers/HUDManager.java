@@ -78,7 +78,7 @@ public class HUDManager extends Manager {
     public void onRender(RenderEvent.Hud.Pre event) {
         this.progress = this.getProgress((float) event.frameTime * 5.0F);
         Arraylist.updateDeltas();
-        if (!(this.progress <= 0.0F) && !(BlackOut.mc.currentScreen instanceof HudEditor)) {
+        if (!(this.progress <= 0.0F) && !(HudEditor.isOpen())) {
             this.start(this.stack);
             Renderer.setAlpha(this.progress);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.progress);
@@ -113,7 +113,7 @@ public class HUDManager extends Manager {
     @Event
     public void onKey(KeyEvent event) {
         if (event.key == 345 && event.pressed && BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            if (BlackOut.mc.currentScreen == null || BlackOut.mc.currentScreen instanceof HudEditor) {
+            if (BlackOut.mc.currentScreen == null || HudEditor.isOpen()) {
                 this.toggle();
             }
         }
@@ -176,6 +176,6 @@ public class HUDManager extends Manager {
     }
 
     private void toggle() {
-        BlackOut.mc.setScreen(BlackOut.mc.currentScreen instanceof HudEditor ? null : this.HUD_EDITOR);
+        BlackOut.mc.setScreen(HudEditor.isOpen() ? null : this.HUD_EDITOR);
     }
 }

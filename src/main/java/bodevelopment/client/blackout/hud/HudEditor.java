@@ -42,10 +42,11 @@ public class HudEditor extends Screen {
     private float screenHeight;
     private float screenWidth;
     private boolean wasList = false;
+    private static boolean isOpen = false;
 
     public HudEditor() {
         super(Text.of("HUD Editor"));
-        BlackOut.EVENT_BUS.subscribe(this, () -> !(BlackOut.mc.currentScreen instanceof HudEditor));
+        BlackOut.EVENT_BUS.subscribe(this, () -> !(HudEditor.isOpen()));
     }
 
     public void initElements() {
@@ -53,6 +54,7 @@ public class HudEditor extends Screen {
     }
 
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        isOpen = true;
         float prevMx = this.mx;
         float prevMy = this.my;
         this.mx = (float) mouseX * RenderUtils.getScale();
@@ -296,6 +298,7 @@ public class HudEditor extends Screen {
 
     @Override
     public void close() {
+        isOpen = false;
         Managers.CONFIG.save(ConfigType.HUD);
         Managers.CONFIG.save(ConfigType.Binds);
         super.close();
@@ -309,6 +312,10 @@ public class HudEditor extends Screen {
     @Override
     public boolean shouldPause() {
         return false;
+    }
+
+    public static boolean isOpen() {
+        return isOpen;
     }
 
     private enum State {

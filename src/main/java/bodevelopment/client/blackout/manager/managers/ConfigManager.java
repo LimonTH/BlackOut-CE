@@ -69,8 +69,8 @@ public class ConfigManager extends Manager {
 
         if (shouldSave
                 && System.currentTimeMillis() > this.previousSave + 10000L
-                && !(BlackOut.mc.currentScreen instanceof ClickGui)
-                && !(BlackOut.mc.currentScreen instanceof HudEditor)) {
+                && !(Managers.CLICK_GUI.CLICK_GUI.isOpen())
+                && !(HudEditor.isOpen())) {
             this.writeCurrent();
         }
     }
