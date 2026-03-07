@@ -66,7 +66,6 @@ public class HUDManager extends Manager {
 
                 try {
                     Class<? extends HudElement> targetClazz = clazz.asSubclass(HudElement.class);
-                    // Только регистрируем класс, не создаём экземпляр и не добавляем в loaded
                     this.add(targetClazz);
                 } catch (Exception e) {
                     BOLogger.error("Error while adding HUD element: " + clazz.getName(), e);

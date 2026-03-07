@@ -93,16 +93,13 @@ public class ConfigManager extends Manager {
     public void readConfigs() {
         FileUtils.addFolder("configs");
 
-        // Проверяем существование файлов конфигов и корректируем имена
         for (ConfigType type : ConfigType.values()) {
             String configName = this.getConfigs()[type.ordinal()];
             if (!FileUtils.exists("configs", configName + ".json")) {
-                // Если файл конфига не существует, используем "default"
                 this.getConfigs()[type.ordinal()] = "default";
             }
         }
 
-        // Сохраняем обновленные имена в config.txt
         this.set();
 
         String mainConfigName = this.getConfigs()[0];
@@ -116,11 +113,8 @@ public class ConfigManager extends Manager {
 
     private void readExtra(String config) {
         JsonObject object = FileUtils.readElement("configs", config + ".json") instanceof JsonObject jsonObject ? jsonObject : null;
-        
-        // Очищаем HUD в любом случае
         Managers.HUD.clear();
-        
-        // Если конфиг отсутствует или пуст, создаём пустой объект с пустой секцией hud
+
         if (object == null) {
             object = new JsonObject();
             object.add("hud", new JsonObject());
@@ -243,7 +237,6 @@ public class ConfigManager extends Manager {
                         .filter(configType.predicate)
                         .forEach(module -> {
                             JsonObject moduleJson = new JsonObject();
-                            // Записываем статус и настройки модуля
                             this.writeSettings(module, moduleJson);
                             categoryObject.add(module.getFileName(), moduleJson);
                         });

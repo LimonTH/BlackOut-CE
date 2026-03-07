@@ -20,7 +20,6 @@ import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.entity.vehicle.MinecartEntity;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.util.Pair;
@@ -138,6 +137,22 @@ public class Velocity extends Module {
                             );
                     event.setCancelled(true);
                     break;
+                case Matrix_AAC:
+                    double velX = (packet.getVelocityX() / 8000.0 - BlackOut.mc.player.getVelocity().x) * this.horizontal.get();
+                    double velY = (packet.getVelocityY() / 8000.0 - BlackOut.mc.player.getVelocity().y) * this.vertical.get();
+                    double velZ = (packet.getVelocityZ() / 8000.0 - BlackOut.mc.player.getVelocity().z) * this.horizontal.get();
+
+                    ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setX((int) ((velX + BlackOut.mc.player.getVelocity().x) * 8000.0));
+                    ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setY((int) ((velY + BlackOut.mc.player.getVelocity().y) * 8000.0));
+                    ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setZ((int) ((velZ + BlackOut.mc.player.getVelocity().z) * 8000.0));
+                    break;
+                case Vulcan:
+                    if (BlackOut.mc.player.isOnGround()) {
+                        ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setY((int) (0.42 * 8000.0));
+                        ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setX(0);
+                        ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setZ(0);
+                    }
+                    break;
                 case Grim:
                     if (this.chance.get() >= ThreadLocalRandom.current().nextDouble()) {
                         this.grimCancel(event, false);
@@ -205,27 +220,14 @@ public class Velocity extends Module {
 
     private void sendGrimPackets() {
         Vec3d vec = Managers.PACKET.pos;
-        Managers.PACKET
-                .sendInstantly(
-                        new PlayerMoveC2SPacket.Full(
-                                vec.getX(), vec.getY(), vec.getZ(), Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, Managers.PACKET.isOnGround()
-                        )
-                );
-        BlockPos pos = new BlockPos((int) Math.floor(vec.x), (int) Math.floor(vec.y) + 1, (int) Math.floor(vec.z));
+        BlockPos pos = new BlockPos((int) Math.floor(vec.x), (int) Math.floor(vec.y) - 1, (int) Math.floor(vec.z));
+        Managers.PACKET.sendInstantly(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN, 0));
         Managers.PACKET.sendInstantly(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN, 0));
     }
 
     private void grimCancel(PacketEvent.Receive.Post event, boolean explosion) {
-        if (!this.single.get()) {
-            this.sendGrimPackets();
-            event.setCancelled(true);
-        } else if (!this.grim) {
-            if (!explosion) {
-                this.grim = true;
-            }
-
-            event.setCancelled(true);
-        }
+        this.sendGrimPackets();
+        event.setCancelled(true);
     }
 
     private boolean validForCollisions(Entity entity) {
@@ -243,8 +245,11 @@ public class Velocity extends Module {
 
     public enum Mode {
         Simple,
+        Matrix_AAC,
         Delayed,
-        Grim
+        Grim,
+        Vulcan,
+        Custom
     }
 
     public enum PushMode {
