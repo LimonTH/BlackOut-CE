@@ -116,10 +116,17 @@ public class ConfigManager extends Manager {
 
     private void readExtra(String config) {
         JsonObject object = FileUtils.readElement("configs", config + ".json") instanceof JsonObject jsonObject ? jsonObject : null;
-        if (object == null) return;
+        
+        // Очищаем HUD в любом случае
+        Managers.HUD.clear();
+        
+        // Если конфиг отсутствует или пуст, создаём пустой объект с пустой секцией hud
+        if (object == null) {
+            object = new JsonObject();
+            object.add("hud", new JsonObject());
+        }
 
         if (object.has("hud")) {
-            Managers.HUD.clear();
             this.readHudElements(object.getAsJsonObject("hud"));
         }
 
