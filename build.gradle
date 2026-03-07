@@ -13,6 +13,13 @@ base {
 
 repositories {
 	mavenCentral()
+	maven {
+		name = "Modrinth"
+		url = "https://api.modrinth.com/maven"
+		content {
+			includeGroup "maven.modrinth"
+		}
+	}
 	maven { url = "https://repo.spongepowered.org/repository/maven-public/"}
 	maven { url = "https://files.minecraftforge.net/maven" }
 	maven { url 'https://jitpack.io' }
@@ -40,6 +47,7 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	compileOnly 'com.google.errorprone:error_prone_annotations:2.47.0'
+	compileOnly 'com.github.CaffeineMC.sodium:fabric:mc1.21.1-0.6.13'
 	implementation 'com.github.LlamaLad7.MixinExtras:mixinextras-common:0.2.2'
 }
 

@@ -36,8 +36,16 @@ public class ShaderESP extends Module {
     private final Setting<BlackOutColor> insideColor = this.sgGeneral.colorSetting("Interior Color", new BlackOutColor(255, 0, 0, 50), "The color applied to the entity's model body.");
 
     public static boolean ignore = false;
-    private final BufferBuilderStorage storage = new BufferBuilderStorage(69);
-    private final VertexConsumerProvider.Immediate vertexConsumerProvider = this.storage.getEntityVertexConsumers();
+    private BufferBuilderStorage storage;
+    private VertexConsumerProvider.Immediate vertexConsumerProvider;
+
+    private VertexConsumerProvider.Immediate getVCP() {
+        if (storage == null) {
+            storage = new BufferBuilderStorage(69);
+            vertexConsumerProvider = storage.getEntityVertexConsumers();
+        }
+        return vertexConsumerProvider;
+    }
 
     public ShaderESP() {
         super("Shader ESP", "Utilizes post-processing framebuffers and GLSL shaders to render glowing silhouettes around entities.", SubCategory.ENTITIES, true);
@@ -72,8 +80,12 @@ public class ShaderESP extends Module {
 
         FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("shaderESP");
         buffer.bind(true);
-        instance.render(entity, yaw, tickDelta, matrices, this.vertexConsumerProvider, light);
-        this.vertexConsumerProvider.draw();
+
+        VertexConsumerProvider.Immediate vcp = getVCP();
+
+        instance.render(entity, yaw, tickDelta, matrices, vcp, light);
+        vcp.draw();
+
         buffer.unbind();
     }
 

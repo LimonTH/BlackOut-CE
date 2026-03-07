@@ -5,10 +5,8 @@ import bodevelopment.client.blackout.module.modules.visual.misc.XRay;
 import bodevelopment.client.blackout.module.modules.visual.world.Ambience;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.WorldRenderer;
 import org.joml.Matrix4f;
-import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -44,20 +42,24 @@ public class MixinWorldRenderer {
         }
     }
 
-    @Redirect(method = "setupTerrain", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;chunkCullingEnabled:Z", opcode = Opcodes.GETFIELD))
-    private boolean redirectChunkCulling(MinecraftClient client) {
+/*    @ModifyExpressionValue(
+            method = "setupTerrain",
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;chunkCullingEnabled:Z", opcode = Opcodes.GETFIELD),
+            require = 0
+    )
+    private boolean modifyChunkCulling(boolean original) {
         XRay xray = XRay.getInstance();
         if (xray != null && xray.enabled) {
             return false;
         }
-        return client.chunkCullingEnabled;
+        return original;
     }
 
-    @Inject(method = "setupTerrain", at = @At("RETURN"))
+    @Inject(method = "setupTerrain", at = @At("RETURN"), require = 0)
     private void onSetupTerrainReturn(Camera camera, Frustum frustum, boolean hasForcedFrustum, boolean spectator, CallbackInfo ci) {
         XRay xray = XRay.getInstance();
         if (xray != null && xray.enabled) {
             this.client.worldRenderer.scheduleTerrainUpdate();
         }
-    }
+    }*/
 }
