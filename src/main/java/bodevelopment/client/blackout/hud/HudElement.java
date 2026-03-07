@@ -27,7 +27,7 @@ public class HudElement {
     public float x = 0.0F;
     public float y = 0.0F;
     public int id;
-    public boolean enabled = true;
+    public boolean enabled = false;
     public long toggleTime = 0L;
     protected float frameTime;
     protected MatrixStack stack;
