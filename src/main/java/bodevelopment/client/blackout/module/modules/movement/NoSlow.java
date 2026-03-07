@@ -51,7 +51,14 @@ public class NoSlow extends Module {
                 if (isBlocking) {
                     return !getInstance().blocking.get();
                 } else if (BlackOut.mc.player.isUsingItem()) {
-                    return Managers.PACKET.getStack().getItem() instanceof SwordItem ? !getInstance().blocking.get() : !getInstance().using.get();
+                    Hand activeHand = BlackOut.mc.player.getActiveHand();
+                    ItemStack activeStack = activeHand == Hand.MAIN_HAND ? 
+                        Managers.PACKET.getStack() : 
+                        BlackOut.mc.player.getOffHandStack();
+
+                    return activeStack.getItem() instanceof SwordItem ? 
+                        !getInstance().blocking.get() : 
+                        !getInstance().using.get();
                 } else {
                     return false;
                 }

@@ -76,7 +76,7 @@ Since I am developing this project solo, any feedback or bug reports are highly 
 - `FakePlayer умирает, не успевая заменить тотем в руке`
 - `AutoCrystal нужен бейз плейс =)`
 - `ускорить clip в Phase модуле`
-- `когда Offhand ест яблоко, включая в Offhand свордгепл, то NoSlow на этом яблоке не работает`
+
 - `Aura добавить белый список разрешённых инструментов - оружия для ауры`
 - `Aura добавить ползунок для настройки количества одновременно атакуемых целей в ауре`
 - `Baritone compat: конфликтует в редиректах, там надо инжекты сделать, в MixinLivingEntity в методе sprintJumpYaw
