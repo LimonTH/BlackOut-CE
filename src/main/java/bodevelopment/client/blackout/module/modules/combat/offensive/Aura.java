@@ -89,6 +89,7 @@ public class Aura extends MoveUpdateModule {
             Items.TRIDENT,
             Items.MACE);
     private final Setting<Integer> maxTargets = this.sgGeneral.intSetting("Max Targets", 1, 1, 10, 1, "Maximum number of entities to attack simultaneously.");
+    private final Setting<WeaponPreference> weaponPreference = this.sgGeneral.enumSetting("Weapon Preference", WeaponPreference.Default, "Determines which weapon type is prioritized when multiple are available.");
     private final Setting<Boolean> ignoreNaked = this.sgGeneral.booleanSetting("Ignore Unarmored", false, "Prevents attacking players who are not wearing any armor.");
     private final Setting<Boolean> tpDisable = this.sgGeneral.booleanSetting("TP Safety Disable", false, "Automatically disables the module upon server teleports or dimension changes.");
     private final Setting<RotationMode> rotationMode = this.sgGeneral.enumSetting("Rotation Logic", RotationMode.OnHit, "Defines when the client should look at the target.");
@@ -513,21 +514,64 @@ public class Aura extends MoveUpdateModule {
     }
 
     private int bestSlot(boolean inventory) {
-        int slot = -1;
-        double hDmg = -1.0;
+        int limit = inventory ? BlackOut.mc.player.getInventory().size() + 1 : 9;
+        int bestSlot = -1;
+        double bestDamage = -1.0;
 
-        for (int i = 0; i < (inventory ? BlackOut.mc.player.getInventory().size() + 1 : 9); i++) {
+        for (int i = 0; i < limit; i++) {
             ItemStack stack = BlackOut.mc.player.getInventory().getStack(i);
             if (!this.onlyWeapon.get() || this.isAllowedWeapon(stack)) {
-                double dmg = DamageUtils.itemDamage(stack);
-                if (dmg > hDmg) {
-                    slot = i;
-                    hDmg = dmg;
+                double damage = DamageUtils.itemDamage(stack);
+                boolean preferred = matchesPreference(stack, this.weaponPreference.get());
+
+                if (this.weaponPreference.get() == WeaponPreference.Default ||
+                    this.weaponPreference.get() == WeaponPreference.Damage) {
+                    if (damage > bestDamage) {
+                        bestSlot = i;
+                        bestDamage = damage;
+                    }
+                } else {
+                    if (preferred) {
+                        if (damage > bestDamage) {
+                            bestSlot = i;
+                            bestDamage = damage;
+                        }
+                    } else if (bestSlot == -1) {
+                        continue;
+                    }
                 }
             }
         }
 
-        return slot;
+        if (bestSlot == -1 && this.weaponPreference.get() != WeaponPreference.Default && 
+            this.weaponPreference.get() != WeaponPreference.Damage) {
+            bestDamage = -1.0;
+            for (int i = 0; i < limit; i++) {
+                ItemStack stack = BlackOut.mc.player.getInventory().getStack(i);
+                if (!this.onlyWeapon.get() || this.isAllowedWeapon(stack)) {
+                    double damage = DamageUtils.itemDamage(stack);
+                    if (damage > bestDamage) {
+                        bestSlot = i;
+                        bestDamage = damage;
+                    }
+                }
+            }
+        }
+        
+        return bestSlot;
+    }
+    
+    private boolean matchesPreference(ItemStack stack, WeaponPreference preference) {
+        if (stack.isEmpty()) return false;
+        Item item = stack.getItem();
+        
+        return switch (preference) {
+            case Sword -> item instanceof SwordItem;
+            case Axe -> item instanceof AxeItem;
+            case Mace -> item == Items.MACE;
+            case Trident -> item == Items.TRIDENT;
+            default -> true;
+        };
     }
 
     private void updateTarget() {
@@ -856,5 +900,31 @@ public class Aura extends MoveUpdateModule {
         Health,
         Angle,
         Distance
+    }
+
+    public enum WeaponPreference {
+        Default("Default", "Uses current damage-based selection"),
+        Damage("Damage", "Prioritizes highest damage weapon"),
+        Sword("Sword", "Prefers swords over other weapons"),
+        Axe("Axe", "Prefers axes over other weapons"),
+        Mace("Mace", "Prefers maces over other weapons"),
+        Trident("Trident", "Prefers tridents over other weapons");
+
+        private final String name;
+        private final String description;
+
+        WeaponPreference(String name, String description) {
+            this.name = name;
+            this.description = description;
+        }
+
+        @Override
+        public String toString() {
+            return this.name;
+        }
+
+        public String getDescription() {
+            return this.description;
+        }
     }
 }
