@@ -22,6 +22,7 @@
     "mixins.MixinChatHudLine",
     "mixins.MixinChatInputSuggestor",
     "mixins.MixinChatScreen",
+    "mixins.MixinChunkOcclusionData",
     "mixins.MixinClientPlayerEntity",
     "mixins.MixinClientPlayerInteractionManager",
     "mixins.MixinClientPlayNetworkHandler",

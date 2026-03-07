@@ -41,25 +41,4 @@ public class MixinWorldRenderer {
             ci.cancel();
         }
     }
-
-/*    @ModifyExpressionValue(
-            method = "setupTerrain",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;chunkCullingEnabled:Z", opcode = Opcodes.GETFIELD),
-            require = 0
-    )
-    private boolean modifyChunkCulling(boolean original) {
-        XRay xray = XRay.getInstance();
-        if (xray != null && xray.enabled) {
-            return false;
-        }
-        return original;
-    }
-
-    @Inject(method = "setupTerrain", at = @At("RETURN"), require = 0)
-    private void onSetupTerrainReturn(Camera camera, Frustum frustum, boolean hasForcedFrustum, boolean spectator, CallbackInfo ci) {
-        XRay xray = XRay.getInstance();
-        if (xray != null && xray.enabled) {
-            this.client.worldRenderer.scheduleTerrainUpdate();
-        }
-    }*/
 }

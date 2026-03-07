@@ -10,7 +10,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Pseudo
 @Mixin(targets = "net.caffeinemc.mods.sodium.client.render.chunk.occlusion.VisibilityEncoding", remap = false)
 public class MixinSodiumVisibilityEncoding {
-
     @Inject(method = "getConnections(JI)I", at = @At("HEAD"), cancellable = true)
     private static void onGetConnectionsIncoming(long visibilityData, int incoming, CallbackInfoReturnable<Integer> cir) {
         if (XRay.getInstance().enabled) {
