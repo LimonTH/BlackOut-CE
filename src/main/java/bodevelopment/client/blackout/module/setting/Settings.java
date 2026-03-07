@@ -8,6 +8,7 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
+import net.minecraft.item.Items;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 
@@ -51,18 +52,28 @@ public class Settings {
         return registrySetting(name, description, visible, Registries.ITEM, item -> item.getName().getString(), value);
     }
 
+    public static Setting<List<Item>> itemFilterdListSetting(String name, String description, SingleOut<Boolean> visible, Predicate<Item> filter, Item... value) {
+        return filteredRegistrySetting(name, description, visible, Registries.ITEM, entity -> entity.getName().getString(), filter, value);
+    }
+
     public static Setting<List<EntityType<?>>> entityListSetting(String name, String description, SingleOut<Boolean> visible, EntityType<?>... value) {
         return registrySetting(name, description, visible, Registries.ENTITY_TYPE, entity -> entity.getName().getString(), value);
     }
 
     public static Setting<List<EntityType<?>>> entityFilterdListSetting(String name, String description, SingleOut<Boolean> visible, Predicate<EntityType<?>> filter, EntityType<?>... value) {
-        return new RegistrySetting<>(name, Registries.ENTITY_TYPE, entity -> entity.getName().getString(), description, visible, filter, value);
+        return filteredRegistrySetting(name, description, visible, Registries.ENTITY_TYPE, entity -> entity.getName().getString(), filter, value);
     }
 
     @SafeVarargs
     public static <T> Setting<List<T>> registrySetting(
             String name, String description, SingleOut<Boolean> visible, Registry<T> registry, EpicInterface<T, String> getName, T... value) {
-        return new RegistrySetting<T>(name, registry, getName, description, visible, value);
+        return new RegistrySetting<>(name, registry, getName, description, visible, value);
+    }
+
+    @SafeVarargs
+    public static <T> Setting<List<T>> filteredRegistrySetting(
+            String name, String description, SingleOut<Boolean> visible, Registry<T> registry, EpicInterface<T, String> getName, Predicate<T> filter, T... value) {
+        return new RegistrySetting<T>(name, registry, getName, description, visible, filter, value);
     }
 
     @SafeVarargs

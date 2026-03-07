@@ -7,10 +7,12 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
+import net.minecraft.item.Items;
 import net.minecraft.registry.Registry;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 public class SettingGroup {
     public final String name;
@@ -56,8 +58,16 @@ public class SettingGroup {
         return this.addSetting(Settings.itemListSetting(name, description, visible, value));
     }
 
+    public Setting<List<Item>> itemFilteredListSetting(String name, String description, SingleOut<Boolean> visible, Predicate<Item> filter, Item... value) {
+        return this.addSetting(Settings.itemFilterdListSetting(name, description, visible, filter, value));
+    }
+
     public Setting<List<EntityType<?>>> entityListSetting(String name, String description, SingleOut<Boolean> visible, EntityType<?>... value) {
         return this.addSetting(Settings.entityListSetting(name, description, visible, value));
+    }
+
+    public Setting<List<EntityType<?>>> entityFilterdListSetting(String name, String description, SingleOut<Boolean> visible, Predicate<EntityType<?>> filter, EntityType<?>... value) {
+        return this.addSetting(Settings.entityFilterdListSetting(name, description, visible, filter, value));
     }
 
     @SafeVarargs
@@ -108,11 +118,15 @@ public class SettingGroup {
         return this.addSetting(Settings.itemListSetting(name, description, null, value));
     }
 
+    public Setting<List<Item>> itemFilteredListSetting(String name, String description, Predicate<Item> filter, Item... value) {
+        return this.addSetting(Settings.itemFilterdListSetting(name, description, null, filter, value));
+    }
+
     public Setting<List<EntityType<?>>> entityListSetting(String name, String description, EntityType<?>... value) {
         return this.addSetting(Settings.entityListSetting(name, description, null, value));
     }
 
-    public Setting<List<EntityType<?>>> entityFilterdListSetting(String name, String description, java.util.function.Predicate<EntityType<?>> filter, EntityType<?>... value) {
+    public Setting<List<EntityType<?>>> entityFilterdListSetting(String name, String description, Predicate<EntityType<?>> filter, EntityType<?>... value) {
         return this.addSetting(Settings.entityFilterdListSetting(name, description, null, filter, value));
     }
 

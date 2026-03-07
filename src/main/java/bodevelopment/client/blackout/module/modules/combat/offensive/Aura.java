@@ -33,11 +33,7 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.item.AxeItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.SwordItem;
-import net.minecraft.item.ToolItem;
+import net.minecraft.item.*;
 import net.minecraft.network.packet.c2s.play.*;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.Hand;
@@ -47,7 +43,6 @@ import net.minecraft.util.math.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicReference;
 
 // TODO: NEED PATCHES
 // TODO: пересмотреть target selection: добавить защиту от резких switch (stickiness/priority lock).
@@ -77,7 +72,22 @@ public class Aura extends MoveUpdateModule {
     private final Setting<Integer> maxHp = this.sgGeneral.intSetting("Maximum Health", 36, 0, 100, 1, "Only targets with total health below this value will be attacked.", this.checkMaxHP::get);
     private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Auto Switch", SwitchMode.Disabled, "Method for automatically switching to a combat weapon.");
     private final Setting<Boolean> onlyWeapon = this.sgGeneral.booleanSetting("Weapon Filter", true, "Restricts attacks to only occur when holding a valid weapon.");
-    private final Setting<List<Item>> allowedItems = this.sgGeneral.itemListSetting("Allowed Items", "Whitelist of tools/weapons that are allowed for attacking (empty = any tool).");
+    private final Setting<List<Item>> allowedItems = this.sgGeneral.itemFilteredListSetting("Allowed Items", "Whitelist of tools/weapons that are allowed for attacking (empty = any tool).", onlyWeapon::get, item ->
+            item instanceof ToolItem || item == Items.TRIDENT || item == Items.MACE,
+            Items.WOODEN_SWORD,
+            Items.STONE_SWORD,
+            Items.GOLDEN_SWORD,
+            Items.IRON_SWORD,
+            Items.DIAMOND_SWORD,
+            Items.NETHERITE_SWORD,
+            Items.WOODEN_AXE,
+            Items.STONE_AXE,
+            Items.GOLDEN_AXE,
+            Items.IRON_AXE,
+            Items.DIAMOND_AXE,
+            Items.NETHERITE_AXE,
+            Items.TRIDENT,
+            Items.MACE);
     private final Setting<Integer> maxTargets = this.sgGeneral.intSetting("Max Targets", 1, 1, 10, 1, "Maximum number of entities to attack simultaneously.");
     private final Setting<Boolean> ignoreNaked = this.sgGeneral.booleanSetting("Ignore Unarmored", false, "Prevents attacking players who are not wearing any armor.");
     private final Setting<Boolean> tpDisable = this.sgGeneral.booleanSetting("TP Safety Disable", false, "Automatically disables the module upon server teleports or dimension changes.");
