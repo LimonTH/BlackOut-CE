@@ -73,11 +73,8 @@ Since I am developing this project solo, any feedback or bug reports are highly 
 - `Создать настройки локализации (RUS/ENG)`
 - `@OnlyDev нужны фиксы`
 - `Auto Mine не может сломать блок если не держать в руках инструмент который выбрал сам модуль`
-- `FakePlayer умирает, не успевая заменить тотем в руке`
 - `AutoCrystal нужен бейз плейс =)`
 - `ускорить clip в Phase модуле`
-- `Aura добавить itemList скак белый список разрешаемых интчрументов, котроыми можно атаковать сущность`
-- `Aura добавить ползунок, intSetting который будет отвечат ьза количество атакуемых сущностей одновременно`
 - `Baritone compat: конфликтует в редиректах, там надо инжекты сделать, в MixinLivingEntity в методе sprintJumpYaw
 в MixinMinecraftClient в методе redirectCurrentScreen`
 - `Sodium compat: ...`
