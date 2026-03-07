@@ -25,6 +25,8 @@ public class NoRender extends Module {
     public final Setting<Boolean> totem = this.sgGeneral.booleanSetting("Totem Animation", true, "Suppresses the Totem of Undying animation that normally covers the screen upon use.");
     public final Setting<Boolean> pumpkin = this.sgGeneral.booleanSetting("Pumpkin Mask", true, "Removes the carved pumpkin vignette from the HUD.");
     public final Setting<Boolean> crystalBase = this.sgGeneral.booleanSetting("Crystal Pedestal", true, "Prevents the rendering of the obsidian/bedrock base underneath End Crystals.");
+    public final Setting<Boolean> noBobbing = this.sgGeneral.booleanSetting("No Bobbing", true, "Prevents the camera from bobbing while moving.");
+    public final Setting<Boolean> noHurtCam = this.sgGeneral.booleanSetting("No Hurt Cam", true, "Removes the camera shake when taking damage.");
 
     public final Setting<Boolean> helmet = this.sgItems.booleanSetting("Cranial Armor", false, "Hides the helmet model on entities.");
     public final Setting<Boolean> chestplate = this.sgItems.booleanSetting("Torso Armor", false, "Hides the chestplate model on entities.");

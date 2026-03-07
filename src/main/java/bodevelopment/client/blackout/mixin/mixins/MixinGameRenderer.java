@@ -178,14 +178,14 @@ public abstract class MixinGameRenderer {
 
     @Inject(method = "bobView", at = @At("HEAD"), cancellable = true)
     private void onBobView(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
-        if (NoBobbing.getInstance().enabled) {
+        if (NoRender.getInstance().enabled && NoRender.getInstance().noBobbing.get()) {
             ci.cancel();
         }
     }
 
     @Inject(method = "tiltViewWhenHurt", at = @At("HEAD"), cancellable = true)
     private void onHurtCameraEffect(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
-        if (NoBobbing.getInstance().enabled && NoBobbing.getInstance().noHurtCam.get()) {
+        if (NoRender.getInstance().enabled && NoRender.getInstance().noHurtCam.get()) {
             ci.cancel();
         }
     }
