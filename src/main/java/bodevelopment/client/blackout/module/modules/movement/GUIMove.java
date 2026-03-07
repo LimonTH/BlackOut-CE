@@ -4,6 +4,8 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
+import bodevelopment.client.blackout.gui.clickgui.ClickGui;
+import bodevelopment.client.blackout.hud.HudEditor;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -23,7 +25,7 @@ public class GUIMove extends Module {
 
     private final Setting<Screens> mode = this.sgGeneral.enumSetting("Screen Filter", Screens.Both, "Determines which graphical interfaces allow player movement (e.g., standard containers vs. personal inventory).");
     private final Setting<Boolean> jump = this.sgGeneral.booleanSetting("Allow Jumping", true, "Enables vertical displacement while an interface is active.");
-    private final Setting<Boolean> sneak = this.sgGeneral.booleanSetting("Allow Sneaking", true, "Enables crouching functionality while navigating menus.");
+    private final Setting<SneakMode> sneakMode = this.sgGeneral.enumSetting("Sneak Mode", SneakMode.Normal, "How crouching is handled in screens.");
     private final Setting<Boolean> sprint = this.sgGeneral.booleanSetting("Allow Sprinting", true, "Maintains athletic pace and kinetic energy while in screens.");
 
     private final Setting<Boolean> arrowsRotate = this.sgRotation.booleanSetting("Arrow Key Look", true, "Enables camera orientation control using the keyboard arrow keys.");
@@ -48,8 +50,15 @@ public class GUIMove extends Module {
         this.updateKey(BlackOut.mc.options.rightKey);
 
         if (this.jump.get()) this.updateKey(BlackOut.mc.options.jumpKey);
-        if (this.sneak.get()) this.updateKey(BlackOut.mc.options.sneakKey);
         if (this.sprint.get()) this.updateKey(BlackOut.mc.options.sprintKey);
+
+        switch (this.sneakMode.get()) {
+            case Normal -> this.updateKey(BlackOut.mc.options.sneakKey);
+            case Packet -> {
+                boolean isDown = isKeyDown(InputUtil.fromTranslationKey(BlackOut.mc.options.sneakKey.getBoundKeyTranslationKey()).getCode());
+                BlackOut.mc.player.setSneaking(isDown);
+            }
+        }
     }
 
     @Event
@@ -74,7 +83,11 @@ public class GUIMove extends Module {
 
     private void updateKey(KeyBinding bind) {
         InputUtil.Key key = InputUtil.fromTranslationKey(bind.getBoundKeyTranslationKey());
-        bind.setPressed(isKeyDown(key.getCode()));
+        boolean isDown = isKeyDown(key.getCode());
+
+        if (bind.isPressed() != isDown) {
+            bind.setPressed(isDown);
+        }
     }
 
     private boolean isKeyDown(int keyCode) {
@@ -97,6 +110,9 @@ public class GUIMove extends Module {
                 || BlackOut.mc.currentScreen instanceof SignEditScreen
                 || BlackOut.mc.currentScreen instanceof AnvilScreen
                 || BlackOut.mc.currentScreen instanceof AbstractCommandBlockScreen
+                || BlackOut.mc.currentScreen instanceof BookEditScreen
+                || BlackOut.mc.currentScreen instanceof ClickGui
+                || BlackOut.mc.currentScreen instanceof HudEditor
                 || BlackOut.mc.currentScreen instanceof StructureBlockScreen) return true;
 
         if (BlackOut.mc.currentScreen instanceof CreativeInventoryScreen screen) {
@@ -113,5 +129,11 @@ public class GUIMove extends Module {
 
     public enum Screens {
         GUI, Inventory, Both
+    }
+
+    public enum SneakMode {
+        Normal,
+        Packet,
+        Disabled
     }
 }
