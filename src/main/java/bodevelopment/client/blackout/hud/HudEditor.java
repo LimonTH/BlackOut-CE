@@ -306,6 +306,11 @@ public class HudEditor extends Screen {
         return this.settings.getOpenedElement() == null;
     }
 
+    @Override
+    public boolean shouldPause() {
+        return false;
+    }
+
     private enum State {
         Selecting,
         Moving,
