@@ -176,6 +176,13 @@ public abstract class MixinGameRenderer {
         }
     }
 
+    @Inject(method = "bobView", at = @At("HEAD"), cancellable = true)
+    private void onBobView(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
+        if (NoBobbing.getInstance().enabled) {
+            ci.cancel();
+        }
+    }
+
     @Unique
     private double getFOV(boolean changing, FovModifier fovModifier) {
         if (this.isRenderingPanorama()) {
