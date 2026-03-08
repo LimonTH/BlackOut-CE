@@ -13,8 +13,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinLightmapTextureManager {
     @Inject(method = "getBrightness", at = @At("HEAD"), cancellable = true)
     private static void onGetBrightness(DimensionType type, int lightLevel, CallbackInfoReturnable<Float> info) {
-        if (Brightness.getInstance().enabled && Brightness.getInstance().mode.get() == Brightness.Mode.Gamma) {
-            info.setReturnValue(1.0f);
+        Brightness brightness = Brightness.getInstance();
+        if (brightness.enabled && brightness.mode.get() == Brightness.Mode.Gamma) {
+            info.setReturnValue(1.0F);
         }
+    }
+
+    @ModifyVariable(method = "update", at = @At(value = "STORE", ordinal = 0), index = 15)
+    private float modifyLightmapBrightness(float value) {
+        Brightness brightness = Brightness.getInstance();
+
+        if (brightness.enabled && brightness.mode.get() == Brightness.Mode.Luminance) {
+            float minLight = brightness.luminanceLevel.get() / 15.0F;
+            return Math.max(value, minLight);
+        }
+        return value;
     }
 }
