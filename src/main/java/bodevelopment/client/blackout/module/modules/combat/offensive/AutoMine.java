@@ -44,7 +44,6 @@ import net.minecraft.util.shape.VoxelShape;
 import java.util.ArrayList;
 import java.util.List;
 
-// TODO: NEW PATCHES
 @OnlyDev
 public class AutoMine extends Module {
     private static AutoMine INSTANCE;
@@ -78,6 +77,7 @@ public class AutoMine extends Module {
     private final Setting<Boolean> useMineBind = this.sgGeneral.booleanSetting("Manual Trigger", false, "Requires a specific keypress to execute the final block break.");
     private final Setting<KeyBind> mineBind = this.sgGeneral.keySetting("Mining Hotkey", "Keybind used for manual block breaking.", this.useMineBind::get);
     private final Setting<List<Block>> ignore = this.sgGeneral.blockListSetting("Exclusion List", "Blocks that will never be automatically targeted for mining.");
+    private final Setting<RotationMode> rotationMode = this.sgGeneral.enumSetting("Rotation Mode", RotationMode.Both, "When to rotate head towards block during mining.");
 
     private final Setting<Boolean> preSwitch = this.sgSwitch.booleanSetting("Predictive Switch", false, "Swaps to the pickaxe slightly before the block is ready to break.");
     private final Setting<SwitchMode> pickaxeSwitch = this.sgSwitch.enumSetting("Pickaxe Swap Mode", SwitchMode.InvSwitch, "The method used to equip the pickaxe for mining.");
@@ -149,7 +149,7 @@ public class AutoMine extends Module {
     private final List<PlayerEntity> enemies = new ArrayList<>();
     public BlockPos minePos = null;
     public BlockPos crystalPos = null;
-    public MineType mineType = null;
+    public bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.MineType mineType = null;
     public boolean started = false;
     private BlockPos prevPos = null;
     private PlayerEntity target = null;
@@ -169,7 +169,7 @@ public class AutoMine extends Module {
         INSTANCE = this;
     }
 
-    public static AutoMine getInstance() {
+    public static bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine getInstance() {
         return INSTANCE;
     }
 
@@ -201,7 +201,7 @@ public class AutoMine extends Module {
             });
             this.startedThisTick = false;
             this.updatePos();
-            if (this.minePos != null && this.mineType == MineType.Manual) {
+            if (this.minePos != null && this.mineType == bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.MineType.Manual) {
                 if (this.manualRangeReset.get() && !SettingUtils.inMineRange(this.minePos)) {
                     this.prevMined = null;
                     this.started = false;
@@ -243,7 +243,7 @@ public class AutoMine extends Module {
 
             if (!this.started && !this.paused(false)) {
                 Direction dir = SettingUtils.getPlaceOnDirection(this.minePos);
-                if (!SettingUtils.startMineRot() || this.rotateBlock(this.minePos, dir, this.getMineStartRotationVec(dir), RotationType.Mining, "mining")) {
+                if (!this.shouldRotateStart() || this.rotateBlock(this.minePos, dir, this.getMineStartRotationVec(dir), RotationType.Mining, "mining")) {
                     this.start(this.minePos, false);
                 }
             }
@@ -254,6 +254,18 @@ public class AutoMine extends Module {
 
     private boolean paused(boolean placing) {
         return (placing ? this.pauseEatPlacing : this.pauseEat).get() && BlackOut.mc.player.isUsingItem() || this.pauseSword.get() && BlackOut.mc.player.getMainHandStack().getItem() instanceof SwordItem;
+    }
+
+    private boolean shouldRotateStart() {
+        RotationMode mode = rotationMode.get();
+        boolean modeOk = mode == RotationMode.StartOnly || mode == RotationMode.Both;
+        return modeOk || SettingUtils.shouldRotate(RotationType.Mining);
+    }
+
+    private boolean shouldRotateEnd() {
+        RotationMode mode = rotationMode.get();
+        boolean modeOk = mode == RotationMode.EndOnly || mode == RotationMode.Both;
+        return modeOk || SettingUtils.shouldRotate(RotationType.Mining);
     }
 
     private void updateRender(float tickDelta) {
@@ -274,7 +286,7 @@ public class AutoMine extends Module {
         }
     }
 
-    private Box getBox(double p, AnimationMode mode) {
+    private Box getBox(double p, bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.AnimationMode mode) {
         double up = 0.5;
         double down = 0.5;
         double sides = 0.5;
@@ -344,38 +356,33 @@ public class AutoMine extends Module {
         if (this.minePos == null) {
             return 0.0;
         } else {
-            FindResult result = this.findBestSlot(
-                    stack -> BlockUtils.getBlockBreakingDelta(
-                            stack, this.ncpState(), minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
+            ItemStack bestStack = this.findBestSlot(
+                            stack -> BlockUtils.getBlockBreakingDelta(
+                                    stack, this.ncpState(), this.minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
+                            )
                     )
-            );
-            ItemStack bestStack;
-            if (result.slot() >= 0 && result.slot() < BlackOut.mc.player.getInventory().size()) {
-                bestStack = BlackOut.mc.player.getInventory().getStack(result.slot());
-            } else {
-                bestStack = ItemStack.EMPTY;
-            }
+                    .stack();
             return !this.ncpProgress.get()
                     ? this.progress
                     : this.minedFor
                     / (
                     1.0
                             / BlockUtils.getBlockBreakingDelta(
-                            bestStack, this.ncpState(), minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
+                            bestStack, this.ncpState(), this.minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
                     )
             );
         }
     }
 
     private BlockState ncpState() {
-        return this.mineType == MineType.Manual && this.manualRemine.get() && this.fastRemine.get() && !this.shouldInstant()
+        return this.mineType == bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.MineType.Manual && this.manualRemine.get() && this.fastRemine.get() && !this.shouldInstant()
                 ? this.prevState
                 : BlackOut.mc.world.getBlockState(this.minePos);
     }
 
     private void updatePos() {
-        if (this.minePos == null || this.mineType != MineType.Manual) {
-            Target target = this.getTarget();
+        if (this.minePos == null || this.mineType != bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.MineType.Manual) {
+            bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target target = this.getTarget();
             this.minePos = target.pos;
             this.crystalPos = target.crystal;
             this.mineType = target.type;
@@ -383,8 +390,8 @@ public class AutoMine extends Module {
         }
     }
 
-    private Target getTarget() {
-        Target target = null;
+    private bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target getTarget() {
+        bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target target = null;
         if (this.autoMine.get()) {
             target = this.targetCheck(target, this.getCev(), this.cevPriority);
             target = this.targetCheck(target, this.getTrapCev(), this.trapCevPriority);
@@ -393,31 +400,23 @@ public class AutoMine extends Module {
             target = this.targetCheck(target, this.getAntiBurrow(), this.antiBurrowPriority);
         }
 
-        return target == null ? new Target(null, null, null, 0, null) : target;
+        return target == null ? new bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target(null, null, null, 0, null) : target;
     }
 
-    private int getPriority(Target target) {
+    private int getPriority(bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target target) {
         return target == null ? 0 : target.priority;
     }
 
-    private Target getCev() {
+    private bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target getCev() {
         BlockPos best = null;
         PlayerEntity bestPlayer = null;
         double bestDist = 1000.0;
 
         for (PlayerEntity player : this.enemies) {
             BlockPos pos = new BlockPos(player.getBlockX(), (int) Math.ceil(player.getBoundingBox().maxY), player.getBlockZ());
-            // Проверка расстояния до врага: блок должен быть прямо над врагом, расстояние по горизонтали должно быть 0
-            double horizontalDist = Math.sqrt(
-                Math.pow(pos.getX() - player.getX(), 2) + Math.pow(pos.getZ() - player.getZ(), 2)
-            );
-            if (horizontalDist > 0.5) {
-                continue; // Блок не прямо над врагом
-            }
-            
             if (!this.invalidCev(pos, player, this.minCevDamage, this.maxCevDamage, this.cevDamageCheck)) {
                 if (pos.equals(this.minePos)) {
-                    return new Target(pos, pos.up(), MineType.Cev, this.cevPriority.get().priority, player);
+                    return new bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target(pos, pos.up(), bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.MineType.Cev, this.cevPriority.get().priority, player);
                 }
 
                 if (!this.ignored(pos)) {
@@ -431,10 +430,10 @@ public class AutoMine extends Module {
             }
         }
 
-        return best == null ? null : new Target(best, best.up(), MineType.Cev, this.cevPriority.get().priority, bestPlayer);
+        return best == null ? null : new bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target(best, best.up(), bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.MineType.Cev, this.cevPriority.get().priority, bestPlayer);
     }
 
-    private Target getTrapCev() {
+    private bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target getTrapCev() {
         BlockPos best = null;
         PlayerEntity bestPlayer = null;
         double bestDist = 1000.0;
@@ -446,7 +445,7 @@ public class AutoMine extends Module {
                 BlockPos pos = eyePos.offset(dir);
                 if (!this.invalidCev(pos, player, this.minTrapCevDamage, this.maxTrapCevDamage, this.trapCevDamageCheck)) {
                     if (pos.equals(this.minePos)) {
-                        return new Target(pos, pos.up(), MineType.TrapCev, this.trapCevPriority.get().priority, player);
+                        return new bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target(pos, pos.up(), bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.MineType.TrapCev, this.trapCevPriority.get().priority, player);
                     }
 
                     if (!this.ignored(pos)) {
@@ -461,10 +460,10 @@ public class AutoMine extends Module {
             }
         }
 
-        return best == null ? null : new Target(best, best.up(), MineType.TrapCev, this.trapCevPriority.get().priority, bestPlayer);
+        return best == null ? null : new bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target(best, best.up(), bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.MineType.TrapCev, this.trapCevPriority.get().priority, bestPlayer);
     }
 
-    private Target getSurroundCev() {
+    private bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target getSurroundCev() {
         BlockPos best = null;
         PlayerEntity bestPlayer = null;
         double bestDist = 1000.0;
@@ -476,7 +475,7 @@ public class AutoMine extends Module {
                 BlockPos pos = feetPos.offset(dir);
                 if (!this.invalidCev(pos, player, this.minSurroundCevDamage, this.maxSurroundCevDamage, this.surroundCevDamageCheck)) {
                     if (pos.equals(this.minePos)) {
-                        return new Target(pos, pos.up(), MineType.SurroundCev, this.surroundCevPriority.get().priority, player);
+                        return new bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target(pos, pos.up(), bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.MineType.SurroundCev, this.surroundCevPriority.get().priority, player);
                     }
 
                     if (!this.ignored(pos)) {
@@ -493,10 +492,10 @@ public class AutoMine extends Module {
 
         return best == null
                 ? null
-                : new Target(best, best.up(), MineType.SurroundCev, this.surroundCevPriority.get().priority, bestPlayer);
+                : new bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target(best, best.up(), bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.MineType.SurroundCev, this.surroundCevPriority.get().priority, bestPlayer);
     }
 
-    private Target getAutoCity() {
+    private bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target getAutoCity() {
         BlockPos best = null;
         BlockPos bestCrystal = null;
         PlayerEntity bestPlayer = null;
@@ -515,7 +514,7 @@ public class AutoMine extends Module {
                         && SettingUtils.inInteractRange(crystal.down())
                         && SettingUtils.inAttackRange(OLEPOSSUtils.getCrystalBox(crystal))) {
                     if (this.isInstant(pos)) {
-                        return new Target(pos, crystal, MineType.AutoCity, this.autoCityPriority.get().priority, player);
+                        return new bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target(pos, crystal, bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.MineType.AutoCity, this.autoCityPriority.get().priority, player);
                     }
 
                     if (!this.ignored(pos) && BlockUtils.mineable(pos)) {
@@ -540,10 +539,10 @@ public class AutoMine extends Module {
             }
         }
 
-        return best == null ? null : new Target(best, bestCrystal, MineType.AutoCity, this.autoCityPriority.get().priority, bestPlayer);
+        return best == null ? null : new bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target(best, bestCrystal, bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.MineType.AutoCity, this.autoCityPriority.get().priority, bestPlayer);
     }
 
-    private Target getAntiBurrow() {
+    private bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target getAntiBurrow() {
         BlockPos best = null;
         PlayerEntity bestPlayer = null;
         double bestDist = 1000.0;
@@ -552,10 +551,10 @@ public class AutoMine extends Module {
             BlockPos pos = new BlockPos(player.getBlockX(), (int) Math.round(player.getY()), player.getBlockZ());
             if (SettingUtils.getPlaceOnDirection(pos) != null && SettingUtils.inMineRange(pos)) {
                 if (this.isInstant(pos)) {
-                    return new Target(pos, null, MineType.AntiBurrow, this.antiBurrowPriority.get().priority, player);
+                    return new bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target(pos, null, bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.MineType.AntiBurrow, this.antiBurrowPriority.get().priority, player);
                 }
 
-                if (!this.ignored(pos) && BlockUtils.mineable(pos) && this.crystalBlock(pos, false)) {
+                if (!this.ignored(pos) && BlockUtils.mineable(pos)) {
                     double distance = this.getDist(pos);
                     if (!(distance >= bestDist)) {
                         best = pos;
@@ -566,7 +565,7 @@ public class AutoMine extends Module {
             }
         }
 
-        return best == null ? null : new Target(best, null, MineType.AntiBurrow, this.antiBurrowPriority.get().priority, bestPlayer);
+        return best == null ? null : new bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target(best, null, bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.MineType.AntiBurrow, this.antiBurrowPriority.get().priority, bestPlayer);
     }
 
     private boolean invalidCev(BlockPos pos, PlayerEntity player, Setting<Double> minDmg, Setting<Double> maxDmg, Setting<Boolean> dmgCheck) {
@@ -615,8 +614,6 @@ public class AutoMine extends Module {
             return false;
         } else if (!(this.getBlock(pos.up()) instanceof AirBlock)) {
             return false;
-        } else if (bottom instanceof AirBlock) {
-            return false;
         } else {
             return this.isInstant(pos) || bottom == Blocks.OBSIDIAN || bottom == Blocks.BEDROCK;
         }
@@ -626,7 +623,7 @@ public class AutoMine extends Module {
         return Managers.BLOCK.blockState(pos).getBlock();
     }
 
-    private Target targetCheck(Target target, Target newTarget, Setting<Priority> prioritySetting) {
+    private bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target targetCheck(bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target target, bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Target newTarget, Setting<bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.Priority> prioritySetting) {
         int priority = prioritySetting.get().priority;
         return priority >= 0 && newTarget != null && priority >= this.getPriority(target) ? newTarget : target;
     }
@@ -679,33 +676,29 @@ public class AutoMine extends Module {
     }
 
     private void updateMining() {
-        if (this.minePos == null || this.startedThisTick) return;
+        if (this.minePos != null && !this.startedThisTick) {
+            boolean holding = this.itemMinedCheck(Managers.PACKET.getStack());
+            int slot = this.findBestSlot(
+                            stack -> BlockUtils.getBlockBreakingDelta(
+                                    this.minePos, stack, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
+                            )
+                    )
+                    .slot();
+            ItemStack bestStack = holding ? Managers.PACKET.getStack() : BlackOut.mc.player.getInventory().getStack(slot);
+            if (this.ncpProgress.get()) {
+                this.minedFor++;
+            } else {
+                this.progress = this.progress
+                        + BlockUtils.getBlockBreakingDelta(
+                        this.minePos, bestStack, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
+                );
+            }
 
-        FindResult best = this.findBestSlot(stack ->
-                BlockUtils.getBlockBreakingDelta(
-                        stack, this.ncpState(), this.minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
-                )
-        );
-
-        ItemStack bestStack = (best.slot() >= 0 && best.slot() < BlackOut.mc.player.getInventory().size())
-                ? BlackOut.mc.player.getInventory().getStack(best.slot())
-                : ItemStack.EMPTY;
-
-        if (this.ncpProgress.get()) {
-            this.minedFor++;
-        } else {
-            this.progress += BlockUtils.getBlockBreakingDelta(
-                    bestStack, this.ncpState(), this.minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
-            );
-        }
-
-        boolean canBreak = this.minedCheck(bestStack);
-
-        if (canBreak) {
-            boolean holding = ItemStack.areEqual(Managers.PACKET.getStack(), bestStack);
-            this.mineEndUpdate(holding, best.slot());
-        } else if (this.almostMined(bestStack) && SettingUtils.endMineRot()) {
-            this.preRotate();
+            if (this.minedCheck(bestStack) && this.damageSyncCheck()) {
+                this.mineEndUpdate(holding, slot);
+            } else if (this.almostMined(bestStack) && this.shouldRotateEnd()) {
+                this.preRotate();
+            }
         }
     }
 
@@ -724,10 +717,7 @@ public class AutoMine extends Module {
 
     private void mineEndUpdate(boolean holding, int slot) {
         EndCrystalEntity crystalAt = this.endCrystalAt(this.crystalPos);
-
-        boolean shouldCheckPress = this.mineType == MineType.Manual;
-        
-        if ((!shouldCheckPress || !this.notPressed()) && !this.ignored(this.minePos)) {
+        if (!this.notPressed() && !this.ignored(this.minePos)) {
             switch (this.mineType) {
                 case Cev:
                     if (crystalAt == null) {
@@ -735,9 +725,12 @@ public class AutoMine extends Module {
                             return;
                         }
 
-                        this.placeCrystal(this.crystalPos.down());
+                        if (!this.placeCrystal(this.crystalPos.down())) {
+                            return;
+                        }
+
                         if (!this.antiAntiCev.get()) {
-                            // В обычном режиме разрушаем даже если кристалл не разместился
+                            return;
                         }
                     }
                     break;
@@ -747,9 +740,12 @@ public class AutoMine extends Module {
                             return;
                         }
 
-                        this.placeCrystal(this.crystalPos.down());
+                        if (!this.placeCrystal(this.crystalPos.down())) {
+                            return;
+                        }
+
                         if (!this.antiAntiTrapCev.get()) {
-                            // В обычном режиме разрушаем даже если кристалл не разместился
+                            return;
                         }
                     }
                     break;
@@ -762,15 +758,18 @@ public class AutoMine extends Module {
                             return;
                         }
 
-                        this.placeCrystal(this.crystalPos.down());
+                        if (!this.placeCrystal(this.crystalPos.down())) {
+                            return;
+                        }
+
                         if (!this.antiAntiSurroundCev.get()) {
-                            // В обычном режиме разрушаем даже если кристалл не разместился
+                            return;
                         }
                     }
                     break;
                 case AutoCity:
-                    if (crystalAt == null && this.placeCrystal.get()) {
-                        this.placeCrystal(this.crystalPos.down());
+                    if (crystalAt == null && this.placeCrystal.get() && !this.placeCrystal(this.crystalPos.down())) {
+                        return;
                     }
             }
 
@@ -787,7 +786,7 @@ public class AutoMine extends Module {
             if (!(this.getBlock(this.minePos) instanceof AirBlock)) {
                 if (SettingUtils.inMineRange(this.minePos)) {
                     Direction dir = SettingUtils.getPlaceOnDirection(this.minePos);
-                    if (dir != null) {
+                    if (dir != null && this.shouldRotateEnd()) {
                         this.rotateBlock(this.minePos, dir, this.getMineEndRotationVec(), RotationType.Mining, "mining");
                     }
                 }
@@ -796,57 +795,50 @@ public class AutoMine extends Module {
     }
 
     private void endMining(boolean holding, int slot) {
-        if (this.minePos == null || this.getBlock(this.minePos) instanceof AirBlock) return;
-        if (!SettingUtils.inMineRange(this.minePos)) return;
+        if (!(this.getBlock(this.minePos) instanceof AirBlock)) {
+            if (SettingUtils.inMineRange(this.minePos)) {
+                Direction dir = SettingUtils.getPlaceOnDirection(this.minePos);
+                if (dir != null) {
+                    if (!this.shouldRotateEnd() || this.rotateBlock(this.minePos, dir, this.getMineEndRotationVec(), RotationType.Mining, "mining")) {
+                        boolean switched = false;
+                        if (holding || (switched = this.pickaxeSwitch.get().swap(slot))) {
+                            this.sendSequenced(s -> new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, this.minePos, dir, s));
+                            SettingUtils.mineSwing(SwingSettings.MiningSwingState.End);
+                            if (this.mineEndSwing.get()) {
+                                this.clientSwing(this.mineHand.get(), Hand.MAIN_HAND);
+                            }
 
-        Direction dir = SettingUtils.getPlaceOnDirection(this.minePos);
-        if (dir == null) return;
+                            if (!this.packet.get()) {
+                                BlackOut.mc.world.setBlockState(this.minePos, Blocks.AIR.getDefaultState());
+                            }
 
-        if (!SettingUtils.endMineRot() || this.rotateBlock(this.minePos, dir, this.getMineEndRotationVec(), RotationType.Mining, "mining")) {
+                            Managers.BLOCK.set(this.minePos, Blocks.AIR, true, true);
+                            Managers.ENTITY.addSpawning(this.minePos);
+                            if (this.shouldInstant()) {
+                                this.prevMined = this.minePos;
+                            } else if (!this.manualRemine.get() || this.mineType != bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.MineType.Manual) {
+                                this.prevMined = null;
+                                this.started = false;
+                                this.minePos = null;
+                            } else if (this.fastRemine.get()) {
+                                this.start(this.minePos, true);
+                            } else {
+                                this.started = false;
+                            }
 
-            int currentSlot = BlackOut.mc.player.getInventory().selectedSlot;
-            boolean isSilent = this.pickaxeSwitch.get() == SwitchMode.Silent || this.pickaxeSwitch.get() == SwitchMode.PickSilent;
-            boolean switched = false;
+                            this.end("mining");
+                            if (this.crystalPos != null && this.shouldAttack()) {
+                                this.crystals.add(this.crystalPos, this.attackTime.get());
+                            }
 
-            if (!holding && slot != -1 && slot != currentSlot) {
-                switched = this.pickaxeSwitch.get().swap(slot);
-                if (!switched && this.pickaxeSwitch.get() != SwitchMode.Disabled) {
-                    Managers.PACKET.sendPacket(new UpdateSelectedSlotC2SPacket(slot));
-                    switched = true;
+                            if (switched) {
+                                this.pickaxeSwitch.get().swapBack();
+                            }
+                        }
+                    }
                 }
             }
-
-            this.sendSequenced(s -> new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, this.minePos, dir, s));
-
-            SettingUtils.mineSwing(SwingSettings.MiningSwingState.End);
-            if (this.mineEndSwing.get()) {
-                this.clientSwing(this.mineHand.get(), Hand.MAIN_HAND);
-            }
-
-            if (!this.packet.get()) {
-                BlackOut.mc.world.setBlockState(this.minePos, Blocks.AIR.getDefaultState());
-            }
-            Managers.BLOCK.set(this.minePos, Blocks.AIR, true, true);
-
-            if (switched && (isSilent || this.pickaxeSwitch.get() == SwitchMode.InvSwitch)) {
-                this.pickaxeSwitch.get().swapBack();
-            }
-
-            this.finalizeMining();
         }
-    }
-
-    private void finalizeMining() {
-        this.prevMined = this.shouldInstant() ? this.minePos : null;
-        if (!this.manualRemine.get() || this.mineType != MineType.Manual) {
-            this.started = false;
-            this.minePos = null;
-        } else if (this.fastRemine.get()) {
-            this.start(this.minePos, true);
-        } else {
-            this.started = false;
-        }
-        this.end("mining");
     }
 
     private boolean isMining(BlockPos pos) {
@@ -869,7 +861,7 @@ public class AutoMine extends Module {
     }
 
     public void onStart(BlockPos pos) {
-        if (this.mineType == MineType.Manual && pos.equals(this.minePos)) {
+        if (this.mineType == bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.MineType.Manual && pos.equals(this.minePos)) {
             if (!this.isMining(pos)) {
                 this.started = false;
             }
@@ -879,7 +871,7 @@ public class AutoMine extends Module {
             if (this.manualMine.get() && this.getBlock(pos) != Blocks.BEDROCK) {
                 this.started = false;
                 this.minePos = pos;
-                this.mineType = MineType.Manual;
+                this.mineType = bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.MineType.Manual;
                 this.crystalPos = null;
             }
         }
@@ -992,33 +984,29 @@ public class AutoMine extends Module {
     }
 
     private boolean itemMinedCheck(ItemStack stack) {
-        double delta = BlockUtils.getBlockBreakingDelta(stack, this.ncpState(), this.minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get());
-
-        if (delta <= 0) return false;
-
-        if (!this.ncpProgress.get()) {
-            return (this.progress * this.speed.get()) >= 1.0;
-        } else {
-            double threshold = Math.ceil(1.0 / (delta * this.speed.get()));
-            return (double) this.minedFor >= threshold;
-        }
+        return !this.ncpProgress.get()
+                ? this.progress * this.speed.get() >= 1.0
+                : this.minedFor * this.speed.get()
+                >= Math.ceil(
+                1.0
+                        / BlockUtils.getBlockBreakingDelta(
+                        this.minePos, stack, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() || this.onGroundSpoof.get()
+                )
+        );
     }
 
     private boolean minedCheck(ItemStack stack) {
         if (this.minePos.equals(this.prevMined)) {
             return true;
-        }
-        if (this.itemMinedCheck(stack)) {
+        } else if (this.itemMinedCheck(stack)) {
             return true;
-        }
+        } else {
+            if (this.onGroundSpoof.get()) {
+                Managers.PACKET.spoofOG(true);
+            }
 
-        if (this.currentProgress >= 1.0) {
-            return true;
+            return false;
         }
-        if (this.onGroundSpoof.get()) {
-            Managers.PACKET.spoofOG(true);
-        }
-        return false;
     }
 
     private boolean almostMined(ItemStack stack) {
@@ -1035,7 +1023,7 @@ public class AutoMine extends Module {
                     >= Math.ceil(
                     1.0
                             / BlockUtils.getBlockBreakingDelta(
-                            this.minePos, stack, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
+                            this.minePos, stack, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() || this.onGroundSpoof.get()
                     )
             );
         }
@@ -1141,6 +1129,15 @@ public class AutoMine extends Module {
         Both
     }
 
-    private record Target(BlockPos pos, BlockPos crystal, MineType type, int priority, PlayerEntity target) {
+    public enum RotationMode {
+        None,
+        StartOnly,
+        EndOnly,
+        Both
+    }
+
+    private record Target(BlockPos pos, BlockPos crystal,
+                          bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine.MineType type,
+                          int priority, PlayerEntity target) {
     }
 }
