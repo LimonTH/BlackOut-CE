@@ -109,17 +109,12 @@ public class AntiAim extends Module {
             yaw = BlackOut.mc.player.getYaw();
         }
 
-        switch (ignoreMode) {
-            case FullIgnore:
-            case IgnorePitch:
-                pitch = BlackOut.mc.player.getPitch();
-                break;
-            case Down:
-                pitch = 90.0;
-                break;
-            case Up:
-                pitch = -90.0;
-        }
+        pitch = switch (ignoreMode) {
+            case FullIgnore, IgnorePitch -> BlackOut.mc.player.getPitch();
+            case Down -> 90.0;
+            case Up -> -90.0;
+            default -> pitch;
+        };
 
         this.rotate((float) yaw, (float) pitch, RotationType.InstantOther, "");
     }

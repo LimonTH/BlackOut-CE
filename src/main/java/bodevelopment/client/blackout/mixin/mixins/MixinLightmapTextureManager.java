@@ -13,8 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinLightmapTextureManager {
     @Inject(method = "getBrightness", at = @At("HEAD"), cancellable = true)
     private static void onGetBrightness(DimensionType type, int lightLevel, CallbackInfoReturnable<Float> info) {
-        Brightness brightness = Brightness.getInstance();
-        if (brightness != null && brightness.enabled && brightness.mode.get() == Brightness.Mode.Gamma) {
+        if (Brightness.getInstance().enabled && Brightness.getInstance().mode.get() == Brightness.Mode.Gamma) {
             info.setReturnValue(1.0f);
         }
     }

@@ -50,6 +50,8 @@ public class Offhand extends Module {
             "Automatically switches to Gapples when you hold a sword and press Use.");
     private final Setting<Boolean> safeSwordGapple = this.sgItem.booleanSetting("Safe Sword Gapple", true,
             "Forces a Totem instead of a Gapple if you are in danger, even while holding a sword.", () -> this.swordGapple.get() && this.totemMode.get() != TotemMode.Never);
+    private final Setting<Integer> swordGappleHealth = this.sgItem.intSetting("Sword Gapple Health", 18, 0, 36, 1,
+            "Health threshold for allowing Gapple when holding sword with Safe Sword Gapple enabled.", () -> this.swordGapple.get() && this.safeSwordGapple.get());
 
     private final Setting<Boolean> onlyInInventory = this.sgSwitch.booleanSetting("Only In Inventory", false,
             "Only perform offhand switches while the inventory screen is open.");
@@ -252,8 +254,22 @@ public class Offhand extends Module {
                 && BlackOut.mc.options.useKey.isPressed()
                 && BlackOut.mc.player.getMainHandStack().getItem() instanceof SwordItem;
 
-        if (shouldSG && (!this.safeSwordGapple.get() || !this.inDanger())) {
-            return ItemMode.Gapple.predicate;
+        if (shouldSG) {
+            boolean allowGapple = true;
+            if (this.safeSwordGapple.get()) {
+                // Проверяем здоровье отдельно, а опасность от кристаллов отдельно
+                double health = BlackOut.mc.player.getHealth() + BlackOut.mc.player.getAbsorptionAmount();
+                if (health < this.swordGappleHealth.get()) {
+                    allowGapple = false;
+                }
+                // Проверяем опасность от кристаллов с текущим здоровьем (без порога)
+                if (this.isCrystalDangerous(health)) {
+                    allowGapple = false;
+                }
+            }
+            if (allowGapple) {
+                return ItemMode.Gapple.predicate;
+            }
         }
 
         TotemMode mode = this.totemMode.get();
@@ -281,11 +297,15 @@ public class Offhand extends Module {
     }
 
     private boolean inDanger() {
+        return this.isDangerous(this.getHealth());
+    }
+
+    private boolean isDangerous(double threshold) {
         if (Suicide.getInstance().enabled && Suicide.getInstance().offHand.get()) {
             return false;
         } else {
             double health = BlackOut.mc.player.getHealth() + BlackOut.mc.player.getAbsorptionAmount();
-            if (health <= this.getHealth()) {
+            if (health <= threshold) {
                 return true;
             } else {
                 for (Box box : this.prevPositions) {
