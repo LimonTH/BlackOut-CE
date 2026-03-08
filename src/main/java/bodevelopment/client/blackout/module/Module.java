@@ -53,12 +53,17 @@ public class Module extends RotationHelper {
     public boolean enabled = false;
     public long toggleTime = 0L;
 
+    /**
+     * @param name        The internal name of the module (e.g., "UltraMoans").
+     * @param description A brief explanation of what the module does.
+     * @param category    The sub-category for GUI organization (e.g., SubCategory.MISC).
+     * @param subscribe   If true, the module is registered to the EventBus automatically.
+     */
     public Module(String name, String description, SubCategory category, boolean subscribe) {
         this.name = name;
         this.description = description;
         this.category = category;
         this.set(this);
-
         this.displayName = this.sgModule.stringSetting("Name", name, "The internal name used for this module in the interface.");
         this.bind = (KeyBindSetting) Settings.keySetting("Bind", "The keyboard key assigned to toggle this module.", null);
         this.bindMode = this.sgModule.enumSetting("Bind Mode", BindMode.Toggle, "Determines if the module toggles on press or stays active only while holding the key.");
