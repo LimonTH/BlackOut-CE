@@ -51,7 +51,7 @@ public abstract class MixinChatHud implements IChatHud {
         this.lastSpamCount = 1;
         this.originalContent = message;
 
-        if (!antiSpam.enabled) return message;
+        if (!antiSpam.enabled || this.addedId != -1) return message;
 
         MutableInt highest = new MutableInt(0);
         boolean found = false;
@@ -90,15 +90,11 @@ public abstract class MixinChatHud implements IChatHud {
     private void onAddVisibleTail(ChatHudLine line, CallbackInfo ci) {
         if (line == null) return;
 
-        for (ChatHudLine.Visible visible : this.visibleMessages) {
-            IVisible customVisible = (IVisible) (Object) visible;
-            try {
-                if (customVisible.blackout_Client$messageEquals(line)) {
-                    customVisible.blackout_Client$set(this.addedId);
-                    customVisible.blackout_Client$setLine(line);
-                }
-            } catch (NullPointerException ignored) {
-            }
+        if (!this.visibleMessages.isEmpty()) {
+            ChatHudLine.Visible lastVisible = this.visibleMessages.getFirst();
+            IVisible customVisible = (IVisible) (Object) lastVisible;
+            customVisible.blackout_Client$set(this.addedId);
+            customVisible.blackout_Client$setLine(line);
         }
     }
 }
