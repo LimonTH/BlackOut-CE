@@ -20,7 +20,7 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.EnchantmentNames;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.PlayerListEntry;
@@ -128,151 +128,157 @@ public class Nametags extends Module {
         }
     }
 
+    // TODO: ПЕРЕКРЫВАЕТ СВОИМ РЕНДЕРОМ ВСЕ ЛЮБЫЕ ЭЛЕМЕНТЫ HUD, КРОМЕ ПРЕДМЕТОВ
     @Event
     public void onRender(RenderEvent.Hud.Post event) {
-        if (BlackOut.mc.world != null && BlackOut.mc.player != null) {
-            GlStateManager._disableDepthTest();
-            GlStateManager._enableBlend();
-            GlStateManager._disableCull();
-            this.stack.push();
-            RenderUtils.unGuiScale(this.stack);
-            this.entities.forEach(entity -> this.renderNameTag(event.tickDelta, entity));
-            this.stack.pop();
-        }
+        if (BlackOut.mc.world == null || BlackOut.mc.player == null) return;
+
+        RenderSystem.disableDepthTest();
+        RenderSystem.depthMask(false);
+
+        this.stack.push();
+        RenderUtils.unGuiScale(this.stack);
+        this.stack.translate(0, 0, RenderLayer.NAMETAGS);
+
+        this.entities.forEach(entity -> this.renderNameTag(event.tickDelta, entity));
+        this.stack.pop();
+
+        RenderSystem.enableDepthTest();
+        RenderSystem.depthMask(true);
+        RenderSystem.enableCull();
     }
 
     public void renderNameTag(double tickDelta, Entity entity) {
         double x = MathHelper.lerp(tickDelta, entity.prevX, entity.getX());
         double y = MathHelper.lerp(tickDelta, entity.prevY, entity.getY());
         double z = MathHelper.lerp(tickDelta, entity.prevZ, entity.getZ());
-        float d = (float) BlackOut.mc.gameRenderer.getCamera().getPos().subtract(x, y, z).length();
-        float s = this.getScale(d);
-        this.stack.push();
-        Vec2f f = RenderUtils.getCoords(x, y + entity.getBoundingBox().getLengthY() + this.yOffset.get(), z, true);
-        if (f == null) {
-            this.stack.pop();
-        } else {
-            this.stack.translate(f.x, f.y, 0.0F);
-            this.stack.scale(s, s, s);
-            this.components.clear();
-            Color color1;
-            if (entity instanceof PlayerEntity && Managers.FRIENDS.isFriend((PlayerEntity) entity)) {
-                color1 = this.friendColor.get().getColor();
-            } else {
-                color1 = this.txt.get().getColor();
-            }
 
-            this.components.add(new Component(this.nameMode.get().getName(entity), color1));
-            if (entity instanceof ItemEntity itemEntity) {
-                int count = itemEntity.getStack().getCount();
-                if (count > 1) {
-                    this.components.add(new Component(count + "x", Color.WHITE));
-                }
+        Vec2f coords = RenderUtils.getCoords(x, y + entity.getBoundingBox().getLengthY() + this.yOffset.get(), z, true);
+        if (coords == null) return;
+
+        float distance = (float) BlackOut.mc.gameRenderer.getCamera().getPos().subtract(x, y, z).length();
+        float s = this.getScale(distance);
+
+        this.stack.push();
+        this.stack.translate(coords.x, coords.y, 0.0F);
+        this.stack.scale(s, s, s);
+
+        this.components.clear();
+        Color mainColor = (entity instanceof PlayerEntity && Managers.FRIENDS.isFriend((PlayerEntity) entity))
+                ? this.friendColor.get().getColor() : this.txt.get().getColor();
+
+        String name = this.nameMode.get().getName(entity).replaceAll("§.", "");
+        this.components.add(new Component(name, mainColor));
+
+        if (entity instanceof ItemEntity item) {
+            if (item.getStack().getCount() > 1) this.components.add(new Component(item.getStack().getCount() + "x", Color.WHITE));
+        }
+
+        if (entity instanceof AbstractClientPlayerEntity player) {
+            if (this.ping.get()) {
+                PlayerListEntry entry = BlackOut.mc.getNetworkHandler().getPlayerListEntry(player.getUuid());
+                if (entry != null) this.components.add(new Component(entry.getLatency() + "ms", mainColor));
             }
+            StatsManager.TrackerData stats = Managers.STATS.getStats(player);
+            if (this.pops.get() && stats != null && stats.pops > 0) {
+                this.components.add(new Component("[" + stats.pops + "]", mainColor));
+            }
+        }
+
+        if (this.showId.get()) this.components.add(new Component("id:" + entity.getId(), mainColor));
+
+        if (entity instanceof LivingEntity living) {
+            float hpVal = living.getHealth() + living.getAbsorptionAmount();
+            this.components.add(new Component(String.format("%.1f", hpVal), BlackOut.FONT.getWidth("20.0"), this.getColor(living, hpVal)));
+        }
+
+        this.length = 0.0F;
+        this.components.forEach(c -> this.length += c.width);
+        this.length += (this.components.size() * 5 - 5);
+
+        if (this.armor.get() || this.hand.get()) {
+            this.stack.push();
+
+            this.stack.translate(0, 0, RenderLayer.OFFSET_MICRO * 2);
+            this.stack.translate(0.0, -16.0 * this.itemOffset.get() - 6.0, 0.0);
+
+            float wbg = 16.0F;
+            float sep = (this.itemSeparation.get().floatValue() - 1.0F) * 4.0F;
+            this.stack.scale(this.itemScale.get().floatValue(), this.itemScale.get().floatValue(), 1.0F);
+            this.stack.translate((wbg * 4.0F + sep * 3.0F) / -2.0F, -16.0F, 0.0F);
 
             if (entity instanceof AbstractClientPlayerEntity player) {
-                if (this.ping.get()) {
-                    PlayerListEntry entry = BlackOut.mc.getNetworkHandler().getPlayerListEntry(entity.getUuid());
-                    if (entry != null) {
-                        this.components.add(new Component(entry.getLatency() + "ms", color1));
-                    }
+                if (this.hand.get()) {
+                    this.renderHandItem(player.getMainHandStack(), wbg, sep, -1);
+                    this.renderHandItem(player.getOffHandStack(), wbg, sep, 4);
                 }
+                if (this.armor.get()) {
+                    for (int i = 0; i < 4; i++) {
+                        ItemStack is = player.getInventory().getArmorStack(3 - i);
+                        if (!is.isEmpty()) {
+                            RenderUtils.renderItem(this.stack, is, i * (wbg + sep), 0.0F, 16.0F, 0.0F, false);
 
-                StatsManager.TrackerData trackerData = Managers.STATS.getStats(player);
-                if (this.pops.get() && trackerData != null && trackerData.pops > 0) {
-                    this.components.add(new Component("[" + trackerData.pops + "]", color1));
-                }
-            }
-
-            if (this.showId.get()) {
-                this.components.add(new Component("id:" + entity.getId(), color1));
-            }
-
-            if (entity instanceof LivingEntity livingEntity) {
-                this.components
-                        .add(
-                                new Component(
-                                        String.format("%.1f", livingEntity.getHealth() + livingEntity.getAbsorptionAmount()),
-                                        BlackOut.FONT.getWidth("20.0"),
-                                        this.getColor(livingEntity, livingEntity.getHealth() + livingEntity.getAbsorptionAmount())
-                                )
-                        );
-            }
-
-            this.length = 0.0F;
-            this.offset = 0.0F;
-            this.components.forEach(component -> this.length = this.length + BlackOut.FONT.getWidth(component.text));
-            this.length = this.length + (this.components.size() * 5 - 5);
-            this.stack.push();
-            this.stack.translate(-this.length / 2.0F, -9.0F, 0.0F);
-            if (this.blur.get()) {
-                RenderUtils.drawLoadedBlur(
-                        "hudblur", this.stack, renderer -> renderer.rounded(-2.0F, -5.0F, this.length + 4.0F, 10.0F, this.rounded.get() ? 3.0F : 0.0F, 10)
-                );
-                Renderer.onHUDBlur();
-            }
-
-            this.background.render(this.stack, -2.0F, -5.0F, this.length + 4.0F, 10.0F, this.rounded.get() ? 3.0F : 0.0F, this.shadow.get() ? 3.0F : 0.0F);
-            this.components.forEach(component -> {
-                BlackOut.FONT.text(this.stack, component.text, 1.0F, this.offset, 0.0F, component.color, false, true);
-                this.offset = this.offset + (component.width + 5.0F);
-            });
-            this.stack.pop();
-            if (this.armor.get() || this.hand.get()) {
-                this.stack.push();
-                this.stack.translate(0.0, -16.0 * this.itemOffset.get() - 6.0, 0.0);
-                this.stack.push();
-                float wbg = 16.0F;
-                float separation = (this.itemSeparation.get().floatValue() - 1.0F) * 4.0F;
-                this.stack.scale(this.itemScale.get().floatValue(), this.itemScale.get().floatValue(), 1.0F);
-                this.stack.translate((wbg * 4.0F + separation * 3.0F) / -2.0F, -16.0F, 0.0F);
-                if (entity instanceof AbstractClientPlayerEntity livingEntity) {
-                    if (this.hand.get()) {
-                        this.renderHandItem(livingEntity.getMainHandStack(), wbg, separation, -1);
-                        this.renderHandItem(livingEntity.getOffHandStack(), wbg, separation, 4);
-                    }
-
-                    if (this.armor.get()) {
-                        for (int i = 0; i < 4; i++) {
-                            ItemStack itemStack = livingEntity.getInventory().getArmorStack(3 - i);
-
-                            if (!itemStack.isEmpty()) {
-                                RenderUtils.renderItem(this.stack, itemStack, i * (wbg + separation), 0.0F, 16.0F, RenderLayer.WORLD, false);
-                                boolean isUnbreakable = itemStack.get(DataComponentTypes.UNBREAKABLE) != null;
-
-                                if (!isUnbreakable && itemStack.isDamageable()) {
-                                    float maxDamage = (float) itemStack.getMaxDamage();
-                                    if (maxDamage > 0) {
-                                        int durabilityPercentage = Math.round((maxDamage - itemStack.getDamage()) * 100.0F / maxDamage);
-                                        this.drawItemText(durabilityPercentage + "%", wbg, separation, i);
-                                    }
-                                }
-                                this.drawEnchantments(itemStack, wbg, separation, i);
+                            this.stack.push();
+                            this.stack.translate(0, 0, RenderLayer.OFFSET_MICRO);
+                            if (is.isDamageable() && is.get(DataComponentTypes.UNBREAKABLE) == null) {
+                                int dur = Math.round((is.getMaxDamage() - is.getDamage()) * 100.0F / is.getMaxDamage());
+                                this.drawItemText(dur + "%", wbg, sep, i);
                             }
+                            this.drawEnchantments(is, wbg, sep, i);
+                            this.stack.pop();
                         }
                     }
                 }
-
-                this.stack.pop();
-                this.stack.pop();
             }
-
             this.stack.pop();
         }
+
+        this.stack.push();
+        this.stack.translate(-this.length / 2.0F, -9.0F, 0.0F);
+
+        if (this.blur.get()) {
+            RenderUtils.drawLoadedBlur("hudblur", this.stack, r ->
+                    r.rounded(-2.0F, -5.0F, this.length + 4.0F, 10.0F, this.rounded.get() ? 3.0F : 0.0F, 10));
+            Renderer.onHUDBlur();
+        }
+
+        RenderSystem.depthMask(false);
+        RenderSystem.disableDepthTest();
+
+        this.background.render(this.stack, -2.0F, -5.0F, this.length + 4.0F, 10.0F, this.rounded.get() ? 3.0F : 0.0F, this.shadow.get() ? 3.0F : 0.0F);
+
+        this.stack.push();
+        this.stack.translate(0, 0, RenderLayer.OFFSET_MICRO);
+        this.offset = 0.0F;
+        for (Component component : this.components) {
+            BlackOut.FONT.text(this.stack, component.text, 1.0F, this.offset, 0.0F, component.color, false, true);
+            this.offset += (component.width + 5.0F);
+        }
+        this.stack.pop();
+
+        this.stack.pop();
+        this.stack.pop();
     }
 
-    private void renderHandItem(ItemStack itemStack, float wbg, float separation, int i) {
-        if (!itemStack.isEmpty()) {
-            RenderUtils.renderItem(this.stack, itemStack, i * (wbg + separation), 0.0F, 16.0F, RenderLayer.WORLD, false);
-            if (itemStack.isStackable() || itemStack.getCount() > 1) {
-                this.drawItemText(String.valueOf(itemStack.getCount()), wbg, separation, i);
-            }
+    private void renderHandItem(ItemStack stack, float wbg, float sep, int i) {
+        if (stack.isEmpty()) return;
+        RenderUtils.renderItem(this.stack, stack, i * (wbg + sep), 0.0F, 16.0F, 0.0F, false);
 
-            this.drawEnchantments(itemStack, wbg, separation, i);
+        this.stack.push();
+        this.stack.translate(0, 0, RenderLayer.OFFSET_SMALL);
+        if (stack.getCount() > 1) {
+            this.drawItemText(String.valueOf(stack.getCount()), wbg, sep, i);
         }
+        this.drawEnchantments(stack, wbg, sep, i);
+        this.stack.pop();
     }
 
     private void drawItemText(String text, float wbg, float separation, int i) {
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.depthMask(false);
+        RenderSystem.disableDepthTest();
+
         BlackOut.FONT.text(this.stack, text, 0.6F, i * (wbg + separation) + wbg / 2.0F, 16.0F, this.txt.get().getRGB(), true, true);
     }
 
@@ -282,6 +288,8 @@ public class Nametags extends Module {
         if (!enchantsComponent.isEmpty() && this.drawEnchants.get()) {
             final int[] y = {0};
 
+            RenderSystem.depthMask(false);
+            RenderSystem.disableDepthTest();
             for (Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : enchantsComponent.getEnchantmentEntries()) {
                 RegistryEntry<Enchantment> enchantment = entry.getKey();
                 int level = entry.getIntValue();

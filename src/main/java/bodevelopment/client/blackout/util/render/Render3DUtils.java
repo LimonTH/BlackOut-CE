@@ -410,6 +410,7 @@ public class Render3DUtils {
         stack.multiply(invRotation);
 
         stack.translate((float)(pos.x - camPos.x), (float)(pos.y - camPos.y), (float)(pos.z - camPos.z));
+        stack.translate(0, 0, RenderLayer.WORLD);
 
         stack.multiply(camera.getRotation());
         stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0f));

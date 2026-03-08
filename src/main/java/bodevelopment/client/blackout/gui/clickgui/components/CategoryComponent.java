@@ -11,6 +11,7 @@ import bodevelopment.client.blackout.module.modules.client.GuiSettings;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.GuiRenderUtils;
+import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.MathHelper;
@@ -66,11 +67,11 @@ public class CategoryComponent extends Component {
                 float fogRadius = (float) GuiSettings.getInstance().selectorGlow.get() * 2.5F;
                 int fogColor = ColorUtils.withAlpha(barColor, (int) (animation * 60));
 
-                this.stack.translate(0, 0, 1.0);
+                this.stack.translate(0, 0, RenderLayer.OFFSET_SMALL);
                 float barY = rectY + (rectH - barHeight) / 2.0F;
                 RenderUtils.rounded(this.stack, this.x + 5.5F, barY, 0.5F, barHeight, 1.0F, fogRadius, fogColor, fogColor);
                 RenderUtils.rounded(this.stack, this.x + 5, barY, 1.5F, barHeight, 1.0F, 2.0F, ColorUtils.withAlpha(barColor, (int)(animation * 255)), ColorUtils.withAlpha(barColor, (int)(animation * 255)));
-                this.stack.translate(0, 0, -1.0);
+                this.stack.translate(0, 0, -RenderLayer.OFFSET_SMALL);
             }
         }
 

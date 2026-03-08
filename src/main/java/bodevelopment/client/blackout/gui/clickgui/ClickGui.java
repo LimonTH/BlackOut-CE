@@ -28,6 +28,7 @@ import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.GuiRenderUtils;
 import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.AnimUtils;
+import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.gui.DrawContext;
@@ -297,7 +298,7 @@ public class ClickGui extends Screen {
                 if (rectX + finalWidth + 25 > width) rectX = (float) mx - finalWidth - 25;
                 if (rectY + finalHeight + 25 > height) rectY = (float) my - finalHeight - 25;
 
-                this.stack.translate(0, 0, 900);
+                this.stack.translate(0, 0, RenderLayer.GUI_POPUP);
 
                 float smoothAlpha = descAlpha * descAlpha;
                 int alphaInt = (int) (smoothAlpha * 255);
