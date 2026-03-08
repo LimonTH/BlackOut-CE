@@ -291,6 +291,9 @@ public class HudEditor extends Screen {
             if (this.settings.getOpenedElement() != null) {
                 this.settings.setOpenedElement(null);
                 return true;
+            } else if (this.openedScreen != null) {
+                this.setScreen(null);
+                return true;
             }
         }
         return super.keyPressed(keyCode, scanCode, modifiers);

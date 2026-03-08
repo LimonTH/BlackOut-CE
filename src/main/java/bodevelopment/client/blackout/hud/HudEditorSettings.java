@@ -61,6 +61,7 @@ public class HudEditorSettings {
 
         if (this.openedElement != null) {
             stack.push();
+
             this.length = ModuleComponent.getLength(this.openedElement.settingGroups) + 30.0F;
 
             RenderUtils.rounded(this.stack, this.x, this.y, 275.0F, this.length - 5.0F, 5.0F, 30.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
