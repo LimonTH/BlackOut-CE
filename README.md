@@ -74,6 +74,7 @@ Since I am developing this project solo, any feedback or bug reports are highly 
 - `@OnlyDev нужны фиксы`
 - `AutoCrystal нужен бейз плейс =)`
 - `TODO в Nametags`
+- `При открытии CustomScreens в частности ColorScreen в HudEditor на него налаазиют предметы от HudElement-ов, с HudEditorSettings такого не происходит`
 
 ---
 
