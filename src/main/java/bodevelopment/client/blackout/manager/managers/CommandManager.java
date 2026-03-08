@@ -48,16 +48,16 @@ public class CommandManager extends Manager {
             try {
                 if (BlackOut.mc.player == null && !command.canUseOutsideWorld()) {
                     return String.format("[%s]%s This command can only be used in-game!",
-                            command.name, Formatting.RED);
+                            command.name, Formatting.RED.toString());
                 }
 
                 String respond = command.execute(Arrays.copyOfRange(args, 1, args.length));
-                return String.format("[%s]%s %s", command.name, Formatting.GRAY, respond);
+                return String.format("[%s]%s %s", command.name, Formatting.GRAY.toString(), respond);
 
             } catch (Exception e) {
                 BOLogger.warn("An error occurred while executing command " + Arrays.toString(args) + " : " + e);
                 return String.format("[%s]%s Error: %s",
-                        command.name, Formatting.RED, "An error occurred while executing command.");
+                        command.name, Formatting.RED.toString(), "An error occurred while executing command.");
             }
         } else {
             return null;

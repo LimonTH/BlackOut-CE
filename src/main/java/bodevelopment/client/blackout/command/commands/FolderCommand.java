@@ -21,7 +21,7 @@ public class FolderCommand extends Command {
             FileUtils.openDirectory(folder);
             return "Opening folder: " + folder.getName();
         } catch (Exception e) {
-            return String.format("Error: Could not open folder: " + e.getMessage(), Formatting.RED);
+            return String.format("Error: Could not open folder: " + e.getMessage(), Formatting.RED.toString());
         }
     }
 

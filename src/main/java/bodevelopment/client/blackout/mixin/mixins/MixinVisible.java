@@ -23,8 +23,11 @@ public class MixinVisible implements IVisible {
     }
 
     @Override
-    public boolean blackout_Client$messageEquals(ChatHudLine line) {
-        return this.line.equals(line);
+    public boolean blackout_Client$messageEquals(ChatHudLine other) {
+        if (this.line == null) {
+            return false;
+        }
+        return this.line.equals(other);
     }
 
     @Override

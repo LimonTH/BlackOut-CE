@@ -211,11 +211,9 @@ public class InvUtils {
 
     public static boolean invSwap(int slot) {
         if (slot < 0 || slot >= 36) return false;
-        // Используем текущий выбранный слот игрока
         int currentSlot = BlackOut.mc.player.getInventory().selectedSlot;
         clickSlot(slot, currentSlot, SlotActionType.SWAP);
         slots = new int[]{slot, currentSlot};
-        // Обновляем Managers.PACKET.slot, если он рассинхронизирован
         if (Managers.PACKET.slot != currentSlot) {
             Managers.PACKET.slot = currentSlot;
         }
@@ -224,11 +222,9 @@ public class InvUtils {
 
     public static boolean invSwapInstantly(int slot) {
         if (slot < 0 || slot >= 36) return false;
-        // Используем текущий выбранный слот игрока
         int currentSlot = BlackOut.mc.player.getInventory().selectedSlot;
         clickSlotInstantly(slot, currentSlot, SlotActionType.SWAP);
         slots = new int[]{slot, currentSlot};
-        // Обновляем Managers.PACKET.slot, если он рассинхронизирован
         if (Managers.PACKET.slot != currentSlot) {
             Managers.PACKET.slot = currentSlot;
         }
@@ -265,14 +261,12 @@ public class InvUtils {
 
     private static boolean syncSlot(boolean instant) {
         int i = BlackOut.mc.player.getInventory().selectedSlot;
-        // Всегда отправляем пакет, если слот изменился
         if (i != Managers.PACKET.slot) {
             if (instant) {
                 Managers.PACKET.sendInstantly(new UpdateSelectedSlotC2SPacket(i));
             } else {
                 Managers.PACKET.sendPacket(new UpdateSelectedSlotC2SPacket(i));
             }
-            // Обновляем состояние сразу после отправки
             Managers.PACKET.slot = i;
             return true;
         }
