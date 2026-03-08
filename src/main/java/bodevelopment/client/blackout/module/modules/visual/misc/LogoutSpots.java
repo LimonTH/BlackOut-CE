@@ -16,6 +16,7 @@ import bodevelopment.client.blackout.randomstuff.timers.TimerMap;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
+import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import bodevelopment.client.blackout.util.render.WireframeRenderer;
 import com.mojang.authlib.GameProfile;
@@ -330,7 +331,7 @@ public class LogoutSpots extends Module {
             ItemStack stack = item.itemStack();
 
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alphaMulti);
-            RenderUtils.renderItem(this.matrixStack, stack, 0.0F, 0.0F, 16.0F, 500.0F, false);
+            RenderUtils.renderItem(this.matrixStack, stack, 0.0F, 0.0F, 16.0F, RenderLayer.WORLD, false);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
             if (item.armor()) {
