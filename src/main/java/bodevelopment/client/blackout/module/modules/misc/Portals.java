@@ -8,7 +8,7 @@ public class Portals extends Module {
     private static Portals INSTANCE;
 
     public Portals() {
-        super("Portals", "Allows interacting with GUIs and prevents the automatic closing of screens while standing inside a portal.", SubCategory.MISC, true);
+        super("Portals", "Allows interacting with GUIs and prevents the automatic closing of screens while standing inside a portal.", SubCategory.MISC, false);
         INSTANCE = this;
     }
 
