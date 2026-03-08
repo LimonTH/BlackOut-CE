@@ -85,7 +85,7 @@ public class RenderUtils {
         Matrix4f matrix = stack.peek().getPositionMatrix();
         float absX = matrix.get(3, 0) + x * matrix.get(0, 0);
         float absY = matrix.get(3, 1) + y * matrix.get(1, 1);
-        float absZ = matrix.get(3, 2); // Получаем текущий Z
+        float absZ = matrix.get(3, 2);
         float hudScale = matrix.get(0, 0);
 
         DrawContext context = new DrawContext(BlackOut.mc, BlackOut.mc.getBufferBuilders().getEntityVertexConsumers());

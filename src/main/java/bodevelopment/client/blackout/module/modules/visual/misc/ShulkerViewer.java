@@ -78,7 +78,7 @@ public class ShulkerViewer extends Module {
         RenderSystem.disableDepthTest();
 
         stack.push();
-        stack.translate(0, 0, 1000.0F);
+        stack.translate(0, 0, RenderLayer.GUI);
 
         if (shadow.get()) {
             RenderUtils.roundedShadow(stack, posX, posY, width, height, round.get().floatValue(), 15.0F, new Color(0, 0, 0, 100).getRGB());

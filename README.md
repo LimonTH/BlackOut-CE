@@ -73,6 +73,7 @@ Since I am developing this project solo, any feedback or bug reports are highly 
 - `Создать настройки локализации (RUS/ENG)`
 - `@OnlyDev нужны фиксы`
 - `AutoCrystal нужен бейз плейс =)`
+- `TODO в Nametags`
 
 ---
 

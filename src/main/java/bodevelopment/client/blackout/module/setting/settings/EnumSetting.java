@@ -6,6 +6,7 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
+import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -54,7 +55,7 @@ public class EnumSetting<T extends Enum<?>> extends Setting<T> {
         float listHeight = (this.values.length - 1) * entryHeight;
 
         this.stack.push();
-        this.stack.translate(0, 0, 800);
+        this.stack.translate(0, 0, RenderLayer.GUI_ELEMENT);
 
         RenderUtils.rounded(this.stack, listX, listY, listWidth, listHeight, 4.0F, 8.0F, new Color(0, 0, 0, 200).getRGB(), ColorUtils.SHADOW100I);
         RenderUtils.rounded(this.stack, listX, listY, listWidth, listHeight, 4.0F, 0.0F, new Color(20, 20, 20, 255).getRGB(), ColorUtils.SHADOW100I);
