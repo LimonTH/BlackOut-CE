@@ -19,8 +19,7 @@ public class MixinEntityRenderDispatcher {
 
     @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/entity/EntityRenderDispatcher;renderShadows:Z", opcode = 180))
     private boolean shouldRenderShadows(EntityRenderDispatcher instance) {
-        Brightness brightness = Brightness.getInstance();
-        return (!brightness.enabled || brightness.mode.get() != Brightness.Mode.Gamma) && this.renderShadows;
+        return Brightness.getInstance().enabled && Brightness.getInstance().mode.get() != Brightness.Mode.Gamma && this.renderShadows;
     }
 
     @Redirect(
