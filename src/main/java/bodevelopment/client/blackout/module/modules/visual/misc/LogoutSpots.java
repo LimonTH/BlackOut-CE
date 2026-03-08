@@ -51,8 +51,9 @@ public class LogoutSpots extends Module {
     private final Setting<RenderShape> renderShape = this.sgRendering.enumSetting("Bounding Shape", RenderShape.Full, "Defines the geometric style of the spot's highlight.");
     private final Setting<BlackOutColor> lineColor = this.sgRendering.colorSetting("Outline Color", new BlackOutColor(255, 0, 0, 255), "The color of the wireframe edges for the logout spot.");
     private final Setting<BlackOutColor> sideColor = this.sgRendering.colorSetting("Surface Color", new BlackOutColor(255, 0, 0, 50), "The color applied to the polygon faces of the logout spot.");
-    private final Setting<Double> maxTime = this.sgRendering.doubleSetting("Retention Period", 60.0, 0.0, 100.0, 1.0, "How long in seconds the spot remains fully visible.");
-    private final Setting<Double> fadeTime = this.sgRendering.doubleSetting("Dissipation Period", 20.0, 0.0, 100.0, 1.0, "The duration of the alpha-out transition after the retention period ends.");
+    private final Setting<Boolean> infinite = this.sgRendering.booleanSetting("Infinite", false, "Spots will never disappear on their own.");
+    private final Setting<Double> maxTime = this.sgRendering.doubleSetting("Retention Period", 60.0, 0.0, 3600.0, 1.0, "How long in seconds the spot remains fully visible.", () -> !this.infinite.get());
+    private final Setting<Double> fadeTime = this.sgRendering.doubleSetting("Dissipation Period", 20.0, 0.0, 120.0, 1.0, "The duration of the alpha-out transition after the retention period ends.", () -> !this.infinite.get());
     private final Setting<Double> infoScale = this.sgRendering.doubleSetting("HUD Scale", 1.0, 0.0, 2.0, 0.1, "The size multiplier for the floating information labels.");
 
     private final Setting<Boolean> name = this.sgInfo.booleanSetting("Display Username", true, "Shows the player's name above their logout spot.");
@@ -192,6 +193,8 @@ public class LogoutSpots extends Module {
             }
             event.stack.pop();
 
+            if (this.infinite.get()) return false;
+
             long lifetime = (long) ((this.maxTime.get() + this.fadeTime.get()) * 1000.0);
             return (System.currentTimeMillis() - spot.logTime) > lifetime;
         });
@@ -232,11 +235,15 @@ public class LogoutSpots extends Module {
     }
 
     private void setAlpha(Spot spot) {
-        float time = (float) (System.currentTimeMillis() - spot.logTime) / 1000.0F;
-        if (time <= this.maxTime.get()) {
+        if (this.infinite.get()) {
             this.alphaMulti = 1.0F;
         } else {
-            this.alphaMulti = 1.0F - (time - this.maxTime.get().floatValue()) / this.fadeTime.get().floatValue();
+            float time = (float) (System.currentTimeMillis() - spot.logTime) / 1000.0F;
+            if (time <= this.maxTime.get()) {
+                this.alphaMulti = 1.0F;
+            } else {
+                this.alphaMulti = 1.0F - (time - this.maxTime.get().floatValue()) / this.fadeTime.get().floatValue();
+            }
         }
 
         if (spot.seen) {
