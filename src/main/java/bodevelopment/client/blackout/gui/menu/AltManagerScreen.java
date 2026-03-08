@@ -5,6 +5,7 @@ import bodevelopment.client.blackout.gui.TextField;
 import bodevelopment.client.blackout.helpers.ScrollHelper;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.client.MainMenuSettings;
+import bodevelopment.client.blackout.randomstuff.mainmenu.AltHelpRenderer;
 import bodevelopment.client.blackout.util.SoundUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import net.minecraft.client.gui.DrawContext;
@@ -26,6 +27,7 @@ public class AltManagerScreen extends Screen {
     private float delta;
     private float altLength = 0.0F;
     private boolean isExiting = false;
+    private final AltHelpRenderer helpRenderer = new AltHelpRenderer();
 
     private final ScrollHelper scroll = new ScrollHelper(
             0.5F,
@@ -74,6 +76,8 @@ public class AltManagerScreen extends Screen {
         this.renderCurrentSession(stack);
         this.renderAccounts(stack);
         this.renderTextField(stack);
+
+        this.helpRenderer.render(stack, this.mx, this.my);
 
         stack.pop();
 
