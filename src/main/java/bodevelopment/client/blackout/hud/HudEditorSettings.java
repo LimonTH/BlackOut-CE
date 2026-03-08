@@ -9,6 +9,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.settings.EnumSetting;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
+import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.MathHelper;
@@ -63,7 +64,6 @@ public class HudEditorSettings {
             stack.push();
 
             this.length = ModuleComponent.getLength(this.openedElement.settingGroups) + 30.0F;
-
             RenderUtils.rounded(this.stack, this.x, this.y, 275.0F, this.length - 5.0F, 5.0F, 30.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
 
             if (this.mx >= this.x && this.mx <= this.x + width && this.my >= this.y && this.my <= this.y + 30.0F) {
@@ -365,7 +365,7 @@ public class HudEditorSettings {
         }
 
         this.stack.push();
-        this.stack.translate(0, 0, 900);
+        this.stack.translate(0, 0, RenderLayer.UI);
 
         float smoothAlpha = descAlpha * descAlpha;
         int alphaInt = (int) (smoothAlpha * 255);

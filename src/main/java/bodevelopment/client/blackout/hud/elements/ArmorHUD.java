@@ -8,6 +8,7 @@ import bodevelopment.client.blackout.module.setting.multisettings.BackgroundMult
 import bodevelopment.client.blackout.module.setting.multisettings.RoundedColorMultiSetting;
 import bodevelopment.client.blackout.module.setting.multisettings.TextColorMultiSetting;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
+import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.util.math.MatrixStack;
@@ -83,7 +84,7 @@ public class ArmorHUD extends HudElement {
 
             if (itemStack.isEmpty()) continue;
 
-            RenderUtils.renderItem(stack, itemStack, xOffset, 1.0F, 16.0F, -500.0F, false);
+            RenderUtils.renderItem(stack, itemStack, xOffset, 1.0F, 16.0F, RenderLayer.HUD, false);
 
             if (itemStack.isDamageable()) {
                 float durabilityValue = (float) (itemStack.getMaxDamage() - itemStack.getDamage()) / itemStack.getMaxDamage();

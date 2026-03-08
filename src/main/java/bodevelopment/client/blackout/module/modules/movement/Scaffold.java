@@ -24,6 +24,7 @@ import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.AnimUtils;
+import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -213,7 +214,7 @@ public class Scaffold extends MoveUpdateModule {
                     );
                 }
 
-                RenderUtils.renderItem(this.stack, itemStack, 3.0F, 3.0F, 24.0F, 100.0F, false);
+                RenderUtils.renderItem(this.stack, itemStack, 3.0F, 3.0F, 24.0F, RenderLayer.HUD, false);
                 BlackOut.FONT.text(this.stack, text, textScale, 26.0F, 1.0F, this.customColor.get().getColor(), false, false);
                 Renderer.setAlpha(prevAlpha);
                 this.stack.pop();

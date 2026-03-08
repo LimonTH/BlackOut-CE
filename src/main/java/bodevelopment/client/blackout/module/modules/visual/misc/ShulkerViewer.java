@@ -9,6 +9,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
+import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.block.ShulkerBoxBlock;
@@ -96,7 +97,7 @@ public class ShulkerViewer extends Module {
             float itemX = posX + (5 + col * 18) * s;
             float itemY = posY + headerHeight + (2 + row * 18) * s;
 
-            RenderUtils.renderItem(stack, itemStack, itemX, itemY, 16.0F * s, 500.0F, true);
+            RenderUtils.renderItem(stack, itemStack, itemX, itemY, 16.0F * s, RenderLayer.WORLD, true);
         }
 
         stack.pop();
