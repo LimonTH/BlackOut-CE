@@ -25,28 +25,28 @@ public class ToggleCommand extends Command {
             if (module == null) {
                 Module similar = this.similar(idkRurAmogus);
                 return similar != null
-                        ? String.format("%s couldn't find %s from modules, did you mean %s", Formatting.RED, built, this.moduleNameString(similar))
-                        : String.format("%s couldn't find %s from modules", Formatting.RED, built);
+                        ? Formatting.RED.toString() + String.format("couldn't find %s from modules, did you mean %s", built, this.moduleNameString(similar))
+                        : Formatting.RED.toString() + String.format("couldn't find %s from modules", built);
             }
 
             if (module.toggleable()) {
                 if (this.lowerCase.equals("enable")) {
                     if (module.enabled) {
-                        return Formatting.YELLOW + this.moduleNameString(module) + " is already enabled!";
+                        return Formatting.YELLOW.toString() + this.moduleNameString(module) + " is already enabled!";
                     }
                     module.enable();
                 } else if (this.lowerCase.equals("disable")) {
                     if (!module.enabled) {
-                        return Formatting.YELLOW + this.moduleNameString(module) + " is already disabled!";
+                        return Formatting.YELLOW.toString() + this.moduleNameString(module) + " is already disabled!";
                     }
                     module.disable();
                 } else {
                     module.toggle();
                 }
 
-                return this.color + this.lowerCase + "d " + Formatting.WHITE + this.moduleNameString(module);
+                return this.color + this.lowerCase + "d " + Formatting.WHITE.toString() + this.moduleNameString(module);
             } else {
-                return String.format("%s%s%s is not toggleable", Formatting.GRAY, this.moduleNameString(module), Formatting.RED);
+                return String.format("%s%s%s is not toggleable", Formatting.GRAY.toString(), this.moduleNameString(module), Formatting.RED.toString());
             }
         } else {
             return this.format;

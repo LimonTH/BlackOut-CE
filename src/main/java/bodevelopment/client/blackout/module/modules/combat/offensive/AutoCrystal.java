@@ -481,7 +481,7 @@ public class AutoCrystal extends Module {
     }
 
     private void debug(String string, String value) {
-        ChatUtils.addMessage(string + " " + Formatting.AQUA + value);
+        ChatUtils.addMessage(string + " " + Formatting.AQUA.toString() + value);
     }
 
     private void updateAntiWeakness() {

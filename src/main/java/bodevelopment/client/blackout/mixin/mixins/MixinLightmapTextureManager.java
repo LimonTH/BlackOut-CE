@@ -22,7 +22,6 @@ public class MixinLightmapTextureManager {
     @ModifyVariable(method = "update", at = @At(value = "STORE", ordinal = 0), index = 15)
     private float modifyLightmapBrightness(float value) {
         Brightness brightness = Brightness.getInstance();
-
         if (brightness.enabled && brightness.mode.get() == Brightness.Mode.Luminance) {
             float minLight = brightness.luminanceLevel.get() / 15.0F;
             return Math.max(value, minLight);

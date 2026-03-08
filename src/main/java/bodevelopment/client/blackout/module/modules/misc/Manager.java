@@ -176,7 +176,7 @@ public class Manager extends Module {
     private void doChestSwap() {
         this.currentlyElytra = !this.currentlyElytra;
         this.sendNotification(
-                this.getDisplayName() + " " + Formatting.BLUE + " changed to " + (this.currentlyElytra ? "Elytra" : "Chestplate"),
+                this.getDisplayName() + " " + Formatting.BLUE.toString() + " changed to " + (this.currentlyElytra ? "Elytra" : "Chestplate"),
                 this.getDisplayName() + "  changed to " + (this.currentlyElytra ? "Elytra" : "Chestplate"),
                 "Chest Swap",
                 Notifications.Type.Info,

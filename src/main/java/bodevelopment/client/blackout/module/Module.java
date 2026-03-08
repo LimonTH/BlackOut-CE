@@ -114,7 +114,7 @@ public class Module extends RotationHelper {
             this.toggleTime = System.currentTimeMillis();
             if (sendNotification) {
                 this.sendNotification(
-                        message == null ? this.getDisplayName() + Formatting.GREEN + " Enabled" : " " + message,
+                        message == null ? this.getDisplayName() + Formatting.GREEN.toString() + " Enabled" : " " + message,
                         message == null ? "Enabled " + this.getDisplayName() : message,
                         "Module Toggle",
                         Notifications.Type.Enable,
@@ -155,7 +155,7 @@ public class Module extends RotationHelper {
             this.toggleTime = System.currentTimeMillis();
             if (sendNotification) {
                 this.sendNotification(
-                        message == null ? this.getDisplayName() + Formatting.RED + " OFF" : " " + message,
+                        message == null ? this.getDisplayName() + Formatting.RED.toString() + " OFF" : " " + message,
                         message == null ? "Disabled " + this.getDisplayName() : message,
                         "Module Toggle",
                         type,
