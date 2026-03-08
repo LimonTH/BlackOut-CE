@@ -15,10 +15,17 @@ public class MixinBlockModelRenderer {
             }
 
             if (Brightness.getInstance().mode.get() == Brightness.Mode.Luminance) {
-                return Math.max(light, Brightness.luminanceValue);
+                int sky = (light >> 20) & 15;
+                int block = (light >> 4) & 15;
+
+                int lLevel = Brightness.getInstance().luminanceLevel.get();
+
+                int newSky = Math.max(sky, lLevel);
+                int newBlock = Math.max(block, lLevel);
+
+                return (newSky << 20) | (newBlock << 4);
             }
         }
-
         return light;
     }
 }

@@ -47,7 +47,8 @@ public class Brightness extends Module {
     public void onTick(TickEvent.Pre event) {
         if (BlackOut.mc.player == null || BlackOut.mc.world == null) return;
 
-        luminanceValue = (this.luminanceLevel.get() * 16) << 16;
+        int level = this.luminanceLevel.get();
+        luminanceValue = (level << 4) | (level << 20);
         if (this.mode.get() == Mode.Effect) {
             BlackOut.mc.player.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, StatusEffectInstance.INFINITE, StatusEffectInstance.MAX_AMPLIFIER, false, false));
         } else {
