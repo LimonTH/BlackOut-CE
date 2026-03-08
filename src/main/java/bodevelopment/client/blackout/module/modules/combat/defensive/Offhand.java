@@ -40,44 +40,26 @@ public class Offhand extends Module {
     private final SettingGroup sgHealth = this.addGroup("Health");
     private final SettingGroup sgThreading = this.addGroup("Threading");
 
-    private final Setting<TotemMode> totemMode = this.sgItem.enumSetting("Totem Mode", TotemMode.Always,
-            "When to prioritize holding a Totem of Undying.");
-    private final Setting<ItemMode> primary = this.sgItem.enumSetting("Primary", ItemMode.Crystal,
-            "Default item to hold in offhand when you are safe.", () -> this.totemMode.get() != TotemMode.Always);
-    private final Setting<ItemMode> secondary = this.sgItem.enumSetting("Secondary", ItemMode.Gapple,
-            "Fall-back item if the primary item is out of stock.", () -> this.totemMode.get() != TotemMode.Always && this.primary.get() != ItemMode.Nothing);
-    private final Setting<Boolean> swordGapple = this.sgItem.booleanSetting("Sword Gapple", true,
-            "Automatically switches to Gapples when you hold a sword and press Use.");
-    private final Setting<Boolean> safeSwordGapple = this.sgItem.booleanSetting("Safe Sword Gapple", true,
-            "Forces a Totem instead of a Gapple if you are in danger, even while holding a sword.", () -> this.swordGapple.get() && this.totemMode.get() != TotemMode.Never);
-    private final Setting<Integer> swordGappleHealth = this.sgItem.intSetting("Sword Gapple Health", 18, 0, 36, 1,
-            "Health threshold for allowing Gapple when holding sword with Safe Sword Gapple enabled.", () -> this.swordGapple.get() && this.safeSwordGapple.get());
+    private final Setting<TotemMode> totemMode = this.sgItem.enumSetting("Totem Mode", TotemMode.Always, "When to prioritize holding a Totem of Undying.");
+    private final Setting<ItemMode> primary = this.sgItem.enumSetting("Primary", ItemMode.Crystal, "Default item to hold in offhand when you are safe.", () -> this.totemMode.get() != TotemMode.Always);
+    private final Setting<ItemMode> secondary = this.sgItem.enumSetting("Secondary", ItemMode.Gapple, "Fall-back item if the primary item is out of stock.", () -> this.totemMode.get() != TotemMode.Always && this.primary.get() != ItemMode.Nothing);
+    private final Setting<Boolean> swordGapple = this.sgItem.booleanSetting("Sword Gapple", true, "Automatically switches to Gapples when you hold a sword and press Use.");
+    private final Setting<Boolean> safeSwordGapple = this.sgItem.booleanSetting("Safe Sword Gapple", true, "Forces a Totem instead of a Gapple if you are in danger, even while holding a sword.", () -> this.swordGapple.get() && this.totemMode.get() != TotemMode.Never);
+    private final Setting<Integer> swordGappleHealth = this.sgItem.intSetting("Sword Gapple Health", 18, 0, 36, 1, "Health threshold for allowing Gapple when holding sword with Safe Sword Gapple enabled.", () -> this.swordGapple.get() && this.safeSwordGapple.get());
 
-    private final Setting<Boolean> onlyInInventory = this.sgSwitch.booleanSetting("Only In Inventory", false,
-            "Only perform offhand switches while the inventory screen is open.");
-    private final Setting<SwitchMode> switchMode = this.sgSwitch.enumSetting("Switch Mode", SwitchMode.FClick,
-            "The packet/click method for swapping items. FClick is usually the fastest.");
-    private final Setting<Double> cooldown = this.sgSwitch.doubleSetting("Cooldown", 0.2, 0.0, 1.0, 0.01,
-            "Delay between offhand swaps to prevent inventory desync/ghost items.");
+    private final Setting<Boolean> onlyInInventory = this.sgSwitch.booleanSetting("Only In Inventory", false, "Only perform offhand switches while the inventory screen is open.");
+    private final Setting<SwitchMode> switchMode = this.sgSwitch.enumSetting("Switch Mode", SwitchMode.FClick, "The packet/click method for swapping items. FClick is usually the fastest.");
+    private final Setting<Double> cooldown = this.sgSwitch.doubleSetting("Cooldown", 0.2, 0.0, 1.0, 0.01, "Delay between offhand swaps to prevent inventory desync/ghost items.");
 
-    private final Setting<Integer> latency = this.sgHealth.intSetting("Latency", 0, 0, 10, 1,
-            "Compensates for server lag by checking your previous positions for damage.");
-    private final Setting<Boolean> prediction = this.sgHealth.booleanSetting("Prediction", true,
-            "Calculates potential damage based on your predicted movement.");
-    private final Setting<Integer> hp = this.sgHealth.intSetting("Totem Health", 14, 0, 36, 1,
-            "Health threshold to switch to a Totem when outside of a hole.");
-    private final Setting<Integer> safeHealth = this.sgHealth.intSetting("Safe Health", 18, 0, 36, 1,
-            "Stays on Totem until your health rises above this level for safety.");
-    private final Setting<Boolean> mineCheck = this.sgHealth.booleanSetting("Mine Check", true,
-            "Treats your hole as unsafe if someone is currently mining its walls.");
-    private final Setting<Double> miningTime = this.sgHealth.doubleSetting("Mining Time", 4.0, 0.0, 10.0, 0.1,
-            "How long to keep the 'Danger' status after a block starts being mined.");
-    private final Setting<Integer> holeHp = this.sgHealth.intSetting("Hole Health", 10, 0, 36, 1,
-            "Health threshold for Totem while safely inside a hole (usually lower than Totem Health).");
-    private final Setting<Integer> holeSafeHp = this.sgHealth.intSetting("Hole Safe Health", 14, 0, 36, 1,
-            "Recovery threshold while in a hole.");
-    private final Setting<Double> safetyMultiplier = this.sgHealth.doubleSetting("Safety Multiplier", 1.0, 0.0, 5.0, 0.05,
-            "Multiplies calculated crystal damage for extra safety padding.");
+    private final Setting<Integer> latency = this.sgHealth.intSetting("Latency", 0, 0, 10, 1, "Compensates for server lag by checking your previous positions for damage.");
+    private final Setting<Boolean> prediction = this.sgHealth.booleanSetting("Prediction", true, "Calculates potential damage based on your predicted movement.");
+    private final Setting<Integer> hp = this.sgHealth.intSetting("Totem Health", 14, 0, 36, 1, "Health threshold to switch to a Totem when outside of a hole.");
+    private final Setting<Integer> safeHealth = this.sgHealth.intSetting("Safe Health", 18, 0, 36, 1, "Stays on Totem until your health rises above this level for safety.");
+    private final Setting<Boolean> mineCheck = this.sgHealth.booleanSetting("Mine Check", true, "Treats your hole as unsafe if someone is currently mining its walls.");
+    private final Setting<Double> miningTime = this.sgHealth.doubleSetting("Mining Time", 4.0, 0.0, 10.0, 0.1, "How long to keep the 'Danger' status after a block starts being mined.");
+    private final Setting<Integer> holeHp = this.sgHealth.intSetting("Hole Health", 10, 0, 36, 1, "Health threshold for Totem while safely inside a hole (usually lower than Totem Health).");
+    private final Setting<Integer> holeSafeHp = this.sgHealth.intSetting("Hole Safe Health", 14, 0, 36, 1, "Recovery threshold while in a hole.");
+    private final Setting<Double> safetyMultiplier = this.sgHealth.doubleSetting("Safety Multiplier", 1.0, 0.0, 5.0, 0.05, "Multiplies calculated crystal damage for extra safety padding.");
 
     private final Setting<Boolean> render = this.sgThreading.booleanSetting("Render", true, "Update offhand during world rendering.");
     private final Setting<Boolean> tickPre = this.sgThreading.booleanSetting("Tick Pre", true, "Update offhand during tick start.");
@@ -257,12 +239,10 @@ public class Offhand extends Module {
         if (shouldSG) {
             boolean allowGapple = true;
             if (this.safeSwordGapple.get()) {
-                // Проверяем здоровье отдельно, а опасность от кристаллов отдельно
                 double health = BlackOut.mc.player.getHealth() + BlackOut.mc.player.getAbsorptionAmount();
                 if (health < this.swordGappleHealth.get()) {
                     allowGapple = false;
                 }
-                // Проверяем опасность от кристаллов с текущим здоровьем (без порога)
                 if (this.isCrystalDangerous(health)) {
                     allowGapple = false;
                 }
@@ -342,6 +322,24 @@ public class Offhand extends Module {
             }
         }
 
+        return false;
+    }
+
+    private boolean isCrystalDangerous(double health) {
+        if (Suicide.getInstance().enabled && Suicide.getInstance().offHand.get()) {
+            return false;
+        }
+        for (Box box : this.prevPositions) {
+            if (this.inDanger(box, health)) {
+                return true;
+            }
+        }
+        if (this.inDanger(BlackOut.mc.player.getBoundingBox(), health)) {
+            return true;
+        }
+        if (this.prediction.get() && this.inDanger(this.predictedBox(), health)) {
+            return true;
+        }
         return false;
     }
 
