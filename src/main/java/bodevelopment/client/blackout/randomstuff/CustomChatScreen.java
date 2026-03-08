@@ -20,18 +20,28 @@ public class CustomChatScreen extends ChatScreen {
 
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         CustomChat customChat = CustomChat.getInstance();
-        String text = this.chatField.getText() + "_";
-        double f = Math.sin(System.currentTimeMillis() / 1000.0 * 2.0) + 1.0;
+
+        boolean blink = System.currentTimeMillis() % 1000 < 500;
+
+        String cursor = blink ? "_" : "";
+        String text = this.chatField.getText() + cursor;
+
+        String measurementText = this.chatField.getText() + "_";
+
         float textScale = 2.2F;
         float fontHeight = BlackOut.FONT.getHeight() * textScale;
-        float width = BlackOut.FONT.getWidth(text) * textScale > 250.0F ? BlackOut.FONT.getWidth(text) * textScale + 2.0F : 250.0F;
+
+        float textWidth = BlackOut.FONT.getWidth(measurementText) * textScale;
+        float width = textWidth > 250.0F ? textWidth + 10.0F : 250.0F;
+
         this.stack.push();
         RenderUtils.unGuiScale(this.stack);
+
         if (customChat.blur.get()) {
             RenderUtils.drawLoadedBlur(
                     "hudblur",
                     this.stack,
-                    renderer -> renderer.rounded(8.0F, BlackOut.mc.getWindow().getHeight() - (fontHeight + 14.0F), width, fontHeight + 4.0F, 6.0F, 10)
+                    renderer -> renderer.rounded(10.0F, BlackOut.mc.getWindow().getHeight() - (fontHeight + 16.0F), width, fontHeight + 4.0F, 6.0F, 10)
             );
             Renderer.onHUDBlur();
         }
@@ -50,7 +60,16 @@ public class CustomChatScreen extends ChatScreen {
             );
         }
 
-        customChat.textColor.render(this.stack, text, textScale, 10.0F, BlackOut.mc.getWindow().getHeight() - (fontHeight + 13.0F), false, false);
+        customChat.textColor.render(
+                this.stack,
+                text,
+                textScale,
+                15.0F,
+                BlackOut.mc.getWindow().getHeight() - (fontHeight + 13.0F),
+                false,
+                false
+        );
+
         this.stack.pop();
     }
 }
