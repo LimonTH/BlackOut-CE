@@ -29,6 +29,18 @@ public class AuthMe extends Module {
     private final List<Setting<String>> nicks = new ArrayList<>();
     private final List<Setting<String>> passes = new ArrayList<>();
 
+    private static final String[] REGISTER_KEYWORDS = {
+            "/register", "/reg", "register", "зарегистрируйтесь", "/рег", "создайте пароль"
+    };
+
+    private static final String[] LOGIN_KEYWORDS = {
+            "/login", "/l ", "login", "авторизуйтесь", "войдите", "/логин", "пароль"
+    };
+
+    private static final String[] AUTH_PROMPT_INDICATORS = {
+            "please", "type", "use", "welcome", "введите", "используйте"
+    };
+
     private long time = -1L;
     private boolean register = false;
 
@@ -67,17 +79,45 @@ public class AuthMe extends Module {
     @Event
     public void onPacketReceive(PacketEvent.Receive.Pre event) {
         if (event.packet instanceof GameMessageS2CPacket packet) {
-            String msg = packet.content().getString().replaceAll("§[0-9a-fk-or]", "").toLowerCase();
+            String msg = packet.content().getString().replaceAll("§[0-9a-fk-or]", "").toLowerCase().trim();
 
-            if (System.currentTimeMillis() - this.time > (this.delay.get() * 1000.0) + 1000.0) {
-                if (msg.contains("/register") || msg.contains("please register") || msg.contains("use /reg")) {
-                    this.time = System.currentTimeMillis();
-                    this.register = true;
+            if (System.currentTimeMillis() - this.time < (this.delay.get() * 1000.0) + 1000.0) return;
+
+            boolean foundLogin = false;
+            boolean foundRegister = false;
+
+            for (String key : REGISTER_KEYWORDS) {
+                if (msg.contains(key)) {
+                    foundRegister = true;
+                    break;
                 }
-                else if (msg.contains("/login") || msg.contains("please log in") || msg.contains("authenticate") || msg.contains("type /l ")) {
-                    this.time = System.currentTimeMillis();
-                    this.register = false;
+            }
+
+            if (!foundRegister) {
+                for (String key : LOGIN_KEYWORDS) {
+                    if (msg.contains(key)) {
+                        foundLogin = true;
+                        break;
+                    }
                 }
+            }
+
+            boolean hasContext = false;
+            for (String context : AUTH_PROMPT_INDICATORS) {
+                if (msg.contains(context)) {
+                    hasContext = true;
+                    break;
+                }
+            }
+
+            boolean isCommand = msg.contains("/") || msg.contains("!");
+
+            if (foundRegister && (hasContext || isCommand)) {
+                this.time = System.currentTimeMillis();
+                this.register = true;
+            } else if (foundLogin && (hasContext || isCommand)) {
+                this.time = System.currentTimeMillis();
+                this.register = false;
             }
         }
     }

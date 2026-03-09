@@ -10,7 +10,6 @@ import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
 import bodevelopment.client.blackout.keys.Keys;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.rendering.renderer.ColorRenderer;
-import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.DrawContext;
