@@ -1,6 +1,6 @@
 [English](README.md) | [Русский](#blackout-ce-1211--rus)
 
-# Blackout-CE (1.21.1) 🌑
+# Blackout-CE (1.21.2) 🌑
 
 > **Template for addon:** [LimonTH/Blackout-CE-addon-template](https://github.com/LimonTH/Blackout-CE-addon-template)  
 
@@ -59,7 +59,7 @@ Since I am developing this project solo, any feedback or bug reports are highly 
 ---
 
 
-# Blackout-CE (1.21.1) 🌑 [RUS]
+# Blackout-CE (1.21.2) 🌑 [RUS]
 
 > **Шаблон для аддона:** [LimonTH/Blackout-CE-addon-template](https://github.com/LimonTH/Blackout-CE-addon-template)
 
