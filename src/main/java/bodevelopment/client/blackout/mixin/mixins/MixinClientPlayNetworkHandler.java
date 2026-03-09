@@ -6,6 +6,7 @@ import bodevelopment.client.blackout.mixin.accessors.AccessorPlayerMoveC2SPacket
 import bodevelopment.client.blackout.module.modules.misc.NoRotate;
 import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
 import bodevelopment.client.blackout.module.modules.visual.world.Ambience;
+import bodevelopment.client.blackout.util.CompatUtils;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.world.ClientWorld;
@@ -65,31 +66,34 @@ public class MixinClientPlayNetworkHandler {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/packet/Packet;)V", ordinal = 1)
     )
     private void sendFull(ClientConnection instance, Packet<?> packet) {
+        if (CompatUtils.isBaritonePathing()) {
+            return;
+        }
         PlayerMoveC2SPacket.Full moveC2SPacket = (PlayerMoveC2SPacket.Full) packet;
         NoRotate noRotate = NoRotate.getInstance();
-        if (!noRotate.enabled) {
-            instance.send(moveC2SPacket);
-        } else {
+
+        if (noRotate.enabled) {
             switch (noRotate.mode.get()) {
                 case Cancel:
                     return;
                 case Set:
                 case Spoof:
-                    ((AccessorPlayerMoveC2SPacket) moveC2SPacket).setYaw(this.lastServerYaw);
-                    ((AccessorPlayerMoveC2SPacket) moveC2SPacket).setPitch(this.lastServerPitch);
-                    break;
                 case Rel:
                     ((AccessorPlayerMoveC2SPacket) moveC2SPacket).setYaw(this.lastServerYaw);
                     ((AccessorPlayerMoveC2SPacket) moveC2SPacket).setPitch(this.lastServerPitch);
 
-                    BlackOut.mc.player.setYaw(BlackOut.mc.player.getYaw() + noRotate.relYaw);
-                    BlackOut.mc.player.setPitch(BlackOut.mc.player.getPitch() + noRotate.relPitch);
-
-                    noRotate.relYaw = 0;
-                    noRotate.relPitch = 0;
+                    if (noRotate.mode.get() == NoRotate.NoRotateMode.Rel) {
+                        if (BlackOut.mc.player != null) {
+                            BlackOut.mc.player.setYaw(BlackOut.mc.player.getYaw() + noRotate.relYaw);
+                            BlackOut.mc.player.setPitch(BlackOut.mc.player.getPitch() + noRotate.relPitch);
+                        }
+                        noRotate.relYaw = 0;
+                        noRotate.relPitch = 0;
+                    }
                     break;
             }
         }
+
         instance.send(moveC2SPacket);
     }
 

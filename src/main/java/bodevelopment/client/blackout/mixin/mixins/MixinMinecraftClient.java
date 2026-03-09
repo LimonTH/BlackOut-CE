@@ -49,7 +49,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Optional;
 import java.util.UUID;
 
-@Mixin(MinecraftClient.class)
+@Mixin(value = MinecraftClient.class, priority = 500)
 public abstract class MixinMinecraftClient implements IMinecraftClient {
     @Shadow
     static MinecraftClient instance;
@@ -77,15 +77,6 @@ public abstract class MixinMinecraftClient implements IMinecraftClient {
     @Shadow
     protected abstract void doItemUse();
 
-    @WrapOperation(
-            method = "openChatScreen",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;setScreen(Lnet/minecraft/client/gui/screen/Screen;)V")
-    )
-    private void wrapChat(MinecraftClient instance, Screen screen, Operation<Void> original) {
-        Screen targetScreen = CustomChat.getInstance().enabled ? new CustomChatScreen() : screen;
-        original.call(instance, targetScreen);
-    }
-
     @Redirect(
             method = "handleInputEvents",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/Perspective;next()Lnet/minecraft/client/option/Perspective;")
@@ -103,24 +94,6 @@ public abstract class MixinMinecraftClient implements IMinecraftClient {
         }
     }
 
-    @WrapOperation(
-            method = "tick",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;currentScreen:Lnet/minecraft/client/gui/screen/Screen;", ordinal = 6, opcode = Opcodes.GETFIELD)
-    )
-    private Screen wrapCurrentScreen(MinecraftClient instance, Operation<Screen> original) {
-        Screen current = original.call(instance);
-        return SharedFeatures.shouldSilentScreen() ? null : current;
-    }
-
-    @WrapOperation(
-            method = "tick",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;overlay:Lnet/minecraft/client/gui/screen/Overlay;", opcode = Opcodes.GETFIELD)
-    )
-    private Overlay wrapOverlay(MinecraftClient instance, Operation<Overlay> original) {
-        Overlay overlay = original.call(instance);
-        return SharedFeatures.shouldSilentScreen() ? null : overlay;
-    }
-
     @Inject(method = "tick", at = @At("HEAD"))
     private void preTick(CallbackInfo ci) {
         TickTimerList.updating.forEach(TickTimerList::update);
@@ -128,6 +101,34 @@ public abstract class MixinMinecraftClient implements IMinecraftClient {
         if (!SettingUtils.grimPackets()) {
             HitCrystal.getInstance().onTick();
         }
+    }
+
+    @WrapOperation(
+            method = "openChatScreen",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;setScreen(Lnet/minecraft/client/gui/screen/Screen;)V")
+    )
+    private void wrapChatOpening(MinecraftClient instance, Screen screen, Operation<Void> original) {
+        Screen targetScreen = CustomChat.getInstance().enabled ? new CustomChatScreen() : screen;
+
+        original.call(instance, targetScreen);
+    }
+
+    @WrapOperation(
+            method = "tick",
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;currentScreen:Lnet/minecraft/client/gui/screen/Screen;", ordinal = 6, opcode = Opcodes.GETFIELD)
+    )
+    private Screen wrapCurrentScreen(MinecraftClient instance, Operation<Screen> original) {
+        Screen realScreen = original.call(instance);
+        return SharedFeatures.shouldSilentScreen() ? null : realScreen;
+    }
+
+    @WrapOperation(
+            method = "tick",
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;overlay:Lnet/minecraft/client/gui/screen/Overlay;", opcode = Opcodes.GETFIELD)
+    )
+    private Overlay wrapOverlay(MinecraftClient instance, Operation<Overlay> original) {
+        Overlay realOverlay = original.call(instance);
+        return SharedFeatures.shouldSilentScreen() ? null : realOverlay;
     }
 
     @Inject(method = "tick", at = @At("TAIL"))
