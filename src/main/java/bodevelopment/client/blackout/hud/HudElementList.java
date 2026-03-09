@@ -248,4 +248,12 @@ public class HudElementList {
             }
         }
     }
+
+    public boolean isOpen() {
+        return this.open;
+    }
+
+    public void setOpen(boolean open) {
+        this.open = open;
+    }
 }

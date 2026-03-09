@@ -99,18 +99,18 @@ public class HudEditor extends Screen {
             Managers.HUD.end(this.stack);
             this.stack.push();
             RenderUtils.unGuiScale(this.stack);
+            RenderSystem.disableDepthTest();
             this.settings.render(this.stack, frameTime, mouseX, mouseY);
             this.elementList.render(this.stack, frameTime, mouseX, mouseY);
 
             if (this.openedScreen != null) {
                 this.stack.push();
-                this.stack.translate(0, 0, RenderLayer.GUI + RenderLayer.OFFSET_LARGE);
-                RenderSystem.disableDepthTest();
+
                 this.openedScreen.onRender(frameTime, mouseX, mouseY);
-                RenderSystem.enableDepthTest();
                 this.stack.pop();
             }
 
+            RenderSystem.enableDepthTest();
             this.stack.pop();
         }
     }
@@ -296,13 +296,23 @@ public class HudEditor extends Screen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (keyCode == 256) {
-            if (this.settings.getOpenedElement() != null) {
-                this.settings.setOpenedElement(null);
-                return true;
-            } else if (this.openedScreen != null) {
+            if (this.openedScreen != null) {
                 this.setScreen(null);
                 return true;
             }
+
+            if (this.elementList.isOpen()) {
+                this.elementList.setOpen(false);
+                return true;
+            }
+
+            if (this.settings.getOpenedElement() != null) {
+                this.settings.setOpenedElement(null);
+                return true;
+            }
+
+            this.close();
+            return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
@@ -317,7 +327,9 @@ public class HudEditor extends Screen {
 
     @Override
     public boolean shouldCloseOnEsc() {
-        return this.settings.getOpenedElement() == null;
+        return this.openedScreen == null
+                && this.settings.getOpenedElement() == null
+                && !this.elementList.isOpen();
     }
 
     @Override
