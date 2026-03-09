@@ -10,7 +10,9 @@ import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
 import bodevelopment.client.blackout.keys.Keys;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.rendering.renderer.ColorRenderer;
+import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.render.VertexFormat;
@@ -99,8 +101,14 @@ public class HudEditor extends Screen {
             RenderUtils.unGuiScale(this.stack);
             this.settings.render(this.stack, frameTime, mouseX, mouseY);
             this.elementList.render(this.stack, frameTime, mouseX, mouseY);
+
             if (this.openedScreen != null) {
+                this.stack.push();
+                this.stack.translate(0, 0, RenderLayer.GUI + RenderLayer.OFFSET_LARGE);
+                RenderSystem.disableDepthTest();
                 this.openedScreen.onRender(frameTime, mouseX, mouseY);
+                RenderSystem.enableDepthTest();
+                this.stack.pop();
             }
 
             this.stack.pop();

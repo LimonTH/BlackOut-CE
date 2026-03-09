@@ -306,7 +306,7 @@ public class Aura extends MoveUpdateModule {
         this.shouldRender = false;
         if (this.target != null && BlackOut.mc.player != null && BlackOut.mc.world != null && this.enabled) {
             int slot = this.bestSlot(this.switchMode.get().inventory);
-            boolean holding = !this.onlyWeapon.get() || BlackOut.mc.player.getMainHandStack().getItem() instanceof ToolItem;
+            boolean holding = !this.onlyWeapon.get() || isAllowedWeapon(BlackOut.mc.player.getMainHandStack());
             if (slot >= 0) {
                 if (!this.onlyWeapon.get() || BlackOut.mc.player.getInventory().getStack(slot).getItem() instanceof ToolItem) {
                     if (holding || this.switchMode.get() != SwitchMode.Disabled) {
@@ -487,20 +487,17 @@ public class Aura extends MoveUpdateModule {
     }
 
     private boolean holdingAllowedWeapon() {
-        ItemStack stack = Managers.PACKET.getStack();
-        if (this.allowedItems.get().isEmpty()) {
-            return stack.getItem() instanceof ToolItem;
-        } else {
-            return this.allowedItems.get().contains(stack.getItem());
-        }
+        return isAllowedWeapon(Managers.PACKET.getStack());
     }
 
     private boolean isAllowedWeapon(ItemStack stack) {
+        if (stack.isEmpty()) return false;
+
         if (this.allowedItems.get().isEmpty()) {
             return stack.getItem() instanceof ToolItem;
-        } else {
-            return this.allowedItems.get().contains(stack.getItem());
         }
+
+        return this.allowedItems.get().contains(stack.getItem());
     }
 
     private boolean chanceCheck() {

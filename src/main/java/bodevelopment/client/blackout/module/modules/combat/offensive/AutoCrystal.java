@@ -238,6 +238,8 @@ public class AutoCrystal extends Module {
     private final Setting<Boolean> debugAttack = this.sgDebug.booleanSetting("Log Detonation", false, "Prints attack debug information to the console.");
     private final Setting<Boolean> removeTime = this.sgDebug.booleanSetting("Log Despawn Timing", false, "Prints the time taken for crystals to despawn.");
 
+    private final Predicate<ItemStack> antiWeaknessPredicate = stack -> stack.getItem() instanceof ToolItem;
+
     private final TimerList<Box> spawning = new TimerList<>(true);
     private final TickTimerList<BlockPos> existedTicksList = new TickTimerList<>(true);
     private final TimerList<BlockPos> existedList = new TimerList<>(true);
@@ -259,7 +261,7 @@ public class AutoCrystal extends Module {
     private final Map<PlayerEntity, Float> moveDirs = new HashMap<>();
     private final RenderList<BlockPos> earthRender = RenderList.getList(false);
     private final List<Long> explosions = Collections.synchronizedList(new ArrayList<>());
-    private final Predicate<ItemStack> antiWeaknessPredicate = stack -> stack.getItem() instanceof ToolItem;
+
     public BlockPos placePos = null;
     public double enemyDamage = 0.0;
     public boolean placing = false;
@@ -1900,5 +1902,4 @@ public class AutoCrystal extends Module {
         Render,
         Full
     }
-
 }
