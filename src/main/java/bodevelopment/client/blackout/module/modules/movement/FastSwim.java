@@ -44,7 +44,7 @@ public class FastSwim extends Module {
         }
 
         if (!(targetSpeed <= 0.0)) {
-            if (!diving && this.modifyVertical.get() && BlackOut.mc.player.input.jumping ^ BlackOut.mc.player.input.sneaking) {
+            if (!diving && this.modifyVertical.get() && BlackOut.mc.player.input.playerInput.jump() ^ BlackOut.mc.player.input.playerInput.sneak()) {
                 event.setY(this, this.getVertical(touchingWater && !BlackOut.mc.player.isInLava()));
             } else if (this.canBeStill(diving)) {
                 event.setY(this, 0.0);
@@ -66,23 +66,23 @@ public class FastSwim extends Module {
     }
 
     private double getVertical(boolean water) {
-        return BlackOut.mc.player.input.jumping ? (water ? this.waterUp : this.lavaUp).get() : -(water ? this.waterDown : this.lavaDown).get();
+        return BlackOut.mc.player.input.playerInput.jump() ? (water ? this.waterUp : this.lavaUp).get() : -(water ? this.waterDown : this.lavaDown).get();
     }
 
     private double horizontalMulti(Input i) {
         if (i.getMovementInput().lengthSquared() == 0.0F) {
             return 0.0;
         } else {
-            return i.jumping ^ i.sneaking ? 0.707106781 : 1.0;
+            return i.playerInput.jump() ^ i.playerInput.sneak() ? 0.707106781 : 1.0;
         }
     }
 
     private double verticalMulti(Input i) {
-        if (i.jumping == i.sneaking) {
+        if (i.playerInput.jump() == i.playerInput.sneak()) {
             return 0.0;
         } else {
             double sus = i.getMovementInput().lengthSquared() == 0.0F ? 1.0 : 0.707106781;
-            return i.jumping ? sus : -sus;
+            return i.playerInput.jump() ? sus : -sus;
         }
     }
 
@@ -91,7 +91,7 @@ public class FastSwim extends Module {
             return false;
         } else {
             Input i = BlackOut.mc.player.input;
-            return diving ? !i.jumping && !i.sneaking && i.getMovementInput().lengthSquared() == 0.0F : !i.jumping && !i.sneaking;
+            return diving ? !i.playerInput.jump() && !i.playerInput.sneak() && i.getMovementInput().lengthSquared() == 0.0F : !i.playerInput.jump() && !i.playerInput.sneak();
         }
     }
 

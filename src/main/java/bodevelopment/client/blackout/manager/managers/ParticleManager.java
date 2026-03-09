@@ -20,10 +20,10 @@ public class ParticleManager extends Manager {
     private final TimerList<Particle> particles = new TimerList<>(true);
 
     private static int alphaMulti(int c, double alpha) {
-        int r = ColorHelper.Argb.getRed(c);
-        int g = ColorHelper.Argb.getGreen(c);
-        int b = ColorHelper.Argb.getBlue(c);
-        int a = ColorHelper.Argb.getAlpha(c);
+        int r = ColorHelper.getRed(c);
+        int g = ColorHelper.getGreen(c);
+        int b = ColorHelper.getBlue(c);
+        int a = ColorHelper.getAlpha(c);
         int alp = (int) Math.round(a * alpha);
         return (alp & 0xFF) << 24 | (r & 0xFF) << 16 | (g & 0xFF) << 8 | b & 0xFF;
     }

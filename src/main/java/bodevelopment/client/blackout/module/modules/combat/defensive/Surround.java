@@ -168,7 +168,7 @@ public class Surround extends ObsidianModule {
             double dist = new Vec3d(targetX, 0.0, targetZ)
                     .distanceTo(new Vec3d(BlackOut.mc.player.getX(), 0.0, BlackOut.mc.player.getZ()));
             if (dist < 0.2873) {
-                this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(targetX, BlackOut.mc.player.getY(), targetZ, Managers.PACKET.isOnGround()));
+                this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(targetX, BlackOut.mc.player.getY(), targetZ, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
             }
 
             double x = BlackOut.mc.player.getX();
@@ -178,7 +178,7 @@ public class Surround extends ObsidianModule {
                 double yaw = RotationUtils.getYaw(BlackOut.mc.player.getEyePos(), new Vec3d(targetX, 0.0, targetZ), 0.0) + 90.0;
                 x += Math.cos(Math.toRadians(yaw)) * 0.2873;
                 z += Math.sin(Math.toRadians(yaw)) * 0.2873;
-                this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(x, BlackOut.mc.player.getY(), z, Managers.PACKET.isOnGround()));
+                this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(x, BlackOut.mc.player.getY(), z, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
             }
 
             BlackOut.mc.player.setPos(targetX, BlackOut.mc.player.getY(), targetZ);

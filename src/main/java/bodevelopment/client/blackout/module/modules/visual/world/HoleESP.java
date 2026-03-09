@@ -13,6 +13,7 @@ import bodevelopment.client.blackout.randomstuff.Hole;
 import bodevelopment.client.blackout.util.HoleUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.BlockPos;
@@ -92,7 +93,7 @@ public class HoleESP extends Module {
     }
 
     private void drawSides() {
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
         double x = BlackOut.mc.gameRenderer.getCamera().getPos().x;
@@ -144,25 +145,25 @@ public class HoleESP extends Module {
     }
 
     private void drawLines() {
-        RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
+        RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
         RenderSystem.lineWidth(1.5F);
-
-        RenderSystem.getModelViewStack().pushMatrix();
-        RenderSystem.getModelViewStack().identity();
-        RenderSystem.applyModelViewMatrix();
 
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
 
-        double x = BlackOut.mc.gameRenderer.getCamera().getPos().x;
-        double y = BlackOut.mc.gameRenderer.getCamera().getPos().y;
-        double z = BlackOut.mc.gameRenderer.getCamera().getPos().z;
-        Matrix4f matrix4f = Render3DUtils.matrices.peek().getPositionMatrix();
+        Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
+        double x = camPos.x;
+        double y = camPos.y;
+        double z = camPos.z;
+
         MatrixStack.Entry entry = Render3DUtils.matrices.peek();
+        Matrix4f matrix4f = entry.getPositionMatrix();
+
         float red = this.lineColor.get().red / 255.0F;
         float green = this.lineColor.get().green / 255.0F;
         float blue = this.lineColor.get().blue / 255.0F;
         float alpha = this.lineColor.get().alpha / 255.0F;
+
         this.holes.forEach(hole -> {
             int ox = switch (hole.type) {
                 case DoubleX, Quad -> 2;
@@ -173,27 +174,30 @@ public class HoleESP extends Module {
                 case Quad, DoubleZ -> 2;
                 default -> 1;
             };
+
             float a = this.getAlpha(this.dist(hole.middle, x, y, z)) * alpha;
-            Vector3f v = new Vector3f((float) (hole.pos.getX() - x), (float) (hole.pos.getY() - y), (float) (hole.pos.getZ() - z));
+
+            float vx = (float) (hole.pos.getX() - x);
+            float vy = (float) (hole.pos.getY() - y);
+            float vz = (float) (hole.pos.getZ() - z);
+
             if (this.bottomLines.get()) {
-                this.hline(bufferBuilder, matrix4f, entry, v.x, v.z, v.x, v.z + oz, v.y, red, green, blue, a);
-                this.hline(bufferBuilder, matrix4f, entry, v.x + ox, v.z, v.x + ox, v.z + oz, v.y, red, green, blue, a);
-                this.hline(bufferBuilder, matrix4f, entry, v.x, v.z, v.x + ox, v.z, v.y, red, green, blue, a);
-                this.hline(bufferBuilder, matrix4f, entry, v.x, v.z + oz, v.x + ox, v.z + oz, v.y, red, green, blue, a);
+                this.hline(bufferBuilder, matrix4f, entry, vx, vz, vx, vz + oz, vy, red, green, blue, a);
+                this.hline(bufferBuilder, matrix4f, entry, vx + ox, vz, vx + ox, vz + oz, vy, red, green, blue, a);
+                this.hline(bufferBuilder, matrix4f, entry, vx, vz, vx + ox, vz, vy, red, green, blue, a);
+                this.hline(bufferBuilder, matrix4f, entry, vx, vz + oz, vx + ox, vz + oz, vy, red, green, blue, a);
             }
 
             if (this.fadeLines.get()) {
                 float height = this.getHeight(hole.pos);
-                this.fadeLine(matrix4f, entry, bufferBuilder, v.x, v.z, v.y, height, red, green, blue, a);
-                this.fadeLine(matrix4f, entry, bufferBuilder, v.x + ox, v.z, v.y, height, red, green, blue, a);
-                this.fadeLine(matrix4f, entry, bufferBuilder, v.x, v.z + oz, v.y, height, red, green, blue, a);
-                this.fadeLine(matrix4f, entry, bufferBuilder, v.x + ox, v.z + oz, v.y, height, red, green, blue, a);
+                this.fadeLine(matrix4f, entry, bufferBuilder, vx, vz, vy, height, red, green, blue, a);
+                this.fadeLine(matrix4f, entry, bufferBuilder, vx + ox, vz, vy, height, red, green, blue, a);
+                this.fadeLine(matrix4f, entry, bufferBuilder, vx, vz + oz, vy, height, red, green, blue, a);
+                this.fadeLine(matrix4f, entry, bufferBuilder, vx + ox, vz + oz, vy, height, red, green, blue, a);
             }
         });
-        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
 
-        RenderSystem.getModelViewStack().popMatrix();
-        RenderSystem.applyModelViewMatrix();
+        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
     }
 
     private void hline(

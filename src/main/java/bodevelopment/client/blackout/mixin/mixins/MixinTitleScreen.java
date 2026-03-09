@@ -31,12 +31,8 @@ public abstract class MixinTitleScreen extends Screen {
         }
 
         ci.cancel();
+
         MainMenu.getInstance().set((TitleScreen) (Object) this);
         MainMenu.getInstance().render(mouseX, mouseY, delta);
-    }
-
-    @Inject(method = "initWidgetsNormal", at = @At("HEAD"), cancellable = true)
-    public void initWidgetsNormal(CallbackInfo ci) {
-        ci.cancel();
     }
 }

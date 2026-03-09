@@ -112,12 +112,12 @@ public class ElytraFly extends Module {
                 BlackOut.mc.player.jump();
                 this.sinceJump = 0;
                 if (BlackOut.mc.options.jumpKey.isPressed()) this.sus = true;
-            } else if (this.sinceJump > this.bounceDelay.get() && BlackOut.mc.player.checkFallFlying()) {
+            } else if (this.sinceJump > this.bounceDelay.get() && BlackOut.mc.player.checkGliding()) {
                 Managers.PACKET.sendInstantly(new ClientCommandC2SPacket(BlackOut.mc.player, ClientCommandC2SPacket.Mode.START_FALL_FLYING));
             }
 
             this.sinceJump++;
-            this.sinceFalling = BlackOut.mc.player.isFallFlying() ? 0 : this.sinceFalling + 1;
+            this.sinceFalling = BlackOut.mc.player.isGliding() ? 0 : this.sinceFalling + 1;
         }
     }
 
@@ -135,7 +135,7 @@ public class ElytraFly extends Module {
     }
 
     private void handleBounceMove(MoveEvent.Pre ignored) {
-        if (BlackOut.mc.player.isFallFlying() && !this.sus) {
+        if (BlackOut.mc.player.isGliding() && !this.sus) {
             float target = getPitch();
             lerpedPitch = (float) MathHelper.lerp(pitchLerp.get(), lerpedPitch, target);
             BlackOut.mc.player.setPitch(lerpedPitch);
@@ -143,7 +143,7 @@ public class ElytraFly extends Module {
     }
 
     private void handleGlide(MoveEvent.Pre ignored) {
-        if (!BlackOut.mc.player.isFallFlying()) return;
+        if (!BlackOut.mc.player.isGliding()) return;
 
         double playerY = BlackOut.mc.player.getY();
         long currentTime = System.currentTimeMillis();
@@ -191,7 +191,7 @@ public class ElytraFly extends Module {
     }
 
     private void handleRotation(MoveEvent.Pre event) {
-        if (!BlackOut.mc.player.isFallFlying()) return;
+        if (!BlackOut.mc.player.isGliding()) return;
         Vec3d dir = getNamiControlDir();
         if (dir != null) {
             float targetYaw = (float) Math.toDegrees(Math.atan2(dir.z, dir.x)) - 90f;
@@ -249,7 +249,7 @@ public class ElytraFly extends Module {
     }
 
     public boolean isBouncing() {
-        return this.mode.get() == Mode.Bounce && (BlackOut.mc.player.isFallFlying() || this.sinceFalling < 5);
+        return this.mode.get() == Mode.Bounce && (BlackOut.mc.player.isGliding() || this.sinceFalling < 5);
     }
 
     private Vec3d getNamiControlDir() {
@@ -263,7 +263,7 @@ public class ElytraFly extends Module {
     }
 
     public void waspTick(MoveEvent.Pre event) {
-        if (!BlackOut.mc.player.isFallFlying()) return;
+        if (!BlackOut.mc.player.isGliding()) return;
         updateControlMovement();
         double x = moving ? Math.cos(Math.toRadians(yaw + 90)) * horizontalSpeed.get() : 0;
         double z = moving ? Math.sin(Math.toRadians(yaw + 90)) * horizontalSpeed.get() : 0;
@@ -274,7 +274,7 @@ public class ElytraFly extends Module {
     }
 
     public void controlTick(MoveEvent.Pre event) {
-        if (!BlackOut.mc.player.isFallFlying()) return;
+        if (!BlackOut.mc.player.isGliding()) return;
         updateControlMovement();
         double x = moving ? Math.cos(Math.toRadians(yaw + 90)) * horizontalSpeed.get() : 0;
         double z = moving ? Math.sin(Math.toRadians(yaw + 90)) * horizontalSpeed.get() : 0;

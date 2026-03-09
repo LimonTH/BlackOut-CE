@@ -8,12 +8,12 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.item.ToolItem;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.EntityHitResult;
@@ -48,7 +48,7 @@ public class TriggerBot extends Module {
                     Entity entity = ((EntityHitResult) result).getEntity();
                     if (entity != null && this.entityTypes.get().contains(entity.getType())) {
                         if (!(entity instanceof LivingEntity livingEntity && livingEntity.isDead())) {
-                            if (!this.onlyWeapon.get() || BlackOut.mc.player.getMainHandStack().getItem() instanceof ToolItem) {
+                            if (!this.onlyWeapon.get() || BlackOut.mc.player.getMainHandStack().contains(DataComponentTypes.TOOL)) {
                                 int tickDelay = this.getTickDelay(entity);
                                 if (BlackOut.mc.player.lastAttackedTicks >= tickDelay) {
                                     this.critTime = System.currentTimeMillis();
@@ -79,7 +79,7 @@ public class TriggerBot extends Module {
 
     private int getTickDelay(Entity entity) {
         return this.smartDelay.get() && entity instanceof LivingEntity
-                ? Math.max((int) Math.ceil(1.0 / BlackOut.mc.player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED) * 20.0), this.minDelay.get())
+                ? Math.max((int) Math.ceil(1.0 / BlackOut.mc.player.getAttributeValue(EntityAttributes.ATTACK_SPEED) * 20.0), this.minDelay.get())
                 : this.attackDelay.get();
     }
 }

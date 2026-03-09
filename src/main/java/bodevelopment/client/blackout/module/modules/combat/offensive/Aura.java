@@ -28,6 +28,7 @@ import bodevelopment.client.blackout.util.SettingUtils;
 import net.minecraft.client.gui.screen.DeathScreen;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.decoration.EndCrystalEntity;
@@ -36,6 +37,7 @@ import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.*;
 import net.minecraft.network.packet.c2s.play.*;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.*;
@@ -72,8 +74,14 @@ public class Aura extends MoveUpdateModule {
     private final Setting<Integer> maxHp = this.sgGeneral.intSetting("Maximum Health", 36, 0, 100, 1, "Only targets with total health below this value will be attacked.", this.checkMaxHP::get);
     private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Auto Switch", SwitchMode.Disabled, "Method for automatically switching to a combat weapon.");
     private final Setting<Boolean> onlyWeapon = this.sgGeneral.booleanSetting("Weapon Filter", true, "Restricts attacks to only occur when holding a valid weapon.");
-    private final Setting<List<Item>> allowedItems = this.sgGeneral.itemFilteredListSetting("Allowed Items", "Whitelist of tools/weapons that are allowed for attacking (empty = any tool).", onlyWeapon::get, item ->
-            item instanceof ToolItem || item == Items.TRIDENT || item == Items.MACE,
+    private final Setting<List<Item>> allowedItems = this.sgGeneral.itemFilteredListSetting("Allowed Items", "Whitelist of tools/weapons that are allowed for attacking (empty = any tool).", onlyWeapon::get, item -> {
+                ItemStack stack = item.getDefaultStack();
+
+                if (stack.contains(DataComponentTypes.TOOL)) return true;
+                return item instanceof SwordItem
+                        || item == Items.TRIDENT
+                        || item == Items.MACE;
+                    },
             Items.WOODEN_SWORD,
             Items.STONE_SWORD,
             Items.GOLDEN_SWORD,
@@ -308,7 +316,7 @@ public class Aura extends MoveUpdateModule {
             int slot = this.bestSlot(this.switchMode.get().inventory);
             boolean holding = !this.onlyWeapon.get() || isAllowedWeapon(BlackOut.mc.player.getMainHandStack());
             if (slot >= 0) {
-                if (!this.onlyWeapon.get() || BlackOut.mc.player.getInventory().getStack(slot).getItem() instanceof ToolItem) {
+                if (!this.onlyWeapon.get() || BlackOut.mc.player.getInventory().getStack(slot).contains(net.minecraft.component.DataComponentTypes.TOOL)) {
                     if (holding || this.switchMode.get() != SwitchMode.Disabled) {
                         this.shouldRender = true;
                         boolean rotated = this.rotationMode.get() != RotationMode.Constant
@@ -362,11 +370,11 @@ public class Aura extends MoveUpdateModule {
             return switch (this.delayMode.get()) {
                 case Basic -> timeSince > this.getDelay();
                 case Smart -> {
-                    double delay = Math.max(1.0 / BlackOut.mc.player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED), this.minDelay.get());
+                    double delay = Math.max(1.0 / BlackOut.mc.player.getAttributeValue(EntityAttributes.ATTACK_SPEED), this.minDelay.get());
                     yield timeSince > this.getRandom(delay - this.randomNegative.get(), delay + this.randomPositive.get());
                 }
                 case Vanilla -> timeSince >= this.minDelay.get()
-                        && BlackOut.mc.player.lastAttackedTicks >= 20.0 / BlackOut.mc.player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED) * this.charge.get();
+                        && BlackOut.mc.player.lastAttackedTicks >= 20.0 / BlackOut.mc.player.getAttributeValue(EntityAttributes.ATTACK_SPEED) * this.charge.get();
             };
         }
     }
@@ -411,7 +419,7 @@ public class Aura extends MoveUpdateModule {
         if (this.target != null && !SettingUtils.inAttackRange(this.target.getBoundingBox()) && this.teleport.get()) {
             positions = this.getPath(this.target);
             if (positions != null) {
-                positions.forEach(posx -> this.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(posx.getX(), posx.getY(), posx.getZ(), false)));
+                positions.forEach(posx -> this.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(posx.getX(), posx.getY(), posx.getZ(), false, BlackOut.mc.player.horizontalCollision)));
                 if (this.tpBack.get()) {
                     BlackOut.mc.player.setPosition(positions.getLast());
                 }
@@ -463,9 +471,9 @@ public class Aura extends MoveUpdateModule {
         if (positions != null && this.tpBack.get()) {
             for (int i = positions.size() - 2; i >= 0; i--) {
                 Vec3d pos = positions.get(i);
-                this.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(pos.getX(), pos.getY(), pos.getZ(), false));
+                this.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(pos.getX(), pos.getY(), pos.getZ(), false, BlackOut.mc.player.horizontalCollision));
             }
-            this.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), false));
+            this.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision));
         }
 
         if (this.holdingSword() && this.block.get() == BlockMode.Spam && this.blocking.get()) {
@@ -494,7 +502,7 @@ public class Aura extends MoveUpdateModule {
         if (stack.isEmpty()) return false;
 
         if (this.allowedItems.get().isEmpty()) {
-            return stack.getItem() instanceof ToolItem;
+            return stack.contains(DataComponentTypes.TOOL);
         }
 
         return this.allowedItems.get().contains(stack.getItem());

@@ -88,7 +88,7 @@ public class RotationManager extends Manager {
     @Event
     public void onSetback(PacketEvent.Received event) {
         if (event.packet instanceof PlayerPositionLookS2CPacket packet) {
-            this.setPrev(packet.getYaw(), packet.getPitch());
+            this.setPrev(packet.change().yaw(), packet.change().pitch());
             this.updateRender();
         }
     }

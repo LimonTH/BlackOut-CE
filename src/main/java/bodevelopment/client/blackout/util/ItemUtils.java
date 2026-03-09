@@ -1,33 +1,56 @@
 package bodevelopment.client.blackout.util;
 
 import net.minecraft.block.Blocks;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.AttributeModifiersComponent;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
-import net.minecraft.item.ArmorItem;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.client.MinecraftClient;
 
 public class ItemUtils {
-
     public static double getArmorValue(ItemStack stack) {
-        if (stack.getItem() instanceof ArmorItem armor) {
-            double value = armor.getProtection();
-            value += armor.getToughness() / 4.0;
+        if (stack.isEmpty()) return 0.0;
 
-            value += armor.getMaterial().value().knockbackResistance() / 3.0;
+        AttributeModifiersComponent modifiers = stack.get(DataComponentTypes.ATTRIBUTE_MODIFIERS);
+        if (modifiers == null) return 0.0;
+        var equippable = stack.get(DataComponentTypes.EQUIPPABLE);
+        if (equippable == null) return 0.0;
+        EquipmentSlot itemSlot = equippable.slot();
 
-            value += getEnchantLevel(stack, Enchantments.PROTECTION) + 1;
-            value += getEnchantLevel(stack, Enchantments.FIRE_PROTECTION) * 0.05;
-            value += getEnchantLevel(stack, Enchantments.FEATHER_FALLING) * 0.1;
-            value += getEnchantLevel(stack, Enchantments.BLAST_PROTECTION) * 0.05;
-            value += getEnchantLevel(stack, Enchantments.PROJECTILE_PROTECTION) * 0.15;
+        double armor = 0;
+        double toughness = 0;
+        double knockbackResist = 0;
 
-            return value;
+        for (AttributeModifiersComponent.Entry entry : modifiers.modifiers()) {
+            if (entry.slot().matches(itemSlot)) {
+                if (entry.attribute().equals(EntityAttributes.ARMOR)) {
+                    armor += entry.modifier().value();
+                } else if (entry.attribute().equals(EntityAttributes.ARMOR_TOUGHNESS)) {
+                    toughness += entry.modifier().value();
+                } else if (entry.attribute().equals(EntityAttributes.KNOCKBACK_RESISTANCE)) {
+                    knockbackResist += entry.modifier().value();
+                }
+            }
         }
-        return 0.0;
+
+        double value = armor;
+        value += toughness / 4.0;
+        value += knockbackResist / 3.0;
+
+        value += getEnchantLevel(stack, Enchantments.PROTECTION) + 1;
+        value += getEnchantLevel(stack, Enchantments.FIRE_PROTECTION) * 0.05;
+        value += getEnchantLevel(stack, Enchantments.FEATHER_FALLING) * 0.1;
+        value += getEnchantLevel(stack, Enchantments.BLAST_PROTECTION) * 0.05;
+        value += getEnchantLevel(stack, Enchantments.PROJECTILE_PROTECTION) * 0.15;
+
+        return value;
     }
 
     public static double getPickaxeValue(ItemStack stack) {
@@ -63,12 +86,12 @@ public class ItemUtils {
         return damage;
     }
 
-    private static int getEnchantLevel(ItemStack stack, net.minecraft.registry.RegistryKey<Enchantment> key) {
+    private static int getEnchantLevel(ItemStack stack, RegistryKey<Enchantment> key) {
         var world = MinecraftClient.getInstance().world;
         if (world == null || stack.isEmpty()) return 0;
 
-        var registry = world.getRegistryManager().get(RegistryKeys.ENCHANTMENT);
-        RegistryEntry<Enchantment> entry = registry.getEntry(key).orElse(null);
+        var registry = world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
+        RegistryEntry<Enchantment> entry = registry.getEntry(key.getValue()).orElse(null);
 
         if (entry == null) return 0;
         return EnchantmentHelper.getLevel(entry, stack);

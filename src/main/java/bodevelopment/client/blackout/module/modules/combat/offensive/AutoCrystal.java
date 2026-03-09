@@ -31,6 +31,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.ItemEntity;
@@ -42,7 +43,6 @@ import net.minecraft.entity.projectile.thrown.ExperienceBottleEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.item.ToolItem;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
@@ -238,7 +238,7 @@ public class AutoCrystal extends Module {
     private final Setting<Boolean> debugAttack = this.sgDebug.booleanSetting("Log Detonation", false, "Prints attack debug information to the console.");
     private final Setting<Boolean> removeTime = this.sgDebug.booleanSetting("Log Despawn Timing", false, "Prints the time taken for crystals to despawn.");
 
-    private final Predicate<ItemStack> antiWeaknessPredicate = stack -> stack.getItem() instanceof ToolItem;
+    private final Predicate<ItemStack> antiWeaknessPredicate = stack -> stack.contains(DataComponentTypes.TOOL);
 
     private final TimerList<Box> spawning = new TimerList<>(true);
     private final TickTimerList<BlockPos> existedTicksList = new TickTimerList<>(true);

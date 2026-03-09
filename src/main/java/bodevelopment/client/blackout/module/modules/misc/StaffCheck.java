@@ -51,11 +51,16 @@ public class StaffCheck extends Module {
         }
 
         if (event.packet instanceof ExplosionS2CPacket packet) {
-            this.checkVelocity(packet.getPlayerVelocityX(), packet.getPlayerVelocityZ(), packet.getPlayerVelocityY());
+            if (packet.playerKnockback().isPresent()) {
+                double velX = packet.playerKnockback().get().x;
+                double velZ = packet.playerKnockback().get().z;
+                double velY = packet.playerKnockback().get().y;
+                this.checkVelocity(velX, velZ, velY);
+            }
         }
     }
 
-    private void checkVelocity(float x, float z, float y) {
+    private void checkVelocity(double x, double z, double y) {
         if (BlackOut.mc.player != null) {
             if (x == 0.0F && z == 0.0F && y > 0.0F && this.kb.get()) {
                 Managers.NOTIFICATIONS

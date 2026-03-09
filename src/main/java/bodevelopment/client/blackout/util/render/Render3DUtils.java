@@ -4,6 +4,7 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Box;
@@ -47,7 +48,7 @@ public class Render3DUtils {
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
             RenderSystem.disableCull();
-            RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+            RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
             RenderSystem.disableDepthTest();
         }
 
@@ -80,58 +81,45 @@ public class Render3DUtils {
 
     public static void renderOutlinesRaw(MatrixStack stack, Box box, int color) {
         start();
-        RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
+        RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
         RenderSystem.lineWidth(1.5F);
-
-        RenderSystem.getModelViewStack().pushMatrix();
-        RenderSystem.getModelViewStack().mul(stack.peek().getPositionMatrix());
-        RenderSystem.applyModelViewMatrix();
 
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
 
-        float r = ColorHelper.Argb.getRed(color) / 255.0F;
-        float g = ColorHelper.Argb.getGreen(color) / 255.0F;
-        float b = ColorHelper.Argb.getBlue(color) / 255.0F;
-        float a = ColorHelper.Argb.getAlpha(color) / 255.0F;
+        float r = ColorHelper.getRed(color) / 255.0F;
+        float g = ColorHelper.getGreen(color) / 255.0F;
+        float b = ColorHelper.getBlue(color) / 255.0F;
+        float a = ColorHelper.getAlpha(color) / 255.0F;
 
-        drawOutlines(new MatrixStack(), bufferBuilder,
+        drawOutlines(stack, bufferBuilder,
                 (float) box.minX, (float) box.minY, (float) box.minZ,
                 (float) box.maxX, (float) box.maxY, (float) box.maxZ,
                 r, g, b, a);
 
         BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
 
-        RenderSystem.getModelViewStack().popMatrix();
-        RenderSystem.applyModelViewMatrix();
         end();
     }
 
     public static void renderSidesRaw(MatrixStack stack, Box box, int color) {
         start();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-
-        RenderSystem.getModelViewStack().pushMatrix();
-        RenderSystem.getModelViewStack().mul(stack.peek().getPositionMatrix());
-        RenderSystem.applyModelViewMatrix();
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
-        float r = ColorHelper.Argb.getRed(color) / 255.0F;
-        float g = ColorHelper.Argb.getGreen(color) / 255.0F;
-        float b = ColorHelper.Argb.getBlue(color) / 255.0F;
-        float a = ColorHelper.Argb.getAlpha(color) / 255.0F;
+        float r = ColorHelper.getRed(color) / 255.0F;
+        float g = ColorHelper.getGreen(color) / 255.0F;
+        float b = ColorHelper.getBlue(color) / 255.0F;
+        float a = ColorHelper.getAlpha(color) / 255.0F;
 
-        drawSides(new MatrixStack(), bufferBuilder,
+        drawSides(stack, bufferBuilder,
                 (float) box.minX, (float) box.minY, (float) box.minZ,
                 (float) box.maxX, (float) box.maxY, (float) box.maxZ,
                 r, g, b, a);
 
         BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
-
-        RenderSystem.getModelViewStack().popMatrix();
-        RenderSystem.applyModelViewMatrix();
         end();
     }
 
@@ -140,32 +128,24 @@ public class Render3DUtils {
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
         RenderSystem.disableDepthTest();
-        RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
-        RenderSystem.lineWidth(1.5F);
 
-        RenderSystem.getModelViewStack().pushMatrix();
-        RenderSystem.getModelViewStack().mul(stack.peek().getPositionMatrix());
-        RenderSystem.applyModelViewMatrix();
+        RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
+        RenderSystem.lineWidth(1.5F);
 
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
 
-        float r = ColorHelper.Argb.getRed(color) / 255.0F;
-        float g = ColorHelper.Argb.getGreen(color) / 255.0F;
-        float b = ColorHelper.Argb.getBlue(color) / 255.0F;
-        float a = ColorHelper.Argb.getAlpha(color) / 255.0F;
+        float r = ColorHelper.getRed(color) / 255.0F;
+        float g = ColorHelper.getGreen(color) / 255.0F;
+        float b = ColorHelper.getBlue(color) / 255.0F;
+        float a = ColorHelper.getAlpha(color) / 255.0F;
 
-        Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
-
-        drawOutlines(new MatrixStack(), bufferBuilder,
-                (float) (box.minX - camPos.x), (float) (box.minY - camPos.y), (float) (box.minZ - camPos.z),
-                (float) (box.maxX - camPos.x), (float) (box.maxY - camPos.y), (float) (box.maxZ - camPos.z),
+        drawOutlines(stack, bufferBuilder,
+                (float) box.minX, (float) box.minY, (float) box.minZ,
+                (float) box.maxX, (float) box.maxY, (float) box.maxZ,
                 r, g, b, a);
 
         BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
-
-        RenderSystem.getModelViewStack().popMatrix();
-        RenderSystem.applyModelViewMatrix();
 
         RenderSystem.enableDepthTest();
         RenderSystem.enableCull();
@@ -210,31 +190,23 @@ public class Render3DUtils {
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
         RenderSystem.disableDepthTest();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
 
-        RenderSystem.getModelViewStack().pushMatrix();
-        RenderSystem.getModelViewStack().mul(stack.peek().getPositionMatrix());
-        RenderSystem.applyModelViewMatrix();
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
-        float r = ColorHelper.Argb.getRed(color) / 255.0F;
-        float g = ColorHelper.Argb.getGreen(color) / 255.0F;
-        float b = ColorHelper.Argb.getBlue(color) / 255.0F;
-        float a = ColorHelper.Argb.getAlpha(color) / 255.0F;
+        float r = ColorHelper.getRed(color) / 255.0F;
+        float g = ColorHelper.getGreen(color) / 255.0F;
+        float b = ColorHelper.getBlue(color) / 255.0F;
+        float a = ColorHelper.getAlpha(color) / 255.0F;
 
-        Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
-
-        drawSides(new MatrixStack(), bufferBuilder,
-                (float) (box.minX - camPos.x), (float) (box.minY - camPos.y), (float) (box.minZ - camPos.z),
-                (float) (box.maxX - camPos.x), (float) (box.maxY - camPos.y), (float) (box.maxZ - camPos.z),
+        drawSides(stack, bufferBuilder,
+                (float) box.minX, (float) box.minY, (float) box.minZ,
+                (float) box.maxX, (float) box.maxY, (float) box.maxZ,
                 r, g, b, a);
 
         BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
-
-        RenderSystem.getModelViewStack().popMatrix();
-        RenderSystem.applyModelViewMatrix();
 
         RenderSystem.enableDepthTest();
         RenderSystem.enableCull();
@@ -329,7 +301,7 @@ public class Render3DUtils {
         if (a <= 0.0F) return;
 
         start();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
         Matrix4f matrix = stack.peek().getPositionMatrix();
         Tessellator tessellator = Tessellator.getInstance();
@@ -360,7 +332,7 @@ public class Render3DUtils {
         if (a <= 0.0F) return;
 
         start();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
         Matrix4f matrix = stack.peek().getPositionMatrix();
         Tessellator tessellator = Tessellator.getInstance();

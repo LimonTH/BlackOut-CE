@@ -4,12 +4,14 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.entity.model.EntityModel;
+import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
@@ -54,7 +56,7 @@ public class WireframeRenderer extends WireframeContext {
         float alphaMult = 1.0F - progress;
 
         if (shape.sides) {
-            RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+            RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
             drawQuads(matrix, positions,
                     sideColor.red / 255.0F,
                     sideColor.green / 255.0F,
@@ -63,7 +65,7 @@ public class WireframeRenderer extends WireframeContext {
         }
 
         if (shape.outlines) {
-            RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
+            RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
             drawLines(matrix, positions,
                     lineColor.red / 255.0F,
                     lineColor.green / 255.0F,
@@ -94,12 +96,12 @@ public class WireframeRenderer extends WireframeContext {
         Matrix4f matrix = stack.peek().getPositionMatrix();
 
         if (shape.sides) {
-            RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+            RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
             drawQuads(matrix, positions, sideColor.red / 255.0F, sideColor.green / 255.0F, sideColor.blue / 255.0F, sideColor.alpha / 255.0F);
         }
 
         if (shape.outlines) {
-            RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
+            RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
             drawLines(matrix, positions, lineColor.red / 255.0F, lineColor.green / 255.0F, lineColor.blue / 255.0F, lineColor.alpha / 255.0F);
         }
 
@@ -108,18 +110,29 @@ public class WireframeRenderer extends WireframeContext {
 
     @SuppressWarnings("unchecked")
     private static void drawStaticPlayerModel(MatrixStack stack, AbstractClientPlayerEntity player, ModelData data) {
-        EntityRenderer<? super AbstractClientPlayerEntity> entityRenderer = BlackOut.mc.getEntityRenderDispatcher().getRenderer(player);
-        if (!(entityRenderer instanceof LivingEntityRenderer<?, ?> livingRenderer)) return;
+        EntityRenderer<? super AbstractClientPlayerEntity, ?> entityRenderer =
+                BlackOut.mc.getEntityRenderDispatcher().getRenderer(player);
+
+        if (!(entityRenderer instanceof LivingEntityRenderer<?, ?, ?> livingRenderer)) return;
 
         EntityModel<?> rawModel = livingRenderer.getModel();
         if (!(rawModel instanceof BipedEntityModel<?>)) return;
 
-        BipedEntityModel<AbstractClientPlayerEntity> model = (BipedEntityModel<AbstractClientPlayerEntity>) rawModel;
+        BipedEntityModel<PlayerEntityRenderState> model = (BipedEntityModel<PlayerEntityRenderState>) rawModel;
+
+        PlayerEntityRenderState state = new PlayerEntityRenderState();
+        state.hasVehicle = data.riding;
+        state.baby = false;
+        state.handSwingProgress = data.swingProgress;
+        state.handSwinging = data.swingProgress > 0;
+        state.skinTextures = player.getSkinTextures();
+
+        state.field_53536 = !data.hasVehicle ? data.limbPos : 0.0F;
+        state.field_53537 = !data.hasVehicle ? Math.min(data.limbSpeed, 1.0F) : 0.0F;
+        state.field_53538 = data.animationProgress;
+        state.leaningPitch = data.leaningPitch;
 
         stack.push();
-        model.handSwingProgress = data.swingProgress;
-        model.riding = data.riding;
-        model.child = false;
 
         float s = data.scale * 0.9375F;
         stack.scale(s, -s, -s);
@@ -148,14 +161,15 @@ public class WireframeRenderer extends WireframeContext {
         float pitch = data.pitch;
         if (data.flip) { pitch *= -1.0F; headYaw *= -1.0F; }
 
-        float limbPos = !data.hasVehicle ? data.limbPos : 0.0F;
-        float limbSpeed = !data.hasVehicle ? Math.min(data.limbSpeed, 1.0F) : 0.0F;
+        state.yawDegrees = headYaw;
+        state.pitch = pitch;
 
-        model.leaningPitch = data.leaningPitch;
-        model.setAngles(player, limbPos, limbSpeed, data.animationProgress, headYaw, pitch);
+        model.setAngles(state);
 
         hidden = true;
-        model.render(stack, provider.getBuffer(null), 69420, 0, 16777215);
+
+        model.render(stack, provider.getBuffer(null), 15728880, 0, -1);
+
         hidden = false;
 
         stack.pop();

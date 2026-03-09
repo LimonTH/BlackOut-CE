@@ -52,7 +52,6 @@ public abstract class MixinLivingEntity {
         }
         return Managers.ROTATION.moveLookYaw;
     }
-
     @WrapOperation(
             method = "tick",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F", ordinal = 0)
@@ -89,7 +88,7 @@ public abstract class MixinLivingEntity {
         }
     }
 
-    @Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getPitch()F"))
+    @Redirect(method = "calcGlidingVelocity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getPitch()F"))
     private float redirectElytraPitch(LivingEntity instance) {
         if ((Object) this == BlackOut.mc.player) {
             if (SettingUtils.grimMovement()) {
@@ -103,14 +102,6 @@ public abstract class MixinLivingEntity {
         }
 
         return instance.getPitch();
-    }
-
-    @Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getRotationVector()Lnet/minecraft/util/math/Vec3d;"))
-    private Vec3d redirectRotationVec(LivingEntity instance) {
-        if ((Object) this == BlackOut.mc.player) {
-            SettingUtils.grimMovement();
-        }
-        return instance.getRotationVector();
     }
 
     @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;jump()V"))

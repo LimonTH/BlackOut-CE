@@ -10,10 +10,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BufferBuilder.class)
 public abstract class MixinBufferBuilder {
-    /** stacktrace:
-    Caused by: java.lang.IllegalStateException: BufferBuilder was empty
-    at knot//net.minecraft.class_287.method_60800(class_287.java:69)
-     */
     @Inject(method = "end", at = @At("HEAD"), cancellable = true)
     private void blackout$safeEnd(CallbackInfoReturnable<BuiltBuffer> cir) {
         if (!((AccessorBufferBuilder) this).isBuilding() || ((AccessorBufferBuilder) this).getVertexCount() == 0) {

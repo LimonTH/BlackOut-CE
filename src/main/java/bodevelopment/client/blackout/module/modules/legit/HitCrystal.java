@@ -130,12 +130,14 @@ public class HitCrystal extends Module {
                 if (this.timer >= this.postPlace.get() + this.preCrystal.get()) {
                     hand = hand == null ? Hand.MAIN_HAND : hand;
                     ActionResult actionResult = BlackOut.mc.interactionManager.interactBlock(BlackOut.mc.player, hand, hitResult);
-                    if (actionResult.shouldSwingHand()) {
-                        BlackOut.mc.getNetworkHandler().sendPacket(new HandSwingC2SPacket(hand));
+                    if (actionResult instanceof ActionResult.Success success) {
+                        if (success.swingSource() == ActionResult.SwingSource.CLIENT) {
+                            BlackOut.mc.getNetworkHandler().sendPacket(new HandSwingC2SPacket(hand));
+                        }
+                        this.clientSwing(SwingHand.RealHand, hand);
+                        this.placed = true;
                     }
 
-                    this.clientSwing(SwingHand.RealHand, hand);
-                    this.placed = true;
                     if (switched) {
                         this.switchMode.get().swapBack();
                     }

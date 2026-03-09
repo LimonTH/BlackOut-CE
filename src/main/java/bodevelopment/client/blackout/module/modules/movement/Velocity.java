@@ -6,7 +6,6 @@ import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.interfaces.mixin.IEntityVelocityUpdateS2CPacket;
-import bodevelopment.client.blackout.interfaces.mixin.IExplosionS2CPacket;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
@@ -161,27 +160,43 @@ public class Velocity extends Module {
         }
 
         if (event.packet instanceof ExplosionS2CPacket packet && this.explosions.get()) {
-            switch (this.mode.get()) {
-                case Simple:
-                    if (this.hChance.get() >= ThreadLocalRandom.current().nextDouble()) {
-                        ((IExplosionS2CPacket) packet).blackout_Client$multiplyXZ(this.horizontal.get().floatValue());
-                    }
+            packet.playerKnockback().ifPresent(knockback -> {
+                double velX = knockback.x;
+                double velY = knockback.y;
+                double velZ = knockback.z;
 
-                    if (this.vChance.get() >= ThreadLocalRandom.current().nextDouble()) {
-                        ((IExplosionS2CPacket) packet).blackout_Client$multiplyY(this.vertical.get().floatValue());
-                    }
-                    break;
-                case Delayed:
-                    if (this.delayExplosion.get()) {
-                        this.delayed.add(new Pair<>(new Vec3d(packet.getPlayerVelocityX(), packet.getPlayerVelocityY(), packet.getPlayerVelocityZ()), true), this.getDelay());
-                        event.setCancelled(true);
-                    }
-                    break;
-                case Grim:
-                    if (this.chance.get() >= ThreadLocalRandom.current().nextDouble()) {
-                        this.grimCancel(event, true);
-                    }
-            }
+                switch (this.mode.get()) {
+                    case Simple:
+                        boolean hBoost = this.hChance.get() >= ThreadLocalRandom.current().nextDouble();
+                        boolean vBoost = this.vChance.get() >= ThreadLocalRandom.current().nextDouble();
+
+                        if (hBoost || vBoost) {
+                            double finalX = hBoost ? velX * this.horizontal.get() : velX;
+                            double finalY = vBoost ? velY * this.vertical.get() : velY;
+                            double finalZ = hBoost ? velZ * this.horizontal.get() : velZ;
+
+                            if (BlackOut.mc.player != null) {
+                                BlackOut.mc.player.addVelocity(finalX, finalY, finalZ);
+                            }
+
+                            event.setCancelled(true);
+                        }
+                        break;
+
+                    case Delayed:
+                        if (this.delayExplosion.get()) {
+                            this.delayed.add(new Pair<>(new Vec3d(velX, velY, velZ), true), this.getDelay());
+                            event.setCancelled(true);
+                        }
+                        break;
+
+                    case Grim:
+                        if (this.chance.get() >= ThreadLocalRandom.current().nextDouble()) {
+                            this.grimCancel(event, true);
+                        }
+                        break;
+                }
+            });
         }
     }
 

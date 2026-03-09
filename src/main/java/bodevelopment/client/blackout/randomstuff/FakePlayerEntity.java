@@ -6,6 +6,7 @@ import bodevelopment.client.blackout.module.modules.client.settings.FakeplayerSe
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.ConsumableComponent;
 import net.minecraft.component.type.FoodComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPose;
@@ -21,25 +22,29 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.item.consume.ApplyEffectsConsumeEffect;
+import net.minecraft.item.consume.ConsumeEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.registry.tag.EntityTypeTags;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Uuids;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Random;
 
 public class FakePlayerEntity extends AbstractClientPlayerEntity {
     private final List<PlayerPos> positions = new ArrayList<>();
-    private final Random random = new Random();
+    private final Random random = this.getWorld().getRandom();
     private final String name;
     public int progress;
     public int popped = 0;
@@ -53,7 +58,7 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
         this.positions.addAll(recordedPositions);
         this.progress = 0;
 
-        EntityAttributeInstance stepAttr = this.getAttributeInstance(EntityAttributes.GENERIC_STEP_HEIGHT);
+        EntityAttributeInstance stepAttr = this.getAttributeInstance(EntityAttributes.STEP_HEIGHT);
         if (stepAttr != null) {
             stepAttr.setBaseValue(1.0);
         }
@@ -93,7 +98,7 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
     }
 
     private boolean innerDamage(DamageSource source, float amount) {
-        if (this.isInvulnerableTo(source)) {
+        if (this.getWorld() instanceof ServerWorld serverWorld && this.isInvulnerableTo(serverWorld, source)) {
             return false;
         } else if (this.getAbilities().invulnerable && !source.isIn(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
             return false;
@@ -113,7 +118,7 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
 
                 if (amount == 0.0F) {
                     return false;
-                } else if (this.isInvulnerableTo(source)) {
+                } else if (this.getWorld() instanceof ServerWorld serverWorld && this.isInvulnerableTo(serverWorld, source)) {
                     return false;
                 } else if (this.isDead()) {
                     return false;
@@ -142,14 +147,17 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
                         if (amount <= this.lastDamageTaken) {
                             return false;
                         }
-
-                        this.applyDamage(source, amount - this.lastDamageTaken);
+                        if (this.getWorld() instanceof ServerWorld serverWorld) {
+                            this.applyDamage(serverWorld, source, amount - this.lastDamageTaken);
+                        }
                         this.lastDamageTaken = amount;
                         bl2 = false;
                     } else {
                         this.lastDamageTaken = amount;
                         this.timeUntilRegen = 20;
-                        this.applyDamage(source, amount);
+                        if (this.getWorld() instanceof ServerWorld serverWorld) {
+                            this.applyDamage(serverWorld, source, amount);
+                        }
                         this.maxHurtTime = 10;
                         this.hurtTime = this.maxHurtTime;
                     }
@@ -178,8 +186,8 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
                             this.sinceSwap = 0;
                             this.popped++;
                         }
-                        
-                        if (!this.tryUseTotem(source)) {
+
+                        if (!this.checkTotemDeathProtection(source)) {
                             SoundEvent soundEvent = this.getDeathSound();
                             if (bl2 && soundEvent != null) {
                                 this.playSound(soundEvent, this.getSoundVolume(), this.getSoundPitch());
@@ -219,6 +227,41 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
         }
     }
 
+    private boolean checkTotemDeathProtection(DamageSource source) {
+        if (source.isIn(net.minecraft.registry.tag.DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+            return false;
+        }
+
+        ItemStack totemStack = null;
+        for (Hand hand : Hand.values()) {
+            ItemStack stack = this.getStackInHand(hand);
+            if (stack.isOf(Items.TOTEM_OF_UNDYING)) {
+                totemStack = stack.copy();
+                if (!this.getAbilities().creativeMode) {
+                    stack.decrement(1);
+                }
+                break;
+            }
+        }
+
+        if (totemStack != null) {
+            this.setHealth(1.0F);
+            this.clearStatusEffects();
+
+            this.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 900, 1));
+            this.addStatusEffect(new StatusEffectInstance(StatusEffects.FIRE_RESISTANCE, 800, 0));
+            this.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 100, 1));
+
+            this.getWorld().sendEntityStatus(this, (byte) 35);
+
+            this.popped++;
+
+            return true;
+        }
+
+        return false;
+    }
+
     public boolean shouldRender(double distance) {
         return true;
     }
@@ -228,6 +271,7 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
         this.sinceEat++;
         FakeplayerSettings fakeplayerSettings = FakeplayerSettings.getInstance();
 
+        // Логика тотемов (остается без изменений, если методы swapToOffhand на месте)
         if (!this.getOffHandStack().isOf(Items.TOTEM_OF_UNDYING)) {
             if (fakeplayerSettings.swapDelay.get() == 0) {
                 if (this.popped < fakeplayerSettings.totems.get() || fakeplayerSettings.unlimitedTotems.get()) {
@@ -243,9 +287,12 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
             this.sinceSwap = 0;
         }
 
+        // Логика поедания
         if (fakeplayerSettings.eating.get()) {
-            if (!this.getMainHandStack().isOf(Items.ENCHANTED_GOLDEN_APPLE)) {
-                this.setStackInHand(Hand.MAIN_HAND, new ItemStack(Items.ENCHANTED_GOLDEN_APPLE, 64));
+            ItemStack handStack = this.getMainHandStack();
+            if (!handStack.isOf(Items.ENCHANTED_GOLDEN_APPLE)) {
+                handStack = new ItemStack(Items.ENCHANTED_GOLDEN_APPLE, 64);
+                this.setStackInHand(Hand.MAIN_HAND, handStack);
             }
 
             this.setCurrentHand(Hand.MAIN_HAND);
@@ -255,8 +302,10 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
                 this.sinceEat = 0;
             } else {
                 if (this.sinceEat % 4 == 0) {
-                    this.spawnConsumptionEffects(this.getMainHandStack(), 5);
-                    this.playSound(this.getEatSound(this.getMainHandStack()), 0.5F + 0.5F * (float) this.random.nextInt(2), (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F);
+                    ConsumableComponent consumable = handStack.get(DataComponentTypes.CONSUMABLE);
+                    if (consumable != null) {
+                        consumable.spawnParticlesAndPlaySound(this.random, this, handStack, 5);
+                    }
                 }
             }
         } else {
@@ -281,12 +330,20 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
         FoodComponent food = stack.get(DataComponentTypes.FOOD);
 
         if (food != null) {
+            ConsumableComponent consumable = stack.get(DataComponentTypes.CONSUMABLE);
+
+            SoundEvent sound = SoundEvents.ENTITY_GENERIC_EAT.value();
+
+            if (consumable != null) {
+                sound = consumable.sound().value();
+            }
+
             world.playSound(
                     null,
                     this.getX(),
                     this.getY(),
                     this.getZ(),
-                    this.getEatSound(stack),
+                    sound,
                     SoundCategory.NEUTRAL,
                     1.0F,
                     1.0F + (this.random.nextFloat() - this.random.nextFloat()) * 0.4F
@@ -307,20 +364,25 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
         return super.clearStatusEffects();
     }
 
-    protected void onStatusEffectRemoved(StatusEffectInstance effect) {
-        super.onStatusEffectRemoved(effect);
 
-        effect.getEffectType().value().onRemoved(this.getAttributes());
+    protected void onStatusEffectsRemoved(Collection<StatusEffectInstance> effects) {
+        super.onStatusEffectsRemoved(effects);
+
+        for (StatusEffectInstance effect : effects) {
+            effect.getEffectType().value().onRemoved(this.getAttributes());
+        }
 
         this.updateAttributes();
     }
 
     private void applyFoodEffects(ItemStack stack) {
-        FoodComponent food = stack.get(DataComponentTypes.FOOD);
-        if (food != null) {
-            for (FoodComponent.StatusEffectEntry entry : food.effects()) {
-                if (this.random.nextFloat() < entry.probability()) {
-                    this.addStatusEffect(new StatusEffectInstance(entry.effect()));
+        ConsumableComponent consumable = stack.get(DataComponentTypes.CONSUMABLE);
+        if (consumable != null) {
+            for (ConsumeEffect effect : consumable.onConsumeEffects()) {
+                if (effect instanceof ApplyEffectsConsumeEffect applyEffects) {
+                    for (StatusEffectInstance effectInstance : applyEffects.effects()) {
+                        this.addStatusEffect(new StatusEffectInstance(effectInstance));
+                    }
                 }
             }
         }
@@ -346,7 +408,7 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
         this.prevStrideDistance = this.strideDistance;
 
         this.updateLimbs(distanceMoved > 0.01F);
-        this.limbAnimator.updateLimbs(distanceMoved * 4.0F, 0.4F);
+        this.limbAnimator.updateLimbs(distanceMoved * 4.0F, 0.4F, 1.0F);
 
         this.tickHandSwing();
 

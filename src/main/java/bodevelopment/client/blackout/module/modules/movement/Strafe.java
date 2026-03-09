@@ -198,32 +198,39 @@ public class Strafe extends Module {
                 this.boosts.clear();
             } else if (System.currentTimeMillis() - this.prevRubberband >= 1000L) {
                 Vec3d vel = null;
+
                 if (event.packet instanceof EntityVelocityUpdateS2CPacket packet) {
                     if (BlackOut.mc.player == null || BlackOut.mc.player.getId() != packet.getEntityId()) {
                         return;
                     }
 
-                    vel = new Vec3d(packet.getVelocityX() / 8000.0F, packet.getVelocityY() / 8000.0F, packet.getVelocityZ() / 8000.0F)
-                            .subtract(this.getVelocity());
+                    vel = new Vec3d(packet.getVelocityX(), packet.getVelocityY(), packet.getVelocityZ())
+                            .subtract(BlackOut.mc.player.getVelocity());
                 }
 
                 if (event.packet instanceof ExplosionS2CPacket packet) {
-                    vel = new Vec3d(packet.getPlayerVelocityX(), packet.getPlayerVelocityY(), packet.getPlayerVelocityZ());
+                    if (packet.playerKnockback().isPresent()) {
+                        vel = packet.playerKnockback().get();
+                    }
                 }
 
                 if (vel != null) {
-                    double x = this.prevMovement.x / this.prevMovement.horizontalLength();
-                    double z = this.prevMovement.z / this.prevMovement.horizontalLength();
+                    double hLen = this.prevMovement.horizontalLength();
                     double boost;
-                    if (this.directionalBoost.get()) {
-                        double velX = Math.max(vel.x * x, 0.0);
-                        double velZ = Math.max(vel.z * z, 0.0);
-                        boost = Math.sqrt(velX * velX + velZ * velZ);
+
+                    if (this.directionalBoost.get() && hLen > 0.0001) {
+                        double x = this.prevMovement.x / hLen;
+                        double z = this.prevMovement.z / hLen;
+
+                        double dot = vel.x * x + vel.z * z;
+                        boost = Math.max(dot, 0.0);
                     } else {
-                        boost = vel.length();
+                        boost = vel.horizontalLength();
                     }
 
-                    this.boosts.add(this.limitBoost(boost * this.boostFactor.get()), this.boostTime.get());
+                    if (boost > 0) {
+                        this.boosts.add(this.limitBoost(boost * this.boostFactor.get()), this.boostTime.get());
+                    }
                 }
             }
         }
@@ -409,7 +416,7 @@ public class Strafe extends Module {
     private boolean isPaused() {
         if (this.pauseSneak.get() && BlackOut.mc.player.isSneaking()) {
             return true;
-        } else if (this.pauseElytra.get() && BlackOut.mc.player.isFallFlying()) {
+        } else if (this.pauseElytra.get() && BlackOut.mc.player.isGliding()) {
             return true;
         } else if (this.pauseFly.get() && BlackOut.mc.player.getAbilities().flying) {
             return true;

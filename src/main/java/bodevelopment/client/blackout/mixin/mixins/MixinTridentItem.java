@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(TridentItem.class)
 public abstract class MixinTridentItem {
     @Shadow
-    public abstract void onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks);
+    public abstract boolean onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks);
 
     @ModifyVariable(method = "onStoppedUsing", at = @At("HEAD"), index = 4, argsOnly = true)
     private int preUse(int value) {

@@ -37,7 +37,7 @@ public class SoundModifier extends Module {
         Identifier[] identifiers = new Identifier[events.length];
 
         for (int i = 0; i < events.length; i++) {
-            identifiers[i] = events[i].getId();
+            identifiers[i] = events[i].id();
         }
 
         return identifiers;

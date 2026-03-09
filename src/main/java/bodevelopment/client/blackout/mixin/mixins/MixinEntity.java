@@ -4,6 +4,7 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.event.events.RemoveEvent;
 import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
+import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.legit.HitCrystal;
 import bodevelopment.client.blackout.module.modules.misc.Timer;
 import bodevelopment.client.blackout.module.modules.movement.*;
@@ -44,6 +45,12 @@ public abstract class MixinEntity {
 
     @Shadow
     public abstract void readNbt(NbtCompound nbt);
+
+    @Shadow
+    public abstract Vec3d getRotationVector(float pitch, float yaw);
+
+    @Shadow public abstract float getYaw();
+    @Shadow public abstract float getPitch();
 
     @Inject(method = "move", at = @At("HEAD"))
     private void onMove(MovementType movementType, Vec3d movement, CallbackInfo ci) {
@@ -184,8 +191,7 @@ public abstract class MixinEntity {
                                     .getNetworkHandler()
                                     .sendPacket(
                                             new PlayerMoveC2SPacket.PositionAndOnGround(
-                                                    BlackOut.mc.player.getX(), BlackOut.mc.player.getY() + y, BlackOut.mc.player.getZ(), false
-                                            )
+                                                    BlackOut.mc.player.getX(), BlackOut.mc.player.getY() + y, BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision)
                                     );
                         }
 
@@ -242,6 +248,21 @@ public abstract class MixinEntity {
             }
 
             return vec3d;
+        }
+    }
+
+    @Inject(method = "getRotationVector()Lnet/minecraft/util/math/Vec3d;", at = @At("HEAD"), cancellable = true)
+    private void onGetRotationVector(CallbackInfoReturnable<Vec3d> cir) {
+        if ((Object) this == BlackOut.mc.player) {
+            if (SettingUtils.grimMovement()) {
+                cir.setReturnValue(this.getRotationVector(Managers.ROTATION.nextPitch, Managers.ROTATION.nextYaw));
+                return;
+            }
+
+            ElytraFly elytraFly = ElytraFly.getInstance();
+            if (elytraFly.enabled && elytraFly.isBouncing()) {
+                cir.setReturnValue(this.getRotationVector(elytraFly.getPitch(), this.getYaw()));
+            }
         }
     }
 

@@ -41,9 +41,7 @@ public class MovementSpam extends Module {
             for (int i = 0; i < this.packets.get(); i++) {
                 this.sendPacket(
                         new PlayerMoveC2SPacket.Full(
-                                pos.x, pos.y, pos.z, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, Managers.PACKET.isOnGround()
-                        )
-                );
+                                pos.x, pos.y, pos.z, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
             }
         }
     }

@@ -95,7 +95,7 @@ public class ColorSetting extends Setting<BlackOutColor> {
     }
 
     private BlackOutColor modifyTheme(int theme) {
-        float[] HSB = Color.RGBtoHSB(ColorHelper.Argb.getRed(theme), ColorHelper.Argb.getGreen(theme), ColorHelper.Argb.getBlue(theme), new float[3]);
+        float[] HSB = Color.RGBtoHSB(ColorHelper.getRed(theme), ColorHelper.getGreen(theme), ColorHelper.getBlue(theme), new float[3]);
         HSB[1] = MathHelper.clamp(HSB[1] + this.saturation, 0.0F, 1.0F);
         HSB[2] = MathHelper.clamp(HSB[2] + this.brightness, 0.0F, 1.0F);
         return BlackOutColor.from(ColorUtils.withAlpha(Color.HSBtoRGB(HSB[0], HSB[1], HSB[2]), this.alpha));

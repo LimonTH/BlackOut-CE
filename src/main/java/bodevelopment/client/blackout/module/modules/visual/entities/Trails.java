@@ -14,6 +14,7 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
@@ -129,19 +130,17 @@ public class Trails extends Module {
 
         private void render(MatrixStack stack, Vec3d camPos, Color color, double renderTime, double fadeTime) {
             this.positions.removeIf(pairx -> System.currentTimeMillis() - pairx.getRight() > (renderTime + fadeTime) * 1000.0);
-            if (this.positions.size() >= 2) {
-                RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
-                RenderSystem.lineWidth(Trails.getInstance().lineWidth.get().floatValue());
 
-                RenderSystem.getModelViewStack().pushMatrix();
-                RenderSystem.getModelViewStack().identity();
-                RenderSystem.applyModelViewMatrix();
+            if (this.positions.size() >= 2) {
+                RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
+                RenderSystem.lineWidth(Trails.getInstance().lineWidth.get().floatValue());
 
                 Tessellator tessellator = Tessellator.getInstance();
                 BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
 
                 MatrixStack.Entry entry = stack.peek();
                 Matrix4f matrix4f = entry.getPositionMatrix();
+
                 float r = color.getRed() / 255.0F;
                 float g = color.getGreen() / 255.0F;
                 float b = color.getBlue() / 255.0F;
@@ -150,36 +149,34 @@ public class Trails extends Module {
                 for (int i = 0; i < this.positions.size() - 1; i++) {
                     Pair<Vec3d, Long> pair = this.positions.get(i);
                     Pair<Vec3d, Long> nextPair = this.positions.get(i + 1);
+
                     Vec3d vec = pair.getLeft();
                     Vec3d nextVec = nextPair.getLeft();
+
                     float alpha = this.getAlpha(pair.getRight(), renderTime, fadeTime) * a;
                     float alpha2 = this.getAlpha(nextPair.getRight(), renderTime, fadeTime) * a;
+
                     Vec3d diff = nextVec.subtract(vec);
-                    Vec3d normal = diff.multiply(1.0 / diff.length());
+                    Vec3d normal = diff.normalize();
+
                     bufferBuilder.vertex(
                                     matrix4f,
                                     (float) (vec.x - camPos.x),
                                     (float) (vec.y - camPos.y),
                                     (float) (vec.z - camPos.z)
-                            )
-                            .color(r, g, b, alpha)
-                            .normal(entry, (float) normal.x, (float) normal.y, (float) normal.z)
-                            ;
+                            ).color(r, g, b, alpha)
+                            .normal((float) normal.x, (float) normal.y, (float) normal.z);
+
                     bufferBuilder.vertex(
                                     matrix4f,
                                     (float) (nextVec.x - camPos.x),
                                     (float) (nextVec.y - camPos.y),
                                     (float) (nextVec.z - camPos.z)
-                            )
-                            .color(r, g, b, alpha2)
-                            .normal(entry, (float) normal.x, (float) normal.y, (float) normal.z)
-                            ;
+                            ).color(r, g, b, alpha2)
+                            .normal((float) normal.x, (float) normal.y, (float) normal.z);
                 }
 
                 BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
-
-                RenderSystem.getModelViewStack().popMatrix();
-                RenderSystem.applyModelViewMatrix();
             }
         }
 

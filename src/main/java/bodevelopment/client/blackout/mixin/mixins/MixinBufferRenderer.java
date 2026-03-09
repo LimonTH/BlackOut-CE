@@ -9,13 +9,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BufferRenderer.class)
 public abstract class MixinBufferRenderer {
-
-    /** stacktrace:
-    Caused by: java.lang.NullPointerException: Cannot invoke "net.minecraft.class_9801.method_60822()" because "$$0" is null
-    at knot//net.minecraft.class_286.method_43439(class_286.java:42)
-    at knot//net.minecraft.class_286.method_43437(class_286.java:36)
-     */
-
     @Inject(method = "draw", at = @At("HEAD"), cancellable = true)
     private static void blackout$drawNullSafe(BuiltBuffer buffer, CallbackInfo ci) {
         if (buffer == null) {

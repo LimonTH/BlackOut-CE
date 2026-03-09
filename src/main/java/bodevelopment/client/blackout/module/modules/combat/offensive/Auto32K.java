@@ -340,12 +340,18 @@ public class Auto32K extends Module {
         if (!(handler instanceof HopperScreenHandler)) {
             return false;
         }
-        var registry = BlackOut.mc.world.getRegistryManager().get(RegistryKeys.ENCHANTMENT);
-        var sharpnessEntry = registry.getEntry(Enchantments.SHARPNESS);
+
+        var registry = BlackOut.mc.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
+        var sharpness = registry.getEntry(Enchantments.SHARPNESS.getValue()).orElseThrow();
+
         for (Slot slot : handler.slots) {
             ItemStack stack = slot.getStack();
+
             if (stack.getItem() instanceof SwordItem) {
-                int sharpnessLevel = sharpnessEntry.map(entry -> EnchantmentHelper.getLevel(entry, stack)).orElse(0);
+                int sharpnessLevel = 0;
+
+                sharpnessLevel = EnchantmentHelper.getLevel(sharpness, stack);
+
                 if (sharpnessLevel >= 10) {
                     int s = this.getSlot();
 
@@ -430,7 +436,7 @@ public class Auto32K extends Module {
 
                                         if (hand != null || this.switchMode.get().swap(findResult.slot())) {
                                             if (this.rotationMode.get() == ObsidianModule.RotationMode.Packet) {
-                                                this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(this.dispenserDir.asRotation(), 0.0F, Managers.PACKET.isOnGround()));
+                                                this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(this.dispenserDir.asRotation(), 0.0F, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
                                             }
 
                                             this.placeBlock(hand, data);

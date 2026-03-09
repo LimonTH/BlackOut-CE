@@ -49,7 +49,7 @@ public class FakePlayerManager extends Manager {
     public void onReceive(PacketEvent.Receive.Pre event) {
         if (event.packet instanceof ExplosionS2CPacket packet) {
             this.fakePlayers.forEach(entity -> {
-                Vec3d pos = new Vec3d(packet.getX(), packet.getY(), packet.getZ());
+                Vec3d pos = new Vec3d(packet.center().getX(), packet.center().getY(), packet.center().getZ());
                 Box box = entity.getBoundingBox();
                 double q = 12.0;
                 double dist = BoxUtils.feet(box).distanceTo(pos) / q;
@@ -95,7 +95,12 @@ public class FakePlayerManager extends Manager {
                     && !BlackOut.mc.player.hasStatusEffect(StatusEffects.BLINDNESS)
                     && !BlackOut.mc.player.hasVehicle()
                     && !BlackOut.mc.player.isSprinting();
-            double d = BlackOut.mc.player.horizontalSpeed - BlackOut.mc.player.prevHorizontalSpeed;
+            double horizontalSpeed = BlackOut.mc.player.getVelocity().horizontalLength();
+            double prevHorizontalSpeed = Math.sqrt(
+                    Math.pow(BlackOut.mc.player.getX() - BlackOut.mc.player.prevX, 2) +
+                            Math.pow(BlackOut.mc.player.getZ() - BlackOut.mc.player.prevZ, 2)
+            );
+            double d = horizontalSpeed - prevHorizontalSpeed;
             boolean bl42 = bl
                     && !critical
                     && !sprintHit

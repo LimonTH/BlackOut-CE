@@ -6,18 +6,14 @@ import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
 import bodevelopment.client.blackout.manager.Managers;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.AttributeModifiersComponent;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.MiningToolItem;
-import net.minecraft.item.SwordItem;
-import net.minecraft.item.ToolItem;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -26,7 +22,6 @@ import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.RaycastContext;
-import org.apache.commons.lang3.mutable.MutableInt;
 
 public class DamageUtils {
     public static RaycastContext raycastContext;
@@ -83,16 +78,14 @@ public class DamageUtils {
 
     public static int getProtectionAmount(Iterable<ItemStack> equipment, boolean explosion) {
         int total = 0;
-        var registry = BlackOut.mc.world.getRegistryManager().getWrapperOrThrow(RegistryKeys.ENCHANTMENT);
+        var registry = BlackOut.mc.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
 
         for (ItemStack stack : equipment) {
             if (stack.isEmpty()) continue;
 
-            // (Protection)
             int protLevel = EnchantmentHelper.getLevel(registry.getOrThrow(Enchantments.PROTECTION), stack);
             total += protLevel;
 
-            // (Blast Protection)
             if (explosion) {
                 int blastLevel = EnchantmentHelper.getLevel(registry.getOrThrow(Enchantments.BLAST_PROTECTION), stack);
                 total += blastLevel * 2;
@@ -112,11 +105,10 @@ public class DamageUtils {
     public static double applyArmor(LivingEntity entity, double damage) {
         double armor = entity.getArmor();
 
-        double toughness = entity.getAttributeValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS);
+        double toughness = entity.getAttributeValue(EntityAttributes.ARMOR_TOUGHNESS);
 
         double f = 2.0 + toughness / 4.0;
 
-        // damage * (1 - clamp(armor - damage / f, armor * 0.2, 20) / 25)
         return damage * (1.0 - MathHelper.clamp(armor - damage / f, armor * 0.2, 20.0) / 25.0);
     }
 
@@ -224,26 +216,22 @@ public class DamageUtils {
             return 1.0;
         }
 
-        // (Base)
         double damage = 1.0;
 
-        // (Attack Damage)
-        net.minecraft.component.type.AttributeModifiersComponent modifiers = stack.getOrDefault(
-                net.minecraft.component.DataComponentTypes.ATTRIBUTE_MODIFIERS,
-                net.minecraft.component.type.AttributeModifiersComponent.DEFAULT
+        AttributeModifiersComponent modifiers = stack.getOrDefault(
+                DataComponentTypes.ATTRIBUTE_MODIFIERS,
+                AttributeModifiersComponent.DEFAULT
         );
 
-        // (Other)
-        for (net.minecraft.component.type.AttributeModifiersComponent.Entry entry : modifiers.modifiers()) {
-            if (entry.attribute().equals(EntityAttributes.GENERIC_ATTACK_DAMAGE) && entry.slot().matches(net.minecraft.entity.EquipmentSlot.MAINHAND)) {
+        for (AttributeModifiersComponent.Entry entry : modifiers.modifiers()) {
+            if (entry.attribute().equals(EntityAttributes.ATTACK_DAMAGE) && entry.slot().matches(net.minecraft.entity.EquipmentSlot.MAINHAND)) {
                 damage += entry.modifier().value();
             }
         }
 
-        // (Sharpness)
         if (BlackOut.mc.world != null) {
             var registry = BlackOut.mc.world.getRegistryManager()
-                    .getWrapperOrThrow(net.minecraft.registry.RegistryKeys.ENCHANTMENT);
+                    .getOrThrow(net.minecraft.registry.RegistryKeys.ENCHANTMENT);
 
             int sharpnessLevel = EnchantmentHelper.getLevel(
                     registry.getOrThrow(Enchantments.SHARPNESS),

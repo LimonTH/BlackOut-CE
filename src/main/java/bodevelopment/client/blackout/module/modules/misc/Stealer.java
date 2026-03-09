@@ -20,6 +20,8 @@ import bodevelopment.client.blackout.util.SettingUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.EquippableComponent;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.*;
 import net.minecraft.screen.GenericContainerScreenHandler;
@@ -298,17 +300,23 @@ public class Stealer extends Module {
         }
 
         if (!this.tools.get()) {
-            this.dump(
-                    slot -> slot.stack.getItem() instanceof ToolItem
-                            && !this.weaponPredicate.test(slot.stack)
-                            && !(slot.stack.getItem() instanceof PickaxeItem)
-            );
+            this.dump(slot -> {
+                ItemStack stack = slot.stack;
+                boolean isTool = stack.contains(DataComponentTypes.TOOL);
+
+                return isTool
+                        && !this.weaponPredicate.test(stack)
+                        && !(stack.getItem() instanceof PickaxeItem);
+            });
         } else {
-            this.steal(
-                    slot -> slot.stack.getItem() instanceof ToolItem
-                            && !this.weaponPredicate.test(slot.stack)
-                            && !(slot.stack.getItem() instanceof PickaxeItem)
-            );
+            this.steal(slot -> {
+                ItemStack stack = slot.stack;
+                boolean isTool = stack.contains(DataComponentTypes.TOOL);
+
+                return isTool
+                        && !this.weaponPredicate.test(stack)
+                        && !(stack.getItem() instanceof PickaxeItem);
+            });
         }
 
         switch (this.armor.get()) {
@@ -330,7 +338,14 @@ public class Stealer extends Module {
                             this.movable.add(best);
                         }
 
-                        this.dump(slot -> slot != best && slot.stack.getItem() instanceof ArmorItem armorItem && armorItem.getSlotType() == equipmentSlot);
+                        this.dump(slot -> {
+                            if (slot == best) return false;
+
+                            ItemStack stack = slot.stack;
+                            EquippableComponent equippable = stack.get(DataComponentTypes.EQUIPPABLE);
+
+                            return equippable != null && equippable.slot() == equipmentSlot;
+                        });
                     }
                 }
         }
@@ -354,7 +369,11 @@ public class Stealer extends Module {
         double bestValue = ItemUtils.getArmorValue(bestSlot.stack);
 
         for (Slot slot : list.stream()
-                .filter(slotx -> slotx.stack.getItem() instanceof ArmorItem armor && armor.getSlotType() == equipmentSlot)
+                .filter(slotx -> {
+                    ItemStack stack = slotx.stack;
+                    EquippableComponent equippable = stack.get(DataComponentTypes.EQUIPPABLE);
+                    return equippable != null && equippable.slot() == equipmentSlot;
+                })
                 .toList()) {
             double value = ItemUtils.getArmorValue(slot.stack);
             if (!(bestValue >= value)) {

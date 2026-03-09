@@ -79,7 +79,8 @@ public class FastEat extends Module {
                                 pos.getZ(),
                                 Managers.ROTATION.prevYaw,
                                 Managers.ROTATION.prevPitch,
-                                Managers.PACKET.isOnGround()
+                                Managers.PACKET.isOnGround(),
+                                BlackOut.mc.player.horizontalCollision
                         )
                 );
             }

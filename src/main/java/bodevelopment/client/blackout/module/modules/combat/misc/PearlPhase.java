@@ -65,7 +65,7 @@ public class PearlPhase extends Module {
         boolean isInvSwitch = hand == null;
         if (!isInvSwitch || this.switchMode.get().swap(pearlResult.slot())) {
             if (this.rotationMode.get() == ObsidianModule.RotationMode.Packet) {
-                this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(this.getYaw(), this.pitch.get(), Managers.PACKET.isOnGround()));
+                this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(this.getYaw(), this.pitch.get(), Managers.PACKET.isOnGround(), BlackOut.mc.player.isSneaking()));
             }
             this.useItem(hand == null ? Hand.MAIN_HAND : hand);
             if (this.swing.get()) {

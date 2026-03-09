@@ -75,7 +75,7 @@ public abstract class MixinClientPlayerEntity {
         if (!sent
                 && Managers.ROTATION.rotated()
                 && (Managers.ROTATION.rotatingYaw != RotationManager.RotatePhase.Inactive || Managers.ROTATION.rotatingPitch != RotationManager.RotatePhase.Inactive)) {
-            BlackOut.mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(Managers.ROTATION.nextYaw, Managers.ROTATION.nextPitch, Managers.PACKET.isOnGround()));
+            BlackOut.mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(Managers.ROTATION.nextYaw, Managers.ROTATION.nextPitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
             wasRotation = true;
             sent = true;
         }
@@ -161,7 +161,7 @@ public abstract class MixinClientPlayerEntity {
 
             boolean cantSprint = !hasInput || !this.canSprint();
             if (value.isSwimming()) {
-                if (!value.isOnGround() && !this.input.sneaking && cantSprint || !value.isTouchingWater()) {
+                if (!value.isOnGround() && !this.input.playerInput.sneak() && cantSprint || !value.isTouchingWater()) {
                     value.setSprinting(false);
                 }
             } else if (cantSprint || value.horizontalCollision && !value.collidedSoftly || value.isTouchingWater() && !value.isSubmergedInWater()) {

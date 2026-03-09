@@ -10,6 +10,8 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.util.InvUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.EquippableComponent;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
@@ -112,9 +114,13 @@ public class SmartMend extends Module {
     }
 
     private int getArmorSlot(EquipmentSlot equipmentSlot) {
+        if (BlackOut.mc.player == null) return -1;
+
         for (Slot slot : BlackOut.mc.player.currentScreenHandler.slots) {
-            if (slot.getStack().getItem() instanceof ArmorItem armorItem && armorItem.getSlotType() == equipmentSlot) {
-                return slot.getIndex();
+            ItemStack stack = slot.getStack();
+            EquippableComponent equippable = stack.get(DataComponentTypes.EQUIPPABLE);
+            if (equippable != null && equippable.slot() == equipmentSlot) {
+                return slot.id;
             }
         }
 

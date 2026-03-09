@@ -3,8 +3,11 @@ package bodevelopment.client.blackout.mixin.mixins;
 import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
 import bodevelopment.client.blackout.module.modules.visual.misc.XRay;
 import bodevelopment.client.blackout.module.modules.visual.world.Ambience;
+import bodevelopment.client.blackout.rendering.renderer.FrameBufferRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.Fog;
+import net.minecraft.client.render.FrameGraphBuilder;
 import net.minecraft.client.render.WorldRenderer;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
@@ -22,23 +25,21 @@ public class MixinWorldRenderer {
     @Final
     private MinecraftClient client;
 
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;isThirdPerson()Z"))
-    private boolean ignoreRender(Camera instance) {
-        return FreeCam.getInstance().enabled || instance.isThirdPerson();
-    }
-
     @Inject(
-            method = "renderSky(Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FLnet/minecraft/client/render/Camera;ZLjava/lang/Runnable;)V",
+            method = "renderSky(Lnet/minecraft/client/render/FrameGraphBuilder;Lnet/minecraft/client/render/Camera;FLnet/minecraft/client/render/Fog;)V",
             at = @At("HEAD"),
             cancellable = true
     )
     private void onRenderSky(
-            Matrix4f matrix4f, Matrix4f projectionMatrix, float tickDelta, Camera camera, boolean thickFog, Runnable fogCallback, CallbackInfo ci
+            FrameGraphBuilder frameGraphBuilder,
+            Camera camera,
+            float tickDelta,
+            net.minecraft.client.render.Fog fog,
+            CallbackInfo ci
     ) {
         Ambience ambience = Ambience.getInstance();
         if (ambience.enabled && ambience.thickFog.get() && !ambience.removeFog.get()) {
-            fogCallback.run();
             ci.cancel();
         }
-    }
+}
 }
