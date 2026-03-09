@@ -9,6 +9,8 @@ A highly customizable and optimized Minecraft utility client, modernized and mai
 > **Note:** This project is a continuation of the original Blackout Client by **luhpossu** and **KassuK**.
 > As a solo developer, I (**Limon_TH**) have taken up this idea, and I'm not going to give it up just yet.
 > 
+> Please, use baritone-api mod if you need baritone.
+
 ---
 
 ## 🛠 Current TASKS (TODO)
@@ -65,6 +67,8 @@ Since I am developing this project solo, any feedback or bug reports are highly 
 
 > **Примечание:** Данный проект является продолжением оригинального Blackout Client от **luhpossu** и **KassuK**.
 > Как соло-разработчик (**Limon_TH**), я занялся этой идеей, и пока не собираюсь её бросать.
+
+> Пожалуйста, используйте мод baritone-api если вам нужен baritone.
 
 ---
 
