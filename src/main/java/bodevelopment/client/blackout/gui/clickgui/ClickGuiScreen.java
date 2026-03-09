@@ -9,6 +9,7 @@ import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
+import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -97,8 +98,8 @@ public class ClickGuiScreen {
 
         RenderUtils.bottomFade(this.stack, -10.0F, 0.0F, this.width + 20.0F, 20.0F, new Color(0, 0, 0, 100).getRGB());
 
-        this.stack.pop();
         frameBuffer.end(this.getAlpha());
+        this.stack.pop();
     }
 
     private float getAlpha() {
