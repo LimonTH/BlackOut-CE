@@ -47,9 +47,8 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	compileOnly 'com.google.errorprone:error_prone_annotations:2.47.0'
-	modImplementation ("com.github.CaffeineMC.sodium:fabric:mc1.21.1-0.6.13") {
-		transitive = false
-	}
+	modImplementation "com.github.CaffeineMC.sodium:fabric:mc1.21.1-0.6.13"
+	modImplementation 'com.github.cabaletta.baritone:baritone-api:1.2.15'
 	implementation 'com.github.LlamaLad7.MixinExtras:mixinextras-common:0.2.2'
 }
 
