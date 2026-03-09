@@ -140,9 +140,9 @@ public class FastProjectile extends Module {
     private void send(double x, double y, double z, boolean og) {
         this.ignore = true;
         if (this.posRot.get()) {
-            this.sendPacket(new PlayerMoveC2SPacket.Full(x, y, z, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, og));
+            this.sendPacket(new PlayerMoveC2SPacket.Full(x, y, z, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, og, BlackOut.mc.player.horizontalCollision));
         } else {
-            this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(x, y, z, og));
+            this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(x, y, z, og, BlackOut.mc.player.horizontalCollision));
         }
 
         this.ignore = false;

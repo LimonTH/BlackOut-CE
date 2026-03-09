@@ -278,7 +278,8 @@ public class Module extends RotationHelper {
                             BlackOut.mc.player.getZ(),
                             yaw,
                             pitch,
-                            Managers.PACKET.isOnGround()
+                            Managers.PACKET.isOnGround(),
+                            BlackOut.mc.player.horizontalCollision
                     )
             );
         }
@@ -300,7 +301,8 @@ public class Module extends RotationHelper {
                             BlackOut.mc.player.getZ(),
                             Managers.ROTATION.prevYaw,
                             Managers.ROTATION.prevPitch,
-                            Managers.PACKET.isOnGround()
+                            Managers.PACKET.isOnGround(),
+                            BlackOut.mc.player.horizontalCollision
                     )
             );
         }

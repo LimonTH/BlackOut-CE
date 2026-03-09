@@ -16,6 +16,7 @@ import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.render.*;
 import net.minecraft.util.math.ColorHelper;
 import net.minecraft.util.math.MathHelper;
@@ -131,9 +132,9 @@ public class ColorScreen extends ClickGuiScreen {
                 float clickBri = (float) (1.0 - MathHelper.clamp(MathHelper.getLerpProgress(this.my, 10.0, 210.0), 0.0, 1.0));
                 float[] HSB = this.getHSB(false);
                 int rgb = Color.HSBtoRGB(HSB[0], clickSat, clickBri);
-                int red = ColorHelper.Argb.getRed(rgb);
-                int green = ColorHelper.Argb.getGreen(rgb);
-                int blue = ColorHelper.Argb.getBlue(rgb);
+                int red = ColorHelper.getRed(rgb);
+                int green = ColorHelper.getGreen(rgb);
+                int blue = ColorHelper.getBlue(rgb);
                 this.colorSetting.get().set(red, green, blue);
                 break;
             }
@@ -141,9 +142,9 @@ public class ColorScreen extends ClickGuiScreen {
                 float clickHue = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.mx, 0.0, 500.0), 0.0, 1.0);
                 float[] HSB = this.getHSB(false);
                 int rgb = Color.HSBtoRGB(clickHue, HSB[1], HSB[2]);
-                int red = ColorHelper.Argb.getRed(rgb);
-                int green = ColorHelper.Argb.getGreen(rgb);
-                int blue = ColorHelper.Argb.getBlue(rgb);
+                int red = ColorHelper.getRed(rgb);
+                int green = ColorHelper.getGreen(rgb);
+                int blue = ColorHelper.getBlue(rgb);
                 this.colorSetting.get().set(red, green, blue);
                 break;
             }
@@ -171,9 +172,9 @@ public class ColorScreen extends ClickGuiScreen {
                 float progress = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.mx, 0.0, 245.0), 0.0, 1.0);
                 float[] HSB = this.getHSB(false);
                 int rgb = Color.HSBtoRGB(HSB[0], progress, HSB[2]);
-                int red = ColorHelper.Argb.getRed(rgb);
-                int green = ColorHelper.Argb.getGreen(rgb);
-                int blue = ColorHelper.Argb.getBlue(rgb);
+                int red = ColorHelper.getRed(rgb);
+                int green = ColorHelper.getGreen(rgb);
+                int blue = ColorHelper.getBlue(rgb);
                 this.colorSetting.get().set(red, green, blue);
                 break;
             }
@@ -181,9 +182,9 @@ public class ColorScreen extends ClickGuiScreen {
                 float progress = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.mx, 0.0, 245.0), 0.0, 1.0);
                 float[] HSB = this.getHSB(false);
                 int rgb = Color.HSBtoRGB(HSB[0], HSB[1], progress);
-                int red = ColorHelper.Argb.getRed(rgb);
-                int green = ColorHelper.Argb.getGreen(rgb);
-                int blue = ColorHelper.Argb.getBlue(rgb);
+                int red = ColorHelper.getRed(rgb);
+                int green = ColorHelper.getGreen(rgb);
+                int blue = ColorHelper.getBlue(rgb);
                 this.colorSetting.get().set(red, green, blue);
             }
         }
@@ -323,13 +324,13 @@ public class ColorScreen extends ClickGuiScreen {
             case 4: {
                 float[] hsb = this.getHSB(false);
                 int rgb = Color.HSBtoRGB(hsb[0], val / 255.0F, hsb[2]);
-                this.colorSetting.get().set(ColorHelper.Argb.getRed(rgb), ColorHelper.Argb.getGreen(rgb), ColorHelper.Argb.getBlue(rgb));
+                this.colorSetting.get().set(ColorHelper.getRed(rgb), ColorHelper.getGreen(rgb), ColorHelper.getBlue(rgb));
                 break;
             }
             case 5: {
                 float[] hsb = this.getHSB(false);
                 int rgb = Color.HSBtoRGB(hsb[0], hsb[1], val / 255.0F);
-                this.colorSetting.get().set(ColorHelper.Argb.getRed(rgb), ColorHelper.Argb.getGreen(rgb), ColorHelper.Argb.getBlue(rgb));
+                this.colorSetting.get().set(ColorHelper.getRed(rgb), ColorHelper.getGreen(rgb), ColorHelper.getBlue(rgb));
                 break;
             }
             case 6:
@@ -469,9 +470,9 @@ public class ColorScreen extends ClickGuiScreen {
                 left.setBlue(255);
                 float[] HSB = this.getHSB(false);
                 int rgb = Color.HSBtoRGB(HSB[0], 1.0F, HSB[2]);
-                int red = ColorHelper.Argb.getRed(rgb);
-                int green = ColorHelper.Argb.getGreen(rgb);
-                int blue = ColorHelper.Argb.getBlue(rgb);
+                int red = ColorHelper.getRed(rgb);
+                int green = ColorHelper.getGreen(rgb);
+                int blue = ColorHelper.getBlue(rgb);
                 right.setRed(red);
                 right.setGreen(green);
                 right.setBlue(blue);
@@ -485,9 +486,9 @@ public class ColorScreen extends ClickGuiScreen {
                 left.setBlue(0);
                 float[] HSB = this.getHSB(false);
                 int rgb = Color.HSBtoRGB(HSB[0], HSB[1], 1.0F);
-                int red = ColorHelper.Argb.getRed(rgb);
-                int green = ColorHelper.Argb.getGreen(rgb);
-                int blue = ColorHelper.Argb.getBlue(rgb);
+                int red = ColorHelper.getRed(rgb);
+                int green = ColorHelper.getGreen(rgb);
+                int blue = ColorHelper.getBlue(rgb);
                 right.setRed(red);
                 right.setGreen(green);
                 right.setBlue(blue);
@@ -527,7 +528,7 @@ public class ColorScreen extends ClickGuiScreen {
     private void renderQuad(float x, float y, float w, float h, float rl, float gl, float bl, float al, float rr, float gr, float br, float ar) {
         Matrix4f matrix4f = this.stack.peek().getPositionMatrix();
         RenderSystem.enableBlend();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
         bufferBuilder.vertex(matrix4f, x + w, y, 0.0F).color(rr, gr, br, ar);
         bufferBuilder.vertex(matrix4f, x, y, 0.0F).color(rl, gl, bl, al);
@@ -540,7 +541,7 @@ public class ColorScreen extends ClickGuiScreen {
     private void renderHueQuad(float x, float y, float w, float h) {
         Matrix4f matrix4f = this.stack.peek().getPositionMatrix();
         RenderSystem.enableBlend();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
         bufferBuilder.vertex(matrix4f, x + w / 6.0F * 6.0F, y, 0.0F).color(1.0F, 0.0F, 0.0F, 1.0F);
         bufferBuilder.vertex(matrix4f, x + w / 6.0F * 5.0F, y, 0.0F).color(1.0F, 0.0F, 1.0F, 1.0F);
@@ -580,9 +581,9 @@ public class ColorScreen extends ClickGuiScreen {
             hueColor = Color.HSBtoRGB(hsb[0], 1.0F, 1.0F);
         }
 
-        int red = ColorHelper.Argb.getRed(hueColor);
-        int green = ColorHelper.Argb.getGreen(hueColor);
-        int blue = ColorHelper.Argb.getBlue(hueColor);
+        int red = ColorHelper.getRed(hueColor);
+        int green = ColorHelper.getGreen(hueColor);
+        int blue = ColorHelper.getBlue(hueColor);
 
         this.renderPickerQuad(10.0F, 500.0F, 200.0F, red / 255.0F, green / 255.0F, blue / 255.0F);
 

@@ -15,6 +15,7 @@ import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.hit.BlockHitResult;
@@ -42,12 +43,9 @@ public class Sight extends Module {
         this.stack.push();
         Render3DUtils.setRotation(this.stack);
         Render3DUtils.start();
-        RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
-        RenderSystem.lineWidth(this.lineWidth.get().floatValue());
 
-        RenderSystem.getModelViewStack().pushMatrix();
-        RenderSystem.getModelViewStack().identity();
-        RenderSystem.applyModelViewMatrix();
+        RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
+        RenderSystem.lineWidth(this.lineWidth.get().floatValue());
 
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
@@ -55,36 +53,30 @@ public class Sight extends Module {
         MatrixStack.Entry entry = this.stack.peek();
         Matrix4f matrix4f = entry.getPositionMatrix();
         Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
-        BlackOut.mc
-                .world
-                .getPlayers()
-                .forEach(
-                        player -> {
-                            if (player != BlackOut.mc.player) {
-                                Vec3d eyePos = OLEPOSSUtils.getLerpedPos(player, event.tickDelta).add(0.0, player.getEyeHeight(player.getPose()), 0.0);
-                                Vec3d lookPos = RotationUtils.rotationVec(
-                                        MathHelper.lerp(BlackOut.mc.getRenderTickCounter().getTickDelta(true), player.prevYaw, player.getYaw()),
-                                        MathHelper.lerp(BlackOut.mc.getRenderTickCounter().getTickDelta(true), player.prevPitch, player.getPitch()),
-                                        eyePos,
-                                        this.fadeIn.get() + this.length.get()
-                                );
-                                ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(eyePos, lookPos);
-                                BlockHitResult hitResult = DamageUtils.raycast(DamageUtils.raycastContext, false);
-                                Vec3d hitPos;
-                                if (hitResult.getType() == HitResult.Type.MISS) {
-                                    hitPos = lookPos;
-                                } else {
-                                    hitPos = hitResult.getPos();
-                                }
 
-                                this.render(bufferBuilder, matrix4f, entry, eyePos.subtract(camPos), hitPos.subtract(camPos));
-                            }
-                        }
+        BlackOut.mc.world.getPlayers().forEach(player -> {
+            if (player != BlackOut.mc.player) {
+                float tickDelta = BlackOut.mc.getRenderTickCounter().getTickDelta(true);
+
+                Vec3d eyePos = OLEPOSSUtils.getLerpedPos(player, tickDelta).add(0.0, player.getEyeHeight(player.getPose()), 0.0);
+
+                Vec3d lookPos = RotationUtils.rotationVec(
+                        MathHelper.lerp(tickDelta, player.prevYaw, player.getYaw()),
+                        MathHelper.lerp(tickDelta, player.prevPitch, player.getPitch()),
+                        eyePos,
+                        this.fadeIn.get() + this.length.get()
                 );
-        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
 
-        RenderSystem.getModelViewStack().popMatrix();
-        RenderSystem.applyModelViewMatrix();
+                ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(eyePos, lookPos);
+                BlockHitResult hitResult = DamageUtils.raycast(DamageUtils.raycastContext, false);
+
+                Vec3d hitPos = (hitResult.getType() == HitResult.Type.MISS) ? lookPos : hitResult.getPos();
+
+                this.render(bufferBuilder, matrix4f, entry, eyePos.subtract(camPos), hitPos.subtract(camPos));
+            }
+        });
+
+        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
 
         Render3DUtils.end();
         this.stack.pop();

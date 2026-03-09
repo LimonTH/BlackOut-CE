@@ -409,7 +409,7 @@ public class BedAura extends Module {
                     if (!this.pauseOffGround.get() || BlackOut.mc.player.isOnGround()) {
                         switch (this.rotationMode.get()) {
                             case Instant:
-                                this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(this.placeDir.asRotation(), Managers.ROTATION.nextPitch, Managers.PACKET.isOnGround()));
+                                this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(this.placeDir.asRotation(), Managers.ROTATION.nextPitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
                                 break;
                             case Manager:
                                 if (!this.rotateYaw(this.placeDir.asRotation(), RotationType.Other, "placing")) {

@@ -17,9 +17,7 @@ import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Identifier;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -28,10 +26,6 @@ import java.awt.*;
 
 @Mixin(InGameHud.class)
 public class MixinInGameHud {
-    @Final
-    @Shadow
-    private static Identifier PUMPKIN_BLUR;
-
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void preRender(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         if (Zoomify.getInstance().isCleanScreen()) {
@@ -100,7 +94,9 @@ public class MixinInGameHud {
             cancellable = true
     )
     private void injectPumpkinBlur(DrawContext context, Identifier texture, float opacity, CallbackInfo callback) {
-        if (NoRender.getInstance().enabled && NoRender.getInstance().pumpkin.get() && PUMPKIN_BLUR.equals(texture)) {
+        Identifier pumpkinTexture = Identifier.ofVanilla("textures/misc/pumpkinblur.png");
+
+        if (NoRender.getInstance().enabled && NoRender.getInstance().pumpkin.get() && pumpkinTexture.equals(texture)) {
             callback.cancel();
         }
     }

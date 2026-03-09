@@ -16,6 +16,8 @@ import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import net.minecraft.block.*;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.EquippableComponent;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.*;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
@@ -496,7 +498,11 @@ public class Manager extends Module {
 
     private Slot findBestArmor(EquipmentSlot equipmentSlot) {
         Slot bestArmor = this.findSlot(
-                slot -> slot.getStack().getItem() instanceof ArmorItem armorItem && armorItem.getSlotType() == equipmentSlot,
+                slot -> {
+                    ItemStack stack = slot.getStack();
+                    EquippableComponent equippable = stack.get(DataComponentTypes.EQUIPPABLE);
+                    return equippable != null && equippable.slot() == equipmentSlot;
+                },
                 slot -> ItemUtils.getArmorValue(slot.getStack()),
                 FindArea.All
         );
@@ -504,7 +510,7 @@ public class Manager extends Module {
             return bestArmor;
         } else {
             Slot bestElytra = this.findSlot(
-                    slot -> slot.getStack().getItem() instanceof ElytraItem, slot -> ItemUtils.getElytraValue(slot.getStack()), FindArea.All
+                    slot -> slot.getStack().contains(net.minecraft.component.DataComponentTypes.GLIDER), slot -> ItemUtils.getElytraValue(slot.getStack()), FindArea.All
             );
             boolean elytraPriority = this.swapBinded() ? this.currentlyElytra != null && this.currentlyElytra : this.elytra.get();
             Slot higherPriority = elytraPriority ? bestElytra : bestArmor;
@@ -529,7 +535,11 @@ public class Manager extends Module {
             if (this.badArmor.get()) {
                 for (EquipmentSlot equipmentSlot : OLEPOSSUtils.equipmentSlots) {
                     Slot badArmor = this.findBadItem(
-                            slot -> slot.getStack().getItem() instanceof ArmorItem armorItem && armorItem.getSlotType() == equipmentSlot,
+                            slot -> {
+                                ItemStack stack = slot.getStack();
+                                EquippableComponent equippable = stack.get(DataComponentTypes.EQUIPPABLE);
+                                return equippable != null && equippable.slot() == equipmentSlot;
+                            },
                             slot -> ItemUtils.getArmorValue(slot.getStack()),
                             FindArea.All
                     );

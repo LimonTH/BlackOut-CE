@@ -2,43 +2,33 @@ package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.module.modules.visual.world.Ambience;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.render.BackgroundRenderer;
 import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.Fog;
+import net.minecraft.client.world.ClientWorld;
+import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BackgroundRenderer.class)
 public class MixinBackgroundRenderer {
-    @Shadow
-    private static float red;
-    @Shadow
-    private static float green;
-    @Shadow
-    private static float blue;
-
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;clearColor(FFFF)V"))
-    private static void redirectColor(float r, float g, float b, float a) {
+    @Inject(method = "getFogColor", at = @At("RETURN"), cancellable = true)
+    private static void onGetFogColor(Camera camera, float tickDelta, ClientWorld world, int clampedViewDistance, float skyDarkness, CallbackInfoReturnable<Vector4f> cir) {
         Ambience ambience = Ambience.getInstance();
         if (ambience.enabled && ambience.modifyFog.get() && ambience.thickFog.get() && !ambience.removeFog.get()) {
             BlackOutColor color = ambience.color.get();
-            red = color.red / 255.0F;
-            green = color.green / 255.0F;
-            blue = color.blue / 255.0F;
+            cir.setReturnValue(new Vector4f(color.red / 255.0F, color.green / 255.0F, color.blue / 255.0F, 1.0F));
         }
-
-        RenderSystem.clearColor(red, green, blue, 0.0F);
     }
 
     @Inject(method = "applyFog", at = @At("HEAD"), cancellable = true)
-    private static void applyFog(Camera camera, BackgroundRenderer.FogType fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo info) {
+    private static void onApplyFog(Camera camera, BackgroundRenderer.FogType fogType, Vector4f color, float viewDistance, boolean thickenFog, float tickDelta, CallbackInfoReturnable<Fog> cir) {
         Ambience ambience = Ambience.getInstance();
         if (ambience != null && ambience.enabled && ambience.modifyFog(fogType == BackgroundRenderer.FogType.FOG_TERRAIN)) {
-            info.cancel();
+            cir.setReturnValue(Fog.DUMMY);
         }
     }
 }

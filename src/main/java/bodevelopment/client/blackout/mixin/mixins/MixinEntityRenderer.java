@@ -2,8 +2,10 @@ package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.module.modules.visual.entities.Nametags;
 import bodevelopment.client.blackout.module.modules.visual.entities.ShaderESP;
+import bodevelopment.client.blackout.util.render.RenderEntityCapture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderer;
+import net.minecraft.client.render.entity.state.EntityRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.text.Text;
@@ -15,21 +17,23 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(EntityRenderer.class)
 public class MixinEntityRenderer {
+
     @Inject(
             method = "renderLabelIfPresent",
             at = @At("HEAD"),
             cancellable = true
     )
-    private <T extends Entity> void shouldRenderNametag(
-            T entity,
+    private void shouldRenderNametag(
+            EntityRenderState state,
             Text text,
             MatrixStack matrices,
             VertexConsumerProvider vertexConsumers,
             int light,
-            float tickDelta,
             CallbackInfo ci
     ) {
-        if (!ShaderESP.ignore && this.shouldCancel(entity)) {
+        Entity entity = RenderEntityCapture.CAPTURED_ENTITY.get();
+
+        if (entity != null && !ShaderESP.ignore && this.shouldCancel(entity)) {
             ci.cancel();
         }
     }

@@ -364,7 +364,7 @@ public class OLEPOSSUtils {
         if (BlackOut.mc.world == null) return 0;
         return EnchantmentHelper.getLevel(
                 BlackOut.mc.world.getRegistryManager()
-                        .getWrapperOrThrow(RegistryKeys.ENCHANTMENT)
+                        .getOrThrow(RegistryKeys.ENCHANTMENT)
                         .getOrThrow(enchantmentKey),
                 stack
         );
@@ -381,7 +381,7 @@ public class OLEPOSSUtils {
         if (BlackOut.mc.world == null) return 0;
         return EnchantmentHelper.getEquipmentLevel(
                 BlackOut.mc.world.getRegistryManager()
-                        .getWrapperOrThrow(RegistryKeys.ENCHANTMENT)
+                        .getOrThrow(RegistryKeys.ENCHANTMENT)
                         .getOrThrow(enchantmentKey),
                 entity
         );

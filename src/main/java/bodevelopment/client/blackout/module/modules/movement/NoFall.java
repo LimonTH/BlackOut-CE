@@ -37,7 +37,7 @@ public class NoFall extends Module {
             if (!Managers.PACKET.isOnGround()) {
                 Vec3d vec = Managers.PACKET.pos;
                 this.sendPacket(
-                        new PlayerMoveC2SPacket.Full(vec.x, vec.y + 1.0E-6, vec.z, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, false)
+                        new PlayerMoveC2SPacket.Full(vec.x, vec.y + 1.0E-6, vec.z, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, false, BlackOut.mc.player.horizontalCollision)
                 );
                 BlackOut.mc.player.fallDistance = 0.0F;
             }

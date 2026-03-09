@@ -14,7 +14,6 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
@@ -129,7 +128,7 @@ public class Criticals extends Module {
             case GrimOld:
                 Vec3d pos = Managers.PACKET.pos;
                 this.sendPacket(new PlayerMoveC2SPacket.Full(pos.getX(), pos.getY() - 1.0E-6, pos.getZ(),
-                        Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, false));
+                        Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, false, BlackOut.mc.player.horizontalCollision));
                 break;
 
             case Matrix:
@@ -146,7 +145,7 @@ public class Criticals extends Module {
     }
 
     private void sendPos(double x, double y, double z, boolean onGround) {
-        this.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(x, y, z, onGround));
+        this.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(x, y, z, onGround, BlackOut.mc.player.horizontalCollision));
     }
 
     @Event
@@ -171,7 +170,7 @@ public class Criticals extends Module {
 
     private boolean input() {
         if (BlackOut.mc.player == null) return false;
-        return BlackOut.mc.player.input.getMovementInput().lengthSquared() > 0.0F || BlackOut.mc.player.input.jumping;
+        return BlackOut.mc.player.input.getMovementInput().lengthSquared() > 0.0F || BlackOut.mc.player.input.playerInput.jump();
     }
 
     public enum Mode {

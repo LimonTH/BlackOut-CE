@@ -19,10 +19,9 @@ import bodevelopment.client.blackout.randomstuff.timers.TimerMap;
 import bodevelopment.client.blackout.util.InvUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.item.Item;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.item.ToolItem;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.state.property.Properties;
@@ -51,8 +50,7 @@ public class AnchorCharge extends Module {
     private final Map<BlockPos, BlockState> realStates = new ConcurrentHashMap<>();
     private final Predicate<ItemStack> emptyPredicate = stack -> {
         if (stack != null && !stack.isEmpty()) {
-            Item item = stack.getItem();
-            return item instanceof ToolItem;
+            return stack.contains(DataComponentTypes.TOOL);
         } else {
             return true;
         }

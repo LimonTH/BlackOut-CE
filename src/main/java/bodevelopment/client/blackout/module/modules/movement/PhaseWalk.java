@@ -68,7 +68,7 @@ public class PhaseWalk extends Module {
             this.sincePhase = 0;
             Vec3d pos = Managers.PACKET.pos;
             this.sendPacket(
-                    new PlayerMoveC2SPacket.Full(pos.x, pos.y + 1.0, pos.z, Managers.ROTATION.prevYaw + 5.0F, Managers.ROTATION.prevPitch, false)
+                    new PlayerMoveC2SPacket.Full(pos.x, pos.y + 1.0, pos.z, Managers.ROTATION.prevYaw + 5.0F, Managers.ROTATION.prevPitch, false, BlackOut.mc.player.horizontalCollision)
             );
         }
     }
@@ -110,7 +110,7 @@ public class PhaseWalk extends Module {
                     this.sincePhase = 0;
                     Vec3d pos = Managers.PACKET.pos;
                     this.sendPacket(
-                            new PlayerMoveC2SPacket.Full(pos.x, pos.y + 1.0, pos.z, Managers.ROTATION.prevYaw + 5.0F, Managers.ROTATION.prevPitch, false)
+                            new PlayerMoveC2SPacket.Full(pos.x, pos.y + 1.0, pos.z, Managers.ROTATION.prevYaw + 5.0F, Managers.ROTATION.prevPitch, false, BlackOut.mc.player.horizontalCollision)
                     );
                 }
 
@@ -241,8 +241,8 @@ public class PhaseWalk extends Module {
     private void sendBounds(Vec3d to) {
         this.rubberbanded = true;
         this.timerLeft = 5;
-        Managers.PACKET.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(to.x, to.y, to.z, Managers.PACKET.isOnGround()));
-        Managers.PACKET.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(to.x, to.y - 87.0, to.z, Managers.PACKET.isOnGround()));
+        Managers.PACKET.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(to.x, to.y, to.z, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
+        Managers.PACKET.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(to.x, to.y - 87.0, to.z, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
         Managers.PACKET.sendInstantly(Managers.PACKET.incrementedPacket(to));
         this.ignore = true;
         if (this.syncPacket.get()) {

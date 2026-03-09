@@ -18,6 +18,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Camera.class)
 public abstract class MixinCamera {
@@ -142,6 +143,13 @@ public abstract class MixinCamera {
             Direction direction = ((LivingEntity) focusedEntity).getSleepingDirection();
             this.setRotation(direction != null ? direction.asRotation() - 180.0F : 0.0F, 0.0F);
             this.moveBy(0.0F, 0.3F, 0.0F);
+        }
+    }
+
+    @Inject(method = "isThirdPerson", at = @At("HEAD"), cancellable = true)
+    private void onIsThirdPerson(CallbackInfoReturnable<Boolean> cir) {
+        if (FreeCam.getInstance().enabled) {
+            cir.setReturnValue(true);
         }
     }
 

@@ -9,12 +9,12 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.BoxMultiSetting;
+import bodevelopment.client.blackout.randomstuff.SimulatedMaterial;
 import bodevelopment.client.blackout.randomstuff.timers.RenderList;
 import bodevelopment.client.blackout.util.BlockUtils;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.item.ToolMaterials;
 import net.minecraft.network.packet.s2c.play.BlockBreakingProgressS2CPacket;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.math.BlockPos;
@@ -29,7 +29,7 @@ public class MineESP extends Module {
 
     private final Setting<Double> range = this.sgGeneral.doubleSetting("Visual Range", 10.0, 0.0, 50.0, 0.5, "The maximum distance at which mining indicators will be rendered.");
     private final Setting<Boolean> accurateTime = this.sgGeneral.booleanSetting("Predictive Timing", false, "Calculates the exact mining duration based on a simulated tool and efficiency level.");
-    private final Setting<ToolMaterials> pickaxeMaterial = this.sgGeneral.enumSetting("Simulated Tool", ToolMaterials.NETHERITE, "The tool material used to calculate the predicted block breaking time.", this.accurateTime::get);
+    private final Setting<SimulatedMaterial> pickaxeMaterial = this.sgGeneral.enumSetting("Simulated Tool", SimulatedMaterial.NETHERITE, "The tool material used to calculate the predicted block breaking time.", this.accurateTime::get);
     private final Setting<Integer> pickaxeEfficiency = this.sgGeneral.intSetting("Efficiency Level", 5, 0, 5, 1, "The Efficiency enchantment level used for the predictive timing calculation.", this.accurateTime::get);
     private final Setting<Double> fadeIn = this.sgGeneral.doubleSetting("Static Scale Time", 2.0, 0.0, 20.0, 0.1, "The duration it takes for the box to scale to full size when predictive timing is disabled.", () -> !this.accurateTime.get());
     private final Setting<Double> renderTime = this.sgGeneral.doubleSetting("Dwell Time", 4.0, 0.0, 20.0, 0.1, "The amount of time the highlight remains at full size before beginning to fade.");
@@ -104,10 +104,10 @@ public class MineESP extends Module {
 
         int level = this.pickaxeEfficiency.get();
         if (level > 0) {
-            var enchantmentRegistry = BlackOut.mc.world.getRegistryManager().get(RegistryKeys.ENCHANTMENT);
-            var efficiencyOption = enchantmentRegistry.getEntry(Enchantments.EFFICIENCY);
+            var enchantmentRegistry = BlackOut.mc.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
 
-            efficiencyOption.ifPresent(entry -> stack.addEnchantment(entry, level));
+            var efficiencyEntry = enchantmentRegistry.getOrThrow(Enchantments.EFFICIENCY);
+            stack.addEnchantment(efficiencyEntry, level);
         }
 
         return stack;

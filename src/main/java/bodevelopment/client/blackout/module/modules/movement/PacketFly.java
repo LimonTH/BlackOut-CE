@@ -110,7 +110,7 @@ public class PacketFly extends Module {
         if (BlackOut.mc.player != null && BlackOut.mc.world != null && this.resync.get()) {
             Vec3d pos = Managers.PACKET.pos;
             this.sendPacket(
-                    new PlayerMoveC2SPacket.Full(pos.x, pos.y + 1.0, pos.z, Managers.ROTATION.prevYaw + 5.0F, Managers.ROTATION.prevPitch, false)
+                    new PlayerMoveC2SPacket.Full(pos.x, pos.y + 1.0, pos.z, Managers.ROTATION.prevYaw + 5.0F, Managers.ROTATION.prevPitch, false, BlackOut.mc.player.horizontalCollision)
             );
         }
     }
@@ -321,7 +321,7 @@ public class PacketFly extends Module {
 
     private void send(Vec3d pos, Vec3d bounds, boolean onGround, boolean phasing) {
         PlayerMoveC2SPacket normal = this.getPacket(pos, onGround, phasing);
-        PlayerMoveC2SPacket.PositionAndOnGround bound = new PlayerMoveC2SPacket.PositionAndOnGround(bounds.x, bounds.y, bounds.z, onGround);
+        PlayerMoveC2SPacket.PositionAndOnGround bound = new PlayerMoveC2SPacket.PositionAndOnGround(bounds.x, bounds.y, bounds.z, onGround, BlackOut.mc.player.horizontalCollision);
         this.validPackets.add(normal);
         this.sendPacket(normal);
         this.validPackets.add(bound);
@@ -342,7 +342,7 @@ public class PacketFly extends Module {
             } else {
                 float yaw = Managers.ROTATION.nextYaw;
                 float pitch = Managers.ROTATION.nextPitch;
-                return new PlayerMoveC2SPacket.Full(pos.x, pos.y, pos.z, yaw, pitch, onGround);
+                return new PlayerMoveC2SPacket.Full(pos.x, pos.y, pos.z, yaw, pitch, onGround, BlackOut.mc.player.horizontalCollision);
             }
         }
     }
@@ -352,7 +352,7 @@ public class PacketFly extends Module {
     }
 
     private PlayerMoveC2SPacket.PositionAndOnGround onlyMove(Vec3d vec3d, boolean ong) {
-        return new PlayerMoveC2SPacket.PositionAndOnGround(vec3d.x, vec3d.y, vec3d.z, ong);
+        return new PlayerMoveC2SPacket.PositionAndOnGround(vec3d.x, vec3d.y, vec3d.z, ong, BlackOut.mc.player.horizontalCollision);
     }
 
     private double getYaw() {

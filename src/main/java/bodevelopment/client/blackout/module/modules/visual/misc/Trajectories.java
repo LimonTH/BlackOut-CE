@@ -20,6 +20,7 @@ import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.component.DataComponentTypes;
@@ -105,10 +106,11 @@ public class Trajectories extends Module {
             return false;
         }
 
-        var enchantmentRegistry = BlackOut.mc.world.getRegistryManager().get(RegistryKeys.ENCHANTMENT);
-        var multishotEntry = enchantmentRegistry.getEntry(Enchantments.MULTISHOT);
+        var registry = BlackOut.mc.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
 
-        return multishotEntry.map(entry -> EnchantmentHelper.getLevel(entry, itemStack) > 0).orElse(false);
+        return registry.getEntry(Enchantments.MULTISHOT.getValue())
+                .map(entry -> EnchantmentHelper.getLevel(entry, itemStack) > 0)
+                .orElse(false);
     }
 
     private void draw(SimulationData data, double[] velocity, ItemStack itemStack, float tickDelta, MatrixStack stack) {
@@ -147,7 +149,7 @@ public class Trajectories extends Module {
     private HitResult drawLine(SimulationData data, double[] velocity, ItemStack itemStack, float tickDelta, MatrixStack stack) {
         Vec3d pos = data.startPos.apply(itemStack, tickDelta);
         Matrix4f matrix4f = stack.peek().getPositionMatrix();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINE_STRIP, VertexFormats.POSITION_COLOR);
         MutableDouble dist = new MutableDouble(0.0);

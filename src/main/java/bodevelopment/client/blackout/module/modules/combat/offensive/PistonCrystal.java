@@ -448,7 +448,7 @@ public class PistonCrystal extends Module {
                     if (!SettingUtils.shouldRotate(RotationType.BlockPlace) || this.rotateBlock(this.pistonData, RotationType.BlockPlace, "piston")) {
                         boolean switched = false;
                         if (hand != null || (switched = this.pistonSwitch.get().swap(result.slot()))) {
-                            this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(this.pistonDir.getOpposite().asRotation(), Managers.ROTATION.nextPitch, Managers.PACKET.isOnGround()));
+                            this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(this.pistonDir.getOpposite().asRotation(), Managers.ROTATION.nextPitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
                             this.placeBlock(hand, this.pistonData.pos().toCenterPos(), this.pistonData.dir(), this.pistonData.pos());
                             if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
                                 this.end("piston");

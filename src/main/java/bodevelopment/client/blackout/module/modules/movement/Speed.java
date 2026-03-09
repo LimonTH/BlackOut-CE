@@ -200,7 +200,7 @@ public class Speed extends Module {
 
     private boolean isPaused() {
         if (this.pauseSneak.get() && BlackOut.mc.player.isSneaking()) return true;
-        if (this.pauseElytra.get() && BlackOut.mc.player.isFallFlying()) return true;
+        if (this.pauseElytra.get() && BlackOut.mc.player.isGliding()) return true;
         if (this.pauseFly.get() && BlackOut.mc.player.getAbilities().flying) return true;
 
         boolean inWater = switch (this.pauseWater.get()) {

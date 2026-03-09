@@ -6,6 +6,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.render.Fog;
 import net.minecraft.client.render.FogShape;
 
 public class Ambience extends Module {
@@ -42,16 +43,29 @@ public class Ambience extends Module {
             return false;
         } else if (!this.modifyFog.get()) {
             return false;
-        } else if (this.removeFog.get()) {
-            RenderSystem.setShaderFogColor(0.0F, 0.0F, 0.0F, 0.0F);
+        }
+
+        if (this.removeFog.get()) {
+            RenderSystem.setShaderFog(new Fog(
+                    Float.MAX_VALUE,
+                    Float.MAX_VALUE,
+                    this.shape.get(),
+                    0.0F, 0.0F, 0.0F, 0.0F
+            ));
             return true;
         } else {
-            RenderSystem.setShaderFogColor(
-                    this.color.get().red / 255.0F, this.color.get().green / 255.0F, this.color.get().blue / 255.0F, this.color.get().alpha / 255.0F
-            );
-            RenderSystem.setShaderFogStart(this.distance.get().floatValue());
-            RenderSystem.setShaderFogEnd(this.distance.get().floatValue() + this.fading.get().floatValue());
-            RenderSystem.setShaderFogShape(this.shape.get());
+            float start = this.distance.get().floatValue();
+            float end = start + this.fading.get().floatValue();
+
+            RenderSystem.setShaderFog(new Fog(
+                    start,
+                    end,
+                    this.shape.get(),
+                    this.color.get().red / 255.0F,
+                    this.color.get().green / 255.0F,
+                    this.color.get().blue / 255.0F,
+                    this.color.get().alpha / 255.0F
+            ));
             return true;
         }
     }

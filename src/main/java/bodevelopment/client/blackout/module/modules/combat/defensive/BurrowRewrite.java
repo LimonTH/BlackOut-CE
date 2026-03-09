@@ -121,7 +121,7 @@ public class BurrowRewrite extends Module {
             if (BlackOut.mc.player.isOnGround()) {
                 if (this.mode.get() == BurrowMode.Cancel) {
                     this.shouldCancel = true;
-                    this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(BlackOut.mc.player.getX(), 1337.0, BlackOut.mc.player.getZ(), false));
+                    this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(BlackOut.mc.player.getX(), 1337.0, BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision));
                 }
 
                 if (this.instant.get()) {
@@ -142,9 +142,7 @@ public class BurrowRewrite extends Module {
                         yVel = (yVel - 0.08F) * 0.98F;
                         this.sendPacket(
                                 new PlayerMoveC2SPacket.PositionAndOnGround(
-                                        BlackOut.mc.player.getX(), BlackOut.mc.player.getY() + y, BlackOut.mc.player.getZ(), false
-                                )
-                        );
+                                        BlackOut.mc.player.getX(), BlackOut.mc.player.getY() + y, BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision));
                     }
 
                     this.place(data);
@@ -268,7 +266,7 @@ public class BurrowRewrite extends Module {
         double z = BlackOut.mc.player.getZ();
 
         for (int i = 0; i < this.packets.get(); i++) {
-            this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(x, y, z, false));
+            this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(x, y, z, false, BlackOut.mc.player.horizontalCollision));
         }
 
         if (this.smooth.get()) {
@@ -282,7 +280,8 @@ public class BurrowRewrite extends Module {
                                         this.startPos.getZ(),
                                         Managers.ROTATION.prevYaw,
                                         Managers.ROTATION.prevPitch,
-                                        false
+                                        false,
+                                        BlackOut.mc.player.horizontalCollision
                                 )
                         );
             }

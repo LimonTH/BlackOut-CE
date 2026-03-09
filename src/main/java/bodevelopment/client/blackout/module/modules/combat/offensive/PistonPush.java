@@ -163,7 +163,7 @@ public class PistonPush extends Module {
 
                         if (!SettingUtils.shouldRotate(RotationType.BlockPlace) || this.rotateBlock(this.pistonData, RotationType.BlockPlace, "piston")) {
 
-                            this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(yaw, pitch, Managers.PACKET.isOnGround()));
+                            this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(yaw, pitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
                             boolean switched = false;
                             if (hand == null) {
                                 switched = this.pistonSwitch.get().swap(result.slot());

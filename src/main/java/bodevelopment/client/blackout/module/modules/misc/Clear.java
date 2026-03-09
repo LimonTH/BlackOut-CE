@@ -127,7 +127,7 @@ public class Clear extends Module {
     private void updatePos() {
         Vec3d pos = this.getPos();
         BlackOut.mc.player.setPosition(pos);
-        this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(pos.x, pos.y, pos.z, BlackOut.mc.player.isOnGround()));
+        this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(pos.x, pos.y, pos.z, BlackOut.mc.player.isOnGround(), BlackOut.mc.player.horizontalCollision));
     }
 
     private Vec3d getPos() {

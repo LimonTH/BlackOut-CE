@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.visual.entities;
 
-import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.mixin.accessors.AccessorEntityRenderer;
 import bodevelopment.client.blackout.module.Module;
@@ -18,6 +17,7 @@ import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.BufferBuilderStorage;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderer;
+import net.minecraft.client.render.entity.state.EntityRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -56,24 +56,26 @@ public class ShaderESP extends Module {
         return INSTANCE;
     }
 
-    public <T extends Entity> void onRender(
-            EntityRenderer<T> instance, T entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light
+    @SuppressWarnings("unchecked")
+    public <T extends Entity, S extends EntityRenderState> void onRender(
+            EntityRenderer<T, S> instance, T entity, S state, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light
     ) {
         if (this.texture.get()) {
-            instance.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
+            instance.render(state, matrices, vertexConsumers, light);
         }
 
         if (this.shouldRenderLabel(entity)) {
             ignore = true;
 
-            ((AccessorEntityRenderer<?>) instance).invokeRenderLabelIfPresent(
-                    entity,
-                    entity.getDisplayName(),
-                    matrices,
-                    vertexConsumers,
-                    light,
-                    BlackOut.mc.getRenderTickCounter().getTickDelta(false)
-            );
+            if (state.displayName != null) {
+                ((AccessorEntityRenderer<T, S>) instance).invokeRenderLabelIfPresent(
+                        state,
+                        state.displayName,
+                        matrices,
+                        vertexConsumers,
+                        light
+                );
+            }
 
             ignore = false;
         }
@@ -83,7 +85,7 @@ public class ShaderESP extends Module {
 
         VertexConsumerProvider.Immediate vcp = getVCP();
 
-        instance.render(entity, yaw, tickDelta, matrices, vcp, light);
+        instance.render(state, matrices, vcp, light);
         vcp.draw();
 
         buffer.unbind();

@@ -37,7 +37,7 @@ public class InstantEat extends Module {
             "The method used to switch to the food item. Silent allows you to eat without stopping your current weapon use.");
 
     private final Predicate<ItemStack> predicate = itemStack -> this.items.get().contains(itemStack.getItem());
-    private final int packetsSent = 0;
+    private int packetsSent = 0;
 
     public InstantEat() {
         super("Instant Eat", "Instantly consumes food items in a single tick using packet saturation. (for v1.8)", SubCategory.MISC_COMBAT, true);
@@ -66,8 +66,11 @@ public class InstantEat extends Module {
             this.useItemInstantly(hand);
         }
 
+        this.packetsSent = 0;
+
         for (int i = 0; i < this.packets.get(); i++) {
             this.sendInstantly(this.packetMode.get().supplier.get());
+            this.packetsSent++;
         }
 
         if (hand == null) {
@@ -82,13 +85,13 @@ public class InstantEat extends Module {
                 () -> {
                     Vec3d pos = Managers.PACKET.pos;
                     return new PlayerMoveC2SPacket.Full(
-                            pos.getX(), pos.getY(), pos.getZ(), Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, Managers.PACKET.isOnGround()
+                            pos.getX(), pos.getY(), pos.getZ(), Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision
                     );
                 }
         ),
         FullOffG(() -> {
             Vec3d pos = Managers.PACKET.pos;
-            return new PlayerMoveC2SPacket.Full(pos.getX(), pos.getY(), pos.getZ(), Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, false);
+            return new PlayerMoveC2SPacket.Full(pos.getX(), pos.getY(), pos.getZ(), Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, false, BlackOut.mc.player.horizontalCollision);
         }),
         Rotation(
                 () -> {
@@ -99,16 +102,17 @@ public class InstantEat extends Module {
                             pos.getZ(),
                             Managers.ROTATION.prevYaw + ((InstantEat.getInstance().packetsSent & 1) == 0 ? 0.3759F : -0.2143F),
                             Managers.ROTATION.prevPitch,
-                            Managers.PACKET.isOnGround()
+                            Managers.PACKET.isOnGround(),
+                            BlackOut.mc.player.horizontalCollision
                     );
                 }
         ),
-        DoubleRotation(() -> new PlayerMoveC2SPacket.LookAndOnGround(Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, Managers.PACKET.isOnGround())),
+        DoubleRotation(() -> new PlayerMoveC2SPacket.LookAndOnGround(Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision)),
         Position(() -> {
             Vec3d pos = Managers.PACKET.pos;
-            return new PlayerMoveC2SPacket.PositionAndOnGround(pos.getX(), pos.getY(), pos.getZ(), Managers.PACKET.isOnGround());
+            return new PlayerMoveC2SPacket.PositionAndOnGround(pos.getX(), pos.getY(), pos.getZ(), Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision);
         }),
-        Og(() -> new PlayerMoveC2SPacket.OnGroundOnly(Managers.PACKET.isOnGround()));
+        Og(() -> new PlayerMoveC2SPacket.OnGroundOnly(Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
 
         private final Supplier<PlayerMoveC2SPacket> supplier;
 

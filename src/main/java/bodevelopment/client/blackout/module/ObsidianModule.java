@@ -342,7 +342,7 @@ public class ObsidianModule extends Module {
                     if (this.switched || this.hand != null) {
                         if (SettingUtils.shouldRotate(RotationType.BlockPlace) && this.rotationMode.get() == RotationMode.Packet) {
                             Rotation rotation = SettingUtils.getRotation(data.pos(), data.dir(), data.pos().toCenterPos(), RotationType.BlockPlace);
-                            this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(rotation.yaw(), rotation.pitch(), Managers.PACKET.isOnGround()));
+                            this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(rotation.yaw(), rotation.pitch(), Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
                         }
 
                         this.placeBlock(this.hand, data.pos().toCenterPos(), data.dir(), data.pos());

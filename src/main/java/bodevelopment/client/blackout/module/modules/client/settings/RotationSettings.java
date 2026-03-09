@@ -733,13 +733,13 @@ public class RotationSettings extends SettingsModule {
         Disabled(null),
         Basic((yaw, pitch) -> {
             Vec3d pos = Managers.PACKET.pos;
-            Managers.PACKET.sendPacket(new PlayerMoveC2SPacket.Full(pos.getX(), pos.getY(), pos.getZ(), yaw, pitch, Managers.PACKET.isOnGround()));
+            Managers.PACKET.sendPacket(new PlayerMoveC2SPacket.Full(pos.getX(), pos.getY(), pos.getZ(), yaw, pitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
         }),
         Double((yaw, pitch) -> {
             Vec3d pos = Managers.PACKET.pos;
 
             for (int i = 0; i < 2; i++) {
-                Managers.PACKET.sendPacket(new PlayerMoveC2SPacket.Full(pos.getX(), pos.getY(), pos.getZ(), yaw, pitch, Managers.PACKET.isOnGround()));
+                Managers.PACKET.sendPacket(new PlayerMoveC2SPacket.Full(pos.getX(), pos.getY(), pos.getZ(), yaw, pitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
             }
         }),
         Return(
@@ -747,9 +747,9 @@ public class RotationSettings extends SettingsModule {
                     float prevYaw = Managers.ROTATION.prevYaw;
                     float prevPitch = Managers.ROTATION.prevPitch;
                     Vec3d pos = Managers.PACKET.pos;
-                    Managers.PACKET.sendPacket(new PlayerMoveC2SPacket.Full(pos.getX(), pos.getY(), pos.getZ(), yaw, pitch, Managers.PACKET.isOnGround()));
+                    Managers.PACKET.sendPacket(new PlayerMoveC2SPacket.Full(pos.getX(), pos.getY(), pos.getZ(), yaw, pitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
                     Managers.PACKET
-                            .sendPacket(new PlayerMoveC2SPacket.Full(pos.getX(), pos.getY(), pos.getZ(), prevYaw, prevPitch, Managers.PACKET.isOnGround()));
+                            .sendPacket(new PlayerMoveC2SPacket.Full(pos.getX(), pos.getY(), pos.getZ(), prevYaw, prevPitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
                 }
         );
 

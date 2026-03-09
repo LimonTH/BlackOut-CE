@@ -11,15 +11,11 @@ import bodevelopment.client.blackout.rendering.shader.Shader;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.*;
-import net.minecraft.client.render.model.BakedModel;
-import net.minecraft.client.render.model.json.ModelTransformationMode;
-import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
-import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.ColorHelper;
 import net.minecraft.util.math.MathHelper;
@@ -107,10 +103,9 @@ public class RenderUtils {
 
         context.drawItem(itemStack, drawX, drawY);
         if (overlay) {
-            context.drawItemInSlot(BlackOut.mc.textRenderer, itemStack, drawX, drawY);
+            context.drawStackOverlay(BlackOut.mc.textRenderer, itemStack, drawX, drawY);
         }
 
-        context.draw();
         context.getMatrices().pop();
     }
 
@@ -632,7 +627,7 @@ public class RenderUtils {
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_FAN, VertexFormats.POSITION_COLOR);
         bufferBuilder.vertex(matrix4f, x + w / 2.0F, y + h / 2.0F, 0.0F).color(r, g, b, a);
@@ -685,7 +680,7 @@ public class RenderUtils {
     private static void renderCorner(
             float x, float y, float radius, int angle, float p, float r, float g, float b, float a, Tessellator tessellator, Matrix4f matrix4f
     ) {
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
         RenderSystem.enableBlend();
 
         BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.TRIANGLE_FAN, VertexFormats.POSITION_COLOR);
@@ -720,17 +715,17 @@ public class RenderUtils {
 
     public static void line(MatrixStack stack, float x1, float y1, float x2, float y2, int color, int color2) {
         Matrix4f matrix4f = stack.peek().getPositionMatrix();
-        float a1 = ColorHelper.Argb.getAlpha(color) / 255.0F;
-        float r1 = ColorHelper.Argb.getRed(color) / 255.0F;
-        float g1 = ColorHelper.Argb.getGreen(color) / 255.0F;
-        float b1 = ColorHelper.Argb.getBlue(color) / 255.0F;
-        float a2 = ColorHelper.Argb.getAlpha(color2) / 255.0F;
-        float r2 = ColorHelper.Argb.getRed(color2) / 255.0F;
-        float g2 = ColorHelper.Argb.getGreen(color2) / 255.0F;
-        float b2 = ColorHelper.Argb.getBlue(color2) / 255.0F;
+        float a1 = ColorHelper.getAlpha(color) / 255.0F;
+        float r1 = ColorHelper.getRed(color) / 255.0F;
+        float g1 = ColorHelper.getGreen(color) / 255.0F;
+        float b1 = ColorHelper.getBlue(color) / 255.0F;
+        float a2 = ColorHelper.getAlpha(color2) / 255.0F;
+        float r2 = ColorHelper.getRed(color2) / 255.0F;
+        float g2 = ColorHelper.getGreen(color2) / 255.0F;
+        float b2 = ColorHelper.getBlue(color2) / 255.0F;
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
 
@@ -759,7 +754,7 @@ public class RenderUtils {
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
@@ -774,13 +769,13 @@ public class RenderUtils {
 
     public static void fadeLine(MatrixStack stack, float x1, float y1, float x2, float y2, int color) {
         Matrix4f matrix4f = stack.peek().getPositionMatrix();
-        float a = ColorHelper.Argb.getAlpha(color) / 255.0F;
-        float r = ColorHelper.Argb.getRed(color) / 255.0F;
-        float g = ColorHelper.Argb.getGreen(color) / 255.0F;
-        float b = ColorHelper.Argb.getBlue(color) / 255.0F;
+        float a = ColorHelper.getAlpha(color) / 255.0F;
+        float r = ColorHelper.getRed(color) / 255.0F;
+        float g = ColorHelper.getGreen(color) / 255.0F;
+        float b = ColorHelper.getBlue(color) / 255.0F;
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.DEBUG_LINE_STRIP, VertexFormats.POSITION_COLOR);
 
         bufferBuilder.vertex(matrix4f, x1, y1, 0.0F).color(r, g, b, 0.0F);
@@ -801,7 +796,7 @@ public class RenderUtils {
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_FAN, VertexFormats.POSITION_COLOR);
         bufferBuilder.vertex(matrix4f, x, y, 0.0F).color(r, g, b, a);
@@ -827,7 +822,7 @@ public class RenderUtils {
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
         RenderSystem.disableDepthTest();
         RenderSystem.disableCull();
@@ -858,7 +853,7 @@ public class RenderUtils {
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionTexProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
         RenderSystem.setShaderColor(r, g, b, a);
 
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
@@ -880,7 +875,7 @@ public class RenderUtils {
 
     public static void drawTexturedQuad(MatrixStack stack, int texture, float x1, float x2, float y1, float y2, float u1, float u2, float v1, float v2) {
         RenderSystem.setShaderTexture(0, texture);
-        RenderSystem.setShader(GameRenderer::getPositionTexProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
         Matrix4f matrix4f = stack.peek().getPositionMatrix();
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
 
@@ -917,7 +912,7 @@ public class RenderUtils {
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
@@ -945,7 +940,7 @@ public class RenderUtils {
         float b = (float) (color & 255) / 255.0F;
 
         RenderSystem.enableBlend();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.DEBUG_LINE_STRIP, VertexFormats.POSITION_COLOR);
 
         bufferBuilder.vertex(matrix4f, x, y, 0.0F).color(r, g, b, a);
@@ -1022,10 +1017,10 @@ public class RenderUtils {
     }
 
     public static void rightFade(MatrixStack stack, float x, float y, float w, float h, int color) {
-        float a = ColorHelper.Argb.getAlpha(color) / 255.0F;
-        float r = ColorHelper.Argb.getRed(color) / 255.0F;
-        float g = ColorHelper.Argb.getGreen(color) / 255.0F;
-        float b = ColorHelper.Argb.getBlue(color) / 255.0F;
+        float a = ColorHelper.getAlpha(color) / 255.0F;
+        float r = ColorHelper.getRed(color) / 255.0F;
+        float g = ColorHelper.getGreen(color) / 255.0F;
+        float b = ColorHelper.getBlue(color) / 255.0F;
 
         quad(stack, x, y, w, h,
                 r, g, b, a,
@@ -1036,10 +1031,10 @@ public class RenderUtils {
     }
 
     public static void leftFade(MatrixStack stack, float x, float y, float w, float h, int color) {
-        float a = ColorHelper.Argb.getAlpha(color) / 255.0F;
-        float r = ColorHelper.Argb.getRed(color) / 255.0F;
-        float g = ColorHelper.Argb.getGreen(color) / 255.0F;
-        float b = ColorHelper.Argb.getBlue(color) / 255.0F;
+        float a = ColorHelper.getAlpha(color) / 255.0F;
+        float r = ColorHelper.getRed(color) / 255.0F;
+        float g = ColorHelper.getGreen(color) / 255.0F;
+        float b = ColorHelper.getBlue(color) / 255.0F;
         quad(stack, x, y, w, h,
                 r, g, b, 0.0F,
                 r, g, b, 0.0F,
@@ -1049,10 +1044,10 @@ public class RenderUtils {
     }
 
     public static void topFade(MatrixStack stack, float x, float y, float w, float h, int color) {
-        float a = ColorHelper.Argb.getAlpha(color) / 255.0F;
-        float r = ColorHelper.Argb.getRed(color) / 255.0F;
-        float g = ColorHelper.Argb.getGreen(color) / 255.0F;
-        float b = ColorHelper.Argb.getBlue(color) / 255.0F;
+        float a = ColorHelper.getAlpha(color) / 255.0F;
+        float r = ColorHelper.getRed(color) / 255.0F;
+        float g = ColorHelper.getGreen(color) / 255.0F;
+        float b = ColorHelper.getBlue(color) / 255.0F;
         quad(stack, x, y, w, h,
                 r, g, b, 0.0F,
                 r, g, b, a,
@@ -1062,10 +1057,10 @@ public class RenderUtils {
     }
 
     public static void bottomFade(MatrixStack stack, float x, float y, float w, float h, int color) {
-        float a = ColorHelper.Argb.getAlpha(color) / 255.0F;
-        float r = ColorHelper.Argb.getRed(color) / 255.0F;
-        float g = ColorHelper.Argb.getGreen(color) / 255.0F;
-        float b = ColorHelper.Argb.getBlue(color) / 255.0F;
+        float a = ColorHelper.getAlpha(color) / 255.0F;
+        float r = ColorHelper.getRed(color) / 255.0F;
+        float g = ColorHelper.getGreen(color) / 255.0F;
+        float b = ColorHelper.getBlue(color) / 255.0F;
 
         quad(stack, x, y, w, h,
                 r, g, b, a,
@@ -1089,7 +1084,7 @@ public class RenderUtils {
         Matrix4f matrix4f = stack.peek().getPositionMatrix();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 

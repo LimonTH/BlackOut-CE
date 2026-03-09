@@ -166,7 +166,7 @@ public class Clip extends Module {
 
     private void sendBounds() {
         Vec3d bounds = this.getBounds();
-        this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(bounds.x, bounds.y, bounds.z, Managers.PACKET.isOnGround()));
+        this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(bounds.x, bounds.y, bounds.z, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
     }
 
     private Vec3d getBounds() {
@@ -200,7 +200,7 @@ public class Clip extends Module {
     }
 
     private void sendPos(double x, double z, boolean onGround) {
-        this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(x, BlackOut.mc.player.getY(), z, onGround));
+        this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(x, BlackOut.mc.player.getY(), z, onGround, BlackOut.mc.player.horizontalCollision));
     }
 
     private boolean findCorner(double x, double z, BlockPos pos) {

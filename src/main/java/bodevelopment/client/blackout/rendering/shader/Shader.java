@@ -4,8 +4,9 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.randomstuff.ShaderSetup;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gl.GlProgramManager;
+import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.BuiltBuffer;
@@ -67,7 +68,7 @@ public class Shader {
         this.bind();
         vertexBuffer.draw();
         this.unbind();
-        GlProgramManager.useProgram(this.currentShader[0]);
+        GlStateManager._glUseProgram(this.currentShader[0]);
     }
 
     private boolean exists(String name) {
@@ -88,12 +89,12 @@ public class Shader {
     }
 
     public void bind() {
-        GlProgramManager.useProgram(this.id);
+        GlStateManager._glUseProgram(this.id);
         this.uniformMap.forEach((name, uniform) -> uniform.upload());
     }
 
     public void unbind() {
-        GlProgramManager.useProgram(0);
+        GlStateManager._glUseProgram(0);
     }
 
     public void set(String uniform, float f) {

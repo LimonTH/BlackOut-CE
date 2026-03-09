@@ -116,7 +116,7 @@ public class Burrow extends Module {
                         this.disable(this.getDisplayName() + " correct blocks not found", 2, Notifications.Type.Alert);
                     } else {
                         if (this.instaRot.get() && SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-                            this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(Managers.ROTATION.nextYaw, 90.0F, Managers.PACKET.isOnGround()));
+                            this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(Managers.ROTATION.nextYaw, 90.0F, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
                         }
 
                         double y = 0.0;
@@ -127,9 +127,7 @@ public class Burrow extends Module {
                             velocity = (velocity - 0.08) * 0.98;
                             this.sendPacket(
                                     new PlayerMoveC2SPacket.PositionAndOnGround(
-                                            BlackOut.mc.player.getX(), BlackOut.mc.player.getY() + y, BlackOut.mc.player.getZ(), false
-                                    )
-                            );
+                                            BlackOut.mc.player.getX(), BlackOut.mc.player.getY() + y, BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision));
                         }
 
                         this.placeBlock(
@@ -184,7 +182,8 @@ public class Burrow extends Module {
                             BlackOut.mc.player.getX(),
                             BlackOut.mc.player.getY() + y + this.lagBackOffset.get(),
                             BlackOut.mc.player.getZ(),
-                            false
+                            false,
+                            BlackOut.mc.player.horizontalCollision
                     )
             );
         }
@@ -205,7 +204,8 @@ public class Burrow extends Module {
                                         BlackOut.mc.player.getZ(),
                                         yaw,
                                         Managers.ROTATION.prevPitch,
-                                        false
+                                        false,
+                                        BlackOut.mc.player.horizontalCollision
                                 )
                         );
             }

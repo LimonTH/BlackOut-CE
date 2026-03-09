@@ -64,21 +64,22 @@ public class Flight extends Module {
 
         if (this.mode.get() == Mode.VerusDMG) {
             this.sendPacket(
-                    new PlayerMoveC2SPacket.PositionAndOnGround(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), false)
+                    new PlayerMoveC2SPacket.PositionAndOnGround(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision)
             );
             this.sendPacket(
                     new PlayerMoveC2SPacket.PositionAndOnGround(
                             BlackOut.mc.player.getX(),
                             BlackOut.mc.player.getY() + this.verusDMGheight.get(),
                             BlackOut.mc.player.getZ(),
-                            false
+                            false,
+                            BlackOut.mc.player.horizontalCollision
                     )
             );
             this.sendPacket(
-                    new PlayerMoveC2SPacket.PositionAndOnGround(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), false)
+                    new PlayerMoveC2SPacket.PositionAndOnGround(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision)
             );
             this.sendPacket(
-                    new PlayerMoveC2SPacket.PositionAndOnGround(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), true)
+                    new PlayerMoveC2SPacket.PositionAndOnGround(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), true, BlackOut.mc.player.horizontalCollision)
             );
         }
     }

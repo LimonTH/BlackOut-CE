@@ -20,7 +20,7 @@ public class BlackOutColor {
     }
 
     public static BlackOutColor from(int color) {
-        return new BlackOutColor(ColorHelper.Argb.getRed(color), ColorHelper.Argb.getGreen(color), ColorHelper.Argb.getBlue(color), ColorHelper.Argb.getAlpha(color));
+        return new BlackOutColor(ColorHelper.getRed(color), ColorHelper.getGreen(color), ColorHelper.getBlue(color), ColorHelper.getAlpha(color));
     }
 
     public BlackOutColor copy() {

@@ -33,9 +33,9 @@ public class SoundESP extends Module {
             "The specific sound events to be visualized in the world.",
             Registries.SOUND_EVENT,
             sound -> {
-                String key = "subtitles." + sound.getId().toTranslationKey();
+                String key = "subtitles." + sound.id().toTranslationKey();
                 String translated = net.minecraft.text.Text.translatable(key).getString();
-                return translated.equals(key) ? sound.getId().getPath() : translated;
+                return translated.equals(key) ? sound.id().getPath() : translated;
             },
             SoundEvents.ENTITY_GENERIC_EXPLODE.value()
     );
@@ -114,7 +114,7 @@ public class SoundESP extends Module {
 
     private boolean contains(SoundInstance instance) {
         for (SoundEvent event : this.sounds.get()) {
-            if (instance.getId().equals(event.getId())) {
+            if (instance.getId().equals(event.id())) {
                 return true;
             }
         }

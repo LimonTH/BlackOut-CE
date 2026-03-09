@@ -96,7 +96,7 @@ public class PacketManager extends Manager {
     }
 
     public void syncRotation(float yaw, float pitch) {
-        this.sendInstantly(new PlayerMoveC2SPacket.LookAndOnGround(yaw, pitch, this.isOnGround()));
+        this.sendInstantly(new PlayerMoveC2SPacket.LookAndOnGround(yaw, pitch, this.isOnGround(), BlackOut.mc.player.horizontalCollision));
     }
 
     public boolean isQueueHeavy() {
@@ -121,15 +121,15 @@ public class PacketManager extends Manager {
     @Event
     public void onReceive(PacketEvent.Receive.Post e) {
         if (e.packet instanceof PlayerPositionLookS2CPacket packet) {
-            Vec3d vec = new Vec3d(packet.getX(), packet.getY(), packet.getZ());
-            int id = packet.getTeleportId();
+            Vec3d vec = new Vec3d(packet.change().position().getX(), packet.change().position().getY(), packet.change().position().getZ());
+            int id = packet.teleportId();
             if (this.validPos.containsKey(id) && this.validPos.get(id).equals(vec)) {
                 e.setCancelled(true);
-                this.validPos.removeKey(packet.getTeleportId());
+                this.validPos.removeKey(packet.teleportId());
             }
 
             this.prevReceived = this.receivedId;
-            this.receivedId = packet.getTeleportId();
+            this.receivedId = packet.teleportId();
             if (!this.ids.contains(id)) {
                 this.teleportId = id;
             }
@@ -319,7 +319,8 @@ public class PacketManager extends Manager {
                         BlackOut.mc.player.getZ(),
                         Managers.ROTATION.prevYaw,
                         Managers.ROTATION.prevPitch,
-                        this.isOnGround()
+                        this.isOnGround(),
+                        BlackOut.mc.player.horizontalCollision
                 )
         );
     }
@@ -330,6 +331,6 @@ public class PacketManager extends Manager {
             yaw = -180.0F - (180.0F - yaw);
         }
 
-        Managers.PACKET.sendInstantly(new PlayerMoveC2SPacket.Full(pos.x, pos.y, pos.z, yaw, pitch, false));
+        Managers.PACKET.sendInstantly(new PlayerMoveC2SPacket.Full(pos.x, pos.y, pos.z, yaw, pitch, false, BlackOut.mc.player.horizontalCollision));
     }
 }

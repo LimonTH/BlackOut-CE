@@ -1,9 +1,12 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.interfaces.mixin.IUUIDHolder;
+import bodevelopment.client.blackout.mixin.mixins.MixinPlayerEntityRenderState;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.texture.TextureManager;
 import net.minecraft.resource.ResourceManager;
@@ -29,8 +32,11 @@ public class Capes {
     private static final List<Pair<String, Identifier>> toLoad = new CopyOnWriteArrayList<>();
     private static volatile boolean loading = false;
 
-    public static Identifier getCape(AbstractClientPlayerEntity player) {
-        String uuid = player.getUuidAsString();
+    public static Identifier getCape(PlayerEntityRenderState state) {
+        UUID uuidObj = ((IUUIDHolder) state).blackout$getUUID();
+        if (uuidObj == null) return null;
+
+        String uuid = uuidObj.toString();
         Identifier identifier = capes.get(uuid);
 
         if (identifier == null) return null;

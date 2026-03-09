@@ -26,7 +26,7 @@ public class TPSManager extends Manager {
     @Event
     public void onReceive(PacketEvent.Receive.Pre event) {
         if (event.packet instanceof WorldTimeUpdateS2CPacket packet) {
-            long tickDelta = packet.getTime() - this.prevWorldTime;
+            long tickDelta = packet.time() - this.prevWorldTime;
             double sus = tickDelta / ((System.currentTimeMillis() - this.prevTime) / 1000.0);
             synchronized (this.list) {
                 this.list.addFirst(sus);
@@ -34,7 +34,7 @@ public class TPSManager extends Manager {
                 this.calcTps();
             }
 
-            this.prevWorldTime = packet.getTime();
+            this.prevWorldTime = packet.time();
             this.prevTime = System.currentTimeMillis();
         }
     }

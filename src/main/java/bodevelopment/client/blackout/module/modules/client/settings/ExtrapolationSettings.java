@@ -12,6 +12,7 @@ import bodevelopment.client.blackout.randomstuff.ExtrapolationMap;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
@@ -92,7 +93,7 @@ public class ExtrapolationSettings extends SettingsModule {
     }
 
     private void renderList(List<Vec3d> list) {
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.begin(this.dashedLine.get() ? VertexFormat.DrawMode.DEBUG_LINES : VertexFormat.DrawMode.DEBUG_LINE_STRIP, VertexFormats.POSITION_COLOR);
         Matrix4f matrix4f = this.stack.peek().getPositionMatrix();

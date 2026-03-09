@@ -9,6 +9,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import net.minecraft.client.input.KeyboardInput;
+import net.minecraft.util.PlayerInput;
 import net.minecraft.util.math.Vec3d;
 
 public class FreeCam extends Module {
@@ -43,14 +44,9 @@ public class FreeCam extends Module {
     }
 
     public void resetInput(KeyboardInput input) {
-        input.pressingForward = false;
-        input.pressingBack = false;
-        input.pressingLeft = false;
-        input.pressingRight = false;
         input.movementForward = 0.0F;
         input.movementSideways = 0.0F;
-        input.jumping = false;
-        input.sneaking = false;
+        input.playerInput = PlayerInput.DEFAULT;
     }
 
     public Vec3d getPos(float yaw, float pitch) {

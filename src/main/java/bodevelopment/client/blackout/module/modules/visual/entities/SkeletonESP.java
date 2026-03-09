@@ -13,6 +13,7 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import bodevelopment.client.blackout.util.render.WireframeRenderer;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
@@ -63,7 +64,7 @@ public class SkeletonESP extends Module {
 
             if (!positions.isEmpty()) {
                 Render3DUtils.start();
-                RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
+                RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
                 RenderSystem.lineWidth(1.5F);
                 RenderSystem.disableDepthTest();
 
