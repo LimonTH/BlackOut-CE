@@ -6,8 +6,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import org.lwjgl.opengl.GL30C;
 
 public class FrameBuffer {
-    private static final int[] prevViewport = new int[4];
-    private static int prevBuffer = BlackOut.mc.getFramebuffer().fbo;
     private int id;
     private int textureId;
     private int depthId;
@@ -74,17 +72,13 @@ public class FrameBuffer {
     }
 
     public void bind(boolean viewPort) {
-        prevBuffer = getCurrent();
-        bind(this.id);
+        RenderSystem.assertOnRenderThreadOrInit();
+        GlStateManager._glBindFramebuffer(36160, this.id);
+
         if (viewPort) {
-            GL30C.glGetIntegerv(GL30C.GL_VIEWPORT, prevViewport);
             GL30C.glViewport(0, 0, this.width, this.height);
             this.viewportChanged = true;
         }
-    }
-
-    public void safeUnbind() {
-        this.safe(this::unbind);
     }
 
     public void unbind() {
@@ -97,11 +91,12 @@ public class FrameBuffer {
 
     private void bindPrev() {
         RenderSystem.assertOnRenderThreadOrInit();
-        GlStateManager._glBindFramebuffer(36160, prevBuffer);
-        if (this.viewportChanged) {
-            GL30C.glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
-            this.viewportChanged = false;
+        if (BlackOut.mc.getFramebuffer() != null) {
+            BlackOut.mc.getFramebuffer().beginWrite(true);
+        } else {
+            GlStateManager._glBindFramebuffer(36160, 0);
         }
+        this.viewportChanged = false;
     }
 
     private void safe(Runnable runnable) {
