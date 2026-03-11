@@ -70,17 +70,16 @@ public class Render3DUtils {
         }
     }
 
-    public static void boxRaw(MatrixStack stack, Box box, BlackOutColor sideColor, BlackOutColor lineColor, RenderShape shape) {
+    public static void boxEntity(MatrixStack stack, Box box, BlackOutColor sideColor, BlackOutColor lineColor, RenderShape shape) {
         if (shape.sides && sideColor != null) {
-            renderSidesRaw(stack, box, sideColor.getRGB());
+            renderEntitySides(stack, box, sideColor.getRGB());
         }
         if (shape.outlines && lineColor != null) {
-            renderOutlinesRaw(stack, box, lineColor.getRGB());
+            renderEntityOutlines(stack, box, lineColor.getRGB());
         }
     }
 
-    public static void renderOutlinesRaw(MatrixStack stack, Box box, int color) {
-        Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
+    public static void renderEntityOutlines(MatrixStack stack, Box box, int color) {
         start();
         RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
         RenderSystem.lineWidth(1.5F);
@@ -94,16 +93,15 @@ public class Render3DUtils {
         float a = ColorHelper.getAlpha(color) / 255.0F;
 
         drawOutlines(stack, bufferBuilder,
-                (float) (box.minX - camPos.x), (float) (box.minY - camPos.y), (float) (box.minZ - camPos.z),
-                (float) (box.maxX - camPos.x), (float) (box.maxY - camPos.y), (float) (box.maxZ - camPos.z),
+                (float) box.minX, (float) box.minY, (float) box.minZ,
+                (float) box.maxX, (float) box.maxY, (float) box.maxZ,
                 r, g, b, a);
 
         BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
         end();
     }
 
-    public static void renderSidesRaw(MatrixStack stack, Box box, int color) {
-        Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
+    public static void renderEntitySides(MatrixStack stack, Box box, int color) {
         start();
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
@@ -116,8 +114,8 @@ public class Render3DUtils {
         float a = ColorHelper.getAlpha(color) / 255.0F;
 
         drawSides(stack, bufferBuilder,
-                (float) (box.minX - camPos.x), (float) (box.minY - camPos.y), (float) (box.minZ - camPos.z),
-                (float) (box.maxX - camPos.x), (float) (box.maxY - camPos.y), (float) (box.maxZ - camPos.z),
+                (float) box.minX, (float) box.minY, (float) box.minZ,
+                (float) box.maxX, (float) box.maxY, (float) box.maxZ,
                 r, g, b, a);
 
         BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
