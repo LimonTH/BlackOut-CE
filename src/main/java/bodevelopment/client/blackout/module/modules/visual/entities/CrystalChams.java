@@ -60,7 +60,7 @@ public class CrystalChams extends Module {
         BlackOutColor lineColor = this.getLineColor(id);
         RenderShape shape = this.getShape(id);
 
-        Render3DUtils.boxRaw(stack, box, sideColor, lineColor, shape);
+        Render3DUtils.boxEntity(stack, box, sideColor, lineColor, shape);
     }
 
     private BlackOutColor getLineColor(int id) {

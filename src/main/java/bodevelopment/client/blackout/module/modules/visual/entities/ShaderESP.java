@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.visual.entities;
 
+import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.mixin.accessors.AccessorEntityRenderer;
 import bodevelopment.client.blackout.module.Module;
@@ -13,6 +14,8 @@ import bodevelopment.client.blackout.rendering.framebuffer.FrameBuffer;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.render.RenderUtils;
+import com.mojang.blaze3d.systems.ProjectionType;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.BufferBuilderStorage;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -21,6 +24,7 @@ import net.minecraft.client.render.entity.state.EntityRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import org.joml.Matrix4f;
 
 import java.util.List;
 
@@ -56,38 +60,21 @@ public class ShaderESP extends Module {
         return INSTANCE;
     }
 
-    @SuppressWarnings("unchecked")
     public <T extends Entity, S extends EntityRenderState> void onRender(
             EntityRenderer<T, S> instance, T entity, S state, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light
     ) {
         if (this.texture.get()) {
             instance.render(state, matrices, vertexConsumers, light);
         }
-
-        if (this.shouldRenderLabel(entity)) {
-            ignore = true;
-
-            if (state.displayName != null) {
-                ((AccessorEntityRenderer<T, S>) instance).invokeRenderLabelIfPresent(
-                        state,
-                        state.displayName,
-                        matrices,
-                        vertexConsumers,
-                        light
-                );
-            }
-
-            ignore = false;
-        }
-
+        if (!this.shouldRender(entity)) return;
         FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("shaderESP");
+        if (vertexConsumers instanceof VertexConsumerProvider.Immediate immediate) {
+            immediate.draw();
+        }
         buffer.bind(true);
-
         VertexConsumerProvider.Immediate vcp = getVCP();
-
         instance.render(state, matrices, vcp, light);
         vcp.draw();
-
         buffer.unbind();
     }
 
