@@ -1,7 +1,6 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
-import bodevelopment.client.blackout.BlackOutInfo;
 import bodevelopment.client.blackout.manager.Managers;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;

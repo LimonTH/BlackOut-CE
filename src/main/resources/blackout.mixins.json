@@ -1,7 +1,6 @@
 {
   "required": true,
   "package": "bodevelopment.client.blackout.mixin",
-  "refmap": "blackout.refmap.json",
   "compatibilityLevel": "JAVA_21",
   "client": [
     "accessors.AccessorAbstractSoundInstance",
