@@ -187,9 +187,13 @@ public class RenderUtils {
         Renderer.setTexture(frameBuffer.getTexture(), 0);
         emptyStack.push();
         unGuiScale(emptyStack);
+        Renderer.setMatrices(emptyStack);
+        float alpha = Renderer.getAlpha();
+        Renderer.setAlpha(1.0F);
         renderer.startRender(emptyStack, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.DrawMode.TRIANGLE_FAN, VertexFormats.POSITION);
         renderer.quadShape(0.0F, 0.0F, BlackOut.mc.getWindow().getWidth(), BlackOut.mc.getWindow().getHeight());
         renderer.endRender(shader, setup);
+        Renderer.setAlpha(alpha);
         emptyStack.pop();
     }
 
@@ -201,6 +205,9 @@ public class RenderUtils {
 
         emptyStack.push();
         unGuiScale(emptyStack);
+        Renderer.setMatrices(emptyStack);
+        float alpha = Renderer.getAlpha();
+        Renderer.setAlpha(1.0F);
 
         renderer.startRender(emptyStack, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.DrawMode.QUADS, VertexFormats.POSITION);
 
