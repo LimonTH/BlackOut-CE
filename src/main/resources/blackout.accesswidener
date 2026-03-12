@@ -5,7 +5,6 @@ accessible	class	net/minecraft/client/world/ClientChunkManager$ClientChunkMap
 accessible	class	net/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket$InteractType
 accessible	class	net/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket$InteractTypeHandler
 
-
 accessible  field   com/mojang/blaze3d/platform/GlStateManager                                              TEXTURES                         [Lcom/mojang/blaze3d/platform/GlStateManager$Texture2DState;
 accessible	field	net/minecraft/client/world/ClientWorld   	                                            entityList               	     Lnet/minecraft/world/EntityList;
 accessible	field	net/minecraft/entity/player/PlayerEntity	                                            POSE_DIMENSIONS	                 Ljava/util/Map;
