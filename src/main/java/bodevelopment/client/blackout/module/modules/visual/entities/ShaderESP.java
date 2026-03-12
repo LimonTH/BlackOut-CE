@@ -1,8 +1,6 @@
 package bodevelopment.client.blackout.module.modules.visual.entities;
 
-import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.manager.Managers;
-import bodevelopment.client.blackout.mixin.accessors.AccessorEntityRenderer;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.combat.misc.AntiBot;
@@ -14,8 +12,6 @@ import bodevelopment.client.blackout.rendering.framebuffer.FrameBuffer;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import com.mojang.blaze3d.systems.ProjectionType;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.BufferBuilderStorage;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -24,7 +20,6 @@ import net.minecraft.client.render.entity.state.EntityRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import org.joml.Matrix4f;
 
 import java.util.List;
 

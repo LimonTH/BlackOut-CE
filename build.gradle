@@ -4,65 +4,68 @@ plugins {
 	id 'maven-publish'
 }
 
-version = project.mod_version
-group = project.maven_group
+def staticArchivesName = project.archives_base_name
+def staticModName = project.mod_name
+def staticModVersion = project.mod_version
+def staticMavenGroup = project.maven_group
+def javaComponent = components.java
 
-base {
-	archivesName = project.archives_base_name
-}
+version = staticModVersion
+group = staticMavenGroup
+
+base { archivesName = staticArchivesName }
 
 repositories {
-	mavenCentral()
-	maven {
-		name = "Modrinth"
-		url = "https://api.modrinth.com/maven"
-		content {
-			includeGroup "maven.modrinth"
-		}
-	}
+	maven { url = "https://api.modrinth.com/maven" }
 	maven { url = "https://repo.spongepowered.org/repository/maven-public/"}
-	maven { url = "https://files.minecraftforge.net/maven" }
-	maven { url 'https://jitpack.io' }
-	maven { url 'https://maven.fabricmc.net/' }
+	maven { url = "https://jitpack.io" }
+	maven { url = "https://maven.fabricmc.net/" }
 }
 
+/**
+ * Miscellaneous of BlackOut client.
+ */
 loom {
-	mixin {
-		defaultRefmapName = "blackout-refmap.json"
-		add sourceSets.main, "blackout-refmap.json"
-	}
-	mods {
-		"blackout" {
-			sourceSet "main"
-		}
-	}
-	accessWidenerPath = file("src/main/resources/blackout.accesswidener")
+	// Dev environment
+	mods { "blackout" { sourceSet "main" } }
 
+	// AccessWidener file
+	accessWidenerPath = file("src/main/resources/blackout.accesswidener")
 }
 
+/**
+ * Dependencies of BlackOut client.
+ */
 dependencies {
+	// Minecraft
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	compileOnly 'com.google.errorprone:error_prone_annotations:2.47.0'
-	modImplementation "com.github.CaffeineMC.sodium:fabric:mc1.21.1-0.6.13"
-	modImplementation 'com.github.cabaletta.baritone:baritone-api:1.2.15'
-	implementation 'com.github.LlamaLad7.MixinExtras:mixinextras-common:0.2.2'
+	// Compatible Mods
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	modImplementation "com.github.CaffeineMC.sodium:fabric:${project.sodium}"
+	modImplementation "com.github.cabaletta.baritone:baritone-api:${project.baritone_api}"
+
+	// Other
+	compileOnly "com.google.errorprone:error_prone_annotations:2.47.0"
+	implementation "com.github.LlamaLad7.MixinExtras:mixinextras-common:0.2.2"
 }
 
+/**
+ * ${~} replacer for fabric.mod.json of BlackOut client.
+ */
 processResources {
-	inputs.property "id", project.archives_base_name
-	inputs.property "version", project.mod_version
-	inputs.property "name", project.mod_name
+	inputs.property "id", staticArchivesName
+	inputs.property "version", staticModVersion
+	inputs.property "name", staticModName
 	inputs.property "description", project.mod_description
 
 	filesMatching("fabric.mod.json") {
 		expand(
-				"id": project.archives_base_name,
-				"version": project.mod_version,
-				"name": project.mod_name,
+				"id": staticArchivesName,
+				"version": staticModVersion,
+				"name": staticModName,
 				"description": project.mod_description,
 				"minecraft_version": project.minecraft_version,
 				"loader_version": project.loader_version,
@@ -83,21 +86,43 @@ java {
 }
 
 jar {
-	inputs.property "archivesName", project.base.archivesName
+	inputs.property "archivesName", staticArchivesName
 
 	from("LICENSE") {
-		rename { "${it}_${inputs.properties.archivesName}"}
+		rename { "LICENSE_${staticArchivesName}" }
+	}
+
+	manifest {
+		attributes([
+				"Specification-Title": staticModName,
+				"Specification-Vendor": "LimonTH",
+				"Specification-Version": "1",
+				"Implementation-Title": staticModName,
+				"Implementation-Version": staticModVersion,
+				"Implementation-Vendor": "LimonTH",
+				"Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+				"MixinConfigs": "blackout.mixins.json"
+		])
 	}
 }
 
 publishing {
 	publications {
 		create("mavenJava", MavenPublication) {
-			artifactId = project.archives_base_name
-			groupId = project.maven_group
-			version = project.mod_version
-			from components.java
+			artifactId = staticArchivesName
+			groupId = staticMavenGroup
+			version = staticModVersion
+			if (javaComponent != null) {
+				from javaComponent
+			}
 		}
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.encoding = "UTF-8"
+	if (JavaVersion.current().isJava9Compatible()) {
+		it.options.release = java_version.toInteger()
 	}
 }
 
