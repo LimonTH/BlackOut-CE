@@ -15,9 +15,9 @@ import net.minecraft.client.MinecraftClient;
 import java.awt.*;
 import java.io.File;
 
-public class BlackOut implements ClientModInitializer {
-    public static final String NAME = "BlackOut";
-    public static final String VERSION = "2.4.0";
+public final class BlackOut extends BlackOutInfo implements ClientModInitializer {
+    public static final String NAME = BlackOutInfo.NAME;
+    public static final String VERSION = BlackOutInfo.VERSION;
     public static final Type TYPE = Type.Dev;
     public static final Color TYPECOLOR = TYPE.getColor();
     public static final MinecraftClient mc = MinecraftClient.getInstance();

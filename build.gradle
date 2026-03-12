@@ -7,8 +7,12 @@ plugins {
 def staticArchivesName = project.archives_base_name
 def staticModName = project.mod_name
 def staticModVersion = project.mod_version
+def staticModDescription = project.mod_description
 def staticMavenGroup = project.maven_group
 def javaComponent = components.java
+def staticMcVersion = project.minecraft_version
+def staticFabricLoaderVersion = project.loader_version
+def staticJavaVersion = project.java_version
 
 version = staticModVersion
 group = staticMavenGroup
@@ -22,14 +26,8 @@ repositories {
 	maven { url = "https://maven.fabricmc.net/" }
 }
 
-/**
- * Miscellaneous of BlackOut client.
- */
 loom {
-	// Dev environment
 	mods { "blackout" { sourceSet "main" } }
-
-	// AccessWidener file
 	accessWidenerPath = file("src/main/resources/blackout.accesswidener")
 }
 
@@ -38,9 +36,9 @@ loom {
  */
 dependencies {
 	// Minecraft
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	minecraft "com.mojang:minecraft:${staticMcVersion}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "net.fabricmc:fabric-loader:${staticFabricLoaderVersion}"
 
 	// Compatible Mods
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
@@ -59,17 +57,17 @@ processResources {
 	inputs.property "id", staticArchivesName
 	inputs.property "version", staticModVersion
 	inputs.property "name", staticModName
-	inputs.property "description", project.mod_description
+	inputs.property "description", staticModDescription
 
 	filesMatching("fabric.mod.json") {
 		expand(
 				"id": staticArchivesName,
 				"version": staticModVersion,
 				"name": staticModName,
-				"description": project.mod_description,
-				"minecraft_version": project.minecraft_version,
-				"loader_version": project.loader_version,
-				"java_version": project.java_version
+				"description": staticModDescription,
+				"minecraft_version": staticMcVersion,
+				"loader_version": staticFabricLoaderVersion,
+				"java_version": staticJavaVersion
 		)
 	}
 	duplicatesStrategy = DuplicatesStrategy.INCLUDE
@@ -122,8 +120,20 @@ publishing {
 tasks.withType(JavaCompile).configureEach {
 	it.options.encoding = "UTF-8"
 	if (JavaVersion.current().isJava9Compatible()) {
-		it.options.release = java_version.toInteger()
+		it.options.release = staticJavaVersion.toInteger()
 	}
+}
+
+tasks.register('generateBlackOutInfo', Copy) {
+	group = "build setup"
+	description = "Generates BlackOutInfo class with current version"
+	from(layout.projectDirectory.dir("src/main/templates"))
+
+	into(layout.buildDirectory.dir("generated/sources/blackout/java/net/mira/blackout"))
+	expand(
+			"name": staticModName,
+			"version": staticModVersion
+	)
 }
 
 afterEvaluate {
