@@ -14,6 +14,8 @@ def staticMcVersion = project.minecraft_version
 def staticFabricLoaderVersion = project.loader_version
 def staticJavaVersion = project.java_version
 
+def genPath = "generated/sources/blackout/java"
+
 version = staticModVersion
 group = staticMavenGroup
 
@@ -125,19 +127,29 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 tasks.register('generateBlackOutInfo', Copy) {
-	group = "build setup"
-	description = "Generates BlackOutInfo class with current version"
 	from(layout.projectDirectory.dir("src/main/templates"))
+	into(layout.buildDirectory.dir("${genPath}/bodevelopment/client/blackout"))
 
-	into(layout.buildDirectory.dir("generated/sources/blackout/java/net/mira/blackout"))
 	expand(
 			"name": staticModName,
 			"version": staticModVersion
 	)
 }
 
+sourceSets {
+	main {
+		java {
+			srcDir(tasks.named('generateBlackOutInfo').map { it.outputs.files.asPath })
+		}
+	}
+}
+
 afterEvaluate {
 	tasks.withType(JavaCompile).configureEach {
 		options.compilerArgs << "-Xlint:all" << "-Xlint:-processing" << "-Xlint:-this-escape" << "-Xlint:-varargs"
 	}
+}
+
+tasks.named('sourcesJar') {
+	dependsOn(tasks.named('generateBlackOutInfo'))
 }
