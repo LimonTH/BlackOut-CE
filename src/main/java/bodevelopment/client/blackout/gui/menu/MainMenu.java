@@ -217,10 +217,10 @@ public class MainMenu {
                 FileUtils.openLink("https://github.com/LimonTH/Blackout-CE");
                 break;
             case 1:
-                FileUtils.openLink("https://discord.com/invite/mmWz9Dz4Y9");
+                FileUtils.openLink("https://discordapp.com/users/866910380097929217"); /* "https://discord.com/invite/mmWz9Dz4Y9" */
                 break;
             case 2:
-                FileUtils.openLink("https://www.youtube.com/@BlackOutDevelopment");
+                FileUtils.openLink("https://www.youtube.com/watch?v=aWJpcxjk5DQ");
         }
     }
 

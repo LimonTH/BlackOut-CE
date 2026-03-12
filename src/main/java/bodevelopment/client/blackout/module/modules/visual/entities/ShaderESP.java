@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.module.modules.visual.entities;
 
+import bodevelopment.client.blackout.event.Event;
+import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
@@ -81,25 +83,40 @@ public class ShaderESP extends Module {
         }
     }
 
+    @Event
+    public void onRenderPre(RenderEvent.World.Pre event) {
+        Managers.FRAME_BUFFER.getBuffer("shaderESP").clear(1.0F, 1.0F, 1.0F, 0.0F);
+    }
+
     public void onRenderHud() {
         FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("shaderESP");
+        FrameBuffer convertBuffer = Managers.FRAME_BUFFER.getBuffer("shaderESP-convert");
         FrameBuffer bloomBuffer = Managers.FRAME_BUFFER.getBuffer("shaderESP-bloom");
-        buffer.bind(true);
+
+        convertBuffer.clear(0.0F, 0.0F, 0.0F, 0.0F);
+        convertBuffer.bind(true);
         RenderUtils.renderBufferWith(buffer, Shaders.convert, new ShaderSetup());
-        buffer.unbind();
-        RenderUtils.renderBufferWith(buffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.insideColor.get().getRGB())));
+        convertBuffer.unbind();
+
+        RenderUtils.renderBufferWith(convertBuffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.insideColor.get().getRGB())));
+
         if (this.bloom.get() > 0) {
             bloomBuffer.clear(0.0F, 0.0F, 0.0F, 1.0F);
             bloomBuffer.bind(true);
-            RenderUtils.renderBufferWith(buffer, Shaders.screentex, new ShaderSetup(setup -> setup.set("alpha", 1.0F)));
+            RenderUtils.renderBufferWith(convertBuffer, Shaders.screentex, new ShaderSetup(setup -> setup.set("alpha", 1.0F)));
             bloomBuffer.unbind();
+
             RenderUtils.blurBufferBW("shaderESP-bloom", this.bloom.get() + 1);
+
             bloomBuffer.bind(true);
-            Renderer.setTexture(buffer.getTexture(), 1);
-            RenderUtils.renderBufferWith(bloomBuffer, Shaders.subtract, new ShaderSetup());
+            Renderer.setTexture(convertBuffer.getTexture(), 1);
+            RenderUtils.renderBufferWith(bloomBuffer, Shaders.subtract, new ShaderSetup(setup -> {
+                setup.set("uTexture0", 0);
+                setup.set("uTexture1", 1);
+            }));
             bloomBuffer.unbind();
+
             RenderUtils.renderBufferWith(bloomBuffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.outsideColor.get().getRGB())));
-            buffer.clear(1.0F, 1.0F, 1.0F, 0.0F);
         }
     }
 
