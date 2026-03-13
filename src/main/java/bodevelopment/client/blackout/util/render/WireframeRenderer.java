@@ -107,7 +107,7 @@ public class WireframeRenderer extends WireframeContext {
         if (!(rawModel instanceof HumanoidModel<?>)) return;
 
         HumanoidModel<PlayerRenderState> model = (HumanoidModel<PlayerRenderState>) rawModel;
-
+        // TODO: слепок не принимает анимации родителя, стоит как статуя
         PlayerRenderState state = new PlayerRenderState();
         state.isPassenger = data.riding;
         state.isBaby = false;
