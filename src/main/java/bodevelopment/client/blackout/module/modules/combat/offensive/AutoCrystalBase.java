@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026.
+ * Original module logic by RegalMagic.
+ * Refined by Limon_TH.
+ */
+
 package bodevelopment.client.blackout.module.modules.combat.offensive;
 
 import bodevelopment.client.blackout.BlackOut;
