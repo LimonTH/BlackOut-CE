@@ -4,12 +4,7 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.HumanoidModel;
@@ -45,20 +40,17 @@ public class WireframeRenderer extends WireframeContext {
         data.scale = Mth.lerp(progress, 1.0F, maxScale);
 
         drawStaticPlayerModel(modelStack, player, data);
-
-        List<Vec3[]> positions = provider.consumer.positions;
+        provider.consumer.fixRemaining();
+        List<Vec3> vertices = provider.consumer.vertices;
 
         stack.pushPose();
-
         stack.translate(0, yOffset * progress, 0);
-
         Matrix4f matrix = stack.last().pose();
-
         float alphaMult = 1.0F - progress;
 
         if (shape.sides) {
             RenderSystem.setShader(CoreShaders.POSITION_COLOR);
-            drawQuads(matrix, positions,
+            drawEverything(matrix, vertices,
                     sideColor.red / 255.0F,
                     sideColor.green / 255.0F,
                     sideColor.blue / 255.0F,
@@ -67,7 +59,7 @@ public class WireframeRenderer extends WireframeContext {
 
         if (shape.outlines) {
             RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
-            drawLines(matrix, positions,
+            drawLinesFromList(matrix, vertices,
                     lineColor.red / 255.0F,
                     lineColor.green / 255.0F,
                     lineColor.blue / 255.0F,
@@ -82,28 +74,26 @@ public class WireframeRenderer extends WireframeContext {
                                    ModelData data, BlackOutColor lineColor,
                                    BlackOutColor sideColor, RenderShape shape) {
         RenderSystem.enableDepthTest();
-        RenderSystem.enablePolygonOffset();
-        RenderSystem.polygonOffset(-1.0f, -1.0f);
-        Render3DUtils.start();
+
         provider.consumer.start();
         PoseStack modelStack = new PoseStack();
         modelStack.setIdentity();
 
         drawStaticPlayerModel(modelStack, player, data);
-        List<Vec3[]> positions = provider.consumer.positions;
+        provider.consumer.fixRemaining();
+
+        List<Vec3> vertices = provider.consumer.vertices;
         Matrix4f matrix = stack.last().pose();
+
         if (shape.sides) {
             RenderSystem.setShader(CoreShaders.POSITION_COLOR);
-            drawQuads(matrix, positions, sideColor.red / 255.0F, sideColor.green / 255.0F, sideColor.blue / 255.0F, sideColor.alpha / 255.0F);
+            drawEverything(matrix, vertices, sideColor.red / 255.0F, sideColor.green / 255.0F, sideColor.blue / 255.0F, sideColor.alpha / 255.0F);
         }
 
         if (shape.outlines) {
             RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
-            drawLines(matrix, positions, lineColor.red / 255.0F, lineColor.green / 255.0F, lineColor.blue / 255.0F, lineColor.alpha / 255.0F);
+            drawLinesFromList(matrix, vertices, lineColor.red / 255.0F, lineColor.green / 255.0F, lineColor.blue / 255.0F, lineColor.alpha / 255.0F);
         }
-
-        Render3DUtils.end();
-        RenderSystem.disablePolygonOffset();
     }
 
     @SuppressWarnings("unchecked")
@@ -123,96 +113,84 @@ public class WireframeRenderer extends WireframeContext {
         state.isBaby = false;
         state.attackTime = data.swingProgress;
         state.swinging = data.swingProgress > 0;
-
-        state.capeFlap = data.limbPos;
-        state.capeLean = data.limbSpeed;
-        state.capeLean2 = data.animationProgress;
-
-        state.yRot = data.headYaw;
-        state.xRot = data.pitch;
         state.isDiscrete = player.isShiftKeyDown();
-        state.isFallFlying = player.isFallFlying();
-        state.isVisuallySwimming = player.isVisuallySwimming();
         state.skin = player.getSkin();
+        model.setupAnim(state);
 
         stack.pushPose();
-
         float s = data.scale * 0.9375F;
         stack.scale(s, -s, -s);
         stack.translate(0.0F, -1.501F, 0.0F);
+        stack.mulPose(Axis.YP.rotationDegrees(data.bodyYaw));
 
-        if (data.sleeping && data.sleepDir != null) {
-            stack.translate((float) (-data.sleepDir.getStepX()) * data.eyeHeight, 0.0F, (float) (-data.sleepDir.getStepZ()) * data.eyeHeight);
-        }
-
-        float bodyYaw = data.bodyYaw;
-        if (data.hasVehicle) {
-            float headYawWrap = Mth.wrapDegrees(data.headYaw - data.vehicleYaw);
-            float clampedHead = Mth.clamp(headYawWrap, -85.0F, 85.0F);
-            bodyYaw = data.headYaw - clampedHead;
-            if (clampedHead * clampedHead > 2500.0F) bodyYaw += clampedHead * 0.2F;
-        }
-
-        stack.mulPose(Axis.YP.rotationDegrees(bodyYaw));
-
-        if (data.flip) {
-            stack.translate(0.0F, 2.125F, 0.0F);
-            stack.mulPose(Axis.ZP.rotationDegrees(180.0F));
-        }
-
-        float headYaw = data.headYaw - bodyYaw;
-        float pitch = data.pitch;
-        if (data.flip) { pitch *= -1.0F; headYaw *= -1.0F; }
-
-        state.yRot = headYaw;
-        state.xRot = pitch;
-
-        model.setupAnim(state);
+        VertexConsumer consumer = provider.getBuffer(null);
+        int light = 15728880;
+        int overlay = 0;
 
         hidden = true;
 
-        model.renderToBuffer(stack, provider.getBuffer(null), 15728880, 0, -1);
+        model.head.render(stack, consumer, light, overlay);
+        provider.consumer.nextPart();
+
+        model.body.render(stack, consumer, light, overlay);
+        provider.consumer.nextPart();
+
+        model.rightArm.render(stack, consumer, light, overlay);
+        provider.consumer.nextPart();
+
+        model.leftArm.render(stack, consumer, light, overlay);
+        provider.consumer.nextPart();
+
+        model.rightLeg.render(stack, consumer, light, overlay);
+        provider.consumer.nextPart();
+
+        model.leftLeg.render(stack, consumer, light, overlay);
+        provider.consumer.nextPart();
 
         hidden = false;
-
         stack.popPose();
     }
 
-    public static void drawLines(Matrix4f matrix, List<Vec3[]> positions, float red, float green, float blue, float alpha) {
+    public static void drawEverything(Matrix4f matrix, List<Vec3> vertices, float red, float green, float blue, float alpha) {
+        if (vertices == null || vertices.isEmpty() || alpha <= 0) return;
+
         Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder builder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
+        BufferBuilder builder = tessellator.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
 
-        positions.forEach(arr -> {
-            for (int i = 0; i < 4; i++) {
-                Vec3 p1 = arr[i];
-                Vec3 p2 = arr[(i + 1) % 4];
-
-                float dx = (float) (p2.x - p1.x);
-                float dy = (float) (p2.y - p1.y);
-                float dz = (float) (p2.z - p1.z);
-
-                builder.addVertex(matrix, (float) p1.x, (float) p1.y, (float) p1.z)
-                        .setColor(red, green, blue, alpha)
-                        .setNormal(dx, dy, dz);
-
-                builder.addVertex(matrix, (float) p2.x, (float) p2.y, (float) p2.z)
-                        .setColor(red, green, blue, alpha)
-                        .setNormal(-dx, -dy, -dz);
-            }
-        });
+        for (Vec3 pos : vertices) {
+            builder.addVertex(matrix, (float) pos.x, (float) pos.y, (float) pos.z)
+                    .setColor(red, green, blue, alpha);
+        }
+        RenderSystem.disableCull();
         BufferUploader.drawWithShader(builder.buildOrThrow());
     }
 
-    public static void drawQuads(Matrix4f matrix, List<Vec3[]> positions, float red, float green, float blue, float alpha) {
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder builder = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+    public static void drawLinesFromList(Matrix4f matrix, List<Vec3> vertices, float red, float green, float blue, float alpha) {
+        if (vertices == null || vertices.size() < 2 || alpha <= 0) return;
 
-        positions.forEach(arr -> {
-            for (Vec3 pos : arr) {
-                builder.addVertex(matrix, (float) pos.x, (float) pos.y, (float) pos.z).setColor(red, green, blue, alpha);
-            }
-        });
+        Tesselator tessellator = Tesselator.getInstance();
+        BufferBuilder builder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
+
+        for (int i = 0; i < vertices.size() - 2; i += 3) {
+            Vec3 v1 = vertices.get(i);
+            Vec3 v2 = vertices.get(i + 1);
+            Vec3 v3 = vertices.get(i + 2);
+
+            addLine(builder, matrix, v1, v2, red, green, blue, alpha);
+            addLine(builder, matrix, v2, v3, red, green, blue, alpha);
+            addLine(builder, matrix, v3, v1, red, green, blue, alpha);
+        }
+
         BufferUploader.drawWithShader(builder.buildOrThrow());
+    }
+
+    private static void addLine(BufferBuilder builder, Matrix4f matrix, Vec3 p1, Vec3 p2, float r, float g, float b, float a) {
+        float dx = (float) (p2.x - p1.x);
+        float dy = (float) (p2.y - p1.y);
+        float dz = (float) (p2.z - p1.z);
+
+        builder.addVertex(matrix, (float) p1.x, (float) p1.y, (float) p1.z).setColor(r, g, b, a).setNormal(dx, dy, dz);
+        builder.addVertex(matrix, (float) p2.x, (float) p2.y, (float) p2.z).setColor(r, g, b, a).setNormal(-dx, -dy, -dz);
     }
 
     public static class ModelData {

@@ -52,22 +52,21 @@ public class SkeletonESP extends Module {
             stack.pushPose();
             stack.setIdentity();
             stack.mulPose(new Quaternionf(camera.rotation()).conjugate());
-            Vec3 renderPos = player.getPosition(event.tickDelta);
-            double x = renderPos.x - camPos.x;
-            double y = renderPos.y - camPos.y;
-            double z = renderPos.z - camPos.z;
 
-            stack.translate((float) x, (float) y, (float) z);
+            Vec3 renderPos = player.getPosition(event.tickDelta);
+            stack.translate((float) (renderPos.x - camPos.x), (float) (renderPos.y - camPos.y), (float) (renderPos.z - camPos.z));
+
             WireframeRenderer.ModelData data = new WireframeRenderer.ModelData(player, event.tickDelta);
             PoseStack modelStack = new PoseStack();
             modelStack.setIdentity();
 
             WireframeRenderer.provider.consumer.start();
-            renderModelData(modelStack, player, data);
+            BlackOutColor dummy = new BlackOutColor(0, 0, 0, 0);
+            WireframeRenderer.renderModel(modelStack, player, data, dummy, dummy, RenderShape.Outlines);
+            WireframeRenderer.provider.consumer.nextPart();
 
-            List<Vec3[]> positions = WireframeRenderer.provider.consumer.positions;
-
-            if (!positions.isEmpty()) {
+            List<List<Vec3>> parts = WireframeRenderer.provider.consumer.parts;
+            if (parts.size() >= 6) {
                 Render3DUtils.start();
                 RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
                 RenderSystem.lineWidth(1.5F);
@@ -77,62 +76,68 @@ public class SkeletonESP extends Module {
                 BufferBuilder builder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
 
                 BlackOutColor color = (Managers.FRIENDS.isFriend(player) ? this.friendColor : this.lineColor).get();
+                float r = color.red / 255.0F, g = color.green / 255.0F, b = color.blue / 255.0F, a = color.alpha / 255.0F;
 
                 Matrix4f matrix = stack.last().pose();
-                this.renderBones(matrix, positions, builder, color.red / 255.0F, color.green / 255.0F, color.blue / 255.0F, color.alpha / 255.0F);
+
+                Vec3 headTop = getExtremum(parts.get(0), true);
+                Vec3 headBottom = getExtremum(parts.get(0), false);
+
+                Vec3 bodyTop = getExtremum(parts.get(1), true);
+                Vec3 bodyBottom = getExtremum(parts.get(1), false);
+
+                line(matrix, builder, headTop, headBottom, r, g, b, a);
+
+                line(matrix, builder, headBottom, bodyTop, r, g, b, a);
+
+                line(matrix, builder, bodyTop, bodyBottom, r, g, b, a);
+
+                line(matrix, builder, bodyTop, bodyBottom, r, g, b, a);
+
+                renderLimb(matrix, builder, parts.get(2), bodyTop, r, g, b, a);
+                renderLimb(matrix, builder, parts.get(3), bodyTop, r, g, b, a);
+
+                renderLimb(matrix, builder, parts.get(4), bodyBottom, r, g, b, a);
+                renderLimb(matrix, builder, parts.get(5), bodyBottom, r, g, b, a);
 
                 BufferUploader.drawWithShader(builder.buildOrThrow());
                 RenderSystem.enableDepthTest();
                 Render3DUtils.end();
             }
-
             stack.popPose();
         }
     }
 
-    private void renderModelData(PoseStack stack, AbstractClientPlayer player, WireframeRenderer.ModelData data) {
-        WireframeRenderer.renderModel(stack, player, data,
-                new BlackOutColor(0,0,0,0), new BlackOutColor(0,0,0,0), RenderShape.Outlines);
+    private void renderLimb(Matrix4f matrix, BufferBuilder builder, List<Vec3> vertices, Vec3 attach, float r, float g, float b, float a) {
+        Vec3 top = getExtremum(vertices, true);
+        Vec3 bottom = getExtremum(vertices, false);
+        line(matrix, builder, attach, top, r, g, b, a);
+        line(matrix, builder, top, bottom, r, g, b, a);
     }
 
-    private void renderBones(Matrix4f matrix, List<Vec3[]> positions, BufferBuilder builder, float red, float green, float blue, float alpha) {
-        if (positions.size() < 36) return;
+    private Vec3 getExtremum(List<Vec3> vertices, boolean top) {
+        if (vertices.isEmpty()) return Vec3.ZERO;
 
-        Vec3 bodyTop = this.average(positions.get(6));
-        Vec3 bodyBottom = this.average(positions.get(7));
-
-        Vec3 chest = bodyTop.lerp(bodyBottom, 0.15);
-        Vec3 ass = bodyTop.lerp(bodyBottom, 0.85);
-
-        for (int i = 0; i < 6; i++) {
-            Vec3 boxTop = this.average(positions.get(i * 6));
-            Vec3 boxBottom = this.average(positions.get(i * 6 + 1));
-
-            switch (i) {
-                case 0:
-                    this.line(matrix, builder, boxTop.lerp(boxBottom, 0.25), boxBottom, red, green, blue, alpha);
-                    break;
-                case 1:
-                    this.line(matrix, builder, chest, ass, red, green, blue, alpha);
-                    break;
-                case 2:
-                case 3:
-                    Vec3 shoulder = boxTop.lerp(boxBottom, 0.1);
-                    Vec3 handBottom = boxTop.lerp(boxBottom, 0.9);
-
-                    this.line(matrix, builder, shoulder, handBottom, red, green, blue, alpha);
-
-                    this.line(matrix, builder, shoulder, chest, red, green, blue, alpha);
-                    break;
-                case 4:
-                case 5:
-                    Vec3 legTop = boxTop.lerp(boxBottom, 0.1);
-                    Vec3 legBottom = boxTop.lerp(boxBottom, 0.9);
-                    this.line(matrix, builder, legTop, legBottom, red, green, blue, alpha);
-                    this.line(matrix, builder, legTop, ass, red, green, blue, alpha);
-                    break;
+        double targetY = vertices.getFirst().y;
+        for (Vec3 v : vertices) {
+            if (top ? (v.y > targetY) : (v.y < targetY)) {
+                targetY = v.y;
             }
         }
+
+        double avgX = 0, avgZ = 0;
+        int count = 0;
+        for (Vec3 v : vertices) {
+            if (Math.abs(v.y - targetY) < 0.01) {
+                avgX += v.x;
+                avgZ += v.z;
+                count++;
+            }
+        }
+
+        if (count == 0) return new Vec3(0, targetY, 0);
+
+        return new Vec3(avgX / count, targetY, avgZ / count);
     }
 
     private void line(Matrix4f matrix, BufferBuilder builder, Vec3 pos, Vec3 pos2, float red, float green, float blue, float alpha) {
@@ -147,13 +152,5 @@ public class SkeletonESP extends Module {
 
         builder.addVertex(matrix, (float) pos.x, (float) pos.y, (float) pos.z).setColor(red, green, blue, alpha).setNormal(dx, dy, dz);
         builder.addVertex(matrix, (float) pos2.x, (float) pos2.y, (float) pos2.z).setColor(red, green, blue, alpha).setNormal(dx, dy, dz);
-    }
-
-    private Vec3 average(Vec3... vecs) {
-        double x = 0, y = 0, z = 0;
-        for (Vec3 v : vecs) {
-            x += v.x; y += v.y; z += v.z;
-        }
-        return new Vec3(x / vecs.length, y / vecs.length, z / vecs.length);
     }
 }
