@@ -75,7 +75,6 @@ public class Velocity extends Module {
                 this.sendGrimPackets();
                 this.grim = false;
             }
-
             this.delayed
                     .timers
                     .removeIf(
@@ -108,7 +107,6 @@ public class Velocity extends Module {
             if (BlackOut.mc.player == null || BlackOut.mc.player.getId() != packet.getId()) {
                 return;
             }
-
             switch (this.mode.get()) {
                 case Simple:
                     int x = (int) (packet.getXa() - BlackOut.mc.player.getDeltaMovement().x * 8000.0);

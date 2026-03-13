@@ -119,7 +119,7 @@ public class FileUtils {
     private static String getPathToResource(String... path) {
         StringBuilder builder = new StringBuilder();
         if (!path[0].equals("assets")) {
-            builder.append("/assets/bodevelopment/client/blackout");
+            builder.append("/assets/blackout");
         }
 
         for (String d : path) {
