@@ -37,6 +37,7 @@ public class SkeletonESP extends Module {
     public SkeletonESP() {
         super("Skeleton ESP", "Renders a simplified stick-figure representation of other players' skeletal structures by connecting their joint positions.", SubCategory.ENTITIES, true);
     }
+    // TODO: Не реагирует на state сущностей
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
@@ -117,27 +118,13 @@ public class SkeletonESP extends Module {
 
     private Vec3 getExtremum(List<Vec3> vertices, boolean top) {
         if (vertices.isEmpty()) return Vec3.ZERO;
-
-        double targetY = vertices.getFirst().y;
+        Vec3 extremum = vertices.getFirst();
         for (Vec3 v : vertices) {
-            if (top ? (v.y > targetY) : (v.y < targetY)) {
-                targetY = v.y;
-            }
+            if (top ? (v.y > extremum.y) : (v.y < extremum.y)) extremum = v;
         }
-
         double avgX = 0, avgZ = 0;
-        int count = 0;
-        for (Vec3 v : vertices) {
-            if (Math.abs(v.y - targetY) < 0.01) {
-                avgX += v.x;
-                avgZ += v.z;
-                count++;
-            }
-        }
-
-        if (count == 0) return new Vec3(0, targetY, 0);
-
-        return new Vec3(avgX / count, targetY, avgZ / count);
+        for (Vec3 v : vertices) { avgX += v.x; avgZ += v.z; }
+        return new Vec3(avgX / vertices.size(), extremum.y, avgZ / vertices.size());
     }
 
     private void line(Matrix4f matrix, BufferBuilder builder, Vec3 pos, Vec3 pos2, float red, float green, float blue, float alpha) {
