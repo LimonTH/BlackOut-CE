@@ -7,7 +7,7 @@ import bodevelopment.client.blackout.gui.clickgui.ClickGui;
 import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.manager.Managers;
-import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.client.gui.screens.TitleScreen;
 
 public class ClickGuiManager extends Manager {
     public final ClickGui CLICK_GUI = new ClickGui();
@@ -20,17 +20,17 @@ public class ClickGuiManager extends Manager {
 
     @Event
     public void onKey(KeyEvent event) {
-        if (!event.pressed || BlackOut.mc.player == null || BlackOut.mc.world == null) return;
+        if (!event.pressed || BlackOut.mc.player == null || BlackOut.mc.level == null) return;
 
         if (event.key == 344) {
-            if (BlackOut.mc.currentScreen == null || Managers.CLICK_GUI.CLICK_GUI.isOpen()) {
+            if (BlackOut.mc.screen == null || Managers.CLICK_GUI.CLICK_GUI.isOpen()) {
                 this.toggle();
             }
         }
     }
 
     public void openScreen(ClickGuiScreen screen) {
-        if (Managers.CLICK_GUI.CLICK_GUI.isOpen() || BlackOut.mc.currentScreen instanceof TitleScreen) {
+        if (Managers.CLICK_GUI.CLICK_GUI.isOpen() || BlackOut.mc.screen instanceof TitleScreen) {
             this.CLICK_GUI.setScreen(screen);
         } else {
             Managers.HUD.HUD_EDITOR.setScreen(screen);

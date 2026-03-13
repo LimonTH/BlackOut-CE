@@ -13,22 +13,21 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.Pair;
 import bodevelopment.client.blackout.randomstuff.timers.TickTimerList;
 import bodevelopment.client.blackout.util.InvUtils;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.PotionContentsComponent;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.item.ArrowItem;
-import net.minecraft.item.BowItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
-import net.minecraft.screen.PlayerScreenHandler;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.Hand;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.item.ArrowItem;
+import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.alchemy.PotionContents;
 
 public class Quiver extends Module {
     public static boolean charging = false;
@@ -51,10 +50,10 @@ public class Quiver extends Module {
     private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotate", true,
             "Forces the pitch to -90 instantly for the shot.");
 
-    private final List<Pair<StatusEffectInstance, Integer>> arrows = new ArrayList<>();
+    private final List<Pair<MobEffectInstance, Integer>> arrows = new ArrayList<>();
     private final List<Integer> actions = new ArrayList<>();
-    private final TickTimerList<StatusEffect> shot = new TickTimerList<>(false);
-    private StatusEffect currentEffect = null;
+    private final TickTimerList<MobEffect> shot = new TickTimerList<>(false);
+    private MobEffect currentEffect = null;
     private int timer = 0;
     private boolean charged = false;
     private double movesLeft = 0.0;
@@ -68,7 +67,7 @@ public class Quiver extends Module {
         this.timer++;
         this.movesLeft = this.movesLeft + this.moveSpeed.get() / 20.0;
         this.shot.update();
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null && BlackOut.mc.player.getMainHandStack().getItem() == Items.BOW) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null && BlackOut.mc.player.getMainHandItem().getItem() == Items.BOW) {
             this.update();
         } else {
             charging = false;
@@ -83,22 +82,22 @@ public class Quiver extends Module {
     }
 
     private void updateShooting() {
-        ItemStack stack = BlackOut.mc.player.getMainHandStack();
+        ItemStack stack = BlackOut.mc.player.getMainHandItem();
         if (stack != null && stack.getItem() instanceof BowItem) {
             if (!this.updateMoving()) {
                 if (this.charged) {
                     this.charged = false;
-                    BlackOut.mc.interactionManager.stopUsingItem(BlackOut.mc.player);
+                    BlackOut.mc.gameMode.releaseUsingItem(BlackOut.mc.player);
                 }
             } else if (this.rotatePitch(-90.0F, RotationType.Other.withInstant(this.instantRotate.get()), "bow")) {
                 if (!BlackOut.mc.player.isUsingItem() && this.timer > this.delay.get()) {
-                    BlackOut.mc.interactionManager.interactItem(BlackOut.mc.player, Hand.MAIN_HAND);
+                    BlackOut.mc.gameMode.useItem(BlackOut.mc.player, InteractionHand.MAIN_HAND);
                     charging = true;
                     this.charged = true;
                 }
 
-                if (BlackOut.mc.player.getItemUseTime() >= this.charge.get()) {
-                    BlackOut.mc.interactionManager.stopUsingItem(BlackOut.mc.player);
+                if (BlackOut.mc.player.getTicksUsingItem() >= this.charge.get()) {
+                    BlackOut.mc.gameMode.releaseUsingItem(BlackOut.mc.player);
                     this.predict(this.getSlot(true));
                     this.shot.add(this.currentEffect, this.retryTime.get());
                     charging = false;
@@ -111,26 +110,26 @@ public class Quiver extends Module {
 
     private void predict(int slot) {
         if (slot >= 0 && Simulation.getInstance().quiverShoot()) {
-            ScreenHandler handler = BlackOut.mc.player.currentScreenHandler;
-            ItemStack stack = handler.getSlot(slot).getStack().copy();
+            AbstractContainerMenu handler = BlackOut.mc.player.containerMenu;
+            ItemStack stack = handler.getSlot(slot).getItem().copy();
             if (stack.getCount() > 1) {
                 stack.setCount(stack.getCount() - 1);
             } else {
-                stack = Items.AIR.getDefaultStack();
+                stack = Items.AIR.getDefaultInstance();
             }
 
-            Managers.PACKET.preApply(new ScreenHandlerSlotUpdateS2CPacket(handler.syncId, handler.getRevision(), slot, stack));
+            Managers.PACKET.preApply(new ClientboundContainerSetSlotPacket(handler.containerId, handler.getStateId(), slot, stack));
         }
     }
 
     private boolean updateMoving() {
-        if (BlackOut.mc.player.currentScreenHandler instanceof PlayerScreenHandler && !this.actions.isEmpty()) {
+        if (BlackOut.mc.player.containerMenu instanceof InventoryMenu && !this.actions.isEmpty()) {
             while (this.movesLeft > 0.0 && !this.actions.isEmpty()) {
                 this.click(this.actions.getFirst());
                 this.actions.removeFirst();
                 this.movesLeft--;
             }
-            if (this.actions.isEmpty() && this.closeInv.get() && BlackOut.mc.player.currentScreenHandler instanceof PlayerScreenHandler) {
+            if (this.actions.isEmpty() && this.closeInv.get() && BlackOut.mc.player.containerMenu instanceof InventoryMenu) {
                 this.closeInventory();
             }
         } else {
@@ -147,14 +146,14 @@ public class Quiver extends Module {
                     return false;
                 }
 
-                if (!(BlackOut.mc.player.currentScreenHandler instanceof PlayerScreenHandler)) {
+                if (!(BlackOut.mc.player.containerMenu instanceof InventoryMenu)) {
                     return false;
                 }
 
                 this.move(toShoot);
                 this.move(all);
                 this.move(toShoot);
-                if (this.closeInv.get() && this.instantMove.get() && BlackOut.mc.player.currentScreenHandler instanceof PlayerScreenHandler) {
+                if (this.closeInv.get() && this.instantMove.get() && BlackOut.mc.player.containerMenu instanceof InventoryMenu) {
                     this.closeInventory();
                 }
             }
@@ -172,26 +171,26 @@ public class Quiver extends Module {
     }
 
     private void click(int slot) {
-        InvUtils.interactSlot(0, slot, 0, SlotActionType.PICKUP);
+        InvUtils.interactSlot(0, slot, 0, ClickType.PICKUP);
     }
 
     private int getSlot(boolean first) {
         int slot = -1;
 
-        for (Pair<StatusEffectInstance, Integer> entry : this.arrows) {
-            StatusEffectInstance effect = entry.getLeft();
-            int s = entry.getRight();
+        for (Pair<MobEffectInstance, Integer> entry : this.arrows) {
+            MobEffectInstance effect = entry.getA();
+            int s = entry.getB();
             if (s <= slot || slot <= -1) {
                 if (!first) {
-                    StatusEffectInstance activeEffect = BlackOut.mc.player.getActiveStatusEffects().get(effect.getEffectType());
-                    if (BlackOut.mc.player.hasStatusEffect(effect.getEffectType())
+                    MobEffectInstance activeEffect = BlackOut.mc.player.getActiveEffectsMap().get(effect.getEffect());
+                    if (BlackOut.mc.player.hasEffect(effect.getEffect())
                             && activeEffect != null && activeEffect.getDuration() > this.durationLeft.get() * 20
-                            || this.shot.contains(effect.getEffectType().value())
-                            || !effect.getEffectType().value().isBeneficial()) {
+                            || this.shot.contains(effect.getEffect().value())
+                            || !effect.getEffect().value().isBeneficial()) {
                         continue;
                     }
 
-                    this.currentEffect = effect.getEffectType().value();
+                    this.currentEffect = effect.getEffect().value();
                 }
 
                 slot = s;
@@ -203,14 +202,14 @@ public class Quiver extends Module {
 
     private void updateArrows() {
         this.arrows.clear();
-        if (BlackOut.mc.player.currentScreenHandler instanceof PlayerScreenHandler handler) {
+        if (BlackOut.mc.player.containerMenu instanceof InventoryMenu handler) {
             for (int slotIndex = 0; slotIndex < handler.slots.size(); slotIndex++) {
-                ItemStack stack = handler.getSlot(slotIndex).getStack();
+                ItemStack stack = handler.getSlot(slotIndex).getItem();
                 if (!stack.isEmpty() && stack.getItem() instanceof ArrowItem) {
-                    PotionContentsComponent contents = stack.get(DataComponentTypes.POTION_CONTENTS);
+                    PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
 
                     if (contents != null) {
-                        Iterable<StatusEffectInstance> effects = contents.getEffects();
+                        Iterable<MobEffectInstance> effects = contents.getAllEffects();
                         var iterator = effects.iterator();
                         if (iterator.hasNext()) {
                             this.arrows.add(new Pair<>(iterator.next(), slotIndex));

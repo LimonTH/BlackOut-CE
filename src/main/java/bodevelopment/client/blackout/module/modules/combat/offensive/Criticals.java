@@ -11,14 +11,14 @@ import bodevelopment.client.blackout.module.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ExperienceOrbEntity;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.phys.Vec3;
 
 // TODO: NEED PATCHES
 // TODO: добавить общий cooldown на crit packets, чтобы не флагаться на burst-атаках.
@@ -58,23 +58,23 @@ public class Criticals extends Module {
 
     @Event
     public void onSend(PacketEvent.Send event) {
-        if (BlackOut.mc.player == null || BlackOut.mc.world == null) return;
+        if (BlackOut.mc.player == null || BlackOut.mc.level == null) return;
         if (Aura.getInstance().enabled && Aura.getInstance().isAttacking) return;
 
         if (event.packet instanceof AccessorInteractEntityC2SPacket packet
-                && packet.getType().getType() == PlayerInteractEntityC2SPacket.InteractType.ATTACK) {
+                && packet.getType().getType() == ServerboundInteractPacket.ActionType.ATTACK) {
 
-            Entity attackedEntity = BlackOut.mc.world.getEntityById(packet.getId());
+            Entity attackedEntity = BlackOut.mc.level.getEntity(packet.getId());
 
             if (attackedEntity == null ||
                     attackedEntity instanceof ItemEntity ||
-                    attackedEntity instanceof ExperienceOrbEntity) return;
+                    attackedEntity instanceof ExperienceOrb) return;
 
-            if (BlackOut.mc.player.isSubmergedInWater() || BlackOut.mc.player.isInLava() ||
-                    BlackOut.mc.player.isClimbing() || BlackOut.mc.player.hasStatusEffect(StatusEffects.BLINDNESS))
+            if (BlackOut.mc.player.isUnderWater() || BlackOut.mc.player.isInLava() ||
+                    BlackOut.mc.player.onClimbable() || BlackOut.mc.player.hasEffect(MobEffects.BLINDNESS))
                 return;
 
-            if (BlackOut.mc.player.isOnGround()) {
+            if (BlackOut.mc.player.onGround()) {
                 doCritLogic();
             }
         }
@@ -85,7 +85,7 @@ public class Criticals extends Module {
         double y = BlackOut.mc.player.getY();
         double z = BlackOut.mc.player.getZ();
 
-        boolean hasSpace = BlackOut.mc.world.getBlockState(new BlockPos((int) x, (int) (y + 2.1), (int) z)).isAir();
+        boolean hasSpace = BlackOut.mc.level.getBlockState(new BlockPos((int) x, (int) (y + 2.1), (int) z)).isAir();
 
         switch (this.mode.get()) {
             case Packet:
@@ -101,7 +101,7 @@ public class Criticals extends Module {
                 break;
 
             case Jump:
-                if (hasSpace) BlackOut.mc.player.jump();
+                if (hasSpace) BlackOut.mc.player.jumpFromGround();
                 break;
 
             case Strict:
@@ -114,7 +114,7 @@ public class Criticals extends Module {
                 break;
 
             case BlocksMC:
-                if (BlackOut.mc.player.age % 4 == 0) {
+                if (BlackOut.mc.player.tickCount % 4 == 0) {
                     sendPos(x, y + 0.0011, z, true);
                     sendPos(x, y, z, false);
                 }
@@ -126,8 +126,8 @@ public class Criticals extends Module {
                 break;
 
             case GrimOld:
-                Vec3d pos = Managers.PACKET.pos;
-                this.sendPacket(new PlayerMoveC2SPacket.Full(pos.getX(), pos.getY() - 1.0E-6, pos.getZ(),
+                Vec3 pos = Managers.PACKET.pos;
+                this.sendPacket(new ServerboundMovePlayerPacket.PosRot(pos.x(), pos.y() - 1.0E-6, pos.z(),
                         Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, false, BlackOut.mc.player.horizontalCollision));
                 break;
 
@@ -145,13 +145,13 @@ public class Criticals extends Module {
     }
 
     private void sendPos(double x, double y, double z, boolean onGround) {
-        this.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(x, y, z, onGround, BlackOut.mc.player.horizontalCollision));
+        this.sendInstantly(new ServerboundMovePlayerPacket.Pos(x, y, z, onGround, BlackOut.mc.player.horizontalCollision));
     }
 
     @Event
     public void onSent(PacketEvent.Sent event) {
         if (Aura.getInstance().enabled && Aura.getInstance().isAttacking) return;
-        if (event.packet instanceof PlayerMoveC2SPacket packet && packet.isOnGround()) {
+        if (event.packet instanceof ServerboundMovePlayerPacket packet && packet.isOnGround()) {
             this.shouldSpoof = false;
         }
     }
@@ -170,7 +170,7 @@ public class Criticals extends Module {
 
     private boolean input() {
         if (BlackOut.mc.player == null) return false;
-        return BlackOut.mc.player.input.getMovementInput().lengthSquared() > 0.0F || BlackOut.mc.player.input.playerInput.jump();
+        return BlackOut.mc.player.input.getMoveVector().lengthSquared() > 0.0F || BlackOut.mc.player.input.keyPresses.jump();
     }
 
     public enum Mode {

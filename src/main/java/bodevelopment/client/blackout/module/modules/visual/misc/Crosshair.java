@@ -9,7 +9,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.util.math.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 public class Crosshair extends Module {
     private static Crosshair INSTANCE;
@@ -23,7 +23,7 @@ public class Crosshair extends Module {
     private final Setting<BlackOutColor> color = this.sgGeneral.colorSetting("Reticle Color", new BlackOutColor(255, 255, 255, 225), "The color and transparency of the custom crosshair.", () -> !this.remove.get());
     public final Setting<Boolean> t = this.sgGeneral.booleanSetting("T-Style Configuration", false, "Removes the top segment of the crosshair to create a 'T' shape.");
 
-    private final MatrixStack stack = new MatrixStack();
+    private final PoseStack stack = new PoseStack();
 
     public Crosshair() {
         super("Crosshair", "Replaces or modifies the standard targeting reticle with a custom geometric crosshair.", SubCategory.MISC_VISUAL, true);
@@ -36,11 +36,11 @@ public class Crosshair extends Module {
 
     @Event
     public void onRender(RenderEvent.Hud.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             if (!this.remove.get()) {
-                this.stack.push();
+                this.stack.pushPose();
                 RenderUtils.unGuiScale(this.stack);
-                this.stack.translate(BlackOut.mc.getWindow().getWidth() / 2.0F - 1.0F, BlackOut.mc.getWindow().getHeight() / 2.0F - 1.0F, 0.0F);
+                this.stack.translate(BlackOut.mc.getWindow().getScreenWidth() / 2.0F - 1.0F, BlackOut.mc.getWindow().getScreenHeight() / 2.0F - 1.0F, 0.0F);
                 int d = this.dist.get();
                 int w = this.width.get();
                 int l = this.length.get();
@@ -51,7 +51,7 @@ public class Crosshair extends Module {
                 RenderUtils.rounded(this.stack, d, -w / 2.0F, l, w, 0.0F, 0.0F, this.color.get().getRGB(), this.color.get().getRGB());
                 RenderUtils.rounded(this.stack, -w / 2.0F, d, w, l, 0.0F, 0.0F, this.color.get().getRGB(), this.color.get().getRGB());
                 RenderUtils.rounded(this.stack, -d - l, -w / 2.0F, l, w, 0.0F, 0.0F, this.color.get().getRGB(), this.color.get().getRGB());
-                this.stack.pop();
+                this.stack.popPose();
             }
         }
     }

@@ -16,18 +16,18 @@ import bodevelopment.client.blackout.util.ChatUtils;
 import bodevelopment.client.blackout.util.FileUtils;
 import bodevelopment.client.blackout.util.MovementUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
-import net.minecraft.registry.tag.FluidTags;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
 import org.apache.commons.lang3.mutable.MutableDouble;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ClientboundExplodePacket;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 
 public class Strafe extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -93,11 +93,11 @@ public class Strafe extends Module {
 
     private final List<Offset> offsets = new ArrayList<>();
     private final TimerList<Double> boosts = new TimerList<>(true);
-    private final List<Vec3d> velocities = new ArrayList<>();
+    private final List<Vec3> velocities = new ArrayList<>();
     private double velocity = 0.0;
     private double yaw = 0.0;
     private int og = 0;
-    private Vec3d prevMovement = Vec3d.ZERO;
+    private Vec3 prevMovement = Vec3.ZERO;
     private boolean vanillaBoosted = false;
     private long prevRubberband = 0L;
     private boolean waiting = false;
@@ -110,7 +110,7 @@ public class Strafe extends Module {
     @Override
     public void onEnable() {
         this.offsets.clear();
-        this.velocity = this.prevMovement.horizontalLength();
+        this.velocity = this.prevMovement.horizontalDistance();
         if (this.useOffsets.get()) {
             File file = FileUtils.getFile("strafe-offsets.txt");
             this.waiting = true;
@@ -142,27 +142,27 @@ public class Strafe extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.player != null || BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null || BlackOut.mc.level != null) {
             this.prevMovement = BlackOut.mc
                     .player
-                    .getPos()
-                    .subtract(BlackOut.mc.player.prevX, BlackOut.mc.player.prevY, BlackOut.mc.player.prevZ);
+                    .position()
+                    .subtract(BlackOut.mc.player.xo, BlackOut.mc.player.yo, BlackOut.mc.player.zo);
             this.velocities.addFirst(this.prevMovement);
             OLEPOSSUtils.limitList(this.velocities, 10);
             if (this.strictCollisions.get()) {
-                this.velocity = this.prevMovement.horizontalLength() - this.boostAmount;
+                this.velocity = this.prevMovement.horizontalDistance() - this.boostAmount;
             }
         }
     }
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null && this.enabled && !this.isPaused()) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null && this.enabled && !this.isPaused()) {
             if (this.strictCollisions.get() && BlackOut.mc.player.horizontalCollision) {
                 this.boosts.clear();
             }
 
-            if (!this.onlyOG.get() || BlackOut.mc.player.isOnGround()) {
+            if (!this.onlyOG.get() || BlackOut.mc.player.onGround()) {
                 this.yaw = Managers.ROTATION.moveYaw + 90.0F;
             }
 
@@ -192,30 +192,30 @@ public class Strafe extends Module {
     @Event
     public void onReceive(PacketEvent.Receive.Pre event) {
         if (this.damageBoost.get() && this.enabled) {
-            if (event.packet instanceof PlayerPositionLookS2CPacket) {
+            if (event.packet instanceof ClientboundPlayerPositionPacket) {
                 this.velocity = 0.0;
                 this.prevRubberband = System.currentTimeMillis();
                 this.boosts.clear();
             } else if (System.currentTimeMillis() - this.prevRubberband >= 1000L) {
-                Vec3d vel = null;
+                Vec3 vel = null;
 
-                if (event.packet instanceof EntityVelocityUpdateS2CPacket packet) {
-                    if (BlackOut.mc.player == null || BlackOut.mc.player.getId() != packet.getEntityId()) {
+                if (event.packet instanceof ClientboundSetEntityMotionPacket packet) {
+                    if (BlackOut.mc.player == null || BlackOut.mc.player.getId() != packet.getId()) {
                         return;
                     }
 
-                    vel = new Vec3d(packet.getVelocityX(), packet.getVelocityY(), packet.getVelocityZ())
-                            .subtract(BlackOut.mc.player.getVelocity());
+                    vel = new Vec3(packet.getXa(), packet.getYa(), packet.getZa())
+                            .subtract(BlackOut.mc.player.getDeltaMovement());
                 }
 
-                if (event.packet instanceof ExplosionS2CPacket packet) {
+                if (event.packet instanceof ClientboundExplodePacket packet) {
                     if (packet.playerKnockback().isPresent()) {
                         vel = packet.playerKnockback().get();
                     }
                 }
 
                 if (vel != null) {
-                    double hLen = this.prevMovement.horizontalLength();
+                    double hLen = this.prevMovement.horizontalDistance();
                     double boost;
 
                     if (this.directionalBoost.get() && hLen > 0.0001) {
@@ -225,7 +225,7 @@ public class Strafe extends Module {
                         double dot = vel.x * x + vel.z * z;
                         boost = Math.max(dot, 0.0);
                     } else {
-                        boost = vel.horizontalLength();
+                        boost = vel.horizontalDistance();
                     }
 
                     if (boost > 0) {
@@ -236,16 +236,16 @@ public class Strafe extends Module {
         }
     }
 
-    private Vec3d getVelocity() {
+    private Vec3 getVelocity() {
         return !this.velocities.isEmpty() && this.latencyTicks.get() != 0
                 ? this.velocities.get(Math.min(this.velocities.size(), this.latencyTicks.get()) - 1)
-                : BlackOut.mc.player.getVelocity();
+                : BlackOut.mc.player.getDeltaMovement();
     }
 
     private void move(MoveEvent.Pre event) {
         this.updateVelocity();
         this.og++;
-        if (BlackOut.mc.player.isOnGround()) {
+        if (BlackOut.mc.player.onGround()) {
             this.waiting = false;
         }
 
@@ -264,7 +264,7 @@ public class Strafe extends Module {
 
     private boolean updateOffsets(MoveEvent.Pre event) {
         if (!this.waiting && this.useOffsets.get() && this.og < this.offsets.size()) {
-            if (BlackOut.mc.player.isOnGround()) {
+            if (BlackOut.mc.player.onGround()) {
                 this.og = 0;
             }
 
@@ -311,7 +311,7 @@ public class Strafe extends Module {
     }
 
     private void updateJump(MoveEvent.Pre event) {
-        if (BlackOut.mc.player.isOnGround() && Step.getInstance().canStrafeJump(this.stepVelocity(event.movement.y))) {
+        if (BlackOut.mc.player.onGround() && Step.getInstance().canStrafeJump(this.stepVelocity(event.movement.y))) {
             event.setY(this, this.jumpPower.get().floatValue());
             this.og = 0;
             this.vanillaBoosted = true;
@@ -322,7 +322,7 @@ public class Strafe extends Module {
         }
     }
 
-    private Vec3d stepVelocity(double y) {
+    private Vec3 stepVelocity(double y) {
         double movement;
         if (this.addBoost.get()) {
             movement = this.velocity + this.boostAmount;
@@ -332,7 +332,7 @@ public class Strafe extends Module {
 
         double x = Math.cos(Math.toRadians(this.yaw)) * movement;
         double z = Math.sin(Math.toRadians(this.yaw)) * movement;
-        return new Vec3d(x, y, z);
+        return new Vec3(x, y, z);
     }
 
     private double getNewJumpVelocity() {
@@ -393,8 +393,8 @@ public class Strafe extends Module {
     private float getTimer() {
         float start = this.ncpTimer.get() ? 1.088F : this.timer.get().floatValue();
         float end = this.endNcpTimer.get() ? 1.088F : this.endTimer.get().floatValue();
-        return MathHelper.clampedLerp(
-                start, end, MathHelper.getLerpProgress(this.og, this.timerStartProgress.get(), this.timerEndProgress.get())
+        return Mth.clampedLerp(
+                start, end, Mth.inverseLerp(this.og, this.timerStartProgress.get(), this.timerEndProgress.get())
         );
     }
 
@@ -403,44 +403,44 @@ public class Strafe extends Module {
             return this.getVanillaFriction();
         } else {
             double l = OLEPOSSUtils.safeDivide(this.og - this.startProgress.get(), this.endProgress.get() - this.startProgress.get());
-            return MathHelper.clampedLerp(this.startFriction.get(), this.endFriction.get(), l);
+            return Mth.clampedLerp(this.startFriction.get(), this.endFriction.get(), l);
         }
     }
 
     private double getVanillaFriction() {
-        BlockPos blockPos = BlackOut.mc.player.getVelocityAffectingPos();
-        double slipperiness = BlackOut.mc.world.getBlockState(blockPos).getBlock().getSlipperiness();
-        return BlackOut.mc.player.isOnGround() ? 0.21600002F / (slipperiness * slipperiness * slipperiness) : 0.98;
+        BlockPos blockPos = BlackOut.mc.player.getBlockPosBelowThatAffectsMyMovement();
+        double slipperiness = BlackOut.mc.level.getBlockState(blockPos).getBlock().getFriction();
+        return BlackOut.mc.player.onGround() ? 0.21600002F / (slipperiness * slipperiness * slipperiness) : 0.98;
     }
 
     private boolean isPaused() {
-        if (this.pauseSneak.get() && BlackOut.mc.player.isSneaking()) {
+        if (this.pauseSneak.get() && BlackOut.mc.player.isShiftKeyDown()) {
             return true;
-        } else if (this.pauseElytra.get() && BlackOut.mc.player.isGliding()) {
+        } else if (this.pauseElytra.get() && BlackOut.mc.player.isFallFlying()) {
             return true;
         } else if (this.pauseFly.get() && BlackOut.mc.player.getAbilities().flying) {
             return true;
         } else {
             switch (this.pauseWater.get()) {
                 case Touching:
-                    if (BlackOut.mc.player.isTouchingWater()) {
+                    if (BlackOut.mc.player.isInWater()) {
                         return true;
                     }
                     break;
                 case Submerged:
-                    if (BlackOut.mc.player.isSubmergedIn(FluidTags.WATER)) {
+                    if (BlackOut.mc.player.isEyeInFluid(FluidTags.WATER)) {
                         return true;
                     }
                     break;
                 case Both:
-                    if (BlackOut.mc.player.isTouchingWater() || BlackOut.mc.player.isSubmergedIn(FluidTags.WATER)) {
+                    if (BlackOut.mc.player.isInWater() || BlackOut.mc.player.isEyeInFluid(FluidTags.WATER)) {
                         return true;
                     }
             }
             return switch (this.pauseLava.get()) {
                 case Touching -> BlackOut.mc.player.isInLava();
-                case Submerged -> BlackOut.mc.player.isSubmergedIn(FluidTags.LAVA);
-                case Both -> BlackOut.mc.player.isInLava() || BlackOut.mc.player.isSubmergedIn(FluidTags.LAVA);
+                case Submerged -> BlackOut.mc.player.isEyeInFluid(FluidTags.LAVA);
+                case Both -> BlackOut.mc.player.isInLava() || BlackOut.mc.player.isEyeInFluid(FluidTags.LAVA);
                 default -> false;
             };
         }

@@ -15,21 +15,20 @@ import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RotationAxis;
-import net.minecraft.util.math.Vec3d;
-
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class ESP extends Module {
     private static ESP INSTANCE;
@@ -50,7 +49,7 @@ public class ESP extends Module {
     private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Outline Color", new BlackOutColor(255, 255, 255, 200), "The primary color of the bounding frame.");
     private final Setting<BlackOutColor> fadeColor = this.sgGeneral.colorSetting("Secondary Outline Color", new BlackOutColor(16, 16, 16, 200), "The secondary color used for vertical line fading and gradients.");
 
-    private final MatrixStack stack = new MatrixStack();
+    private final PoseStack stack = new PoseStack();
     private final List<Entity> entities = new ArrayList<>();
     private float progress = 0.0F;
 
@@ -65,9 +64,9 @@ public class ESP extends Module {
 
     @Event
     public void onTickPost(TickEvent.Post event) {
-        if (BlackOut.mc.world != null && BlackOut.mc.player != null) {
+        if (BlackOut.mc.level != null && BlackOut.mc.player != null) {
             this.entities.clear();
-            BlackOut.mc.world.entityList.forEach(entity -> {
+            BlackOut.mc.level.tickingEntities.forEach(entity -> {
                 if (this.shouldRender(entity)) {
                     this.entities.add(entity);
                 }
@@ -78,13 +77,13 @@ public class ESP extends Module {
 
     public boolean shouldRender(Entity entity) {
         AntiBot antiBot = AntiBot.getInstance();
-        return (!antiBot.enabled || antiBot.mode.get() != AntiBot.HandlingMode.Ignore || !(entity instanceof AbstractClientPlayerEntity player) || !antiBot.getBots().contains(player)) && entity != BlackOut.mc.player && this.entityTypes.get().contains(entity.getType());
+        return (!antiBot.enabled || antiBot.mode.get() != AntiBot.HandlingMode.Ignore || !(entity instanceof AbstractClientPlayer player) || !antiBot.getBots().contains(player)) && entity != BlackOut.mc.player && this.entityTypes.get().contains(entity.getType());
     }
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.world != null && BlackOut.mc.player != null) {
-            Vec3d cameraPos = BlackOut.mc.gameRenderer.getCamera().getPos();
+        if (BlackOut.mc.level != null && BlackOut.mc.player != null) {
+            Vec3 cameraPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
 
             RenderSystem.disableDepthTest();
             RenderSystem.depthMask(false);
@@ -96,31 +95,31 @@ public class ESP extends Module {
         }
     }
 
-    public void render2D(double tickDelta, Vec3d cameraPos, Entity entity) {
-        double x = MathHelper.lerp(tickDelta, entity.prevX, entity.getX()) - cameraPos.x;
-        double y = MathHelper.lerp(tickDelta, entity.prevY, entity.getY()) - cameraPos.y + entity.getHeight() / 2.0F;
-        double z = MathHelper.lerp(tickDelta, entity.prevZ, entity.getZ()) - cameraPos.z;
+    public void render2D(double tickDelta, Vec3 cameraPos, Entity entity) {
+        double x = Mth.lerp(tickDelta, entity.xo, entity.getX()) - cameraPos.x;
+        double y = Mth.lerp(tickDelta, entity.yo, entity.getY()) - cameraPos.y + entity.getBbHeight() / 2.0F;
+        double z = Mth.lerp(tickDelta, entity.zo, entity.getZ()) - cameraPos.z;
         float s = 1.25F;
-        double cameraPitch = Math.abs(BlackOut.mc.gameRenderer.getCamera().getPitch() / 90.0F);
-        double anglePitch = Math.abs(RotationUtils.getPitch(new Vec3d(x, y, z), Vec3d.ZERO) / 90.0);
+        double cameraPitch = Math.abs(BlackOut.mc.gameRenderer.getMainCamera().getXRot() / 90.0F);
+        double anglePitch = Math.abs(RotationUtils.getPitch(new Vec3(x, y, z), Vec3.ZERO) / 90.0);
         double yaw1 = 90.0
                 - Math.abs(
                 90.0
                         - Math.abs(
                         RotationUtils.yawAngle(
-                                BlackOut.mc.gameRenderer.getCamera().getYaw() + 180.0F, RotationUtils.getYaw(new Vec3d(x, y, z), Vec3d.ZERO, 0.0)
+                                BlackOut.mc.gameRenderer.getMainCamera().getYRot() + 180.0F, RotationUtils.getYaw(new Vec3(x, y, z), Vec3.ZERO, 0.0)
                         )
                 )
         );
         double yaw = yaw1 / 90.0;
         float width = this.getWidth(entity.getBoundingBox(), cameraPitch * (1.0 - anglePitch) * yaw);
         float height = this.getHeight(entity.getBoundingBox(), anglePitch);
-        this.stack.push();
+        this.stack.pushPose();
         Render3DUtils.setRotation(this.stack);
         this.stack.translate(x, y, z);
         this.stack.scale(s, -s, s);
-        this.stack.multiply(RotationAxis.POSITIVE_Y.rotation((float) Math.toRadians(-BlackOut.mc.gameRenderer.getCamera().getYaw() + 180.0F)));
-        this.stack.multiply(RotationAxis.POSITIVE_X.rotation((float) Math.toRadians(BlackOut.mc.gameRenderer.getCamera().getPitch())));
+        this.stack.mulPose(Axis.YP.rotation((float) Math.toRadians(-BlackOut.mc.gameRenderer.getMainCamera().getYRot() + 180.0F)));
+        this.stack.mulPose(Axis.XP.rotation((float) Math.toRadians(BlackOut.mc.gameRenderer.getMainCamera().getXRot())));
         String name = this.nameMode.get().getName(entity);
         float textScale = 0.01F;
         if (this.renderName.get()) {
@@ -137,8 +136,8 @@ public class ESP extends Module {
                     );
         }
 
-        if (this.renderItem.get() && entity instanceof AbstractClientPlayerEntity && ((AbstractClientPlayerEntity) entity).getMainHandStack() != null) {
-            String stackName = ((AbstractClientPlayerEntity) entity).getMainHandStack().getName().getString();
+        if (this.renderItem.get() && entity instanceof AbstractClientPlayer && ((AbstractClientPlayer) entity).getMainHandItem() != null) {
+            String stackName = ((AbstractClientPlayer) entity).getMainHandItem().getHoverName().getString();
             BlackOut.FONT
                     .text(
                             this.stack,
@@ -168,7 +167,7 @@ public class ESP extends Module {
         }
 
         if (entity instanceof LivingEntity livingEntity) {
-            float frameTime = BlackOut.mc.getRenderTickCounter().getLastFrameDuration() / 20.0F * 4.0F;
+            float frameTime = BlackOut.mc.getDeltaTracker().getGameTimeDeltaTicks() / 20.0F * 4.0F;
             float targetProgress = Math.min((livingEntity.getHealth() + livingEntity.getAbsorptionAmount()) / livingEntity.getMaxHealth(), 1.0F);
             float progressDelta = frameTime + frameTime * Math.abs(targetProgress - this.progress);
             if (targetProgress > this.progress) {
@@ -182,15 +181,15 @@ public class ESP extends Module {
             }
         }
 
-        this.stack.pop();
+        this.stack.popPose();
     }
 
-    private float getWidth(Box box, double pitch) {
-        return (float) MathHelper.lerp(Math.sin(pitch * Math.PI / 2.0), box.getLengthX(), box.getLengthY());
+    private float getWidth(AABB box, double pitch) {
+        return (float) Mth.lerp(Math.sin(pitch * Math.PI / 2.0), box.getXsize(), box.getYsize());
     }
 
-    private float getHeight(Box box, double pitch) {
-        return (float) MathHelper.lerp(Math.sin(pitch * Math.PI / 2.0), box.getLengthY(), box.getLengthX());
+    private float getHeight(AABB box, double pitch) {
+        return (float) Mth.lerp(Math.sin(pitch * Math.PI / 2.0), box.getYsize(), box.getXsize());
     }
 
     private Color getColor(float health) {

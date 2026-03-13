@@ -11,28 +11,27 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.Hole;
 import bodevelopment.client.blackout.randomstuff.timers.TimerMap;
 import bodevelopment.client.blackout.util.*;
-import net.minecraft.client.gui.screen.ingame.InventoryScreen;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.SwordItem;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.s2c.play.BlockBreakingProgressS2CPacket;
-import net.minecraft.screen.PlayerScreenHandler;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class Offhand extends Module {
     private final SettingGroup sgItem = this.addGroup("Item");
@@ -68,8 +67,8 @@ public class Offhand extends Module {
     private final Setting<Boolean> crystalSpawn = this.sgThreading.booleanSetting("Crystal Spawn", true, "Instant update when a crystal spawns.");
 
     private final TimerMap<Integer, BlockPos> mining = new TimerMap<>(true);
-    private final List<Box> prevPositions = new ArrayList<>();
-    private final Predicate<ItemStack> totemPredicate = stack -> stack.isOf(Items.TOTEM_OF_UNDYING);
+    private final List<AABB> prevPositions = new ArrayList<>();
+    private final Predicate<ItemStack> totemPredicate = stack -> stack.is(Items.TOTEM_OF_UNDYING);
     private final TimerMap<Integer, Long> movedFrom = new TimerMap<>(true);
     private long prevSwitch = 0L;
 
@@ -79,9 +78,9 @@ public class Offhand extends Module {
 
     @Event
     public void onReceive(PacketEvent.Receive.Pre event) {
-        if (BlackOut.mc.world != null && event.packet instanceof BlockBreakingProgressS2CPacket packet && BlockUtils.mineable(packet.getPos())) {
-            this.mining.remove((id, timer) -> id == packet.getEntityId());
-            this.mining.add(packet.getEntityId(), packet.getPos(), this.miningTime.get());
+        if (BlackOut.mc.level != null && event.packet instanceof ClientboundBlockDestructionPacket packet && BlockUtils.mineable(packet.getPos())) {
+            this.mining.remove((id, timer) -> id == packet.getId());
+            this.mining.add(packet.getId(), packet.getPos(), this.miningTime.get());
         }
     }
 
@@ -117,17 +116,17 @@ public class Offhand extends Module {
 
     @Event
     public void onEntity(EntityAddEvent.Post event) {
-        if (event.entity instanceof EndCrystalEntity && this.crystalSpawn.get()) {
+        if (event.entity instanceof EndCrystal && this.crystalSpawn.get()) {
             this.update();
         }
     }
 
     private void update() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null && BlackOut.mc.player.currentScreenHandler instanceof PlayerScreenHandler) {
-            if (!this.onlyInInventory.get() || BlackOut.mc.currentScreen instanceof InventoryScreen) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null && BlackOut.mc.player.containerMenu instanceof InventoryMenu) {
+            if (!this.onlyInInventory.get() || BlackOut.mc.screen instanceof InventoryScreen) {
                 Predicate<ItemStack> predicate = this.getItem();
                 if (predicate != null) {
-                    if (!predicate.test(BlackOut.mc.player.getOffHandStack())) {
+                    if (!predicate.test(BlackOut.mc.player.getOffhandItem())) {
                         if (this.available(predicate)) {
                             this.doSwitch(predicate);
                         }
@@ -142,12 +141,12 @@ public class Offhand extends Module {
             switch (this.switchMode.get()) {
                 case Basic:
                     if (this.isPicked(predicate)) {
-                        this.clickSlot(45, 0, SlotActionType.PICKUP);
+                        this.clickSlot(45, 0, ClickType.PICKUP);
                     } else {
                         Slot slotxx = this.find(predicate);
                         if (slotxx != null) {
-                            this.clickSlot(slotxx.id, 0, SlotActionType.PICKUP);
-                            this.clickSlot(45, 0, SlotActionType.PICKUP);
+                            this.clickSlot(slotxx.index, 0, ClickType.PICKUP);
+                            this.clickSlot(45, 0, ClickType.PICKUP);
                             this.addMoveTime(slotxx);
                         }
                     }
@@ -155,7 +154,7 @@ public class Offhand extends Module {
                     if (this.anythingPicked()) {
                         Slot empty = this.findEmpty();
                         if (empty != null) {
-                            this.clickSlot(empty.id, 0, SlotActionType.PICKUP);
+                            this.clickSlot(empty.index, 0, ClickType.PICKUP);
                         }
                     }
 
@@ -165,7 +164,7 @@ public class Offhand extends Module {
                 case FClick:
                     Slot slotx = this.find(predicate);
                     if (slotx != null) {
-                        this.clickSlot(slotx.id, 40, SlotActionType.SWAP);
+                        this.clickSlot(slotx.index, 40, ClickType.SWAP);
                         this.prevSwitch = System.currentTimeMillis();
                         this.addMoveTime(slotx);
                     }
@@ -177,9 +176,9 @@ public class Offhand extends Module {
                 case Pick:
                     Slot slot = this.find(predicate);
                     if (slot != null) {
-                        int selectedSlot = BlackOut.mc.player.getInventory().selectedSlot;
-                        InvUtils.pickSwap(slot.getIndex());
-                        this.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND, BlockPos.ORIGIN, Direction.DOWN));
+                        int selectedSlot = BlackOut.mc.player.getInventory().selected;
+                        InvUtils.pickSwap(slot.getContainerSlot());
+                        this.sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND, BlockPos.ZERO, Direction.DOWN));
                         InvUtils.swap(selectedSlot);
                         this.prevSwitch = System.currentTimeMillis();
                         this.addMoveTime(slot);
@@ -189,14 +188,14 @@ public class Offhand extends Module {
     }
 
     private void addMoveTime(Slot slot) {
-        this.movedFrom.removeKey(slot.id);
-        this.movedFrom.add(slot.id, System.currentTimeMillis(), 5.0);
+        this.movedFrom.removeKey(slot.index);
+        this.movedFrom.add(slot.index, System.currentTimeMillis(), 5.0);
     }
 
     private Slot findEmpty() {
         for (int i = 9; i < 45; i++) {
-            Slot slot = BlackOut.mc.player.currentScreenHandler.getSlot(i);
-            if (slot.getStack().isEmpty()) {
+            Slot slot = BlackOut.mc.player.containerMenu.getSlot(i);
+            if (slot.getItem().isEmpty()) {
                 return slot;
             }
         }
@@ -207,34 +206,34 @@ public class Offhand extends Module {
     private Slot find(Predicate<ItemStack> predicate) {
         List<Slot> possible = new ArrayList<>();
 
-        for (Slot slot : BlackOut.mc.player.currentScreenHandler.slots) {
-            if (predicate.test(slot.getStack())) {
+        for (Slot slot : BlackOut.mc.player.containerMenu.slots) {
+            if (predicate.test(slot.getItem())) {
                 possible.add(slot);
             }
         }
 
         Optional<Slot> optional = possible.stream()
-                .min(Comparator.comparingLong(slotx -> this.movedFrom.containsKey(slotx.id) ? this.movedFrom.get(slotx.id) : 0L));
+                .min(Comparator.comparingLong(slotx -> this.movedFrom.containsKey(slotx.index) ? this.movedFrom.get(slotx.index) : 0L));
         return optional.orElse(null);
     }
 
-    private void clickSlot(int id, int button, SlotActionType actionType) {
-        ScreenHandler handler = BlackOut.mc.player.currentScreenHandler;
-        BlackOut.mc.interactionManager.clickSlot(handler.syncId, id, button, actionType, BlackOut.mc.player);
+    private void clickSlot(int id, int button, ClickType actionType) {
+        AbstractContainerMenu handler = BlackOut.mc.player.containerMenu;
+        BlackOut.mc.gameMode.handleInventoryMouseClick(handler.containerId, id, button, actionType, BlackOut.mc.player);
     }
 
     private boolean isPicked(Predicate<ItemStack> predicate) {
-        return predicate.test(BlackOut.mc.player.currentScreenHandler.getCursorStack());
+        return predicate.test(BlackOut.mc.player.containerMenu.getCarried());
     }
 
     private boolean anythingPicked() {
-        return !BlackOut.mc.player.currentScreenHandler.getCursorStack().isEmpty();
+        return !BlackOut.mc.player.containerMenu.getCarried().isEmpty();
     }
 
     private Predicate<ItemStack> getItem() {
         boolean shouldSG = this.swordGapple.get()
-                && BlackOut.mc.options.useKey.isPressed()
-                && BlackOut.mc.player.getMainHandStack().getItem() instanceof SwordItem;
+                && BlackOut.mc.options.keyUse.isDown()
+                && BlackOut.mc.player.getMainHandItem().getItem() instanceof SwordItem;
 
         if (shouldSG) {
             boolean allowGapple = true;
@@ -288,7 +287,7 @@ public class Offhand extends Module {
             if (health <= threshold) {
                 return true;
             } else {
-                for (Box box : this.prevPositions) {
+                for (AABB box : this.prevPositions) {
                     if (this.inDanger(box, health)) {
                         return true;
                     }
@@ -299,25 +298,25 @@ public class Offhand extends Module {
         }
     }
 
-    private Box predictedBox() {
-        Vec3d pos = MovementPrediction.predict(BlackOut.mc.player);
-        double lx = BlackOut.mc.player.getBoundingBox().getLengthX();
-        double lz = BlackOut.mc.player.getBoundingBox().getLengthZ();
-        double height = BlackOut.mc.player.getBoundingBox().getLengthY();
-        return new Box(
-                pos.getX() - lx / 2.0,
-                pos.getY(),
-                pos.getZ() - lz / 2.0,
-                pos.getX() + lx / 2.0,
-                pos.getY() + height,
-                pos.getZ() + lz / 2.0
+    private AABB predictedBox() {
+        Vec3 pos = MovementPrediction.predict(BlackOut.mc.player);
+        double lx = BlackOut.mc.player.getBoundingBox().getXsize();
+        double lz = BlackOut.mc.player.getBoundingBox().getZsize();
+        double height = BlackOut.mc.player.getBoundingBox().getYsize();
+        return new AABB(
+                pos.x() - lx / 2.0,
+                pos.y(),
+                pos.z() - lz / 2.0,
+                pos.x() + lx / 2.0,
+                pos.y() + height,
+                pos.z() + lz / 2.0
         );
     }
 
-    private boolean inDanger(Box box, double health) {
-        for (Entity entity : BlackOut.mc.world.getEntities()) {
-            if (entity instanceof EndCrystalEntity
-                    && DamageUtils.crystalDamage(BlackOut.mc.player, box, entity.getPos()) * this.safetyMultiplier.get() >= health) {
+    private boolean inDanger(AABB box, double health) {
+        for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
+            if (entity instanceof EndCrystal
+                    && DamageUtils.crystalDamage(BlackOut.mc.player, box, entity.position()) * this.safetyMultiplier.get() >= health) {
                 return true;
             }
         }
@@ -329,7 +328,7 @@ public class Offhand extends Module {
         if (Suicide.getInstance().enabled && Suicide.getInstance().offHand.get()) {
             return false;
         }
-        for (Box box : this.prevPositions) {
+        for (AABB box : this.prevPositions) {
             if (this.inDanger(box, health)) {
                 return true;
             }
@@ -344,12 +343,12 @@ public class Offhand extends Module {
     }
 
     private double getHealth() {
-        boolean holdingTot = BlackOut.mc.player.getOffHandStack().isOf(Items.TOTEM_OF_UNDYING);
+        boolean holdingTot = BlackOut.mc.player.getOffhandItem().is(Items.TOTEM_OF_UNDYING);
         return this.isInHole() ? (holdingTot ? this.holeSafeHp : this.holeHp).get() : (holdingTot ? this.safeHealth : this.hp).get().intValue();
     }
 
     private boolean isInHole() {
-        for (Box box : this.prevPositions) {
+        for (AABB box : this.prevPositions) {
             if (!this.isInHole(BoxUtils.feet(box))) {
                 return false;
             }
@@ -358,8 +357,8 @@ public class Offhand extends Module {
         return true;
     }
 
-    private boolean isInHole(Vec3d feet) {
-        Hole hole = HoleUtils.currentHole(BlockPos.ofFloored(feet.add(0.0, 0.5, 0.0)));
+    private boolean isInHole(Vec3 feet) {
+        Hole hole = HoleUtils.currentHole(BlockPos.containing(feet.add(0.0, 0.5, 0.0)));
         if (this.mineCheck.get()) {
             for (BlockPos pos : hole.positions) {
                 if (this.mining.containsValue(pos)) {
@@ -373,11 +372,11 @@ public class Offhand extends Module {
 
     public enum ItemMode {
         Nothing(null),
-        Crystal(stack -> stack.isOf(Items.END_CRYSTAL)),
-        Exp(stack -> stack.isOf(Items.EXPERIENCE_BOTTLE)),
+        Crystal(stack -> stack.is(Items.END_CRYSTAL)),
+        Exp(stack -> stack.is(Items.EXPERIENCE_BOTTLE)),
         Gapple(OLEPOSSUtils::isGapple),
         Bed(OLEPOSSUtils::isBed),
-        Obsidian(stack -> stack.isOf(Items.OBSIDIAN));
+        Obsidian(stack -> stack.is(Items.OBSIDIAN));
 
         private final Predicate<ItemStack> predicate;
 

@@ -1,45 +1,44 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.MovementType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
-
 import java.util.List;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class MovementPrediction {
-    public static Vec3d adjustMovementForCollisions(Entity entity, Vec3d movement) {
-        Box box = entity.getBoundingBox();
-        List<VoxelShape> list = entity.getEntityWorld().getEntityCollisions(entity, box.stretch(movement));
-        Vec3d vec3d = movement.lengthSquared() == 0.0 ? movement : Entity.adjustMovementForCollisions(entity, movement, box, entity.getEntityWorld(), list);
+    public static Vec3 adjustMovementForCollisions(Entity entity, Vec3 movement) {
+        AABB box = entity.getBoundingBox();
+        List<VoxelShape> list = entity.getCommandSenderWorld().getEntityCollisions(entity, box.expandTowards(movement));
+        Vec3 vec3d = movement.lengthSqr() == 0.0 ? movement : Entity.collideBoundingBox(entity, movement, box, entity.getCommandSenderWorld(), list);
         boolean bl = movement.x != vec3d.x;
         boolean bl2 = movement.y != vec3d.y;
         boolean bl3 = movement.z != vec3d.z;
-        boolean bl4 = entity.isOnGround() || bl2 && movement.y < 0.0;
-        if (entity.getStepHeight() > 0.0F && bl4 && (bl || bl3)) {
-            Vec3d vec3d2 = Entity.adjustMovementForCollisions(
-                    entity, new Vec3d(movement.x, entity.getStepHeight(), movement.z), box, entity.getEntityWorld(), list
+        boolean bl4 = entity.onGround() || bl2 && movement.y < 0.0;
+        if (entity.maxUpStep() > 0.0F && bl4 && (bl || bl3)) {
+            Vec3 vec3d2 = Entity.collideBoundingBox(
+                    entity, new Vec3(movement.x, entity.maxUpStep(), movement.z), box, entity.getCommandSenderWorld(), list
             );
-            Vec3d vec3d3 = Entity.adjustMovementForCollisions(
-                    entity, new Vec3d(0.0, entity.getStepHeight(), 0.0), box.stretch(movement.x, 0.0, movement.z), entity.getEntityWorld(), list
+            Vec3 vec3d3 = Entity.collideBoundingBox(
+                    entity, new Vec3(0.0, entity.maxUpStep(), 0.0), box.expandTowards(movement.x, 0.0, movement.z), entity.getCommandSenderWorld(), list
             );
-            if (vec3d3.y < entity.getStepHeight()) {
-                Vec3d vec3d4 = Entity.adjustMovementForCollisions(
-                                entity, new Vec3d(movement.x, 0.0, movement.z), box.offset(vec3d3), entity.getEntityWorld(), list
+            if (vec3d3.y < entity.maxUpStep()) {
+                Vec3 vec3d4 = Entity.collideBoundingBox(
+                                entity, new Vec3(movement.x, 0.0, movement.z), box.move(vec3d3), entity.getCommandSenderWorld(), list
                         )
                         .add(vec3d3);
-                if (vec3d4.horizontalLengthSquared() > vec3d2.horizontalLengthSquared()) {
+                if (vec3d4.horizontalDistanceSqr() > vec3d2.horizontalDistanceSqr()) {
                     vec3d2 = vec3d4;
                 }
             }
 
-            if (vec3d2.horizontalLengthSquared() > vec3d.horizontalLengthSquared()) {
+            if (vec3d2.horizontalDistanceSqr() > vec3d.horizontalDistanceSqr()) {
                 return vec3d2.add(
-                        Entity.adjustMovementForCollisions(
-                                entity, new Vec3d(0.0, -vec3d2.y + movement.y, 0.0), box.offset(vec3d2), entity.getEntityWorld(), list
+                        Entity.collideBoundingBox(
+                                entity, new Vec3(0.0, -vec3d2.y + movement.y, 0.0), box.move(vec3d2), entity.getCommandSenderWorld(), list
                         )
                 );
             }
@@ -48,18 +47,18 @@ public class MovementPrediction {
         return vec3d;
     }
 
-    public static Vec3d predict(PlayerEntity player) {
-        Vec3d movement = new Vec3d(player.getVelocity().x, player.getVelocity().y, player.getVelocity().z);
+    public static Vec3 predict(Player player) {
+        Vec3 movement = new Vec3(player.getDeltaMovement().x, player.getDeltaMovement().y, player.getDeltaMovement().z);
         collide(movement, player);
-        return player.getPos().add(movement);
+        return player.position().add(movement);
     }
 
-    public static void collide(Vec3d movement, PlayerEntity player) {
-        set(movement, player.adjustMovementForSneaking(movement, MovementType.SELF));
+    public static void collide(Vec3 movement, Player player) {
+        set(movement, player.maybeBackOffFromEdge(movement, MoverType.SELF));
         set(movement, adjustMovementForCollisions(player, movement));
     }
 
-    private static void set(Vec3d vec, Vec3d to) {
+    private static void set(Vec3 vec, Vec3 to) {
         ((IVec3d) vec).blackout_Client$set(to.x, to.y, to.z);
     }
 

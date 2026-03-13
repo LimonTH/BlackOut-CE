@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.event.events;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.math.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class RenderEvent {
     public double frameTime = 0.0;
@@ -17,12 +17,12 @@ public class RenderEvent {
     }
 
     public static class Hud extends RenderEvent {
-        public DrawContext context;
+        public GuiGraphics context;
 
         public static class Post extends Hud {
             private static final Post INSTANCE = new Post();
 
-            public static Post get(DrawContext context, float tickDelta) {
+            public static Post get(GuiGraphics context, float tickDelta) {
                 INSTANCE.context = context;
                 INSTANCE.tickDelta = tickDelta;
                 INSTANCE.setFrameTime();
@@ -33,7 +33,7 @@ public class RenderEvent {
         public static class Pre extends Hud {
             private static final Pre INSTANCE = new Pre();
 
-            public static Pre get(DrawContext context, float tickDelta) {
+            public static Pre get(GuiGraphics context, float tickDelta) {
                 INSTANCE.context = context;
                 INSTANCE.tickDelta = tickDelta;
                 INSTANCE.setFrameTime();
@@ -43,12 +43,12 @@ public class RenderEvent {
     }
 
     public static class World extends RenderEvent {
-        public MatrixStack stack = null;
+        public PoseStack stack = null;
 
         public static class Post extends World {
             private static final Post INSTANCE = new Post();
 
-            public static Post get(MatrixStack stack, float tickDelta) {
+            public static Post get(PoseStack stack, float tickDelta) {
                 INSTANCE.stack = stack;
                 INSTANCE.tickDelta = tickDelta;
                 INSTANCE.setFrameTime();
@@ -59,7 +59,7 @@ public class RenderEvent {
         public static class Pre extends World {
             private static final Pre INSTANCE = new Pre();
 
-            public static Pre get(MatrixStack stack, float tickDelta) {
+            public static Pre get(PoseStack stack, float tickDelta) {
                 INSTANCE.stack = stack;
                 INSTANCE.tickDelta = tickDelta;
                 INSTANCE.setFrameTime();

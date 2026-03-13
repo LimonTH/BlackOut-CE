@@ -8,9 +8,9 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.InvUtils;
-import net.minecraft.item.ArrowItem;
-import net.minecraft.item.Items;
-import net.minecraft.util.Hand;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ArrowItem;
+import net.minecraft.world.item.Items;
 
 public class BowSpam extends Module {
     private static BowSpam INSTANCE;
@@ -35,13 +35,13 @@ public class BowSpam extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            if (BlackOut.mc.player.getMainHandStack().isOf(Items.BOW)
-                    && BlackOut.mc.player.getItemUseTime() >= this.charge.get()
-                    && BlackOut.mc.options.useKey.isPressed()) {
-                BlackOut.mc.interactionManager.stopUsingItem(BlackOut.mc.player);
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            if (BlackOut.mc.player.getMainHandItem().is(Items.BOW)
+                    && BlackOut.mc.player.getTicksUsingItem() >= this.charge.get()
+                    && BlackOut.mc.options.keyUse.isDown()) {
+                BlackOut.mc.gameMode.releaseUsingItem(BlackOut.mc.player);
                 if (this.fast.get()) {
-                    BlackOut.mc.interactionManager.interactItem(BlackOut.mc.player, Hand.MAIN_HAND);
+                    BlackOut.mc.gameMode.useItem(BlackOut.mc.player, InteractionHand.MAIN_HAND);
                 }
             }
         }

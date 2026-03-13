@@ -2,12 +2,11 @@ package bodevelopment.client.blackout.gui.clickgui;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.util.math.MatrixStack;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 
 public class Component {
-    protected final MatrixStack stack;
+    protected final PoseStack stack;
     public int x = 0;
     public int y = 0;
     public double mx = 0.0;
@@ -15,7 +14,7 @@ public class Component {
     public float width = 0.0F;
     public float frameTime = 0.0F;
 
-    public Component(MatrixStack stack) {
+    public Component(PoseStack stack) {
         this.stack = stack;
     }
 

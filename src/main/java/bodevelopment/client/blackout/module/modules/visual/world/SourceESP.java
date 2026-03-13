@@ -18,12 +18,11 @@ import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.registry.tag.FluidTags;
-import net.minecraft.util.math.BlockPos;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.BlockPos;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.level.material.FluidState;
 
 public class SourceESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -46,7 +45,7 @@ public class SourceESP extends Module {
     @Event
     public void onRender(RenderEvent.World.Post event) {
         if (System.currentTimeMillis() - this.prevCalc > 100L) {
-            this.find(BlackOut.mc.player.getBlockPos(), (int) Math.ceil(this.range.get()), this.range.get() * this.range.get());
+            this.find(BlackOut.mc.player.blockPosition(), (int) Math.ceil(this.range.get()), this.range.get() * this.range.get());
             this.prevCalc = System.currentTimeMillis();
         }
 
@@ -84,7 +83,7 @@ public class SourceESP extends Module {
     }
 
     private void renderShader(Pair<BlockPos, Boolean> pair) {
-        Render3DUtils.box(BoxUtils.get(pair.getLeft()), this.white, null, RenderShape.Sides);
+        Render3DUtils.box(BoxUtils.get(pair.getA()), this.white, null, RenderShape.Sides);
     }
 
     private void find(BlockPos center, int r, double rangeSq) {
@@ -94,14 +93,14 @@ public class SourceESP extends Module {
             for (int y = -r; y <= r; y++) {
                 for (int z = -r; z <= r; z++) {
                     if (!(x * x + y * y + z * z > rangeSq)) {
-                        BlockPos pos = center.add(x, y, z);
-                        FluidState fluidState = BlackOut.mc.world.getFluidState(pos);
-                        if (!fluidState.isEmpty() && fluidState.isStill()) {
-                            if (fluidState.isIn(FluidTags.WATER)) {
+                        BlockPos pos = center.offset(x, y, z);
+                        FluidState fluidState = BlackOut.mc.level.getFluidState(pos);
+                        if (!fluidState.isEmpty() && fluidState.isSource()) {
+                            if (fluidState.is(FluidTags.WATER)) {
                                 if (this.water.get()) {
                                     this.sources.add(new Pair<>(pos, true));
                                 }
-                            } else if (this.lava.get() && fluidState.isIn(FluidTags.LAVA)) {
+                            } else if (this.lava.get() && fluidState.is(FluidTags.LAVA)) {
                                 this.sources.add(new Pair<>(pos, false));
                             }
                         }

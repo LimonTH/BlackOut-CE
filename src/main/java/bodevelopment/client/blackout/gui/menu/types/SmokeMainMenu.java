@@ -12,9 +12,8 @@ import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.render.VertexFormats;
-import net.minecraft.client.util.math.MatrixStack;
-
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 
 public class SmokeMainMenu implements MainMenuRenderer {
@@ -28,7 +27,7 @@ public class SmokeMainMenu implements MainMenuRenderer {
     private final ChangelogRenderer changelogRenderer = new ChangelogRenderer();
 
     @Override
-    public void render(MatrixStack stack, float height, float mx, float my, String text1, String text2, float progress) {
+    public void render(PoseStack stack, float height, float mx, float my, String text1, String text2, float progress) {
         boolean isGuiOpen = MainMenu.getInstance().isOpenedMenu();
         boolean isExiting = MainMenu.getInstance().isExiting();
 
@@ -44,7 +43,7 @@ public class SmokeMainMenu implements MainMenuRenderer {
         this.changelogRenderer.render(stack, renderMx, renderMy, false, null, null, 0);
     }
 
-    private void renderAnimatedSplash(MatrixStack stack, String text1, String text2, float progress) {
+    private void renderAnimatedSplash(PoseStack stack, String text1, String text2, float progress) {
         float yPos = -200.0F;
         float scale = 2.5F;
         float offset = 15.0F;
@@ -52,22 +51,22 @@ public class SmokeMainMenu implements MainMenuRenderer {
         if (progress >= 1.0F || text2.isEmpty()) {
             BlackOut.FONT.text(stack, text1, scale, 0.0F, yPos, Color.WHITE.getRGB(), true, true);
         } else {
-            stack.push();
+            stack.pushPose();
             stack.translate(0, -progress * offset, 0);
             int a1 = (int) ((1.0F - progress) * 255);
             BlackOut.FONT.text(stack, text1, scale, 0.0F, yPos, new Color(255, 255, 255, a1).getRGB(), true, true);
-            stack.pop();
+            stack.popPose();
 
-            stack.push();
+            stack.pushPose();
             stack.translate(0, offset - (progress * offset), 0);
             int a2 = (int) (progress * 255);
             BlackOut.FONT.text(stack, text2, scale, 0.0F, yPos, new Color(255, 255, 255, a2).getRGB(), true, true);
-            stack.pop();
+            stack.popPose();
         }
     }
 
-    private void renderAllIconButtons(MatrixStack stack, float windowHeight, float mx, float my) {
-        stack.push();
+    private void renderAllIconButtons(PoseStack stack, float windowHeight, float mx, float my) {
+        stack.pushPose();
         float startX = -1000.0F + 14.0F;
         float startY = windowHeight / 2.0F - 44.0F;
         stack.translate(startX, startY, 0.0F);
@@ -76,43 +75,43 @@ public class SmokeMainMenu implements MainMenuRenderer {
             float currentX = startX + (i * 54.0F);
             boolean hovered = RenderUtils.insideRounded(mx, my, currentX + 5.0F, startY + 5.0F, 22.0F, 22.0F, 10.0F);
 
-            stack.push();
+            stack.pushPose();
             if (hovered) {
                 stack.scale(1.1F, 1.1F, 1.0F);
                 stack.translate(-1.0F, -1.0F, 0.0F);
             }
             this.renderSingleIconButton(stack, i, hovered);
-            stack.pop();
+            stack.popPose();
 
             stack.translate(54.0F, 0.0F, 0.0F);
         }
-        stack.pop();
+        stack.popPose();
     }
 
-    private void renderButtons(MatrixStack stack, float mx, float my) {
-        stack.push();
+    private void renderButtons(PoseStack stack, float mx, float my) {
+        stack.pushPose();
         stack.translate(-180.0F, -100.0F, 0.0F);
         float currentY = -100.0F;
 
         for (String name : MainMenu.getInstance().buttonNames) {
             boolean hovered = RenderUtils.insideRounded(mx, my, -180.0, currentY, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS);
 
-            stack.push();
+            stack.pushPose();
             if (hovered) {
                 stack.scale(1.03F, 1.03F, 1.0F);
                 stack.translate(-5.4F, -0.3F, 0.0F);
             }
 
             this.renderButton(stack, name, hovered);
-            stack.pop();
+            stack.popPose();
 
             stack.translate(0.0F, 85.0F, 0.0F);
             currentY += 85.0F;
         }
-        stack.pop();
+        stack.popPose();
     }
 
-    private void renderButton(MatrixStack stack, String name, boolean hovered) {
+    private void renderButton(PoseStack stack, String name, boolean hovered) {
         RenderUtils.drawLoadedBlur("title", stack, renderer ->
                 renderer.rounded(0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10, 1.0F, 1.0F, 1.0F, 1.0F));
 
@@ -124,7 +123,7 @@ public class SmokeMainMenu implements MainMenuRenderer {
         BlackOut.FONT.text(stack, name, 3.0F, 180.0F, 5.0F, textColor.getRGB(), true, true);
     }
 
-    private void renderSingleIconButton(MatrixStack stack, int i, boolean hovered) {
+    private void renderSingleIconButton(PoseStack stack, int i, boolean hovered) {
         TextureRenderer t = switch (i) {
             case 1 -> BOTextures.getDiscordIconRenderer();
             case 2 -> BOTextures.getYoutubeIconRenderer();
@@ -189,7 +188,7 @@ public class SmokeMainMenu implements MainMenuRenderer {
     }
 
     @Override
-    public void renderBackground(MatrixStack stack, float width, float height, float mx, float my) {
+    public void renderBackground(PoseStack stack, float width, float height, float mx, float my) {
         MainMenuSettings mainMenuSettings = MainMenuSettings.getInstance();
         ShaderRenderer shaderRenderer = ShaderRenderer.getInstance();
 
@@ -208,7 +207,7 @@ public class SmokeMainMenu implements MainMenuRenderer {
             setup.color("clr1", mainMenuSettings.color.get().getRGB());
             setup.color("clr2", mainMenuSettings.color2.get().getRGB());
             setup.set("speed", 1.0F);
-        }), VertexFormats.POSITION);
+        }), DefaultVertexFormat.POSITION);
 
         int blurRadius = (int) (double) mainMenuSettings.blur.get();
 

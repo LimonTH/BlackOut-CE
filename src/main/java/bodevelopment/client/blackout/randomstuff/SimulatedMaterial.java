@@ -1,6 +1,6 @@
 package bodevelopment.client.blackout.randomstuff;
 
-import net.minecraft.item.ToolMaterial;
+import net.minecraft.world.item.ToolMaterial;
 
 public enum SimulatedMaterial {
     WOOD(ToolMaterial.WOOD),

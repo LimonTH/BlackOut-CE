@@ -53,14 +53,14 @@ public class Arraylist extends HudElement {
 
     public static void updateDeltas() {
         deltaMap.forEach((module, mutableFloat) -> {
-            float delta = BlackOut.mc.getRenderTickCounter().getLastFrameDuration() / 20.0F * 4.0F;
+            float delta = BlackOut.mc.getDeltaTracker().getGameTimeDeltaTicks() / 20.0F * 4.0F;
             mutableFloat.setValue(module.enabled ? Math.min(mutableFloat.getValue() + delta, 1.0F) : Math.max(mutableFloat.getValue() - delta, 0.0F));
         });
     }
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             Comparator<Module> comparator = Comparator.comparingDouble(
                     m -> BlackOut.FONT.getWidth(m.getDisplayName() + (m.getInfo() == null ? "" : this.getInfo(m.getInfo())))
             );
@@ -218,7 +218,7 @@ public class Arraylist extends HudElement {
     }
 
     private void render(List<Module> list, Consumer<Module> consumer) {
-        this.stack.push();
+        this.stack.pushPose();
         this.stack.translate(75.0F, 0.0F, 0.0F);
         this.setSize(75.0F, Math.max((BlackOut.FONT.getHeight() + 2.0F) * this.i, 123.0F));
         this.i = 0;
@@ -229,20 +229,20 @@ public class Arraylist extends HudElement {
                         delta = (float) AnimUtils.easeOutQuad(delta);
                         float yDelta = (float) (Math.min(delta, 0.3) / 0.3);
                         float xDelta = (float) ((Math.max(delta, 0.3) - 0.3) / 0.7);
-                        this.stack.push();
+                        this.stack.pushPose();
                         float prevAlpha = Renderer.getAlpha();
                         Renderer.setAlpha(prevAlpha * delta);
                         this.stack
                                 .translate((1.0F - xDelta) * BlackOut.FONT.getWidth(module.getDisplayName() + " " + this.getInfo(module.getInfo())) + 1.0F, 0.0F, 0.0F);
                         consumer.accept(module);
                         Renderer.setAlpha(prevAlpha);
-                        this.stack.pop();
+                        this.stack.popPose();
                         this.stack.translate(0.0F, yDelta * (BlackOut.FONT.getHeight() + 2.0F), 0.0F);
                         this.i++;
                     }
                 }
         );
-        this.stack.pop();
+        this.stack.popPose();
     }
 
     public enum BracketMode {

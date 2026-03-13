@@ -5,10 +5,10 @@ import bodevelopment.client.blackout.event.events.MouseButtonEvent;
 import bodevelopment.client.blackout.event.events.MouseScrollEvent;
 import bodevelopment.client.blackout.keys.MouseButtons;
 import bodevelopment.client.blackout.util.SharedFeatures;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.Mouse;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.MouseHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -17,21 +17,21 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(Mouse.class)
+@Mixin(MouseHandler.class)
 public abstract class MixinMouse {
     @Shadow
-    private boolean cursorLocked;
+    private boolean mouseGrabbed;
     @Shadow
-    private double x;
+    private double xpos;
     @Shadow
-    private double y;
+    private double ypos;
     @Shadow
-    private boolean hasResolutionChanged;
+    private boolean ignoreFirstMove;
 
     @Shadow
-    public abstract void lockCursor();
+    public abstract void grabMouse();
 
-    @Inject(method = "onMouseButton", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "onPress", at = @At("HEAD"), cancellable = true)
     private void onClick(long window, int button, int action, int mods, CallbackInfo ci) {
         MouseButtonEvent event = MouseButtonEvent.get(button, action == 1);
         if (BlackOut.EVENT_BUS.post(event).isCancelled()) {
@@ -41,7 +41,7 @@ public abstract class MixinMouse {
         MouseButtons.set(button, action == 1);
     }
 
-    @Inject(method = "onMouseScroll", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "onScroll", at = @At("HEAD"), cancellable = true)
     private void onScroll(long window, double horizontal, double vertical, CallbackInfo ci) {
         MouseScrollEvent event = MouseScrollEvent.get(horizontal, vertical);
         if (BlackOut.EVENT_BUS.post(event).isCancelled()) {
@@ -49,7 +49,7 @@ public abstract class MixinMouse {
         }
     }
 
-    @Inject(method = "isCursorLocked", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "isMouseGrabbed", at = @At("HEAD"), cancellable = true)
     private void locked(CallbackInfoReturnable<Boolean> cir) {
         if (SharedFeatures.shouldSilentScreen()) {
             this.lockWithoutClose();
@@ -59,17 +59,17 @@ public abstract class MixinMouse {
 
     @Unique
     private void lockWithoutClose() {
-        if (BlackOut.mc.isWindowFocused()) {
-            if (!this.cursorLocked) {
-                if (!MinecraftClient.IS_SYSTEM_MAC) {
-                    KeyBinding.updatePressedStates();
+        if (BlackOut.mc.isWindowActive()) {
+            if (!this.mouseGrabbed) {
+                if (!Minecraft.ON_OSX) {
+                    KeyMapping.setAll();
                 }
 
-                this.cursorLocked = true;
-                this.hasResolutionChanged = true;
-                this.x = BlackOut.mc.getWindow().getWidth() / 2.0;
-                this.y = BlackOut.mc.getWindow().getHeight() / 2.0;
-                InputUtil.setCursorParameters(BlackOut.mc.getWindow().getHandle(), 212995, this.x, this.y);
+                this.mouseGrabbed = true;
+                this.ignoreFirstMove = true;
+                this.xpos = BlackOut.mc.getWindow().getScreenWidth() / 2.0;
+                this.ypos = BlackOut.mc.getWindow().getScreenHeight() / 2.0;
+                InputConstants.grabOrReleaseMouse(BlackOut.mc.getWindow().getWindow(), 212995, this.xpos, this.ypos);
             }
         }
     }

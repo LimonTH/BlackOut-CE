@@ -44,14 +44,14 @@ public class Timer extends Module {
 
     @Override
     public boolean shouldSkipListeners() {
-        return BlackOut.mc.world == null;
+        return BlackOut.mc.level == null;
     }
 
     @Event
     public void onTick(TickEvent.Pre event) {
         if (BlackOut.mc.player != null && this.enabled && this.mode.get() == TimerMode.Physics) {
             for (packets = packets + (this.physicsMulti.get().floatValue() - 1.0F); packets > 0.0F; packets--) {
-                BlackOut.mc.player.tickMovement();
+                BlackOut.mc.player.aiStep();
             }
         }
     }

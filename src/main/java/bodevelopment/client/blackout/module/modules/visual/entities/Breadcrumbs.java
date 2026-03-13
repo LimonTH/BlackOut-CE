@@ -13,13 +13,12 @@ import bodevelopment.client.blackout.randomstuff.timers.RenderList;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec2f;
-import net.minecraft.util.math.Vec3d;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
 
 public class Breadcrumbs extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -37,8 +36,8 @@ public class Breadcrumbs extends Module {
     private final Setting<Integer> iAlpha = this.sgColor.intSetting("Core Opacity", 150, 0, 255, 1, "The transparency level of the inner particle dot.", () -> this.colorMode.get() == ColorMode.Rainbow);
     private final Setting<Integer> oAlpha = this.sgColor.intSetting("Aura Opacity", 50, 0, 255, 1, "The transparency level of the outer particle glow.", () -> this.colorMode.get() == ColorMode.Rainbow);
 
-    private final MatrixStack stack = new MatrixStack();
-    private final RenderList<Vec3d> list = RenderList.getList(true);
+    private final PoseStack stack = new PoseStack();
+    private final RenderList<Vec3> list = RenderList.getList(true);
     private long lastAddition = System.currentTimeMillis();
 
     public Breadcrumbs() {
@@ -52,33 +51,33 @@ public class Breadcrumbs extends Module {
 
     @Event
     public void onRender(RenderEvent.Hud.Post event) {
-        if (BlackOut.mc.world != null && BlackOut.mc.player != null) {
+        if (BlackOut.mc.level != null && BlackOut.mc.player != null) {
             if (this.lastAddition + this.delay.get() * 1000.0 < System.currentTimeMillis()) {
                 this.addDot(event.tickDelta, BlackOut.mc.player);
                 this.lastAddition = System.currentTimeMillis();
             }
 
-            this.stack.push();
+            this.stack.pushPose();
             RenderUtils.unGuiScale(this.stack);
             this.list.update((pos, time, d) -> this.drawDot(this.stack, pos, d));
-            this.stack.pop();
+            this.stack.popPose();
         }
     }
 
     private void addDot(double tickDelta, Entity entity) {
         if (!this.onlyMoving.get()
-                || entity.prevX != entity.getX()
-                || entity.prevY != entity.getY()
-                || entity.prevZ != entity.getZ()) {
-            double x = MathHelper.lerp(tickDelta, entity.prevX, entity.getX());
-            double y = MathHelper.lerp(tickDelta, entity.prevY, entity.getY());
-            double z = MathHelper.lerp(tickDelta, entity.prevZ, entity.getZ());
-            this.list.add(new Vec3d(x, y, z), this.renderTime.get());
+                || entity.xo != entity.getX()
+                || entity.yo != entity.getY()
+                || entity.zo != entity.getZ()) {
+            double x = Mth.lerp(tickDelta, entity.xo, entity.getX());
+            double y = Mth.lerp(tickDelta, entity.yo, entity.getY());
+            double z = Mth.lerp(tickDelta, entity.zo, entity.getZ());
+            this.list.add(new Vec3(x, y, z), this.renderTime.get());
         }
     }
 
-    private void drawDot(MatrixStack stack, Vec3d vec, double delta) {
-        Vec2f f = RenderUtils.getCoords(vec.x, vec.y, vec.z, true);
+    private void drawDot(PoseStack stack, Vec3 vec, double delta) {
+        Vec2 f = RenderUtils.getCoords(vec.x, vec.y, vec.z, true);
         if (f != null) {
             Color[] colors = this.getColors();
             Color color1 = colors[0];

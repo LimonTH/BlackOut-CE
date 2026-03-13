@@ -32,13 +32,13 @@ public class DevInfo extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.components.clear();
             String text = BlackOut.TYPE + " Build - " + BlackOut.VERSION;
             this.components.add(new Component(""));
             this.components.add(new Component(BlackOut.TYPE.name(), this.typeColor.get() ? BlackOut.TYPECOLOR : null, true));
             this.components.add(new Component(" Build - " + BlackOut.VERSION));
-            this.stack.push();
+            this.stack.pushPose();
             if (this.blur.get()) {
                 RenderUtils.drawLoadedBlur(
                         "hudblur",
@@ -65,7 +65,7 @@ public class DevInfo extends HudElement {
 
                 this.offset = this.offset + component.width;
             });
-            this.stack.pop();
+            this.stack.popPose();
         }
     }
 }

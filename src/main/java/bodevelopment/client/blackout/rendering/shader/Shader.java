@@ -6,10 +6,9 @@ import bodevelopment.client.blackout.randomstuff.ShaderSetup;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gl.ShaderProgram;
-import net.minecraft.client.gl.VertexBuffer;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.BuiltBuffer;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.MeshData;
+import com.mojang.blaze3d.vertex.VertexBuffer;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL30C;
@@ -31,11 +30,11 @@ public class Shader {
     }
 
     public void render(BufferBuilder bufferBuilder, ShaderSetup shaderSetup) {
-        BuiltBuffer builtBuffer = bufferBuilder.end();
+        MeshData builtBuffer = bufferBuilder.buildOrThrow();
         if (builtBuffer == null) return;
         if (shaderSetup != null) shaderSetup.setup(this);
 
-        VertexBuffer vertexBuffer = builtBuffer.getDrawParameters().format().getBuffer();
+        VertexBuffer vertexBuffer = builtBuffer.drawState().format().getImmediateDrawVertexBuffer();
         vertexBuffer.bind();
         vertexBuffer.upload(builtBuffer);
         this.draw(vertexBuffer);
@@ -51,9 +50,9 @@ public class Shader {
             this.setIf("ProjMat", projMat);
         }
         this.setIf("uAlpha", Renderer.getAlpha());
-        if (Renderer.getMatrices() != null && Renderer.getMatrices().peek() != null) {
-            Matrix4f positionMatrix = Renderer.getMatrices().peek().getPositionMatrix();
-            Matrix3f normalMatrix = Renderer.getMatrices().peek().getNormalMatrix();
+        if (Renderer.getMatrices() != null && Renderer.getMatrices().last() != null) {
+            Matrix4f positionMatrix = Renderer.getMatrices().last().pose();
+            Matrix3f normalMatrix = Renderer.getMatrices().last().normal();
             if (positionMatrix != null) {
                 this.setIf("uMatrices", positionMatrix);
             }
@@ -62,7 +61,7 @@ public class Shader {
             }
         }
 
-        this.setIf("uResolution", BlackOut.mc.getWindow().getWidth(), BlackOut.mc.getWindow().getHeight());
+        this.setIf("uResolution", BlackOut.mc.getWindow().getScreenWidth(), BlackOut.mc.getWindow().getScreenHeight());
         this.timeIf(this.initTime);
         GL30C.glGetIntegerv(35725, this.currentShader);
         this.bind();

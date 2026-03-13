@@ -14,12 +14,11 @@ import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.MathHelper;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.util.Mth;
 
 public class HudElementList {
     private static final int minWidth = 150;
@@ -29,7 +28,7 @@ public class HudElementList {
     private static final int elementRadius = 5;
     private final List<HudListEntry> entries = new ArrayList<>();
     private float listLength = 0.0F;
-    private MatrixStack stack;
+    private PoseStack stack;
     private float mx;
     private float my;
     private float frameTime;
@@ -46,14 +45,14 @@ public class HudElementList {
         List<Pair<String, Class<? extends HudElement>>> managerElements = Managers.HUD.getElements();
 
         managerElements.forEach(pair -> {
-            this.entries.add(new HudListEntry(pair.getRight(), pair.getLeft()));
+            this.entries.add(new HudListEntry(pair.getB(), pair.getA()));
         });
 
         this.listLength = this.entries.size() * 60;
         this.scroll.set(0);
     }
 
-    public void render(MatrixStack stack, float frameTime, float mouseX, float mouseY) {
+    public void render(PoseStack stack, float frameTime, float mouseX, float mouseY) {
         this.frameTime = frameTime;
         this.mx = mouseX * RenderUtils.getScale();
         this.my = mouseY * RenderUtils.getScale();
@@ -73,8 +72,8 @@ public class HudElementList {
             return false;
         }
 
-        float listX = (BlackOut.mc.getWindow().getWidth() - this.width) / 2.0F;
-        float listY = BlackOut.mc.getWindow().getHeight() - this.height;
+        float listX = (BlackOut.mc.getWindow().getScreenWidth() - this.width) / 2.0F;
+        float listY = BlackOut.mc.getWindow().getScreenHeight() - this.height;
 
         if (insideBounds(listX, listY, this.width, 40.0F)) { // Клик по шапке
             this.open = !this.open;
@@ -87,8 +86,8 @@ public class HudElementList {
     }
 
     public boolean onScroll(double vertical) {
-        float listX = (BlackOut.mc.getWindow().getWidth() - this.width) / 2.0F;
-        float listY = BlackOut.mc.getWindow().getHeight() - this.height;
+        float listX = (BlackOut.mc.getWindow().getScreenWidth() - this.width) / 2.0F;
+        float listY = BlackOut.mc.getWindow().getScreenHeight() - this.height;
 
         if (!this.insideBounds(listX, listY, this.width, this.height)) {
             return false;
@@ -135,19 +134,19 @@ public class HudElementList {
     }
 
     private void renderList() {
-        this.stack.push();
+        this.stack.pushPose();
         float width = this.getWidth();
         float height = this.getHeight();
-        this.stack.translate((BlackOut.mc.getWindow().getWidth() - width) / 2.0F, BlackOut.mc.getWindow().getHeight() - height, 0.0F);
+        this.stack.translate((BlackOut.mc.getWindow().getScreenWidth() - width) / 2.0F, BlackOut.mc.getWindow().getScreenHeight() - height, 0.0F);
         RenderUtils.rounded(this.stack, 0.0F, 0.0F, width, height, 10.0F, 30.0F, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
         RenderUtils.roundedTop(this.stack, 0.0F, 0.0F, width, 40.0F, 10.0F, 0.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
         this.renderListContent();
         RenderUtils.bottomFade(this.stack, -10.0F, 40.0F, width + 20.0F, 10.0F, ColorUtils.SHADOW100I);
-        this.stack.pop();
+        this.stack.popPose();
     }
 
     private float clampLerpProgress(float val, float start, float end) {
-        return MathHelper.clamp(MathHelper.getLerpProgress(val, start, end), 0.0F, 1.0F);
+        return Mth.clamp(Mth.inverseLerp(val, start, end), 0.0F, 1.0F);
     }
 
     private void updateProgress() {
@@ -165,12 +164,12 @@ public class HudElementList {
     }
 
     private void renderListContent() {
-        float listX = (BlackOut.mc.getWindow().getWidth() - this.width) / 2.0F;
-        float listY = BlackOut.mc.getWindow().getHeight() - this.height;
+        float listX = (BlackOut.mc.getWindow().getScreenWidth() - this.width) / 2.0F;
+        float listY = BlackOut.mc.getWindow().getScreenHeight() - this.height;
 
         float y = 60.0F - this.scroll.get();
         this.scissor();
-        this.stack.push();
+        this.stack.pushPose();
 
         for (HudListEntry entry : this.entries) {
             boolean isHovered = this.insideBounds(listX + 7.5F, y + listY, this.width - 15.0F, 35.0F);
@@ -182,14 +181,14 @@ public class HudElementList {
             y += 60.0F;
         }
 
-        this.stack.pop();
+        this.stack.popPose();
         this.endScissor();
     }
 
     private void scissor() {
         var window = BlackOut.mc.getWindow();
-        double sw = window.getWidth();
-        double sh = window.getHeight();
+        double sw = window.getScreenWidth();
+        double sh = window.getScreenHeight();
 
         double topContentY = (sh - this.height + 40.0F);
         double cutLineTop = sh - topContentY;
@@ -225,8 +224,8 @@ public class HudElementList {
     }
 
     private float getHeight() {
-        return MathHelper.lerp(
-                (float) AnimUtils.easeInOutCubic(this.clampLerpProgress(this.openProgress, 0.5F, 1.0F)), 40.0F, BlackOut.mc.getWindow().getHeight() * 0.5F
+        return Mth.lerp(
+                (float) AnimUtils.easeInOutCubic(this.clampLerpProgress(this.openProgress, 0.5F, 1.0F)), 40.0F, BlackOut.mc.getWindow().getScreenHeight() * 0.5F
         );
     }
 

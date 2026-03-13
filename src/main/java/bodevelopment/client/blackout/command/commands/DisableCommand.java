@@ -1,11 +1,11 @@
 package bodevelopment.client.blackout.command.commands;
 
 import bodevelopment.client.blackout.command.ToggleCommand;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
 
 public class DisableCommand extends ToggleCommand {
     public DisableCommand() {
-        super("disable", Formatting.RED);
+        super("disable", ChatFormatting.RED);
     }
 
     @Override

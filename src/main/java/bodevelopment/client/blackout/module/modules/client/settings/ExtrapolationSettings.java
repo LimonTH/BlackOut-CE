@@ -12,12 +12,16 @@ import bodevelopment.client.blackout.randomstuff.ExtrapolationMap;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.client.renderer.CoreShaders;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
 import java.util.ArrayList;
@@ -58,7 +62,7 @@ public class ExtrapolationSettings extends SettingsModule {
             "The color of the extrapolation path line.");
 
     private final ExtrapolationMap extrapolationMap = new ExtrapolationMap();
-    private final MatrixStack stack = new MatrixStack();
+    private final PoseStack stack = new PoseStack();
 
     public ExtrapolationSettings() {
         super("Extrapolation", false, true);
@@ -71,44 +75,44 @@ public class ExtrapolationSettings extends SettingsModule {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.world != null && BlackOut.mc.player != null && this.renderExtrapolation.get()) {
-            Map<Entity, Box> map = this.extrapolationMap.getMap();
-            Map<Entity, List<Vec3d>> feet = new HashMap<>();
+        if (BlackOut.mc.level != null && BlackOut.mc.player != null && this.renderExtrapolation.get()) {
+            Map<Entity, AABB> map = this.extrapolationMap.getMap();
+            Map<Entity, List<Vec3>> feet = new HashMap<>();
             map.clear();
             Managers.EXTRAPOLATION.getDataMap().forEach((player, data) -> {
                 if (player.isAlive()) {
-                    List<Vec3d> list = new ArrayList<>();
-                    Box box = data.extrapolate(player, 20, b -> list.add(BoxUtils.feet(b)));
+                    List<Vec3> list = new ArrayList<>();
+                    AABB box = data.extrapolate(player, 20, b -> list.add(BoxUtils.feet(b)));
                     feet.put(player, list);
                     map.put(player, box);
                 }
             });
-            this.stack.push();
+            this.stack.pushPose();
             Render3DUtils.setRotation(this.stack);
             Render3DUtils.start();
             feet.values().forEach(this::renderList);
             Render3DUtils.end();
-            this.stack.pop();
+            this.stack.popPose();
         }
     }
 
-    private void renderList(List<Vec3d> list) {
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.begin(this.dashedLine.get() ? VertexFormat.DrawMode.DEBUG_LINES : VertexFormat.DrawMode.DEBUG_LINE_STRIP, VertexFormats.POSITION_COLOR);
-        Matrix4f matrix4f = this.stack.peek().getPositionMatrix();
-        Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
+    private void renderList(List<Vec3> list) {
+        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
+        Tesselator tessellator = Tesselator.getInstance();
+        BufferBuilder bufferBuilder = tessellator.begin(this.dashedLine.get() ? VertexFormat.Mode.DEBUG_LINES : VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        Matrix4f matrix4f = this.stack.last().pose();
+        Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
         float red = this.lineColor.get().red / 255.0F;
         float green = this.lineColor.get().green / 255.0F;
         float blue = this.lineColor.get().blue / 255.0F;
         float alpha = this.lineColor.get().alpha / 255.0F;
         list.forEach(
-                vec -> bufferBuilder.vertex(
+                vec -> bufferBuilder.addVertex(
                                 matrix4f, (float) (vec.x - camPos.x), (float) (vec.y - camPos.y), (float) (vec.z - camPos.z)
                         )
-                        .color(red, green, blue, alpha)
+                        .setColor(red, green, blue, alpha)
                         
         );
-        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
     }
 }

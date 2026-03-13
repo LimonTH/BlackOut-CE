@@ -11,10 +11,9 @@ import bodevelopment.client.blackout.util.InvUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-
 import java.util.List;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 
 public class GearHUD extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -36,7 +35,7 @@ public class GearHUD extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             float textWidth = 10.0F;
 
             for (Item item : this.items.get()) {
@@ -47,7 +46,7 @@ public class GearHUD extends HudElement {
             float backgroundWidth = textWidth + 16.0F;
             float length = this.items.get().size() * 16 + this.items.get().size() * 6 - 6;
             this.setSize(backgroundWidth, length);
-            this.stack.push();
+            this.stack.pushPose();
 
             if (this.blur.get()) {
                 RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, backgroundWidth, length, 3.0F, 10));
@@ -58,17 +57,17 @@ public class GearHUD extends HudElement {
                 this.background.render(this.stack, 0.0F, 0.0F, backgroundWidth, length, 3.0F, 3.0F);
             }
 
-            BlackOut.mc.getBufferBuilders().getEntityVertexConsumers().draw();
+            BlackOut.mc.renderBuffers().bufferSource().endBatch();
             RenderSystem.disableDepthTest();
 
             for (Item item : this.items.get()) {
                 int amount = this.getAmount(item);
                 this.textColor.render(this.stack, String.valueOf(amount), this.textScale.get().floatValue(), textWidth / 2.0F, 8.0F, true, true);
-                RenderUtils.renderItem(this.stack, item.getDefaultStack(), textWidth, 0.0F, 16.0F, RenderLayer.HUD, true);
+                RenderUtils.renderItem(this.stack, item.getDefaultInstance(), textWidth, 0.0F, 16.0F, RenderLayer.HUD, true);
                 this.stack.translate(0.0F, 22.0F, 0.0F);
             }
-            BlackOut.mc.getBufferBuilders().getEntityVertexConsumers().draw();
-            this.stack.pop();
+            BlackOut.mc.renderBuffers().bufferSource().endBatch();
+            this.stack.popPose();
         }
     }
 

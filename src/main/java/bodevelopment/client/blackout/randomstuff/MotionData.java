@@ -1,19 +1,19 @@
 package bodevelopment.client.blackout.randomstuff;
 
 
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.Direction;
+import net.minecraft.world.phys.Vec3;
 
 public class MotionData {
-    public Vec3d motion;
+    public Vec3 motion;
     public double yawDiff = 0.0;
     public boolean reset = false;
 
-    public MotionData(Vec3d motion) {
+    public MotionData(Vec3 motion) {
         this.motion = motion;
     }
 
-    public static MotionData of(Vec3d motion) {
+    public static MotionData of(Vec3 motion) {
         return new MotionData(motion);
     }
 
@@ -28,7 +28,7 @@ public class MotionData {
     }
 
     public MotionData y(double y) {
-        this.motion = this.motion.withAxis(Direction.Axis.Y, y);
+        this.motion = this.motion.with(Direction.Axis.Y, y);
         return this;
     }
 }

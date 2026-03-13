@@ -2,24 +2,23 @@ package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.interfaces.functional.DoubleConsumer;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
-
 import java.util.List;
 import java.util.function.Consumer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class SimulationContext {
     public final Entity entity;
     public final int ticks;
-    public final Consumer<Box> consumer;
+    public final Consumer<AABB> consumer;
     public final DoubleConsumer<SimulationContext, Integer> onTick;
     public final double jumpHeight;
-    public final Vec3d originalMotion;
+    public final Vec3 originalMotion;
     public final boolean originalWater;
     public final boolean originalLava;
-    public Box box;
+    public AABB box;
     public boolean onGround = false;
     public boolean prevOnGround = false;
     public boolean jump = false;
@@ -36,8 +35,8 @@ public class SimulationContext {
             Entity entity,
             int ticks,
             double jumpHeight,
-            Vec3d originalMotion,
-            Consumer<Box> consumer,
+            Vec3 originalMotion,
+            Consumer<AABB> consumer,
             DoubleConsumer<SimulationContext, Integer> onTick
     ) {
         this.entity = entity;
@@ -54,8 +53,8 @@ public class SimulationContext {
         this.motionZ = originalMotion.z;
     }
 
-    public void move(Vec3d movement) {
-        this.box = this.box.offset(movement);
+    public void move(Vec3 movement) {
+        this.box = this.box.move(movement);
     }
 
     public boolean isOnGround() {
@@ -67,11 +66,11 @@ public class SimulationContext {
     }
 
     public void updateCollisions() {
-        this.collisions = BlackOut.mc.world.getEntityCollisions(this.entity, this.box.stretch(this.motionX, this.motionY, this.motionZ));
+        this.collisions = BlackOut.mc.level.getEntityCollisions(this.entity, this.box.expandTowards(this.motionX, this.motionY, this.motionZ));
     }
 
-    public Vec3d collide(Vec3d motion, Box box) {
-        return Entity.adjustMovementForCollisions(this.entity, motion, box, BlackOut.mc.world, this.collisions);
+    public Vec3 collide(Vec3 motion, AABB box) {
+        return Entity.collideBoundingBox(this.entity, motion, box, BlackOut.mc.level, this.collisions);
     }
 
     public void accept() {

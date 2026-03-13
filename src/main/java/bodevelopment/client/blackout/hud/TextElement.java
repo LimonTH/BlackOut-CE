@@ -7,7 +7,7 @@ import bodevelopment.client.blackout.module.setting.multisettings.BackgroundMult
 import bodevelopment.client.blackout.module.setting.multisettings.TextColorMultiSetting;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.util.math.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 public class TextElement extends HudElement {
     public final SettingGroup sgGeneral = this.addGroup("General");
@@ -25,8 +25,8 @@ public class TextElement extends HudElement {
         super(name, description);
     }
 
-    protected void drawElement(MatrixStack stack, String text, String info) {
-        stack.push();
+    protected void drawElement(PoseStack stack, String text, String info) {
+        stack.pushPose();
         float width = BlackOut.FONT.getWidth(text + " " + info);
         this.setSize(width, BlackOut.FONT.getHeight());
         if (this.blur.get()) {
@@ -42,6 +42,6 @@ public class TextElement extends HudElement {
 
         this.textColor.render(stack, text, 1.0F, 0.0F, 0.0F, false, false);
         this.infoColor.render(stack, info, 1.0F, BlackOut.FONT.getWidth(text + " "), 0.0F, false, false);
-        stack.pop();
+        stack.popPose();
     }
 }

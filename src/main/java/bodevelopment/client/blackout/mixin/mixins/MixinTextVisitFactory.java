@@ -1,15 +1,15 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.module.modules.misc.Streamer;
-import net.minecraft.text.TextVisitFactory;
+import net.minecraft.util.StringDecomposer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
-@Mixin(TextVisitFactory.class)
+@Mixin(StringDecomposer.class)
 public class MixinTextVisitFactory {
     @ModifyVariable(
-            method = "visitFormatted(Ljava/lang/String;ILnet/minecraft/text/Style;Lnet/minecraft/text/Style;Lnet/minecraft/text/CharacterVisitor;)Z",
+            method = "iterateFormatted(Ljava/lang/String;ILnet/minecraft/network/chat/Style;Lnet/minecraft/network/chat/Style;Lnet/minecraft/util/FormattedCharSink;)Z",
             at = @At("HEAD"),
             argsOnly = true
     )

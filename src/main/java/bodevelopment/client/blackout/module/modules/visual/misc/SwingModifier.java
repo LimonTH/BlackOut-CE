@@ -6,7 +6,7 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.util.Hand;
+import net.minecraft.world.InteractionHand;
 
 public class SwingModifier extends Module {
     private static SwingModifier INSTANCE;
@@ -42,8 +42,8 @@ public class SwingModifier extends Module {
         return INSTANCE;
     }
 
-    public void startSwing(Hand hand) {
-        if (hand == Hand.MAIN_HAND) {
+    public void startSwing(InteractionHand hand) {
+        if (hand == InteractionHand.MAIN_HAND) {
             if (this.mainReset.get() || !mainSwinging) {
                 this.mainProgress = 0.0F;
                 mainSwinging = true;
@@ -75,14 +75,14 @@ public class SwingModifier extends Module {
         }
     }
 
-    public float getSwing(Hand hand) {
-        return hand == Hand.MAIN_HAND
+    public float getSwing(InteractionHand hand) {
+        return hand == InteractionHand.MAIN_HAND
                 ? (float) (this.mainStart.get() + (this.mainEnd.get() - this.mainStart.get()) * this.mainProgress)
                 : (float) (this.offStart.get() + (this.offEnd.get() - this.offStart.get()) * this.offProgress);
     }
 
-    public float getY(Hand hand) {
-        return hand == Hand.MAIN_HAND
+    public float getY(InteractionHand hand) {
+        return hand == InteractionHand.MAIN_HAND
                 ? (float) (this.mainStartY.get() + (this.mainEndY.get() - this.mainStartY.get()) * this.mainProgress) / -10.0F
                 : (float) (this.offStartY.get() + (this.offEndY.get() - this.offStartY.get()) * this.offProgress) / -10.0F;
     }

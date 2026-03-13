@@ -6,7 +6,7 @@ import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.util.ChatUtils;
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 
 public class AutoGG extends Module {
     public AutoGG() {
@@ -15,8 +15,8 @@ public class AutoGG extends Module {
 
     @Event
     public void onReceive(PacketEvent.Receive.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            if (event.packet instanceof GameMessageS2CPacket packet) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            if (event.packet instanceof ClientboundSystemChatPacket packet) {
                 String unformattedText = packet.content().getString();
                 String[] look = new String[]{
                         "You won! Want to play again? Click here! ", "You lost! Want to play again? Click here! ", "You died! Want to play again? Click here! "

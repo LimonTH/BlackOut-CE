@@ -11,24 +11,23 @@ import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gui.CubeMapRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.RotatingCubeMapRenderer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.Identifier;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.CubeMap;
+import net.minecraft.client.renderer.PanoramaRenderer;
+import net.minecraft.resources.ResourceLocation;
 
 public class PanoramaMainMenu implements MainMenuRenderer {
     private static final float BUTTON_WIDTH = 360.0F;
     private static final float BUTTON_HEIGHT = 10.0F;
     private static final float BUTTON_RADIUS = 25.0F;
-    private final CubeMapRenderer PANORAMA_CUBE_MAP = new CubeMapRenderer(Identifier.of("textures/gui/title/background/panorama"));
-    private final RotatingCubeMapRenderer backgroundRenderer = new RotatingCubeMapRenderer(this.PANORAMA_CUBE_MAP);
+    private final CubeMap PANORAMA_CUBE_MAP = new CubeMap(ResourceLocation.parse("textures/gui/title/background/panorama"));
+    private final PanoramaRenderer backgroundRenderer = new PanoramaRenderer(this.PANORAMA_CUBE_MAP);
     private final ChangelogRenderer changelogRenderer = new ChangelogRenderer();
 
     @Override
-    public void render(MatrixStack stack, float height, float mx, float my, String text1, String text2, float progress) {
+    public void render(PoseStack stack, float height, float mx, float my, String text1, String text2, float progress) {
         boolean isGuiOpen = MainMenu.getInstance().isOpenedMenu();
         boolean isExiting = MainMenu.getInstance().isExiting();
 
@@ -43,7 +42,7 @@ public class PanoramaMainMenu implements MainMenuRenderer {
         this.changelogRenderer.render(stack, renderMx, renderMy, false, null, null, 0);
     }
 
-    private void renderAnimatedSplash(MatrixStack stack, String text1, String text2, float progress) {
+    private void renderAnimatedSplash(PoseStack stack, String text1, String text2, float progress) {
         float yPos = -200.0F;
         float scale = 2.5F;
         float offsetRange = 15.0F;
@@ -53,46 +52,46 @@ public class PanoramaMainMenu implements MainMenuRenderer {
         } else {
             int alpha1 = (int) ((1.0F - progress) * 255);
             if (alpha1 > 5) {
-                stack.push();
+                stack.pushPose();
                 stack.translate(0, -progress * offsetRange, 0);
                 BlackOut.FONT.text(stack, text1, scale, 0.0F, yPos, new Color(255, 255, 255, alpha1).getRGB(), true, true);
-                stack.pop();
+                stack.popPose();
             }
 
             int alpha2 = (int) (progress * 255);
             if (alpha2 > 5) {
-                stack.push();
+                stack.pushPose();
                 stack.translate(0, offsetRange - (progress * offsetRange), 0);
                 BlackOut.FONT.text(stack, text2, scale, 0.0F, yPos, new Color(255, 255, 255, alpha2).getRGB(), true, true);
-                stack.pop();
+                stack.popPose();
             }
         }
     }
 
-    private void renderButtons(MatrixStack stack, float mx, float my) {
-        stack.push();
+    private void renderButtons(PoseStack stack, float mx, float my) {
+        stack.pushPose();
         stack.translate(-180.0F, -100.0F, 0.0F);
         float currentY = -100.0F;
 
         for (String name : MainMenu.getInstance().buttonNames) {
             boolean hovered = RenderUtils.insideRounded(mx, my, -180.0, currentY, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS);
 
-            stack.push();
+            stack.pushPose();
             if (hovered) {
                 stack.scale(1.03F, 1.03F, 1.0F);
                 stack.translate(-5.4F, -0.3F, 0.0F);
             }
 
             this.renderButton(stack, name, hovered);
-            stack.pop();
+            stack.popPose();
 
             stack.translate(0.0F, 85.0F, 0.0F);
             currentY += 85.0F;
         }
-        stack.pop();
+        stack.popPose();
     }
 
-    private void renderButton(MatrixStack stack, String name, boolean hovered) {
+    private void renderButton(PoseStack stack, String name, boolean hovered) {
         RenderUtils.drawLoadedBlur("title", stack, renderer ->
                 renderer.rounded(0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10, 1.0F, 1.0F, 1.0F, 1.0F));
 
@@ -104,8 +103,8 @@ public class PanoramaMainMenu implements MainMenuRenderer {
         BlackOut.FONT.text(stack, name, 3.0F, 180.0F, 5.0F, textColor.getRGB(), true, true);
     }
 
-    private void renderAllIconButtons(MatrixStack stack, float windowHeight, float mx, float my) {
-        stack.push();
+    private void renderAllIconButtons(PoseStack stack, float windowHeight, float mx, float my) {
+        stack.pushPose();
         float startX = -1000.0F + 14.0F;
         float startY = windowHeight / 2.0F - 44.0F;
         stack.translate(startX, startY, 0.0F);
@@ -114,20 +113,20 @@ public class PanoramaMainMenu implements MainMenuRenderer {
             float currentX = startX + (i * 54.0F);
             boolean hovered = RenderUtils.insideRounded(mx, my, currentX + 5.0F, startY + 5.0F, 22.0F, 22.0F, 10.0F);
 
-            stack.push();
+            stack.pushPose();
             if (hovered) {
                 stack.scale(1.1F, 1.1F, 1.0F);
                 stack.translate(-1.0F, -1.0F, 0.0F);
             }
             this.renderSingleIconButton(stack, i, hovered);
-            stack.pop();
+            stack.popPose();
 
             stack.translate(54.0F, 0.0F, 0.0F);
         }
-        stack.pop();
+        stack.popPose();
     }
 
-    private void renderSingleIconButton(MatrixStack stack, int i, boolean hovered) {
+    private void renderSingleIconButton(PoseStack stack, int i, boolean hovered) {
         TextureRenderer t = switch (i) {
             case 1 -> BOTextures.getDiscordIconRenderer();
             case 2 -> BOTextures.getYoutubeIconRenderer();
@@ -181,12 +180,12 @@ public class PanoramaMainMenu implements MainMenuRenderer {
     }
 
     @Override
-    public void renderBackground(MatrixStack stack, float width, float height, float mx, float my) {
+    public void renderBackground(PoseStack stack, float width, float height, float mx, float my) {
         MainMenuSettings mainMenuSettings = MainMenuSettings.getInstance();
         BlackOutColor color = mainMenuSettings.shitfuckingmenucolor.get();
         boolean exiting = MainMenu.getInstance().isExiting();
 
-        DrawContext context = new DrawContext(BlackOut.mc, BlackOut.mc.getBufferBuilders().getEntityVertexConsumers());
+        GuiGraphics context = new GuiGraphics(BlackOut.mc, BlackOut.mc.renderBuffers().bufferSource());
         RenderSystem.setShaderColor(color.red / 255.0F, color.green / 255.0F, color.blue / 255.0F, color.alpha / 255.0F);
 
         this.backgroundRenderer.render(
@@ -194,7 +193,7 @@ public class PanoramaMainMenu implements MainMenuRenderer {
                 (int) width,
                 (int) height,
                 1.0F,
-                BlackOut.mc.getRenderTickCounter().getTickDelta(true)
+                BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
         );
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);

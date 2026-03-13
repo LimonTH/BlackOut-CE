@@ -13,12 +13,11 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.*;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.BlockPos;
-
 import java.util.Comparator;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Blocks;
 
 public class AutoCrystalBase extends ObsidianModule {
     public final SettingGroup sgPerformance = this.addGroup("Performance");
@@ -29,7 +28,7 @@ public class AutoCrystalBase extends ObsidianModule {
     private final Setting<Double> searchRadius = this.sgPerformance.doubleSetting("Horizontal Radius", 4.0, 1.0, 6.0, 0.1, "Horizontal radius around target.");
     private final Setting<Integer> verticalRadius = this.sgPerformance.intSetting("Vertical Depth", 3, 1, 10, 1, "How many blocks to search up and down.");
 
-    private PlayerEntity target = null;
+    private Player target = null;
     private BlockPos lastBestPos = null;
     private int internalTicks = 0;
 
@@ -40,10 +39,10 @@ public class AutoCrystalBase extends ObsidianModule {
 
     @Override
     protected void addInsideBlocks() {
-        if (BlackOut.mc.world == null || BlackOut.mc.player == null) return;
+        if (BlackOut.mc.level == null || BlackOut.mc.player == null) return;
 
         if (target == null || !target.isAlive() || BlackOut.mc.player.distanceTo(target) > 13.0) {
-            this.target = BlackOut.mc.world.getPlayers().stream()
+            this.target = BlackOut.mc.level.players().stream()
                     .filter(p -> p != BlackOut.mc.player && !Managers.FRIENDS.isFriend(p) && p.isAlive())
                     .filter(p -> BlackOut.mc.player.distanceTo(p) <= 12.0)
                     .min(Comparator.comparingDouble(p -> BlackOut.mc.player.distanceTo(p)))
@@ -79,7 +78,7 @@ public class AutoCrystalBase extends ObsidianModule {
     }
 
     private BlockPos findOptimalBase(AutoCrystal ac) {
-        BlockPos targetPos = target.getBlockPos();
+        BlockPos targetPos = target.blockPosition();
         BlockPos currentBest = null;
         double maxScore = 0;
 
@@ -91,7 +90,7 @@ public class AutoCrystalBase extends ObsidianModule {
                 if (x * x + z * z > rH * rH) continue;
 
                 for (int y = -rV; y <= -1; y++) {
-                    BlockPos pos = targetPos.add(x, y, z);
+                    BlockPos pos = targetPos.offset(x, y, z);
 
                     if (!isValidForBase(pos, ac)) continue;
 
@@ -109,7 +108,7 @@ public class AutoCrystalBase extends ObsidianModule {
 
                     if (score > maxScore) {
                         maxScore = score;
-                        currentBest = pos.toImmutable();
+                        currentBest = pos.immutable();
                     }
                 }
             }
@@ -119,7 +118,7 @@ public class AutoCrystalBase extends ObsidianModule {
 
     private boolean isCurrentBaseBetter(BlockPos bestPos, AutoCrystal ac) {
         double bestScore = getSimulatedDmg(target, bestPos);
-        BlockPos targetPos = target.getBlockPos();
+        BlockPos targetPos = target.blockPosition();
 
         double rH = searchRadius.get();
         int rV = verticalRadius.get();
@@ -128,10 +127,10 @@ public class AutoCrystalBase extends ObsidianModule {
             for (int z = (int)-rH; z <= rH; z++) {
                 if (x * x + z * z > rH * rH) continue;
                 for (int y = -rV; y <= -1; y++) {
-                    BlockPos pos = targetPos.add(x, y, z);
+                    BlockPos pos = targetPos.offset(x, y, z);
 
-                    if (BlackOut.mc.world.getBlockState(pos).isOf(Blocks.OBSIDIAN) || BlackOut.mc.world.getBlockState(pos).isOf(Blocks.BEDROCK)) {
-                        if (!ac.crystalBlock(pos.up()) || ac.intersects(pos.up())) continue;
+                    if (BlackOut.mc.level.getBlockState(pos).is(Blocks.OBSIDIAN) || BlackOut.mc.level.getBlockState(pos).is(Blocks.BEDROCK)) {
+                        if (!ac.crystalBlock(pos.above()) || ac.intersects(pos.above())) continue;
 
                         double existingDmg = getDmg(target, pos);
                         if (existingDmg + scoreImprove.get() >= bestScore) return true;
@@ -147,12 +146,12 @@ public class AutoCrystalBase extends ObsidianModule {
             return false;
         }
 
-        BlockPos crystalPos = pos.up();
+        BlockPos crystalPos = pos.above();
 
-        if (!BlackOut.mc.world.getBlockState(crystalPos).isAir() && !OLEPOSSUtils.replaceable(crystalPos)) {
+        if (!BlackOut.mc.level.getBlockState(crystalPos).isAir() && !OLEPOSSUtils.replaceable(crystalPos)) {
             return false;
         }
-        if (SettingUtils.oldCrystals() && !BlackOut.mc.world.getBlockState(crystalPos.up()).isAir()) {
+        if (SettingUtils.oldCrystals() && !BlackOut.mc.level.getBlockState(crystalPos.above()).isAir()) {
             return false;
         }
         if (ac.intersects(crystalPos)) {
@@ -165,21 +164,21 @@ public class AutoCrystalBase extends ObsidianModule {
         return true;
     }
 
-    private double getSimulatedDmg(PlayerEntity p, BlockPos pos) {
-        if (BlackOut.mc.world == null) return 0;
+    private double getSimulatedDmg(Player p, BlockPos pos) {
+        if (BlackOut.mc.level == null) return 0;
 
-        net.minecraft.block.BlockState oldState = BlackOut.mc.world.getBlockState(pos);
-        BlackOut.mc.world.setBlockState(pos, Blocks.OBSIDIAN.getDefaultState(), 0);
+        net.minecraft.world.level.block.state.BlockState oldState = BlackOut.mc.level.getBlockState(pos);
+        BlackOut.mc.level.setBlock(pos, Blocks.OBSIDIAN.defaultBlockState(), 0);
 
-        double dmg = DamageUtils.crystalDamage(p, p.getBoundingBox(), pos.toCenterPos().add(0, 0.5, 0));
-        BlackOut.mc.world.setBlockState(pos, oldState, 0);
+        double dmg = DamageUtils.crystalDamage(p, p.getBoundingBox(), pos.getCenter().add(0, 0.5, 0));
+        BlackOut.mc.level.setBlock(pos, oldState, 0);
 
         return dmg;
     }
 
     private boolean isFriendSafe(BlockPos pos, AutoCrystal ac, double targetDmg) {
         if (!ac.getCheckFriendPlacing().get()) return true;
-        return BlackOut.mc.world.getPlayers().stream()
+        return BlackOut.mc.level.players().stream()
                 .filter(p -> p != BlackOut.mc.player && Managers.FRIENDS.isFriend(p) && p.isAlive())
                 .allMatch(friend -> {
                     double fDmg = getDmg(friend, pos);
@@ -188,8 +187,8 @@ public class AutoCrystalBase extends ObsidianModule {
                 });
     }
 
-    private double getDmg(PlayerEntity p, BlockPos pos) {
-        return DamageUtils.crystalDamage(p, p.getBoundingBox(), pos.toCenterPos().add(0, 0.5, 0));
+    private double getDmg(Player p, BlockPos pos) {
+        return DamageUtils.crystalDamage(p, p.getBoundingBox(), pos.getCenter().add(0, 0.5, 0));
     }
 
     @Override protected boolean validForBlocking(Entity entity) { return false; }

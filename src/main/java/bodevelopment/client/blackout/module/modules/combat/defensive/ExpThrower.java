@@ -13,9 +13,9 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Hand;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 public class ExpThrower extends Module {
     private static ExpThrower INSTANCE;
@@ -56,7 +56,7 @@ public class ExpThrower extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.throwsLeft = this.throwsLeft + this.throwSpeed.get() / 20.0;
             this.update();
             this.throwsLeft = Math.min(1.0, this.throwsLeft);
@@ -64,7 +64,7 @@ public class ExpThrower extends Module {
     }
 
     private void update() {
-        Hand hand = OLEPOSSUtils.getHand(Items.EXPERIENCE_BOTTLE);
+        InteractionHand hand = OLEPOSSUtils.getHand(Items.EXPERIENCE_BOTTLE);
         FindResult result = null;
         boolean switched = false;
         int bottlesLeft = 0;
@@ -74,7 +74,7 @@ public class ExpThrower extends Module {
                 bottlesLeft = Math.min((int) Math.floor(this.throwsLeft), result.amount());
             }
         } else {
-            int b = hand == Hand.MAIN_HAND ? Managers.PACKET.getStack().getCount() : BlackOut.mc.player.getOffHandStack().getCount();
+            int b = hand == InteractionHand.MAIN_HAND ? Managers.PACKET.getStack().getCount() : BlackOut.mc.player.getOffhandItem().getCount();
             bottlesLeft = Math.min((int) Math.floor(this.throwsLeft), b);
         }
 
@@ -103,10 +103,10 @@ public class ExpThrower extends Module {
         float lowest = 500.0F;
         boolean found = false;
 
-        for (ItemStack stack : BlackOut.mc.player.getArmorItems()) {
-            if (!stack.isEmpty() && stack.isDamageable()) {
+        for (ItemStack stack : BlackOut.mc.player.getArmorSlots()) {
+            if (!stack.isEmpty() && stack.isDamageableItem()) {
                 found = true;
-                float dur = (float) (stack.getMaxDamage() - stack.getDamage()) / stack.getMaxDamage() * 100.0F;
+                float dur = (float) (stack.getMaxDamage() - stack.getDamageValue()) / stack.getMaxDamage() * 100.0F;
                 if (dur > max) {
                     max = dur;
                 }
@@ -124,7 +124,7 @@ public class ExpThrower extends Module {
         }
     }
 
-    private void throwBottle(Hand hand) {
+    private void throwBottle(InteractionHand hand) {
         this.useItem(hand);
         if (this.renderSwing.get()) {
             this.clientSwing(this.swingHand.get(), hand);

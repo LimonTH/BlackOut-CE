@@ -25,11 +25,11 @@ public class Streamer extends Module {
     }
 
     public String replace(String string) {
-        if (BlackOut.mc.currentScreen instanceof AltManagerScreen) {
+        if (BlackOut.mc.screen instanceof AltManagerScreen) {
             return string;
         }
 
-        String currentName = BlackOut.mc.getSession().getUsername();
+        String currentName = BlackOut.mc.getUser().getName();
         if (currentName == null || string == null) return string;
 
         return string.replace(currentName, this.spoofedName.get());

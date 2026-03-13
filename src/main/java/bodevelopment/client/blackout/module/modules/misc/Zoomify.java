@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 
 public class Zoomify extends Module {
     private static Zoomify INSTANCE;
@@ -38,15 +38,15 @@ public class Zoomify extends Module {
     public void onEnable() {
         this.currentZoom = 1.0;
         this.scrollMultiplier = 1.0;
-        this.wasCinematic = BlackOut.mc.options.smoothCameraEnabled;
-        this.lastMouseSens = BlackOut.mc.options.getMouseSensitivity().getValue().floatValue();
+        this.wasCinematic = BlackOut.mc.options.smoothCamera;
+        this.lastMouseSens = BlackOut.mc.options.sensitivity().get().floatValue();
     }
 
     @Override
     public void onDisable() {
-        BlackOut.mc.options.smoothCameraEnabled = wasCinematic;
+        BlackOut.mc.options.smoothCamera = wasCinematic;
         if (lastMouseSens != -1) {
-            BlackOut.mc.options.getMouseSensitivity().setValue((double) lastMouseSens);
+            BlackOut.mc.options.sensitivity().set((double) lastMouseSens);
         }
     }
 
@@ -55,17 +55,17 @@ public class Zoomify extends Module {
         if (BlackOut.mc.player == null) return;
 
         double target = zoomValue.get() * scrollMultiplier;
-        currentZoom = MathHelper.lerp(smoothSpeed.get(), currentZoom, target);
+        currentZoom = Mth.lerp(smoothSpeed.get(), currentZoom, target);
 
         if (cinematic.get()) {
-            BlackOut.mc.options.smoothCameraEnabled = currentZoom > 1.1;
+            BlackOut.mc.options.smoothCamera = currentZoom > 1.1;
         }
 
         if (mouseModifier.get() && currentZoom > 1.1) {
             double sens = lastMouseSens / (currentZoom * 0.5);
-            BlackOut.mc.options.getMouseSensitivity().setValue(sens);
+            BlackOut.mc.options.sensitivity().set(sens);
         } else if (lastMouseSens != -1) {
-            BlackOut.mc.options.getMouseSensitivity().setValue((double) lastMouseSens);
+            BlackOut.mc.options.sensitivity().set((double) lastMouseSens);
         }
     }
 
@@ -74,7 +74,7 @@ public class Zoomify extends Module {
         if (this.scroll.get() || this.cleanScreen.get()) {
             event.cancel();
         }
-        if (!this.scroll.get() || BlackOut.mc.currentScreen != null) return;
+        if (!this.scroll.get() || BlackOut.mc.screen != null) return;
 
         if (event.vertical > 0) {
             scrollMultiplier *= scrollSpeed.get();
@@ -82,7 +82,7 @@ public class Zoomify extends Module {
             scrollMultiplier /= scrollSpeed.get();
         }
 
-        scrollMultiplier = MathHelper.clamp(scrollMultiplier, 0.1, 20.0);
+        scrollMultiplier = Mth.clamp(scrollMultiplier, 0.1, 20.0);
     }
 
     public float getZoomFactor(float fov) {

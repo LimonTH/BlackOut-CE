@@ -9,8 +9,8 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.phys.Vec3;
 
 public class MovementSpam extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -35,12 +35,12 @@ public class MovementSpam extends Module {
 
     @Event
     public void onTickPost(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null && this.enabled) {
-            Vec3d pos = Managers.PACKET.pos;
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null && this.enabled) {
+            Vec3 pos = Managers.PACKET.pos;
 
             for (int i = 0; i < this.packets.get(); i++) {
                 this.sendPacket(
-                        new PlayerMoveC2SPacket.Full(
+                        new ServerboundMovePlayerPacket.PosRot(
                                 pos.x, pos.y, pos.z, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
             }
         }
@@ -48,7 +48,7 @@ public class MovementSpam extends Module {
 
     @Event
     public void onSend(PacketEvent.Sent event) {
-        if (event.packet instanceof PlayerMoveC2SPacket) {
+        if (event.packet instanceof ServerboundMovePlayerPacket) {
             this.packetsSent++;
         }
     }

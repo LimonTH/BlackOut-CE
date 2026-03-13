@@ -1,8 +1,8 @@
 package bodevelopment.client.blackout.event.events;
 
 import bodevelopment.client.blackout.event.Cancellable;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class BlockStateEvent extends Cancellable {
     private static final BlockStateEvent INSTANCE = new BlockStateEvent();

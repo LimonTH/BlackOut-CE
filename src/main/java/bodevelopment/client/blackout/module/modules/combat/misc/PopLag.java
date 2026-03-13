@@ -34,13 +34,13 @@ public class PopLag extends Module {
     @Event
     public void onPop(PopEvent event) {
         if (event.player != BlackOut.mc.player && !Managers.FRIENDS.isFriend(event.player)) {
-            UUID uuid = event.player.getUuid();
+            UUID uuid = event.player.getUUID();
             if (!this.sent.contains(uuid)) {
                 if (this.target.get() && AutoCrystal.getInstance().targetedPlayer != event.player) {
                     return;
                 }
 
-                BlackOut.mc.getNetworkHandler().sendChatCommand(this.command.get() + " " + event.player.getName().getString() + " " + this.buildString());
+                BlackOut.mc.getConnection().sendCommand(this.command.get() + " " + event.player.getName().getString() + " " + this.buildString());
                 this.sent.add(uuid, this.cooldown.get() * 60.0);
             }
         }

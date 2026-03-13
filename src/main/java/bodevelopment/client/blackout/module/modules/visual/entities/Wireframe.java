@@ -12,16 +12,16 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.render.WireframeRenderer;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.render.Camera;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
 import org.joml.Quaternionf;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import net.minecraft.client.Camera;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec3;
 
 public class Wireframe extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -30,7 +30,7 @@ public class Wireframe extends Module {
     private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Wireframe Color", new BlackOutColor(255, 0, 0, 255), "The color and opacity of the polygonal edges.");
     private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Surface Color", new BlackOutColor(255, 0, 0, 50), "The color and opacity of the model's polygon faces.");
 
-    private final List<AbstractClientPlayerEntity> player = new ArrayList<>();
+    private final List<AbstractClientPlayer> player = new ArrayList<>();
 
     public Wireframe() {
         super("Wireframe", "Renders a structural shell over player entities to visualize their model geometry and joint rotations.", SubCategory.ENTITIES, true);
@@ -38,11 +38,11 @@ public class Wireframe extends Module {
 
     @Event
     public void onTickPost(TickEvent.Post event) {
-        if (BlackOut.mc.world != null && BlackOut.mc.player != null) {
+        if (BlackOut.mc.level != null && BlackOut.mc.player != null) {
             this.player.clear();
-            BlackOut.mc.world.entityList.forEach(entity -> {
-                if (entity instanceof AbstractClientPlayerEntity && this.shouldRender(entity)) {
-                    this.player.add((AbstractClientPlayerEntity) entity);
+            BlackOut.mc.level.tickingEntities.forEach(entity -> {
+                if (entity instanceof AbstractClientPlayer && this.shouldRender(entity)) {
+                    this.player.add((AbstractClientPlayer) entity);
                 }
             });
             this.player.sort(Comparator.comparingDouble(entity -> -BlackOut.mc.player.distanceTo(entity)));
@@ -53,7 +53,7 @@ public class Wireframe extends Module {
         AntiBot antiBot = AntiBot.getInstance();
 
         if (antiBot.enabled && antiBot.mode.get() == AntiBot.HandlingMode.Ignore) {
-            if (entity instanceof AbstractClientPlayerEntity playerx && antiBot.getBots().contains(playerx)) {
+            if (entity instanceof AbstractClientPlayer playerx && antiBot.getBots().contains(playerx)) {
                 return false;
             }
         }
@@ -63,23 +63,23 @@ public class Wireframe extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.world == null || BlackOut.mc.player == null) return;
+        if (BlackOut.mc.level == null || BlackOut.mc.player == null) return;
 
-        Camera camera = BlackOut.mc.gameRenderer.getCamera();
-        Vec3d camPos = camera.getPos();
+        Camera camera = BlackOut.mc.gameRenderer.getMainCamera();
+        Vec3 camPos = camera.getPosition();
         float tickDelta = event.tickDelta;
 
         this.player.forEach(entity -> {
             WireframeRenderer.ModelData data = new WireframeRenderer.ModelData(entity, tickDelta);
 
-            event.stack.push();
+            event.stack.pushPose();
 
-            event.stack.loadIdentity();
-            event.stack.multiply(new Quaternionf(camera.getRotation()).conjugate());
+            event.stack.setIdentity();
+            event.stack.mulPose(new Quaternionf(camera.rotation()).conjugate());
 
-            double x = MathHelper.lerp(tickDelta, entity.lastRenderX, entity.getX()) - camPos.x;
-            double y = MathHelper.lerp(tickDelta, entity.lastRenderY, entity.getY()) - camPos.y;
-            double z = MathHelper.lerp(tickDelta, entity.lastRenderZ, entity.getZ()) - camPos.z;
+            double x = Mth.lerp(tickDelta, entity.xOld, entity.getX()) - camPos.x;
+            double y = Mth.lerp(tickDelta, entity.yOld, entity.getY()) - camPos.y;
+            double z = Mth.lerp(tickDelta, entity.zOld, entity.getZ()) - camPos.z;
 
             event.stack.translate((float) x, (float) y, (float) z);
 
@@ -92,7 +92,7 @@ public class Wireframe extends Module {
                     this.renderShape.get()
             );
 
-            event.stack.pop();
+            event.stack.popPose();
         });
     }
 }

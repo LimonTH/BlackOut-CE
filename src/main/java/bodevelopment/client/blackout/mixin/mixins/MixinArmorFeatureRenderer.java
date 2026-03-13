@@ -2,32 +2,32 @@ package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
 import bodevelopment.client.blackout.util.render.WireframeRenderer;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.feature.ArmorFeatureRenderer;
-import net.minecraft.client.render.entity.model.BipedEntityModel;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.ItemStack;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(ArmorFeatureRenderer.class)
+@Mixin(HumanoidArmorLayer.class)
 public class MixinArmorFeatureRenderer {
 
     @Inject(
-            method = "renderArmor",
+            method = "renderArmorPiece",
             at = @At("HEAD"),
             cancellable = true
     )
     private void onRenderArmor(
-            MatrixStack matrices,
-            VertexConsumerProvider vertexConsumers,
+            PoseStack matrices,
+            MultiBufferSource vertexConsumers,
             ItemStack stack,
             EquipmentSlot slot,
             int light,
-            BipedEntityModel<?> armorModel,
+            HumanoidModel<?> armorModel,
             CallbackInfo ci
     ) {
         if (WireframeRenderer.hidden || NoRender.getInstance().ignoreArmor(slot)) {

@@ -12,13 +12,12 @@ import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.MathHelper;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
+import net.minecraft.util.Mth;
 
 public class ClickGuiScreen {
-    protected final MatrixStack stack;
+    protected final PoseStack stack;
     protected final float width;
     protected final float height;
     protected final ScrollHelper scroll;
@@ -39,7 +38,7 @@ public class ClickGuiScreen {
 
     public ClickGuiScreen(String label, float width, float height, boolean smooth) {
         this.openTime = System.currentTimeMillis();
-        this.stack = new MatrixStack();
+        this.stack = new PoseStack();
         this.width = width;
         this.height = height + 40.0F;
         this.scroll = smooth
@@ -52,7 +51,7 @@ public class ClickGuiScreen {
         GuiAlphaFrameBuffer frameBuffer = Managers.FRAME_BUFFER.getGui();
         frameBuffer.start();
 
-        float popUpDelta = (float) MathHelper.clamp(System.currentTimeMillis() - this.openTime, 0L, 500L) / 500.0F;
+        float popUpDelta = (float) Mth.clamp(System.currentTimeMillis() - this.openTime, 0L, 500L) / 500.0F;
         popUpDelta = (float) AnimUtils.easeOutBack(popUpDelta);
         this.unscaled = popUpDelta;
         float currentScale = RenderUtils.getScale();
@@ -62,8 +61,8 @@ public class ClickGuiScreen {
 
         this.frameTime = frameTime;
         var window = BlackOut.mc.getWindow();
-        double sw = window.getWidth();
-        double sh = window.getHeight();
+        double sw = window.getScreenWidth();
+        double sh = window.getScreenHeight();
 
         double startX = (sw / 2.0 + this.x - this.width / 2.0F) / this.unscaled;
         double startY = (sh / 2.0 + this.y - this.height / 2.0F) / this.unscaled;
@@ -98,7 +97,7 @@ public class ClickGuiScreen {
         RenderUtils.bottomFade(this.stack, -10.0F, 0.0F, this.width + 20.0F, 20.0F, new Color(0, 0, 0, 100).getRGB());
 
         frameBuffer.end(this.getAlpha());
-        this.stack.pop();
+        this.stack.popPose();
     }
 
     private float getAlpha() {

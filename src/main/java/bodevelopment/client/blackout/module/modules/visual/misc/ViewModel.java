@@ -4,9 +4,9 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.RotationAxis;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
+import net.minecraft.world.InteractionHand;
 
 public class ViewModel extends Module {
     private static ViewModel INSTANCE;
@@ -63,20 +63,20 @@ public class ViewModel extends Module {
         return INSTANCE;
     }
 
-    public void transform(MatrixStack stack, Hand hand) {
-        if (hand == Hand.MAIN_HAND) {
+    public void transform(PoseStack stack, InteractionHand hand) {
+        if (hand == InteractionHand.MAIN_HAND) {
             this.transform(stack, this.mainX, this.mainY, this.mainZ);
         } else {
             this.transform(stack, this.offX, this.offY, this.offZ);
         }
     }
 
-    public boolean shouldCancel(Hand hand) {
-        return hand == Hand.MAIN_HAND ? !this.renderMain.get() : !this.renderOff.get();
+    public boolean shouldCancel(InteractionHand hand) {
+        return hand == InteractionHand.MAIN_HAND ? !this.renderMain.get() : !this.renderOff.get();
     }
 
-    public void scaleAndRotate(MatrixStack stack, Hand hand) {
-        stack.push();
+    public void scaleAndRotate(PoseStack stack, InteractionHand hand) {
+        stack.pushPose();
         Setting<Double> scaleX;
         Setting<Double> scaleY;
         Setting<Double> scaleZ;
@@ -86,7 +86,7 @@ public class ViewModel extends Module {
         float rotationX;
         float rotationY;
         float rotationZ;
-        if (hand == Hand.MAIN_HAND) {
+        if (hand == InteractionHand.MAIN_HAND) {
             scaleX = this.mainScaleX;
             scaleY = this.mainScaleY;
             scaleZ = this.mainScaleZ;
@@ -148,26 +148,26 @@ public class ViewModel extends Module {
             rotationZ = this.offRotationZ;
         }
 
-        stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(rotX.get().floatValue() + rotationX));
-        stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotY.get().floatValue() + rotationY));
-        stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotZ.get().floatValue() + rotationZ));
+        stack.mulPose(Axis.XP.rotationDegrees(rotX.get().floatValue() + rotationX));
+        stack.mulPose(Axis.YP.rotationDegrees(rotY.get().floatValue() + rotationY));
+        stack.mulPose(Axis.ZP.rotationDegrees(rotZ.get().floatValue() + rotationZ));
         stack.translate(-0.5, -0.5, -0.5);
-        stack.push();
+        stack.pushPose();
         stack.translate(0.5, 0.5, 0.5);
         stack.scale(scaleX.get().floatValue(), scaleY.get().floatValue(), scaleZ.get().floatValue());
     }
 
-    public void post(MatrixStack stack) {
-        stack.pop();
+    public void post(PoseStack stack) {
+        stack.popPose();
     }
 
-    public void postRender(MatrixStack stack) {
-        stack.pop();
-        stack.pop();
+    public void postRender(PoseStack stack) {
+        stack.popPose();
+        stack.popPose();
     }
 
-    private void transform(MatrixStack stack, Setting<Double> x, Setting<Double> y, Setting<Double> z) {
-        stack.push();
+    private void transform(PoseStack stack, Setting<Double> x, Setting<Double> y, Setting<Double> z) {
+        stack.pushPose();
         stack.translate(x.get(), y.get(), -z.get());
     }
 }

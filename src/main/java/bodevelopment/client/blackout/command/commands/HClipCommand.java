@@ -16,8 +16,8 @@ public class HClipCommand extends Command {
         if (args.length > 0) {
             try {
                 double value = Double.parseDouble(args[0].replace(",", "."));
-                double yaw = Math.toRadians(BlackOut.mc.player.getYaw() + 90.0F);
-                BlackOut.mc.player.setPosition(
+                double yaw = Math.toRadians(BlackOut.mc.player.getYRot() + 90.0F);
+                BlackOut.mc.player.setPos(
                         BlackOut.mc.player.getX() + Math.cos(yaw) * value,
                         BlackOut.mc.player.getY(),
                         BlackOut.mc.player.getZ() + Math.sin(yaw) * value

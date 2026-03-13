@@ -8,17 +8,16 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
-import net.minecraft.screen.PlayerScreenHandler;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.screen.slot.SlotActionType;
-
 import java.util.List;
 import java.util.function.Predicate;
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 public class XCarry extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -37,19 +36,19 @@ public class XCarry extends Module {
 
     @Event
     public void onSend(PacketEvent.Send event) {
-        if (event.packet instanceof CloseHandledScreenC2SPacket packet && this.shouldCancel(packet)) {
+        if (event.packet instanceof ServerboundContainerClosePacket packet && this.shouldCancel(packet)) {
             event.setCancelled(true);
         }
     }
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null && BlackOut.mc.player.currentScreenHandler instanceof PlayerScreenHandler && this.fill.get()) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null && BlackOut.mc.player.containerMenu instanceof InventoryMenu && this.fill.get()) {
             Slot returnSlot = this.returnSlot();
             Slot emptySlot = this.emptySlot();
             if (returnSlot != null && emptySlot != null) {
                 if (this.delayCheck()) {
-                    this.clickSlot(returnSlot.id, 0, SlotActionType.QUICK_MOVE);
+                    this.clickSlot(returnSlot.index, 0, ClickType.QUICK_MOVE);
                     if (!this.anythingPicked()) {
                         this.closeInventory();
                     }
@@ -58,17 +57,17 @@ public class XCarry extends Module {
                 Slot craftSlot = this.craftSlot();
                 Slot fillSlot = this.fillSlot();
                 if (fillSlot != null && craftSlot != null && this.delayCheck()) {
-                    if (this.isPicked(stack -> stack.isOf(fillSlot.getStack().getItem()))) {
-                        this.clickSlot(craftSlot.id, 0, SlotActionType.PICKUP);
+                    if (this.isPicked(stack -> stack.is(fillSlot.getItem().getItem()))) {
+                        this.clickSlot(craftSlot.index, 0, ClickType.PICKUP);
                     } else {
-                        this.clickSlot(fillSlot.id, 0, SlotActionType.PICKUP);
-                        this.clickSlot(craftSlot.id, 0, SlotActionType.PICKUP);
+                        this.clickSlot(fillSlot.index, 0, ClickType.PICKUP);
+                        this.clickSlot(craftSlot.index, 0, ClickType.PICKUP);
                     }
 
                     if (this.anythingPicked()) {
                         Slot empty = this.emptySlot();
                         if (empty != null) {
-                            this.clickSlot(empty.id, 0, SlotActionType.PICKUP);
+                            this.clickSlot(empty.index, 0, ClickType.PICKUP);
                         }
                     }
 
@@ -78,18 +77,18 @@ public class XCarry extends Module {
         }
     }
 
-    private void clickSlot(int id, int button, SlotActionType actionType) {
-        ScreenHandler handler = BlackOut.mc.player.currentScreenHandler;
-        BlackOut.mc.interactionManager.clickSlot(handler.syncId, id, button, actionType, BlackOut.mc.player);
+    private void clickSlot(int id, int button, ClickType actionType) {
+        AbstractContainerMenu handler = BlackOut.mc.player.containerMenu;
+        BlackOut.mc.gameMode.handleInventoryMouseClick(handler.containerId, id, button, actionType, BlackOut.mc.player);
         this.prevMove = System.currentTimeMillis();
     }
 
     private boolean isPicked(Predicate<ItemStack> predicate) {
-        return predicate.test(BlackOut.mc.player.currentScreenHandler.getCursorStack());
+        return predicate.test(BlackOut.mc.player.containerMenu.getCarried());
     }
 
     private boolean anythingPicked() {
-        return !BlackOut.mc.player.currentScreenHandler.getCursorStack().isEmpty();
+        return !BlackOut.mc.player.containerMenu.getCarried().isEmpty();
     }
 
     private boolean delayCheck() {
@@ -98,8 +97,8 @@ public class XCarry extends Module {
 
     private Slot emptySlot() {
         for (int i = 9; i < 45; i++) {
-            Slot slot = BlackOut.mc.player.currentScreenHandler.getSlot(i);
-            if (slot.getStack().isEmpty()) {
+            Slot slot = BlackOut.mc.player.containerMenu.getSlot(i);
+            if (slot.getItem().isEmpty()) {
                 return slot;
             }
         }
@@ -109,8 +108,8 @@ public class XCarry extends Module {
 
     private Slot fillSlot() {
         for (int i = 9; i < 36; i++) {
-            Slot slot = BlackOut.mc.player.currentScreenHandler.getSlot(i);
-            ItemStack stack = slot.getStack();
+            Slot slot = BlackOut.mc.player.containerMenu.getSlot(i);
+            ItemStack stack = slot.getItem();
             if (!stack.isEmpty() && this.fillItems.get().contains(stack.getItem()) && this.stacksOf(stack.getItem()) > this.minStacks.get()) {
                 return slot;
             }
@@ -121,8 +120,8 @@ public class XCarry extends Module {
 
     private Slot craftSlot() {
         for (int i = 1; i < 5; i++) {
-            Slot slot = BlackOut.mc.player.currentScreenHandler.getSlot(i);
-            if (slot.getStack().isEmpty()) {
+            Slot slot = BlackOut.mc.player.containerMenu.getSlot(i);
+            if (slot.getItem().isEmpty()) {
                 return slot;
             }
         }
@@ -132,8 +131,8 @@ public class XCarry extends Module {
 
     private Slot returnSlot() {
         for (int i = 1; i < 5; i++) {
-            Slot slot = BlackOut.mc.player.currentScreenHandler.getSlot(i);
-            ItemStack stack = slot.getStack();
+            Slot slot = BlackOut.mc.player.containerMenu.getSlot(i);
+            ItemStack stack = slot.getItem();
             if (!stack.isEmpty() && this.fillItems.get().contains(stack.getItem()) && this.stacksOf(stack.getItem()) < this.minStacks.get()) {
                 return slot;
             }
@@ -146,7 +145,7 @@ public class XCarry extends Module {
         int stacks = 0;
 
         for (int i = 9; i < 45; i++) {
-            if (BlackOut.mc.player.currentScreenHandler.getSlot(i).getStack().isOf(item)) {
+            if (BlackOut.mc.player.containerMenu.getSlot(i).getItem().is(item)) {
                 stacks++;
             }
         }
@@ -154,7 +153,7 @@ public class XCarry extends Module {
         return stacks;
     }
 
-    private boolean shouldCancel(CloseHandledScreenC2SPacket packet) {
-        return !this.onlyInventory.get() || packet.getSyncId() == 0;
+    private boolean shouldCancel(ServerboundContainerClosePacket packet) {
+        return !this.onlyInventory.get() || packet.getContainerId() == 0;
     }
 }

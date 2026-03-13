@@ -17,13 +17,13 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.util.math.MathHelper;
 import org.apache.commons.lang3.mutable.MutableDouble;
 
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import net.minecraft.util.Mth;
 
 public class TabGui extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -59,8 +59,8 @@ public class TabGui extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            this.stack.push();
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            this.stack.pushPose();
             this.selectedParent = ParentCategory.categories.get(this.selectedParentId);
             this.selectedChild = this.getChild(this.selectedChildId);
             if (this.opened > -1) {
@@ -75,7 +75,7 @@ public class TabGui extends HudElement {
                 this.renderModules(180.0F, this.frameTime * 2.0F);
             }
 
-            this.stack.pop();
+            this.stack.popPose();
         }
     }
 
@@ -126,7 +126,7 @@ public class TabGui extends HudElement {
         this.moduleMap.forEach((module, d) -> {
             if (module.category == this.selectedChild) {
                 this.renderModule(module, d.getValue(), x);
-                d.setValue(MathHelper.clamp(d.getValue() + (module.enabled ? frameTime : -frameTime), 0.0, 1.0));
+                d.setValue(Mth.clamp(d.getValue() + (module.enabled ? frameTime : -frameTime), 0.0, 1.0));
                 this.i++;
                 this.progress = this.progress + (BlackOut.FONT.getHeight() + 10.0F);
             }

@@ -5,12 +5,11 @@ import bodevelopment.client.blackout.interfaces.mixin.IMinecraftClient;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.google.gson.JsonObject;
-import net.minecraft.client.session.Session;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.Uuids;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.UUID;
+import net.minecraft.client.User;
+import net.minecraft.core.UUIDUtil;
 
 public class Account {
     public static final float WIDTH = 500.0F;
@@ -23,29 +22,29 @@ public class Account {
     private String accessToken;
     private String xuid;
     private String clientId;
-    private Session.AccountType accountType;
+    private User.Type accountType;
 
     public Account(String script) {
         this.script = (script == null || script.isEmpty()) ? "NewAccount" : script;
         String parsed = AccountScriptReader.nameFromScript(this.script);
         this.name = (parsed == null || parsed.equals("null")) ? this.script : parsed;
 
-        this.uuid = Uuids.getOfflinePlayerUuid(this.name);
+        this.uuid = UUIDUtil.createOfflinePlayerUUID(this.name);
         this.accessToken = "";
         this.xuid = null;
         this.clientId = null;
 
-        this.accountType = Session.AccountType.LEGACY;
+        this.accountType = User.Type.LEGACY;
     }
 
-    public Account(Session session) {
-        this.name = session.getUsername();
-        this.script = session.getUsername();
-        this.uuid = session.getUuidOrNull();
+    public Account(User session) {
+        this.name = session.getName();
+        this.script = session.getName();
+        this.uuid = session.getProfileId();
         this.accessToken = session.getAccessToken();
         this.xuid = session.getXuid().orElse(null);
         this.clientId = session.getClientId().orElse(null);
-        this.accountType = session.getAccountType();
+        this.accountType = session.getType();
         this.progress = 1.0F;
     }
 
@@ -68,7 +67,7 @@ public class Account {
         }
     }
 
-    public Account(String name, String script, UUID uuid, String accessToken, String xuid, String clientId, Session.AccountType accountType) {
+    public Account(String name, String script, UUID uuid, String accessToken, String xuid, String clientId, User.Type accountType) {
         this.script = (script == null || script.isEmpty()) ? "NewAccount" : script;
         if (name != null && !name.isEmpty() && !name.equals("null")) {
             this.name = name;
@@ -76,7 +75,7 @@ public class Account {
             String parsedName = AccountScriptReader.nameFromScript(this.script);
             this.name = (parsedName == null || parsedName.isEmpty() || parsedName.equals("null")) ? this.script : parsedName;
         }
-        this.uuid = (uuid != null) ? uuid : Uuids.getOfflinePlayerUuid(this.name);
+        this.uuid = (uuid != null) ? uuid : UUIDUtil.createOfflinePlayerUUID(this.name);
 
         this.accessToken = accessToken;
         this.xuid = xuid;
@@ -112,8 +111,8 @@ public class Account {
         return AccountClickResult.Nothing;
     }
 
-    public void render(MatrixStack stack, float x, float y, float delta) {
-        stack.push();
+    public void render(PoseStack stack, float x, float y, float delta) {
+        stack.pushPose();
         stack.translate(x, y, 0.0F);
         this.updateProgress(delta * 2.0F);
 
@@ -178,7 +177,7 @@ public class Account {
         BlackOut.FONT.text(stack, shortUuid, 1.3F, WIDTH - 110.0F, HEIGHT - 22.0F, new Color(255, 255, 255, 35), false, false);
 
         this.pulse = Math.max(this.pulse - delta, 0.0F);
-        stack.pop();
+        stack.popPose();
     }
 
     private void updateProgress(float delta) {
@@ -191,12 +190,12 @@ public class Account {
 
     public void refresh() {
         this.name = AccountScriptReader.nameFromScript(this.script);
-        this.uuid = Uuids.getOfflinePlayerUuid(this.name);
+        this.uuid = UUIDUtil.createOfflinePlayerUUID(this.name);
         Managers.ALT.save();
         this.pulse = 1.0F;
     }
 
-    public void setAccess(Session session) {
+    public void setAccess(User session) {
         this.accessToken = session.getAccessToken();
         this.xuid = session.getXuid().orElse(null);
         this.clientId = session.getClientId().orElse(null);
@@ -207,13 +206,13 @@ public class Account {
         ((IMinecraftClient) BlackOut.mc).blackout_Client$setSession(this.name, this.uuid, this.accessToken, this.xuid, this.clientId, this.accountType);
     }
 
-    private Session.AccountType getAccountType(String from) {
+    private User.Type getAccountType(String from) {
         String sessionType = from.toLowerCase();
 
         return switch (sessionType) {
-            case "msa" -> Session.AccountType.MSA;
-            case "legacy" -> Session.AccountType.LEGACY;
-            case "mojang" -> Session.AccountType.MOJANG;
+            case "msa" -> User.Type.MSA;
+            case "legacy" -> User.Type.LEGACY;
+            case "mojang" -> User.Type.MOJANG;
             default ->
                     throw new IllegalStateException("Unexpected account type: " + from + " name: " + this.name + " script: " + this.script);
         };

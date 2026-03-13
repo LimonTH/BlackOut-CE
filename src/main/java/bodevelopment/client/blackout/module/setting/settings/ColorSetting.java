@@ -12,10 +12,9 @@ import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.minecraft.util.math.ColorHelper;
-import net.minecraft.util.math.MathHelper;
-
 import java.awt.*;
+import net.minecraft.util.ARGB;
+import net.minecraft.util.Mth;
 
 public class ColorSetting extends Setting<BlackOutColor> {
     public int theme = 0;
@@ -95,9 +94,9 @@ public class ColorSetting extends Setting<BlackOutColor> {
     }
 
     private BlackOutColor modifyTheme(int theme) {
-        float[] HSB = Color.RGBtoHSB(ColorHelper.getRed(theme), ColorHelper.getGreen(theme), ColorHelper.getBlue(theme), new float[3]);
-        HSB[1] = MathHelper.clamp(HSB[1] + this.saturation, 0.0F, 1.0F);
-        HSB[2] = MathHelper.clamp(HSB[2] + this.brightness, 0.0F, 1.0F);
+        float[] HSB = Color.RGBtoHSB(ARGB.red(theme), ARGB.green(theme), ARGB.blue(theme), new float[3]);
+        HSB[1] = Mth.clamp(HSB[1] + this.saturation, 0.0F, 1.0F);
+        HSB[2] = Mth.clamp(HSB[2] + this.brightness, 0.0F, 1.0F);
         return BlackOutColor.from(ColorUtils.withAlpha(Color.HSBtoRGB(HSB[0], HSB[1], HSB[2]), this.alpha));
     }
 
@@ -123,8 +122,8 @@ public class ColorSetting extends Setting<BlackOutColor> {
         } else {
             this.theme = Integer.parseInt(strings[0]);
             this.alpha = Integer.parseInt(strings[1]);
-            this.saturation = MathHelper.clamp(Float.parseFloat(strings[2]), -1.0F, 1.0F);
-            this.brightness = MathHelper.clamp(Float.parseFloat(strings[3]), -1.0F, 1.0F);
+            this.saturation = Mth.clamp(Float.parseFloat(strings[2]), -1.0F, 1.0F);
+            this.brightness = Mth.clamp(Float.parseFloat(strings[3]), -1.0F, 1.0F);
             this.actual = BlackOutColor.from(Integer.parseInt(strings[4]));
         }
     }

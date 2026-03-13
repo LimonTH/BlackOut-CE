@@ -10,18 +10,16 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.util.InvUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.EquippableComponent;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.ArmorItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.screen.slot.SlotActionType;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.equipment.Equippable;
 
 public class SmartMend extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -44,9 +42,9 @@ public class SmartMend extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             for (EquipmentSlot equipmentSlot : OLEPOSSUtils.equipmentSlots) {
-                if (BlackOut.mc.player.getInventory().getArmorStack(equipmentSlot.getEntitySlotId()).isEmpty()) {
+                if (BlackOut.mc.player.getInventory().getArmor(equipmentSlot.getIndex()).isEmpty()) {
                     this.wornSince.remove(equipmentSlot);
                 } else if (!this.wornSince.containsKey(equipmentSlot)) {
                     this.wornSince.put(equipmentSlot, System.currentTimeMillis());
@@ -72,7 +70,7 @@ public class SmartMend extends Module {
                 EquipmentSlot equipmentSlot = mended.getFirst();
                 if (!(System.currentTimeMillis() - this.prevMove < 1000.0 / this.moveSpeed.get())) {
                     if (!this.delays.contains(equipmentSlot)) {
-                        int slot = 8 - equipmentSlot.getEntitySlotId();
+                        int slot = 8 - equipmentSlot.getIndex();
                         if (!this.moveBack.contains(equipmentSlot)) {
                             this.moveBack.add(equipmentSlot);
                         }
@@ -107,7 +105,7 @@ public class SmartMend extends Module {
 
     private void move(EquipmentSlot equipmentSlot, int slot) {
         this.delays.add(equipmentSlot, 0.5);
-        InvUtils.interactHandler(slot, 0, SlotActionType.QUICK_MOVE);
+        InvUtils.interactHandler(slot, 0, ClickType.QUICK_MOVE);
         if (this.closeInv.get()) {
             this.closeInventory();
         }
@@ -116,11 +114,11 @@ public class SmartMend extends Module {
     private int getArmorSlot(EquipmentSlot equipmentSlot) {
         if (BlackOut.mc.player == null) return -1;
 
-        for (Slot slot : BlackOut.mc.player.currentScreenHandler.slots) {
-            ItemStack stack = slot.getStack();
-            EquippableComponent equippable = stack.get(DataComponentTypes.EQUIPPABLE);
+        for (Slot slot : BlackOut.mc.player.containerMenu.slots) {
+            ItemStack stack = slot.getItem();
+            Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
             if (equippable != null && equippable.slot() == equipmentSlot) {
-                return slot.id;
+                return slot.index;
             }
         }
 
@@ -131,9 +129,9 @@ public class SmartMend extends Module {
         List<EquipmentSlot> armor = new ArrayList<>();
 
         for (EquipmentSlot equipmentSlot : OLEPOSSUtils.equipmentSlots) {
-            ItemStack stack = BlackOut.mc.player.getInventory().getArmorStack(equipmentSlot.getEntitySlotId());
-            if (!stack.isEmpty() && stack.isDamageable()) {
-                double dur = (double) (stack.getMaxDamage() - stack.getDamage()) / stack.getMaxDamage() * 100.0;
+            ItemStack stack = BlackOut.mc.player.getInventory().getArmor(equipmentSlot.getIndex());
+            if (!stack.isEmpty() && stack.isDamageableItem()) {
+                double dur = (double) (stack.getMaxDamage() - stack.getDamageValue()) / stack.getMaxDamage() * 100.0;
                 if (dur >= this.antiWaste.get()) {
                     armor.add(equipmentSlot);
                 }

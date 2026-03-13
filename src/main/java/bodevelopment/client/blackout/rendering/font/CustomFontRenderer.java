@@ -11,8 +11,11 @@ import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.ColorUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.MatrixStack;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL13C;
 
@@ -64,53 +67,53 @@ public class CustomFontRenderer {
         return 8.0F;
     }
 
-    public void text(MatrixStack stack, String string, float s, float textX, float textY, Color color, boolean xCenter, boolean yCenter) {
+    public void text(PoseStack stack, String string, float s, float textX, float textY, Color color, boolean xCenter, boolean yCenter) {
         this.textInternal(stack, string, s, textX, textY, color.getRGB(), xCenter, yCenter, Shaders.font, new ShaderSetup());
     }
 
-    public void text(MatrixStack stack, String string, float s, float textX, float textY, int color, boolean xCenter, boolean yCenter) {
+    public void text(PoseStack stack, String string, float s, float textX, float textY, int color, boolean xCenter, boolean yCenter) {
         this.textInternal(stack, string, s, textX, textY, color, xCenter, yCenter, Shaders.font, new ShaderSetup());
     }
 
     public void text(
-            MatrixStack stack, String string, float s, float textX, float textY, Color color, boolean xCenter, boolean yCenter, Shader shader, ShaderSetup setup
+            PoseStack stack, String string, float s, float textX, float textY, Color color, boolean xCenter, boolean yCenter, Shader shader, ShaderSetup setup
     ) {
         this.textInternal(stack, string, s, textX, textY, color.getRGB(), xCenter, yCenter, shader, setup);
     }
 
     public void text(
-            MatrixStack stack, String string, float s, float textX, float textY, int color, boolean xCenter, boolean yCenter, Shader shader, ShaderSetup setup
+            PoseStack stack, String string, float s, float textX, float textY, int color, boolean xCenter, boolean yCenter, Shader shader, ShaderSetup setup
     ) {
         this.textInternal(stack, string, s, textX, textY, color, xCenter, yCenter, shader, setup);
     }
 
     private void textInternal(
-            MatrixStack stack, String string, float s, float textX, float textY, int color, boolean xCenter, boolean yCenter, Shader shader, ShaderSetup setup
+            PoseStack stack, String string, float s, float textX, float textY, int color, boolean xCenter, boolean yCenter, Shader shader, ShaderSetup setup
     ) {
-        stack.push();
+        stack.pushPose();
         float d = 8.0F / this.getScale();
         float ds = s / d;
         stack.scale(ds, ds, 1.0F);
         float x = (textX / s - (xCenter ? this.getWidth(string) / 2.0F : 0.0F)) * d;
         float y = (textY / s - (yCenter ? this.getHeight() / 2.0F : 0.0F)) * d;
         this.string(string, stack, x, y, color, shader, setup);
-        stack.pop();
+        stack.popPose();
     }
 
-    public void string(String string, MatrixStack stack, float x, float y, int color) {
+    public void string(String string, PoseStack stack, float x, float y, int color) {
         this.renderString(string, stack, x, y, color, Shaders.font, new ShaderSetup());
     }
 
-    public void string(String string, MatrixStack stack, float x, float y, int color, Shader shader, ShaderSetup setup) {
+    public void string(String string, PoseStack stack, float x, float y, int color, Shader shader, ShaderSetup setup) {
         this.renderString(string, stack, x, y, color, shader, setup);
     }
 
-    private void renderString(String string, MatrixStack stack, float x, float y, int color, Shader shader, ShaderSetup setup) {
+    private void renderString(String string, PoseStack stack, float x, float y, int color, Shader shader, ShaderSetup setup) {
         this.innerRenderString(string, stack, x, y, ColorUtils.withAlpha(0, (int) ((color >>> 24) * 100.0F / 255.0F)), Shaders.fontshadow, setup);
         this.innerRenderString(string, stack, x, y, color, shader, setup);
     }
 
-    private void innerRenderString(String string, MatrixStack stack, float x, float y, int color, Shader shader, ShaderSetup setup) {
+    private void innerRenderString(String string, PoseStack stack, float x, float y, int color, Shader shader, ShaderSetup setup) {
         this.renderString(string, stack, x, y, shader, setup.append(s -> {
             if (shader == Shaders.fontshadow) {
                 s.set("alphaMulti", (color >>> 24) / 255.0F);
@@ -123,18 +126,18 @@ public class CustomFontRenderer {
         }));
     }
 
-    private void renderString(String string, MatrixStack stack, float x, float y, Shader shader, ShaderSetup setup) {
+    private void renderString(String string, PoseStack stack, float x, float y, Shader shader, ShaderSetup setup) {
         Streamer streamer = Streamer.getInstance();
         if (streamer.enabled) {
             string = streamer.replace(string);
         }
 
-        Matrix4f matrix4f = stack.peek().getPositionMatrix();
+        Matrix4f matrix4f = stack.last().pose();
         y = (float) (y - (this.selectedFont.getFontSize() * 0.4 - this.offset));
         RenderSystem.enableBlend();
         GL13C.glActiveTexture(33984);
         GL13C.glBindTexture(3553, this.selectedFont.getId());
-        BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
 
         for (int i = 0; i < string.length(); i++) {
             char ch = string.charAt(i);
@@ -142,17 +145,17 @@ public class CustomFontRenderer {
         }
 
         shader.render(bufferBuilder, setup);
-        GL13C.glBindTexture(3553, GlStateManager.TEXTURES[0].boundTexture);
+        GL13C.glBindTexture(3553, GlStateManager.TEXTURES[0].binding);
         GL13C.glActiveTexture(33984 | GlStateManager.activeTexture);
         RenderSystem.disableBlend();
     }
 
     private float renderChar(BufferBuilder bufferBuilder, Matrix4f matrix4f, CharInfo charInfo, float x, float y) {
-        bufferBuilder.vertex(matrix4f, x + charInfo.width, y, 0.0F).texture(charInfo.tx + charInfo.tw, charInfo.ty - charInfo.th);
-        bufferBuilder.vertex(matrix4f, x, y, 0.0F).texture(charInfo.tx, charInfo.ty - charInfo.th);
-        bufferBuilder.vertex(matrix4f, x, y + charInfo.height * 1.5F, 0.0F).texture(charInfo.tx, charInfo.ty + charInfo.th * 0.5F);
-        bufferBuilder.vertex(matrix4f, x + charInfo.width, y + charInfo.height * 1.5F, 0.0F)
-                .texture(charInfo.tx + charInfo.tw, charInfo.ty + charInfo.th * 0.5F);
+        bufferBuilder.addVertex(matrix4f, x + charInfo.width, y, 0.0F).setUv(charInfo.tx + charInfo.tw, charInfo.ty - charInfo.th);
+        bufferBuilder.addVertex(matrix4f, x, y, 0.0F).setUv(charInfo.tx, charInfo.ty - charInfo.th);
+        bufferBuilder.addVertex(matrix4f, x, y + charInfo.height * 1.5F, 0.0F).setUv(charInfo.tx, charInfo.ty + charInfo.th * 0.5F);
+        bufferBuilder.addVertex(matrix4f, x + charInfo.width, y + charInfo.height * 1.5F, 0.0F)
+                .setUv(charInfo.tx + charInfo.tw, charInfo.ty + charInfo.th * 0.5F);
         return charInfo.width;
     }
 }

@@ -3,7 +3,7 @@ package bodevelopment.client.blackout.randomstuff;
 
 import java.util.Objects;
 
-public class Pair<A, B> extends net.minecraft.util.Pair<A, B> {
+public class Pair<A, B> extends net.minecraft.util.Tuple<A, B> {
     public Pair(A left, B right) {
         super(left, right);
     }
@@ -13,12 +13,12 @@ public class Pair<A, B> extends net.minecraft.util.Pair<A, B> {
         if (obj == this) {
             return true;
         } else {
-            return obj instanceof Pair<?, ?> pair && Objects.equals(this.getLeft(), pair.getLeft()) && Objects.equals(this.getRight(), pair.getRight());
+            return obj instanceof Pair<?, ?> pair && Objects.equals(this.getA(), pair.getA()) && Objects.equals(this.getB(), pair.getB());
         }
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.getLeft(), this.getRight());
+        return Objects.hash(this.getA(), this.getB());
     }
 }

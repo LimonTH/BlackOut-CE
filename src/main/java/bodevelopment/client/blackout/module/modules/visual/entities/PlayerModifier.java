@@ -7,9 +7,9 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.timers.TimerMap;
 import bodevelopment.client.blackout.util.RotationUtils;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 
 public class PlayerModifier extends Module {
     private static PlayerModifier INSTANCE;
@@ -23,7 +23,7 @@ public class PlayerModifier extends Module {
     public final Setting<Boolean> noAnimations = this.sgGeneral.booleanSetting("Disable Animations", true, "Prevents the rendering of limb movements, resulting in a static model pose.");
     public final Setting<Boolean> noSwing = this.sgGeneral.booleanSetting("Suppress Swing", true, "Disables the hand-swing animation when using items or attacking.");
 
-    private final TimerMap<PlayerEntity, Float> leaningMap = new TimerMap<>(true);
+    private final TimerMap<Player, Float> leaningMap = new TimerMap<>(true);
 
     public PlayerModifier() {
         super("Player Modifier", "Manipulates the visual state and procedural animations of player entities for aesthetic or tactical purposes.", SubCategory.ENTITIES, false);
@@ -34,29 +34,29 @@ public class PlayerModifier extends Module {
         return INSTANCE;
     }
 
-    public float getLeaning(PlayerEntity player) {
+    public float getLeaning(Player player) {
         float current = this.getLeaningValue(player);
         if (!this.leaningMap.containsKey(player)) {
             this.leaningMap.add(player, current, 1.0);
             return current;
         } else {
             double prev = this.leaningMap.get(player);
-            float newLeaning = MathHelper.clamp(
-                    (float) MathHelper.lerp(MathHelper.clamp(BlackOut.mc.getRenderTickCounter().getLastFrameDuration() / 10.0F, 0.0F, 1.0F), prev, current), 0.0F, 1.0F
+            float newLeaning = Mth.clamp(
+                    (float) Mth.lerp(Mth.clamp(BlackOut.mc.getDeltaTracker().getGameTimeDeltaTicks() / 10.0F, 0.0F, 1.0F), prev, current), 0.0F, 1.0F
             );
             this.leaningMap.add(player, newLeaning, 1.0);
             return newLeaning;
         }
     }
 
-    private float getLeaningValue(PlayerEntity player) {
+    private float getLeaningValue(Player player) {
         if (!this.moveLeaning.get()) {
             return this.leaning.get().floatValue();
         } else {
-            double yaw = RotationUtils.getYaw(Vec3d.ZERO, player.getVelocity(), 0.0);
-            double yawAngle = Math.abs(RotationUtils.yawAngle(yaw, player.getYaw()));
-            float yawRatio = (float) MathHelper.clamp(MathHelper.getLerpProgress(yawAngle, 90.0, 0.0), 0.0, 1.0);
-            float velRatio = (float) MathHelper.clamp(player.getVelocity().horizontalLength() / 0.25, 0.0, 1.0);
+            double yaw = RotationUtils.getYaw(Vec3.ZERO, player.getDeltaMovement(), 0.0);
+            double yawAngle = Math.abs(RotationUtils.yawAngle(yaw, player.getYRot()));
+            float yawRatio = (float) Mth.clamp(Mth.inverseLerp(yawAngle, 90.0, 0.0), 0.0, 1.0);
+            float velRatio = (float) Mth.clamp(player.getDeltaMovement().horizontalDistance() / 0.25, 0.0, 1.0);
             return this.leaning.get().floatValue() * yawRatio * velRatio;
         }
     }

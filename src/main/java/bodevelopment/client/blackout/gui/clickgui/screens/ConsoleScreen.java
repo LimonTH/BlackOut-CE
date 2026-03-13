@@ -9,12 +9,11 @@ import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.util.Formatting;
-
 import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.ChatFormatting;
 
 public class ConsoleScreen extends ClickGuiScreen {
     private static final int LINE_COLOR = new Color(50, 50, 50, 255).getRGB();
@@ -41,10 +40,10 @@ public class ConsoleScreen extends ClickGuiScreen {
     public void render() {
         RenderUtils.rounded(this.stack, 0, 0, width, height - 40.0F, 10, 10, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
 
-        this.stack.push();
+        this.stack.pushPose();
         this.stack.translate(20.0F, 10.0F - this.scroll.get(), 0.0F);
         this.renderLines();
-        this.stack.pop();
+        this.stack.popPose();
 
         this.renderBottomBG();
         this.renderBottom();
@@ -114,7 +113,7 @@ public class ConsoleScreen extends ClickGuiScreen {
     }
 
     private int renderLine(String line, int color) {
-        this.stack.push();
+        this.stack.pushPose();
         float xOffset = 0.0F;
         int currentClr = color;
 
@@ -122,8 +121,8 @@ public class ConsoleScreen extends ClickGuiScreen {
             String text;
             if (part.startsWith("§") && part.length() >= 2) {
                 text = part.substring(2);
-                Formatting formatting = Formatting.byCode(part.charAt(1));
-                currentClr = (formatting != null) ? formatting.getColorValue() | 0xFF000000 : color;
+                ChatFormatting formatting = ChatFormatting.getByCode(part.charAt(1));
+                currentClr = (formatting != null) ? formatting.getColor() | 0xFF000000 : color;
             } else {
                 text = part;
                 currentClr = color;
@@ -133,7 +132,7 @@ public class ConsoleScreen extends ClickGuiScreen {
             xOffset += BlackOut.FONT.getWidth(text) * 2.0F;
         }
 
-        this.stack.pop();
+        this.stack.popPose();
         return currentClr;
     }
 

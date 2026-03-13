@@ -13,10 +13,9 @@ import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.GuiRenderUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.MathHelper;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
+import net.minecraft.util.Mth;
 
 public class CategoryComponent extends Component {
     public final SubCategory category;
@@ -25,7 +24,7 @@ public class CategoryComponent extends Component {
 
     private final float EXPANSION_AMOUNT = 8.0f;
 
-    public CategoryComponent(MatrixStack stack, SubCategory category) {
+    public CategoryComponent(PoseStack stack, SubCategory category) {
         super(stack);
         this.category = category;
     }
@@ -39,8 +38,8 @@ public class CategoryComponent extends Component {
         float targetOffset = active ? 6f : (hovered ? 3f : 0f);
 
         float speed = frameTime * 15f;
-        animation = MathHelper.stepTowards(animation, targetAnim, speed);
-        textOffset = MathHelper.stepTowards(textOffset, targetOffset, speed);
+        animation = Mth.approach(animation, targetAnim, speed);
+        textOffset = Mth.approach(textOffset, targetOffset, speed);
 
         float fontScale = GuiSettings.getInstance().fontScale.get().floatValue();
         float categoryScale = fontScale * 2.0F;

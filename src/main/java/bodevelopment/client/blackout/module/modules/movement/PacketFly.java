@@ -12,15 +12,14 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.MovementUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.entity.EntityPose;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class PacketFly extends Module {
     private static PacketFly INSTANCE;
@@ -64,14 +63,14 @@ public class PacketFly extends Module {
     private final Setting<Boolean> sneakPhase = this.sgPhase.booleanSetting("Auto Sneak-Phase", true, "Automatically manipulates the sneaking state to facilitate block penetration.");
 
     private final ThreadLocalRandom random = ThreadLocalRandom.current();
-    private final List<PlayerMoveC2SPacket> validPackets = new ArrayList<>();
+    private final List<ServerboundMovePlayerPacket> validPackets = new ArrayList<>();
     public boolean moving = false;
     private int ticks = 0;
     private int sent = 0;
     private int rur = 0;
     private double packetsToSend = 0.0;
     private String info = null;
-    private Vec3d offset = Vec3d.ZERO;
+    private Vec3 offset = Vec3.ZERO;
     private boolean sneaked = false;
 
     public PacketFly() {
@@ -107,21 +106,21 @@ public class PacketFly extends Module {
 
     @Override
     public void onDisable() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null && this.resync.get()) {
-            Vec3d pos = Managers.PACKET.pos;
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null && this.resync.get()) {
+            Vec3 pos = Managers.PACKET.pos;
             this.sendPacket(
-                    new PlayerMoveC2SPacket.Full(pos.x, pos.y + 1.0, pos.z, Managers.ROTATION.prevYaw + 5.0F, Managers.ROTATION.prevPitch, false, BlackOut.mc.player.horizontalCollision)
+                    new ServerboundMovePlayerPacket.PosRot(pos.x, pos.y + 1.0, pos.z, Managers.ROTATION.prevYaw + 5.0F, Managers.ROTATION.prevPitch, false, BlackOut.mc.player.horizontalCollision)
             );
         }
     }
 
     @Event
     public void onMove(MoveEvent.Pre e) {
-        if (this.enabled && BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (this.enabled && BlackOut.mc.player != null && BlackOut.mc.level != null) {
             boolean phasing = this.isPhasing();
             boolean semiPhasing = this.isSemiPhase();
             if (this.noClip.get()) {
-                BlackOut.mc.player.noClip = true;
+                BlackOut.mc.player.noPhysics = true;
             }
 
             this.packetsToSend = this.packetsToSend + this.packets(semiPhasing);
@@ -160,7 +159,7 @@ public class PacketFly extends Module {
                 }
             }
 
-            this.offset = new Vec3d(0.0, 0.0, 0.0);
+            this.offset = new Vec3(0.0, 0.0, 0.0);
             boolean antiKickSent = false;
 
             while (this.packetsToSend > 0.0) {
@@ -174,7 +173,7 @@ public class PacketFly extends Module {
                 }
 
                 this.offset = this.offset.add(x, yOffset, z);
-                this.send(this.offset.add(BlackOut.mc.player.getPos()), this.getBounds(), this.getOnGround(), semiPhasing);
+                this.send(this.offset.add(BlackOut.mc.player.position()), this.getBounds(), this.getOnGround(), semiPhasing);
                 this.packetsToSend--;
                 if (x == 0.0 && z == 0.0 && y == 0.0) {
                     break;
@@ -196,7 +195,7 @@ public class PacketFly extends Module {
     @Event
     public void onSend(PacketEvent.Send event) {
         if (this.enabled) {
-            if (event.packet instanceof PlayerMoveC2SPacket) {
+            if (event.packet instanceof ServerboundMovePlayerPacket) {
                 if (!this.validPackets.contains(event.packet)) {
                     event.setCancelled(true);
                 } else {
@@ -216,12 +215,12 @@ public class PacketFly extends Module {
                     this.endSneak();
                 }
             } else {
-                Box standBox = this.boxFor(EntityPose.STANDING, BlackOut.mc.player.getPos())
-                        .contract(0.0625, 0.0625, 0.0625)
-                        .offset(0.0, this.offset.y * 2.0, 0.0);
-                Box movedBox = this.boxFor(EntityPose.STANDING, BlackOut.mc.player.getPos())
-                        .contract(0.0625, 0.0, 0.0625)
-                        .offset(0.0, this.offset.y * 3.0, 0.0);
+                AABB standBox = this.boxFor(Pose.STANDING, BlackOut.mc.player.position())
+                        .deflate(0.0625, 0.0625, 0.0625)
+                        .move(0.0, this.offset.y * 2.0, 0.0);
+                AABB movedBox = this.boxFor(Pose.STANDING, BlackOut.mc.player.position())
+                        .deflate(0.0625, 0.0, 0.0625)
+                        .move(0.0, this.offset.y * 3.0, 0.0);
                 boolean standIn = this.in(standBox);
                 boolean movedIn = this.in(movedBox);
                 if (this.sneaking()) {
@@ -235,23 +234,23 @@ public class PacketFly extends Module {
         }
     }
 
-    private Box boxFor(EntityPose pose, Vec3d vec3d) {
-        return PlayerEntity.POSE_DIMENSIONS.getOrDefault(pose, PlayerEntity.STANDING_DIMENSIONS).getBoxAt(vec3d);
+    private AABB boxFor(Pose pose, Vec3 vec3d) {
+        return Player.POSES.getOrDefault(pose, Player.STANDING_DIMENSIONS).makeBoundingBox(vec3d);
     }
 
-    private boolean in(Box box) {
+    private boolean in(AABB box) {
         return OLEPOSSUtils.inside(BlackOut.mc.player, box);
     }
 
     private void startSneak() {
         this.sneaked = true;
-        BlackOut.mc.player.setSneaking(true);
-        BlackOut.mc.options.sneakKey.setPressed(true);
+        BlackOut.mc.player.setShiftKeyDown(true);
+        BlackOut.mc.options.keyShift.setDown(true);
     }
 
     private void endSneak() {
-        BlackOut.mc.player.setSneaking(false);
-        BlackOut.mc.options.sneakKey.setPressed(false);
+        BlackOut.mc.player.setShiftKeyDown(false);
+        BlackOut.mc.options.keyShift.setDown(false);
     }
 
     @Override
@@ -260,16 +259,16 @@ public class PacketFly extends Module {
     }
 
     private boolean onGround() {
-        return BlackOut.mc.player.isOnGround()
+        return BlackOut.mc.player.onGround()
                 || BlackOut.mc.player.getBlockY() - BlackOut.mc.player.getY() == 0.0
-                && OLEPOSSUtils.collidable(BlackOut.mc.player.getBlockPos().down());
+                && OLEPOSSUtils.collidable(BlackOut.mc.player.blockPosition().below());
     }
 
     private double packets(boolean semiPhasing) {
         return (semiPhasing ? this.phasePackets : this.packets).get();
     }
 
-    private Vec3d getBounds() {
+    private Vec3 getBounds() {
         double yaw = this.random.nextDouble(0.0, Math.PI * 2);
         double x = 0.0;
         double y = 0.0;
@@ -296,32 +295,32 @@ public class PacketFly extends Module {
                 }
         }
 
-        return new Vec3d(x, y, z);
+        return new Vec3(x, y, z);
     }
 
     private boolean getOnGround() {
-        return this.onGroundSpoof.get() ? this.onGround.get() : BlackOut.mc.player.isOnGround();
+        return this.onGroundSpoof.get() ? this.onGround.get() : BlackOut.mc.player.onGround();
     }
 
     private boolean isPhasing() {
-        return OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().contract(0.0625, 0.0, 0.0625));
+        return OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().deflate(0.0625, 0.0, 0.0625));
     }
 
     private boolean isSemiPhase() {
-        return OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().expand(0.01, 0.0, 0.01));
+        return OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().inflate(0.01, 0.0, 0.01));
     }
 
     private boolean jumping() {
-        return BlackOut.mc.options.jumpKey.isPressed();
+        return BlackOut.mc.options.keyJump.isDown();
     }
 
     private boolean sneaking() {
-        return BlackOut.mc.options.sneakKey.isPressed();
+        return BlackOut.mc.options.keyShift.isDown();
     }
 
-    private void send(Vec3d pos, Vec3d bounds, boolean onGround, boolean phasing) {
-        PlayerMoveC2SPacket normal = this.getPacket(pos, onGround, phasing);
-        PlayerMoveC2SPacket.PositionAndOnGround bound = new PlayerMoveC2SPacket.PositionAndOnGround(bounds.x, bounds.y, bounds.z, onGround, BlackOut.mc.player.horizontalCollision);
+    private void send(Vec3 pos, Vec3 bounds, boolean onGround, boolean phasing) {
+        ServerboundMovePlayerPacket normal = this.getPacket(pos, onGround, phasing);
+        ServerboundMovePlayerPacket.Pos bound = new ServerboundMovePlayerPacket.Pos(bounds.x, bounds.y, bounds.z, onGround, BlackOut.mc.player.horizontalCollision);
         this.validPackets.add(normal);
         this.sendPacket(normal);
         this.validPackets.add(bound);
@@ -332,7 +331,7 @@ public class PacketFly extends Module {
         }
     }
 
-    private PlayerMoveC2SPacket getPacket(Vec3d pos, boolean onGround, boolean phasing) {
+    private ServerboundMovePlayerPacket getPacket(Vec3 pos, boolean onGround, boolean phasing) {
         if (!this.shouldRotate(phasing ? this.phaseRotate : this.flyRotate, phasing ? this.stillPhaseRotate : this.stillFlyRotate)) {
             return this.onlyMove(pos, onGround);
         } else {
@@ -342,7 +341,7 @@ public class PacketFly extends Module {
             } else {
                 float yaw = Managers.ROTATION.nextYaw;
                 float pitch = Managers.ROTATION.nextPitch;
-                return new PlayerMoveC2SPacket.Full(pos.x, pos.y, pos.z, yaw, pitch, onGround, BlackOut.mc.player.horizontalCollision);
+                return new ServerboundMovePlayerPacket.PosRot(pos.x, pos.y, pos.z, yaw, pitch, onGround, BlackOut.mc.player.horizontalCollision);
             }
         }
     }
@@ -351,14 +350,14 @@ public class PacketFly extends Module {
         return rot.get() && (!still.get() || this.offset.length() < 0.01);
     }
 
-    private PlayerMoveC2SPacket.PositionAndOnGround onlyMove(Vec3d vec3d, boolean ong) {
-        return new PlayerMoveC2SPacket.PositionAndOnGround(vec3d.x, vec3d.y, vec3d.z, ong, BlackOut.mc.player.horizontalCollision);
+    private ServerboundMovePlayerPacket.Pos onlyMove(Vec3 vec3d, boolean ong) {
+        return new ServerboundMovePlayerPacket.Pos(vec3d.x, vec3d.y, vec3d.z, ong, BlackOut.mc.player.horizontalCollision);
     }
 
     private double getYaw() {
-        double f = BlackOut.mc.player.input.movementForward;
-        double s = BlackOut.mc.player.input.movementSideways;
-        double yaw = BlackOut.mc.player.getYaw();
+        double f = BlackOut.mc.player.input.forwardImpulse;
+        double s = BlackOut.mc.player.input.leftImpulse;
+        double yaw = BlackOut.mc.player.getYRot();
         if (f > 0.0) {
             this.moving = true;
             yaw += s > 0.0 ? -45.0 : (s < 0.0 ? 45.0 : 0.0);

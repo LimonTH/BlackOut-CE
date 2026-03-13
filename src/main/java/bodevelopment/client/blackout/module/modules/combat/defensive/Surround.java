@@ -8,11 +8,14 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.entity.Entity;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.math.*;
-
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,7 +44,7 @@ public class Surround extends ObsidianModule {
     private final Setting<Boolean> antiCev = this.sgAttack.booleanSetting("Anti CEV", false,
             "Predictively attacks crystals placed above your surround blocks to prevent Cev-Breaker attacks.", this.attack::get);
 
-    private final Map<AbstractClientPlayerEntity, Long> blockedSince = new HashMap<>();
+    private final Map<AbstractClientPlayer, Long> blockedSince = new HashMap<>();
     private final Direction[] directions = new Direction[]{
             Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST, Direction.DOWN
     };
@@ -80,7 +83,7 @@ public class Surround extends ObsidianModule {
     protected boolean validForBlocking(Entity entity) {
         if (this.antiCev.get()) {
             for (BlockPos pos : this.blockPlacements) {
-                if (entity.getBlockPos().equals(pos.up())) {
+                if (entity.blockPosition().equals(pos.above())) {
                     return true;
                 }
             }
@@ -101,8 +104,8 @@ public class Surround extends ObsidianModule {
         this.addPlacements();
         if (this.extend.get()) {
             BlackOut.mc
-                    .world
-                    .getPlayers()
+                    .level
+                    .players()
                     .stream()
                     .filter(player -> BlackOut.mc.player.distanceTo(player) < 5.0F && player != BlackOut.mc.player)
                     .sorted(Comparator.comparingDouble(player -> BlackOut.mc.player.distanceTo(player)))
@@ -124,8 +127,8 @@ public class Surround extends ObsidianModule {
     protected void addPlacements() {
         this.insideBlocks.forEach(pos -> {
             for (Direction dir : this.directions) {
-                if (!this.blockPlacements.contains(pos.offset(dir)) && !this.insideBlocks.contains(pos.offset(dir))) {
-                    this.blockPlacements.add(pos.offset(dir));
+                if (!this.blockPlacements.contains(pos.relative(dir)) && !this.insideBlocks.contains(pos.relative(dir))) {
+                    this.blockPlacements.add(pos.relative(dir));
                 }
             }
         });
@@ -133,14 +136,14 @@ public class Surround extends ObsidianModule {
 
     @Override
     protected void addBlocks(Entity entity, int[] size) {
-        BlockPos pos = entity.getBlockPos();
+        BlockPos pos = entity.blockPosition();
 
         for (int x = size[0]; x <= size[1]; x++) {
             for (int z = size[2]; z <= size[3]; z++) {
-                BlockPos p = pos.add(x, 0, z);
-                if ((!(BlackOut.mc.world.getBlockState(p).getBlock().getBlastResistance() > 600.0F) || p.equals(this.currentPos))
-                        && !this.insideBlocks.contains(p.withY(this.currentPos.getY()))) {
-                    this.insideBlocks.add(p.withY(this.currentPos.getY()));
+                BlockPos p = pos.offset(x, 0, z);
+                if ((!(BlackOut.mc.level.getBlockState(p).getBlock().getExplosionResistance() > 600.0F) || p.equals(this.currentPos))
+                        && !this.insideBlocks.contains(p.atY(this.currentPos.getY()))) {
+                    this.insideBlocks.add(p.atY(this.currentPos.getY()));
                 }
             }
         }
@@ -149,15 +152,15 @@ public class Surround extends ObsidianModule {
     private void setBB() {
         if (!this.centered
                 && this.center.get()
-                && BlackOut.mc.player.isOnGround()
-                && (!this.phaseCenter.get() || !OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().contract(0.01, 0.01, 0.01)))) {
+                && BlackOut.mc.player.onGround()
+                && (!this.phaseCenter.get() || !OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().deflate(0.01, 0.01, 0.01)))) {
             double targetX;
             double targetZ;
             if (this.smartCenter.get()) {
-                targetX = MathHelper.clamp(
+                targetX = Mth.clamp(
                         BlackOut.mc.player.getX(), this.currentPos.getX() + 0.31, this.currentPos.getX() + 0.69
                 );
-                targetZ = MathHelper.clamp(
+                targetZ = Mth.clamp(
                         BlackOut.mc.player.getZ(), this.currentPos.getZ() + 0.31, this.currentPos.getZ() + 0.69
                 );
             } else {
@@ -165,27 +168,27 @@ public class Surround extends ObsidianModule {
                 targetZ = this.currentPos.getZ() + 0.5;
             }
 
-            double dist = new Vec3d(targetX, 0.0, targetZ)
-                    .distanceTo(new Vec3d(BlackOut.mc.player.getX(), 0.0, BlackOut.mc.player.getZ()));
+            double dist = new Vec3(targetX, 0.0, targetZ)
+                    .distanceTo(new Vec3(BlackOut.mc.player.getX(), 0.0, BlackOut.mc.player.getZ()));
             if (dist < 0.2873) {
-                this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(targetX, BlackOut.mc.player.getY(), targetZ, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
+                this.sendPacket(new ServerboundMovePlayerPacket.Pos(targetX, BlackOut.mc.player.getY(), targetZ, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
             }
 
             double x = BlackOut.mc.player.getX();
             double z = BlackOut.mc.player.getZ();
 
             for (int i = 0; i < Math.ceil(dist / 0.2873); i++) {
-                double yaw = RotationUtils.getYaw(BlackOut.mc.player.getEyePos(), new Vec3d(targetX, 0.0, targetZ), 0.0) + 90.0;
+                double yaw = RotationUtils.getYaw(BlackOut.mc.player.getEyePosition(), new Vec3(targetX, 0.0, targetZ), 0.0) + 90.0;
                 x += Math.cos(Math.toRadians(yaw)) * 0.2873;
                 z += Math.sin(Math.toRadians(yaw)) * 0.2873;
-                this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(x, BlackOut.mc.player.getY(), z, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
+                this.sendPacket(new ServerboundMovePlayerPacket.Pos(x, BlackOut.mc.player.getY(), z, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
             }
 
-            BlackOut.mc.player.setPos(targetX, BlackOut.mc.player.getY(), targetZ);
+            BlackOut.mc.player.setPosRaw(targetX, BlackOut.mc.player.getY(), targetZ);
             BlackOut.mc
                     .player
                     .setBoundingBox(
-                            new Box(
+                            new AABB(
                                     targetX - 0.3,
                                     BlackOut.mc.player.getY(),
                                     targetZ - 0.3,

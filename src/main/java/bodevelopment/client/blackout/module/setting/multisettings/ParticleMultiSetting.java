@@ -5,17 +5,16 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
+import net.minecraft.world.phys.Vec3;
 
 public class ParticleMultiSetting {
-    private static final Function<Double, Vec3d> randomMotion = speed -> {
+    private static final Function<Double, Vec3> randomMotion = speed -> {
         double yaw = ThreadLocalRandom.current().nextDouble() * 2.0 * Math.PI;
         double pitch = ThreadLocalRandom.current().nextDouble() * 2.0 * Math.PI;
         double c = Math.abs(Math.cos(pitch));
-        return new Vec3d(speed * Math.cos(yaw) * c, speed * -Math.sin(pitch), speed * Math.sin(yaw) * c);
+        return new Vec3(speed * Math.cos(yaw) * c, speed * -Math.sin(pitch), speed * Math.sin(yaw) * c);
     };
     public final Setting<ParticleMode> mode;
     public final Setting<Integer> particles;
@@ -62,17 +61,17 @@ public class ParticleMultiSetting {
         return new ParticleMultiSetting(sg, name, visible);
     }
 
-    public void spawnParticles(Vec3d vec) {
+    public void spawnParticles(Vec3 vec) {
         this.spawnParticles(vec, randomMotion);
     }
 
-    public void spawnParticles(Vec3d vec, Function<Double, Vec3d> getMotion) {
+    public void spawnParticles(Vec3 vec, Function<Double, Vec3> getMotion) {
         for (int i = 0; i < this.particles.get(); i++) {
             this.spawnParticle(vec, getMotion.apply(this.velocity.get() * (0.75 + ThreadLocalRandom.current().nextDouble() * 0.25)));
         }
     }
 
-    private void spawnParticle(Vec3d vec, Vec3d motion) {
+    private void spawnParticle(Vec3 vec, Vec3 motion) {
         switch (this.mode.get()) {
             case Normal:
                 Managers.PARTICLE.addFriction(vec, motion, this.friction.get(), this.time.get(), this.color.get().getRGB(), this.shadowColor.get().getRGB());

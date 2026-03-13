@@ -12,9 +12,9 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.MovementPrediction;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.phys.Vec3;
 
 public class PhaseWalk extends Module {
     private static PhaseWalk INSTANCE;
@@ -63,19 +63,19 @@ public class PhaseWalk extends Module {
             Timer.reset();
         }
 
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null && this.prevActive && this.resync.get()) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null && this.prevActive && this.resync.get()) {
             this.timerLeft = 0;
             this.sincePhase = 0;
-            Vec3d pos = Managers.PACKET.pos;
+            Vec3 pos = Managers.PACKET.pos;
             this.sendPacket(
-                    new PlayerMoveC2SPacket.Full(pos.x, pos.y + 1.0, pos.z, Managers.ROTATION.prevYaw + 5.0F, Managers.ROTATION.prevPitch, false, BlackOut.mc.player.horizontalCollision)
+                    new ServerboundMovePlayerPacket.PosRot(pos.x, pos.y + 1.0, pos.z, Managers.ROTATION.prevYaw + 5.0F, Managers.ROTATION.prevPitch, false, BlackOut.mc.player.horizontalCollision)
             );
         }
     }
 
     @Event
     public void onSent(PacketEvent.Sent event) {
-        if (event.packet instanceof PlayerMoveC2SPacket packet && packet.changesLook() && !this.ignore) {
+        if (event.packet instanceof ServerboundMovePlayerPacket packet && packet.hasRotation() && !this.ignore) {
             this.sinceRotation = 0;
         }
     }
@@ -103,14 +103,14 @@ public class PhaseWalk extends Module {
         this.sinceRotation++;
         if (!PacketFly.getInstance().enabled) {
             this.waitingForPhase = false;
-            boolean phasing = OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().contract(0.0625));
+            boolean phasing = OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().deflate(0.0625));
             if (!phasing) {
                 if (this.prevActive && this.rubberbanded && this.resync.get()) {
                     this.timerLeft = 0;
                     this.sincePhase = 0;
-                    Vec3d pos = Managers.PACKET.pos;
+                    Vec3 pos = Managers.PACKET.pos;
                     this.sendPacket(
-                            new PlayerMoveC2SPacket.Full(pos.x, pos.y + 1.0, pos.z, Managers.ROTATION.prevYaw + 5.0F, Managers.ROTATION.prevPitch, false, BlackOut.mc.player.horizontalCollision)
+                            new ServerboundMovePlayerPacket.PosRot(pos.x, pos.y + 1.0, pos.z, Managers.ROTATION.prevYaw + 5.0F, Managers.ROTATION.prevPitch, false, BlackOut.mc.player.horizontalCollision)
                     );
                 }
 
@@ -123,7 +123,7 @@ public class PhaseWalk extends Module {
                     this.waitingForPhase = true;
                     if (this.sinceRotation < this.preTicks.get()) {
                         if (this.stopWait.get()) {
-                            BlackOut.mc.player.setVelocity(new Vec3d(0.0, BlackOut.mc.player.getVelocity().y, 0.0));
+                            BlackOut.mc.player.setDeltaMovement(new Vec3(0.0, BlackOut.mc.player.getDeltaMovement().y, 0.0));
                             event.setXZ(this, 0.0, 0.0);
                         }
 
@@ -161,9 +161,9 @@ public class PhaseWalk extends Module {
     private void handleInput() {
         if (!this.descending && !this.ascending) {
             if (this.canVertical()) {
-                if (BlackOut.mc.options.sneakKey.isPressed() && this.descend.get()) {
+                if (BlackOut.mc.options.keyShift.isDown() && this.descend.get()) {
                     this.descending = true;
-                } else if (BlackOut.mc.options.jumpKey.isPressed() && this.ascend.get()) {
+                } else if (BlackOut.mc.options.keyJump.isDown() && this.ascend.get()) {
                     this.ascending = true;
                     this.ascendProgress = 0;
                     this.ascendY = BlackOut.mc.player.getY();
@@ -185,10 +185,10 @@ public class PhaseWalk extends Module {
     }
 
     private boolean preXZ(MoveEvent.Pre event) {
-        Vec3d vec = MovementPrediction.predict(BlackOut.mc.player);
-        Vec3d vec2 = BlackOut.mc.player.getPos().add(event.movement);
-        double d = vec.subtract(vec2).horizontalLength();
-        double d2 = vec.subtract(BlackOut.mc.player.getPos()).horizontalLength();
+        Vec3 vec = MovementPrediction.predict(BlackOut.mc.player);
+        Vec3 vec2 = BlackOut.mc.player.position().add(event.movement);
+        double d = vec.subtract(vec2).horizontalDistance();
+        double d2 = vec.subtract(BlackOut.mc.player.position()).horizontalDistance();
         if (this.phasedCheck.get() && !this.phased()) {
             return true;
         } else {
@@ -197,18 +197,18 @@ public class PhaseWalk extends Module {
     }
 
     private void handleDescend(MoveEvent.Pre event) {
-        Vec3d vec3 = BlackOut.mc.player.getPos().add(0.0, -0.0253, 0.0);
+        Vec3 vec3 = BlackOut.mc.player.position().add(0.0, -0.0253, 0.0);
         this.sendBounds(vec3);
-        BlackOut.mc.player.setPosition(vec3);
+        BlackOut.mc.player.setPos(vec3);
         event.set(this, 0.0, 0.0, 0.0);
         this.descending = false;
     }
 
     private void handleAscend(MoveEvent.Pre event) {
         double offset = Math.min(this.ascendProgress * 0.06, 1.0);
-        Vec3d vec = BlackOut.mc.player.getPos().withAxis(Direction.Axis.Y, this.ascendY + offset);
+        Vec3 vec = BlackOut.mc.player.position().with(Direction.Axis.Y, this.ascendY + offset);
         this.sendBounds(vec);
-        BlackOut.mc.player.setPosition(vec);
+        BlackOut.mc.player.setPos(vec);
         event.set(this, 0.0, 0.0, 0.0);
         this.ascendProgress++;
         if (offset >= 1.0) {
@@ -217,32 +217,32 @@ public class PhaseWalk extends Module {
     }
 
     private void handleXZ(MoveEvent.Pre event) {
-        double ratio = event.movement.horizontalLength() / 0.06;
+        double ratio = event.movement.horizontalDistance() / 0.06;
         double x = event.movement.x / ratio;
         double z = event.movement.z / ratio;
-        Vec3d vec3 = BlackOut.mc
+        Vec3 vec3 = BlackOut.mc
                 .player
-                .getPos()
+                .position()
                 .add(x, event.movement.y, z)
-                .withAxis(Direction.Axis.Y, BlackOut.mc.player.getY());
+                .with(Direction.Axis.Y, BlackOut.mc.player.getY());
         this.sendBounds(vec3);
-        BlackOut.mc.player.setPosition(vec3);
+        BlackOut.mc.player.setPos(vec3);
         event.setXZ(this, 0.0, 0.0);
     }
 
     private boolean phased() {
-        return OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().contract(0.07, 0.1, 0.07));
+        return OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().deflate(0.07, 0.1, 0.07));
     }
 
     private boolean isOnGround() {
-        return BlackOut.mc.player.isOnGround();
+        return BlackOut.mc.player.onGround();
     }
 
-    private void sendBounds(Vec3d to) {
+    private void sendBounds(Vec3 to) {
         this.rubberbanded = true;
         this.timerLeft = 5;
-        Managers.PACKET.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(to.x, to.y, to.z, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
-        Managers.PACKET.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(to.x, to.y - 87.0, to.z, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
+        Managers.PACKET.sendInstantly(new ServerboundMovePlayerPacket.Pos(to.x, to.y, to.z, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
+        Managers.PACKET.sendInstantly(new ServerboundMovePlayerPacket.Pos(to.x, to.y - 87.0, to.z, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
         Managers.PACKET.sendInstantly(Managers.PACKET.incrementedPacket(to));
         this.ignore = true;
         if (this.syncPacket.get()) {

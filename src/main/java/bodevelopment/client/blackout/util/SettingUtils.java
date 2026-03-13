@@ -8,12 +8,12 @@ import bodevelopment.client.blackout.interfaces.mixin.IEndCrystalEntity;
 import bodevelopment.client.blackout.module.modules.client.settings.*;
 import bodevelopment.client.blackout.randomstuff.PlaceData;
 import bodevelopment.client.blackout.randomstuff.Rotation;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class SettingUtils {
     private static FacingSettings facing;
@@ -62,7 +62,7 @@ public class SettingUtils {
         return range.inInteractRange(pos, null);
     }
 
-    public static boolean inInteractRange(BlockPos pos, Vec3d from) {
+    public static boolean inInteractRange(BlockPos pos, Vec3 from) {
         return range.inInteractRange(pos, from);
     }
 
@@ -70,7 +70,7 @@ public class SettingUtils {
         return range.inInteractRangeNoTrace(pos, null);
     }
 
-    public static boolean inInteractRangeNoTrace(BlockPos pos, Vec3d from) {
+    public static boolean inInteractRangeNoTrace(BlockPos pos, Vec3 from) {
         return range.inInteractRangeNoTrace(pos, from);
     }
 
@@ -90,7 +90,7 @@ public class SettingUtils {
         return range.inPlaceRange(pos, null);
     }
 
-    public static boolean inPlaceRange(BlockPos pos, Vec3d from) {
+    public static boolean inPlaceRange(BlockPos pos, Vec3 from) {
         return range.inPlaceRange(pos, from);
     }
 
@@ -98,7 +98,7 @@ public class SettingUtils {
         return range.inPlaceRangeNoTrace(pos, null);
     }
 
-    public static boolean inPlaceRangeNoTrace(BlockPos pos, Vec3d from) {
+    public static boolean inPlaceRangeNoTrace(BlockPos pos, Vec3 from) {
         return range.inPlaceRangeNoTrace(pos, from);
     }
 
@@ -110,27 +110,27 @@ public class SettingUtils {
         return range.attackRangeWalls.get();
     }
 
-    public static double attackRangeTo(Box bb, Vec3d feet) {
+    public static double attackRangeTo(AABB bb, Vec3 feet) {
         return range.innerAttackRangeTo(bb, feet, false);
     }
 
-    public static double wallAttackRangeTo(Box bb, Vec3d feet) {
+    public static double wallAttackRangeTo(AABB bb, Vec3 feet) {
         return range.innerAttackRangeTo(bb, feet, true);
     }
 
-    public static boolean inAttackRange(Box bb) {
+    public static boolean inAttackRange(AABB bb) {
         return range.inAttackRange(bb, null);
     }
 
-    public static boolean inAttackRange(Box bb, Vec3d from) {
+    public static boolean inAttackRange(AABB bb, Vec3 from) {
         return range.inAttackRange(bb, from);
     }
 
-    public static boolean inAttackRangeNoTrace(Box bb) {
+    public static boolean inAttackRangeNoTrace(AABB bb) {
         return range.inAttackRangeNoTrace(bb, null);
     }
 
-    public static boolean inAttackRangeNoTrace(Box bb, Vec3d from) {
+    public static boolean inAttackRangeNoTrace(AABB bb, Vec3 from) {
         return range.inAttackRangeNoTrace(bb, from);
     }
 
@@ -174,7 +174,7 @@ public class SettingUtils {
         return rotation.blockRotationCheck(pos, dir, yaw, pitch, type);
     }
 
-    public static boolean attackRotationCheck(Box box, float yaw, float pitch) {
+    public static boolean attackRotationCheck(AABB box, float yaw, float pitch) {
         return rotation.attackRotationCheck(box, yaw, pitch);
     }
 
@@ -186,19 +186,19 @@ public class SettingUtils {
         return rotation.pitchStep(type);
     }
 
-    public static Rotation getRotation(BlockPos pos, Direction dir, Vec3d vec, RotationType type) {
+    public static Rotation getRotation(BlockPos pos, Direction dir, Vec3 vec, RotationType type) {
         return rotation.getRotation(pos, dir, vec, type);
     }
 
-    public static Vec3d getRotationVec(BlockPos pos, Direction dir, Vec3d vec, RotationType type) {
+    public static Vec3 getRotationVec(BlockPos pos, Direction dir, Vec3 vec, RotationType type) {
         return rotation.getRotationVec(pos, dir, vec, type);
     }
 
-    public static Rotation getRotation(Vec3d vec) {
+    public static Rotation getRotation(Vec3 vec) {
         return rotation.getRotation(vec);
     }
 
-    public static Rotation getAttackRotation(Box box, Vec3d vec) {
+    public static Rotation getAttackRotation(AABB box, Vec3 vec) {
         return rotation.getAttackRotation(box, vec);
     }
 
@@ -226,13 +226,13 @@ public class SettingUtils {
         return rotation.noOwnTime.get() > 0.0 || rotation.noOtherTime.get() > 0.0;
     }
 
-    public static boolean shouldIgnoreRotations(EndCrystalEntity entity) {
+    public static boolean shouldIgnoreRotations(EndCrystal entity) {
         IEndCrystalEntity iEntity = (IEndCrystalEntity) entity;
         long since = System.currentTimeMillis() - iEntity.blackout_Client$getSpawnTime();
         return since < (iEntity.blackout_Client$isOwn() ? rotation.noOwnTime : rotation.noOtherTime).get() * 1000.0;
     }
 
-    public static void swing(SwingState state, SwingType type, Hand hand) {
+    public static void swing(SwingState state, SwingType type, InteractionHand hand) {
         swing.swing(state, type, hand);
     }
 
@@ -288,7 +288,7 @@ public class SettingUtils {
         return raytrace.placeTrace(pos);
     }
 
-    public static boolean attackTrace(Box bb) {
+    public static boolean attackTrace(AABB bb) {
         return raytrace.attackTrace(bb);
     }
 

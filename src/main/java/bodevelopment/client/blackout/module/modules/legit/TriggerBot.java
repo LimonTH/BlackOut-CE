@@ -8,18 +8,17 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.hit.HitResult;
-
 import java.util.List;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 
 public class TriggerBot extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -40,23 +39,23 @@ public class TriggerBot extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             if (!this.shouldWait()) {
                 this.critTime = System.currentTimeMillis();
-                HitResult result = BlackOut.mc.crosshairTarget;
+                HitResult result = BlackOut.mc.hitResult;
                 if (result != null && result.getType() == HitResult.Type.ENTITY) {
                     Entity entity = ((EntityHitResult) result).getEntity();
                     if (entity != null && this.entityTypes.get().contains(entity.getType())) {
-                        if (!(entity instanceof LivingEntity livingEntity && livingEntity.isDead())) {
-                            if (!this.onlyWeapon.get() || BlackOut.mc.player.getMainHandStack().contains(DataComponentTypes.TOOL)) {
+                        if (!(entity instanceof LivingEntity livingEntity && livingEntity.isDeadOrDying())) {
+                            if (!this.onlyWeapon.get() || BlackOut.mc.player.getMainHandItem().has(DataComponents.TOOL)) {
                                 int tickDelay = this.getTickDelay(entity);
-                                if (BlackOut.mc.player.lastAttackedTicks >= tickDelay) {
+                                if (BlackOut.mc.player.attackStrengthTicker >= tickDelay) {
                                     this.critTime = System.currentTimeMillis();
-                                    BlackOut.mc.interactionManager.attackEntity(BlackOut.mc.player, entity);
-                                    this.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
-                                    this.clientSwing(SwingHand.MainHand, Hand.MAIN_HAND);
-                                    if (entity instanceof EndCrystalEntity && CrystalOptimizer.getInstance().enabled) {
-                                        BlackOut.mc.world.removeEntity(entity.getId(), Entity.RemovalReason.KILLED);
+                                    BlackOut.mc.gameMode.attack(BlackOut.mc.player, entity);
+                                    this.sendPacket(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
+                                    this.clientSwing(SwingHand.MainHand, InteractionHand.MAIN_HAND);
+                                    if (entity instanceof EndCrystal && CrystalOptimizer.getInstance().enabled) {
+                                        BlackOut.mc.level.removeEntity(entity.getId(), Entity.RemovalReason.KILLED);
                                     }
                                 }
                             }
@@ -70,7 +69,7 @@ public class TriggerBot extends Module {
     private boolean shouldWait() {
         if (!this.critSync.get()) {
             return false;
-        } else if (BlackOut.mc.player.isOnGround() && !BlackOut.mc.options.jumpKey.isPressed()) {
+        } else if (BlackOut.mc.player.onGround() && !BlackOut.mc.options.keyJump.isDown()) {
             return false;
         } else {
             return !(BlackOut.mc.player.fallDistance > 0.0F) && System.currentTimeMillis() - this.critTime <= this.critSyncTime.get() * 1000.0;
@@ -79,7 +78,7 @@ public class TriggerBot extends Module {
 
     private int getTickDelay(Entity entity) {
         return this.smartDelay.get() && entity instanceof LivingEntity
-                ? Math.max((int) Math.ceil(1.0 / BlackOut.mc.player.getAttributeValue(EntityAttributes.ATTACK_SPEED) * 20.0), this.minDelay.get())
+                ? Math.max((int) Math.ceil(1.0 / BlackOut.mc.player.getAttributeValue(Attributes.ATTACK_SPEED) * 20.0), this.minDelay.get())
                 : this.attackDelay.get();
     }
 }

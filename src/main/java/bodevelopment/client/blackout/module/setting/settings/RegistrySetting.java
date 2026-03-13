@@ -5,15 +5,14 @@ import bodevelopment.client.blackout.interfaces.functional.EpicInterface;
 import bodevelopment.client.blackout.interfaces.functional.SingleOut;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import com.google.gson.JsonElement;
-import net.minecraft.registry.Registry;
-import net.minecraft.util.Identifier;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
 
 public class RegistrySetting<T> extends ListSetting<T> {
     private static final Map<Registry<?>, List<?>> registries = new HashMap<>();
@@ -32,7 +31,7 @@ public class RegistrySetting<T> extends ListSetting<T> {
     }
 
     private static <T> List<T> getFilteredList(Registry<T> registry, Predicate<T> filter) {
-        return registry.getEntrySet().stream()
+        return registry.entrySet().stream()
                 .map(Entry::getValue)
                 .filter(filter)
                 .toList();
@@ -43,7 +42,7 @@ public class RegistrySetting<T> extends ListSetting<T> {
         if (registries.containsKey(registry)) {
             return (List<T>) registries.get(registry);
         } else {
-            List<T> list = new ArrayList<>(registry.getEntrySet().stream().map(Entry::getValue).toList());
+            List<T> list = new ArrayList<>(registry.entrySet().stream().map(Entry::getValue).toList());
             registries.put(registry, list);
             return list;
         }
@@ -91,7 +90,7 @@ public class RegistrySetting<T> extends ListSetting<T> {
                 builder.append(",");
             }
 
-            builder.append(this.registry.getId(item));
+            builder.append(this.registry.getKey(item));
         }
 
         return builder.toString();
@@ -102,9 +101,9 @@ public class RegistrySetting<T> extends ListSetting<T> {
         this.get().clear();
 
         for (String string : element.getAsString().split(",")) {
-            Identifier id = Identifier.of(string);
-            if (this.registry.containsId(id)) {
-                this.get().add(this.registry.get(id));
+            ResourceLocation id = ResourceLocation.parse(string);
+            if (this.registry.containsKey(id)) {
+                this.get().add(this.registry.getValue(id));
             }
         }
         this.checkChange();

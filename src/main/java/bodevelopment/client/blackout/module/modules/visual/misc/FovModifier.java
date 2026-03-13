@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.render.AnimUtils;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 
 public class FovModifier extends Module {
     private static FovModifier INSTANCE;
@@ -33,12 +33,12 @@ public class FovModifier extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Pre event) {
-        this.progress = MathHelper.clamp(
+        this.progress = Mth.clamp(
                 this.progress + (this.zoomKey.get().isPressed() ? event.frameTime / this.zoomTime.get() : -event.frameTime / this.zoomTime.get()), 0.0, 1.0
         );
     }
 
     public double getFOV() {
-        return MathHelper.lerp(AnimUtils.easeInOutCubic(this.progress), this.fov.get(), this.zoom.get());
+        return Mth.lerp(AnimUtils.easeInOutCubic(this.progress), this.fov.get(), this.zoom.get());
     }
 }

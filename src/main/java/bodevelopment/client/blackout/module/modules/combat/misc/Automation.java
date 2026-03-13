@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.module.modules.movement.Blink;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.HoleUtils;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 public class Automation extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -33,7 +33,7 @@ public class Automation extends Module {
 
     @Event
     public void onMove(MoveEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             BlockPos prev = this.currentPos;
             this.currentPos = new BlockPos(
                     BlackOut.mc.player.getBlockX(), (int) Math.round(BlackOut.mc.player.getY()), BlackOut.mc.player.getBlockZ()

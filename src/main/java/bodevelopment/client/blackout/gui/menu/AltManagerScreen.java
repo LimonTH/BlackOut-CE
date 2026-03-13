@@ -8,13 +8,12 @@ import bodevelopment.client.blackout.module.modules.client.MainMenuSettings;
 import bodevelopment.client.blackout.randomstuff.mainmenu.AltHelpRenderer;
 import bodevelopment.client.blackout.util.SoundUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.ArrayList;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 public class AltManagerScreen extends Screen {
     private final Screen parent;
@@ -37,16 +36,16 @@ public class AltManagerScreen extends Screen {
     ).limit(3.0F);
 
     public AltManagerScreen(Screen parent) {
-        super(Text.of("Alt Manager"));
+        super(Component.nullToEmpty("Alt Manager"));
         this.parent = parent;
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float deltaTick) {
-        MatrixStack stack = context.getMatrices();
+    public void render(GuiGraphics context, int mouseX, int mouseY, float deltaTick) {
+        PoseStack stack = context.pose();
         this.updateWindowData(mouseX, mouseY);
 
-        float frameDuration = Math.min(BlackOut.mc.getRenderTickCounter().getLastFrameDuration(), 0.016F);
+        float frameDuration = Math.min(BlackOut.mc.getDeltaTracker().getGameTimeDeltaTicks(), 0.016F);
         this.scroll.update(frameDuration);
 
         this.delta = frameDuration;
@@ -61,11 +60,11 @@ public class AltManagerScreen extends Screen {
             MainMenu.globalFade = Math.min(1.0F, MainMenu.globalFade + this.delta * 3.0F);
         }
 
-        stack.push();
+        stack.pushPose();
         RenderUtils.unGuiScale(stack);
 
-        int screenW = BlackOut.mc.getWindow().getWidth();
-        int screenH = BlackOut.mc.getWindow().getHeight();
+        int screenW = BlackOut.mc.getWindow().getScreenWidth();
+        int screenH = BlackOut.mc.getWindow().getScreenHeight();
 
         MainMenuSettings.getInstance().getRenderer().renderBackground(stack, screenW, screenH, this.mx, this.my);
 
@@ -79,20 +78,20 @@ public class AltManagerScreen extends Screen {
 
         this.helpRenderer.render(stack, this.mx, this.my);
 
-        stack.pop();
+        stack.popPose();
 
         if (MainMenu.globalFade < 1.0F) {
             int alpha = (int) ((1.0F - MainMenu.globalFade) * 255.0F);
             int blackColor = (alpha << 24);
 
-            stack.push();
+            stack.pushPose();
             RenderUtils.unGuiScale(stack);
             RenderUtils.quad(stack, 0, 0, screenW, screenH, blackColor);
-            stack.pop();
+            stack.popPose();
         }
     }
 
-    private void renderTextField(MatrixStack stack) {
+    private void renderTextField(PoseStack stack) {
         if (!this.textField.isEmpty()) {
             this.progress = Math.min(this.progress + this.delta, 1.0F);
         } else {
@@ -115,13 +114,13 @@ public class AltManagerScreen extends Screen {
         );
     }
 
-    private void renderCurrentSession(MatrixStack stack) {
+    private void renderCurrentSession(PoseStack stack) {
         Managers.ALT.currentSession.render(stack, -940.0F, this.windowHeight / 2.0F - 65.0F - 60.0F, this.delta);
     }
 
-    private void renderAccounts(MatrixStack stack) {
+    private void renderAccounts(PoseStack stack) {
         this.altLength = -90.0F;
-        stack.push();
+        stack.pushPose();
         stack.translate(0.0F, -this.scroll.get(), 0.0F);
         stack.translate(-250.0F, this.windowHeight / -2.0F + 200.0F, 0.0F);
 
@@ -132,10 +131,10 @@ public class AltManagerScreen extends Screen {
             this.altLength += offset;
         });
 
-        stack.pop();
+        stack.popPose();
     }
 
-    private void renderAltManagerTitle(MatrixStack stack) {
+    private void renderAltManagerTitle(PoseStack stack) {
         BlackOut.BOLD_FONT.text(stack, "Alt Manager", 8.5F, 0.0F, this.windowHeight / -2.0F + 100.0F, Color.WHITE, true, true);
     }
 
@@ -231,14 +230,14 @@ public class AltManagerScreen extends Screen {
     }
 
     private void updateWindowData(double ignoredX, double ignoredY) {
-        double physicalWidth = BlackOut.mc.getWindow().getWidth();
-        double physicalHeight = BlackOut.mc.getWindow().getHeight();
+        double physicalWidth = BlackOut.mc.getWindow().getScreenWidth();
+        double physicalHeight = BlackOut.mc.getWindow().getScreenHeight();
 
         this.scale = (float) (physicalWidth / 2000.0F);
         this.windowHeight = (float) (physicalHeight / physicalWidth * 2000.0F);
 
-        double logicalX = BlackOut.mc.mouse.getX();
-        double logicalY = BlackOut.mc.mouse.getY();
+        double logicalX = BlackOut.mc.mouseHandler.xpos();
+        double logicalY = BlackOut.mc.mouseHandler.ypos();
 
         this.mx = (float) ((logicalX - physicalWidth / 2.0) / this.scale);
         this.my = (float) ((logicalY - physicalHeight / 2.0) / this.scale);

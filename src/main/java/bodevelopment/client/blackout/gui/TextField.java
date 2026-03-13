@@ -3,13 +3,13 @@ package bodevelopment.client.blackout.gui;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.keys.Keys;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.MathHelper;
+import com.mojang.blaze3d.vertex.PoseStack;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
+import net.minecraft.util.Mth;
 
 public class TextField {
     private static final Map<String, String> shiftModified = new HashMap<>();
@@ -53,7 +53,7 @@ public class TextField {
     private boolean capsLock = false;
 
     public void render(
-            MatrixStack stack,
+            PoseStack stack,
             float scale,
             double mx,
             double my,
@@ -179,7 +179,7 @@ public class TextField {
             this.limitIndex();
 
             if (key == GLFW.GLFW_KEY_V && ctrl) {
-                String cb = BlackOut.mc.keyboard.getClipboard();
+                String cb = BlackOut.mc.keyboardHandler.getClipboard();
                 if (cb != null) for (char c : cb.toCharArray()) this.addChar(String.valueOf(c));
                 return;
             }
@@ -204,11 +204,11 @@ public class TextField {
                     }
                     return;
                 case GLFW.GLFW_KEY_RIGHT:
-                    this.typingIndex = MathHelper.clamp(this.typingIndex + 1, 0, this.content.length());
+                    this.typingIndex = Mth.clamp(this.typingIndex + 1, 0, this.content.length());
                     this.lastType = System.currentTimeMillis();
                     return;
                 case GLFW.GLFW_KEY_LEFT:
-                    this.typingIndex = MathHelper.clamp(this.typingIndex - 1, 0, this.content.length());
+                    this.typingIndex = Mth.clamp(this.typingIndex - 1, 0, this.content.length());
                     this.lastType = System.currentTimeMillis();
                     return;
                 case GLFW.GLFW_KEY_SPACE:
@@ -232,7 +232,7 @@ public class TextField {
     }
 
     private void limitIndex() {
-        this.typingIndex = MathHelper.clamp(this.typingIndex, 0, this.content.length());
+        this.typingIndex = Mth.clamp(this.typingIndex, 0, this.content.length());
     }
 
     private String modify(String string, int key) {

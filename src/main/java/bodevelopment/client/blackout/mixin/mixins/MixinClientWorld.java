@@ -3,15 +3,15 @@ package bodevelopment.client.blackout.mixin.mixins;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.events.EntityAddEvent;
 import bodevelopment.client.blackout.module.modules.visual.world.Ambience;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(ClientWorld.class)
+@Mixin(ClientLevel.class)
 public abstract class MixinClientWorld {
     @Inject(method = "addEntity", at = @At("HEAD"), cancellable = true)
     private void preAddEntity(Entity entity, CallbackInfo ci) {
@@ -25,13 +25,13 @@ public abstract class MixinClientWorld {
         BlackOut.EVENT_BUS.post(EntityAddEvent.Post.get(entity.getId(), entity));
     }
 
-    @Redirect(method = "tickTime", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld$Properties;setTimeOfDay(J)V"))
-    private void redirectTickTime(ClientWorld.Properties instance, long timeOfDay) {
+    @Redirect(method = "tickTime", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel$ClientLevelData;setDayTime(J)V"))
+    private void redirectTickTime(ClientLevel.ClientLevelData instance, long timeOfDay) {
         Ambience ambience = Ambience.getInstance();
         if (ambience.enabled && ambience.modifyTime.get()) {
-            instance.setTimeOfDay(ambience.time.get().longValue());
+            instance.setDayTime(ambience.time.get().longValue());
         } else {
-            instance.setTimeOfDay(timeOfDay);
+            instance.setDayTime(timeOfDay);
         }
     }
 }

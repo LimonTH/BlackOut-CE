@@ -1,12 +1,12 @@
 package bodevelopment.client.blackout.event.events;
 
-import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
+import net.minecraft.network.protocol.game.ClientboundLoginPacket;
 
 public class GameJoinEvent {
     private static final GameJoinEvent INSTANCE = new GameJoinEvent();
-    public GameJoinS2CPacket packet = null;
+    public ClientboundLoginPacket packet = null;
 
-    public static GameJoinEvent get(GameJoinS2CPacket packet) {
+    public static GameJoinEvent get(ClientboundLoginPacket packet) {
         INSTANCE.packet = packet;
         return INSTANCE;
     }

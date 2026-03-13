@@ -12,22 +12,7 @@ import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.SharedFeatures;
 import com.llamalad7.mixinextras.sugar.Local;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.projectile.ProjectileUtil;
-import net.minecraft.resource.ResourceFactory;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
+import com.mojang.blaze3d.vertex.PoseStack;
 import org.joml.Matrix4f;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,43 +23,58 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.function.Predicate;
+import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.ContainerScreen;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.server.packs.resources.ResourceProvider;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 
 @Mixin(GameRenderer.class)
 public abstract class MixinGameRenderer {
     @Shadow
-    public abstract void reset();
+    public abstract void resetData();
 
     @Shadow
-    public abstract void render(RenderTickCounter tickCounter, boolean tick);
+    public abstract void render(DeltaTracker tickCounter, boolean tick);
 
     @Shadow
-    public abstract boolean isRenderingPanorama();
+    public abstract boolean isPanoramicMode();
 
     @Shadow
-    protected abstract void renderHand(Camera camera, float tickDelta, Matrix4f matrix4f);
+    protected abstract void renderItemInHand(Camera camera, float tickDelta, Matrix4f matrix4f);
 
     @Redirect(
             method = "render",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;currentScreen:Lnet/minecraft/client/gui/screen/Screen;", opcode = Opcodes.GETFIELD)
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", opcode = Opcodes.GETFIELD)
     )
-    private Screen redirectCurrentScreen(MinecraftClient instance) {
-        return instance.currentScreen instanceof GenericContainerScreen && SharedFeatures.shouldSilentScreen() ? null : instance.currentScreen;
+    private Screen redirectCurrentScreen(Minecraft instance) {
+        return instance.screen instanceof ContainerScreen && SharedFeatures.shouldSilentScreen() ? null : instance.screen;
     }
 
     @Inject(method = "render", at = @At("TAIL"))
-    private void postRender(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci) {
+    private void postRender(DeltaTracker tickCounter, boolean tick, CallbackInfo ci) {
         Managers.PING.update();
     }
 
     @Inject(
-            method = "renderWorld",
+            method = "renderLevel",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/render/WorldRenderer;render(Lnet/minecraft/client/util/ObjectAllocator;Lnet/minecraft/client/render/RenderTickCounter;ZLnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/GameRenderer;Lnet/minecraft/client/render/LightmapTextureManager;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V"
+                    target = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V"
             )
     )
-    private void onRenderWorldPre(RenderTickCounter tickCounter, CallbackInfo ci, @Local MatrixStack matrices) {
-        float tickDelta = tickCounter.getTickDelta(true);
+    private void onRenderWorldPre(DeltaTracker tickCounter, CallbackInfo ci, @Local PoseStack matrices) {
+        float tickDelta = tickCounter.getGameTimeDeltaPartialTick(true);
 
         TimerList.updating.forEach(TimerList::update);
         TimerMap.updating.forEach(TimerMap::update);
@@ -83,30 +83,30 @@ public abstract class MixinGameRenderer {
     }
 
     @Inject(
-            method = "renderWorld",
+            method = "renderLevel",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/render/WorldRenderer;render(Lnet/minecraft/client/util/ObjectAllocator;Lnet/minecraft/client/render/RenderTickCounter;ZLnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/GameRenderer;Lnet/minecraft/client/render/LightmapTextureManager;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V",
+                    target = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V",
                     shift = At.Shift.AFTER
             )
     )
-    private void onRenderWorldPost(RenderTickCounter tickCounter, CallbackInfo ci, @Local MatrixStack matrices) {
-        BlackOut.EVENT_BUS.post(RenderEvent.World.Post.get(matrices, tickCounter.getTickDelta(true)));
+    private void onRenderWorldPost(DeltaTracker tickCounter, CallbackInfo ci, @Local PoseStack matrices) {
+        BlackOut.EVENT_BUS.post(RenderEvent.World.Post.get(matrices, tickCounter.getGameTimeDeltaPartialTick(true)));
     }
 
     @Redirect(
-            method = "renderWorld",
+            method = "renderLevel",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/render/GameRenderer;renderHand(Lnet/minecraft/client/render/Camera;FLorg/joml/Matrix4f;)V"
+                    target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemInHand(Lnet/minecraft/client/Camera;FLorg/joml/Matrix4f;)V"
             )
     )
-    private void renderHeldItems(GameRenderer instance, Camera camera, float tickDelta, org.joml.Matrix4f matrix4f) {
-        HandESP.getInstance().draw(() -> this.renderHand(camera, tickDelta, matrix4f));
+    private void renderHeldItems(GameRenderer instance, Camera camera, float tickDelta, Matrix4f matrix4f) {
+        HandESP.getInstance().draw(() -> this.renderItemInHand(camera, tickDelta, matrix4f));
     }
 
-    @Inject(method = "preloadPrograms", at = @At("TAIL"))
-    private void onShaderLoad(ResourceFactory factory, CallbackInfo ci) {
+    @Inject(method = "preloadUiShader", at = @At("TAIL"))
+    private void onShaderLoad(ResourceProvider factory, CallbackInfo ci) {
         Shaders.loadPrograms();
         BlackOut.FONT.loadFont();
         BlackOut.BOLD_FONT.loadFont();
@@ -114,57 +114,63 @@ public abstract class MixinGameRenderer {
     }
 
     @Redirect(
-            method = "updateCrosshairTarget",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getBlockInteractionRange()D")
+            method = "pick(F)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/player/LocalPlayer;blockInteractionRange()D"
+            )
     )
-    private double getBlockReach(ClientPlayerEntity instance) {
+    private double getBlockReach(LocalPlayer instance) {
         Reach reach = Reach.getInstance();
-        return reach.enabled ? reach.blockReach.get() : instance.getBlockInteractionRange();
+        return reach.enabled ? reach.blockReach.get() : instance.blockInteractionRange();
     }
 
     @Redirect(
-            method = "updateCrosshairTarget",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getEntityInteractionRange()D")
+            method = "pick(F)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/player/LocalPlayer;entityInteractionRange()D"
+            )
     )
-    private double getEntityReach(ClientPlayerEntity instance) {
+    private double getEntityReach(LocalPlayer instance) {
         Reach reach = Reach.getInstance();
-        return reach.enabled ? reach.entityReach.get() : instance.getEntityInteractionRange();
+        return reach.enabled ? reach.entityReach.get() : instance.entityInteractionRange();
     }
 
     @Redirect(
-            method = "findCrosshairTarget",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;raycast(DFZ)Lnet/minecraft/util/hit/HitResult;")
+            method = "pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;pick(DFZ)Lnet/minecraft/world/phys/HitResult;")
     )
     private HitResult raycast(Entity instance, double maxDistance, float tickDelta, boolean includeFluids) {
         FreeCam freecam = FreeCam.getInstance();
         if (!freecam.enabled) {
-            return instance.raycast(maxDistance, tickDelta, includeFluids);
+            return instance.pick(maxDistance, tickDelta, includeFluids);
         } else {
-            Vec3d start = freecam.pos;
-            Vec3d rotation = instance.getRotationVec(tickDelta);
-            Vec3d end = start.add(rotation.x * maxDistance, rotation.y * maxDistance, rotation.z * maxDistance);
-            return instance.getWorld().raycast(new RaycastContext(start, end, RaycastContext.ShapeType.OUTLINE, includeFluids ? RaycastContext.FluidHandling.ANY : RaycastContext.FluidHandling.NONE, instance));
+            Vec3 start = freecam.pos;
+            Vec3 rotation = instance.getViewVector(tickDelta);
+            Vec3 end = start.add(rotation.x * maxDistance, rotation.y * maxDistance, rotation.z * maxDistance);
+            return instance.level().clip(new ClipContext(start, end, ClipContext.Block.OUTLINE, includeFluids ? ClipContext.Fluid.ANY : ClipContext.Fluid.NONE, instance));
         }
     }
 
     @Redirect(
-            method = "findCrosshairTarget",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getCameraPosVec(F)Lnet/minecraft/util/math/Vec3d;")
+            method = "pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getEyePosition(F)Lnet/minecraft/world/phys/Vec3;")
     )
-    private Vec3d cameraPos(Entity instance, float tickDelta) {
+    private Vec3 cameraPos(Entity instance, float tickDelta) {
         FreeCam freecam = FreeCam.getInstance();
-        return freecam.enabled ? freecam.pos : instance.getCameraPosVec(tickDelta);
+        return freecam.enabled ? freecam.pos : instance.getEyePosition(tickDelta);
     }
 
     @Redirect(
-            method = "findCrosshairTarget",
+            method = "pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/entity/projectile/ProjectileUtil;raycast(Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/Vec3d;Lnet/minecraft/util/math/Vec3d;Lnet/minecraft/util/math/Box;Ljava/util/function/Predicate;D)Lnet/minecraft/util/hit/EntityHitResult;"
+                    target = "Lnet/minecraft/world/entity/projectile/ProjectileUtil;getEntityHitResult(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;D)Lnet/minecraft/world/phys/EntityHitResult;"
             )
     )
-    private EntityHitResult raycastEntities(Entity entity, Vec3d min, Vec3d max, Box box, Predicate<Entity> predicate, double d) {
-        return NoTrace.getInstance().enabled ? null : ProjectileUtil.raycast(entity, min, max, box, predicate, d);
+    private EntityHitResult raycastEntities(Entity entity, Vec3 min, Vec3 max, AABB box, Predicate<Entity> predicate, double d) {
+        return NoTrace.getInstance().enabled ? null : ProjectileUtil.getEntityHitResult(entity, min, max, box, predicate, d);
     }
 
     @Inject(method = "getFov", at = @At("HEAD"), cancellable = true)
@@ -177,14 +183,14 @@ public abstract class MixinGameRenderer {
     }
 
     @Inject(method = "bobView", at = @At("HEAD"), cancellable = true)
-    private void onBobView(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
+    private void onBobView(PoseStack matrices, float tickDelta, CallbackInfo ci) {
         if (NoRender.getInstance().enabled && NoRender.getInstance().noBobbing.get()) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "tiltViewWhenHurt", at = @At("HEAD"), cancellable = true)
-    private void onHurtCameraEffect(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
+    @Inject(method = "bobHurt", at = @At("HEAD"), cancellable = true)
+    private void onHurtCameraEffect(PoseStack matrices, float tickDelta, CallbackInfo ci) {
         if (NoRender.getInstance().enabled && NoRender.getInstance().noHurtCam.get()) {
             ci.cancel();
         }
@@ -192,11 +198,11 @@ public abstract class MixinGameRenderer {
 
     @Unique
     private double getFOV(boolean changing, FovModifier fovModifier) {
-        if (this.isRenderingPanorama()) {
+        if (this.isPanoramicMode()) {
             return 90.0;
         } else if (!changing) {
             ViewModel handView = ViewModel.getInstance();
-            return handView.enabled ? handView.fov.get() : MinecraftClient.getInstance().options.getFov().getValue().doubleValue();
+            return handView.enabled ? handView.fov.get() : Minecraft.getInstance().options.fov().get().doubleValue();
         } else {
             return fovModifier.getFOV();
         }

@@ -12,14 +12,13 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 
 public class Spectate extends Module {
     private static Spectate INSTANCE;
@@ -30,9 +29,9 @@ public class Spectate extends Module {
     private final Setting<KeyBind> forwardKey = this.sgGeneral.keySetting("Next Target", "The hotkey used to cycle to the next available player in the sequence.");
     private final Setting<KeyBind> backKey = this.sgGeneral.keySetting("Previous Target", "The hotkey used to cycle to the previous player in the sequence.");
 
-    private final List<PlayerEntity> playerEntities = new ArrayList<>();
-    private final MatrixStack stack = new MatrixStack();
-    private PlayerEntity target;
+    private final List<Player> playerEntities = new ArrayList<>();
+    private final PoseStack stack = new PoseStack();
+    private Player target;
     private int prevI = 0;
 
     public Spectate() {
@@ -46,24 +45,24 @@ public class Spectate extends Module {
 
     @Event
     public void onRender(RenderEvent.Hud.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            this.stack.push();
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            this.stack.pushPose();
             RenderUtils.unGuiScale(this.stack);
-            if (this.target instanceof AbstractClientPlayerEntity) {
+            if (this.target instanceof AbstractClientPlayer) {
                 BlackOut.FONT
                         .text(
                                 this.stack,
                                 "Spectating " + this.target.getName().getString(),
                                 2.0F,
-                                BlackOut.mc.getWindow().getWidth() / 2.0F,
-                                BlackOut.mc.getWindow().getHeight() / 2.0F + BlackOut.FONT.getHeight() * 3.0F,
+                                BlackOut.mc.getWindow().getScreenWidth() / 2.0F,
+                                BlackOut.mc.getWindow().getScreenHeight() / 2.0F + BlackOut.FONT.getHeight() * 3.0F,
                                 Color.WHITE,
                                 true,
                                 true
                         );
             }
 
-            this.stack.pop();
+            this.stack.popPose();
         }
     }
 
@@ -126,7 +125,7 @@ public class Spectate extends Module {
     private void updateList() {
         this.playerEntities.clear();
 
-        for (PlayerEntity player : BlackOut.mc.world.getPlayers()) {
+        for (Player player : BlackOut.mc.level.players()) {
             if (player != BlackOut.mc.player && (!this.ignoreFriends.get() || !Managers.FRIENDS.isFriend(player))) {
                 this.playerEntities.add(player);
             }

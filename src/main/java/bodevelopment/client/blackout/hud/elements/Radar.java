@@ -13,13 +13,12 @@ import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.MathHelper;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 
 public class Radar extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -41,7 +40,7 @@ public class Radar extends HudElement {
 
     @Override
     public void render() {
-        this.stack.push();
+        this.stack.pushPose();
         switch (this.style.get()) {
             case Exhibition:
                 this.setSize(42.0F, 42.0F);
@@ -76,12 +75,12 @@ public class Radar extends HudElement {
 
         this.stack.translate(20.0F, 20.0F, 0.0F);
 
-        for (PlayerEntity player : BlackOut.mc.world.getPlayers()) {
+        for (Player player : BlackOut.mc.level.players()) {
             if (player != BlackOut.mc.player && this.shouldRender(player)) {
                 boolean isFriend = Managers.FRIENDS.isFriend(player);
-                double dist = player.getPos().subtract(BlackOut.mc.player.getPos()).horizontalLength();
-                double yaw = RotationUtils.getYaw(player.getPos());
-                yaw = Math.toRadians(MathHelper.wrapDegrees(yaw - BlackOut.mc.player.getYaw() - 90.0));
+                double dist = player.position().subtract(BlackOut.mc.player.position()).horizontalDistance();
+                double yaw = RotationUtils.getYaw(player.position());
+                yaw = Math.toRadians(Mth.wrapDegrees(yaw - BlackOut.mc.player.getYRot() - 90.0));
                 float x = (float) (Math.cos(yaw) * dist);
                 float z = (float) (Math.sin(yaw) * dist);
                 x /= this.range.get();
@@ -96,10 +95,10 @@ public class Radar extends HudElement {
             }
         }
 
-        this.stack.pop();
+        this.stack.popPose();
     }
 
-    public void renderEnemy(MatrixStack stack, float x, float y, boolean friend) {
+    public void renderEnemy(PoseStack stack, float x, float y, boolean friend) {
         if (this.style.get() == Style.Exhibition) {
             RenderUtils.quad(stack, x - 1.0F, y - 1.0F, 3.0F, 3.0F, Color.BLACK.getRGB());
             RenderUtils.quad(stack, x, y, 1.0F, 1.0F, friend ? Color.YELLOW.getRGB() : Color.RED.getRGB());
@@ -112,7 +111,7 @@ public class Radar extends HudElement {
 
     public boolean shouldRender(Entity entity) {
         AntiBot antiBot = AntiBot.getInstance();
-        if (antiBot.enabled && antiBot.mode.get() == AntiBot.HandlingMode.Ignore && entity instanceof AbstractClientPlayerEntity player && antiBot.getBots().contains(player)) {
+        if (antiBot.enabled && antiBot.mode.get() == AntiBot.HandlingMode.Ignore && entity instanceof AbstractClientPlayer player && antiBot.getBots().contains(player)) {
             return false;
         } else {
             return entity != BlackOut.mc.player || FreeCam.getInstance().enabled;

@@ -16,21 +16,20 @@ import bodevelopment.client.blackout.randomstuff.timers.RenderList;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class HoleFill extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -78,7 +77,7 @@ public class HoleFill extends Module {
     private final RenderList<BlockPos> render = RenderList.getList(false);
     private final ExtrapolationMap nearPosition = new ExtrapolationMap();
     private final ExtrapolationMap boxes = new ExtrapolationMap();
-    private Hand hand = null;
+    private InteractionHand hand = null;
     public static boolean placing = false;
     private int blocksLeft = 0;
     private int placesLeft = 0;
@@ -87,8 +86,8 @@ public class HoleFill extends Module {
     private boolean shouldIgnoreSelf = false;
     private int tickTimer = 0;
     private long lastTime = 0L;
-    private BlockPos prevPos = BlockPos.ORIGIN;
-    private BlockPos prevHole = BlockPos.ORIGIN;
+    private BlockPos prevPos = BlockPos.ZERO;
+    private BlockPos prevHole = BlockPos.ZERO;
     private long holeTime = 0L;
 
     public HoleFill() {
@@ -97,7 +96,7 @@ public class HoleFill extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             BlockPos pos = new BlockPos(
                     BlackOut.mc.player.getBlockX(), (int) Math.round(BlackOut.mc.player.getY()), BlackOut.mc.player.getBlockZ()
             );
@@ -113,7 +112,7 @@ public class HoleFill extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.render.update((pos, time, d) -> {
                 double progress = 1.0 - Math.max(time - this.renderTime.get(), 0.0) / this.fadeTime.get();
                 Render3DUtils.box(BoxUtils.get(pos), this.sideColor.get().alphaMulti(progress), this.lineColor.get().alphaMulti(progress), this.renderShape.get());
@@ -137,7 +136,7 @@ public class HoleFill extends Module {
         if (!BlackOut.mc.player.isUsingItem() || !this.pauseEat.get()) {
             this.holes
                     .stream()
-                    .sorted(Comparator.comparingDouble(pos -> pos.toCenterPos().distanceTo(BlackOut.mc.player.getEyePos())))
+                    .sorted(Comparator.comparingDouble(pos -> pos.getCenter().distanceTo(BlackOut.mc.player.getEyePosition())))
                     .forEach(this::place);
             if (this.switched && this.hand == null) {
                 this.switchMode.get().swapBack();
@@ -157,13 +156,13 @@ public class HoleFill extends Module {
     private void updateHoles() {
         this.holes.clear();
         int range = (int) Math.ceil(SettingUtils.maxPlaceRange() + 1.0);
-        BlockPos p = BlockPos.ofFloored(BlackOut.mc.player.getEyePos());
+        BlockPos p = BlockPos.containing(BlackOut.mc.player.getEyePosition());
         List<Hole> holeList = new ArrayList<>();
 
         for (int x = -range; x <= range; x++) {
             for (int y = -range; y <= range; y++) {
                 for (int z = -range; z <= range; z++) {
-                    Hole hole = HoleUtils.getHole(p.add(x, y, z));
+                    Hole hole = HoleUtils.getHole(p.offset(x, y, z));
                     if (hole.type != HoleType.NotHole
                             && (this.single.get() || hole.type != HoleType.Single)
                             && (this.doubleHole.get() || hole.type != HoleType.DoubleX && hole.type != HoleType.DoubleZ)
@@ -195,7 +194,7 @@ public class HoleFill extends Module {
     private boolean validHole(Hole hole) {
         double pDist = (this.nearPosition.contains(BlackOut.mc.player)
                 ? this.feet(this.nearPosition.get(BlackOut.mc.player))
-                : BlackOut.mc.player.getPos())
+                : BlackOut.mc.player.position())
                 .distanceTo(hole.middle);
         if (this.selfNearCheck(hole)) {
             return false;
@@ -206,7 +205,7 @@ public class HoleFill extends Module {
                 }
             }
 
-            for (AbstractClientPlayerEntity player : BlackOut.mc.world.getPlayers()) {
+            for (AbstractClientPlayer player : BlackOut.mc.level.players()) {
                 if (!player.isSpectator()
                         && player != BlackOut.mc.player
                         && !(player.getHealth() <= 0.0F)
@@ -227,13 +226,13 @@ public class HoleFill extends Module {
             BlockPos pos = new BlockPos(
                     BlackOut.mc.player.getBlockX(), (int) Math.round(BlackOut.mc.player.getY()), BlackOut.mc.player.getBlockZ()
             );
-            if (!this.ignoreSelfHole.get() || !HoleUtils.inHole(BlackOut.mc.player.getBlockPos()) && !OLEPOSSUtils.collidable(pos)) {
+            if (!this.ignoreSelfHole.get() || !HoleUtils.inHole(BlackOut.mc.player.blockPosition()) && !OLEPOSSUtils.collidable(pos)) {
                 if (this.selfAbove.get() && BlackOut.mc.player.getY() <= hole.middle.y) {
                     this.shouldIgnoreSelf = true;
                     return false;
                 } else {
                     this.shouldIgnoreSelf = false;
-                    return BlackOut.mc.player.getPos().distanceTo(hole.middle) <= this.selfDistance.get();
+                    return BlackOut.mc.player.position().distanceTo(hole.middle) <= this.selfDistance.get();
                 }
             } else {
                 this.shouldIgnoreSelf = true;
@@ -242,15 +241,15 @@ public class HoleFill extends Module {
         }
     }
 
-    private boolean nearCheck(AbstractClientPlayerEntity player, Hole hole, double pDist) {
+    private boolean nearCheck(AbstractClientPlayer player, Hole hole, double pDist) {
         if (!this.near.get()) {
             return false;
-        } else if (this.ignoreHole.get() && this.inHole(player.getPos()) && this.inHole(BoxUtils.feet(this.nearPosition.get(player)))) {
+        } else if (this.ignoreHole.get() && this.inHole(player.position()) && this.inHole(BoxUtils.feet(this.nearPosition.get(player)))) {
             return false;
         } else if (this.above.get() && this.nearPosition.get(player).minY <= hole.middle.y && player.getY() <= hole.middle.y) {
             return false;
         } else {
-            double eDist = (this.nearPosition.contains(player) ? this.feet(this.nearPosition.get(player)) : player.getPos())
+            double eDist = (this.nearPosition.contains(player) ? this.feet(this.nearPosition.get(player)) : player.position())
                     .distanceTo(hole.middle.add(0.0, 1.0, 0.0));
             return !(eDist > this.nearDistance.get()) && (System.currentTimeMillis() - this.holeTime < 500L && OLEPOSSUtils.contains(hole.positions, this.prevHole)
                     || this.shouldIgnoreSelf
@@ -259,8 +258,8 @@ public class HoleFill extends Module {
         }
     }
 
-    private boolean inHole(Vec3d vec) {
-        BlockPos pos = new BlockPos((int) Math.floor(vec.getX()), (int) Math.round(vec.getY()), (int) Math.floor(vec.getZ()));
+    private boolean inHole(Vec3 vec) {
+        BlockPos pos = new BlockPos((int) Math.floor(vec.x()), (int) Math.round(vec.y()), (int) Math.floor(vec.z()));
         return HoleUtils.inHole(pos) || OLEPOSSUtils.collidable(pos);
     }
 
@@ -289,7 +288,7 @@ public class HoleFill extends Module {
                     if (this.switched || this.hand != null || (this.switched = this.switchMode.get().swap(this.result.slot()))) {
                         this.render.add(pos, this.renderTime.get() + this.fadeTime.get());
                         this.timers.add(pos, this.cooldown.get());
-                        this.placeBlock(this.hand, data.pos().toCenterPos(), data.dir(), data.pos());
+                        this.placeBlock(this.hand, data.pos().getCenter(), data.dir(), data.pos());
                         if (this.placeSwing.get()) {
                             this.clientSwing(this.placeHand.get(), this.hand);
                         }
@@ -305,7 +304,7 @@ public class HoleFill extends Module {
         }
     }
 
-    private Vec3d feet(Box box) {
-        return new Vec3d((box.minX + box.maxX) / 2.0, box.minY, (box.minZ + box.maxZ) / 2.0);
+    private Vec3 feet(AABB box) {
+        return new Vec3((box.minX + box.maxX) / 2.0, box.minY, (box.minZ + box.maxZ) / 2.0);
     }
 }

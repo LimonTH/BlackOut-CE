@@ -16,13 +16,13 @@ import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
 
 public class PearlPhase extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
@@ -49,9 +49,9 @@ public class PearlPhase extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Pre event) {
-        if (BlackOut.mc.player == null || BlackOut.mc.world == null) return;
+        if (BlackOut.mc.player == null || BlackOut.mc.level == null) return;
 
-        Hand hand = OLEPOSSUtils.getHand(Items.ENDER_PEARL);
+        InteractionHand hand = OLEPOSSUtils.getHand(Items.ENDER_PEARL);
         FindResult pearlResult = this.switchMode.get().find(Items.ENDER_PEARL);
 
         if (hand == null && !pearlResult.wasFound()) return;
@@ -65,11 +65,11 @@ public class PearlPhase extends Module {
         boolean isInvSwitch = hand == null;
         if (!isInvSwitch || this.switchMode.get().swap(pearlResult.slot())) {
             if (this.rotationMode.get() == ObsidianModule.RotationMode.Packet) {
-                this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(this.getYaw(), this.pitch.get(), Managers.PACKET.isOnGround(), BlackOut.mc.player.isSneaking()));
+                this.sendPacket(new ServerboundMovePlayerPacket.Rot(this.getYaw(), this.pitch.get(), Managers.PACKET.isOnGround(), BlackOut.mc.player.isShiftKeyDown()));
             }
-            this.useItem(hand == null ? Hand.MAIN_HAND : hand);
+            this.useItem(hand == null ? InteractionHand.MAIN_HAND : hand);
             if (this.swing.get()) {
-                this.clientSwing(this.swingHand.get(), hand == null ? Hand.MAIN_HAND : hand);
+                this.clientSwing(this.swingHand.get(), hand == null ? InteractionHand.MAIN_HAND : hand);
             }
             this.end("look");
             if (isInvSwitch) this.switchMode.get().swapBack();
@@ -85,20 +85,20 @@ public class PearlPhase extends Module {
             return false;
         }
 
-        BlockPos pos = BlackOut.mc.player.getBlockPos().down();
+        BlockPos pos = BlackOut.mc.player.blockPosition().below();
 
         if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
             if (!this.handleRotations(
-                    (float) RotationUtils.getYaw(pos.toCenterPos()),
-                    (float) RotationUtils.getPitch(BlackOut.mc.player.getEyePos(), pos.toCenterPos()),
+                    (float) RotationUtils.getYaw(pos.getCenter()),
+                    (float) RotationUtils.getPitch(BlackOut.mc.player.getEyePosition(), pos.getCenter()),
                     "placing")) return false;
         }
 
-        Hand blockHand = OLEPOSSUtils.getHand(stack -> stack.getItem() instanceof BlockItem);
+        InteractionHand blockHand = OLEPOSSUtils.getHand(stack -> stack.getItem() instanceof BlockItem);
         boolean isInvSwitch = blockHand == null;
 
         if (!isInvSwitch || this.ccSwitchMode.get().swap(blockResult.slot())) {
-            this.placeBlock(blockHand == null ? Hand.MAIN_HAND : blockHand, pos.toCenterPos(), Direction.UP, pos);
+            this.placeBlock(blockHand == null ? InteractionHand.MAIN_HAND : blockHand, pos.getCenter(), Direction.UP, pos);
 
             if (SettingUtils.shouldRotate(RotationType.BlockPlace)) this.end("placing");
 
@@ -122,7 +122,7 @@ public class PearlPhase extends Module {
     }
 
     private int getYaw() {
-        return (int) Math.round(RotationUtils.getYaw(new Vec3d(
+        return (int) Math.round(RotationUtils.getYaw(new Vec3(
                 Math.floor(BlackOut.mc.player.getX()) + 0.5,
                 0.0,
                 Math.floor(BlackOut.mc.player.getZ()) + 0.5))) + 180;

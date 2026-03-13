@@ -12,10 +12,10 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
-import net.minecraft.util.Hand;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Items;
 
 public class Disabler extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -35,23 +35,23 @@ public class Disabler extends Module {
 
     @Event
     public void onMove(MoveEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            if (this.vulcanOmni.get() && !BlackOut.mc.options.forwardKey.isPressed() && BlackOut.mc.player.isSprinting()) {
-                this.sendPacket(new ClientCommandC2SPacket(BlackOut.mc.player, ClientCommandC2SPacket.Mode.START_SPRINTING));
-                this.sendPacket(new ClientCommandC2SPacket(BlackOut.mc.player, ClientCommandC2SPacket.Mode.STOP_SPRINTING));
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            if (this.vulcanOmni.get() && !BlackOut.mc.options.keyUp.isDown() && BlackOut.mc.player.isSprinting()) {
+                this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.START_SPRINTING));
+                this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
             }
         }
     }
 
     @Event
     public void onTickPre(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             if (this.grimMovement.get()) {
                 if (System.currentTimeMillis() - this.prevRiptide < this.tridentDelay.get() * 1000.0) {
                     return;
                 }
 
-                Hand hand = OLEPOSSUtils.getHand(Items.TRIDENT);
+                InteractionHand hand = OLEPOSSUtils.getHand(Items.TRIDENT);
                 if (hand == null) {
                     FindResult result = this.tridentSwitch.get().find(Items.TRIDENT);
                     if (!result.wasFound() || !this.tridentSwitch.get().swap(result.slot())) {
@@ -60,7 +60,7 @@ public class Disabler extends Module {
                 }
 
                 if (this.b1.get()) {
-                    this.sendPacket(new PlayerInteractItemC2SPacket(hand == null ? Hand.MAIN_HAND : hand, 0, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch));
+                    this.sendPacket(new ServerboundUseItemPacket(hand == null ? InteractionHand.MAIN_HAND : hand, 0, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch));
                 }
 
                 if (this.b2.get()) {

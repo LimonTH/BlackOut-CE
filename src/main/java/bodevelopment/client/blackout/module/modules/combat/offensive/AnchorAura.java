@@ -20,29 +20,28 @@ import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.randomstuff.PlaceData;
 import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.RespawnAnchorBlock;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.RespawnAnchorBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 // TODO: NEED PATCHES
 // TODO: убрать неиспользуемое поле target или интегрировать его в расчёт приоритетов.
@@ -105,7 +104,7 @@ public class AnchorAura extends Module {
     // TODO: target не используется
     private final ExtrapolationMap extMap = new ExtrapolationMap();
     private final ExtrapolationMap hitboxMap = new ExtrapolationMap();
-    private final List<PlayerEntity> enemies = new ArrayList<>();
+    private final List<Player> enemies = new ArrayList<>();
     private BlockPos placePos = null;
     private BlockPos explodePos = null;
     private LivingEntity target = null;
@@ -135,7 +134,7 @@ public class AnchorAura extends Module {
     }
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.calc(1.0F);
             this.updatePos();
         }
@@ -143,7 +142,7 @@ public class AnchorAura extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.calc(event.tickDelta);
             if (this.explodePos != null) {
                 this.updateInteract();
@@ -167,7 +166,7 @@ public class AnchorAura extends Module {
                 int x = i % d - this.calcR;
                 int y = i / d % d - this.calcR;
                 int z = i / d / d % d - this.calcR;
-                BlockPos pos = this.calcMiddle.add(x, y, z);
+                BlockPos pos = this.calcMiddle.offset(x, y, z);
                 this.calcPos(pos);
             }
 
@@ -179,20 +178,20 @@ public class AnchorAura extends Module {
                 int x = i % d - this.targetCalcR;
                 int y = i / d % d - this.targetCalcR;
                 int z = i / d / d % d - this.targetCalcR;
-                BlockPos pos = this.calcMiddle.add(x, y, z);
+                BlockPos pos = this.calcMiddle.offset(x, y, z);
                 this.calcTarget(pos);
             }
         }
     }
 
     private void calcTarget(BlockPos pos) {
-        if (BlackOut.mc.world.getBlockState(pos).getBlock() == Blocks.RESPAWN_ANCHOR) {
+        if (BlackOut.mc.level.getBlockState(pos).getBlock() == Blocks.RESPAWN_ANCHOR) {
             if (SettingUtils.getPlaceOnDirection(pos) != null) {
                 if (SettingUtils.inInteractRange(pos)) {
                     this.calcDamage(pos);
                     if (this.explodeDamageCheck()) {
                         double value = this.getExplodeValue(pos);
-                        boolean isLoaded = BlackOut.mc.world.getBlockState(pos).get(Properties.CHARGES) > 0;
+                        boolean isLoaded = BlackOut.mc.level.getBlockState(pos).getValue(BlockStateProperties.RESPAWN_ANCHOR_CHARGES) > 0;
                         if (!(value <= this.targetCalcValue) && (!this.bestIsLoaded || isLoaded)) {
                             this.targetCalcBest = pos;
                             this.targetCalcValue = value;
@@ -205,7 +204,7 @@ public class AnchorAura extends Module {
     }
 
     private void calcPos(BlockPos pos) {
-        if (OLEPOSSUtils.replaceable(pos) || BlackOut.mc.world.getBlockState(pos).getBlock() == Blocks.RESPAWN_ANCHOR) {
+        if (OLEPOSSUtils.replaceable(pos) || BlackOut.mc.level.getBlockState(pos).getBlock() == Blocks.RESPAWN_ANCHOR) {
             PlaceData data = SettingUtils.getPlaceData(pos);
             if (this.inRangeToEnemies(pos)) {
                 if (data.valid()) {
@@ -231,9 +230,9 @@ public class AnchorAura extends Module {
     }
 
     private boolean inRangeToEnemies(BlockPos pos) {
-        Vec3d vec = pos.toCenterPos();
+        Vec3 vec = pos.getCenter();
 
-        for (PlayerEntity player : this.enemies) {
+        for (Player player : this.enemies) {
             if (BoxUtils.middle(player.getBoundingBox()).distanceTo(vec) < 4.0) {
                 return true;
             }
@@ -251,8 +250,8 @@ public class AnchorAura extends Module {
     }
 
     private void updateInteract() {
-        BlockState state = BlackOut.mc.world.getBlockState(this.explodePos);
-        if (state.getBlock() == Blocks.RESPAWN_ANCHOR && state.get(Properties.CHARGES) <= 0) {
+        BlockState state = BlackOut.mc.level.getBlockState(this.explodePos);
+        if (state.getBlock() == Blocks.RESPAWN_ANCHOR && state.getValue(BlockStateProperties.RESPAWN_ANCHOR_CHARGES) <= 0) {
             if (!(System.currentTimeMillis() - this.lastInteract < 1000.0 / this.interactSpeed.get())) {
                 this.interact(this.explodePos);
             }
@@ -260,8 +259,8 @@ public class AnchorAura extends Module {
     }
 
     private void updateExplode() {
-        BlockState state = BlackOut.mc.world.getBlockState(this.explodePos);
-        if (state.getBlock() == Blocks.RESPAWN_ANCHOR && state.get(Properties.CHARGES) > 0) {
+        BlockState state = BlackOut.mc.level.getBlockState(this.explodePos);
+        if (state.getBlock() == Blocks.RESPAWN_ANCHOR && state.getValue(BlockStateProperties.RESPAWN_ANCHOR_CHARGES) > 0) {
             if (!(System.currentTimeMillis() - this.lastExplode < 1000.0 / this.explodeSpeed.get())) {
                 this.explode(this.explodePos);
             }
@@ -272,16 +271,16 @@ public class AnchorAura extends Module {
         Direction dir = SettingUtils.getPlaceOnDirection(pos);
         if (dir != null) {
             Predicate<ItemStack> predicate = stack -> stack.getItem() != Items.GLOWSTONE;
-            Hand hand = OLEPOSSUtils.getHand(predicate);
+            InteractionHand hand = OLEPOSSUtils.getHand(predicate);
             this.result = this.switchMode.get().find(predicate);
             if (hand != null || this.result.wasFound()) {
                 PlaceData data = SettingUtils.getPlaceData(pos);
-                Vec3d placeVec = data != null && data.valid() ? data.pos().toCenterPos().offset(data.dir(), 0.5) : null;
+                Vec3 placeVec = data != null && data.valid() ? data.pos().getCenter().relative(data.dir(), 0.5) : null;
                 if (!SettingUtils.shouldRotate(RotationType.Interact) || this.rotateBlock(pos, dir, placeVec, RotationType.Interact, 0.1, "explode")) {
                     boolean switched = false;
                     if (hand != null || (switched = this.switchMode.get().swap(this.result.slot()))) {
-                        this.interactBlock(hand, pos.toCenterPos(), dir, pos);
-                        BlackOut.mc.world.setBlockState(pos, Blocks.AIR.getDefaultState());
+                        this.interactBlock(hand, pos.getCenter(), dir, pos);
+                        BlackOut.mc.level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
                         this.lastExplode = System.currentTimeMillis();
                         this.explodePos = null;
                         if (this.placeSwing.get()) {
@@ -301,16 +300,16 @@ public class AnchorAura extends Module {
     private void interact(BlockPos pos) {
         Direction dir = SettingUtils.getPlaceOnDirection(pos);
         if (dir != null) {
-            Hand hand = OLEPOSSUtils.getHand(Items.GLOWSTONE);
+            InteractionHand hand = OLEPOSSUtils.getHand(Items.GLOWSTONE);
             this.result = this.switchMode.get().find(Items.GLOWSTONE);
             if (hand != null || this.result.wasFound()) {
                 PlaceData data = SettingUtils.getPlaceData(pos);
-                Vec3d placeVec = data != null && data.valid() ? data.pos().toCenterPos().offset(data.dir(), 0.5) : null;
+                Vec3 placeVec = data != null && data.valid() ? data.pos().getCenter().relative(data.dir(), 0.5) : null;
                 if (!SettingUtils.shouldRotate(RotationType.Interact) || this.rotateBlock(pos, dir, placeVec, RotationType.Interact, 0.05, "interact")) {
                     boolean switched = false;
                     if (hand != null || (switched = this.switchMode.get().swap(this.result.slot()))) {
-                        this.interactBlock(hand, pos.toCenterPos(), dir, pos);
-                        RespawnAnchorBlock.charge(BlackOut.mc.player, BlackOut.mc.world, pos, BlackOut.mc.world.getBlockState(pos));
+                        this.interactBlock(hand, pos.getCenter(), dir, pos);
+                        RespawnAnchorBlock.charge(BlackOut.mc.player, BlackOut.mc.level, pos, BlackOut.mc.level.getBlockState(pos));
                         this.blockPlaceSound(pos, this.result.stack());
                         this.lastInteract = System.currentTimeMillis();
                         if (this.placeSwing.get()) {
@@ -330,14 +329,14 @@ public class AnchorAura extends Module {
     private void place() {
         PlaceData data = SettingUtils.getPlaceData(this.placePos);
         if (data.valid()) {
-            Hand hand = OLEPOSSUtils.getHand(Items.RESPAWN_ANCHOR);
+            InteractionHand hand = OLEPOSSUtils.getHand(Items.RESPAWN_ANCHOR);
             this.result = this.switchMode.get().find(Items.RESPAWN_ANCHOR);
             if (hand != null || this.result.wasFound()) {
                 if (!SettingUtils.shouldRotate(RotationType.BlockPlace)
-                        || this.rotateBlock(data, data.pos().toCenterPos().offset(data.dir(), 0.5), RotationType.BlockPlace, "placing")) {
+                        || this.rotateBlock(data, data.pos().getCenter().relative(data.dir(), 0.5), RotationType.BlockPlace, "placing")) {
                     boolean switched = false;
                     if (hand != null || (switched = this.switchMode.get().swap(this.result.slot()))) {
-                        this.placeBlock(hand, data.pos().toCenterPos(), data.dir(), data.pos());
+                        this.placeBlock(hand, data.pos().getCenter(), data.dir(), data.pos());
                         this.setBlock(hand, this.placePos);
                         this.lastPlace = System.currentTimeMillis();
                         if (this.placeSwing.get()) {
@@ -354,17 +353,17 @@ public class AnchorAura extends Module {
         }
     }
 
-    private void setBlock(Hand hand, BlockPos pos) {
+    private void setBlock(InteractionHand hand, BlockPos pos) {
         Item item;
         if (hand == null) {
-            item = BlackOut.mc.player.getInventory().getStack(this.result.slot()).getItem();
+            item = BlackOut.mc.player.getInventory().getItem(this.result.slot()).getItem();
         } else {
             item = OLEPOSSUtils.getItem(hand).getItem();
         }
 
         if (item instanceof BlockItem block) {
             Managers.PACKET.addToQueue(handler -> {
-                BlackOut.mc.world.setBlockState(pos, block.getBlock().getDefaultState());
+                BlackOut.mc.level.setBlockAndUpdate(pos, block.getBlock().defaultBlockState());
                 this.blockPlaceSound(this.placePos, this.result.stack());
             });
         }
@@ -380,16 +379,16 @@ public class AnchorAura extends Module {
     }
 
     private void findTargets() {
-        Map<PlayerEntity, Double> map = new HashMap<>();
+        Map<Player, Double> map = new HashMap<>();
 
-        for (PlayerEntity player : BlackOut.mc.world.getPlayers()) {
+        for (Player player : BlackOut.mc.level.players()) {
             if (player != BlackOut.mc.player && !(player.getHealth() <= 0.0F)) {
                 double distance = BlackOut.mc.player.distanceTo(player);
                 if (!(distance > this.enemyDistance.get())) {
                     if (map.size() < 3) {
                         map.put(player, distance);
                     } else {
-                        for (Entry<PlayerEntity, Double> entry : map.entrySet()) {
+                        for (Entry<Player, Double> entry : map.entrySet()) {
                             if (entry.getValue() > distance) {
                                 map.remove(entry.getKey());
                                 map.put(player, distance);
@@ -411,7 +410,7 @@ public class AnchorAura extends Module {
         this.calcValue = -42069.0;
         this.progress = 0;
         this.calcR = (int) Math.ceil(SettingUtils.maxPlaceRange());
-        this.calcMiddle = BlockPos.ofFloored(BlackOut.mc.player.getEyePos());
+        this.calcMiddle = BlockPos.containing(BlackOut.mc.player.getEyePosition());
         this.targetCalcBest = null;
         this.targetCalcValue = -42069.0;
         this.bestIsLoaded = false;
@@ -500,7 +499,7 @@ public class AnchorAura extends Module {
     }
 
     private void calcDamage(BlockPos pos) {
-        Vec3d vec = pos.toCenterPos();
+        Vec3 vec = pos.getCenter();
         this.target = null;
         this.selfDamage = DamageUtils.anchorDamage(BlackOut.mc.player, this.extMap.get(BlackOut.mc.player), vec, pos);
         this.enemyDamage = 0.0;
@@ -508,7 +507,7 @@ public class AnchorAura extends Module {
         this.enemyHealth = 20.0;
         this.friendHealth = 20.0;
         this.enemies.forEach(player -> {
-            Box box = this.extMap.get(player);
+            AABB box = this.extMap.get(player);
             if (!(player.getHealth() <= 0.0F) && player != BlackOut.mc.player) {
                 double dmg = DamageUtils.anchorDamage(player, box, vec, pos);
                 double health = this.getHealth(player);

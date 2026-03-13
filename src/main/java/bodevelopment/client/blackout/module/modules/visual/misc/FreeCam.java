@@ -8,9 +8,9 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.client.input.KeyboardInput;
-import net.minecraft.util.PlayerInput;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.player.KeyboardInput;
+import net.minecraft.world.entity.player.Input;
+import net.minecraft.world.phys.Vec3;
 
 public class FreeCam extends Module {
     private static FreeCam INSTANCE;
@@ -21,8 +21,8 @@ public class FreeCam extends Module {
     private final Setting<Double> speedH = this.sgGeneral.doubleSetting("Horizontal Velocity", 1.0, 0.1, 10.0, 0.1, "The movement speed multiplier for the lateral X and Z axes.");
     private final Setting<Double> speedV = this.sgGeneral.doubleSetting("Vertical Velocity", 1.0, 0.1, 10.0, 0.1, "The movement speed multiplier for the vertical Y axis.");
 
-    public final Vec3d velocity = new Vec3d(0.0, 0.0, 0.0);
-    public Vec3d pos = Vec3d.ZERO;
+    public final Vec3 velocity = new Vec3(0.0, 0.0, 0.0);
+    public Vec3 pos = Vec3.ZERO;
     private float moveYaw;
     private float vertical;
     private boolean move;
@@ -38,20 +38,20 @@ public class FreeCam extends Module {
 
     @Event
     public void onRender(TickEvent.Pre event) {
-        if (BlackOut.mc.world == null || BlackOut.mc.player == null) {
+        if (BlackOut.mc.level == null || BlackOut.mc.player == null) {
             this.disable();
         }
     }
 
     public void resetInput(KeyboardInput input) {
-        input.movementForward = 0.0F;
-        input.movementSideways = 0.0F;
-        input.playerInput = PlayerInput.DEFAULT;
+        input.forwardImpulse = 0.0F;
+        input.leftImpulse = 0.0F;
+        input.keyPresses = Input.EMPTY;
     }
 
-    public Vec3d getPos(float yaw, float pitch) {
+    public Vec3 getPos(float yaw, float pitch) {
         this.inputYaw(yaw);
-        Vec3d movement;
+        Vec3 movement;
         double rad;
         double x;
         double y;
@@ -67,7 +67,7 @@ public class FreeCam extends Module {
                     z = Math.sin(rad) * this.speedH.get();
                 }
 
-                movement = new Vec3d(x, y, z);
+                movement = new Vec3(x, y, z);
                 break;
             case Smooth:
                 rad = Math.toRadians(this.moveYaw + 90.0F);
@@ -98,29 +98,29 @@ public class FreeCam extends Module {
                 double lookY = sinPitch;
                 double lookZ = cosYaw * cosPitch;
 
-                Vec3d direction = new Vec3d(lookX, lookY, lookZ);
+                Vec3 direction = new Vec3(lookX, lookY, lookZ);
 
                 if (this.move) {
-                    movement = direction.multiply(this.speedH.get());
+                    movement = direction.scale(this.speedH.get());
                 } else {
-                    movement = new Vec3d(0, this.vertical * this.speedV.get(), 0);
+                    movement = new Vec3(0, this.vertical * this.speedV.get(), 0);
                 }
                 break;
             default:
                 return this.pos;
         }
 
-        return this.pos = this.pos.add(movement.multiply(BlackOut.mc.getRenderTickCounter().getLastFrameDuration()));
+        return this.pos = this.pos.add(movement.scale(BlackOut.mc.getDeltaTracker().getGameTimeDeltaTicks()));
     }
 
     private double smoothen(double from, double to) {
-        return (from + to * BlackOut.mc.getRenderTickCounter().getLastFrameDuration() / 4.0) * (1.0F - BlackOut.mc.getRenderTickCounter().getLastFrameDuration() / 4.0F);
+        return (from + to * BlackOut.mc.getDeltaTracker().getGameTimeDeltaTicks() / 4.0) * (1.0F - BlackOut.mc.getDeltaTracker().getGameTimeDeltaTicks() / 4.0F);
     }
 
     private void inputYaw(float yaw) {
         this.moveYaw = yaw;
-        float forward = this.getMovementMultiplier(BlackOut.mc.options.forwardKey.isPressed(), BlackOut.mc.options.backKey.isPressed());
-        float strafing = this.getMovementMultiplier(BlackOut.mc.options.leftKey.isPressed(), BlackOut.mc.options.rightKey.isPressed());
+        float forward = this.getMovementMultiplier(BlackOut.mc.options.keyUp.isDown(), BlackOut.mc.options.keyDown.isDown());
+        float strafing = this.getMovementMultiplier(BlackOut.mc.options.keyLeft.isDown(), BlackOut.mc.options.keyRight.isDown());
         if (forward > 0.0F) {
             this.move = true;
             this.moveYaw += strafing > 0.0F ? -45.0F : (strafing < 0.0F ? 45.0F : 0.0F);
@@ -132,7 +132,7 @@ public class FreeCam extends Module {
             this.moveYaw += strafing > 0.0F ? -90.0F : (strafing < 0.0F ? 90.0F : 0.0F);
         }
 
-        this.vertical = this.getMovementMultiplier(BlackOut.mc.options.jumpKey.isPressed(), BlackOut.mc.options.sneakKey.isPressed());
+        this.vertical = this.getMovementMultiplier(BlackOut.mc.options.keyJump.isDown(), BlackOut.mc.options.keyShift.isDown());
     }
 
     private float getMovementMultiplier(boolean positive, boolean negative) {

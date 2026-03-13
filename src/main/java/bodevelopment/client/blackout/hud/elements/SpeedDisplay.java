@@ -4,7 +4,7 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.hud.TextElement;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 
 public class SpeedDisplay extends TextElement {
     public final SettingGroup sgGeneral = this.addGroup("General");
@@ -21,8 +21,8 @@ public class SpeedDisplay extends TextElement {
     public void render() {
         if (BlackOut.mc.player == null) return;
 
-        Vec3d vel = BlackOut.mc.player.getVelocity();
-        double speed = onlyHorizontal.get() ? vel.horizontalLength() : vel.length();
+        Vec3 vel = BlackOut.mc.player.getDeltaMovement();
+        double speed = onlyHorizontal.get() ? vel.horizontalDistance() : vel.length();
         speed *= 20.0;
 
         String speedString = String.format("%." + decimals.get() + "f", speed);

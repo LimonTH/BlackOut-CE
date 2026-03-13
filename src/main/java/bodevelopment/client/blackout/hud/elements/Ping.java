@@ -2,7 +2,7 @@ package bodevelopment.client.blackout.hud.elements;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.hud.TextElement;
-import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.multiplayer.PlayerInfo;
 
 public class Ping extends TextElement {
 
@@ -13,14 +13,14 @@ public class Ping extends TextElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             String ping = this.getPing();
             this.drawElement(this.stack, "Ping:", ping);
         }
     }
 
     private String getPing() {
-        PlayerListEntry entry = BlackOut.mc.getNetworkHandler().getPlayerListEntry(BlackOut.mc.player.getGameProfile().getName());
+        PlayerInfo entry = BlackOut.mc.getConnection().getPlayerInfo(BlackOut.mc.player.getGameProfile().getName());
         return entry == null ? "-" : String.valueOf(entry.getLatency());
     }
 }

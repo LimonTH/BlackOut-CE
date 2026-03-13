@@ -25,17 +25,20 @@ import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.InvUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import net.minecraft.block.AirBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.*;
-import net.minecraft.util.shape.VoxelShape;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.AirBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,7 +85,7 @@ public class Nuker extends Module {
     private double prevProgress = 0.0;
     private double currentProgress = 0.0;
     private boolean shouldRestart = false;
-    private BlockPos ended = BlockPos.ORIGIN;
+    private BlockPos ended = BlockPos.ZERO;
 
     public Nuker() {
         super("Nuker", "Automatically breaks multiple blocks within range based on a filter list.", SubCategory.MISC, true);
@@ -90,7 +93,7 @@ public class Nuker extends Module {
 
     @Event
     public void onSent(PacketEvent.Sent event) {
-        if (this.resetOnSwitch.get() && event.packet instanceof UpdateSelectedSlotC2SPacket) {
+        if (this.resetOnSwitch.get() && event.packet instanceof ServerboundSetCarriedItemPacket) {
             this.shouldRestart = true;
         }
     }
@@ -107,7 +110,7 @@ public class Nuker extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.startedThisTick = false;
             if (this.shouldUpdatePos()) {
                 this.minePos = this.findPos();
@@ -121,7 +124,7 @@ public class Nuker extends Module {
             if (this.instants.isEmpty()) {
                 this.updateStartOrAbort(this.minePos);
             } else {
-                this.instants.forEach(pair -> this.updateStartOrAbort(pair.getLeft()));
+                this.instants.forEach(pair -> this.updateStartOrAbort(pair.getA()));
             }
 
             this.updateMining();
@@ -131,12 +134,12 @@ public class Nuker extends Module {
     }
 
     private boolean shouldUpdatePos() {
-        return this.minePos == null || !this.blocks.get().contains(BlackOut.mc.world.getBlockState(this.minePos).getBlock());
+        return this.minePos == null || !this.blocks.get().contains(BlackOut.mc.level.getBlockState(this.minePos).getBlock());
     }
 
     private BlockPos findPos() {
         this.instants.clear();
-        BlockPos middle = BlockPos.ofFloored(BlackOut.mc.player.getEyePos());
+        BlockPos middle = BlockPos.containing(BlackOut.mc.player.getEyePosition());
         int rad = (int) Math.ceil(SettingUtils.maxMineRange());
         BlockPos bestPos = null;
         double bestDist = -1.0;
@@ -146,14 +149,14 @@ public class Nuker extends Module {
         for (int x = -rad; x <= rad; x++) {
             for (int y = -rad; y <= rad; y++) {
                 for (int z = -rad; z <= rad; z++) {
-                    BlockPos pos = middle.add(x, y, z);
+                    BlockPos pos = middle.offset(x, y, z);
                     if (this.down.get() || pos.getY() >= feetY) {
-                        BlockState state = BlackOut.mc.world.getBlockState(pos);
+                        BlockState state = BlackOut.mc.level.getBlockState(pos);
                         if (this.blocks.get().contains(state.getBlock())) {
                             double delta = this.getBestDelta(pos);
                             boolean isInstant = this.creative.get() || delta >= 1.0;
                             if (!(delta < bestDelta) || isInstant) {
-                                double dist = BlackOut.mc.player.getEyePos().distanceTo(pos.toCenterPos());
+                                double dist = BlackOut.mc.player.getEyePosition().distanceTo(pos.getCenter());
                                 if ((!(dist > bestDist) || !(bestDist > 0.0) || isInstant)
                                         && SettingUtils.getPlaceOnDirection(pos) != null
                                         && SettingUtils.inMineRange(pos)) {
@@ -163,7 +166,7 @@ public class Nuker extends Module {
                                         } else {
                                             for (int i = 0; i < this.instants.size(); i++) {
                                                 Pair<BlockPos, Double> pair = this.instants.get(i);
-                                                if (!(pair.getRight() < dist)) {
+                                                if (!(pair.getB() < dist)) {
                                                     this.instants.remove(i);
                                                     this.instants.add(new Pair<>(pos, dist));
                                                     break;
@@ -183,7 +186,7 @@ public class Nuker extends Module {
             }
         }
 
-        return !this.instants.isEmpty() ? this.instants.getFirst().getLeft() : bestPos;
+        return !this.instants.isEmpty() ? this.instants.getFirst().getA() : bestPos;
     }
 
     private double getProgress() {
@@ -192,7 +195,7 @@ public class Nuker extends Module {
         } else {
             ItemStack itemStack = this.findBestSlot(
                             stack -> BlockUtils.getBlockBreakingDelta(
-                                    stack, BlackOut.mc.world.getBlockState(this.minePos), this.minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get()
+                                    stack, BlackOut.mc.level.getBlockState(this.minePos), this.minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get()
                             )
                     )
                     .stack();
@@ -201,7 +204,7 @@ public class Nuker extends Module {
                     / (
                     1.0
                             / BlockUtils.getBlockBreakingDelta(
-                            itemStack, BlackOut.mc.world.getBlockState(this.minePos), this.minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get()
+                            itemStack, BlackOut.mc.level.getBlockState(this.minePos), this.minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get()
                     )
             )
                     : this.progress;
@@ -212,14 +215,14 @@ public class Nuker extends Module {
         double best = 0.0;
 
         for (int i = this.pickaxeSwitch.get().hotbar ? 0 : 9;
-             i < (this.pickaxeSwitch.get().inventory && this.allowInventory.get() ? BlackOut.mc.player.getInventory().size() : 9);
+             i < (this.pickaxeSwitch.get().inventory && this.allowInventory.get() ? BlackOut.mc.player.getInventory().getContainerSize() : 9);
              i++
         ) {
-            ItemStack stack = BlackOut.mc.player.getInventory().getStack(i);
+            ItemStack stack = BlackOut.mc.player.getInventory().getItem(i);
             best = Math.max(
                     best,
                     BlockUtils.getBlockBreakingDelta(
-                            stack, BlackOut.mc.world.getBlockState(pos), pos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get()
+                            stack, BlackOut.mc.level.getBlockState(pos), pos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get()
                     )
             );
         }
@@ -248,7 +251,7 @@ public class Nuker extends Module {
 
             if (!this.started && !this.paused()) {
                 Direction dir = SettingUtils.getPlaceOnDirection(pos);
-                if (!SettingUtils.startMineRot() || this.rotateBlock(pos, dir, pos.toCenterPos(), RotationType.Mining, "mining")) {
+                if (!SettingUtils.startMineRot() || this.rotateBlock(pos, dir, pos.getCenter(), RotationType.Mining, "mining")) {
                     this.start(pos);
                 }
             }
@@ -287,7 +290,7 @@ public class Nuker extends Module {
                 this.minePos = null;
                 this.ended = pos;
                 if (!this.packet.get()) {
-                    BlackOut.mc.world.setBlockState(pos, Blocks.AIR.getDefaultState());
+                    BlackOut.mc.level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
                 }
 
                 Managers.BLOCK.set(pos, Blocks.AIR, true, true);
@@ -297,7 +300,7 @@ public class Nuker extends Module {
                 this.pickaxeSwitch.get().swap(result.slot());
             }
 
-            this.sendSequenced(s -> new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, dir, s));
+            this.sendSequenced(s -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, dir, s));
             SettingUtils.mineSwing(SwingSettings.MiningSwingState.Start);
             if (canInstant && !holding) {
                 this.pickaxeSwitch.get().swapBack();
@@ -305,7 +308,7 @@ public class Nuker extends Module {
 
             this.end("mining");
             if (this.mineStartSwing.get()) {
-                this.clientSwing(this.mineHand.get(), Hand.MAIN_HAND);
+                this.clientSwing(this.mineHand.get(), InteractionHand.MAIN_HAND);
             }
         }
     }
@@ -317,7 +320,7 @@ public class Nuker extends Module {
                             stack -> BlockUtils.getBlockBreakingDelta(this.minePos, stack, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get())
                     )
                     .slot();
-            ItemStack bestStack = holding ? Managers.PACKET.getStack() : BlackOut.mc.player.getInventory().getStack(slot);
+            ItemStack bestStack = holding ? Managers.PACKET.getStack() : BlackOut.mc.player.getInventory().getItem(slot);
             if (this.ncpProgress.get()) {
                 this.minedFor++;
             } else {
@@ -343,18 +346,18 @@ public class Nuker extends Module {
         if (!(this.getBlock(this.minePos) instanceof AirBlock)) {
             Direction dir = SettingUtils.getPlaceOnDirection(this.minePos);
             if (dir != null) {
-                if (!SettingUtils.endMineRot() || this.rotateBlock(this.minePos, dir, this.minePos.toCenterPos(), RotationType.Mining, "mining")) {
+                if (!SettingUtils.endMineRot() || this.rotateBlock(this.minePos, dir, this.minePos.getCenter(), RotationType.Mining, "mining")) {
                     boolean switched = false;
                     if (holding || (switched = this.pickaxeSwitch.get().swap(slot))) {
                         this.ended = this.minePos;
-                        this.sendSequenced(s -> new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, this.minePos, dir, s));
+                        this.sendSequenced(s -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, this.minePos, dir, s));
                         SettingUtils.mineSwing(SwingSettings.MiningSwingState.End);
                         if (this.mineEndSwing.get()) {
-                            this.clientSwing(this.mineHand.get(), Hand.MAIN_HAND);
+                            this.clientSwing(this.mineHand.get(), InteractionHand.MAIN_HAND);
                         }
 
                         if (!this.packet.get()) {
-                            BlackOut.mc.world.setBlockState(this.minePos, Blocks.AIR.getDefaultState());
+                            BlackOut.mc.level.setBlockAndUpdate(this.minePos, Blocks.AIR.defaultBlockState());
                         }
 
                         Managers.BLOCK.set(this.minePos, Blocks.AIR, true, true);
@@ -376,7 +379,7 @@ public class Nuker extends Module {
             if (SettingUtils.inMineRange(this.minePos)) {
                 Direction dir = SettingUtils.getPlaceOnDirection(this.minePos);
                 if (dir != null) {
-                    this.rotateBlock(this.minePos, dir, this.minePos.toCenterPos(), RotationType.Mining, "mining");
+                    this.rotateBlock(this.minePos, dir, this.minePos.getCenter(), RotationType.Mining, "mining");
                 }
             }
         }
@@ -417,20 +420,20 @@ public class Nuker extends Module {
     private void updateRender(float tickDelta) {
         double p = this.currentProgress;
         if (this.minePos != null && this.prevProgress < p && p < Double.POSITIVE_INFINITY) {
-            p = MathHelper.lerp(tickDelta, this.prevProgress, p);
-            p = MathHelper.clamp(p, 0.0, 1.0);
+            p = Mth.lerp(tickDelta, this.prevProgress, p);
+            p = Mth.clamp(p, 0.0, 1.0);
             p = 1.0 - Math.pow(1.0 - p, this.animationExponent.get());
             p = Math.min(p / 2.0, 0.5);
             BlackOutColor sideColor = this.getSideColor(p * 2.0);
             BlackOutColor lineColor = this.getLineColor(p * 2.0);
-            Box box = this.getBox(p, this.animationMode.get());
+            AABB box = this.getBox(p, this.animationMode.get());
             if (box != null) {
                 Render3DUtils.box(box, sideColor, lineColor, this.renderShape.get());
             }
         }
     }
 
-    private Box getBox(double p, AutoMine.AnimationMode mode) {
+    private AABB getBox(double p, AutoMine.AnimationMode mode) {
         double up = 0.5;
         double down = 0.5;
         double sides = 0.5;
@@ -457,24 +460,24 @@ public class Nuker extends Module {
     }
 
     private void abort(BlockPos pos) {
-        this.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN, 0));
+        this.sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN, 0));
         this.started = false;
     }
 
-    private Box getBox(double sides, double up, double down) {
-        VoxelShape shape = BlackOut.mc.world.getBlockState(this.minePos).getOutlineShape(BlackOut.mc.world, this.minePos);
+    private AABB getBox(double sides, double up, double down) {
+        VoxelShape shape = BlackOut.mc.level.getBlockState(this.minePos).getShape(BlackOut.mc.level, this.minePos);
         if (shape.isEmpty()) {
             return null;
         } else {
-            Box from = shape.getBoundingBox();
-            Vec3d middle = BoxUtils.middle(from);
-            Vec3d scale = new Vec3d(from.getLengthX(), from.getLengthY(), from.getLengthZ());
-            return this.fromScale(middle, scale, sides, up, down).offset(this.minePos);
+            AABB from = shape.bounds();
+            Vec3 middle = BoxUtils.middle(from);
+            Vec3 scale = new Vec3(from.getXsize(), from.getYsize(), from.getZsize());
+            return this.fromScale(middle, scale, sides, up, down).move(this.minePos);
         }
     }
 
-    private Box fromScale(Vec3d m, Vec3d s, double sides, double up, double down) {
-        return new Box(
+    private AABB fromScale(Vec3 m, Vec3 s, double sides, double up, double down) {
+        return new AABB(
                 m.x - sides * s.x,
                 m.y - down * s.y,
                 m.z - sides * s.z,

@@ -9,10 +9,9 @@ import bodevelopment.client.blackout.module.modules.visual.entities.PlayerModifi
 import bodevelopment.client.blackout.util.SettingUtils;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -25,11 +24,11 @@ public abstract class MixinLivingEntity {
     public abstract void remove(Entity.RemovalReason reason);
 
     @Shadow
-    public abstract void jump();
+    public abstract void jumpFromGround();
 
-    @Inject(method = "getLeaningPitch", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getSwimAmount", at = @At("HEAD"), cancellable = true)
     private void injectLeaning(float tickDelta, CallbackInfoReturnable<Float> cir) {
-        if ((Object) this instanceof PlayerEntity player) {
+        if ((Object) this instanceof Player player) {
             PlayerModifier playerModifier = PlayerModifier.getInstance();
             if (playerModifier.enabled && playerModifier.setLeaning.get()) {
                 cir.setReturnValue(playerModifier.getLeaning(player));
@@ -37,14 +36,14 @@ public abstract class MixinLivingEntity {
         }
     }
 
-    @ModifyConstant(method = "tickMovement", constant = @Constant(intValue = 10))
+    @ModifyConstant(method = "aiStep", constant = @Constant(intValue = 10))
     private int modifyJumpDelay(int constant) {
         return NoJumpDelay.getInstance().enabled ? 0 : constant;
     }
 
     @WrapOperation(
-            method = "jump",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F")
+            method = "jumpFromGround",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getYRot()F")
     )
     private float wrapSprintJumpYaw(LivingEntity instance, Operation<Float> original) {
         if (instance != BlackOut.mc.player || !SettingUtils.grimMovement()) {
@@ -54,7 +53,7 @@ public abstract class MixinLivingEntity {
     }
     @WrapOperation(
             method = "tick",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F", ordinal = 0)
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getYRot()F", ordinal = 0)
     )
     private float wrapYaw1(LivingEntity instance, Operation<Float> original) {
         return (Object) this != BlackOut.mc.player ? original.call(instance) : this.getModifiedYaw(instance, original);
@@ -62,33 +61,33 @@ public abstract class MixinLivingEntity {
 
     @WrapOperation(
             method = "tick",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F", ordinal = 1)
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getYRot()F", ordinal = 1)
     )
     private float wrapYaw2(LivingEntity instance, Operation<Float> original) {
         return (Object) this != BlackOut.mc.player ? original.call(instance) : this.getModifiedYaw(instance, original);
     }
 
     @WrapOperation(
-            method = "turnHead",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F")
+            method = "tickHeadTurn",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getYRot()F")
     )
     private float wrapTurnHeadYaw(LivingEntity instance, Operation<Float> original) {
         return (Object) this != BlackOut.mc.player ? original.call(instance) : this.getModifiedYaw(instance, original);
     }
 
-    @Redirect(method = "getMovementSpeed(F)F", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getMovementSpeed()F"))
+    @Redirect(method = "getFrictionInfluencedSpeed(F)F", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getSpeed()F"))
     private float vanillaSpeed(LivingEntity instance) {
         if ((Object) this != BlackOut.mc.player) {
-            return instance.getMovementSpeed();
+            return instance.getSpeed();
         } else {
             Speed speed = Speed.getInstance();
             return speed.enabled && speed.mode.get() == Speed.SpeedMode.Vanilla
-                    ? speed.vanillaSpeed.get().floatValue() * instance.getMovementSpeed()
-                    : instance.getMovementSpeed();
+                    ? speed.vanillaSpeed.get().floatValue() * instance.getSpeed()
+                    : instance.getSpeed();
         }
     }
 
-    @Redirect(method = "calcGlidingVelocity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getPitch()F"))
+    @Redirect(method = "updateFallFlyingMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getXRot()F"))
     private float redirectElytraPitch(LivingEntity instance) {
         if ((Object) this == BlackOut.mc.player) {
             if (SettingUtils.grimMovement()) {
@@ -101,15 +100,15 @@ public abstract class MixinLivingEntity {
             }
         }
 
-        return instance.getPitch();
+        return instance.getXRot();
     }
 
-    @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;jump()V"))
+    @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;jumpFromGround()V"))
     private void onJump(LivingEntity instance) {
         if ((Object) this == BlackOut.mc.player) {
             ElytraFly elytraFly = ElytraFly.getInstance();
             if (!elytraFly.enabled || !elytraFly.isBouncing()) {
-                this.jump();
+                this.jumpFromGround();
             }
         }
     }

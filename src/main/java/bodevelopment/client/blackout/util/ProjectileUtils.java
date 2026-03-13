@@ -2,16 +2,15 @@ package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.randomstuff.Rotation;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.function.Consumer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 
 public class ProjectileUtils {
     private static double[] hitPos;
 
-    public static Rotation calcShootingRotation(Vec3d from, Vec3d to, double speed, boolean playerVelocity, Consumer<double[]> velocityUpdate) {
-        Vec3d interpolated = to.subtract(from).add(0.0, 0.1, 0.0);
+    public static Rotation calcShootingRotation(Vec3 from, Vec3 to, double speed, boolean playerVelocity, Consumer<double[]> velocityUpdate) {
+        Vec3 interpolated = to.subtract(from).add(0.0, 0.1, 0.0);
         double min = -180.0;
         double max = 180.0;
         double pitch = 0.0;
@@ -35,10 +34,10 @@ public class ProjectileUtils {
     }
 
     private static double getYaw(double x, double z) {
-        return MathHelper.wrapDegrees(Math.toDegrees(Math.atan2(z, x)) - 90.0);
+        return Mth.wrapDegrees(Math.toDegrees(Math.atan2(z, x)) - 90.0);
     }
 
-    private static double getPitch(Vec3d to, double yaw, double speed, boolean playerVelocity, Consumer<double[]> velocityUpdate) {
+    private static double getPitch(Vec3 to, double yaw, double speed, boolean playerVelocity, Consumer<double[]> velocityUpdate) {
         double min = -90.0;
         double max = 90.0;
 
@@ -59,9 +58,9 @@ public class ProjectileUtils {
         return middle;
     }
 
-    private static double[] calcAngleHitPos(Vec3d to, Vec3d velocity, Consumer<double[]> velocityUpdate) {
+    private static double[] calcAngleHitPos(Vec3 to, Vec3 velocity, Consumer<double[]> velocityUpdate) {
         double[] vel = new double[]{velocity.x, velocity.y, velocity.z};
-        double distToTarget = to.horizontalLengthSquared();
+        double distToTarget = to.horizontalDistanceSqr();
         double x = 0.0;
         double y = 0.0;
         double z = 0.0;
@@ -84,11 +83,11 @@ public class ProjectileUtils {
         return x * x + z * z;
     }
 
-    public static Vec3d getShootingVelocity(double yaw, double pitch, double speed, boolean playerVelocity) {
-        Vec3d vec = RotationUtils.rotationVec(yaw, pitch, speed);
+    public static Vec3 getShootingVelocity(double yaw, double pitch, double speed, boolean playerVelocity) {
+        Vec3 vec = RotationUtils.rotationVec(yaw, pitch, speed);
         if (playerVelocity) {
-            Vec3d velocity = BlackOut.mc.player.getVelocity();
-            vec = vec.add(velocity.x, BlackOut.mc.player.isOnGround() ? 0.0 : velocity.y, velocity.z);
+            Vec3 velocity = BlackOut.mc.player.getDeltaMovement();
+            vec = vec.add(velocity.x, BlackOut.mc.player.onGround() ? 0.0 : velocity.y, velocity.z);
         }
 
         return vec;

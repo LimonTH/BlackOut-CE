@@ -9,9 +9,8 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.ChatUtils;
-import net.minecraft.entity.player.PlayerEntity;
-
 import java.util.Random;
+import net.minecraft.world.entity.player.Player;
 
 public class AnteroTaateli extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -71,12 +70,12 @@ public class AnteroTaateli extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player == null || BlackOut.mc.world == null) return;
+        if (BlackOut.mc.player == null || BlackOut.mc.level == null) return;
 
         this.timer++;
 
         if (this.timer >= this.delay.get()) {
-            PlayerEntity target = this.getClosest();
+            Player target = this.getClosest();
 
             if (target != null) {
                 ChatUtils.sendMessage(this.generateMessage(target));
@@ -85,7 +84,7 @@ public class AnteroTaateli extends Module {
         }
     }
 
-    private String generateMessage(PlayerEntity pl) {
+    private String generateMessage(Player pl) {
         int index;
         do {
             index = r.nextInt(messages.length);
@@ -95,11 +94,11 @@ public class AnteroTaateli extends Module {
         return messages[index].replace("<NAME>", pl.getName().getString());
     }
 
-    private PlayerEntity getClosest() {
-        PlayerEntity closest = null;
+    private Player getClosest() {
+        Player closest = null;
         double minDistance = Double.MAX_VALUE;
 
-        for (PlayerEntity player : BlackOut.mc.world.getPlayers()) {
+        for (Player player : BlackOut.mc.level.players()) {
             if (player == BlackOut.mc.player) continue;
             if (this.iFriends.get() && Managers.FRIENDS.isFriend(player)) continue;
 

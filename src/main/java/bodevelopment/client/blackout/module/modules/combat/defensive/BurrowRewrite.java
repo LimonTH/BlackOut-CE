@@ -20,23 +20,22 @@ import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.EntityUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.List;
 import java.util.function.Predicate;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 @OnlyDev
 public class BurrowRewrite extends Module {
@@ -71,7 +70,7 @@ public class BurrowRewrite extends Module {
 
     private boolean shouldCancel = true;
     private int tick = 0;
-    private Vec3d startPos = Vec3d.ZERO;
+    private Vec3 startPos = Vec3.ZERO;
     private double maxHeight = 0.0;
     private long prevFinish = 0L;
     private long lastNotify = 0L;
@@ -91,7 +90,7 @@ public class BurrowRewrite extends Module {
 
     @Event
     public void onReceive(PacketEvent.Receive.Post event) {
-        if (event.packet instanceof PlayerPositionLookS2CPacket && this.shouldCancel) {
+        if (event.packet instanceof ClientboundPlayerPositionPacket && this.shouldCancel) {
             this.shouldCancel = false;
             event.setCancelled(true);
         }
@@ -99,15 +98,15 @@ public class BurrowRewrite extends Module {
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (BlackOut.mc.player == null || BlackOut.mc.world == null) {
+        if (BlackOut.mc.player == null || BlackOut.mc.level == null) {
             return;
         }
 
         long now = System.currentTimeMillis();
         boolean ready = now - this.prevFinish >= (long) (this.cooldown.get() * 1000.0);
-        boolean outside = !OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().stretch(0.0, this.calcY(), 0.0));
+        boolean outside = !OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().expandTowards(0.0, this.calcY(), 0.0));
         if (outside && ready && !this.notFound()) {
-            BlockPos pos = BlockPos.ofFloored(BlackOut.mc.player.getPos());
+            BlockPos pos = BlockPos.containing(BlackOut.mc.player.position());
             if (!this.canAttempt(pos)) {
                 this.resetTimer();
                 return;
@@ -118,17 +117,17 @@ public class BurrowRewrite extends Module {
                 Timer.set(this.timer.get().floatValue());
             }
 
-            if (BlackOut.mc.player.isOnGround()) {
+            if (BlackOut.mc.player.onGround()) {
                 if (this.mode.get() == BurrowMode.Cancel) {
                     this.shouldCancel = true;
-                    this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(BlackOut.mc.player.getX(), 1337.0, BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision));
+                    this.sendPacket(new ServerboundMovePlayerPacket.Pos(BlackOut.mc.player.getX(), 1337.0, BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision));
                 }
 
                 if (this.instant.get()) {
-                    Vec3d prevPos = BlackOut.mc.player.getPos();
-                    BlackOut.mc.player.setPosition(BlackOut.mc.player.getPos().add(0.0, this.calcY(), 0.0));
+                    Vec3 prevPos = BlackOut.mc.player.position();
+                    BlackOut.mc.player.setPos(BlackOut.mc.player.position().add(0.0, this.calcY(), 0.0));
                     PlaceData data = this.preInstant(prevPos);
-                    BlackOut.mc.player.setPosition(prevPos);
+                    BlackOut.mc.player.setPos(prevPos);
                     if (data == null) {
                         this.resetTimer();
                         return;
@@ -141,17 +140,17 @@ public class BurrowRewrite extends Module {
                         y += yVel;
                         yVel = (yVel - 0.08F) * 0.98F;
                         this.sendPacket(
-                                new PlayerMoveC2SPacket.PositionAndOnGround(
+                                new ServerboundMovePlayerPacket.Pos(
                                         BlackOut.mc.player.getX(), BlackOut.mc.player.getY() + y, BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision));
                     }
 
                     this.place(data);
                 } else {
                     this.tick = 0;
-                    this.startPos = BlackOut.mc.player.getPos();
-                    this.maxHeight = this.startPos.getY();
+                    this.startPos = BlackOut.mc.player.position();
+                    this.maxHeight = this.startPos.y();
                     event.setY(this, 0.42F);
-                    BlackOut.mc.player.jump();
+                    BlackOut.mc.player.jumpFromGround();
                 }
             }
 
@@ -174,7 +173,7 @@ public class BurrowRewrite extends Module {
         return false;
     }
 
-    private PlaceData preInstant(Vec3d prevPos) {
+    private PlaceData preInstant(Vec3 prevPos) {
         BlockPos bestPos = this.findBestBurrowPos(prevPos);
         if (bestPos == null) {
             this.notifyFailure("no valid burrow position");
@@ -198,14 +197,14 @@ public class BurrowRewrite extends Module {
         this.tick++;
 
         double currentY = BlackOut.mc.player.getY();
-        double velocityY = BlackOut.mc.player.getVelocity().y;
+        double velocityY = BlackOut.mc.player.getDeltaMovement().y;
 
         if (currentY > this.maxHeight) {
             this.maxHeight = currentY;
         }
 
         boolean startedFalling = currentY < this.maxHeight - 0.05;
-        boolean closeToGround = currentY <= this.startPos.getY() + 0.2;
+        boolean closeToGround = currentY <= this.startPos.y() + 0.2;
         if (startedFalling && closeToGround) {
             PlaceData data = this.getPlaceData();
             if (data.valid()) {
@@ -235,7 +234,7 @@ public class BurrowRewrite extends Module {
     }
 
     private void place(PlaceData data) {
-        Hand hand = OLEPOSSUtils.getHand(this.predicate);
+        InteractionHand hand = OLEPOSSUtils.getHand(this.predicate);
         if (hand == null) {
             FindResult result = this.switchMode.get().find(this.predicate);
             if (!result.wasFound() || !this.switchMode.get().swap(result.slot())) {
@@ -266,18 +265,18 @@ public class BurrowRewrite extends Module {
         double z = BlackOut.mc.player.getZ();
 
         for (int i = 0; i < this.packets.get(); i++) {
-            this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(x, y, z, false, BlackOut.mc.player.horizontalCollision));
+            this.sendPacket(new ServerboundMovePlayerPacket.Pos(x, y, z, false, BlackOut.mc.player.horizontalCollision));
         }
 
         if (this.smooth.get()) {
-            this.sendPacket(Managers.PACKET.incrementedPacket(BlackOut.mc.player.getPos()));
+            this.sendPacket(Managers.PACKET.incrementedPacket(BlackOut.mc.player.position()));
             if (this.syncPacket.get()) {
                 Managers.PACKET
                         .sendInstantly(
-                                new PlayerMoveC2SPacket.Full(
-                                        this.startPos.getX(),
-                                        this.startPos.getY(),
-                                        this.startPos.getZ(),
+                                new ServerboundMovePlayerPacket.PosRot(
+                                        this.startPos.x(),
+                                        this.startPos.y(),
+                                        this.startPos.z(),
                                         Managers.ROTATION.prevYaw,
                                         Managers.ROTATION.prevPitch,
                                         false,
@@ -289,15 +288,15 @@ public class BurrowRewrite extends Module {
     }
 
     private PlaceData getPlaceData() {
-        return SettingUtils.getPlaceData(BlockPos.ofFloored(this.startPos));
+        return SettingUtils.getPlaceData(BlockPos.containing(this.startPos));
     }
 
     private PlaceData getPlaceDataForCurrentPos() {
-        return SettingUtils.getPlaceData(BlockPos.ofFloored(BlackOut.mc.player.getPos()));
+        return SettingUtils.getPlaceData(BlockPos.containing(BlackOut.mc.player.position()));
     }
 
-    private BlockPos findBestBurrowPos(Vec3d playerPos) {
-        BlockPos basePos = BlockPos.ofFloored(playerPos);
+    private BlockPos findBestBurrowPos(Vec3 playerPos) {
+        BlockPos basePos = BlockPos.containing(playerPos);
 
         if (OLEPOSSUtils.replaceable(basePos) && this.canAttempt(basePos)) {
             return basePos;
@@ -306,17 +305,17 @@ public class BurrowRewrite extends Module {
         for (Direction dir : this.burrowDirections) {
             if (dir == Direction.DOWN) continue;
 
-            BlockPos sidePos = basePos.offset(dir);
+            BlockPos sidePos = basePos.relative(dir);
             if (OLEPOSSUtils.replaceable(sidePos) && this.canAttempt(sidePos)) {
-                Box playerBox = BlackOut.mc.player.getBoundingBox();
-                Box blockBox = BoxUtils.get(sidePos);
+                AABB playerBox = BlackOut.mc.player.getBoundingBox();
+                AABB blockBox = BoxUtils.get(sidePos);
                 if (playerBox.intersects(blockBox)) {
                     return sidePos;
                 }
             }
         }
 
-        BlockPos upPos = basePos.up();
+        BlockPos upPos = basePos.above();
         if (OLEPOSSUtils.replaceable(upPos) && this.canAttempt(upPos)) {
             return upPos;
         }
@@ -366,12 +365,12 @@ public class BurrowRewrite extends Module {
     }
 
     private boolean hasBlockingEntities(BlockPos pos) {
-        Box box = BoxUtils.get(pos);
+        AABB box = BoxUtils.get(pos);
         return EntityUtils.intersects(box, entity ->
                 !entity.isSpectator()
                         && entity != BlackOut.mc.player
                         && !(entity instanceof ItemEntity)
-                        && !(this.attack.get() && entity instanceof EndCrystalEntity));
+                        && !(this.attack.get() && entity instanceof EndCrystal));
     }
 
     private void attackBlockingEntities(BlockPos pos) {
@@ -379,8 +378,8 @@ public class BurrowRewrite extends Module {
             return;
         }
 
-        Box crystalBox = OLEPOSSUtils.getCrystalBox(pos);
-        List<Entity> crystals = EntityUtils.getEntities(crystalBox, entity -> entity instanceof EndCrystalEntity);
+        AABB crystalBox = OLEPOSSUtils.getCrystalBox(pos);
+        List<Entity> crystals = EntityUtils.getEntities(crystalBox, entity -> entity instanceof EndCrystal);
         if (crystals.isEmpty()) {
             return;
         }

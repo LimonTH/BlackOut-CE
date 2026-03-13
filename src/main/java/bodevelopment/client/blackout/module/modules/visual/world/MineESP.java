@@ -12,14 +12,14 @@ import bodevelopment.client.blackout.module.setting.multisettings.BoxMultiSettin
 import bodevelopment.client.blackout.randomstuff.SimulatedMaterial;
 import bodevelopment.client.blackout.randomstuff.timers.RenderList;
 import bodevelopment.client.blackout.util.BlockUtils;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.s2c.play.BlockBreakingProgressS2CPacket;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.phys.AABB;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -45,13 +45,13 @@ public class MineESP extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.renders
                     .update(
                             (triple, time, delta) -> {
-                                double distanceDelta = MathHelper.clamp(
-                                        MathHelper.getLerpProgress(
-                                                BlackOut.mc.player.getEyePos().distanceTo(triple.getLeft().toCenterPos()),
+                                double distanceDelta = Mth.clamp(
+                                        Mth.inverseLerp(
+                                                BlackOut.mc.player.getEyePosition().distanceTo(triple.getLeft().getCenter()),
                                                 this.range.get() + 2.0,
                                                 this.range.get()
                                         ),
@@ -71,7 +71,7 @@ public class MineESP extends Module {
                                     fadeDelta = 1.0;
                                 }
 
-                                double colorDelta = MathHelper.clamp(fadeDelta * distanceDelta, 0.0, 1.0);
+                                double colorDelta = Mth.clamp(fadeDelta * distanceDelta, 0.0, 1.0);
 
                                 this.box.render(this.getBox(triple.getLeft(), scaleDelta), (float) colorDelta, (float) colorDelta);
                             }
@@ -81,10 +81,10 @@ public class MineESP extends Module {
 
     @Event
     public void onReceive(PacketEvent.Receive.Pre event) {
-        if (BlackOut.mc.world != null && event.packet instanceof BlockBreakingProgressS2CPacket packet && !this.contains(packet) && BlockUtils.mineable(packet.getPos())) {
-            this.renders.remove(timer -> timer.value.getMiddle() == packet.getEntityId());
+        if (BlackOut.mc.level != null && event.packet instanceof ClientboundBlockDestructionPacket packet && !this.contains(packet) && BlockUtils.mineable(packet.getPos())) {
+            this.renders.remove(timer -> timer.value.getMiddle() == packet.getId());
             double fadeIn = this.getFadeIn(packet.getPos());
-            this.renders.add(new ImmutableTriple<>(packet.getPos(), packet.getEntityId(), fadeIn), fadeIn + this.renderTime.get() + this.fadeOut.get());
+            this.renders.add(new ImmutableTriple<>(packet.getPos(), packet.getId(), fadeIn), fadeIn + this.renderTime.get() + this.fadeOut.get());
         }
     }
 
@@ -104,22 +104,22 @@ public class MineESP extends Module {
 
         int level = this.pickaxeEfficiency.get();
         if (level > 0) {
-            var enchantmentRegistry = BlackOut.mc.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
+            var enchantmentRegistry = BlackOut.mc.level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
 
             var efficiencyEntry = enchantmentRegistry.getOrThrow(Enchantments.EFFICIENCY);
-            stack.addEnchantment(efficiencyEntry, level);
+            stack.enchant(efficiencyEntry, level);
         }
 
         return stack;
     }
 
-    private boolean contains(BlockBreakingProgressS2CPacket packet) {
+    private boolean contains(ClientboundBlockDestructionPacket packet) {
         return this.renders
-                .contains(timer -> timer.value.getLeft().equals(packet.getPos()) && timer.value.getMiddle() == packet.getEntityId());
+                .contains(timer -> timer.value.getLeft().equals(packet.getPos()) && timer.value.getMiddle() == packet.getId());
     }
 
-    private Box getBox(BlockPos pos, double progress) {
-        return new Box(
+    private AABB getBox(BlockPos pos, double progress) {
+        return new AABB(
                 pos.getX() + 0.5 - progress / 2.0,
                 pos.getY() + 0.5 - progress / 2.0,
                 pos.getZ() + 0.5 - progress / 2.0,

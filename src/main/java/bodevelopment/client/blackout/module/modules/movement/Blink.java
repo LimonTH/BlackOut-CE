@@ -13,8 +13,8 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class Blink extends Module {
     private static Blink INSTANCE;
@@ -31,7 +31,7 @@ public class Blink extends Module {
     private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Fill Color", new BlackOutColor(255, 0, 0, 50), "The color of the ghost's box faces.");
 
     private int delayed = 0;
-    private Box box = null;
+    private AABB box = null;
     private int time = 0;
 
     public Blink() {
@@ -49,14 +49,14 @@ public class Blink extends Module {
         this.time = 0;
         if (BlackOut.mc.player != null) {
             this.box = BlackOut.mc.player.getBoundingBox();
-            Vec3d serverPos = Managers.PACKET.pos;
-            this.box = new Box(
-                    serverPos.x - this.box.getLengthX() / 2.0,
+            Vec3 serverPos = Managers.PACKET.pos;
+            this.box = new AABB(
+                    serverPos.x - this.box.getXsize() / 2.0,
                     serverPos.y,
-                    serverPos.z - this.box.getLengthZ() / 2.0,
-                    serverPos.x + this.box.getLengthX() / 2.0,
-                    serverPos.y + this.box.getLengthY(),
-                    serverPos.z + this.box.getLengthZ() / 2.0
+                    serverPos.z - this.box.getZsize() / 2.0,
+                    serverPos.x + this.box.getXsize() / 2.0,
+                    serverPos.y + this.box.getYsize(),
+                    serverPos.z + this.box.getZsize() / 2.0
             );
         }
     }
@@ -74,7 +74,7 @@ public class Blink extends Module {
     @Event
     public void onTick(TickEvent.Pre event) {
         this.time++;
-        if (BlackOut.mc.player == null || BlackOut.mc.world == null || this.ticks.get() > 0 && this.time > this.ticks.get()) {
+        if (BlackOut.mc.player == null || BlackOut.mc.level == null || this.ticks.get() > 0 && this.time > this.ticks.get()) {
             this.disable();
         }
     }
@@ -110,7 +110,7 @@ public class Blink extends Module {
     }
 
     public boolean shouldDelay() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             return switch (this.blinkMode.get()) {
                 case Damage ->
                         BlackOut.mc.player.hurtTime > 0 && (this.packets.get() == 0 || BlackOut.mc.player.hurtTime < this.packets.get());

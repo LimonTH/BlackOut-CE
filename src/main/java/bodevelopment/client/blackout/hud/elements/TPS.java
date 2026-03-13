@@ -12,7 +12,7 @@ public class TPS extends TextElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             String tps = String.format("%.1f", Managers.TPS.tps);
             this.drawElement(this.stack, "TPS", tps);
         }

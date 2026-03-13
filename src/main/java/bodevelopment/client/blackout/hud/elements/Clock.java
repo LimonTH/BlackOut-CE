@@ -33,14 +33,14 @@ public class Clock extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             String time = switch (this.mode.get()) {
                 case Normal -> LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
                 case American -> new SimpleDateFormat("hh:mm a").format(new Date());
             };
             this.textWidth = BlackOut.FONT.getWidth(time);
             this.setSize(this.textWidth, BlackOut.FONT.getHeight());
-            this.stack.push();
+            this.stack.pushPose();
             if (this.blur.get()) {
                 RenderUtils.drawLoadedBlur(
                         "hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, this.textWidth, BlackOut.FONT.getHeight(), this.rounded.get() ? 3.0F : 0.0F, 10)
@@ -53,7 +53,7 @@ public class Clock extends HudElement {
             }
 
             this.textColor.render(this.stack, time, 1.0F, 0.0F, 0.0F, false, false);
-            this.stack.pop();
+            this.stack.popPose();
         }
     }
 

@@ -4,63 +4,67 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.interfaces.mixin.IRaycastContext;
 import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
 import bodevelopment.client.blackout.manager.Managers;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.AttributeModifiersComponent;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.*;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.BlockView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.util.Mth;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class DamageUtils {
-    public static RaycastContext raycastContext;
+    public static ClipContext raycastContext;
 
-    public static double crystalDamage(LivingEntity entity, Box box, Vec3d pos) {
+    public static double crystalDamage(LivingEntity entity, AABB box, Vec3 pos) {
         return crystalDamage(entity, box, pos, null);
     }
 
-    public static double crystalDamage(LivingEntity entity, Box entityBox, Vec3d crystalPos, BlockPos ignorePos) {
+    public static double crystalDamage(LivingEntity entity, AABB entityBox, Vec3 crystalPos, BlockPos ignorePos) {
         if (entity == null || Managers.ENTITY.isDead(entity.getId())) return 0.0;
 
         return explosionDamage(entity, entityBox, crystalPos, ignorePos, 6.0);
     }
 
-    public static double anchorDamage(LivingEntity entity, Box box, Vec3d pos) {
+    public static double anchorDamage(LivingEntity entity, AABB box, Vec3 pos) {
         return explosionDamage(entity, box, pos, null, 5.0);
     }
 
-    public static double anchorDamage(LivingEntity entity, Box box, Vec3d pos, BlockPos ignorePos) {
+    public static double anchorDamage(LivingEntity entity, AABB box, Vec3 pos, BlockPos ignorePos) {
         return explosionDamage(entity, box, pos, ignorePos, 5.0);
     }
 
-    public static double creeperDamage(LivingEntity entity, Box box, Vec3d pos) {
+    public static double creeperDamage(LivingEntity entity, AABB box, Vec3 pos) {
         return explosionDamage(entity, box, pos, null, 3.0);
     }
 
-    public static double creeperDamage(LivingEntity entity, Box box, Vec3d pos, BlockPos ignorePos) {
+    public static double creeperDamage(LivingEntity entity, AABB box, Vec3 pos, BlockPos ignorePos) {
         return explosionDamage(entity, box, pos, ignorePos, 3.0);
     }
 
-    public static double chargedCreeperDamage(LivingEntity entity, Box box, Vec3d pos) {
+    public static double chargedCreeperDamage(LivingEntity entity, AABB box, Vec3 pos) {
         return explosionDamage(entity, box, pos, null, 6.0);
     }
 
-    public static double chargedCreeperDamage(LivingEntity entity, Box box, Vec3d pos, BlockPos ignorePos) {
+    public static double chargedCreeperDamage(LivingEntity entity, AABB box, Vec3 pos, BlockPos ignorePos) {
         return explosionDamage(entity, box, pos, ignorePos, 6.0);
     }
 
-    private static double explosionDamage(LivingEntity entity, Box box, Vec3d pos, BlockPos ignorePos, double strength) {
+    private static double explosionDamage(LivingEntity entity, AABB box, Vec3 pos, BlockPos ignorePos, double strength) {
         double q = strength * 2.0;
         double dist = BoxUtils.feet(box).distanceTo(pos) / q;
         if (dist > 1.0) {
@@ -78,16 +82,16 @@ public class DamageUtils {
 
     public static int getProtectionAmount(Iterable<ItemStack> equipment, boolean explosion) {
         int total = 0;
-        var registry = BlackOut.mc.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
+        var registry = BlackOut.mc.level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
 
         for (ItemStack stack : equipment) {
             if (stack.isEmpty()) continue;
 
-            int protLevel = EnchantmentHelper.getLevel(registry.getOrThrow(Enchantments.PROTECTION), stack);
+            int protLevel = EnchantmentHelper.getItemEnchantmentLevel(registry.getOrThrow(Enchantments.PROTECTION), stack);
             total += protLevel;
 
             if (explosion) {
-                int blastLevel = EnchantmentHelper.getLevel(registry.getOrThrow(Enchantments.BLAST_PROTECTION), stack);
+                int blastLevel = EnchantmentHelper.getItemEnchantmentLevel(registry.getOrThrow(Enchantments.BLAST_PROTECTION), stack);
                 total += blastLevel * 2;
             }
         }
@@ -95,45 +99,45 @@ public class DamageUtils {
     }
 
     public static double difficultyDamage(double damage) {
-        if (BlackOut.mc.world.getDifficulty() == Difficulty.EASY) {
+        if (BlackOut.mc.level.getDifficulty() == Difficulty.EASY) {
             return Math.min(damage / 2.0 + 1.0, damage);
         } else {
-            return BlackOut.mc.world.getDifficulty() == Difficulty.NORMAL ? damage : damage * 1.5;
+            return BlackOut.mc.level.getDifficulty() == Difficulty.NORMAL ? damage : damage * 1.5;
         }
     }
 
     public static double applyArmor(LivingEntity entity, double damage) {
-        double armor = entity.getArmor();
+        double armor = entity.getArmorValue();
 
-        double toughness = entity.getAttributeValue(EntityAttributes.ARMOR_TOUGHNESS);
+        double toughness = entity.getAttributeValue(Attributes.ARMOR_TOUGHNESS);
 
         double f = 2.0 + toughness / 4.0;
 
-        return damage * (1.0 - MathHelper.clamp(armor - damage / f, armor * 0.2, 20.0) / 25.0);
+        return damage * (1.0 - Mth.clamp(armor - damage / f, armor * 0.2, 20.0) / 25.0);
     }
 
     public static double applyResistance(LivingEntity entity, double damage) {
-        int amplifier = entity.hasStatusEffect(StatusEffects.RESISTANCE) ? entity.getStatusEffect(StatusEffects.RESISTANCE).getAmplifier() : 0;
+        int amplifier = entity.hasEffect(MobEffects.DAMAGE_RESISTANCE) ? entity.getEffect(MobEffects.DAMAGE_RESISTANCE).getAmplifier() : 0;
         int j = 25 - (amplifier + 1) * 5;
         return Math.max(damage * j / 25.0, 0.0);
     }
 
     public static double applyProtection(LivingEntity entity, double damage, boolean explosions) {
-        int i = getProtectionAmount(entity.getArmorItems(), explosions);
+        int i = getProtectionAmount(entity.getArmorSlots(), explosions);
         if (i > 0) {
-            damage *= 1.0F - MathHelper.clamp(i, 0.0F, 20.0F) / 25.0F;
+            damage *= 1.0F - Mth.clamp(i, 0.0F, 20.0F) / 25.0F;
         }
 
         return damage;
     }
 
-    public static double getExposure(Vec3d source, Box box, BlockPos ignorePos) {
-        ((IRaycastContext) raycastContext).blackout_Client$set(RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, BlackOut.mc.player);
+    public static double getExposure(Vec3 source, AABB box, BlockPos ignorePos) {
+        ((IRaycastContext) raycastContext).blackout_Client$set(ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
         ((IRaycastContext) raycastContext).blackout_Client$setStart(source);
-        Vec3d vec3d = new Vec3d(0.0, 0.0, 0.0);
-        double lx = box.getLengthX();
-        double ly = box.getLengthY();
-        double lz = box.getLengthZ();
+        Vec3 vec3d = new Vec3(0.0, 0.0, 0.0);
+        double lx = box.getXsize();
+        double ly = box.getYsize();
+        double lz = box.getZsize();
         double deltaX = 1.0 / (lx * 2.0 + 1.0);
         double deltaY = 1.0 / (ly * 2.0 + 1.0);
         double deltaZ = 1.0 / (lz * 2.0 + 1.0);
@@ -172,40 +176,40 @@ public class DamageUtils {
         }
     }
 
-    public static BlockHitResult raycast(RaycastContext context, boolean damage) {
+    public static BlockHitResult raycast(ClipContext context, boolean damage) {
         return raycast(context, damage, null);
     }
 
-    public static BlockHitResult raycast(RaycastContext context, boolean damage, BlockPos ignorePos) {
-        return BlockView.raycast(
-                context.getStart(),
-                context.getEnd(),
+    public static BlockHitResult raycast(ClipContext context, boolean damage, BlockPos ignorePos) {
+        return BlockGetter.traverseBlocks(
+                context.getFrom(),
+                context.getTo(),
                 context,
                 (contextx, pos) -> {
                     BlockState blockState;
                     if (pos.equals(ignorePos)) {
-                        blockState = Blocks.AIR.getDefaultState();
+                        blockState = Blocks.AIR.defaultBlockState();
                     } else if (damage) {
-                        if (BlackOut.mc.world.getBlockState(pos).getBlock().getBlastResistance() < 200.0F) {
-                            blockState = Blocks.AIR.getDefaultState();
+                        if (BlackOut.mc.level.getBlockState(pos).getBlock().getExplosionResistance() < 200.0F) {
+                            blockState = Blocks.AIR.defaultBlockState();
                         } else {
                             blockState = Managers.BLOCK.damageState(pos);
                         }
                     } else {
-                        blockState = BlackOut.mc.world.getBlockState(pos);
+                        blockState = BlackOut.mc.level.getBlockState(pos);
                     }
 
-                    Vec3d vec3d = contextx.getStart();
-                    Vec3d vec3d2 = contextx.getEnd();
-                    VoxelShape voxelShape = contextx.getBlockShape(blockState, BlackOut.mc.world, pos);
-                    return BlackOut.mc.world.raycastBlock(vec3d, vec3d2, pos, voxelShape, blockState);
+                    Vec3 vec3d = contextx.getFrom();
+                    Vec3 vec3d2 = contextx.getTo();
+                    VoxelShape voxelShape = contextx.getBlockShape(blockState, BlackOut.mc.level, pos);
+                    return BlackOut.mc.level.clipWithInteractionOverride(vec3d, vec3d2, pos, voxelShape, blockState);
                 },
                 contextx -> {
-                    Vec3d vec3d = contextx.getStart().subtract(contextx.getEnd());
-                    return BlockHitResult.createMissed(
-                            contextx.getEnd(),
-                            Direction.getFacing(vec3d.x, vec3d.y, vec3d.z),
-                            BlockPos.ofFloored(contextx.getEnd())
+                    Vec3 vec3d = contextx.getFrom().subtract(contextx.getTo());
+                    return BlockHitResult.miss(
+                            contextx.getTo(),
+                            Direction.getApproximateNearest(vec3d.x, vec3d.y, vec3d.z),
+                            BlockPos.containing(contextx.getTo())
                     );
                 }
         );
@@ -218,22 +222,22 @@ public class DamageUtils {
 
         double damage = 1.0;
 
-        AttributeModifiersComponent modifiers = stack.getOrDefault(
-                DataComponentTypes.ATTRIBUTE_MODIFIERS,
-                AttributeModifiersComponent.DEFAULT
+        ItemAttributeModifiers modifiers = stack.getOrDefault(
+                DataComponents.ATTRIBUTE_MODIFIERS,
+                ItemAttributeModifiers.EMPTY
         );
 
-        for (AttributeModifiersComponent.Entry entry : modifiers.modifiers()) {
-            if (entry.attribute().equals(EntityAttributes.ATTACK_DAMAGE) && entry.slot().matches(net.minecraft.entity.EquipmentSlot.MAINHAND)) {
-                damage += entry.modifier().value();
+        for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) {
+            if (entry.attribute().equals(Attributes.ATTACK_DAMAGE) && entry.slot().test(net.minecraft.world.entity.EquipmentSlot.MAINHAND)) {
+                damage += entry.modifier().amount();
             }
         }
 
-        if (BlackOut.mc.world != null) {
-            var registry = BlackOut.mc.world.getRegistryManager()
-                    .getOrThrow(net.minecraft.registry.RegistryKeys.ENCHANTMENT);
+        if (BlackOut.mc.level != null) {
+            var registry = BlackOut.mc.level.registryAccess()
+                    .lookupOrThrow(Registries.ENCHANTMENT);
 
-            int sharpnessLevel = EnchantmentHelper.getLevel(
+            int sharpnessLevel = EnchantmentHelper.getItemEnchantmentLevel(
                     registry.getOrThrow(Enchantments.SHARPNESS),
                     stack
             );

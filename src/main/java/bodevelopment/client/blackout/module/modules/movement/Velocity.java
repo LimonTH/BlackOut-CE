@@ -13,21 +13,20 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FakePlayerEntity;
 import bodevelopment.client.blackout.randomstuff.timers.TickTimerList;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.decoration.ArmorStandEntity;
-import net.minecraft.entity.vehicle.BoatEntity;
-import net.minecraft.entity.vehicle.MinecartEntity;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
-import net.minecraft.util.Pair;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.concurrent.ThreadLocalRandom;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ClientboundExplodePacket;
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.util.Tuple;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.vehicle.Boat;
+import net.minecraft.world.entity.vehicle.Minecart;
+import net.minecraft.world.phys.Vec3;
 
 public class Velocity extends Module {
     private static Velocity INSTANCE;
@@ -52,7 +51,7 @@ public class Velocity extends Module {
     public final Setting<Double> acceleration = this.sgPush.doubleSetting("Force Multiplier", 1.0, 0.0, 2.0, 0.02, "The strength of the repulsive force applied during entity collisions.", () -> this.entityPush.get() == PushMode.Accelerate);
     public final Setting<Boolean> blockPush = this.sgPush.booleanSetting("Block Collision", true, "Prevents kinetic energy from blocks (like pistons) from moving the player.");
 
-    private final TickTimerList<Pair<Vec3d, Boolean>> delayed = new TickTimerList<>(false);
+    private final TickTimerList<Tuple<Vec3, Boolean>> delayed = new TickTimerList<>(false);
     public boolean grim = false;
 
     public Velocity() {
@@ -82,15 +81,15 @@ public class Velocity extends Module {
                     .removeIf(
                             item -> {
                                 if (item.ticks-- <= 0) {
-                                    if (item.value.getRight()) {
-                                        BlackOut.mc.player.addVelocity(item.value.getLeft());
+                                    if (item.value.getB()) {
+                                        BlackOut.mc.player.push(item.value.getA());
                                     } else {
                                         BlackOut.mc
                                                 .player
-                                                .setVelocityClient(
-                                                        item.value.getLeft().x,
-                                                        item.value.getLeft().y,
-                                                        item.value.getLeft().z
+                                                .lerpMotion(
+                                                        item.value.getA().x,
+                                                        item.value.getA().y,
+                                                        item.value.getA().z
                                                 );
                                     }
 
@@ -105,48 +104,48 @@ public class Velocity extends Module {
 
     @Event
     public void onVelocity(PacketEvent.Receive.Post event) {
-        if (event.packet instanceof EntityVelocityUpdateS2CPacket packet) {
-            if (BlackOut.mc.player == null || BlackOut.mc.player.getId() != packet.getEntityId()) {
+        if (event.packet instanceof ClientboundSetEntityMotionPacket packet) {
+            if (BlackOut.mc.player == null || BlackOut.mc.player.getId() != packet.getId()) {
                 return;
             }
 
             switch (this.mode.get()) {
                 case Simple:
-                    int x = (int) (packet.getVelocityX() - BlackOut.mc.player.getVelocity().x * 8000.0);
-                    int y = (int) (packet.getVelocityY() - BlackOut.mc.player.getVelocity().y * 8000.0);
-                    int z = (int) (packet.getVelocityZ() - BlackOut.mc.player.getVelocity().z * 8000.0);
+                    int x = (int) (packet.getXa() - BlackOut.mc.player.getDeltaMovement().x * 8000.0);
+                    int y = (int) (packet.getYa() - BlackOut.mc.player.getDeltaMovement().y * 8000.0);
+                    int z = (int) (packet.getZa() - BlackOut.mc.player.getDeltaMovement().z * 8000.0);
                     double random = ThreadLocalRandom.current().nextDouble();
                     if (this.hChance.get() >= random) {
                         ((IEntityVelocityUpdateS2CPacket) packet)
-                                .blackout_Client$setX((int) (x * this.horizontal.get() + BlackOut.mc.player.getVelocity().x * 8000.0));
+                                .blackout_Client$setX((int) (x * this.horizontal.get() + BlackOut.mc.player.getDeltaMovement().x * 8000.0));
                         ((IEntityVelocityUpdateS2CPacket) packet)
-                                .blackout_Client$setZ((int) (z * this.horizontal.get() + BlackOut.mc.player.getVelocity().z * 8000.0));
+                                .blackout_Client$setZ((int) (z * this.horizontal.get() + BlackOut.mc.player.getDeltaMovement().z * 8000.0));
                     }
 
                     if (this.vChance.get() >= random) {
                         ((IEntityVelocityUpdateS2CPacket) packet)
-                                .blackout_Client$setY((int) (y * this.vertical.get() + BlackOut.mc.player.getVelocity().y * 8000.0));
+                                .blackout_Client$setY((int) (y * this.vertical.get() + BlackOut.mc.player.getDeltaMovement().y * 8000.0));
                     }
                     break;
                 case Delayed:
                     this.delayed
                             .add(
-                                    new Pair<>(new Vec3d(packet.getVelocityX() / 8000.0, packet.getVelocityY() / 8000.0, packet.getVelocityZ() / 8000.0), false),
+                                    new Tuple<>(new Vec3(packet.getXa() / 8000.0, packet.getYa() / 8000.0, packet.getZa() / 8000.0), false),
                                     this.getDelay()
                             );
                     event.setCancelled(true);
                     break;
                 case Matrix_AAC:
-                    double velX = (packet.getVelocityX() / 8000.0 - BlackOut.mc.player.getVelocity().x) * this.horizontal.get();
-                    double velY = (packet.getVelocityY() / 8000.0 - BlackOut.mc.player.getVelocity().y) * this.vertical.get();
-                    double velZ = (packet.getVelocityZ() / 8000.0 - BlackOut.mc.player.getVelocity().z) * this.horizontal.get();
+                    double velX = (packet.getXa() / 8000.0 - BlackOut.mc.player.getDeltaMovement().x) * this.horizontal.get();
+                    double velY = (packet.getYa() / 8000.0 - BlackOut.mc.player.getDeltaMovement().y) * this.vertical.get();
+                    double velZ = (packet.getZa() / 8000.0 - BlackOut.mc.player.getDeltaMovement().z) * this.horizontal.get();
 
-                    ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setX((int) ((velX + BlackOut.mc.player.getVelocity().x) * 8000.0));
-                    ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setY((int) ((velY + BlackOut.mc.player.getVelocity().y) * 8000.0));
-                    ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setZ((int) ((velZ + BlackOut.mc.player.getVelocity().z) * 8000.0));
+                    ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setX((int) ((velX + BlackOut.mc.player.getDeltaMovement().x) * 8000.0));
+                    ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setY((int) ((velY + BlackOut.mc.player.getDeltaMovement().y) * 8000.0));
+                    ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setZ((int) ((velZ + BlackOut.mc.player.getDeltaMovement().z) * 8000.0));
                     break;
                 case Vulcan:
-                    if (BlackOut.mc.player.isOnGround()) {
+                    if (BlackOut.mc.player.onGround()) {
                         ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setY((int) (0.42 * 8000.0));
                         ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setX(0);
                         ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setZ(0);
@@ -159,7 +158,7 @@ public class Velocity extends Module {
             }
         }
 
-        if (event.packet instanceof ExplosionS2CPacket packet && this.explosions.get()) {
+        if (event.packet instanceof ClientboundExplodePacket packet && this.explosions.get()) {
             packet.playerKnockback().ifPresent(knockback -> {
                 double velX = knockback.x;
                 double velY = knockback.y;
@@ -176,7 +175,7 @@ public class Velocity extends Module {
                             double finalZ = hBoost ? velZ * this.horizontal.get() : velZ;
 
                             if (BlackOut.mc.player != null) {
-                                BlackOut.mc.player.addVelocity(finalX, finalY, finalZ);
+                                BlackOut.mc.player.push(finalX, finalY, finalZ);
                             }
 
                             event.setCancelled(true);
@@ -185,7 +184,7 @@ public class Velocity extends Module {
 
                     case Delayed:
                         if (this.delayExplosion.get()) {
-                            this.delayed.add(new Pair<>(new Vec3d(velX, velY, velZ), true), this.getDelay());
+                            this.delayed.add(new Tuple<>(new Vec3(velX, velY, velZ), true), this.getDelay());
                             event.setCancelled(true);
                         }
                         break;
@@ -202,20 +201,20 @@ public class Velocity extends Module {
 
     @Event
     public void onTickPre(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             if (this.entityPush.get() == PushMode.Accelerate) {
                 if (Managers.ROTATION.move) {
                     BlackOut.mc
-                            .world
-                            .getOtherEntities(
+                            .level
+                            .getEntities(
                                     BlackOut.mc.player,
-                                    BlackOut.mc.player.getBoundingBox().expand(1.0),
-                                    entity -> this.validForCollisions(entity) && !BlackOut.mc.player.isConnectedThroughVehicle(entity)
+                                    BlackOut.mc.player.getBoundingBox().inflate(1.0),
+                                    entity -> this.validForCollisions(entity) && !BlackOut.mc.player.isPassengerOfSameVehicle(entity)
                             )
                             .forEach(entity -> {
                                 double distX = entity.getX() - BlackOut.mc.player.getX();
                                 double distZ = entity.getZ() - BlackOut.mc.player.getZ();
-                                double maxDist = MathHelper.absMax(distX, distZ);
+                                double maxDist = Mth.absMax(distX, distZ);
                                 if (!(maxDist < 0.01F)) {
                                     maxDist = Math.sqrt(maxDist);
                                     distX /= maxDist;
@@ -225,7 +224,7 @@ public class Velocity extends Module {
                                     distZ *= d;
                                     double speed = Math.sqrt(distX * distX + distZ * distZ) * this.acceleration.get() * 0.05;
                                     double yaw = Math.toRadians(Managers.ROTATION.moveYaw + 90.0F);
-                                    BlackOut.mc.player.addVelocity(Math.cos(yaw) * speed, 0.0, Math.sin(yaw) * speed);
+                                    BlackOut.mc.player.push(Math.cos(yaw) * speed, 0.0, Math.sin(yaw) * speed);
                                 }
                             });
                 }
@@ -234,10 +233,10 @@ public class Velocity extends Module {
     }
 
     private void sendGrimPackets() {
-        Vec3d vec = Managers.PACKET.pos;
+        Vec3 vec = Managers.PACKET.pos;
         BlockPos pos = new BlockPos((int) Math.floor(vec.x), (int) Math.floor(vec.y) - 1, (int) Math.floor(vec.z));
-        Managers.PACKET.sendInstantly(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN, 0));
-        Managers.PACKET.sendInstantly(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN, 0));
+        Managers.PACKET.sendInstantly(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN, 0));
+        Managers.PACKET.sendInstantly(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN, 0));
     }
 
     private void grimCancel(PacketEvent.Receive.Post event, boolean explosion) {
@@ -248,14 +247,14 @@ public class Velocity extends Module {
     private boolean validForCollisions(Entity entity) {
         return switch (entity) {
             case FakePlayerEntity fakePlayerEntity -> false;
-            case BoatEntity boatEntity -> true;
-            case MinecartEntity minecartEntity -> true;
-            default -> entity instanceof LivingEntity && !(entity instanceof ArmorStandEntity);
+            case Boat boatEntity -> true;
+            case Minecart minecartEntity -> true;
+            default -> entity instanceof LivingEntity && !(entity instanceof ArmorStand);
         };
     }
 
     private int getDelay() {
-        return MathHelper.lerp((float) ThreadLocalRandom.current().nextDouble(), this.minDelay.get(), this.maxDelay.get());
+        return Mth.lerpInt((float) ThreadLocalRandom.current().nextDouble(), this.minDelay.get(), this.maxDelay.get());
     }
 
     public enum Mode {

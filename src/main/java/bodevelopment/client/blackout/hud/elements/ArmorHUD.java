@@ -11,10 +11,9 @@ import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.ItemStack;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
+import net.minecraft.world.item.ItemStack;
 
 public class ArmorHUD extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -38,7 +37,7 @@ public class ArmorHUD extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player == null || BlackOut.mc.world == null) return;
+        if (BlackOut.mc.player == null || BlackOut.mc.level == null) return;
         if (!armorFound()) return;
 
         int armorCount = 0;
@@ -52,12 +51,12 @@ public class ArmorHUD extends HudElement {
         float bgHeight = this.bar.get() ? 22.0F : 18.0F;
         this.setSize(bgWidth, bgHeight);
 
-        this.stack.push();
+        this.stack.pushPose();
         this.draw(this.stack);
-        this.stack.pop();
+        this.stack.popPose();
     }
 
-    private void draw(MatrixStack stack) {
+    private void draw(PoseStack stack) {
         float width = this.getWidth();
         float height = this.getHeight();
 
@@ -70,12 +69,12 @@ public class ArmorHUD extends HudElement {
             this.background.render(stack, 0.0F, 0.0F, width, height, 3.0F, this.shadow.get() ? 3.0F : 0.0F);
         }
 
-        BlackOut.mc.getBufferBuilders().getEntityVertexConsumers().draw();
+        BlackOut.mc.renderBuffers().bufferSource().endBatch();
         RenderSystem.enableDepthTest();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        BlackOut.mc.gameRenderer.getLightmapTextureManager().disable();
+        BlackOut.mc.gameRenderer.lightTexture().turnOffLightLayer();
 
         int renderedIdx = 0;
         for (int i = 0; i < 4; i++) {
@@ -86,8 +85,8 @@ public class ArmorHUD extends HudElement {
 
             RenderUtils.renderItem(stack, itemStack, xOffset, 1.0F, 16.0F, RenderLayer.HUD, false);
 
-            if (itemStack.isDamageable()) {
-                float durabilityValue = (float) (itemStack.getMaxDamage() - itemStack.getDamage()) / itemStack.getMaxDamage();
+            if (itemStack.isDamageableItem()) {
+                float durabilityValue = (float) (itemStack.getMaxDamage() - itemStack.getDamageValue()) / itemStack.getMaxDamage();
 
                 if (this.text.get()) {
                     int durabilityPercentage = Math.round(durabilityValue * 100.0f);
@@ -106,7 +105,7 @@ public class ArmorHUD extends HudElement {
             }
             renderedIdx++;
         }
-        BlackOut.mc.getBufferBuilders().getEntityVertexConsumers().draw();
+        BlackOut.mc.renderBuffers().bufferSource().endBatch();
     }
 
     private boolean armorFound() {

@@ -72,7 +72,7 @@ public class Octopus extends Module {
 
     private void use(int slot) {
         boolean switched = false;
-        if (BlackOut.mc.interactionManager.lastSelectedSlot != slot) {
+        if (BlackOut.mc.gameMode.carriedIndex != slot) {
             InvUtils.swap(slot);
             switched = true;
         }

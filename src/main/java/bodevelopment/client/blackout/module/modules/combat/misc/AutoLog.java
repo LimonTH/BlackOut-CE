@@ -8,9 +8,9 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.InvUtils;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.common.ClientboundDisconnectPacket;
+import net.minecraft.world.item.Items;
 
 public class AutoLog extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -29,8 +29,8 @@ public class AutoLog extends Module {
     }
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            int tots = InvUtils.count(true, true, stack -> stack.isOf(Items.TOTEM_OF_UNDYING));
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            int tots = InvUtils.count(true, true, stack -> stack.is(Items.TOTEM_OF_UNDYING));
             if (BlackOut.mc.player.getHealth() + BlackOut.mc.player.getAbsorptionAmount() <= this.health.get()) {
                 if (this.totems.get() && tots > this.totemAmount.get()) {
                     return;
@@ -40,7 +40,7 @@ public class AutoLog extends Module {
                     this.disable();
                 }
 
-                BlackOut.mc.player.networkHandler.onDisconnect(new DisconnectS2CPacket(Text.literal("AutoLog")));
+                BlackOut.mc.player.connection.handleDisconnect(new ClientboundDisconnectPacket(Component.literal("AutoLog")));
             }
         }
     }

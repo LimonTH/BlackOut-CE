@@ -10,13 +10,12 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.RotationUtils;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.item.ThrowablePotionItem;
-import net.minecraft.util.math.MathHelper;
-
 import java.util.concurrent.ThreadLocalRandom;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ThrowablePotionItem;
 
 public class AntiAim extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -64,11 +63,11 @@ public class AntiAim extends Module {
         double pitch = 0.0;
         switch (this.mode.get()) {
             case Enemy:
-                AbstractClientPlayerEntity target = this.getEnemy(this.range.get());
+                AbstractClientPlayer target = this.getEnemy(this.range.get());
                 if (target != null) {
                     yaw = RotationUtils.getYaw(target);
                 } else {
-                    yaw = BlackOut.mc.player.getYaw();
+                    yaw = BlackOut.mc.player.getYRot();
                 }
                 break;
             case Spin:
@@ -78,8 +77,8 @@ public class AntiAim extends Module {
                 break;
             case CSGO:
                 if (System.currentTimeMillis() > this.prevCsgo + 1000.0 / this.csgoSpeed.get()) {
-                    this.csgoYaw = MathHelper.lerp(ThreadLocalRandom.current().nextDouble(), this.csgoYawMin.get(), this.csgoYawMax.get());
-                    this.csgoPitch = MathHelper.lerp(ThreadLocalRandom.current().nextDouble(), this.csgoPitchMin.get(), this.csgoPitchMax.get());
+                    this.csgoYaw = Mth.lerp(ThreadLocalRandom.current().nextDouble(), this.csgoYawMin.get(), this.csgoYawMax.get());
+                    this.csgoPitch = Mth.lerp(ThreadLocalRandom.current().nextDouble(), this.csgoPitchMin.get(), this.csgoPitchMax.get());
                     this.prevCsgo = System.currentTimeMillis();
                 }
 
@@ -94,10 +93,10 @@ public class AntiAim extends Module {
         if (this.mode.get() != Mode.Spin && this.mode.get() != Mode.Enemy) {
             switch (this.yawMode.get()) {
                 case RelativeOwn:
-                    yaw += BlackOut.mc.player.getYaw();
+                    yaw += BlackOut.mc.player.getYRot();
                     break;
                 case RelativeEnemy:
-                    AbstractClientPlayerEntity target = this.getEnemy(0.0);
+                    AbstractClientPlayer target = this.getEnemy(0.0);
                     if (target != null) {
                         yaw += RotationUtils.getYaw(target);
                     }
@@ -106,11 +105,11 @@ public class AntiAim extends Module {
 
         IgnoreMode ignoreMode = this.getIgnore();
         if (ignoreMode == IgnoreMode.FullIgnore || ignoreMode == IgnoreMode.IgnoreYaw) {
-            yaw = BlackOut.mc.player.getYaw();
+            yaw = BlackOut.mc.player.getYRot();
         }
 
         pitch = switch (ignoreMode) {
-            case FullIgnore, IgnorePitch -> BlackOut.mc.player.getPitch();
+            case FullIgnore, IgnorePitch -> BlackOut.mc.player.getXRot();
             case Down -> 90.0;
             case Up -> -90.0;
             default -> pitch;
@@ -119,11 +118,11 @@ public class AntiAim extends Module {
         this.rotate((float) yaw, (float) pitch, RotationType.InstantOther, "");
     }
 
-    private AbstractClientPlayerEntity getEnemy(double r) {
-        AbstractClientPlayerEntity target = null;
+    private AbstractClientPlayer getEnemy(double r) {
+        AbstractClientPlayer target = null;
         double dist = 1000.0;
 
-        for (AbstractClientPlayerEntity player : BlackOut.mc.world.getPlayers()) {
+        for (AbstractClientPlayer player : BlackOut.mc.level.players()) {
             if (player != BlackOut.mc.player && !Managers.FRIENDS.isFriend(player) && !(player.getHealth() <= 0.0F)) {
                 double d = BlackOut.mc.player.distanceTo(player);
                 if ((!(d > r) || !(r > 0.0)) && d < dist) {
@@ -137,9 +136,9 @@ public class AntiAim extends Module {
     }
 
     private IgnoreMode getIgnore() {
-        IgnoreMode ignoreMode = this.getIgnore(BlackOut.mc.player.getMainHandStack().getItem());
+        IgnoreMode ignoreMode = this.getIgnore(BlackOut.mc.player.getMainHandItem().getItem());
         if (ignoreMode == IgnoreMode.Disabled) {
-            ignoreMode = this.getIgnore(BlackOut.mc.player.getOffHandStack().getItem());
+            ignoreMode = this.getIgnore(BlackOut.mc.player.getOffhandItem().getItem());
         }
 
         return ignoreMode;

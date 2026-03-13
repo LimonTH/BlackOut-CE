@@ -35,7 +35,7 @@ public class AddonScreen extends ClickGuiScreen {
     public void render() {
         RenderUtils.rounded(this.stack, 0, 0, width, height - 40.0F, 10, 10, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
 
-        this.stack.push();
+        this.stack.pushPose();
         this.stack.translate(0.0F, 15.0F - this.scroll.get(), 0.0F);
 
         for (int i = 0; i < AddonLoader.addons.size(); i++) {
@@ -48,7 +48,7 @@ public class AddonScreen extends ClickGuiScreen {
             if (hovered) anim.setValue(Math.min(anim.getValue() + frameTime * 10, 1.0));
             else anim.setValue(Math.max(anim.getValue() - frameTime * 5, 0.0));
 
-            this.stack.push();
+            this.stack.pushPose();
             this.stack.translate(0, yPos, 0);
 
             if (anim.getValue() > 0) {
@@ -60,9 +60,9 @@ public class AddonScreen extends ClickGuiScreen {
 
             renderAddonRow(addon, i == 0);
 
-            this.stack.pop();
+            this.stack.popPose();
         }
-        this.stack.pop();
+        this.stack.popPose();
 
         this.renderButtons();
     }
@@ -95,7 +95,7 @@ public class AddonScreen extends ClickGuiScreen {
         boolean hovered = Math.abs(mx - x) < 40 && Math.abs(my - y) < 30;
         float s = hovered ? 1.1F : 1.0F;
 
-        this.stack.push();
+        this.stack.pushPose();
         this.stack.translate(x, y, 0);
         this.stack.scale(s, s, 1.0F);
 
@@ -106,7 +106,7 @@ public class AddonScreen extends ClickGuiScreen {
         icon.quad(this.stack, -iconW / 2.0F, -iconH / 2.0F - 10.0F, iconW, iconH, hovered ? Color.WHITE.getRGB() : Color.LIGHT_GRAY.getRGB());
         BlackOut.FONT.text(this.stack, name, 1.6F, 0.0F, 18.0F, hovered ? Color.WHITE : Color.GRAY, true, true);
 
-        this.stack.pop();
+        this.stack.popPose();
     }
 
     @Override

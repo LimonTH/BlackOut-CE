@@ -1,12 +1,12 @@
 package bodevelopment.client.blackout.interfaces.mixin;
 
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 
 public interface IChatHudLine {
     void blackout_Client$setId(int id);
     boolean blackout_Client$idEquals(int id);
     void blackout_Client$setSpam(int count);
     int blackout_Client$getSpam();
-    void blackout_Client$setMessage(Text text);
-    Text blackout_Client$getMessage();
+    void blackout_Client$setMessage(Component text);
+    Component blackout_Client$getMessage();
 }

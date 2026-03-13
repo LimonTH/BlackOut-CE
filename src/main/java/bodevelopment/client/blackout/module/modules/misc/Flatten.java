@@ -7,7 +7,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.randomstuff.PlaceData;
 import bodevelopment.client.blackout.util.SettingUtils;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 public class Flatten extends ObsidianModule {
     private final Setting<Boolean> setY = this.sgGeneral.booleanSetting("Fixed Altitude", true, "Whether to use a specific Y-level or use the block level beneath your feet.");
@@ -22,7 +22,7 @@ public class Flatten extends ObsidianModule {
     @Override
     public void onTick(TickEvent.Pre event) {
         super.onTick(event);
-        if (BlackOut.mc.player != null && BlackOut.mc.player.isOnGround()) {
+        if (BlackOut.mc.player != null && BlackOut.mc.player.onGround()) {
             this.height = (int) (Math.round(BlackOut.mc.player.getY()) - 1L);
         }
     }
@@ -48,11 +48,11 @@ public class Flatten extends ObsidianModule {
 
     @Override
     protected void addInsideBlocks() {
-        BlockPos center = BlackOut.mc.player.getBlockPos().withY(this.setY.get() ? this.y.get() : this.height);
+        BlockPos center = BlackOut.mc.player.blockPosition().atY(this.setY.get() ? this.y.get() : this.height);
 
         for (int x = -6; x <= 6; x++) {
             for (int z = -6; z <= 6; z++) {
-                this.insideBlocks.add(center.add(x, 0, z));
+                this.insideBlocks.add(center.offset(x, 0, z));
             }
         }
     }

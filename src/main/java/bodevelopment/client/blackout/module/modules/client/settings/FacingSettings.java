@@ -9,10 +9,14 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.PlaceData;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
-import net.minecraft.block.*;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.AnvilBlock;
+import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.CraftingTableBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 public class FacingSettings extends SettingsModule {
     private static FacingSettings INSTANCE;
@@ -47,13 +51,13 @@ public class FacingSettings extends SettingsModule {
         double closestDist = 1000.0;
 
         for (Direction dir : Direction.values()) {
-            BlockPos pos = blockPos.offset(dir);
+            BlockPos pos = blockPos.relative(dir);
             boolean sneak = this.ignoreBlock(this.state(pos));
             if (!this.outOfBuildHeightCheck(pos)
                     && (!sneak || !ignoreContainers)
                     && (!this.strictDir.get() || OLEPOSSUtils.strictDir(pos, dir.getOpposite(), this.ncpDirection.get()))
                     && (predicateOR != null && predicateOR.test(pos, dir) || this.solid(pos) && (predicateAND == null || predicateAND.test(pos, dir)))) {
-                double dist = SettingUtils.placeRangeTo(pos.offset(dir));
+                double dist = SettingUtils.placeRangeTo(pos.relative(dir));
                 if (direction == null || dist < closestDist) {
                     closestDist = dist;
                     direction = dir;
@@ -67,7 +71,7 @@ public class FacingSettings extends SettingsModule {
         } else {
             return direction == null
                     ? new PlaceData(null, null, false, false)
-                    : new PlaceData(blockPos.offset(direction), direction.getOpposite(), true, closestSneak);
+                    : new PlaceData(blockPos.relative(direction), direction.getOpposite(), true, closestSneak);
         }
     }
 
@@ -85,7 +89,7 @@ public class FacingSettings extends SettingsModule {
         double closestDist = 1000.0;
 
         for (Direction dir : Direction.values()) {
-            BlockPos pos = position.offset(dir);
+            BlockPos pos = position.relative(dir);
             if (!this.outOfBuildHeightCheck(pos)
                     && (!this.unblocked.get() || !this.solid(pos))
                     && (!this.strictDir.get() || OLEPOSSUtils.strictDir(position, dir, this.ncpDirection.get()))) {
@@ -101,7 +105,7 @@ public class FacingSettings extends SettingsModule {
     }
 
     private boolean solid(BlockPos pos) {
-        return !this.state(pos).getCollisionShape(BlackOut.mc.world, pos).isEmpty();
+        return !this.state(pos).getCollisionShape(BlackOut.mc.level, pos).isEmpty();
     }
 
     private BlockState state(BlockPos pos) {
@@ -117,10 +121,10 @@ public class FacingSettings extends SettingsModule {
     }
 
     private double dist(BlockPos pos, Direction dir) {
-        Vec3d vec = new Vec3d(
-                pos.getX() + dir.getOffsetX() / 2.0F, pos.getY() + dir.getOffsetY() / 2.0F, pos.getZ() + dir.getOffsetZ() / 2.0F
+        Vec3 vec = new Vec3(
+                pos.getX() + dir.getStepX() / 2.0F, pos.getY() + dir.getStepY() / 2.0F, pos.getZ() + dir.getStepZ() / 2.0F
         );
-        Vec3d dist = BlackOut.mc.player.getEyePos().subtract(vec);
+        Vec3 dist = BlackOut.mc.player.getEyePosition().subtract(vec);
         return dist.length();
     }
 

@@ -21,17 +21,16 @@ import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec2f;
-import net.minecraft.util.math.Vec3d;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
 
 public class TargetHUD extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -57,10 +56,10 @@ public class TargetHUD extends HudElement {
     private float delta = 0.0F;
     private float progress = 0.0F;
     private float armorProgress = 0.0F;
-    private AbstractClientPlayerEntity target = null;
-    private AbstractClientPlayerEntity renderTarget = null;
-    private Vec3d renderPos = Vec3d.ZERO;
-    private Identifier renderSkin;
+    private AbstractClientPlayer target = null;
+    private AbstractClientPlayer renderTarget = null;
+    private Vec3 renderPos = Vec3.ZERO;
+    private ResourceLocation renderSkin;
 
     public TargetHUD() {
         super("Target HUD", "Displays an advanced status overlay for the current combat target, featuring health, armor, and player head renders.");
@@ -70,7 +69,7 @@ public class TargetHUD extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.updateTarget();
             if (this.target != null) {
                 this.setRendering(this.target);
@@ -94,35 +93,35 @@ public class TargetHUD extends HudElement {
 
     @Event
     public void onRender(RenderEvent.Hud.Post event) {
-        if (BlackOut.mc.world != null && BlackOut.mc.player != null) {
+        if (BlackOut.mc.level != null && BlackOut.mc.player != null) {
             if (this.renderType.get() != RenderType.Hud && this.renderTarget != null) {
-                this.stack.push();
+                this.stack.pushPose();
                 RenderUtils.unGuiScale(this.stack);
-                double yaw = Math.toRadians(RotationUtils.getYaw(this.renderPos, BlackOut.mc.gameRenderer.getCamera().getPos(), 0.0));
-                Vec2f f = RenderUtils.getCoords(
+                double yaw = Math.toRadians(RotationUtils.getYaw(this.renderPos, BlackOut.mc.gameRenderer.getMainCamera().getPosition(), 0.0));
+                Vec2 f = RenderUtils.getCoords(
                         this.renderPos.x + Math.cos(yaw) * this.dist.get(),
-                        this.renderPos.y + this.renderTarget.getBoundingBox().getLengthY() * this.renderHeight.get(),
+                        this.renderPos.y + this.renderTarget.getBoundingBox().getYsize() * this.renderHeight.get(),
                         this.renderPos.z + Math.sin(yaw) * this.dist.get(),
                         true
                 );
                 if (f == null) {
-                    this.stack.pop();
+                    this.stack.popPose();
                 } else {
                     this.stack.translate(f.x, f.y, 0.0F);
                     this.stack.scale(this.getScale() * 2.0F, this.getScale() * 2.0F, 0.0F);
                     this.renderTargetHUD(true);
-                    this.stack.pop();
+                    this.stack.popPose();
                 }
             }
         }
     }
 
-    private void setRendering(AbstractClientPlayerEntity player) {
+    private void setRendering(AbstractClientPlayer player) {
         this.renderTarget = player;
-        this.renderPos = new Vec3d(
-                MathHelper.lerp(BlackOut.mc.getRenderTickCounter().getTickDelta(true), this.renderTarget.prevX, this.renderTarget.getX()),
-                MathHelper.lerp(BlackOut.mc.getRenderTickCounter().getTickDelta(true), this.renderTarget.prevY, this.renderTarget.getY()),
-                MathHelper.lerp(BlackOut.mc.getRenderTickCounter().getTickDelta(true), this.renderTarget.prevZ, this.renderTarget.getZ())
+        this.renderPos = new Vec3(
+                Mth.lerp(BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true), this.renderTarget.xo, this.renderTarget.getX()),
+                Mth.lerp(BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true), this.renderTarget.yo, this.renderTarget.getY()),
+                Mth.lerp(BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true), this.renderTarget.zo, this.renderTarget.getZ())
         );
     }
 
@@ -156,7 +155,7 @@ public class TargetHUD extends HudElement {
         }
 
         Color yes = new Color(0, 0, 0, 85);
-        this.stack.push();
+        this.stack.pushPose();
         this.stack.translate(this.getRenderWidth() / 2.0F, center ? 0.0F : this.getRenderHeight() / 2.0F, 0.0F);
         this.stack.scale(renderScale, renderScale, 1.0F);
         float prevAlpha = Renderer.getAlpha();
@@ -218,7 +217,7 @@ public class TargetHUD extends HudElement {
 
             case BlackoutInfo:
                 String ping = "0";
-                PlayerListEntry entry = BlackOut.mc.getNetworkHandler().getPlayerListEntry(this.renderTarget.getUuid());
+                PlayerInfo entry = BlackOut.mc.getConnection().getPlayerInfo(this.renderTarget.getUUID());
                 if (entry != null) {
                     ping = String.valueOf(entry.getLatency());
                 }
@@ -396,11 +395,11 @@ public class TargetHUD extends HudElement {
                         .text(
                                 this.stack,
                                 "Yaw: "
-                                        + Math.round(this.renderTarget.getYaw())
+                                        + Math.round(this.renderTarget.getYRot())
                                         + " Pitch: "
-                                        + Math.round(this.renderTarget.getPitch())
+                                        + Math.round(this.renderTarget.getXRot())
                                         + " BodyYaw: "
-                                        + Math.round(this.renderTarget.bodyYaw),
+                                        + Math.round(this.renderTarget.yBodyRot),
                                 0.6F,
                                 34.0F,
                                 16.0F + BlackOut.FONT.getHeight() * 0.6F,
@@ -411,7 +410,7 @@ public class TargetHUD extends HudElement {
                 BlackOut.FONT
                         .text(
                                 this.stack,
-                                "TOG: 0 HURT: " + this.renderTarget.hurtTime + " TE: " + this.renderTarget.age,
+                                "TOG: 0 HURT: " + this.renderTarget.hurtTime + " TE: " + this.renderTarget.tickCount,
                                 0.6F,
                                 34.0F,
                                 16.0F + BlackOut.FONT.getHeight() * 1.2F,
@@ -422,7 +421,7 @@ public class TargetHUD extends HudElement {
         }
 
         Renderer.setAlpha(prevAlpha);
-        this.stack.pop();
+        this.stack.popPose();
     }
 
     private float getRenderWidth() {
@@ -460,7 +459,7 @@ public class TargetHUD extends HudElement {
         }
 
         if (this.target != null) {
-            this.renderSkin = this.target.getSkinTextures().texture();
+            this.renderSkin = this.target.getSkin().texture();
         }
     }
 
@@ -479,7 +478,7 @@ public class TargetHUD extends HudElement {
     private void closestTarget() {
         double distance = Double.MAX_VALUE;
 
-        for (AbstractClientPlayerEntity player : BlackOut.mc.world.getPlayers()) {
+        for (AbstractClientPlayer player : BlackOut.mc.level.players()) {
             if (player != BlackOut.mc.player && !Managers.FRIENDS.isFriend(player) && !(player.distanceTo(BlackOut.mc.player) > this.targetRange.get())) {
                 double d = BlackOut.mc.player.distanceTo(player);
                 if (d < distance) {
@@ -490,28 +489,28 @@ public class TargetHUD extends HudElement {
         }
     }
 
-    private void drawFace(MatrixStack stack, float scale, float x, float y) {
+    private void drawFace(PoseStack stack, float scale, float x, float y) {
         float size = scale * 20.0F;
         if (this.renderSkin != null) {
             if (this.mode.get() == Mode.Old || this.mode.get() == Mode.Exhibition) {
                 TextureRenderer.renderQuad(
-                        stack, x, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, BlackOut.mc.getTextureManager().getTexture(this.renderSkin).getGlId()
+                        stack, x, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, BlackOut.mc.getTextureManager().getTexture(this.renderSkin).getId()
                 );
             }
 
             if (this.mode.get() != Mode.Tenacity && this.mode.get() != Mode.Tenacity2) {
                 TextureRenderer.renderFitRounded(
-                        stack, x, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, 5.0F, 40, BlackOut.mc.getTextureManager().getTexture(this.renderSkin).getGlId()
+                        stack, x, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, 5.0F, 40, BlackOut.mc.getTextureManager().getTexture(this.renderSkin).getId()
                 );
             } else {
                 TextureRenderer.renderFitRounded(
-                        stack, x, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, 12.0F, 40, BlackOut.mc.getTextureManager().getTexture(this.renderSkin).getGlId()
+                        stack, x, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, 12.0F, 40, BlackOut.mc.getTextureManager().getTexture(this.renderSkin).getId()
                 );
             }
         }
     }
 
-    private void drawArmor(MatrixStack stack, PlayerEntity player, float x, float y) {
+    private void drawArmor(PoseStack stack, Player player, float x, float y) {
         switch (this.mode.get()) {
             case ExhibitionNew:
                 for (int ix = 0; ix < 4; ix++) {
@@ -533,9 +532,9 @@ public class TargetHUD extends HudElement {
         }
     }
 
-    private boolean getArmor(PlayerEntity entity) {
+    private boolean getArmor(Player entity) {
         for (int i = 0; i < 4; i++) {
-            if (!entity.getInventory().getArmorStack(i).isEmpty()) {
+            if (!entity.getInventory().getArmor(i).isEmpty()) {
                 return true;
             }
         }
@@ -543,14 +542,14 @@ public class TargetHUD extends HudElement {
         return false;
     }
 
-    private float getDurability(PlayerEntity entity) {
+    private float getDurability(Player entity) {
         float totalDurability = 0.0F;
         int armorPieces = 0;
         float lowestDurability = 1.0F;
         boolean hasAnyArmor = false;
 
         for (int i = 0; i < 4; i++) {
-            ItemStack itemStack = entity.getInventory().getArmorStack(i);
+            ItemStack itemStack = entity.getInventory().getArmor(i);
 
             if (itemStack.isEmpty()) {
                 if (this.countMode.get() == ArmorCount.Lowest) {
@@ -562,7 +561,7 @@ public class TargetHUD extends HudElement {
             hasAnyArmor = true;
             armorPieces++;
 
-            float currentItemDurability = (float) (itemStack.getMaxDamage() - itemStack.getDamage()) / itemStack.getMaxDamage();
+            float currentItemDurability = (float) (itemStack.getMaxDamage() - itemStack.getDamageValue()) / itemStack.getMaxDamage();
 
             if (this.countMode.get() == ArmorCount.Average) {
                 totalDurability += currentItemDurability;

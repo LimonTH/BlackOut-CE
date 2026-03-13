@@ -26,17 +26,20 @@ import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.*;
-
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -89,11 +92,11 @@ public class Scaffold extends MoveUpdateModule {
     private final Setting<RenderMode> renderMode = this.sgRender.enumSetting("Visual Mode", RenderMode.Placed, "Controls which target positions are highlighted in the world.");
     private final BoxMultiSetting rendering = BoxMultiSetting.of(this.sgRender);
 
-    private final MatrixStack stack = new MatrixStack();
+    private final PoseStack stack = new PoseStack();
     private final TimerList<BlockPos> placed = new TimerList<>(true);
     private final List<BlockPos> positions = new ArrayList<>();
     private final List<BlockPos> valids = new ArrayList<>();
-    private final List<Box> boxes = new ArrayList<>();
+    private final List<AABB> boxes = new ArrayList<>();
     private final TimerList<BlockPos> render = new TimerList<>(false);
     private final float[] velocities = new float[]{0.42F, 0.3332F, 0.2468F};
     private final float[] slowVelocities = new float[]{0.42F, 0.3332F, 0.2468F, 0.0F};
@@ -104,10 +107,10 @@ public class Scaffold extends MoveUpdateModule {
     private int placesLeft = 0;
     private int blocksLeft = 0;
     private boolean changedTimer = false;
-    private Vec3d movement = Vec3d.ZERO;
+    private Vec3 movement = Vec3.ZERO;
     private FindResult result = null;
     private boolean switched = false;
-    private Hand hand = null;
+    private InteractionHand hand = null;
     private boolean towerRotate = false;
     private int jumpProgress = -1;
     private double startY = 0.0;
@@ -151,14 +154,14 @@ public class Scaffold extends MoveUpdateModule {
         switch (this.renderMode.get()) {
             case Placed:
                 this.render.forEach(timer -> {
-                    double progress = 1.0 - MathHelper.clamp(MathHelper.getLerpProgress(System.currentTimeMillis(), timer.startTime, timer.endTime), 0.0, 1.0);
+                    double progress = 1.0 - Mth.clamp(Mth.inverseLerp(System.currentTimeMillis(), timer.startTime, timer.endTime), 0.0, 1.0);
                     this.rendering.render(BoxUtils.get(timer.value), (float) progress, 1.0F);
                 });
                 break;
             case NotPlaced:
                 this.positions.forEach(pos -> this.rendering.render(BoxUtils.get(pos), 1.0F, 1.0F));
                 this.render.forEach(timer -> {
-                    double progress = 1.0 - MathHelper.clamp(MathHelper.getLerpProgress(System.currentTimeMillis(), timer.startTime, timer.endTime), 0.0, 1.0);
+                    double progress = 1.0 - Mth.clamp(Mth.inverseLerp(System.currentTimeMillis(), timer.startTime, timer.endTime), 0.0, 1.0);
                     this.rendering.render(BoxUtils.get(timer.value), (float) progress, 1.0F);
                 });
         }
@@ -166,9 +169,9 @@ public class Scaffold extends MoveUpdateModule {
 
     @Event
     public void onRenderHud(RenderEvent.Hud.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.updateResult();
-            Hand hand = OLEPOSSUtils.getHand(this::valid);
+            InteractionHand hand = OLEPOSSUtils.getHand(this::valid);
             ItemStack itemStack;
             if (hand != null) {
                 itemStack = Managers.PACKET.stackInHand(hand);
@@ -191,17 +194,17 @@ public class Scaffold extends MoveUpdateModule {
             }
 
             if (this.drawBlocks.get()) {
-                this.stack.push();
+                this.stack.pushPose();
                 RenderUtils.unGuiScale(this.stack);
                 float anim = (float) AnimUtils.easeOutQuart(this.delta);
                 this.stack
                         .translate(
-                                BlackOut.mc.getWindow().getWidth() / 2.0F - width / 2.0F, BlackOut.mc.getWindow().getHeight() / 2.0F + height + 2.0F, 0.0F
+                                BlackOut.mc.getWindow().getScreenWidth() / 2.0F - width / 2.0F, BlackOut.mc.getWindow().getScreenHeight() / 2.0F + height + 2.0F, 0.0F
                         );
                 this.stack.scale(anim, anim, 1.0F);
                 float prevAlpha = Renderer.getAlpha();
                 Renderer.setAlpha(anim);
-                this.stack.push();
+                this.stack.pushPose();
                 this.stack.translate(width / -2.0F + width / 2.0F, (height + 2.0F) / -2.0F + height / 2.0F, 0.0F);
                 if (this.blur.get()) {
                     RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, width, height, 6.0F, 10));
@@ -217,15 +220,15 @@ public class Scaffold extends MoveUpdateModule {
                 RenderUtils.renderItem(this.stack, itemStack, 3.0F, 3.0F, 24.0F, RenderLayer.HUD, false);
                 BlackOut.FONT.text(this.stack, text, textScale, 26.0F, 1.0F, this.customColor.get().getColor(), false, false);
                 Renderer.setAlpha(prevAlpha);
-                this.stack.pop();
-                this.stack.pop();
+                this.stack.popPose();
+                this.stack.popPose();
             }
         }
     }
 
     @Override
     public void preTick() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.placeTickTimer++;
             if (this.useTimer.get()) {
                 Timer.set(this.timer.get().floatValue());
@@ -238,20 +241,20 @@ public class Scaffold extends MoveUpdateModule {
 
     @Override
     public void postMove() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             super.postMove();
         }
     }
 
     @Override
     public void postTick() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            if (BlackOut.mc.player.isOnGround()) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            if (BlackOut.mc.player.onGround()) {
                 this.startY = BlackOut.mc.player.getY();
             }
 
             if (this.canTower() && this.towerRotate && SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-                PlaceData data = SettingUtils.getPlaceData(BlackOut.mc.player.getBlockPos(), null, null);
+                PlaceData data = SettingUtils.getPlaceData(BlackOut.mc.player.blockPosition(), null, null);
                 if (data.valid()) {
                     this.rotateBlock(data, RotationType.BlockPlace, -0.1, "tower");
                 }
@@ -263,7 +266,7 @@ public class Scaffold extends MoveUpdateModule {
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.movement = event.movement;
             this.updateTower(event);
         }
@@ -273,10 +276,10 @@ public class Scaffold extends MoveUpdateModule {
         if (this.canTower()) {
             switch (this.tower.get()) {
                 case NCP:
-                    if (BlackOut.mc.options.jumpKey.isPressed()
-                            && (this.towerMoving.get() || BlackOut.mc.player.input.movementForward == 0.0F && BlackOut.mc.player.input.movementSideways == 0.0F)) {
+                    if (BlackOut.mc.options.keyJump.isDown()
+                            && (this.towerMoving.get() || BlackOut.mc.player.input.forwardImpulse == 0.0F && BlackOut.mc.player.input.leftImpulse == 0.0F)) {
                         this.towerRotate = true;
-                        if (BlackOut.mc.player.isOnGround() || this.jumpProgress == 3) {
+                        if (BlackOut.mc.player.onGround() || this.jumpProgress == 3) {
                             this.jumpProgress = 0;
                         }
 
@@ -286,7 +289,7 @@ public class Scaffold extends MoveUpdateModule {
                             }
 
                             event.setY(this, this.velocities[this.jumpProgress]);
-                            ((IVec3d) BlackOut.mc.player.getVelocity()).blackout_Client$setY(this.velocities[this.jumpProgress]);
+                            ((IVec3d) BlackOut.mc.player.getDeltaMovement()).blackout_Client$setY(this.velocities[this.jumpProgress]);
                             this.jumpProgress++;
                         }
                     } else {
@@ -295,10 +298,10 @@ public class Scaffold extends MoveUpdateModule {
                     }
                     break;
                 case SlowNCP:
-                    if (BlackOut.mc.options.jumpKey.isPressed()
-                            && (this.towerMoving.get() || BlackOut.mc.player.input.movementForward == 0.0F && BlackOut.mc.player.input.movementSideways == 0.0F)) {
+                    if (BlackOut.mc.options.keyJump.isDown()
+                            && (this.towerMoving.get() || BlackOut.mc.player.input.forwardImpulse == 0.0F && BlackOut.mc.player.input.leftImpulse == 0.0F)) {
                         this.towerRotate = true;
-                        if (BlackOut.mc.player.isOnGround() || this.jumpProgress == 4) {
+                        if (BlackOut.mc.player.onGround() || this.jumpProgress == 4) {
                             this.jumpProgress = 0;
                         }
 
@@ -308,7 +311,7 @@ public class Scaffold extends MoveUpdateModule {
                             }
 
                             event.setY(this, this.slowVelocities[this.jumpProgress]);
-                            ((IVec3d) BlackOut.mc.player.getVelocity()).blackout_Client$setY(this.slowVelocities[this.jumpProgress]);
+                            ((IVec3d) BlackOut.mc.player.getDeltaMovement()).blackout_Client$setY(this.slowVelocities[this.jumpProgress]);
                             this.jumpProgress++;
                         }
                     } else {
@@ -317,10 +320,10 @@ public class Scaffold extends MoveUpdateModule {
                     }
                     break;
                 case TP:
-                    if (BlackOut.mc.options.jumpKey.isPressed()
-                            && (this.towerMoving.get() || BlackOut.mc.player.input.movementForward == 0.0F && BlackOut.mc.player.input.movementSideways == 0.0F)) {
+                    if (BlackOut.mc.options.keyJump.isDown()
+                            && (this.towerMoving.get() || BlackOut.mc.player.input.forwardImpulse == 0.0F && BlackOut.mc.player.input.leftImpulse == 0.0F)) {
                         this.towerRotate = true;
-                        if (BlackOut.mc.player.isOnGround() || this.jumpProgress == 1) {
+                        if (BlackOut.mc.player.onGround() || this.jumpProgress == 1) {
                             this.jumpProgress = 0;
                         }
 
@@ -330,7 +333,7 @@ public class Scaffold extends MoveUpdateModule {
                             }
 
                             event.setY(this, 1.0);
-                            ((IVec3d) BlackOut.mc.player.getVelocity()).blackout_Client$setY(1.0);
+                            ((IVec3d) BlackOut.mc.player.getDeltaMovement()).blackout_Client$setY(1.0);
                             this.jumpProgress++;
                         }
                     } else {
@@ -339,10 +342,10 @@ public class Scaffold extends MoveUpdateModule {
                     }
                     break;
                 case Disabled:
-                    if (BlackOut.mc.options.jumpKey.isPressed()
-                            && (this.towerMoving.get() || BlackOut.mc.player.input.movementForward == 0.0F && BlackOut.mc.player.input.movementSideways == 0.0F)) {
+                    if (BlackOut.mc.options.keyJump.isDown()
+                            && (this.towerMoving.get() || BlackOut.mc.player.input.forwardImpulse == 0.0F && BlackOut.mc.player.input.leftImpulse == 0.0F)) {
                         this.towerRotate = true;
-                        if (BlackOut.mc.player.isOnGround() || this.jumpProgress == 1) {
+                        if (BlackOut.mc.player.onGround() || this.jumpProgress == 1) {
                             this.jumpProgress = 0;
                         }
 
@@ -393,50 +396,50 @@ public class Scaffold extends MoveUpdateModule {
         return this.result = this.switchMode.get().find(this::valid);
     }
 
-    private void updateBlocks(Vec3d motion) {
+    private void updateBlocks(Vec3 motion) {
         this.boxes.clear();
         this.positions.clear();
         Direction[] directions = this.getDirections(motion);
-        Box box = BlackOut.mc.player.getBoundingBox();
+        AABB box = BlackOut.mc.player.getBoundingBox();
         if (this.shouldKeepY()) {
             double offset = box.minY - Math.min(this.startY, box.minY);
-            box = box.withMaxY(box.maxY - offset);
-            box = box.withMinY(box.minY - offset);
+            box = box.setMaxY(box.maxY - offset);
+            box = box.setMinY(box.minY - offset);
         }
 
         this.addBlocks(box, directions, this.support.get());
         double x = motion.x;
         double y = motion.y;
         double z = motion.z;
-        boolean onGround = this.inside(box.offset(0.0, -0.04, 0.0));
+        boolean onGround = this.inside(box.move(0.0, -0.04, 0.0));
 
         for (int i = 0; i < this.extrapolation.get(); i++) {
-            if (!this.smart.get() || !this.inside(box.offset(x, 0.0, 0.0))) {
-                box = box.offset(x, 0.0, 0.0);
+            if (!this.smart.get() || !this.inside(box.move(x, 0.0, 0.0))) {
+                box = box.move(x, 0.0, 0.0);
             }
 
-            if (!this.smart.get() || !this.inside(box.offset(0.0, 0.0, z))) {
-                box = box.offset(0.0, 0.0, z);
+            if (!this.smart.get() || !this.inside(box.move(0.0, 0.0, z))) {
+                box = box.move(0.0, 0.0, z);
             }
 
             if (!this.shouldKeepY()) {
                 if (onGround) {
-                    if (BlackOut.mc.options.jumpKey.isPressed()) {
+                    if (BlackOut.mc.options.keyJump.isDown()) {
                         y = 0.42;
                     } else {
                         y = 0.0;
                     }
                 }
 
-                if (!this.inside(box.offset(0.0, y, 0.0))) {
+                if (!this.inside(box.move(0.0, y, 0.0))) {
                     if (box.minY + y <= Math.floor(box.minY)) {
-                        box = box.offset(0.0, -(box.minY % 1.0), 0.0);
+                        box = box.move(0.0, -(box.minY % 1.0), 0.0);
                     } else {
-                        box = box.offset(0.0, y, 0.0);
+                        box = box.move(0.0, y, 0.0);
                     }
                 }
 
-                onGround = this.inside(box.offset(0.0, -0.04, 0.0)) || box.minY % 1.0 == 0.0;
+                onGround = this.inside(box.move(0.0, -0.04, 0.0)) || box.minY % 1.0 == 0.0;
                 y = (y - 0.08) * 0.98;
             }
 
@@ -446,15 +449,15 @@ public class Scaffold extends MoveUpdateModule {
     }
 
     private boolean shouldKeepY() {
-        return (!this.allowTower.get() || !(this.movement.horizontalLength() < 0.1)) && this.keepY.get();
+        return (!this.allowTower.get() || !(this.movement.horizontalDistance() < 0.1)) && this.keepY.get();
     }
 
-    private boolean inside(Box box) {
+    private boolean inside(AABB box) {
         return OLEPOSSUtils.inside(BlackOut.mc.player, box);
     }
 
-    private boolean addBlocks2(Box box, Direction[] directions, int b) {
-        BlockPos feetPos = BlockPos.ofFloored(BoxUtils.feet(box).add(0.0, -0.5, 0.0));
+    private boolean addBlocks2(AABB box, Direction[] directions, int b) {
+        BlockPos feetPos = BlockPos.containing(BoxUtils.feet(box).add(0.0, -0.5, 0.0));
         if (OLEPOSSUtils.replaceable(feetPos) && !this.positions.contains(feetPos) && !this.intersects(feetPos)) {
             if (b < 1 && this.validSupport(feetPos, true)) {
                 this.positions.add(feetPos);
@@ -474,7 +477,7 @@ public class Scaffold extends MoveUpdateModule {
                         this.addPos(feetPos);
 
                         for (Direction dir : drr) {
-                            pos = pos.offset(dir);
+                            pos = pos.relative(dir);
                             this.addPos(pos);
                         }
 
@@ -495,7 +498,7 @@ public class Scaffold extends MoveUpdateModule {
         }
     }
 
-    private void addBlocks(Box box, Direction[] directions, int max) {
+    private void addBlocks(AABB box, Direction[] directions, int max) {
         for (int i = 0; i < max; i++) {
             if (this.addBlocks2(box, directions, i)) {
                 return;
@@ -507,7 +510,7 @@ public class Scaffold extends MoveUpdateModule {
         BlockPos pos = feet;
         if (!useFeet) {
             for (Direction dir : dirs) {
-                pos = pos.offset(dir);
+                pos = pos.relative(dir);
             }
         }
 
@@ -515,9 +518,9 @@ public class Scaffold extends MoveUpdateModule {
     }
 
     private boolean intersects(BlockPos pos) {
-        Box box = BoxUtils.get(pos);
+        AABB box = BoxUtils.get(pos);
 
-        for (Box bb : this.boxes) {
+        for (AABB bb : this.boxes) {
             if (bb.intersects(box)) {
                 return true;
             }
@@ -526,10 +529,10 @@ public class Scaffold extends MoveUpdateModule {
         return EntityUtils.intersects(BoxUtils.get(pos), entity -> !(entity instanceof ItemEntity));
     }
 
-    private Direction[] getDirections(Vec3d motion) {
-        double dir = RotationUtils.getYaw(new Vec3d(0.0, 0.0, 0.0), motion, 0.0);
-        Direction moveDir = Direction.fromRotation(dir);
-        return new Direction[]{moveDir.getOpposite(), moveDir, moveDir.rotateYCounterclockwise(), moveDir.rotateYClockwise(), Direction.UP, Direction.DOWN};
+    private Direction[] getDirections(Vec3 motion) {
+        double dir = RotationUtils.getYaw(new Vec3(0.0, 0.0, 0.0), motion, 0.0);
+        Direction moveDir = Direction.fromYRot(dir);
+        return new Direction[]{moveDir.getOpposite(), moveDir, moveDir.getCounterClockWise(), moveDir.getClockWise(), Direction.UP, Direction.DOWN};
     }
 
     private boolean validBlock(BlockPos pos) {
@@ -558,7 +561,7 @@ public class Scaffold extends MoveUpdateModule {
                             }
 
                             if (this.attackSwing.get()) {
-                                this.clientSwing(this.attackHand.get(), Hand.MAIN_HAND);
+                                this.clientSwing(this.attackHand.get(), InteractionHand.MAIN_HAND);
                             }
 
                             this.lastAttack = System.currentTimeMillis();
@@ -575,8 +578,8 @@ public class Scaffold extends MoveUpdateModule {
                 if (this.blocksLeft > 0) {
                     PlaceData data = SettingUtils.getPlaceData(pos, (p, d) -> this.placed.contains(p), null);
                     if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-                        Rotation rotation = SettingUtils.getRotation(data.pos(), data.dir(), data.pos().toCenterPos(), RotationType.BlockPlace);
-                        Vec3d vec = this.getRotationVec(data.pos(), rotation.pitch());
+                        Rotation rotation = SettingUtils.getRotation(data.pos(), data.dir(), data.pos().getCenter(), RotationType.BlockPlace);
+                        Vec3 vec = this.getRotationVec(data.pos(), rotation.pitch());
                         if (vec != null) {
                             if (!this.rotateBlock(data.pos(), data.dir(), vec, RotationType.BlockPlace.withInstant(this.instantRotate.get()), "placing")) {
                                 return;
@@ -588,7 +591,7 @@ public class Scaffold extends MoveUpdateModule {
 
                     if (allowAction) {
                         if (this.switched || this.hand != null || (this.switched = this.switchMode.get().swap(this.result.slot()))) {
-                            this.placeBlock(this.hand, data.pos().toCenterPos(), data.dir(), data.pos());
+                            this.placeBlock(this.hand, data.pos().getCenter(), data.dir(), data.pos());
                             this.setBlock(pos);
                             this.render.add(pos, this.renderTime.get());
                             if (this.placeSwing.get()) {
@@ -608,18 +611,18 @@ public class Scaffold extends MoveUpdateModule {
         }
     }
 
-    private Vec3d getRotationVec(BlockPos pos, double pitch) {
+    private Vec3 getRotationVec(BlockPos pos, double pitch) {
         double yaw;
-        if (this.movement.horizontalLengthSquared() > 0.0) {
+        if (this.movement.horizontalDistanceSqr() > 0.0) {
             switch (this.smartYaw.get()) {
                 case SemiLocked:
-                    yaw = Math.round(RotationUtils.getYaw(this.movement, Vec3d.ZERO, 0.0) / 45.0) * 45L;
+                    yaw = Math.round(RotationUtils.getYaw(this.movement, Vec3.ZERO, 0.0) / 45.0) * 45L;
                     break;
                 case Locked:
-                    yaw = Math.round(RotationUtils.getYaw(this.movement, Vec3d.ZERO, 0.0) / 90.0) * 90L;
+                    yaw = Math.round(RotationUtils.getYaw(this.movement, Vec3.ZERO, 0.0) / 90.0) * 90L;
                     break;
                 case Back:
-                    yaw = RotationUtils.getYaw(this.movement, Vec3d.ZERO, 0.0);
+                    yaw = RotationUtils.getYaw(this.movement, Vec3.ZERO, 0.0);
                     break;
                 default:
                     return null;
@@ -632,33 +635,33 @@ public class Scaffold extends MoveUpdateModule {
         }
 
         return BoxUtils.clamp(
-                RotationUtils.rotationVec(yaw, pitch, BlackOut.mc.player.getEyePos(), BlackOut.mc.player.getEyePos().distanceTo(pos.toCenterPos())),
+                RotationUtils.rotationVec(yaw, pitch, BlackOut.mc.player.getEyePosition(), BlackOut.mc.player.getEyePosition().distanceTo(pos.getCenter())),
                 BoxUtils.get(pos)
         );
     }
 
     private void setBlock(BlockPos pos) {
-        if (BlackOut.mc.player.getInventory().getStack(this.result.slot()).getItem() instanceof BlockItem block) {
+        if (BlackOut.mc.player.getInventory().getItem(this.result.slot()).getItem() instanceof BlockItem block) {
             Managers.PACKET.addToQueue(handler -> {
-                BlackOut.mc.world.setBlockState(pos, block.getBlock().getDefaultState());
+                BlackOut.mc.level.setBlockAndUpdate(pos, block.getBlock().defaultBlockState());
                 this.blockPlaceSound(pos, block);
             });
         }
     }
 
     private boolean validEntity(Entity entity) {
-        return (!(entity instanceof EndCrystalEntity) || System.currentTimeMillis() - this.lastAttack >= 100L) && !(entity instanceof ItemEntity);
+        return (!(entity instanceof EndCrystal) || System.currentTimeMillis() - this.lastAttack >= 100L) && !(entity instanceof ItemEntity);
     }
 
     private Entity getBlocking() {
         Entity crystal = null;
         double lowest = 1000.0;
 
-        for (Entity entity : BlackOut.mc.world.getEntities()) {
-            if (entity instanceof EndCrystalEntity && !(BlackOut.mc.player.distanceTo(entity) > 5.0F) && SettingUtils.inAttackRange(entity.getBoundingBox())) {
+        for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
+            if (entity instanceof EndCrystal && !(BlackOut.mc.player.distanceTo(entity) > 5.0F) && SettingUtils.inAttackRange(entity.getBoundingBox())) {
                 for (BlockPos pos : this.valids) {
                     if (BoxUtils.get(pos).intersects(entity.getBoundingBox())) {
-                        double dmg = DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), entity.getPos());
+                        double dmg = DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), entity.position());
                         if (dmg < lowest) {
                             crystal = entity;
                             lowest = dmg;
@@ -691,11 +694,11 @@ public class Scaffold extends MoveUpdateModule {
         return stack.getItem() instanceof BlockItem block && this.blocks.get().contains(block.getBlock());
     }
 
-    private Hand getHand() {
+    private InteractionHand getHand() {
         if (this.valid(Managers.PACKET.getStack())) {
-            return Hand.MAIN_HAND;
+            return InteractionHand.MAIN_HAND;
         } else {
-            return this.valid(BlackOut.mc.player.getOffHandStack()) ? Hand.OFF_HAND : null;
+            return this.valid(BlackOut.mc.player.getOffhandItem()) ? InteractionHand.OFF_HAND : null;
         }
     }
 

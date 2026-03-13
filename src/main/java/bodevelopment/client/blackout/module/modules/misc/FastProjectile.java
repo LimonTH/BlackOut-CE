@@ -11,13 +11,13 @@ import bodevelopment.client.blackout.module.modules.movement.Blink;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.item.BowItem;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.Items;
 
 public class FastProjectile extends Module {
     private static FastProjectile INSTANCE;
@@ -51,20 +51,20 @@ public class FastProjectile extends Module {
 
     @Event
     public void onSend(PacketEvent.Send event) {
-        if (event.packet instanceof PlayerMoveC2SPacket && !this.ignore && this.ticksLeft > 0) {
+        if (event.packet instanceof ServerboundMovePlayerPacket && !this.ignore && this.ticksLeft > 0) {
             event.setCancelled(true);
         }
 
-        if (event.packet instanceof PlayerInteractItemC2SPacket packet) {
-            if (this.throwIgnore || !OLEPOSSUtils.getItem(packet.getHand()).isOf(Items.ENDER_PEARL)) {
+        if (event.packet instanceof ServerboundUseItemPacket packet) {
+            if (this.throwIgnore || !OLEPOSSUtils.getItem(packet.getHand()).is(Items.ENDER_PEARL)) {
                 return;
             }
 
             this.move(event);
         }
 
-        if (event.packet instanceof PlayerActionC2SPacket packet && packet.getAction() == PlayerActionC2SPacket.Action.RELEASE_USE_ITEM) {
-            if (this.throwIgnore || !(BlackOut.mc.player.getActiveItem().getItem() instanceof BowItem)) {
+        if (event.packet instanceof ServerboundPlayerActionPacket packet && packet.getAction() == ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM) {
+            if (this.throwIgnore || !(BlackOut.mc.player.getUseItem().getItem() instanceof BowItem)) {
                 return;
             }
 
@@ -77,9 +77,9 @@ public class FastProjectile extends Module {
         if (--this.ticksLeft <= 0) {
             if (this.enabledBlink) {
                 Blink.getInstance().disable();
-                BlackOut.mc.getNetworkHandler().getConnection().flush();
+                BlackOut.mc.getConnection().getConnection().flushChannel();
                 this.enabledBlink = false;
-                this.sendPacket(new ClientCommandC2SPacket(BlackOut.mc.player, ClientCommandC2SPacket.Mode.STOP_SPRINTING));
+                this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
                 this.throwIgnore = true;
                 if (this.throwPacket != null) {
                     this.sendPacket(this.throwPacket);
@@ -124,7 +124,7 @@ public class FastProjectile extends Module {
             event.setCancelled(true);
         }
 
-        this.sendPacket(new ClientCommandC2SPacket(BlackOut.mc.player, ClientCommandC2SPacket.Mode.START_SPRINTING));
+        this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.START_SPRINTING));
         if (!this.blink.get()) {
             for (int i = 0; i < this.charge.get(); i++) {
                 this.x = this.x + Math.cos(yaw) * 1.0E-5;
@@ -133,16 +133,16 @@ public class FastProjectile extends Module {
                 this.send(this.x, this.y + 2.0E-13, this.z, false);
             }
 
-            this.sendPacket(new ClientCommandC2SPacket(BlackOut.mc.player, ClientCommandC2SPacket.Mode.STOP_SPRINTING));
+            this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
         }
     }
 
     private void send(double x, double y, double z, boolean og) {
         this.ignore = true;
         if (this.posRot.get()) {
-            this.sendPacket(new PlayerMoveC2SPacket.Full(x, y, z, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, og, BlackOut.mc.player.horizontalCollision));
+            this.sendPacket(new ServerboundMovePlayerPacket.PosRot(x, y, z, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, og, BlackOut.mc.player.horizontalCollision));
         } else {
-            this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(x, y, z, og, BlackOut.mc.player.horizontalCollision));
+            this.sendPacket(new ServerboundMovePlayerPacket.Pos(x, y, z, og, BlackOut.mc.player.horizontalCollision));
         }
 
         this.ignore = false;

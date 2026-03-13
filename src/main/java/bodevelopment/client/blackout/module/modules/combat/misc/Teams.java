@@ -5,8 +5,8 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.text.TextColor;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.world.entity.player.Player;
 
 public class Teams extends Module {
     private static Teams INSTANCE;
@@ -25,7 +25,7 @@ public class Teams extends Module {
         return INSTANCE;
     }
 
-    public boolean isTeammate(PlayerEntity player) {
+    public boolean isTeammate(Player player) {
         if (this.colorCheck.get()) {
             TextColor localColor = BlackOut.mc.player.getDisplayName().getStyle().getColor();
             TextColor playerColor = player.getDisplayName().getStyle().getColor();

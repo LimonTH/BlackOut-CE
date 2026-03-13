@@ -7,10 +7,9 @@ import bodevelopment.client.blackout.util.BOLogger;
 import bodevelopment.client.blackout.util.ClassUtils;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.util.Formatting;
-
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import net.minecraft.ChatFormatting;
 
 public class CommandManager extends Manager {
     private final Map<String, Command> commands = new HashMap<>();
@@ -48,16 +47,16 @@ public class CommandManager extends Manager {
             try {
                 if (BlackOut.mc.player == null && !command.canUseOutsideWorld()) {
                     return String.format("[%s]%s This command can only be used in-game!",
-                            command.name, Formatting.RED.toString());
+                            command.name, ChatFormatting.RED.toString());
                 }
 
                 String respond = command.execute(Arrays.copyOfRange(args, 1, args.length));
-                return String.format("[%s]%s %s", command.name, Formatting.GRAY.toString(), respond);
+                return String.format("[%s]%s %s", command.name, ChatFormatting.GRAY.toString(), respond);
 
             } catch (Exception e) {
                 BOLogger.warn("An error occurred while executing command " + Arrays.toString(args) + " : " + e);
                 return String.format("[%s]%s Error: %s",
-                        command.name, Formatting.RED.toString(), "An error occurred while executing command.");
+                        command.name, ChatFormatting.RED.toString(), "An error occurred while executing command.");
             }
         } else {
             return null;

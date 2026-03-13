@@ -8,35 +8,34 @@ import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.randomstuff.FakePlayerEntity;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.DamageUtils;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.SwordItem;
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.network.protocol.game.ClientboundExplodePacket;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class FakePlayerManager extends Manager {
     public final List<FakePlayerEntity> fakePlayers = new ArrayList<>();
     private final List<FakePlayerEntity.PlayerPos> recorded = new ArrayList<>();
     private boolean recording = false;
 
-    public static FakePlayerEntity.PlayerPos getPlayerPos(PlayerEntity player) {
+    public static FakePlayerEntity.PlayerPos getPlayerPos(Player player) {
         return new FakePlayerEntity.PlayerPos(
-                player.getPos(),
-                player.getVelocity(),
+                player.position(),
+                player.getDeltaMovement(),
                 player.getPose(),
-                player.getPitch(),
-                player.getYaw(),
-                player.getHeadYaw(),
-                player.getBodyYaw()
+                player.getXRot(),
+                player.getYRot(),
+                player.getYHeadRot(),
+                player.getVisualRotationYInDegrees()
         );
     }
 
@@ -47,17 +46,17 @@ public class FakePlayerManager extends Manager {
 
     @Event
     public void onReceive(PacketEvent.Receive.Pre event) {
-        if (event.packet instanceof ExplosionS2CPacket packet) {
+        if (event.packet instanceof ClientboundExplodePacket packet) {
             this.fakePlayers.forEach(entity -> {
-                Vec3d pos = new Vec3d(packet.center().getX(), packet.center().getY(), packet.center().getZ());
-                Box box = entity.getBoundingBox();
+                Vec3 pos = new Vec3(packet.center().x(), packet.center().y(), packet.center().z());
+                AABB box = entity.getBoundingBox();
                 double q = 12.0;
                 double dist = BoxUtils.feet(box).distanceTo(pos) / q;
                 if (!(dist > 1.0)) {
                     double aa = DamageUtils.getExposure(pos, box, null);
                     double ab = (1.0 - dist) * aa;
                     float damage = (int) ((ab * ab + ab) * 3.5 * q + 1.0);
-                    BlackOut.mc.execute(() -> entity.damage(BlackOut.mc.player.getDamageSources().explosion(null, null), damage));
+                    BlackOut.mc.execute(() -> entity.damage(BlackOut.mc.player.damageSources().explosion(null, null), damage));
                 }
             });
         }
@@ -65,22 +64,22 @@ public class FakePlayerManager extends Manager {
 
     public void onAttack(FakePlayerEntity player) {
         this.playHitSound(player);
-        player.damage(BlackOut.mc.player.getDamageSources().playerAttack(BlackOut.mc.player), this.getDamage(player));
+        player.damage(BlackOut.mc.player.damageSources().playerAttack(BlackOut.mc.player), this.getDamage(player));
     }
 
     private void playHitSound(FakePlayerEntity target) {
-        if (!(this.getDamage(target) <= 0.0F) && !target.isDead()) {
-            boolean bl = BlackOut.mc.player.getAttackCooldownProgress(0.5F) > 0.9F;
+        if (!(this.getDamage(target) <= 0.0F) && !target.isDeadOrDying()) {
+            boolean bl = BlackOut.mc.player.getAttackStrengthScale(0.5F) > 0.9F;
             boolean sprintHit = BlackOut.mc.player.isSprinting() && bl;
             if (sprintHit) {
                 BlackOut.mc
-                        .world
-                        .playSound(
+                        .level
+                        .playLocalSound(
                                 BlackOut.mc.player.getX(),
                                 BlackOut.mc.player.getY(),
                                 BlackOut.mc.player.getZ(),
-                                SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK,
-                                BlackOut.mc.player.getSoundCategory(),
+                                SoundEvents.PLAYER_ATTACK_KNOCKBACK,
+                                BlackOut.mc.player.getSoundSource(),
                                 1.0F,
                                 1.0F,
                                 true
@@ -89,47 +88,47 @@ public class FakePlayerManager extends Manager {
 
             boolean critical = bl
                     && BlackOut.mc.player.fallDistance > 0.0F
-                    && !BlackOut.mc.player.isOnGround()
-                    && !BlackOut.mc.player.isClimbing()
-                    && !BlackOut.mc.player.isTouchingWater()
-                    && !BlackOut.mc.player.hasStatusEffect(StatusEffects.BLINDNESS)
-                    && !BlackOut.mc.player.hasVehicle()
+                    && !BlackOut.mc.player.onGround()
+                    && !BlackOut.mc.player.onClimbable()
+                    && !BlackOut.mc.player.isInWater()
+                    && !BlackOut.mc.player.hasEffect(MobEffects.BLINDNESS)
+                    && !BlackOut.mc.player.isPassenger()
                     && !BlackOut.mc.player.isSprinting();
-            double horizontalSpeed = BlackOut.mc.player.getVelocity().horizontalLength();
+            double horizontalSpeed = BlackOut.mc.player.getDeltaMovement().horizontalDistance();
             double prevHorizontalSpeed = Math.sqrt(
-                    Math.pow(BlackOut.mc.player.getX() - BlackOut.mc.player.prevX, 2) +
-                            Math.pow(BlackOut.mc.player.getZ() - BlackOut.mc.player.prevZ, 2)
+                    Math.pow(BlackOut.mc.player.getX() - BlackOut.mc.player.xo, 2) +
+                            Math.pow(BlackOut.mc.player.getZ() - BlackOut.mc.player.zo, 2)
             );
             double d = horizontalSpeed - prevHorizontalSpeed;
             boolean bl42 = bl
                     && !critical
                     && !sprintHit
-                    && BlackOut.mc.player.isOnGround()
-                    && d < BlackOut.mc.player.getMovementSpeed()
-                    && BlackOut.mc.player.getStackInHand(Hand.MAIN_HAND).getItem() instanceof SwordItem;
+                    && BlackOut.mc.player.onGround()
+                    && d < BlackOut.mc.player.getSpeed()
+                    && BlackOut.mc.player.getItemInHand(InteractionHand.MAIN_HAND).getItem() instanceof SwordItem;
             if (bl42) {
                 BlackOut.mc
-                        .world
-                        .playSound(
+                        .level
+                        .playLocalSound(
                                 BlackOut.mc.player.getX(),
                                 BlackOut.mc.player.getY(),
                                 BlackOut.mc.player.getZ(),
-                                SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP,
-                                BlackOut.mc.player.getSoundCategory(),
+                                SoundEvents.PLAYER_ATTACK_SWEEP,
+                                BlackOut.mc.player.getSoundSource(),
                                 1.0F,
                                 1.0F,
                                 true
                         );
             } else if (!critical) {
-                SoundEvent soundEvent = bl ? SoundEvents.ENTITY_PLAYER_ATTACK_STRONG : SoundEvents.ENTITY_PLAYER_ATTACK_WEAK;
+                SoundEvent soundEvent = bl ? SoundEvents.PLAYER_ATTACK_STRONG : SoundEvents.PLAYER_ATTACK_WEAK;
                 BlackOut.mc
-                        .world
-                        .playSound(
+                        .level
+                        .playLocalSound(
                                 BlackOut.mc.player.getX(),
                                 BlackOut.mc.player.getY(),
                                 BlackOut.mc.player.getZ(),
                                 soundEvent,
-                                BlackOut.mc.player.getSoundCategory(),
+                                BlackOut.mc.player.getSoundSource(),
                                 1.0F,
                                 1.0F,
                                 true
@@ -138,13 +137,13 @@ public class FakePlayerManager extends Manager {
 
             if (critical) {
                 BlackOut.mc
-                        .world
-                        .playSound(
+                        .level
+                        .playLocalSound(
                                 BlackOut.mc.player.getX(),
                                 BlackOut.mc.player.getY(),
                                 BlackOut.mc.player.getZ(),
-                                SoundEvents.ENTITY_PLAYER_ATTACK_CRIT,
-                                BlackOut.mc.player.getSoundCategory(),
+                                SoundEvents.PLAYER_ATTACK_CRIT,
+                                BlackOut.mc.player.getSoundSource(),
                                 1.0F,
                                 1.0F,
                                 true
@@ -152,13 +151,13 @@ public class FakePlayerManager extends Manager {
             }
         } else {
             BlackOut.mc
-                    .world
-                    .playSound(
+                    .level
+                    .playLocalSound(
                             BlackOut.mc.player.getX(),
                             BlackOut.mc.player.getY(),
                             BlackOut.mc.player.getZ(),
-                            SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE,
-                            BlackOut.mc.player.getSoundCategory(),
+                            SoundEvents.PLAYER_ATTACK_NODAMAGE,
+                            BlackOut.mc.player.getSoundSource(),
                             1.0F,
                             1.0F,
                             true
@@ -167,9 +166,9 @@ public class FakePlayerManager extends Manager {
     }
 
     private float getDamage(Entity target) {
-        float damage = (float) DamageUtils.itemDamage(BlackOut.mc.player.getMainHandStack());
+        float damage = (float) DamageUtils.itemDamage(BlackOut.mc.player.getMainHandItem());
 
-        float cooldown = BlackOut.mc.player.getAttackCooldownProgress(0.5F);
+        float cooldown = BlackOut.mc.player.getAttackStrengthScale(0.5F);
         float currentDamage = damage * (0.2F + cooldown * cooldown * 0.8F);
 
         if (isCrit(cooldown, target)) {
@@ -182,11 +181,11 @@ public class FakePlayerManager extends Manager {
     private boolean isCrit(float cooldown, Entity target) {
         return cooldown > 0.9F
                 && BlackOut.mc.player.fallDistance > 0.0F
-                && !BlackOut.mc.player.isOnGround()
-                && !BlackOut.mc.player.isClimbing()
-                && !BlackOut.mc.player.isTouchingWater()
-                && !BlackOut.mc.player.hasStatusEffect(StatusEffects.BLINDNESS)
-                && !BlackOut.mc.player.hasVehicle()
+                && !BlackOut.mc.player.onGround()
+                && !BlackOut.mc.player.onClimbable()
+                && !BlackOut.mc.player.isInWater()
+                && !BlackOut.mc.player.hasEffect(MobEffects.BLINDNESS)
+                && !BlackOut.mc.player.isPassenger()
                 && target instanceof LivingEntity
                 && !BlackOut.mc.player.isSprinting();
     }
@@ -195,13 +194,13 @@ public class FakePlayerManager extends Manager {
     public void onTick(TickEvent.Post event) {
         if (this.recording && BlackOut.mc.player != null) {
             FakePlayerEntity.PlayerPos playerPos = new FakePlayerEntity.PlayerPos(
-                    BlackOut.mc.player.getPos(),
-                    BlackOut.mc.player.getVelocity(),
+                    BlackOut.mc.player.position(),
+                    BlackOut.mc.player.getDeltaMovement(),
                     BlackOut.mc.player.getPose(),
-                    BlackOut.mc.player.getPitch(),
-                    BlackOut.mc.player.getYaw(),
-                    BlackOut.mc.player.getHeadYaw(),
-                    BlackOut.mc.player.bodyYaw
+                    BlackOut.mc.player.getXRot(),
+                    BlackOut.mc.player.getYRot(),
+                    BlackOut.mc.player.getYHeadRot(),
+                    BlackOut.mc.player.yBodyRot
             );
             this.recorded.add(playerPos);
 

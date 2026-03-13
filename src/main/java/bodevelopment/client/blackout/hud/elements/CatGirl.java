@@ -17,7 +17,7 @@ public class CatGirl extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             TextureRenderer t = BOTextures.getCat2Renderer();
             float width = t.getWidth() / 4.0F;
             float height = t.getHeight() / 4.0F;

@@ -10,8 +10,8 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.Notifications;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.world.effect.MobEffects;
 
 public class Notifier extends Module {
     private static Notifier INSTANCE;
@@ -62,9 +62,9 @@ public class Notifier extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             if (this.weakness.get()) {
-                if (!BlackOut.mc.player.hasStatusEffect(StatusEffects.WEAKNESS)) {
+                if (!BlackOut.mc.player.hasEffect(MobEffects.WEAKNESS)) {
                     if (this.last) {
                         this.last = false;
                         this.sendNotification("You no longer have weakness!");
@@ -87,7 +87,7 @@ public class Notifier extends Module {
         }
     }
 
-    private String getPopString(AbstractClientPlayerEntity player, int pops) {
+    private String getPopString(AbstractClientPlayer player, int pops) {
         return player.getName().getString() + " has popped their " + pops + this.getSuffix(pops) + " totem!";
     }
 

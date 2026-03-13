@@ -2,7 +2,7 @@ package bodevelopment.client.blackout.helpers;
 
 import bodevelopment.client.blackout.interfaces.functional.SingleOut;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 
 public class ScrollHelper {
     private final float friction;
@@ -43,7 +43,7 @@ public class ScrollHelper {
         if (this.targetScroll != -1.0F) {
             float diff = this.targetScroll - this.scroll;
             this.scroll += diff * Math.min(1.0F, frameTime * 20.0F * 0.15F);
-            this.speed = MathHelper.clampedLerp(this.speed, 0.0F, frameTime * 20.0F * 0.2F);
+            this.speed = Mth.clampedLerp(this.speed, 0.0F, frameTime * 20.0F * 0.2F);
 
             if (Math.abs(diff) < 0.1F) {
                 this.scroll = this.targetScroll;
@@ -54,7 +54,7 @@ public class ScrollHelper {
         }
 
         this.clamp(this.min.get(), this.max.get());
-        this.speed = MathHelper.clampedLerp(this.speed, 0.0F, frameTime * 20.0F * this.friction);
+        this.speed = Mth.clampedLerp(this.speed, 0.0F, frameTime * 20.0F * this.friction);
     }
 
     protected void clamp(float min, float max) {
@@ -82,7 +82,7 @@ public class ScrollHelper {
         this.targetScroll = -1.0F;
         amount = -amount;
         if (this.limit > 0.0F) {
-            amount = MathHelper.clamp(amount, -this.limit, this.limit);
+            amount = Mth.clamp(amount, -this.limit, this.limit);
         }
 
         this.scrolls.add(amount * this.speedMulti, 0.1);

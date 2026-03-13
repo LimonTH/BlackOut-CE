@@ -9,8 +9,8 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.util.BlockUtils;
 import bodevelopment.client.blackout.util.InvUtils;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.ItemStack;
 
 public class HandMine extends Module {
     private static HandMine INSTANCE;

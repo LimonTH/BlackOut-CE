@@ -16,8 +16,8 @@ public class Welcomer extends TextElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            this.stack.push();
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            this.stack.pushPose();
             LocalTime currentTime = LocalTime.now();
             String timetxt;
             if (currentTime.isBefore(LocalTime.NOON)) {
@@ -39,7 +39,7 @@ public class Welcomer extends TextElement {
 
             this.setSize(BlackOut.FONT.getWidth(txt), BlackOut.FONT.getHeight());
             this.drawElement(this.stack, txt, BlackOut.mc.player.getName().getString());
-            this.stack.pop();
+            this.stack.popPose();
         }
     }
 

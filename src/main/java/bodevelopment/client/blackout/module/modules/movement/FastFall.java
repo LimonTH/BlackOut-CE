@@ -11,8 +11,8 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.HoleUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import org.joml.Vector2i;
 
 public class FastFall extends Module {
@@ -47,7 +47,7 @@ public class FastFall extends Module {
                 this.jumpPos = new Vector2i(-69420, -69420);
             }
 
-            boolean onGround = OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().offset(0.0, -0.04, 0.0));
+            boolean onGround = OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(0.0, -0.04, 0.0));
             if (onGround) {
                 if (this.rbTime <= 0L) {
                     this.rbTime = System.currentTimeMillis();
@@ -65,7 +65,7 @@ public class FastFall extends Module {
                     if (!this.onlyHole.get() || holeCheck) {
                         if (!this.jumping || holeCheck && this.jumpHole.get()) {
                             if (!onGround) {
-                                if (!OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().offset(0.0, -0.6, 0.0))) {
+                                if (!OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(0.0, -0.6, 0.0))) {
                                     this.fall(event, holeCheck);
                                 }
                             }
@@ -78,14 +78,14 @@ public class FastFall extends Module {
 
     @Event
     public void onTickPost(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.player.isOnGround()) {
+        if (BlackOut.mc.player != null && BlackOut.mc.player.onGround()) {
             this.jumping = false;
         }
     }
 
     @Event
     public void onReceive(PacketEvent.Receive.Pre event) {
-        if (event.packet instanceof PlayerPositionLookS2CPacket && this.rbDisable.get()) {
+        if (event.packet instanceof ClientboundPlayerPositionPacket && this.rbDisable.get()) {
             this.rubberbanded = true;
         }
     }
@@ -99,8 +99,8 @@ public class FastFall extends Module {
 
     private boolean aboveHole() {
         for (double offset = 0.0; offset < 7.0; offset += 0.1) {
-            if (OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().offset(0.0, -offset, 0.0))) {
-                return HoleUtils.inHole(BlockPos.ofFloored(BlackOut.mc.player.getPos().add(0.0, -offset + 0.12, 0.0)));
+            if (OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(0.0, -offset, 0.0))) {
+                return HoleUtils.inHole(BlockPos.containing(BlackOut.mc.player.position().add(0.0, -offset + 0.12, 0.0)));
             }
         }
 

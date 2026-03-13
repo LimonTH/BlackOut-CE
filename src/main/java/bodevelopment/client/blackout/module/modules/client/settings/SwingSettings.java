@@ -5,8 +5,8 @@ import bodevelopment.client.blackout.enums.SwingType;
 import bodevelopment.client.blackout.module.SettingsModule;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
-import net.minecraft.util.Hand;
+import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+import net.minecraft.world.InteractionHand;
 
 public class SwingSettings extends SettingsModule {
     private static SwingSettings INSTANCE;
@@ -49,7 +49,7 @@ public class SwingSettings extends SettingsModule {
         return INSTANCE;
     }
 
-    public void swing(SwingState state, SwingType type, Hand hand) {
+    public void swing(SwingState state, SwingType type, InteractionHand hand) {
         if (state == this.getState(type)) {
             switch (type) {
                 case Interact:
@@ -83,7 +83,7 @@ public class SwingSettings extends SettingsModule {
                 return;
         }
 
-        this.swing(true, Hand.MAIN_HAND);
+        this.swing(true, InteractionHand.MAIN_HAND);
     }
 
     private SwingState getState(SwingType type) {
@@ -96,9 +96,9 @@ public class SwingSettings extends SettingsModule {
         };
     }
 
-    private void swing(boolean shouldSwing, Hand hand) {
+    private void swing(boolean shouldSwing, InteractionHand hand) {
         if (shouldSwing) {
-            this.sendPacket(new HandSwingC2SPacket(hand));
+            this.sendPacket(new ServerboundSwingPacket(hand));
         }
     }
 

@@ -33,7 +33,7 @@ public class ModuleManager extends Manager {
         });
         BOLogger.info(String.format("Initializing %s modules took %sms", this.modules.size(), time));
 
-        BlackOut.EVENT_BUS.subscribe(this, () -> BlackOut.mc.currentScreen != null || SharedFeatures.shouldSilentScreen());
+        BlackOut.EVENT_BUS.subscribe(this, () -> BlackOut.mc.screen != null || SharedFeatures.shouldSilentScreen());
         SettingUtils.init();
         SharedFeatures.init();
     }

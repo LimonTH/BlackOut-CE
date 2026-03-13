@@ -9,15 +9,6 @@ import bodevelopment.client.blackout.module.modules.legit.HitCrystal;
 import bodevelopment.client.blackout.module.modules.misc.Timer;
 import bodevelopment.client.blackout.module.modules.movement.*;
 import bodevelopment.client.blackout.util.SettingUtils;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.MovementType;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -28,32 +19,41 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 @Mixin(Entity.class)
 public abstract class MixinEntity {
     @Shadow
-    public abstract Box getBoundingBox();
+    public abstract AABB getBoundingBox();
 
     @Shadow
-    public abstract World getEntityWorld();
+    public abstract Level getCommandSenderWorld();
 
     @Shadow
-    public abstract boolean isOnGround();
+    public abstract boolean onGround();
 
     @Shadow
-    public abstract float getStepHeight();
+    public abstract float maxUpStep();
 
     @Shadow
-    public abstract void readNbt(NbtCompound nbt);
+    public abstract void load(CompoundTag nbt);
 
     @Shadow
-    public abstract Vec3d getRotationVector(float pitch, float yaw);
+    public abstract Vec3 calculateViewVector(float pitch, float yaw);
 
-    @Shadow public abstract float getYaw();
-    @Shadow public abstract float getPitch();
+    @Shadow public abstract float getYRot();
+    @Shadow public abstract float getXRot();
 
     @Inject(method = "move", at = @At("HEAD"))
-    private void onMove(MovementType movementType, Vec3d movement, CallbackInfo ci) {
+    private void onMove(MoverType movementType, Vec3 movement, CallbackInfo ci) {
         if ((Object) this == BlackOut.mc.player) {
             BlackOut.EVENT_BUS.post(MoveEvent.Pre.get(movement, movementType));
             TargetStrafe strafe = TargetStrafe.getInstance();
@@ -64,7 +64,7 @@ public abstract class MixinEntity {
     }
 
     @Inject(method = "move", at = @At("TAIL"))
-    private void onMovePost(MovementType movementType, Vec3d movement, CallbackInfo ci) {
+    private void onMovePost(MoverType movementType, Vec3 movement, CallbackInfo ci) {
         if ((Object) this == BlackOut.mc.player) {
             BlackOut.EVENT_BUS.post(MoveEvent.Post.get());
         }
@@ -74,16 +74,16 @@ public abstract class MixinEntity {
         }
     }
 
-    @Redirect(method = "updateVelocity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getYaw()F"))
+    @Redirect(method = "moveRelative", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getYRot()F"))
     private float getMoveYaw(Entity instance) {
         if ((Object) this == BlackOut.mc.player) {
             SettingUtils.grimMovement();
         }
-        return instance.getYaw();
+        return instance.getYRot();
     }
 
-    @Inject(method = "adjustMovementForCollisions(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;", at = @At("HEAD"), cancellable = true)
-    private void doStepStuff(Vec3d movement, CallbackInfoReturnable<Vec3d> cir) {
+    @Inject(method = "collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;", at = @At("HEAD"), cancellable = true)
+    private void doStepStuff(Vec3 movement, CallbackInfoReturnable<Vec3> cir) {
         if ((Object) this != BlackOut.mc.player) return;
 
         Step step = Step.getInstance();
@@ -100,83 +100,83 @@ public abstract class MixinEntity {
     }
 
     @Redirect(
-            method = "adjustMovementForCollisions(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getBoundingBox()Lnet/minecraft/util/math/Box;")
+            method = "collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getBoundingBox()Lnet/minecraft/world/phys/AABB;")
     )
-    private Box box(Entity instance) {
+    private AABB box(Entity instance) {
         return this.getBox();
     }
 
     @Unique
-    private Vec3d getStep(Step step, Vec3d movement) {
+    private Vec3 getStep(Step step, Vec3 movement) {
         if (step.stepProgress > -1 && step.slow.get() && step.offsets != null) {
-            if (movement.horizontalLengthSquared() <= 0.0) {
+            if (movement.horizontalDistanceSqr() <= 0.0) {
                 ((IVec3d) movement).blackout_Client$setXZ(step.prevMovement.x, step.prevMovement.z);
             }
 
-            step.prevMovement = movement.multiply(1.0);
+            step.prevMovement = movement.scale(1.0);
         }
 
         Entity entity = (Entity) (Object) this;
-        Box box = this.getBox();
-        List<VoxelShape> list = this.getEntityWorld().getEntityCollisions(entity, box.stretch(movement));
-        Vec3d vec3d = movement.lengthSquared() == 0.0 ? movement : Entity.adjustMovementForCollisions(entity, movement, box, this.getEntityWorld(), list);
+        AABB box = this.getBox();
+        List<VoxelShape> list = this.getCommandSenderWorld().getEntityCollisions(entity, box.expandTowards(movement));
+        Vec3 vec3d = movement.lengthSqr() == 0.0 ? movement : Entity.collideBoundingBox(entity, movement, box, this.getCommandSenderWorld(), list);
         boolean collidedX = movement.x != vec3d.x;
         boolean collidedY = movement.y != vec3d.y;
         boolean collidedZ = movement.z != vec3d.z;
         boolean collidedHorizontally = collidedX || collidedZ;
-        boolean bl4 = this.isOnGround() || collidedY && movement.y < 0.0;
-        double vanillaHeight = step.stepMode.get() == Step.StepMode.Vanilla ? step.height.get() : this.getStepHeight();
-        Vec3d stepMovement = Entity.adjustMovementForCollisions(
-                entity, new Vec3d(movement.x, vanillaHeight, movement.z), box, this.getEntityWorld(), list
+        boolean bl4 = this.onGround() || collidedY && movement.y < 0.0;
+        double vanillaHeight = step.stepMode.get() == Step.StepMode.Vanilla ? step.height.get() : this.maxUpStep();
+        Vec3 stepMovement = Entity.collideBoundingBox(
+                entity, new Vec3(movement.x, vanillaHeight, movement.z), box, this.getCommandSenderWorld(), list
         );
-        Vec3d stepMovementUp = Entity.adjustMovementForCollisions(
-                entity, new Vec3d(0.0, vanillaHeight, 0.0), box.stretch(movement.x, 0.0, movement.z), this.getEntityWorld(), list
+        Vec3 stepMovementUp = Entity.collideBoundingBox(
+                entity, new Vec3(0.0, vanillaHeight, 0.0), box.expandTowards(movement.x, 0.0, movement.z), this.getCommandSenderWorld(), list
         );
         if (vanillaHeight > 0.0 && bl4 && collidedHorizontally && (!step.slow.get() || step.stepProgress < 0)) {
             if (stepMovementUp.y < vanillaHeight) {
-                Vec3d vec3d4 = Entity.adjustMovementForCollisions(
-                                entity, new Vec3d(movement.x, 0.0, movement.z), box.offset(stepMovementUp), this.getEntityWorld(), list
+                Vec3 vec3d4 = Entity.collideBoundingBox(
+                                entity, new Vec3(movement.x, 0.0, movement.z), box.move(stepMovementUp), this.getCommandSenderWorld(), list
                         )
                         .add(stepMovementUp);
-                if (vec3d4.horizontalLengthSquared() > stepMovement.horizontalLengthSquared()) {
+                if (vec3d4.horizontalDistanceSqr() > stepMovement.horizontalDistanceSqr()) {
                     stepMovement = vec3d4;
                 }
             }
 
-            if (stepMovement.horizontalLengthSquared() > vec3d.horizontalLengthSquared()) {
+            if (stepMovement.horizontalDistanceSqr() > vec3d.horizontalDistanceSqr()) {
                 return stepMovement.add(
-                        Entity.adjustMovementForCollisions(
-                                entity, new Vec3d(0.0, -stepMovement.y + movement.y, 0.0), box.offset(stepMovement), this.getEntityWorld(), list
+                        Entity.collideBoundingBox(
+                                entity, new Vec3(0.0, -stepMovement.y + movement.y, 0.0), box.move(stepMovement), this.getCommandSenderWorld(), list
                         )
                 );
             }
         }
 
         double height = step.height.get();
-        stepMovement = Entity.adjustMovementForCollisions(entity, new Vec3d(movement.x, height, movement.z), box, this.getEntityWorld(), list);
-        stepMovementUp = Entity.adjustMovementForCollisions(
-                entity, new Vec3d(0.0, height, 0.0), box.stretch(movement.x, 0.0, movement.z), this.getEntityWorld(), list
+        stepMovement = Entity.collideBoundingBox(entity, new Vec3(movement.x, height, movement.z), box, this.getCommandSenderWorld(), list);
+        stepMovementUp = Entity.collideBoundingBox(
+                entity, new Vec3(0.0, height, 0.0), box.expandTowards(movement.x, 0.0, movement.z), this.getCommandSenderWorld(), list
         );
         if (height > 0.0
-                && entity.isOnGround()
+                && entity.onGround()
                 && collidedHorizontally
                 && (!step.slow.get() || step.stepProgress < 0 || step.offsets == null)
                 && step.cooldownCheck()) {
             if (stepMovementUp.y < height) {
-                Vec3d vec3d4 = Entity.adjustMovementForCollisions(
-                                entity, new Vec3d(movement.x, 0.0, movement.z), box.offset(stepMovementUp), this.getEntityWorld(), list
+                Vec3 vec3d4 = Entity.collideBoundingBox(
+                                entity, new Vec3(movement.x, 0.0, movement.z), box.move(stepMovementUp), this.getCommandSenderWorld(), list
                         )
                         .add(stepMovementUp);
-                if (vec3d4.horizontalLengthSquared() > stepMovement.horizontalLengthSquared()) {
+                if (vec3d4.horizontalDistanceSqr() > stepMovement.horizontalDistanceSqr()) {
                     stepMovement = vec3d4;
                 }
             }
 
-            if (stepMovement.horizontalLengthSquared() > vec3d.horizontalLengthSquared()) {
-                Vec3d vec3d3 = stepMovement.add(
-                        Entity.adjustMovementForCollisions(
-                                entity, new Vec3d(0.0, -stepMovement.y + movement.y, 0.0), box.offset(stepMovement), this.getEntityWorld(), list
+            if (stepMovement.horizontalDistanceSqr() > vec3d.horizontalDistanceSqr()) {
+                Vec3 vec3d3 = stepMovement.add(
+                        Entity.collideBoundingBox(
+                                entity, new Vec3(0.0, -stepMovement.y + movement.y, 0.0), box.move(stepMovement), this.getCommandSenderWorld(), list
                         )
                 );
                 step.start(vec3d3.y);
@@ -188,9 +188,9 @@ public abstract class MixinEntity {
                         for (double offset : step.offsets) {
                             y += offset;
                             BlackOut.mc
-                                    .getNetworkHandler()
-                                    .sendPacket(
-                                            new PlayerMoveC2SPacket.PositionAndOnGround(
+                                    .getConnection()
+                                    .send(
+                                            new ServerboundMovePlayerPacket.Pos(
                                                     BlackOut.mc.player.getX(), BlackOut.mc.player.getY() + y, BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision)
                                     );
                         }
@@ -214,9 +214,9 @@ public abstract class MixinEntity {
             if (step.stepProgress < step.offsets.length) {
                 h = step.offsets[step.stepProgress];
                 step.stepProgress++;
-                stepMovement = Entity.adjustMovementForCollisions(entity, new Vec3d(movement.x, 0.0, movement.z), box, this.getEntityWorld(), list);
+                stepMovement = Entity.collideBoundingBox(entity, new Vec3(movement.x, 0.0, movement.z), box, this.getCommandSenderWorld(), list);
             } else {
-                Vec3d m;
+                Vec3 m;
                 if (step.stepMode.get() == Step.StepMode.UpdatedNCP) {
                     if (step.stepProgress == step.offsets.length) {
                         step.stepProgress++;
@@ -227,18 +227,18 @@ public abstract class MixinEntity {
                         step.offsets = null;
                     }
 
-                    m = new Vec3d(0.0, 0.0, 0.0);
+                    m = new Vec3(0.0, 0.0, 0.0);
                 } else {
                     h = step.lastSlow;
                     step.stepProgress = -1;
                     step.offsets = null;
-                    m = movement.withAxis(Direction.Axis.Y, 0.0);
+                    m = movement.with(Direction.Axis.Y, 0.0);
                 }
 
-                stepMovement = Entity.adjustMovementForCollisions(entity, m, box, this.getEntityWorld(), list);
+                stepMovement = Entity.collideBoundingBox(entity, m, box, this.getCommandSenderWorld(), list);
             }
 
-            return stepMovement.add(Entity.adjustMovementForCollisions(entity, new Vec3d(0.0, h, 0.0), box.offset(stepMovement), this.getEntityWorld(), list));
+            return stepMovement.add(Entity.collideBoundingBox(entity, new Vec3(0.0, h, 0.0), box.move(stepMovement), this.getCommandSenderWorld(), list));
         } else {
             if (step.shouldResetTimer) {
                 step.stepProgress = -1;
@@ -251,28 +251,28 @@ public abstract class MixinEntity {
         }
     }
 
-    @Inject(method = "getRotationVector()Lnet/minecraft/util/math/Vec3d;", at = @At("HEAD"), cancellable = true)
-    private void onGetRotationVector(CallbackInfoReturnable<Vec3d> cir) {
+    @Inject(method = "getLookAngle()Lnet/minecraft/world/phys/Vec3;", at = @At("HEAD"), cancellable = true)
+    private void onGetRotationVector(CallbackInfoReturnable<Vec3> cir) {
         if ((Object) this == BlackOut.mc.player) {
             if (SettingUtils.grimMovement()) {
-                cir.setReturnValue(this.getRotationVector(Managers.ROTATION.nextPitch, Managers.ROTATION.nextYaw));
+                cir.setReturnValue(this.calculateViewVector(Managers.ROTATION.nextPitch, Managers.ROTATION.nextYaw));
                 return;
             }
 
             ElytraFly elytraFly = ElytraFly.getInstance();
             if (elytraFly.enabled && elytraFly.isBouncing()) {
-                cir.setReturnValue(this.getRotationVector(elytraFly.getPitch(), this.getYaw()));
+                cir.setReturnValue(this.calculateViewVector(elytraFly.getPitch(), this.getYRot()));
             }
         }
     }
 
     @Unique
-    private Box getBox() {
+    private AABB getBox() {
         CollisionShrink shrink = CollisionShrink.getInstance();
         return shrink.enabled ? shrink.getBox(this.getBoundingBox()) : this.getBoundingBox();
     }
 
-    @Inject(method = "pushAwayFrom", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "push(Lnet/minecraft/world/entity/Entity;)V", at = @At("HEAD"), cancellable = true)
     private void pushAwayFromEntities(Entity entity, CallbackInfo ci) {
         if ((Object) this == BlackOut.mc.player) {
             Velocity velocity = Velocity.getInstance();

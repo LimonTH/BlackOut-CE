@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.event.events;
 
 import bodevelopment.client.blackout.event.Cancellable;
-import net.minecraft.network.packet.Packet;
+import net.minecraft.network.protocol.Packet;
 
 public class PacketEvent {
     public static class Receive {

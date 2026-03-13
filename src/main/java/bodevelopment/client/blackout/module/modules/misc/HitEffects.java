@@ -14,14 +14,13 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.SoundUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.List;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 
 public class HitEffects extends Module {
     private final SettingGroup sgEntities = this.addGroup("Entities");
@@ -42,7 +41,7 @@ public class HitEffects extends Module {
     private final Setting<Integer> end = this.sgHitMarker.intSetting("Outer Length", 15, 0, 50, 1, "The distance from the center where the marker lines terminate.", this.hitMarker::get);
     private final Setting<BlackOutColor> markerColor = this.sgHitMarker.colorSetting("Marker Appearance", new BlackOutColor(175, 175, 175, 200), "The color and transparency of the hitmarker lines.", this.hitMarker::get);
 
-    private final MatrixStack stack = new MatrixStack();
+    private final PoseStack stack = new PoseStack();
     private long startedDraw = System.currentTimeMillis();
     public HitEffects() {
         super("Hit Effects", "Provides visual and auditory feedback, such as hitmarkers and custom sounds, when successfully attacking entities.", SubCategory.MISC, true);
@@ -50,9 +49,9 @@ public class HitEffects extends Module {
 
     @Event
     public void onSend(PacketEvent.Sent event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            if (event.packet instanceof AccessorInteractEntityC2SPacket packet && packet.getType().getType() == PlayerInteractEntityC2SPacket.InteractType.ATTACK) {
-                Entity target = BlackOut.mc.world.getEntityById(packet.getId());
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            if (event.packet instanceof AccessorInteractEntityC2SPacket packet && packet.getType().getType() == ServerboundInteractPacket.ActionType.ATTACK) {
+                Entity target = BlackOut.mc.level.getEntity(packet.getId());
                 if (target == null) {
                     return;
                 }
@@ -72,7 +71,7 @@ public class HitEffects extends Module {
 
     @Event
     public void onRender(RenderEvent.Hud.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.drawHitMarker();
         }
     }
@@ -91,13 +90,13 @@ public class HitEffects extends Module {
                     break;
                 case Critical:
                     BlackOut.mc
-                            .world
-                            .playSound(
+                            .level
+                            .playLocalSound(
                                     target.getX(),
                                     target.getY() + 1.0,
                                     target.getZ(),
-                                    SoundEvents.ENTITY_PLAYER_ATTACK_CRIT,
-                                    SoundCategory.PLAYERS,
+                                    SoundEvents.PLAYER_ATTACK_CRIT,
+                                    SoundSource.PLAYERS,
                                     this.volume.get().floatValue(),
                                     this.pitch.get().floatValue(),
                                     true
@@ -109,16 +108,16 @@ public class HitEffects extends Module {
     private void drawHitMarker() {
         if (this.hitMarker.get()) {
             if (System.currentTimeMillis() - this.startedDraw <= 100L) {
-                this.stack.push();
+                this.stack.pushPose();
                 RenderUtils.unGuiScale(this.stack);
-                this.stack.translate(BlackOut.mc.getWindow().getWidth() / 2.0F - 1.0F, BlackOut.mc.getWindow().getHeight() / 2.0F - 1.0F, 0.0F);
+                this.stack.translate(BlackOut.mc.getWindow().getScreenWidth() / 2.0F - 1.0F, BlackOut.mc.getWindow().getScreenHeight() / 2.0F - 1.0F, 0.0F);
                 int s = this.start.get();
                 int e = this.end.get();
                 RenderUtils.fadeLine(this.stack, s, s, e, e, this.markerColor.get().getRGB());
                 RenderUtils.fadeLine(this.stack, s, -s, e, -e, this.markerColor.get().getRGB());
                 RenderUtils.fadeLine(this.stack, -s, s, -e, e, this.markerColor.get().getRGB());
                 RenderUtils.fadeLine(this.stack, -s, -s, -e, -e, this.markerColor.get().getRGB());
-                this.stack.pop();
+                this.stack.popPose();
             }
         }
     }

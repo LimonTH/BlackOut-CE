@@ -27,7 +27,7 @@ public class Sprint extends Module {
 
     @Override
     public void onDisable() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             BlackOut.mc.player.setSprinting(false);
         }
     }
@@ -39,8 +39,8 @@ public class Sprint extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null && !LongJump.getInstance().enabled) {
-            if (this.hungerCheck.get() && BlackOut.mc.player.getHungerManager().getFoodLevel() < 6) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null && !LongJump.getInstance().enabled) {
+            if (this.hungerCheck.get() && BlackOut.mc.player.getFoodData().getFoodLevel() < 6) {
                 BlackOut.mc.player.setSprinting(false);
             } else {
                 if (this.shouldSprint()) {
@@ -52,9 +52,9 @@ public class Sprint extends Module {
 
     public boolean shouldSprint() {
         return switch (this.sprintMode.get()) {
-            case Vanilla -> BlackOut.mc.player.input.hasForwardMovement();
+            case Vanilla -> BlackOut.mc.player.input.hasForwardImpulse();
             case Omni ->
-                    BlackOut.mc.player.getVelocity().getX() != 0.0 || BlackOut.mc.player.getVelocity().getZ() != 0.0;
+                    BlackOut.mc.player.getDeltaMovement().x() != 0.0 || BlackOut.mc.player.getDeltaMovement().z() != 0.0;
             case Rage -> true;
         };
     }

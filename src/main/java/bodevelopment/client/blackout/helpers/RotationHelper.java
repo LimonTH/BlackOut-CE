@@ -17,14 +17,13 @@ import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 import it.unimi.dsi.fastutil.floats.FloatFloatPair;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class RotationHelper {
     private static final List<Class<? extends Module>> priorities = new ArrayList<>();
@@ -101,19 +100,19 @@ public class RotationHelper {
         return this.rotate(0.0F, pitch, false, true, priority, type, (y, p) -> Math.abs(p - pitch) <= precision, key);
     }
 
-    protected boolean rotateBlock(PlaceData data, Vec3d vec, RotationType type, String key) {
+    protected boolean rotateBlock(PlaceData data, Vec3 vec, RotationType type, String key) {
         return this.rotateBlock(data, vec, type, 0.0, key);
     }
 
-    protected boolean rotateBlock(PlaceData data, Vec3d vec, RotationType type, double priority, String key) {
+    protected boolean rotateBlock(PlaceData data, Vec3 vec, RotationType type, double priority, String key) {
         return this.rotateBlock(data.pos(), data.dir(), vec, type, priority, key);
     }
 
-    protected boolean rotateBlock(BlockPos pos, Direction dir, Vec3d vec, RotationType type, String key) {
+    protected boolean rotateBlock(BlockPos pos, Direction dir, Vec3 vec, RotationType type, String key) {
         return this.rotateBlock(pos, dir, vec, type, 0.0, key);
     }
 
-    protected boolean rotateBlock(BlockPos pos, Direction dir, Vec3d vec, RotationType type, double priority, String key) {
+    protected boolean rotateBlock(BlockPos pos, Direction dir, Vec3 vec, RotationType type, double priority, String key) {
         Rotation rotation = SettingUtils.getRotation(pos, dir, vec, type);
         return this.rotate(rotation.yaw(), rotation.pitch(), true, true, priority, type, (y, p) -> SettingUtils.blockRotationCheck(pos, dir, y, p, type), key);
     }
@@ -131,23 +130,23 @@ public class RotationHelper {
     }
 
     protected boolean rotateBlock(BlockPos pos, Direction dir, RotationType type, double priority, String key) {
-        Rotation rotation = SettingUtils.getRotation(pos, dir, pos.toCenterPos(), type);
+        Rotation rotation = SettingUtils.getRotation(pos, dir, pos.getCenter(), type);
         return this.rotate(rotation.yaw(), rotation.pitch(), true, true, priority, type, (y, p) -> SettingUtils.blockRotationCheck(pos, dir, y, p, type), key);
     }
 
-    protected boolean attackRotate(Box box, String key) {
+    protected boolean attackRotate(AABB box, String key) {
         return this.attackRotate(box, BoxUtils.middle(box), key);
     }
 
-    protected boolean attackRotate(Box box, double priority, String key) {
+    protected boolean attackRotate(AABB box, double priority, String key) {
         return this.attackRotate(box, BoxUtils.middle(box), priority, key);
     }
 
-    protected boolean attackRotate(Box box, Vec3d vec, String key) {
+    protected boolean attackRotate(AABB box, Vec3 vec, String key) {
         return this.attackRotate(box, vec, 0.0, key);
     }
 
-    protected boolean attackRotate(Box box, Vec3d vec, double priority, String key) {
+    protected boolean attackRotate(AABB box, Vec3 vec, double priority, String key) {
         Rotation rotation = SettingUtils.getAttackRotation(box, vec);
         return this.rotate(
                 rotation.yaw(), rotation.pitch(), true, true, priority, RotationType.Attacking, (y, p) -> SettingUtils.attackRotationCheck(box, y, p), key

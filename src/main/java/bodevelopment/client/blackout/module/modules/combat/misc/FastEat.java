@@ -11,12 +11,12 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.Vec3;
 
 public class FastEat extends Module {
     private static FastEat INSTANCE;
@@ -39,14 +39,14 @@ public class FastEat extends Module {
         return INSTANCE != null && INSTANCE.enabled && INSTANCE.antiStop.get() && getHand() != null;
     }
 
-    private static Hand getHand() {
-        return BlackOut.mc.player != null && BlackOut.mc.world != null ? OLEPOSSUtils.getHand(OLEPOSSUtils::isGapple) : null;
+    private static InteractionHand getHand() {
+        return BlackOut.mc.player != null && BlackOut.mc.level != null ? OLEPOSSUtils.getHand(OLEPOSSUtils::isGapple) : null;
     }
 
     @Event
     public void onSend(PacketEvent.Send event) {
         if (getHand() != null) {
-            if (event.packet instanceof PlayerActionC2SPacket packet && packet.getAction() == PlayerActionC2SPacket.Action.RELEASE_USE_ITEM && this.antiStop.get()) {
+            if (event.packet instanceof ServerboundPlayerActionPacket packet && packet.getAction() == ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM && this.antiStop.get()) {
                 event.setCancelled(true);
             }
         }
@@ -54,29 +54,29 @@ public class FastEat extends Module {
 
     @Event
     public void onReceive(PacketEvent.Receive.Pre event) {
-        if (event.packet instanceof EntityStatusS2CPacket packet
+        if (event.packet instanceof ClientboundEntityEventPacket packet
                 && BlackOut.mc.player != null
                 && ((AccessorEntityStatusC2SPacket) packet).getId() == BlackOut.mc.player.getId()) {
-            Hand hand = getHand();
-            if (hand != null && BlackOut.mc.options.useKey.isPressed()) {
-                this.sendSequenced(s -> new PlayerInteractItemC2SPacket(hand, s, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch));
+            InteractionHand hand = getHand();
+            if (hand != null && BlackOut.mc.options.keyUse.isDown()) {
+                this.sendSequenced(s -> new ServerboundUseItemPacket(hand, s, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch));
             }
         }
     }
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        Hand hand = getHand();
-        if (hand != null && BlackOut.mc.options.useKey.isPressed()) {
-            this.sendSequenced(s -> new PlayerInteractItemC2SPacket(hand, s, Managers.ROTATION.nextYaw, Managers.ROTATION.nextPitch));
+        InteractionHand hand = getHand();
+        if (hand != null && BlackOut.mc.options.keyUse.isDown()) {
+            this.sendSequenced(s -> new ServerboundUseItemPacket(hand, s, Managers.ROTATION.nextYaw, Managers.ROTATION.nextPitch));
 
             for (this.toSend = this.toSend + this.packets.get(); this.toSend > 0.0; this.toSend--) {
-                Vec3d pos = Managers.PACKET.pos;
+                Vec3 pos = Managers.PACKET.pos;
                 this.sendInstantly(
-                        new PlayerMoveC2SPacket.Full(
-                                pos.getX(),
-                                pos.getY(),
-                                pos.getZ(),
+                        new ServerboundMovePlayerPacket.PosRot(
+                                pos.x(),
+                                pos.y(),
+                                pos.z(),
                                 Managers.ROTATION.prevYaw,
                                 Managers.ROTATION.prevPitch,
                                 Managers.PACKET.isOnGround(),

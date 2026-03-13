@@ -1,11 +1,11 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.interfaces.mixin.IEndCrystalState;
-import net.minecraft.client.render.entity.state.EndCrystalEntityRenderState;
+import net.minecraft.client.renderer.entity.state.EndCrystalRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
-@Mixin(EndCrystalEntityRenderState.class)
+@Mixin(EndCrystalRenderState.class)
 public class MixinEndCrystalRenderState implements IEndCrystalState {
     @Unique
     private long spawnTime;

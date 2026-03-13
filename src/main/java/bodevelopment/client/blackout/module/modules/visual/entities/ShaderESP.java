@@ -14,16 +14,15 @@ import bodevelopment.client.blackout.rendering.framebuffer.FrameBuffer;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.render.BufferBuilderStorage;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EntityRenderer;
-import net.minecraft.client.render.entity.state.EntityRenderState;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.List;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderBuffers;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 
 public class ShaderESP extends Module {
     private static ShaderESP INSTANCE;
@@ -37,13 +36,13 @@ public class ShaderESP extends Module {
     private final Setting<BlackOutColor> insideColor = this.sgGeneral.colorSetting("Interior Color", new BlackOutColor(255, 0, 0, 50), "The color applied to the entity's model body.");
 
     public static boolean ignore = false;
-    private BufferBuilderStorage storage;
-    private VertexConsumerProvider.Immediate vertexConsumerProvider;
+    private RenderBuffers storage;
+    private MultiBufferSource.BufferSource vertexConsumerProvider;
 
-    private VertexConsumerProvider.Immediate getVCP() {
+    private MultiBufferSource.BufferSource getVCP() {
         if (storage == null) {
-            storage = new BufferBuilderStorage(69);
-            vertexConsumerProvider = storage.getEntityVertexConsumers();
+            storage = new RenderBuffers(69);
+            vertexConsumerProvider = storage.bufferSource();
         }
         return vertexConsumerProvider;
     }
@@ -58,20 +57,20 @@ public class ShaderESP extends Module {
     }
 
     public <T extends Entity, S extends EntityRenderState> void onRender(
-            EntityRenderer<T, S> instance, T entity, S state, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light
+            EntityRenderer<T, S> instance, T entity, S state, PoseStack matrices, MultiBufferSource vertexConsumers, int light
     ) {
         if (this.texture.get()) {
             instance.render(state, matrices, vertexConsumers, light);
         }
         if (!this.shouldRender(entity)) return;
         FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("shaderESP");
-        if (vertexConsumers instanceof VertexConsumerProvider.Immediate immediate) {
-            immediate.draw();
+        if (vertexConsumers instanceof MultiBufferSource.BufferSource immediate) {
+            immediate.endBatch();
         }
         buffer.bind(true);
-        VertexConsumerProvider.Immediate vcp = getVCP();
+        MultiBufferSource.BufferSource vcp = getVCP();
         instance.render(state, matrices, vcp, light);
-        vcp.draw();
+        vcp.endBatch();
         buffer.unbind();
     }
 
@@ -79,7 +78,7 @@ public class ShaderESP extends Module {
         if (Nametags.shouldCancelLabel(entity)) {
             return false;
         } else {
-            return !this.shouldRender(entity) && entity.shouldRenderName() && entity.hasCustomName();
+            return !this.shouldRender(entity) && entity.shouldShowName() && entity.hasCustomName();
         }
     }
 
@@ -122,6 +121,6 @@ public class ShaderESP extends Module {
 
     public boolean shouldRender(Entity entity) {
         AntiBot antiBot = AntiBot.getInstance();
-        return (!antiBot.enabled || antiBot.mode.get() != AntiBot.HandlingMode.Ignore || !(entity instanceof AbstractClientPlayerEntity player) || !antiBot.getBots().contains(player)) && this.entities.get().contains(entity.getType());
+        return (!antiBot.enabled || antiBot.mode.get() != AntiBot.HandlingMode.Ignore || !(entity instanceof AbstractClientPlayer player) || !antiBot.getBots().contains(player)) && this.entities.get().contains(entity.getType());
     }
 }

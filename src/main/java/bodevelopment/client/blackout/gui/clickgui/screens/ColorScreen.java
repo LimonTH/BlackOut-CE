@@ -16,10 +16,14 @@ import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.render.*;
-import net.minecraft.util.math.ColorHelper;
-import net.minecraft.util.math.MathHelper;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.client.renderer.CoreShaders;
+import net.minecraft.util.ARGB;
+import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
 
 import java.awt.*;
@@ -56,8 +60,8 @@ public class ColorScreen extends ClickGuiScreen {
 
         this.renderSidebarContent();
 
-        int screenWidth = BlackOut.mc.getWindow().getWidth();
-        int screenHeight = BlackOut.mc.getWindow().getHeight();
+        int screenWidth = BlackOut.mc.getWindow().getScreenWidth();
+        int screenHeight = BlackOut.mc.getWindow().getScreenHeight();
 
         float realX = (screenWidth / 2f + (x - width / 2f) * unscaled);
         float realY = (screenHeight / 2f + (y - height / 2f) * unscaled);
@@ -72,7 +76,7 @@ public class ColorScreen extends ClickGuiScreen {
         GlStateManager._enableScissorTest();
         GlStateManager._scissorBox(Math.max(0, scX), Math.max(0, invertedY), Math.max(0, scW), Math.max(0, scH));
 
-        this.stack.push();
+        this.stack.pushPose();
         this.stack.translate(200.0F, 0.0F, 0.0F);
 
         double rawMx = this.mx;
@@ -93,7 +97,7 @@ public class ColorScreen extends ClickGuiScreen {
         }
 
         this.mx = rawMx;
-        this.stack.pop();
+        this.stack.popPose();
 
         GlStateManager._disableScissorTest();
 
@@ -128,63 +132,63 @@ public class ColorScreen extends ClickGuiScreen {
     private void handleSliders() {
         switch (this.selecting) {
             case 1: {
-                float clickSat = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.mx, 0.0, 500.0), 0.0, 1.0);
-                float clickBri = (float) (1.0 - MathHelper.clamp(MathHelper.getLerpProgress(this.my, 10.0, 210.0), 0.0, 1.0));
+                float clickSat = (float) Mth.clamp(Mth.inverseLerp(this.mx, 0.0, 500.0), 0.0, 1.0);
+                float clickBri = (float) (1.0 - Mth.clamp(Mth.inverseLerp(this.my, 10.0, 210.0), 0.0, 1.0));
                 float[] HSB = this.getHSB(false);
                 int rgb = Color.HSBtoRGB(HSB[0], clickSat, clickBri);
-                int red = ColorHelper.getRed(rgb);
-                int green = ColorHelper.getGreen(rgb);
-                int blue = ColorHelper.getBlue(rgb);
+                int red = ARGB.red(rgb);
+                int green = ARGB.green(rgb);
+                int blue = ARGB.blue(rgb);
                 this.colorSetting.get().set(red, green, blue);
                 break;
             }
             case 2: {
-                float clickHue = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.mx, 0.0, 500.0), 0.0, 1.0);
+                float clickHue = (float) Mth.clamp(Mth.inverseLerp(this.mx, 0.0, 500.0), 0.0, 1.0);
                 float[] HSB = this.getHSB(false);
                 int rgb = Color.HSBtoRGB(clickHue, HSB[1], HSB[2]);
-                int red = ColorHelper.getRed(rgb);
-                int green = ColorHelper.getGreen(rgb);
-                int blue = ColorHelper.getBlue(rgb);
+                int red = ARGB.red(rgb);
+                int green = ARGB.green(rgb);
+                int blue = ARGB.blue(rgb);
                 this.colorSetting.get().set(red, green, blue);
                 break;
             }
             case 3: {
-                float progress = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.mx, 255.0, 500.0), 0.0, 1.0) * 255.0F;
+                float progress = (float) Mth.clamp(Mth.inverseLerp(this.mx, 255.0, 500.0), 0.0, 1.0) * 255.0F;
                 this.colorSetting.get().setRed((int) progress);
                 break;
             }
             case 4: {
-                float progress = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.mx, 255.0, 500.0), 0.0, 1.0) * 255.0F;
+                float progress = (float) Mth.clamp(Mth.inverseLerp(this.mx, 255.0, 500.0), 0.0, 1.0) * 255.0F;
                 this.colorSetting.get().setGreen((int) progress);
                 break;
             }
             case 5: {
-                float progress = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.mx, 255.0, 500.0), 0.0, 1.0) * 255.0F;
+                float progress = (float) Mth.clamp(Mth.inverseLerp(this.mx, 255.0, 500.0), 0.0, 1.0) * 255.0F;
                 this.colorSetting.get().setBlue((int) progress);
                 break;
             }
             case 6: {
-                float progress = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.mx, 0.0, 245.0), 0.0, 1.0) * 255.0F;
+                float progress = (float) Mth.clamp(Mth.inverseLerp(this.mx, 0.0, 245.0), 0.0, 1.0) * 255.0F;
                 this.colorSetting.get().setAlpha((int) progress);
                 break;
             }
             case 7: {
-                float progress = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.mx, 0.0, 245.0), 0.0, 1.0);
+                float progress = (float) Mth.clamp(Mth.inverseLerp(this.mx, 0.0, 245.0), 0.0, 1.0);
                 float[] HSB = this.getHSB(false);
                 int rgb = Color.HSBtoRGB(HSB[0], progress, HSB[2]);
-                int red = ColorHelper.getRed(rgb);
-                int green = ColorHelper.getGreen(rgb);
-                int blue = ColorHelper.getBlue(rgb);
+                int red = ARGB.red(rgb);
+                int green = ARGB.green(rgb);
+                int blue = ARGB.blue(rgb);
                 this.colorSetting.get().set(red, green, blue);
                 break;
             }
             case 8: {
-                float progress = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.mx, 0.0, 245.0), 0.0, 1.0);
+                float progress = (float) Mth.clamp(Mth.inverseLerp(this.mx, 0.0, 245.0), 0.0, 1.0);
                 float[] HSB = this.getHSB(false);
                 int rgb = Color.HSBtoRGB(HSB[0], HSB[1], progress);
-                int red = ColorHelper.getRed(rgb);
-                int green = ColorHelper.getGreen(rgb);
-                int blue = ColorHelper.getBlue(rgb);
+                int red = ARGB.red(rgb);
+                int green = ARGB.green(rgb);
+                int blue = ARGB.blue(rgb);
                 this.colorSetting.get().set(red, green, blue);
             }
         }
@@ -193,17 +197,17 @@ public class ColorScreen extends ClickGuiScreen {
     private void handleThemeSliders() {
         switch (this.selecting) {
             case 1:
-                this.colorSetting.saturation = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.mx, 0.0, 500.0), 0.0, 1.0) * 2.0F - 1.0F;
+                this.colorSetting.saturation = (float) Mth.clamp(Mth.inverseLerp(this.mx, 0.0, 500.0), 0.0, 1.0) * 2.0F - 1.0F;
                 break;
             case 2:
-                this.colorSetting.brightness = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.mx, 0.0, 500.0), 0.0, 1.0) * 2.0F - 1.0F;
+                this.colorSetting.brightness = (float) Mth.clamp(Mth.inverseLerp(this.mx, 0.0, 500.0), 0.0, 1.0) * 2.0F - 1.0F;
                 break;
             case 3:
-                this.colorSetting.alpha = (int) (MathHelper.clamp(MathHelper.getLerpProgress(this.mx, 0.0, 500.0), 0.0, 1.0) * 255.0);
+                this.colorSetting.alpha = (int) (Mth.clamp(Mth.inverseLerp(this.mx, 0.0, 500.0), 0.0, 1.0) * 255.0);
                 break;
             case 4:
-                this.colorSetting.saturation = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.mx, 0.0, 500.0), 0.0, 1.0) * 2.0F - 1.0F;
-                this.colorSetting.brightness = (float) (1.0 - MathHelper.clamp(MathHelper.getLerpProgress(this.my, 10.0, 210.0), 0.0, 1.0)) * 2.0F - 1.0F;
+                this.colorSetting.saturation = (float) Mth.clamp(Mth.inverseLerp(this.mx, 0.0, 500.0), 0.0, 1.0) * 2.0F - 1.0F;
+                this.colorSetting.brightness = (float) (1.0 - Mth.clamp(Mth.inverseLerp(this.my, 10.0, 210.0), 0.0, 1.0)) * 2.0F - 1.0F;
                 break;
         }
     }
@@ -307,7 +311,7 @@ public class ColorScreen extends ClickGuiScreen {
         } catch (NumberFormatException ignored) {
         }
 
-        val = MathHelper.clamp(val, 0, 255);
+        val = Mth.clamp(val, 0, 255);
         switch (id) {
             case 0:
                 this.colorSetting.get().setRed(val);
@@ -324,13 +328,13 @@ public class ColorScreen extends ClickGuiScreen {
             case 4: {
                 float[] hsb = this.getHSB(false);
                 int rgb = Color.HSBtoRGB(hsb[0], val / 255.0F, hsb[2]);
-                this.colorSetting.get().set(ColorHelper.getRed(rgb), ColorHelper.getGreen(rgb), ColorHelper.getBlue(rgb));
+                this.colorSetting.get().set(ARGB.red(rgb), ARGB.green(rgb), ARGB.blue(rgb));
                 break;
             }
             case 5: {
                 float[] hsb = this.getHSB(false);
                 int rgb = Color.HSBtoRGB(hsb[0], hsb[1], val / 255.0F);
-                this.colorSetting.get().set(ColorHelper.getRed(rgb), ColorHelper.getGreen(rgb), ColorHelper.getBlue(rgb));
+                this.colorSetting.get().set(ARGB.red(rgb), ARGB.green(rgb), ARGB.blue(rgb));
                 break;
             }
             case 6:
@@ -363,15 +367,15 @@ public class ColorScreen extends ClickGuiScreen {
         this.renderHueQuad(x, y, w, h);
         float hueX;
         if (this.selecting == 2) {
-            hueX = (float) MathHelper.clamp(this.mx, 0.0, 500.0);
+            hueX = (float) Mth.clamp(this.mx, 0.0, 500.0);
         } else {
-            hueX = MathHelper.lerp(hue, x, x + w);
+            hueX = Mth.lerp(hue, x, x + w);
         }
 
-        this.prevHueX = MathHelper.clampedLerp(this.prevHueX, hueX, this.frameTime * 20.0F);
+        this.prevHueX = Mth.clampedLerp(this.prevHueX, hueX, this.frameTime * 20.0F);
         RenderUtils.roundedShadow(this.stack, this.prevHueX, y, 0.0F, h, 0.0F, 10.0F, new Color(0, 0, 0, 100).getRGB());
         RenderUtils.quad(
-                this.stack, this.prevHueX - 3.0F, y - 2.0F, 6.0F, h + 4.0F, Color.HSBtoRGB(MathHelper.getLerpProgress(this.prevHueX, 0.0F, 500.0F), 1.0F, 1.0F)
+                this.stack, this.prevHueX - 3.0F, y - 2.0F, 6.0F, h + 4.0F, Color.HSBtoRGB(Mth.inverseLerp(this.prevHueX, 0.0F, 500.0F), 1.0F, 1.0F)
         );
     }
 
@@ -392,7 +396,7 @@ public class ColorScreen extends ClickGuiScreen {
     }
 
     private void renderThemeBar(float x, float y, float w, int id, float number, float p, String name) {
-        this.themeX[id] = MathHelper.lerp(Math.min(this.frameTime * 20.0F, 1.0F), this.themeX[id], p);
+        this.themeX[id] = Mth.lerp(Math.min(this.frameTime * 20.0F, 1.0F), this.themeX[id], p);
         Color left;
         Color right = switch (id) {
             case 1 -> {
@@ -438,7 +442,7 @@ public class ColorScreen extends ClickGuiScreen {
     }
 
     private void renderBar(float x, float y, float w, int id, float p, String name) {
-        this.colorX[id] = MathHelper.lerp(Math.min(this.frameTime * 20.0F, 1.0F), this.colorX[id], p);
+        this.colorX[id] = Mth.lerp(Math.min(this.frameTime * 20.0F, 1.0F), this.colorX[id], p);
         BlackOutColor left = this.colorSetting.get().copy();
         BlackOutColor right = this.colorSetting.get().copy();
         switch (id) {
@@ -470,9 +474,9 @@ public class ColorScreen extends ClickGuiScreen {
                 left.setBlue(255);
                 float[] HSB = this.getHSB(false);
                 int rgb = Color.HSBtoRGB(HSB[0], 1.0F, HSB[2]);
-                int red = ColorHelper.getRed(rgb);
-                int green = ColorHelper.getGreen(rgb);
-                int blue = ColorHelper.getBlue(rgb);
+                int red = ARGB.red(rgb);
+                int green = ARGB.green(rgb);
+                int blue = ARGB.blue(rgb);
                 right.setRed(red);
                 right.setGreen(green);
                 right.setBlue(blue);
@@ -486,9 +490,9 @@ public class ColorScreen extends ClickGuiScreen {
                 left.setBlue(0);
                 float[] HSB = this.getHSB(false);
                 int rgb = Color.HSBtoRGB(HSB[0], HSB[1], 1.0F);
-                int red = ColorHelper.getRed(rgb);
-                int green = ColorHelper.getGreen(rgb);
-                int blue = ColorHelper.getBlue(rgb);
+                int red = ARGB.red(rgb);
+                int green = ARGB.green(rgb);
+                int blue = ARGB.blue(rgb);
                 right.setRed(red);
                 right.setGreen(green);
                 right.setBlue(blue);
@@ -526,48 +530,48 @@ public class ColorScreen extends ClickGuiScreen {
     }
 
     private void renderQuad(float x, float y, float w, float h, float rl, float gl, float bl, float al, float rr, float gr, float br, float ar) {
-        Matrix4f matrix4f = this.stack.peek().getPositionMatrix();
+        Matrix4f matrix4f = this.stack.last().pose();
         RenderSystem.enableBlend();
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-        BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-        bufferBuilder.vertex(matrix4f, x + w, y, 0.0F).color(rr, gr, br, ar);
-        bufferBuilder.vertex(matrix4f, x, y, 0.0F).color(rl, gl, bl, al);
-        bufferBuilder.vertex(matrix4f, x, y + h, 0.0F).color(rl, gl, bl, al);
-        bufferBuilder.vertex(matrix4f, x + w, y + h, 0.0F).color(rr, gr, br, ar);
-        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        bufferBuilder.addVertex(matrix4f, x + w, y, 0.0F).setColor(rr, gr, br, ar);
+        bufferBuilder.addVertex(matrix4f, x, y, 0.0F).setColor(rl, gl, bl, al);
+        bufferBuilder.addVertex(matrix4f, x, y + h, 0.0F).setColor(rl, gl, bl, al);
+        bufferBuilder.addVertex(matrix4f, x + w, y + h, 0.0F).setColor(rr, gr, br, ar);
+        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
         RenderSystem.disableBlend();
     }
 
     private void renderHueQuad(float x, float y, float w, float h) {
-        Matrix4f matrix4f = this.stack.peek().getPositionMatrix();
+        Matrix4f matrix4f = this.stack.last().pose();
         RenderSystem.enableBlend();
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-        BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F * 6.0F, y, 0.0F).color(1.0F, 0.0F, 0.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F * 5.0F, y, 0.0F).color(1.0F, 0.0F, 1.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F * 5.0F, y + h, 0.0F).color(1.0F, 0.0F, 1.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F * 6.0F, y + h, 0.0F).color(1.0F, 0.0F, 0.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F * 5.0F, y, 0.0F).color(1.0F, 0.0F, 1.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F * 4.0F, y, 0.0F).color(0.0F, 0.0F, 1.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F * 4.0F, y + h, 0.0F).color(0.0F, 0.0F, 1.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F * 5.0F, y + h, 0.0F).color(1.0F, 0.0F, 1.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F * 4.0F, y, 0.0F).color(0.0F, 0.0F, 1.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F * 3.0F, y, 0.0F).color(0.0F, 1.0F, 1.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F * 3.0F, y + h, 0.0F).color(0.0F, 1.0F, 1.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F * 4.0F, y + h, 0.0F).color(0.0F, 0.0F, 1.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F * 3.0F, y, 0.0F).color(0.0F, 1.0F, 1.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F * 2.0F, y, 0.0F).color(0.0F, 1.0F, 0.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F * 2.0F, y + h, 0.0F).color(0.0F, 1.0F, 0.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F * 3.0F, y + h, 0.0F).color(0.0F, 1.0F, 1.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F * 2.0F, y, 0.0F).color(0.0F, 1.0F, 0.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F, y, 0.0F).color(1.0F, 1.0F, 0.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F, y + h, 0.0F).color(1.0F, 1.0F, 0.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F * 2.0F, y + h, 0.0F).color(0.0F, 1.0F, 0.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F, y, 0.0F).color(1.0F, 1.0F, 0.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x, y, 0.0F).color(1.0F, 0.0F, 0.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x, y + h, 0.0F).color(1.0F, 0.0F, 0.0F, 1.0F);
-        bufferBuilder.vertex(matrix4f, x + w / 6.0F, y + h, 0.0F).color(1.0F, 1.0F, 0.0F, 1.0F);
-        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 6.0F, y, 0.0F).setColor(1.0F, 0.0F, 0.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 5.0F, y, 0.0F).setColor(1.0F, 0.0F, 1.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 5.0F, y + h, 0.0F).setColor(1.0F, 0.0F, 1.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 6.0F, y + h, 0.0F).setColor(1.0F, 0.0F, 0.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 5.0F, y, 0.0F).setColor(1.0F, 0.0F, 1.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 4.0F, y, 0.0F).setColor(0.0F, 0.0F, 1.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 4.0F, y + h, 0.0F).setColor(0.0F, 0.0F, 1.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 5.0F, y + h, 0.0F).setColor(1.0F, 0.0F, 1.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 4.0F, y, 0.0F).setColor(0.0F, 0.0F, 1.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 3.0F, y, 0.0F).setColor(0.0F, 1.0F, 1.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 3.0F, y + h, 0.0F).setColor(0.0F, 1.0F, 1.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 4.0F, y + h, 0.0F).setColor(0.0F, 0.0F, 1.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 3.0F, y, 0.0F).setColor(0.0F, 1.0F, 1.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 2.0F, y, 0.0F).setColor(0.0F, 1.0F, 0.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 2.0F, y + h, 0.0F).setColor(0.0F, 1.0F, 0.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 3.0F, y + h, 0.0F).setColor(0.0F, 1.0F, 1.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 2.0F, y, 0.0F).setColor(0.0F, 1.0F, 0.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F, y, 0.0F).setColor(1.0F, 1.0F, 0.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F, y + h, 0.0F).setColor(1.0F, 1.0F, 0.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 2.0F, y + h, 0.0F).setColor(0.0F, 1.0F, 0.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F, y, 0.0F).setColor(1.0F, 1.0F, 0.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x, y, 0.0F).setColor(1.0F, 0.0F, 0.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x, y + h, 0.0F).setColor(1.0F, 0.0F, 0.0F, 1.0F);
+        bufferBuilder.addVertex(matrix4f, x + w / 6.0F, y + h, 0.0F).setColor(1.0F, 1.0F, 0.0F, 1.0F);
+        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
         RenderSystem.disableBlend();
     }
 
@@ -581,9 +585,9 @@ public class ColorScreen extends ClickGuiScreen {
             hueColor = Color.HSBtoRGB(hsb[0], 1.0F, 1.0F);
         }
 
-        int red = ColorHelper.getRed(hueColor);
-        int green = ColorHelper.getGreen(hueColor);
-        int blue = ColorHelper.getBlue(hueColor);
+        int red = ARGB.red(hueColor);
+        int green = ARGB.green(hueColor);
+        int blue = ARGB.blue(hueColor);
 
         this.renderPickerQuad(10.0F, 500.0F, 200.0F, red / 255.0F, green / 255.0F, blue / 255.0F);
 
@@ -592,25 +596,25 @@ public class ColorScreen extends ClickGuiScreen {
 
         if (this.colorSetting.theme > 0) {
             if (this.selecting == 4) {
-                circleX = (float) MathHelper.clamp(this.mx, 0.0, 500.0);
-                circleY = (float) MathHelper.clamp(this.my, 10.0, 210.0);
+                circleX = (float) Mth.clamp(this.mx, 0.0, 500.0);
+                circleY = (float) Mth.clamp(this.my, 10.0, 210.0);
             } else {
                 circleX = (this.colorSetting.saturation + 1.0F) / 2.0F * 500.0F;
                 circleY = 10.0F + (1.0F - (this.colorSetting.brightness + 1.0F) / 2.0F) * 200.0F;
             }
         } else {
             if (this.selecting == 1) {
-                circleX = (float) MathHelper.clamp(this.mx, 0.0, 500.0);
-                circleY = (float) MathHelper.clamp(this.my, 10.0, 210.0);
+                circleX = (float) Mth.clamp(this.mx, 0.0, 500.0);
+                circleY = (float) Mth.clamp(this.my, 10.0, 210.0);
             } else {
                 float[] HSB = this.getHSB(false);
                 circleX = HSB[1] * 500.0F;
-                circleY = MathHelper.lerp(HSB[2], 210, 10);
+                circleY = Mth.lerpInt(HSB[2], 210, 10);
             }
         }
 
-        this.prevCircleX = MathHelper.clampedLerp(this.prevCircleX, circleX, this.frameTime * 20.0F);
-        this.prevCircleY = MathHelper.clampedLerp(this.prevCircleY, circleY, this.frameTime * 20.0F);
+        this.prevCircleX = Mth.clampedLerp(this.prevCircleX, circleX, this.frameTime * 20.0F);
+        this.prevCircleY = Mth.clampedLerp(this.prevCircleY, circleY, this.frameTime * 20.0F);
 
         int displayColor = ColorUtils.withAlpha(this.colorSetting.get().getRGB(), 255);
 
@@ -623,11 +627,11 @@ public class ColorScreen extends ClickGuiScreen {
         Renderer.setMatrices(this.stack);
         Matrix4f matrix4f = Renderer.emptyMatrix;
         RenderSystem.enableBlend();
-        BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION);
-        bufferBuilder.vertex(matrix4f, w, oy, 0.0F);
-        bufferBuilder.vertex(matrix4f, 0.0F, oy, 0.0F);
-        bufferBuilder.vertex(matrix4f, 0.0F, oy + h, 0.0F);
-        bufferBuilder.vertex(matrix4f, w, oy + h, 0.0F);
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+        bufferBuilder.addVertex(matrix4f, w, oy, 0.0F);
+        bufferBuilder.addVertex(matrix4f, 0.0F, oy, 0.0F);
+        bufferBuilder.addVertex(matrix4f, 0.0F, oy + h, 0.0F);
+        bufferBuilder.addVertex(matrix4f, w, oy + h, 0.0F);
         Shaders.picker.render(bufferBuilder, new ShaderSetup(setup -> {
             setup.set("pos", 0.0F, oy, w, h);
             setup.set("clr", red, green, blue);

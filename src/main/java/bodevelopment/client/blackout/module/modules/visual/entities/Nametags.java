@@ -21,29 +21,28 @@ import bodevelopment.client.blackout.util.EnchantmentNames;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ItemEnchantmentsComponent;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec2f;
-
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.minecraft.world.phys.Vec2;
 
 public class Nametags extends Module {
     private static Nametags INSTANCE;
@@ -74,7 +73,7 @@ public class Nametags extends Module {
     private final Setting<Double> itemSeparation = this.sgItems.doubleSetting("Item Horizontal Spacing", 0.0, 0.0, 5.0, 0.05, "Adjusts the gap between individual inventory items.");
 
     private final Setting<FilterMode> filterMode = this.sgEnchantments.enumSetting("Enchantment Filtering", FilterMode.Blacklist, "Determines how the enchantment list is processed.");
-    private final Setting<List<RegistryKey<Enchantment>>> enchantments = this.sgEnchantments.listSetting("Enchantment Filter", "The list of enchantments to either include or exclude from the tag.", EnchantmentNames.enchantments, EnchantmentNames::getLongName);
+    private final Setting<List<ResourceKey<Enchantment>>> enchantments = this.sgEnchantments.listSetting("Enchantment Filter", "The list of enchantments to either include or exclude from the tag.", EnchantmentNames.enchantments, EnchantmentNames::getLongName);
     private final Setting<Boolean> drawEnchants = this.sgEnchantments.booleanSetting("Render Enchantments", false, "Displays enchantment abbreviations and levels on the equipment icons.");
     private final Setting<Boolean> enchantsAbove = this.sgEnchantments.booleanSetting("Stack Direction", true, "Renders enchantment text above the items when enabled, below when disabled.", this.drawEnchants::get);
     private final Setting<Boolean> shortNames = this.sgEnchantments.booleanSetting("Abbreviate Names", true, "Uses shortened names for enchantments (e.g., 'Prot' instead of 'Protection').", this.drawEnchants::get);
@@ -90,7 +89,7 @@ public class Nametags extends Module {
 
 
 
-    private final MatrixStack stack = new MatrixStack();
+    private final PoseStack stack = new PoseStack();
     private final List<Entity> entities = new ArrayList<>();
     private final List<Component> components = new ArrayList<>();
     private float length;
@@ -117,31 +116,31 @@ public class Nametags extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.world != null && BlackOut.mc.player != null) {
+        if (BlackOut.mc.level != null && BlackOut.mc.player != null) {
             this.entities.clear();
-            BlackOut.mc.world.entityList.forEach(entity -> {
+            BlackOut.mc.level.tickingEntities.forEach(entity -> {
                 if (this.shouldRender(entity)) {
                     this.entities.add(entity);
                 }
             });
-            this.entities.sort(Comparator.comparingDouble(entity -> -BlackOut.mc.gameRenderer.getCamera().getPos().distanceTo(entity.getPos())));
+            this.entities.sort(Comparator.comparingDouble(entity -> -BlackOut.mc.gameRenderer.getMainCamera().getPosition().distanceTo(entity.position())));
         }
     }
 
     // TODO: ПЕРЕКРЫВАЕТ СВОИМ РЕНДЕРОМ ВСЕ ЛЮБЫЕ ЭЛЕМЕНТЫ HUD, КРОМЕ ПРЕДМЕТОВ
     @Event
     public void onRender(RenderEvent.Hud.Post event) {
-        if (BlackOut.mc.world == null || BlackOut.mc.player == null) return;
+        if (BlackOut.mc.level == null || BlackOut.mc.player == null) return;
 
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
 
-        this.stack.push();
+        this.stack.pushPose();
         RenderUtils.unGuiScale(this.stack);
         this.stack.translate(0, 0, RenderLayer.NAMETAGS);
 
         this.entities.forEach(entity -> this.renderNameTag(event.tickDelta, entity));
-        this.stack.pop();
+        this.stack.popPose();
 
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);
@@ -149,34 +148,34 @@ public class Nametags extends Module {
     }
 
     public void renderNameTag(double tickDelta, Entity entity) {
-        double x = MathHelper.lerp(tickDelta, entity.prevX, entity.getX());
-        double y = MathHelper.lerp(tickDelta, entity.prevY, entity.getY());
-        double z = MathHelper.lerp(tickDelta, entity.prevZ, entity.getZ());
+        double x = Mth.lerp(tickDelta, entity.xo, entity.getX());
+        double y = Mth.lerp(tickDelta, entity.yo, entity.getY());
+        double z = Mth.lerp(tickDelta, entity.zo, entity.getZ());
 
-        Vec2f coords = RenderUtils.getCoords(x, y + entity.getBoundingBox().getLengthY() + this.yOffset.get(), z, true);
+        Vec2 coords = RenderUtils.getCoords(x, y + entity.getBoundingBox().getYsize() + this.yOffset.get(), z, true);
         if (coords == null) return;
 
-        float distance = (float) BlackOut.mc.gameRenderer.getCamera().getPos().subtract(x, y, z).length();
+        float distance = (float) BlackOut.mc.gameRenderer.getMainCamera().getPosition().subtract(x, y, z).length();
         float s = this.getScale(distance);
 
-        this.stack.push();
+        this.stack.pushPose();
         this.stack.translate(coords.x, coords.y, 0.0F);
         this.stack.scale(s, s, s);
 
         this.components.clear();
-        Color mainColor = (entity instanceof PlayerEntity && Managers.FRIENDS.isFriend((PlayerEntity) entity))
+        Color mainColor = (entity instanceof Player && Managers.FRIENDS.isFriend((Player) entity))
                 ? this.friendColor.get().getColor() : this.txt.get().getColor();
 
         String name = this.nameMode.get().getName(entity).replaceAll("§.", "");
         this.components.add(new Component(name, mainColor));
 
         if (entity instanceof ItemEntity item) {
-            if (item.getStack().getCount() > 1) this.components.add(new Component(item.getStack().getCount() + "x", Color.WHITE));
+            if (item.getItem().getCount() > 1) this.components.add(new Component(item.getItem().getCount() + "x", Color.WHITE));
         }
 
-        if (entity instanceof AbstractClientPlayerEntity player) {
+        if (entity instanceof AbstractClientPlayer player) {
             if (this.ping.get()) {
-                PlayerListEntry entry = BlackOut.mc.getNetworkHandler().getPlayerListEntry(player.getUuid());
+                PlayerInfo entry = BlackOut.mc.getConnection().getPlayerInfo(player.getUUID());
                 if (entry != null) this.components.add(new Component(entry.getLatency() + "ms", mainColor));
             }
             StatsManager.TrackerData stats = Managers.STATS.getStats(player);
@@ -197,7 +196,7 @@ public class Nametags extends Module {
         this.length += (this.components.size() * 5 - 5);
 
         if (this.armor.get() || this.hand.get()) {
-            this.stack.push();
+            this.stack.pushPose();
 
             this.stack.translate(0, 0, RenderLayer.OFFSET_MICRO * 2);
             this.stack.translate(0.0, -16.0 * this.itemOffset.get() - 6.0, 0.0);
@@ -207,33 +206,33 @@ public class Nametags extends Module {
             this.stack.scale(this.itemScale.get().floatValue(), this.itemScale.get().floatValue(), 1.0F);
             this.stack.translate((wbg * 4.0F + sep * 3.0F) / -2.0F, -16.0F, 0.0F);
 
-            if (entity instanceof AbstractClientPlayerEntity player) {
+            if (entity instanceof AbstractClientPlayer player) {
                 if (this.hand.get()) {
-                    this.renderHandItem(player.getMainHandStack(), wbg, sep, -1);
-                    this.renderHandItem(player.getOffHandStack(), wbg, sep, 4);
+                    this.renderHandItem(player.getMainHandItem(), wbg, sep, -1);
+                    this.renderHandItem(player.getOffhandItem(), wbg, sep, 4);
                 }
                 if (this.armor.get()) {
                     for (int i = 0; i < 4; i++) {
-                        ItemStack is = player.getInventory().getArmorStack(3 - i);
+                        ItemStack is = player.getInventory().getArmor(3 - i);
                         if (!is.isEmpty()) {
                             RenderUtils.renderItem(this.stack, is, i * (wbg + sep), 0.0F, 16.0F, 0.0F, false);
 
-                            this.stack.push();
+                            this.stack.pushPose();
                             this.stack.translate(0, 0, RenderLayer.OFFSET_MICRO);
-                            if (is.isDamageable() && is.get(DataComponentTypes.UNBREAKABLE) == null) {
-                                int dur = Math.round((is.getMaxDamage() - is.getDamage()) * 100.0F / is.getMaxDamage());
+                            if (is.isDamageableItem() && is.get(DataComponents.UNBREAKABLE) == null) {
+                                int dur = Math.round((is.getMaxDamage() - is.getDamageValue()) * 100.0F / is.getMaxDamage());
                                 this.drawItemText(dur + "%", wbg, sep, i);
                             }
                             this.drawEnchantments(is, wbg, sep, i);
-                            this.stack.pop();
+                            this.stack.popPose();
                         }
                     }
                 }
             }
-            this.stack.pop();
+            this.stack.popPose();
         }
 
-        this.stack.push();
+        this.stack.pushPose();
         this.stack.translate(-this.length / 2.0F, -9.0F, 0.0F);
 
         if (this.blur.get()) {
@@ -247,30 +246,30 @@ public class Nametags extends Module {
 
         this.background.render(this.stack, -2.0F, -5.0F, this.length + 4.0F, 10.0F, this.rounded.get() ? 3.0F : 0.0F, this.shadow.get() ? 3.0F : 0.0F);
 
-        this.stack.push();
+        this.stack.pushPose();
         this.stack.translate(0, 0, RenderLayer.OFFSET_MICRO);
         this.offset = 0.0F;
         for (Component component : this.components) {
             BlackOut.FONT.text(this.stack, component.text, 1.0F, this.offset, 0.0F, component.color, false, true);
             this.offset += (component.width + 5.0F);
         }
-        this.stack.pop();
+        this.stack.popPose();
 
-        this.stack.pop();
-        this.stack.pop();
+        this.stack.popPose();
+        this.stack.popPose();
     }
 
     private void renderHandItem(ItemStack stack, float wbg, float sep, int i) {
         if (stack.isEmpty()) return;
         RenderUtils.renderItem(this.stack, stack, i * (wbg + sep), 0.0F, 16.0F, 0.0F, false);
 
-        this.stack.push();
+        this.stack.pushPose();
         this.stack.translate(0, 0, RenderLayer.OFFSET_SMALL);
         if (stack.getCount() > 1) {
             this.drawItemText(String.valueOf(stack.getCount()), wbg, sep, i);
         }
         this.drawEnchantments(stack, wbg, sep, i);
-        this.stack.pop();
+        this.stack.popPose();
     }
 
     private void drawItemText(String text, float wbg, float separation, int i) {
@@ -283,18 +282,18 @@ public class Nametags extends Module {
     }
 
     private void drawEnchantments(ItemStack itemStack, float wbg, float separation, int i) {
-        ItemEnchantmentsComponent enchantsComponent = EnchantmentHelper.getEnchantments(itemStack);
+        ItemEnchantments enchantsComponent = EnchantmentHelper.getEnchantmentsForCrafting(itemStack);
 
         if (!enchantsComponent.isEmpty() && this.drawEnchants.get()) {
             final int[] y = {0};
 
             RenderSystem.depthMask(false);
             RenderSystem.disableDepthTest();
-            for (Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : enchantsComponent.getEnchantmentEntries()) {
-                RegistryEntry<Enchantment> enchantment = entry.getKey();
+            for (Object2IntMap.Entry<Holder<Enchantment>> entry : enchantsComponent.entrySet()) {
+                Holder<Enchantment> enchantment = entry.getKey();
                 int level = entry.getIntValue();
 
-                enchantment.getKey().ifPresent(key -> {
+                enchantment.unwrapKey().ifPresent(key -> {
                     if (this.filterMode.get().shouldAccept(key, this.enchantments.get())) {
                         String name = EnchantmentNames.getName(enchantment, this.shortNames.get());
                         String text = (level > 1) ? name + " " + level : name;
@@ -324,7 +323,7 @@ public class Nametags extends Module {
 
     public boolean shouldRender(Entity entity) {
         AntiBot antiBot = AntiBot.getInstance();
-        if (antiBot.enabled && antiBot.mode.get() == AntiBot.HandlingMode.Ignore && entity instanceof AbstractClientPlayerEntity player && antiBot.getBots().contains(player)) {
+        if (antiBot.enabled && antiBot.mode.get() == AntiBot.HandlingMode.Ignore && entity instanceof AbstractClientPlayer player && antiBot.getBots().contains(player)) {
             return false;
         } else if (!this.entityTypes.get().contains(entity.getType())) {
             return false;
@@ -337,7 +336,7 @@ public class Nametags extends Module {
         return this.colorMode.get() == ColorMode.Custom
                 ? this.hp.get().getColor()
                 : ColorUtils.lerpColor(
-                Math.min(health / (entity.getMaxHealth() + (entity instanceof PlayerEntity ? 16 : 0)), 1.0F), new Color(255, 0, 0, 255), new Color(0, 255, 0, 255)
+                Math.min(health / (entity.getMaxHealth() + (entity instanceof Player ? 16 : 0)), 1.0F), new Color(255, 0, 0, 255), new Color(0, 255, 0, 255)
         );
     }
 

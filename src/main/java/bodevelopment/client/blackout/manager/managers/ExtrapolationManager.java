@@ -10,24 +10,23 @@ import bodevelopment.client.blackout.module.modules.client.settings.Extrapolatio
 import bodevelopment.client.blackout.randomstuff.MotionData;
 import bodevelopment.client.blackout.randomstuff.timers.TickTimerList;
 import bodevelopment.client.blackout.util.*;
-import net.minecraft.client.network.OtherClientPlayerEntity;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.packet.s2c.play.EntityAnimationS2CPacket;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import net.minecraft.client.player.RemotePlayer;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class ExtrapolationManager extends Manager {
-    private Map<PlayerEntity, ExtrapolationData> dataMap = new ConcurrentHashMap<>();
+    private Map<Player, ExtrapolationData> dataMap = new ConcurrentHashMap<>();
 
     private static MotionData getMotion(ExtrapolationData data) {
         return HorizontalExtrapolation.getMotion(data).y(data.motions.isEmpty() ? 0.0 : gravityMod(gravityMod(data.motions.getFirst().y)));
@@ -44,10 +43,10 @@ public class ExtrapolationManager extends Manager {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            Map<PlayerEntity, ExtrapolationData> newMap = new ConcurrentHashMap<>();
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            Map<Player, ExtrapolationData> newMap = new ConcurrentHashMap<>();
 
-            for (PlayerEntity player : BlackOut.mc.world.getPlayers()) {
+            for (Player player : BlackOut.mc.level.players()) {
                 ExtrapolationData data = this.getFromMap(player);
                 if (data != null) {
                     data.update();
@@ -60,8 +59,8 @@ public class ExtrapolationManager extends Manager {
             this.dataMap = newMap;
             this.dataMap.forEach((playerx, datax) -> {
                 datax.setTicksSince(Math.min(datax.getTicksSince() + 1, 8));
-                if (!(playerx instanceof OtherClientPlayerEntity)) {
-                    datax.handleMotion(playerx.getPos().subtract(playerx.prevX, playerx.prevY, playerx.prevZ), datax.getEntity());
+                if (!(playerx instanceof RemotePlayer)) {
+                    datax.handleMotion(playerx.position().subtract(playerx.xo, playerx.yo, playerx.zo), datax.getEntity());
                 }
             });
         }
@@ -69,17 +68,17 @@ public class ExtrapolationManager extends Manager {
 
     @Event
     public void onReceive(PacketEvent.Receive.Pre event) {
-        if (event.packet instanceof EntityAnimationS2CPacket packet && (packet.getAnimationId() == 0 || packet.getAnimationId() == 3)) {
+        if (event.packet instanceof ClientboundAnimatePacket packet && (packet.getAction() == 0 || packet.getAction() == 3)) {
             this.dataMap.forEach((player, data) -> {
-                if (packet.getEntityId() == player.getId()) {
+                if (packet.getId() == player.getId()) {
                     data.stopLag();
                 }
             });
         }
     }
 
-    private ExtrapolationData getFromMap(PlayerEntity player) {
-        for (Entry<PlayerEntity, ExtrapolationData> data : this.dataMap.entrySet()) {
+    private ExtrapolationData getFromMap(Player player) {
+        for (Entry<Player, ExtrapolationData> data : this.dataMap.entrySet()) {
             if (data.getKey() == player) {
                 return data.getValue();
             }
@@ -88,27 +87,27 @@ public class ExtrapolationManager extends Manager {
         return null;
     }
 
-    public void tick(PlayerEntity player, Vec3d motion) {
+    public void tick(Player player, Vec3 motion) {
         ExtrapolationData data = this.getFromMap(player);
         if (data != null) {
             data.handleMotion(motion, data.getEntity());
         }
     }
 
-    public Map<PlayerEntity, ExtrapolationData> getDataMap() {
+    public Map<Player, ExtrapolationData> getDataMap() {
         return this.dataMap;
     }
 
-    public void extrapolateMap(Map<Entity, Box> old, EpicInterface<Entity, Integer> extrapolation) {
+    public void extrapolateMap(Map<Entity, AABB> old, EpicInterface<Entity, Integer> extrapolation) {
         old.clear();
         this.dataMap.forEach((player, data) -> {
-            Box box = data.extrapolate(player, extrapolation.get(player));
+            AABB box = data.extrapolate(player, extrapolation.get(player));
             old.put(player, box);
         });
     }
 
-    public Box extrapolate(Entity entity, int ticks) {
-        if (entity instanceof PlayerEntity player) {
+    public AABB extrapolate(Entity entity, int ticks) {
+        if (entity instanceof Player player) {
             ExtrapolationData data = this.getFromMap(player);
             return data == null ? entity.getBoundingBox() : data.extrapolate(player, ticks);
         } else {
@@ -117,7 +116,7 @@ public class ExtrapolationManager extends Manager {
     }
 
     public static class ExtrapolationData {
-        public final List<Vec3d> motions = new ArrayList<>();
+        public final List<Vec3> motions = new ArrayList<>();
         private final List<Boolean> onGrounds = new ArrayList<>();
         private final TickTimerList<Double> step = new TickTimerList<>(false);
         private final TickTimerList<Double> reverseStep = new TickTimerList<>(false);
@@ -126,8 +125,8 @@ public class ExtrapolationManager extends Manager {
         private double stepHeight = 0.0;
         private double reverseHeight = 0.0;
         private double jumpHeight = 0.42;
-        private MotionData motionData = MotionData.of(new Vec3d(0.0, 0.0, 0.0));
-        private Vec3d prevPos;
+        private MotionData motionData = MotionData.of(new Vec3(0.0, 0.0, 0.0));
+        private Vec3 prevPos;
         private int ticksSince = 0;
         private int stillFor = 0;
         private boolean prevOffGround = false;
@@ -138,22 +137,22 @@ public class ExtrapolationManager extends Manager {
 
         public ExtrapolationData(Entity entity) {
             this.entity = entity;
-            this.motions.add(new Vec3d(0.0, 0.0, 0.0));
+            this.motions.add(new Vec3(0.0, 0.0, 0.0));
         }
 
         private void update() {
             this.step.update();
             this.reverseStep.update();
-            Vec3d currentPos = this.entity.getPos();
-            if (this.rotated() && !this.entity.isOnGround()) {
+            Vec3 currentPos = this.entity.position();
+            if (this.rotated() && !this.entity.onGround()) {
                 this.stopLag();
-            } else if (this.prevPos != null && this.prevPos.squaredDistanceTo(currentPos) < 0.01) {
+            } else if (this.prevPos != null && this.prevPos.distanceToSqr(currentPos) < 0.01) {
                 this.stillFor++;
             }
 
             this.prevPos = currentPos;
-            this.prevYaw = this.entity.getYaw();
-            this.prevPitch = this.entity.getPitch();
+            this.prevYaw = this.entity.getYRot();
+            this.prevPitch = this.entity.getXRot();
             this.onGrounds.addFirst(Simulator.isOnGround(this.getEntity(), this.getEntity().getBoundingBox()));
             OLEPOSSUtils.limitList(this.onGrounds, 3);
             boolean offGround = this.isOffGround();
@@ -193,17 +192,17 @@ public class ExtrapolationManager extends Manager {
             return this.onGrounds.stream().anyMatch(b -> !b);
         }
 
-        private void handleMotion(Vec3d motion, Entity entity) {
+        private void handleMotion(Vec3 motion, Entity entity) {
             if (motion.y > 0.0) {
                 this.movedUp = true;
             }
 
-            if (motion.y < 0.0 && !entity.isOnGround()) {
+            if (motion.y < 0.0 && !entity.onGround()) {
                 this.movedDown = true;
             }
 
             this.motionData = ExtrapolationManager.getMotion(this);
-            if (!(motion.lengthSquared() < 1.0E-4) || this.stillFor >= ExtrapolationSettings.getInstance().maxLag.get() || entity == BlackOut.mc.player) {
+            if (!(motion.lengthSqr() < 1.0E-4) || this.stillFor >= ExtrapolationSettings.getInstance().maxLag.get() || entity == BlackOut.mc.player) {
                 this.stillFor = 0;
                 if (this.handleMotion2(motion, entity)) {
                     this.setTicksSince(0);
@@ -212,33 +211,33 @@ public class ExtrapolationManager extends Manager {
 
                     for (int startTicks = this.getTicksSince(); this.getTicksSince() > 0; yVel = ExtrapolationManager.gravityMod(yVel)) {
                         this.setTicksSince(this.getTicksSince() - 1);
-                        this.addMotion(motion.withAxis(Direction.Axis.Y, yVel).multiply(1.0F / startTicks, 1.0, 1.0F / startTicks));
+                        this.addMotion(motion.with(Direction.Axis.Y, yVel).multiply(1.0F / startTicks, 1.0, 1.0F / startTicks));
                     }
                 }
             }
         }
 
         private boolean rotated() {
-            return Math.abs(RotationUtils.yawAngle(this.entity.getYaw(), this.prevYaw)) > 5.0 || Math.abs(this.entity.getPitch() - this.prevPitch) > 5.0;
+            return Math.abs(RotationUtils.yawAngle(this.entity.getYRot(), this.prevYaw)) > 5.0 || Math.abs(this.entity.getXRot() - this.prevPitch) > 5.0;
         }
 
-        private boolean handleMotion2(Vec3d motion, Entity entity) {
-            if (motion.horizontalLengthSquared() > 3.0) {
-                this.addMotion(new Vec3d(0.0, 0.0, 0.0));
+        private boolean handleMotion2(Vec3 motion, Entity entity) {
+            if (motion.horizontalDistanceSqr() > 3.0) {
+                this.addMotion(new Vec3(0.0, 0.0, 0.0));
                 return true;
             } else {
                 if (motion.y >= 0.45 && motion.y <= 4.0 && Simulator.isOnGround(entity, entity.getBoundingBox())) {
                     if (SettingUtils.stepPredict()) {
                         this.step.add(motion.y, SettingUtils.stepTicks());
                         this.motions.clear();
-                        this.addMotion(new Vec3d(motion.x, 0.0, motion.z));
+                        this.addMotion(new Vec3(motion.x, 0.0, motion.z));
                         return true;
                     }
                 } else if (motion.y <= -0.45 && motion.y >= -6.0 && Simulator.isOnGround(entity, entity.getBoundingBox())) {
                     if (SettingUtils.reverseStepPredict()) {
                         this.reverseStep.add(-motion.y, SettingUtils.reverseStepTicks());
                         this.motions.clear();
-                        this.addMotion(new Vec3d(motion.x, 0.0, motion.z));
+                        this.addMotion(new Vec3(motion.x, 0.0, motion.z));
                         return true;
                     }
                 } else if (motion.y > 0.35 && motion.y < 0.45 && !Simulator.isOnGround(entity, entity.getBoundingBox())) {
@@ -249,11 +248,11 @@ public class ExtrapolationManager extends Manager {
             }
         }
 
-        public Box extrapolate(Entity entity, int ticks) {
+        public AABB extrapolate(Entity entity, int ticks) {
             return this.extrapolate(entity, ticks, null);
         }
 
-        public Box extrapolate(Entity entity, int ticks, Consumer<Box> consumer) {
+        public AABB extrapolate(Entity entity, int ticks, Consumer<AABB> consumer) {
             if (ticks == 0) {
                 return entity.getBoundingBox();
             } else {
@@ -288,10 +287,10 @@ public class ExtrapolationManager extends Manager {
         }
 
         private double motionYaw(double x, double z) {
-            return MathHelper.wrapDegrees(Math.toDegrees(Math.atan2(-x, z)));
+            return Mth.wrapDegrees(Math.toDegrees(Math.atan2(-x, z)));
         }
 
-        private void addMotion(Vec3d motion) {
+        private void addMotion(Vec3 motion) {
             if (motion.length() > 0.0 && this.motions.size() > 1 && (this.collided() || this.entity.horizontalCollision)) {
                 motion = this.motions.get(1);
             }
@@ -301,16 +300,16 @@ public class ExtrapolationManager extends Manager {
         }
 
         private boolean collided() {
-            Box box = this.entity.getBoundingBox();
-            Box newBox = new Box(
-                    this.prevPos.x - box.getLengthX() / 2.0,
+            AABB box = this.entity.getBoundingBox();
+            AABB newBox = new AABB(
+                    this.prevPos.x - box.getXsize() / 2.0,
                     this.prevPos.y,
-                    this.prevPos.z - box.getLengthZ() / 2.0,
-                    this.prevPos.x + box.getLengthX() / 2.0,
-                    this.prevPos.y + box.getLengthY(),
-                    this.prevPos.z + box.getLengthZ() / 2.0
+                    this.prevPos.z - box.getZsize() / 2.0,
+                    this.prevPos.x + box.getXsize() / 2.0,
+                    this.prevPos.y + box.getYsize(),
+                    this.prevPos.z + box.getZsize() / 2.0
             );
-            return !BlackOut.mc.world.getEntityCollisions(this.entity, newBox.stretch(this.motions.get(1))).isEmpty();
+            return !BlackOut.mc.level.getEntityCollisions(this.entity, newBox.expandTowards(this.motions.get(1))).isEmpty();
         }
 
         public Entity getEntity() {

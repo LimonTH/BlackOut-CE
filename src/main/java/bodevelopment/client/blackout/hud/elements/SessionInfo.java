@@ -12,9 +12,8 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
-
 import java.awt.*;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 
 public class SessionInfo extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -43,16 +42,16 @@ public class SessionInfo extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             String timeString = OLEPOSSUtils.getTimeString(System.currentTimeMillis() - startTime);
-            this.ip = !BlackOut.mc.isIntegratedServerRunning() && BlackOut.mc.getNetworkHandler() != null && BlackOut.mc.getNetworkHandler().getServerInfo() != null
-                    ? BlackOut.mc.getNetworkHandler().getServerInfo().address
+            this.ip = !BlackOut.mc.hasSingleplayerServer() && BlackOut.mc.getConnection() != null && BlackOut.mc.getConnection().getServerData() != null
+                    ? BlackOut.mc.getConnection().getServerData().ip
                     : "Singleplayer";
-            this.stack.push();
-            if (BlackOut.mc.player.isDead() && !this.isDead) {
+            this.stack.pushPose();
+            if (BlackOut.mc.player.isDeadOrDying() && !this.isDead) {
                 this.deaths++;
                 this.isDead = true;
-            } else if (!BlackOut.mc.player.isDead()) {
+            } else if (!BlackOut.mc.player.isDeadOrDying()) {
                 this.isDead = false;
             }
 
@@ -105,15 +104,15 @@ public class SessionInfo extends HudElement {
                     this.textColor.render(this.stack, timeString, 1.0F, 4.0F, 4.0F + num * 3.0F, false, false);
             }
 
-            this.stack.pop();
+            this.stack.popPose();
         }
     }
 
     @Event
     public void onReceive(PacketEvent.Receive.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             if (this.mode.get() == Mode.Chat) {
-                if (event.packet instanceof GameMessageS2CPacket packet) {
+                if (event.packet instanceof ClientboundSystemChatPacket packet) {
                     String unformattedText = packet.content().getString();
                     String name = BlackOut.mc.player.getName().getString();
                     String[] look = new String[]{

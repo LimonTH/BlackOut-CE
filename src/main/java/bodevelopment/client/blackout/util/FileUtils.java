@@ -5,8 +5,6 @@ import bodevelopment.client.blackout.manager.Managers;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import net.minecraft.util.Formatting;
-
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -174,7 +172,7 @@ public class FileUtils {
 
     public static void openLink(String url) {
         try {
-            URI uri = new java.net.URI(url);
+            URI uri = new URI(url);
 
             if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
                 Desktop.getDesktop().browse(uri);

@@ -10,14 +10,13 @@ import bodevelopment.client.blackout.util.FileUtils;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.authlib.GameProfile;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.entity.player.PlayerEntity;
-
 import java.io.File;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.util.*;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.world.entity.player.Player;
 
 public class FriendsManager extends Manager {
     private final List<Friend> friends = new ArrayList<>();
@@ -26,7 +25,7 @@ public class FriendsManager extends Manager {
 
     @Override
     public void init() {
-        BlackOut.EVENT_BUS.subscribe(this, () -> BlackOut.mc.player == null || BlackOut.mc.world == null);
+        BlackOut.EVENT_BUS.subscribe(this, () -> BlackOut.mc.player == null || BlackOut.mc.level == null);
     }
 
     @Event
@@ -35,7 +34,7 @@ public class FriendsManager extends Manager {
             this.writeFriends();
         }
 
-        Collection<PlayerListEntry> entries = BlackOut.mc.getNetworkHandler().getPlayerList();
+        Collection<PlayerInfo> entries = BlackOut.mc.getConnection().getOnlinePlayers();
         if (entries != null) {
             entries.forEach(entry -> {
                 GameProfile profile = entry.getProfile();
@@ -157,7 +156,7 @@ public class FriendsManager extends Manager {
         this.shouldSave = true;
     }
 
-    public boolean isFriend(PlayerEntity player) {
+    public boolean isFriend(Player player) {
         for (Friend friend : this.friends) {
             if (friend.getName().equalsIgnoreCase(player.getGameProfile().getName())) {
                 return true;

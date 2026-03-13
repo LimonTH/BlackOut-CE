@@ -11,16 +11,15 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
 
 public class InstantEat extends Module {
     private static InstantEat INSTANCE;
@@ -54,7 +53,7 @@ public class InstantEat extends Module {
     }
 
     private String doStuff() {
-        Hand hand = OLEPOSSUtils.getHand(this.predicate);
+        InteractionHand hand = OLEPOSSUtils.getHand(this.predicate);
         if (hand == null) {
             FindResult result = this.switchMode.get().find(this.predicate);
             if (!result.wasFound() || !this.switchMode.get().swapInstantly(result.slot())) {
@@ -83,23 +82,23 @@ public class InstantEat extends Module {
     public enum PacketMode {
         Full(
                 () -> {
-                    Vec3d pos = Managers.PACKET.pos;
-                    return new PlayerMoveC2SPacket.Full(
-                            pos.getX(), pos.getY(), pos.getZ(), Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision
+                    Vec3 pos = Managers.PACKET.pos;
+                    return new ServerboundMovePlayerPacket.PosRot(
+                            pos.x(), pos.y(), pos.z(), Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision
                     );
                 }
         ),
         FullOffG(() -> {
-            Vec3d pos = Managers.PACKET.pos;
-            return new PlayerMoveC2SPacket.Full(pos.getX(), pos.getY(), pos.getZ(), Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, false, BlackOut.mc.player.horizontalCollision);
+            Vec3 pos = Managers.PACKET.pos;
+            return new ServerboundMovePlayerPacket.PosRot(pos.x(), pos.y(), pos.z(), Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, false, BlackOut.mc.player.horizontalCollision);
         }),
         Rotation(
                 () -> {
-                    Vec3d pos = Managers.PACKET.pos;
-                    return new PlayerMoveC2SPacket.Full(
-                            pos.getX(),
-                            pos.getY(),
-                            pos.getZ(),
+                    Vec3 pos = Managers.PACKET.pos;
+                    return new ServerboundMovePlayerPacket.PosRot(
+                            pos.x(),
+                            pos.y(),
+                            pos.z(),
                             Managers.ROTATION.prevYaw + ((InstantEat.getInstance().packetsSent & 1) == 0 ? 0.3759F : -0.2143F),
                             Managers.ROTATION.prevPitch,
                             Managers.PACKET.isOnGround(),
@@ -107,16 +106,16 @@ public class InstantEat extends Module {
                     );
                 }
         ),
-        DoubleRotation(() -> new PlayerMoveC2SPacket.LookAndOnGround(Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision)),
+        DoubleRotation(() -> new ServerboundMovePlayerPacket.Rot(Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision)),
         Position(() -> {
-            Vec3d pos = Managers.PACKET.pos;
-            return new PlayerMoveC2SPacket.PositionAndOnGround(pos.getX(), pos.getY(), pos.getZ(), Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision);
+            Vec3 pos = Managers.PACKET.pos;
+            return new ServerboundMovePlayerPacket.Pos(pos.x(), pos.y(), pos.z(), Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision);
         }),
-        Og(() -> new PlayerMoveC2SPacket.OnGroundOnly(Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
+        Og(() -> new ServerboundMovePlayerPacket.StatusOnly(Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
 
-        private final Supplier<PlayerMoveC2SPacket> supplier;
+        private final Supplier<ServerboundMovePlayerPacket> supplier;
 
-        PacketMode(Supplier<PlayerMoveC2SPacket> supplier) {
+        PacketMode(Supplier<ServerboundMovePlayerPacket> supplier) {
             this.supplier = supplier;
         }
     }

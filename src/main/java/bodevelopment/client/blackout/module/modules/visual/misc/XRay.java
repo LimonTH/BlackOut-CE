@@ -5,10 +5,9 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-
 import java.util.List;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 
 public class XRay extends Module {
     private static XRay INSTANCE;
@@ -36,8 +35,8 @@ public class XRay extends Module {
             Blocks.LAPIS_ORE,
             Blocks.DEEPSLATE_LAPIS_ORE
     ).onChanged(v -> {
-        if (this.enabled && BlackOut.mc.worldRenderer != null) {
-            BlackOut.mc.worldRenderer.reload();
+        if (this.enabled && BlackOut.mc.levelRenderer != null) {
+            BlackOut.mc.levelRenderer.allChanged();
         }
     });
 
@@ -48,15 +47,15 @@ public class XRay extends Module {
 
     @Override
     public void onEnable() {
-        if (BlackOut.mc.worldRenderer != null) {
-            BlackOut.mc.worldRenderer.reload();
+        if (BlackOut.mc.levelRenderer != null) {
+            BlackOut.mc.levelRenderer.allChanged();
         }
     }
 
     @Override
     public void onDisable() {
-        if (BlackOut.mc.worldRenderer != null) {
-            BlackOut.mc.worldRenderer.reload();
+        if (BlackOut.mc.levelRenderer != null) {
+            BlackOut.mc.levelRenderer.allChanged();
         }
     }
 

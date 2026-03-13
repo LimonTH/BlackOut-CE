@@ -9,8 +9,7 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.randomstuff.ShaderSetup;
 import bodevelopment.client.blackout.rendering.font.CustomFontRenderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
-import net.minecraft.client.util.math.MatrixStack;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 
 public class TextColorMultiSetting {
@@ -109,11 +108,11 @@ public class TextColorMultiSetting {
         return this.speed.get().floatValue();
     }
 
-    public void render(MatrixStack stack, String text, float scale, float x, float y, boolean xCenter, boolean yCenter) {
+    public void render(PoseStack stack, String text, float scale, float x, float y, boolean xCenter, boolean yCenter) {
         this.render(stack, text, scale, x, y, xCenter, yCenter, false);
     }
 
-    public void render(MatrixStack stack, String text, float scale, float x, float y, boolean xCenter, boolean yCenter, boolean bold) {
+    public void render(PoseStack stack, String text, float scale, float x, float y, boolean xCenter, boolean yCenter, boolean bold) {
         CustomFontRenderer renderer = bold ? BlackOut.BOLD_FONT : BlackOut.FONT;
         switch (this.mode.get()) {
             case Static:

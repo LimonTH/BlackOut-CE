@@ -1,12 +1,10 @@
 package bodevelopment.client.blackout.module.setting;
 
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.particle.ParticleType;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
-
 import java.util.HashMap;
 import java.util.Map;
+import net.minecraft.core.particles.ParticleType;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 
 public class RegistryNames {
     private static final Map<ParticleType<?>, String> particles = new HashMap<>();
@@ -14,8 +12,8 @@ public class RegistryNames {
     public static void init() {
         particles.clear();
 
-        Registries.PARTICLE_TYPE.forEach(particleType -> {
-            Identifier id = Registries.PARTICLE_TYPE.getId(particleType);
+        BuiltInRegistries.PARTICLE_TYPE.forEach(particleType -> {
+            ResourceLocation id = BuiltInRegistries.PARTICLE_TYPE.getKey(particleType);
 
             if (id != null) {
                 String name = id.getPath();

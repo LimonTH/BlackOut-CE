@@ -7,8 +7,8 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 
 public class Brightness extends Module {
     private static Brightness INSTANCE;
@@ -32,8 +32,8 @@ public class Brightness extends Module {
     @Override
     public void onDisable() {
         if (BlackOut.mc.player != null) {
-            if (BlackOut.mc.player.hasStatusEffect(StatusEffects.NIGHT_VISION)) {
-                BlackOut.mc.player.removeStatusEffect(StatusEffects.NIGHT_VISION);
+            if (BlackOut.mc.player.hasEffect(MobEffects.NIGHT_VISION)) {
+                BlackOut.mc.player.removeEffect(MobEffects.NIGHT_VISION);
             }
         }
     }
@@ -45,15 +45,15 @@ public class Brightness extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player == null || BlackOut.mc.world == null) return;
+        if (BlackOut.mc.player == null || BlackOut.mc.level == null) return;
 
         int level = this.luminanceLevel.get();
         luminanceValue = (level << 4) | (level << 20);
         if (this.mode.get() == Mode.Effect) {
-            BlackOut.mc.player.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, StatusEffectInstance.INFINITE, StatusEffectInstance.MAX_AMPLIFIER, false, false));
+            BlackOut.mc.player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, MobEffectInstance.INFINITE_DURATION, MobEffectInstance.MAX_AMPLIFIER, false, false));
         } else {
-            if (BlackOut.mc.player.hasStatusEffect(StatusEffects.NIGHT_VISION)) {
-                BlackOut.mc.player.removeStatusEffect(StatusEffects.NIGHT_VISION);
+            if (BlackOut.mc.player.hasEffect(MobEffects.NIGHT_VISION)) {
+                BlackOut.mc.player.removeEffect(MobEffects.NIGHT_VISION);
             }
         }
     }

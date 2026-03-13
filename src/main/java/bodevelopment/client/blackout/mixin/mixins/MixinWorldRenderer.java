@@ -4,11 +4,10 @@ import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
 import bodevelopment.client.blackout.module.modules.visual.misc.XRay;
 import bodevelopment.client.blackout.module.modules.visual.world.Ambience;
 import bodevelopment.client.blackout.rendering.renderer.FrameBufferRenderer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.Fog;
-import net.minecraft.client.render.FrameGraphBuilder;
-import net.minecraft.client.render.WorldRenderer;
+import com.mojang.blaze3d.framegraph.FrameGraphBuilder;
+import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LevelRenderer;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,15 +17,15 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(WorldRenderer.class)
+@Mixin(LevelRenderer.class)
 public class MixinWorldRenderer {
 
     @Shadow
     @Final
-    private MinecraftClient client;
+    private Minecraft minecraft;
 
     @Inject(
-            method = "renderSky(Lnet/minecraft/client/render/FrameGraphBuilder;Lnet/minecraft/client/render/Camera;FLnet/minecraft/client/render/Fog;)V",
+            method = "addSkyPass(Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;Lnet/minecraft/client/Camera;FLnet/minecraft/client/renderer/FogParameters;)V",
             at = @At("HEAD"),
             cancellable = true
     )
@@ -34,7 +33,7 @@ public class MixinWorldRenderer {
             FrameGraphBuilder frameGraphBuilder,
             Camera camera,
             float tickDelta,
-            net.minecraft.client.render.Fog fog,
+            net.minecraft.client.renderer.FogParameters fog,
             CallbackInfo ci
     ) {
         Ambience ambience = Ambience.getInstance();

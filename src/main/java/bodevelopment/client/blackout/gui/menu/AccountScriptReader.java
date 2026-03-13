@@ -40,7 +40,7 @@ public class AccountScriptReader {
 
             for (String key : entry.getValue()) {
                 for (Pair<String, String> pair : braces) {
-                    string = string.replace(pair.getLeft() + key + pair.getRight(), mod.get());
+                    string = string.replace(pair.getA() + key + pair.getB(), mod.get());
                 }
             }
         }

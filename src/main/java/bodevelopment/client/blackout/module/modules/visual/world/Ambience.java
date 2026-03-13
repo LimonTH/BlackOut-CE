@@ -5,9 +5,9 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
+import com.mojang.blaze3d.shaders.FogShape;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.render.Fog;
-import net.minecraft.client.render.FogShape;
+import net.minecraft.client.renderer.FogParameters;
 
 public class Ambience extends Module {
     private static Ambience INSTANCE;
@@ -46,7 +46,7 @@ public class Ambience extends Module {
         }
 
         if (this.removeFog.get()) {
-            RenderSystem.setShaderFog(new Fog(
+            RenderSystem.setShaderFog(new FogParameters(
                     Float.MAX_VALUE,
                     Float.MAX_VALUE,
                     this.shape.get(),
@@ -57,7 +57,7 @@ public class Ambience extends Module {
             float start = this.distance.get().floatValue();
             float end = start + this.fading.get().floatValue();
 
-            RenderSystem.setShaderFog(new Fog(
+            RenderSystem.setShaderFog(new FogParameters(
                     start,
                     end,
                     this.shape.get(),

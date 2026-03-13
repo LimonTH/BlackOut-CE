@@ -11,11 +11,11 @@ import bodevelopment.client.blackout.module.modules.combat.offensive.Aura;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.SwordItem;
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.util.Hand;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.SwordItem;
 
 public class NoSlow extends Module {
     private static NoSlow INSTANCE;
@@ -51,10 +51,10 @@ public class NoSlow extends Module {
                 if (isBlocking) {
                     return !getInstance().blocking.get();
                 } else if (BlackOut.mc.player.isUsingItem()) {
-                    Hand activeHand = BlackOut.mc.player.getActiveHand();
-                    ItemStack activeStack = activeHand == Hand.MAIN_HAND ? 
+                    InteractionHand activeHand = BlackOut.mc.player.getUsedItemHand();
+                    ItemStack activeStack = activeHand == InteractionHand.MAIN_HAND ? 
                         Managers.PACKET.getStack() : 
-                        BlackOut.mc.player.getOffHandStack();
+                        BlackOut.mc.player.getOffhandItem();
 
                     return activeStack.getItem() instanceof SwordItem ? 
                         !getInstance().blocking.get() : 
@@ -73,7 +73,7 @@ public class NoSlow extends Module {
         return this.strict.get() ? "Strict" : "Normal";
     }
 
-    public boolean shouldSendNoSlow(Hand hand) {
+    public boolean shouldSendNoSlow(InteractionHand hand) {
         if (BlackOut.mc.player == null) {
             return false;
         } else if (!getInstance().enabled) {
@@ -94,8 +94,8 @@ public class NoSlow extends Module {
 
     @Event
     public void onSend(PacketEvent.Sent event) {
-        if (event.packet instanceof PlayerInteractItemC2SPacket packet && BlackOut.mc.player.isUsingItem()) {
-            Hand hand = BlackOut.mc.player.getActiveHand();
+        if (event.packet instanceof ServerboundUseItemPacket packet && BlackOut.mc.player.isUsingItem()) {
+            InteractionHand hand = BlackOut.mc.player.getUsedItemHand();
             if (hand == packet.getHand() && this.shouldSendNoSlow(hand) && this.strict.get()) {
                 this.send(hand);
                 this.timer = 0;
@@ -106,9 +106,9 @@ public class NoSlow extends Module {
     @Event
     public void onMove(MoveEvent.Pre event) {
         if (this.strict.get()) {
-            if (this.shouldSendNoSlow(BlackOut.mc.player.getActiveHand())) {
+            if (this.shouldSendNoSlow(BlackOut.mc.player.getUsedItemHand())) {
                 if (++this.timer >= this.delay.get() && !this.single.get()) {
-                    this.send(BlackOut.mc.player.getActiveHand());
+                    this.send(BlackOut.mc.player.getUsedItemHand());
                     this.timer = 0;
                 }
             }
@@ -119,17 +119,17 @@ public class NoSlow extends Module {
         return slot > 7 ? 0 : slot + 1;
     }
 
-    private void send(Hand hand) {
+    private void send(InteractionHand hand) {
         int currentSlot = Managers.PACKET.slot;
         if (this.grim.get()) {
-            if (hand == Hand.MAIN_HAND) {
-                this.sendSequencedPostGrim(sequence -> new PlayerInteractItemC2SPacket(Hand.OFF_HAND, sequence, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch));
+            if (hand == InteractionHand.MAIN_HAND) {
+                this.sendSequencedPostGrim(sequence -> new ServerboundUseItemPacket(InteractionHand.OFF_HAND, sequence, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch));
                 return;
             }
 
-            Managers.PACKET.sendPostPacket(new UpdateSelectedSlotC2SPacket(this.getGrimSlot(currentSlot)));
+            Managers.PACKET.sendPostPacket(new ServerboundSetCarriedItemPacket(this.getGrimSlot(currentSlot)));
         }
 
-        Managers.PACKET.sendPostPacket(new UpdateSelectedSlotC2SPacket(currentSlot));
+        Managers.PACKET.sendPostPacket(new ServerboundSetCarriedItemPacket(currentSlot));
     }
 }

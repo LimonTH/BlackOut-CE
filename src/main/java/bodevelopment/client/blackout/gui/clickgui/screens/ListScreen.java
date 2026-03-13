@@ -10,11 +10,10 @@ import bodevelopment.client.blackout.module.setting.settings.ListSetting;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.util.math.MathHelper;
-
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
+import net.minecraft.util.Mth;
 
 public class ListScreen<T> extends ClickGuiScreen {
     private final TextField textField = new TextField();
@@ -46,10 +45,10 @@ public class ListScreen<T> extends ClickGuiScreen {
     public void render() {
         RenderUtils.rounded(this.stack, 0, 0, width, height - 40.0F, 10, 10, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
 
-        this.stack.push();
+        this.stack.pushPose();
         this.stack.translate(0.0F, 15.0F - this.scroll.get(), 0.0F);
         this.renderListItems();
-        this.stack.pop();
+        this.stack.popPose();
 
         this.renderSearch();
     }
@@ -79,7 +78,7 @@ public class ListScreen<T> extends ClickGuiScreen {
                 }
 
                 float currentAnim = hoverAnims.getOrDefault(item, 0.0F);
-                currentAnim = MathHelper.clamp(MathHelper.lerp(frameTime * 10.0F, currentAnim, target), 0.0F, 1.0F);
+                currentAnim = Mth.clamp(Mth.lerp(frameTime * 10.0F, currentAnim, target), 0.0F, 1.0F);
                 hoverAnims.put(item, currentAnim);
                 int color = ColorUtils.lerpColor(currentAnim, Color.GRAY, Color.WHITE).getRGB();
 

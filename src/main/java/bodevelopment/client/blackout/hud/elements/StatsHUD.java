@@ -12,9 +12,8 @@ import bodevelopment.client.blackout.module.setting.multisettings.TextColorMulti
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-
 import java.util.function.Predicate;
+import net.minecraft.client.player.AbstractClientPlayer;
 
 public class StatsHUD extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -42,12 +41,12 @@ public class StatsHUD extends HudElement {
 
     @Override
     public void render() {
-        AbstractClientPlayerEntity target = this.getTarget();
+        AbstractClientPlayer target = this.getTarget();
         if (target != null) {
             StatsManager.TrackerData data = Managers.STATS.getStats(target);
             if (data != null) {
                 int statCount = this.statCount();
-                this.stack.push();
+                this.stack.pushPose();
                 this.setSize(
                         Math.max(50.0F, BlackOut.FONT.getWidth(target.getGameProfile().getName()) * 1.5F + 20.0F),
                         BlackOut.FONT.getHeight() * 1.5F + statCount * BlackOut.FONT.getHeight() + 10.0F
@@ -75,7 +74,7 @@ public class StatsHUD extends HudElement {
                     }
                 }
 
-                this.stack.pop();
+                this.stack.popPose();
             }
         }
     }
@@ -116,7 +115,7 @@ public class StatsHUD extends HudElement {
         return stats;
     }
 
-    private AbstractClientPlayerEntity getTarget() {
+    private AbstractClientPlayer getTarget() {
         return switch (this.targetMode.get()) {
             case Enemy -> this.getClosest(player -> player != BlackOut.mc.player && !Managers.FRIENDS.isFriend(player));
             case Friend -> this.getClosest(Managers.FRIENDS::isFriend);
@@ -124,11 +123,11 @@ public class StatsHUD extends HudElement {
         };
     }
 
-    private AbstractClientPlayerEntity getClosest(Predicate<AbstractClientPlayerEntity> predicate) {
+    private AbstractClientPlayer getClosest(Predicate<AbstractClientPlayer> predicate) {
         double closestDist = 0.0;
-        AbstractClientPlayerEntity closest = null;
+        AbstractClientPlayer closest = null;
 
-        for (AbstractClientPlayerEntity player : BlackOut.mc.world.getPlayers()) {
+        for (AbstractClientPlayer player : BlackOut.mc.level.players()) {
             double d = BlackOut.mc.player.distanceTo(player);
             if (predicate.test(player) && (closest == null || !(d > closestDist))) {
                 closest = player;

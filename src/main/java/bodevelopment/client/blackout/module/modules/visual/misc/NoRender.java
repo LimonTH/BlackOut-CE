@@ -5,12 +5,11 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.RegistryNames;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.particle.ParticleType;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Arm;
-
 import java.util.List;
+import net.minecraft.core.particles.ParticleType;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.HumanoidArm;
 
 public class NoRender extends Module {
     private static NoRender INSTANCE;
@@ -34,7 +33,7 @@ public class NoRender extends Module {
     public final Setting<Boolean> boots = this.sgItems.booleanSetting("Footwear", false, "Hides the boot models on entities.");
     public final Setting<Boolean> left = this.sgItems.booleanSetting("Off-Hand Model", false, "Stops the left hand/item from rendering in first and third person.");
     public final Setting<Boolean> right = this.sgItems.booleanSetting("Main-Hand Model", false, "Stops the right hand/item from rendering in first and third person.");
-    private final Setting<List<ParticleType<?>>> particles = this.sgGeneral.registrySetting("Particle Filter", "A list of specific particle types that will not be rendered in the game world.", Registries.PARTICLE_TYPE, RegistryNames::get);
+    private final Setting<List<ParticleType<?>>> particles = this.sgGeneral.registrySetting("Particle Filter", "A list of specific particle types that will not be rendered in the game world.", BuiltInRegistries.PARTICLE_TYPE, RegistryNames::get);
 
     public NoRender() {
         super("No Render", "Selectively disables the rendering of various overlays, entity parts, and environmental particles to increase visibility and performance.", SubCategory.MISC_VISUAL, true);
@@ -58,7 +57,7 @@ public class NoRender extends Module {
         }).get();
     }
 
-    public boolean ignoreHand(Arm arm) {
-        return (arm == Arm.RIGHT ? this.right : this.left).get();
+    public boolean ignoreHand(HumanoidArm arm) {
+        return (arm == HumanoidArm.RIGHT ? this.right : this.left).get();
     }
 }

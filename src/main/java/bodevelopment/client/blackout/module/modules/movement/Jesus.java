@@ -12,10 +12,10 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.MovementUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
-import net.minecraft.registry.tag.FluidTags;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.level.block.Blocks;
 
 public class Jesus extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -44,16 +44,16 @@ public class Jesus extends Module {
 
     @Event
     public void onRecieve(PacketEvent.Receive.Pre event) {
-        if (event.packet instanceof PlayerPositionLookS2CPacket) {
+        if (event.packet instanceof ClientboundPlayerPositionPacket) {
             this.isSlowed = true;
         }
     }
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            if (BlackOut.mc.world.getBlockState(BlackOut.mc.player.getBlockPos().down()).getBlock() != Blocks.WATER
-                    && BlackOut.mc.world.getBlockState(BlackOut.mc.player.getBlockPos()).getBlock() != Blocks.WATER) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            if (BlackOut.mc.level.getBlockState(BlackOut.mc.player.blockPosition().below()).getBlock() != Blocks.WATER
+                    && BlackOut.mc.level.getBlockState(BlackOut.mc.player.blockPosition()).getBlock() != Blocks.WATER) {
                 this.inWater = false;
             } else {
                 if (!this.inWater) {
@@ -63,7 +63,7 @@ public class Jesus extends Module {
                 this.inWater = true;
             }
 
-            if (BlackOut.mc.options.sneakKey.isPressed() || BlackOut.mc.options.jumpKey.isPressed()) {
+            if (BlackOut.mc.options.keyShift.isDown() || BlackOut.mc.options.keyJump.isDown()) {
                 return;
             }
 
@@ -98,17 +98,17 @@ public class Jesus extends Module {
     }
 
     private void tickFast(MoveEvent.Pre event) {
-        if (BlackOut.mc.player.isTouchingWater() && !BlackOut.mc.player.isSubmergedInWater()
-                || BlackOut.mc.player.isInLava() && !BlackOut.mc.player.isSubmergedIn(FluidTags.LAVA)) {
-            ((IVec3d) BlackOut.mc.player.getVelocity()).blackout_Client$setY(this.bob.get());
-            if (this.toggle.get() && (!BlackOut.mc.player.isInLava() || BlackOut.mc.player.isSubmergedIn(FluidTags.LAVA)) && !this.isSlowed) {
+        if (BlackOut.mc.player.isInWater() && !BlackOut.mc.player.isUnderWater()
+                || BlackOut.mc.player.isInLava() && !BlackOut.mc.player.isEyeInFluid(FluidTags.LAVA)) {
+            ((IVec3d) BlackOut.mc.player.getDeltaMovement()).blackout_Client$setY(this.bob.get());
+            if (this.toggle.get() && (!BlackOut.mc.player.isInLava() || BlackOut.mc.player.isEyeInFluid(FluidTags.LAVA)) && !this.isSlowed) {
                 double motion = MovementUtils.getSpeed(this.waterSpeed.get());
-                if (BlackOut.mc.player.hasStatusEffect(StatusEffects.SPEED)) {
-                    motion *= 1.2 + BlackOut.mc.player.getStatusEffect(StatusEffects.SPEED).getAmplifier() * 0.2;
+                if (BlackOut.mc.player.hasEffect(MobEffects.MOVEMENT_SPEED)) {
+                    motion *= 1.2 + BlackOut.mc.player.getEffect(MobEffects.MOVEMENT_SPEED).getAmplifier() * 0.2;
                 }
 
-                if (BlackOut.mc.player.hasStatusEffect(StatusEffects.SLOWNESS)) {
-                    motion /= 1.2 + BlackOut.mc.player.getStatusEffect(StatusEffects.SLOWNESS).getAmplifier() * 0.2;
+                if (BlackOut.mc.player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN)) {
+                    motion /= 1.2 + BlackOut.mc.player.getEffect(MobEffects.MOVEMENT_SLOWDOWN).getAmplifier() * 0.2;
                 }
 
                 double x = Math.cos(Math.toRadians(Managers.ROTATION.moveYaw + 90.0F));

@@ -9,7 +9,7 @@ import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 
 public class BoolSetting extends Setting<Boolean> {
     private float progress = -1.0F;
@@ -24,7 +24,7 @@ public class BoolSetting extends Setting<Boolean> {
         if (this.progress < 0.0F) {
             this.progress = target;
         } else {
-            this.progress = MathHelper.lerp(Math.min(this.frameTime * 20.0F, 1.0F), this.progress, target);
+            this.progress = Mth.lerp(Math.min(this.frameTime * 20.0F, 1.0F), this.progress, target);
         }
 
         float textScale = 2.0F;

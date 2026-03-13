@@ -6,11 +6,10 @@ import bodevelopment.client.blackout.module.ObsidianModule;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.util.SettingUtils;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-
 import java.util.Comparator;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.Entity;
 
 public class AutoTrap extends ObsidianModule {
     private final Setting<TrapMode> trapMode = this.sgGeneral.enumSetting("Trap Mode", TrapMode.Both,
@@ -31,9 +30,9 @@ public class AutoTrap extends ObsidianModule {
                         pos -> {
                             for (Direction dir : this.directions) {
                                 if (this.trapMode.get().allowed(dir)
-                                        && !this.blockPlacements.contains(pos.offset(dir))
-                                        && !this.insideBlocks.contains(pos.offset(dir))) {
-                                    this.blockPlacements.add(pos.offset(dir));
+                                        && !this.blockPlacements.contains(pos.relative(dir))
+                                        && !this.insideBlocks.contains(pos.relative(dir))) {
+                                    this.blockPlacements.add(pos.relative(dir));
                                 }
                             }
                         }
@@ -43,8 +42,8 @@ public class AutoTrap extends ObsidianModule {
     @Override
     protected void addInsideBlocks() {
         BlackOut.mc
-                .world
-                .getPlayers()
+                .level
+                .players()
                 .stream()
                 .filter(player -> BlackOut.mc.player.distanceTo(player) < 15.0F && player != BlackOut.mc.player && !Managers.FRIENDS.isFriend(player))
                 .sorted(Comparator.comparingDouble(player -> BlackOut.mc.player.distanceTo(player)))
@@ -57,8 +56,8 @@ public class AutoTrap extends ObsidianModule {
 
         for (int x = size[0]; x <= size[1]; x++) {
             for (int z = size[2]; z <= size[3]; z++) {
-                BlockPos p = entity.getBlockPos().add(x, 0, z).withY(eyeY - 1);
-                if (!(BlackOut.mc.world.getBlockState(p).getBlock().getBlastResistance() > 600.0F) && SettingUtils.inPlaceRange(p)) {
+                BlockPos p = entity.blockPosition().offset(x, 0, z).atY(eyeY - 1);
+                if (!(BlackOut.mc.level.getBlockState(p).getBlock().getExplosionResistance() > 600.0F) && SettingUtils.inPlaceRange(p)) {
                     this.insideBlocks.add(p);
                 }
             }
@@ -73,7 +72,7 @@ public class AutoTrap extends ObsidianModule {
         public boolean allowed(Direction dir) {
             return switch (this) {
                 case Top -> dir == Direction.UP;
-                case Eyes -> dir.getOffsetY() == 0;
+                case Eyes -> dir.getStepY() == 0;
                 case Both -> true;
             };
         }

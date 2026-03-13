@@ -1,9 +1,8 @@
 package bodevelopment.client.blackout.util;
 
 
-import net.minecraft.util.math.MathHelper;
-
 import java.awt.*;
+import net.minecraft.util.Mth;
 
 public class ColorUtils {
     public static Color SHADOW100 = new Color(0, 0, 0, 100);
@@ -44,7 +43,7 @@ public class ColorUtils {
     }
 
     public static int colorVal(int original, int wave, double f) {
-        return MathHelper.clamp((int) Math.floor(wave + (original - wave) * f), 0, 255);
+        return Mth.clamp((int) Math.floor(wave + (original - wave) * f), 0, 255);
     }
 
     public static int getRainbow(float seconds, float saturation, float brightness) {

@@ -3,13 +3,13 @@ package bodevelopment.client.blackout.command;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
 
 public class ToggleCommand extends Command {
     private final String lowerCase;
     private final String color;
 
-    public ToggleCommand(String action, Formatting formatting) {
+    public ToggleCommand(String action, ChatFormatting formatting) {
         super(action, action.toLowerCase() + " <name>");
         this.lowerCase = action.toLowerCase();
         this.color = formatting.toString();
@@ -25,28 +25,28 @@ public class ToggleCommand extends Command {
             if (module == null) {
                 Module similar = this.similar(idkRurAmogus);
                 return similar != null
-                        ? Formatting.RED.toString() + String.format("couldn't find %s from modules, did you mean %s", built, this.moduleNameString(similar))
-                        : Formatting.RED.toString() + String.format("couldn't find %s from modules", built);
+                        ? ChatFormatting.RED.toString() + String.format("couldn't find %s from modules, did you mean %s", built, this.moduleNameString(similar))
+                        : ChatFormatting.RED.toString() + String.format("couldn't find %s from modules", built);
             }
 
             if (module.toggleable()) {
                 if (this.lowerCase.equals("enable")) {
                     if (module.enabled) {
-                        return Formatting.YELLOW.toString() + this.moduleNameString(module) + " is already enabled!";
+                        return ChatFormatting.YELLOW.toString() + this.moduleNameString(module) + " is already enabled!";
                     }
                     module.enable();
                 } else if (this.lowerCase.equals("disable")) {
                     if (!module.enabled) {
-                        return Formatting.YELLOW.toString() + this.moduleNameString(module) + " is already disabled!";
+                        return ChatFormatting.YELLOW.toString() + this.moduleNameString(module) + " is already disabled!";
                     }
                     module.disable();
                 } else {
                     module.toggle();
                 }
 
-                return this.color + this.lowerCase + "d " + Formatting.WHITE.toString() + this.moduleNameString(module);
+                return this.color + this.lowerCase + "d " + ChatFormatting.WHITE.toString() + this.moduleNameString(module);
             } else {
-                return String.format("%s%s%s is not toggleable", Formatting.GRAY.toString(), this.moduleNameString(module), Formatting.RED.toString());
+                return String.format("%s%s%s is not toggleable", ChatFormatting.GRAY.toString(), this.moduleNameString(module), ChatFormatting.RED.toString());
             }
         } else {
             return this.format;

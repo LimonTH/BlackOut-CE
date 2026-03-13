@@ -1,23 +1,23 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
-import net.minecraft.client.render.BufferRenderer;
-import net.minecraft.client.render.BuiltBuffer;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.MeshData;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(BufferRenderer.class)
+@Mixin(BufferUploader.class)
 public abstract class MixinBufferRenderer {
     @Inject(method = "draw", at = @At("HEAD"), cancellable = true)
-    private static void blackout$drawNullSafe(BuiltBuffer buffer, CallbackInfo ci) {
+    private static void blackout$drawNullSafe(MeshData buffer, CallbackInfo ci) {
         if (buffer == null) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "drawWithGlobalProgram", at = @At("HEAD"), cancellable = true)
-    private static void blackout$drawGlobalNullSafe(BuiltBuffer buffer, CallbackInfo ci) {
+    @Inject(method = "drawWithShader", at = @At("HEAD"), cancellable = true)
+    private static void blackout$drawGlobalNullSafe(MeshData buffer, CallbackInfo ci) {
         if (buffer == null) {
             ci.cancel();
         }

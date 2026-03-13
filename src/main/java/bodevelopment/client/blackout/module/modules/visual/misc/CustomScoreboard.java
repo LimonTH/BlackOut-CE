@@ -11,8 +11,7 @@ import bodevelopment.client.blackout.module.setting.multisettings.TextColorMulti
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.util.math.MatrixStack;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.Collection;
 
@@ -35,7 +34,7 @@ public class CustomScoreboard extends Module {
     public final Setting<BlackOutColor> shadowColor = this.sgColor.colorSetting("Shadow Tint", new BlackOutColor(0, 0, 0, 100), "The color applied to the background's drop shadow.", () -> this.background.get() && this.shadow.get() && !this.remove.get());
 
 
-    private final MatrixStack stack = new MatrixStack();
+    private final PoseStack stack = new PoseStack();
     public String objectiveName;
     public Color objectiveColor;
     public Collection<String> texts;
@@ -51,16 +50,16 @@ public class CustomScoreboard extends Module {
 
     @Event
     public void onRender(RenderEvent.Hud.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             if (this.objectiveName != null && this.texts != null && !this.remove.get()) {
                 float width = Math.max(this.getLongest(this.texts) * 2.0F + 20.0F, BlackOut.FONT.getWidth(this.objectiveName) * 2.0F + 40.0F);
                 float length = (this.texts.size() + 2) * BlackOut.FONT.getHeight() * 2.0F + 6.0F;
-                this.stack.push();
+                this.stack.pushPose();
                 RenderUtils.unGuiScale(this.stack);
                 this.stack
                         .translate(
-                                BlackOut.mc.getWindow().getWidth() - (width + 8.0F) * this.scale.get(),
-                                BlackOut.mc.getWindow().getHeight() / 2.0F + this.addedY.get(),
+                                BlackOut.mc.getWindow().getScreenWidth() - (width + 8.0F) * this.scale.get(),
+                                BlackOut.mc.getWindow().getScreenHeight() / 2.0F + this.addedY.get(),
                                 0.0
                         );
                 this.stack.scale(this.scale.get().floatValue(), this.scale.get().floatValue(), 0.0F);
@@ -79,7 +78,7 @@ public class CustomScoreboard extends Module {
                     this.textColor.render(this.stack, text, 2.0F, 0.0F, this.y, false, false);
                     this.y = this.y + (BlackOut.FONT.getHeight() * 2.0F + 2.0F);
                 });
-                this.stack.pop();
+                this.stack.popPose();
             }
         }
     }

@@ -8,12 +8,11 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.misc.Timer;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
-
 import java.util.List;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class
 Step extends Module {
@@ -34,7 +33,7 @@ Step extends Module {
     public double[] offsets = null;
     public double lastSlow = 0.0;
     public long lastStep = 0L;
-    public Vec3d prevMovement = Vec3d.ZERO;
+    public Vec3 prevMovement = Vec3.ZERO;
 
     public Step() {
         super("Step", "Allows the player to instantly ascend blocks of varying heights without jumping by utilizing coordinate packet offsets.", SubCategory.MOVEMENT, true);
@@ -121,48 +120,48 @@ Step extends Module {
         return null;
     }
 
-    public boolean canStrafeJump(Vec3d movement) {
+    public boolean canStrafeJump(Vec3 movement) {
         if (!this.enabled) {
             return true;
         } else if (this.sinceStep <= 1) {
             return false;
         } else {
-            Box box = BlackOut.mc.player.getBoundingBox();
-            List<VoxelShape> list = BlackOut.mc.world.getEntityCollisions(BlackOut.mc.player, box.stretch(movement));
-            Vec3d vec3d = movement.lengthSquared() == 0.0
+            AABB box = BlackOut.mc.player.getBoundingBox();
+            List<VoxelShape> list = BlackOut.mc.level.getEntityCollisions(BlackOut.mc.player, box.expandTowards(movement));
+            Vec3 vec3d = movement.lengthSqr() == 0.0
                     ? movement
-                    : Entity.adjustMovementForCollisions(BlackOut.mc.player, movement, box, BlackOut.mc.world, list);
+                    : Entity.collideBoundingBox(BlackOut.mc.player, movement, box, BlackOut.mc.level, list);
             boolean collidedX = movement.x != vec3d.x;
             boolean collidedZ = movement.z != vec3d.z;
             boolean collidedHorizontally = collidedX || collidedZ;
             if (!collidedHorizontally) {
                 return true;
             } else {
-                Vec3d stepMovement = Entity.adjustMovementForCollisions(
-                        BlackOut.mc.player, new Vec3d(movement.x, 0.6, movement.z), box, BlackOut.mc.world, list
+                Vec3 stepMovement = Entity.collideBoundingBox(
+                        BlackOut.mc.player, new Vec3(movement.x, 0.6, movement.z), box, BlackOut.mc.level, list
                 );
-                Vec3d stepMovementUp = Entity.adjustMovementForCollisions(
+                Vec3 stepMovementUp = Entity.collideBoundingBox(
                         BlackOut.mc.player,
-                        new Vec3d(0.0, 0.6, 0.0),
-                        box.stretch(movement.x, 0.0, movement.z),
-                        BlackOut.mc.world,
+                        new Vec3(0.0, 0.6, 0.0),
+                        box.expandTowards(movement.x, 0.0, movement.z),
+                        BlackOut.mc.level,
                         list
                 );
                 if (stepMovementUp.y < this.height.get()) {
-                    Vec3d vec3d4 = Entity.adjustMovementForCollisions(
+                    Vec3 vec3d4 = Entity.collideBoundingBox(
                                     BlackOut.mc.player,
-                                    new Vec3d(movement.x, 0.0, movement.z),
-                                    box.offset(stepMovementUp),
-                                    BlackOut.mc.world,
+                                    new Vec3(movement.x, 0.0, movement.z),
+                                    box.move(stepMovementUp),
+                                    BlackOut.mc.level,
                                     list
                             )
                             .add(stepMovementUp);
-                    if (vec3d4.horizontalLengthSquared() > stepMovement.horizontalLengthSquared()) {
+                    if (vec3d4.horizontalDistanceSqr() > stepMovement.horizontalDistanceSqr()) {
                         stepMovement = vec3d4;
                     }
                 }
 
-                return stepMovement.horizontalLengthSquared() <= vec3d.horizontalLengthSquared();
+                return stepMovement.horizontalDistanceSqr() <= vec3d.horizontalDistanceSqr();
             }
         }
     }

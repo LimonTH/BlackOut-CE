@@ -4,19 +4,18 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.module.modules.client.GuiSettings;
 import bodevelopment.client.blackout.randomstuff.ShaderSetup;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
-import net.minecraft.client.util.math.MatrixStack;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 
 public class GuiRenderUtils {
     private static final long initTime = System.currentTimeMillis();
 
-    public static void renderWaveText(MatrixStack stack, String text, float textScale, float x, float y, boolean xCenter, boolean yCenter, boolean bold) {
+    public static void renderWaveText(PoseStack stack, String text, float textScale, float x, float y, boolean xCenter, boolean yCenter, boolean bold) {
         GuiSettings guiSettings = GuiSettings.getInstance();
         guiSettings.textColor.render(stack, text, textScale, x, y, xCenter, yCenter, bold);
     }
 
-    public static void renderWaveText(MatrixStack stack, String text, float textScale, float x, float y, boolean xCenter, boolean yCenter, int clr1, int clr2) {
+    public static void renderWaveText(PoseStack stack, String text, float textScale, float x, float y, boolean xCenter, boolean yCenter, int clr1, int clr2) {
         float shaderTime = (float) (System.currentTimeMillis() - initTime) / 1000.0f;
 
         BlackOut.FONT.text(stack, text, textScale, x, y, Color.WHITE.getRGB(), xCenter, yCenter, Shaders.fontwave, new ShaderSetup(setup -> {

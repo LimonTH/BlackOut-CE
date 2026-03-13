@@ -17,17 +17,16 @@ import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec2f;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec2;
 
 public class PhaseESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -49,7 +48,7 @@ public class PhaseESP extends Module {
     private final Setting<BlackOutColor> txt = this.sgColor.colorSetting("Label Color", new BlackOutColor(255, 255, 255, 255), "The color of the indicator text.");
 
     private final List<Entity> players = new ArrayList<>();
-    private final MatrixStack stack = new MatrixStack();
+    private final PoseStack stack = new PoseStack();
 
     public PhaseESP() {
         super("Phase ESP", "Displays specialized indicators over players who are currently intersecting with solid blocks or 'phasing'.", SubCategory.ENTITIES, true);
@@ -62,35 +61,35 @@ public class PhaseESP extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.world != null && BlackOut.mc.player != null) {
+        if (BlackOut.mc.level != null && BlackOut.mc.player != null) {
             this.players.clear();
-            BlackOut.mc.world.entityList.forEach(entity -> {
+            BlackOut.mc.level.tickingEntities.forEach(entity -> {
                 if (this.shouldRender(entity)) {
                     this.players.add(entity);
                 }
             });
-            this.players.sort(Comparator.comparingDouble(entity -> -BlackOut.mc.gameRenderer.getCamera().getPos().distanceTo(entity.getPos())));
+            this.players.sort(Comparator.comparingDouble(entity -> -BlackOut.mc.gameRenderer.getMainCamera().getPosition().distanceTo(entity.position())));
         }
     }
 
     public void renderNameTag(double tickDelta, Entity entity) {
-        double x = MathHelper.lerp(tickDelta, entity.prevX, entity.getX());
-        double y = MathHelper.lerp(tickDelta, entity.prevY, entity.getY());
-        double z = MathHelper.lerp(tickDelta, entity.prevZ, entity.getZ());
-        float d = (float) BlackOut.mc.gameRenderer.getCamera().getPos().subtract(x, y, z).length();
+        double x = Mth.lerp(tickDelta, entity.xo, entity.getX());
+        double y = Mth.lerp(tickDelta, entity.yo, entity.getY());
+        double z = Mth.lerp(tickDelta, entity.zo, entity.getZ());
+        float d = (float) BlackOut.mc.gameRenderer.getMainCamera().getPosition().subtract(x, y, z).length();
         float s = this.getScale(d);
-        this.stack.push();
-        Vec2f f = RenderUtils.getCoords(x, y - this.yOffset.get(), z, true);
+        this.stack.pushPose();
+        Vec2 f = RenderUtils.getCoords(x, y - this.yOffset.get(), z, true);
         if (f == null) {
-            this.stack.pop();
+            this.stack.popPose();
         } else {
             this.stack.translate(f.x, f.y, 0.0F);
             this.stack.scale(s, s, s);
             String text = this.getText();
             float length = BlackOut.FONT.getWidth(text);
-            this.stack.push();
+            this.stack.pushPose();
             this.stack.translate(-length / 2.0F, -9.0F, 0.0F);
-            double easedValue = AnimUtils.easeOutQuint(MathHelper.clamp(d / 100.0, 0.0, 1.0));
+            double easedValue = AnimUtils.easeOutQuint(Mth.clamp(d / 100.0, 0.0, 1.0));
             Color color = ColorUtils.lerpColor(easedValue, this.bgClose.get().getColor(), this.bgFar.get().getColor());
             Color shadowColor = ColorUtils.lerpColor(easedValue, this.shdwClose.get().getColor(), this.shdwFar.get().getColor());
             if (this.bg.get()) {
@@ -115,19 +114,19 @@ public class PhaseESP extends Module {
             }
 
             BlackOut.FONT.text(this.stack, text, 1.0F, 0.0F, 0.0F, this.txt.get().getColor(), false, true);
-            this.stack.pop();
-            this.stack.pop();
+            this.stack.popPose();
+            this.stack.popPose();
         }
     }
 
     public boolean shouldRender(Entity entity) {
-        if (!(entity instanceof PlayerEntity)) {
+        if (!(entity instanceof Player)) {
             return false;
         } else {
             AntiBot antiBot = AntiBot.getInstance();
-            if (antiBot.enabled && antiBot.mode.get() == AntiBot.HandlingMode.Ignore && entity instanceof AbstractClientPlayerEntity && antiBot.getBots().contains(entity)) {
+            if (antiBot.enabled && antiBot.mode.get() == AntiBot.HandlingMode.Ignore && entity instanceof AbstractClientPlayer && antiBot.getBots().contains(entity)) {
                 return false;
-            } else if (!OLEPOSSUtils.inside(entity, entity.getBoundingBox().contract(0.04, 0.06, 0.04))) {
+            } else if (!OLEPOSSUtils.inside(entity, entity.getBoundingBox().deflate(0.04, 0.06, 0.04))) {
                 return false;
             } else {
                 return entity != BlackOut.mc.player || FreeCam.getInstance().enabled;
@@ -137,14 +136,14 @@ public class PhaseESP extends Module {
 
     @Event
     public void onRender(RenderEvent.Hud.Post event) {
-        if (BlackOut.mc.world != null && BlackOut.mc.player != null) {
+        if (BlackOut.mc.level != null && BlackOut.mc.player != null) {
             GlStateManager._disableDepthTest();
             GlStateManager._enableBlend();
             GlStateManager._disableCull();
-            this.stack.push();
+            this.stack.pushPose();
             RenderUtils.unGuiScale(this.stack);
             this.players.forEach(entity -> this.renderNameTag(event.tickDelta, entity));
-            this.stack.pop();
+            this.stack.popPose();
         }
     }
 
