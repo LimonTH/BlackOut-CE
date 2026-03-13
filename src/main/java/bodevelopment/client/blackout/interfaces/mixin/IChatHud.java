@@ -1,8 +1,8 @@
 package bodevelopment.client.blackout.interfaces.mixin;
 
 
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 
 public interface IChatHud {
-    void blackout_Client$addMessageToChat(Text text, int id);
+    void blackout_Client$addMessageToChat(Component text, int id);
 }

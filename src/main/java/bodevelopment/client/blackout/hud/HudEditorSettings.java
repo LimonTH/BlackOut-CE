@@ -11,11 +11,10 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.MathHelper;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.List;
+import net.minecraft.util.Mth;
 import java.util.ArrayList;
 
 
@@ -26,7 +25,7 @@ public class HudEditorSettings {
     private HudElement openedElement = null;
     private long openTime = 0L;
     private int openedY;
-    private MatrixStack stack;
+    private PoseStack stack;
     private float frameTime;
     private float mx;
     private float my;
@@ -38,7 +37,7 @@ public class HudEditorSettings {
     private long hoverTime = 0L;
     private float descAlpha = 0.0F;
 
-    public void render(MatrixStack stack, float frameTime, int mouseX, int mouseY) {
+    public void render(PoseStack stack, float frameTime, int mouseX, int mouseY) {
         if (this.openedElement == null) {
             animDelta = Math.max(0, animDelta - frameTime * 5f);
             if (animDelta <= 0) return;
@@ -61,7 +60,7 @@ public class HudEditorSettings {
         }
 
         if (this.openedElement != null) {
-            stack.push();
+            stack.pushPose();
             stack.translate(0, 0, RenderLayer.GUI);
 
             this.length = ModuleComponent.getLength(this.openedElement.settingGroups) + 30.0F;
@@ -74,7 +73,7 @@ public class HudEditorSettings {
             BlackOut.FONT.text(stack, this.openedElement.name, 2.0F, this.x + 137.5F, this.y + 15.0F, GuiColorUtils.enabled, true, true);
 
             this.renderSettings();
-            stack.pop();
+            stack.popPose();
 
             boolean isOverDropdown = false;
             for (SettingGroup group : this.openedElement.settingGroups) {
@@ -224,17 +223,17 @@ public class HudEditorSettings {
     }
 
     private void updateMoving(float deltaX, float deltaY) {
-        var window = net.minecraft.client.MinecraftClient.getInstance().getWindow();
-        float screenW = (float) window.getWidth();
-        float screenH = (float) window.getHeight();
+        var window = net.minecraft.client.Minecraft.getInstance().getWindow();
+        float screenW = (float) window.getScreenWidth();
+        float screenH = (float) window.getScreenHeight();
 
         this.x += deltaX;
         this.y += deltaY;
 
-        this.x = MathHelper.clamp(this.x, 0, screenW - 275.0F);
+        this.x = Mth.clamp(this.x, 0, screenW - 275.0F);
 
         float currentHeight = Math.max(this.length, 30.0F);
-        this.y = MathHelper.clamp(this.y, 0, screenH - currentHeight);
+        this.y = Mth.clamp(this.y, 0, screenH - currentHeight);
     }
 
     public void set(HudElement hudElement) {
@@ -245,14 +244,14 @@ public class HudEditorSettings {
         this.openTime = System.currentTimeMillis();
         this.openedElement = hudElement;
 
-        var window = net.minecraft.client.MinecraftClient.getInstance().getWindow();
-        float screenW = (float) window.getWidth();
-        float screenH = (float) window.getHeight();
+        var window = net.minecraft.client.Minecraft.getInstance().getWindow();
+        float screenW = (float) window.getScreenWidth();
+        float screenH = (float) window.getScreenHeight();
 
         float expectedLength = ModuleComponent.getLength(hudElement.settingGroups) + 30.0F;
 
-        this.x = MathHelper.clamp(this.mx, 0, screenW - 275.0F);
-        this.y = MathHelper.clamp(this.my, 0, screenH - expectedLength);
+        this.x = Mth.clamp(this.mx, 0, screenW - 275.0F);
+        this.y = Mth.clamp(this.my, 0, screenH - expectedLength);
     }
 
     private void renderBG() {
@@ -313,9 +312,9 @@ public class HudEditorSettings {
 
         long waitTime = 600L;
         if (lastDescription != null && (System.currentTimeMillis() - hoverTime > waitTime || descAlpha > 0.3F)) {
-            descAlpha = MathHelper.clamp(descAlpha + frameTime * 7.0F, 0.0F, 1.0F);
+            descAlpha = Mth.clamp(descAlpha + frameTime * 7.0F, 0.0F, 1.0F);
         } else {
-            descAlpha = MathHelper.clamp(descAlpha - frameTime * 8.0F, 0.0F, 1.0F);
+            descAlpha = Mth.clamp(descAlpha - frameTime * 8.0F, 0.0F, 1.0F);
         }
 
         if (descAlpha > 0.0F && lastDescription != null) {
@@ -357,15 +356,15 @@ public class HudEditorSettings {
         float rectX = this.mx + 15;
         float rectY = this.my + 15;
 
-        var window = net.minecraft.client.MinecraftClient.getInstance().getWindow();
-        if (rectX + finalWidth + 20 > window.getWidth()) {
+        var window = net.minecraft.client.Minecraft.getInstance().getWindow();
+        if (rectX + finalWidth + 20 > window.getScreenWidth()) {
             rectX = this.mx - finalWidth - 20;
         }
-        if (rectY + finalHeight + 20 > window.getHeight()) {
+        if (rectY + finalHeight + 20 > window.getScreenHeight()) {
             rectY = this.my - finalHeight - 20;
         }
 
-        this.stack.push();
+        this.stack.pushPose();
         this.stack.translate(0, 0, RenderLayer.GUI);
 
         float smoothAlpha = descAlpha * descAlpha;
@@ -380,7 +379,7 @@ public class HudEditorSettings {
             BlackOut.FONT.text(this.stack, line, textScale, rectX + 6, currentY, textColor, false, false);
             currentY += lineHeight + spacing;
         }
-        this.stack.pop();
+        this.stack.popPose();
     }
 
     public HudElement getOpenedElement() {

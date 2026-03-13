@@ -12,10 +12,9 @@ import bodevelopment.client.blackout.module.modules.client.Notifications;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.ChatUtils;
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 
 public class AuthMe extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -58,7 +57,7 @@ public class AuthMe extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             if (this.time >= 0L && (System.currentTimeMillis() - this.time >= this.delay.get() * 1000.0)) {
                 String message = this.getAuthMessage();
 
@@ -78,7 +77,7 @@ public class AuthMe extends Module {
 
     @Event
     public void onPacketReceive(PacketEvent.Receive.Pre event) {
-        if (event.packet instanceof GameMessageS2CPacket packet) {
+        if (event.packet instanceof ClientboundSystemChatPacket packet) {
             String msg = packet.content().getString().replaceAll("§[0-9a-fk-or]", "").toLowerCase().trim();
 
             if (System.currentTimeMillis() - this.time < (this.delay.get() * 1000.0) + 1000.0) return;

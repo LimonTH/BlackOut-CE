@@ -37,10 +37,10 @@ public class Watermark extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             String formattedTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
             String formattedTime2 = new SimpleDateFormat("hh:mm a").format(new Date());
-            this.stack.push();
+            this.stack.pushPose();
             label79:
             switch (this.mode.get()) {
                 case Simple: {
@@ -64,7 +64,7 @@ public class Watermark extends HudElement {
                     BlackOut.FONT
                             .text(
                                     this.stack,
-                                    "Fps " + BlackOut.mc.getCurrentFps(),
+                                    "Fps " + BlackOut.mc.getFps(),
                                     1.0F,
                                     8.0F + width / 2.0F,
                                     4.0F + BlackOut.FONT.getHeight() * 2.0F,
@@ -79,8 +79,8 @@ public class Watermark extends HudElement {
                     break;
                 }
                 case Clean: {
-                    String ip = !BlackOut.mc.isIntegratedServerRunning() && BlackOut.mc.getNetworkHandler() != null && BlackOut.mc.getNetworkHandler().getServerInfo() != null
-                            ? BlackOut.mc.getNetworkHandler().getServerInfo().address
+                    String ip = !BlackOut.mc.hasSingleplayerServer() && BlackOut.mc.getConnection() != null && BlackOut.mc.getConnection().getServerData() != null
+                            ? BlackOut.mc.getConnection().getServerData().ip
                             : "Singleplayer";
                     String text = "Blackout | "
                             + BlackOut.TYPE
@@ -89,7 +89,7 @@ public class Watermark extends HudElement {
                             + " | "
                             + ip
                             + " | "
-                            + BlackOut.mc.getCurrentFps()
+                            + BlackOut.mc.getFps()
                             + " fps";
                     float width = BlackOut.FONT.getWidth(text) + 4.0F;
                     this.setSize(width, BlackOut.FONT.getHeight());
@@ -106,13 +106,13 @@ public class Watermark extends HudElement {
                     break;
                 }
                 case GameSense: {
-                    String ipx = !BlackOut.mc.isIntegratedServerRunning() && BlackOut.mc.getNetworkHandler() != null && BlackOut.mc.getNetworkHandler().getServerInfo() != null
-                            ? BlackOut.mc.getNetworkHandler().getServerInfo().address
+                    String ipx = !BlackOut.mc.hasSingleplayerServer() && BlackOut.mc.getConnection() != null && BlackOut.mc.getConnection().getServerData() != null
+                            ? BlackOut.mc.getConnection().getServerData().ip
                             : "Singleplayer";
                     String text = "| "
                             + BlackOut.mc.player.getName().getString()
                             + " | "
-                            + BlackOut.mc.getCurrentFps()
+                            + BlackOut.mc.getFps()
                             + " fps | "
                             + ipx
                             + " | "
@@ -172,7 +172,7 @@ public class Watermark extends HudElement {
                 }
             }
 
-            this.stack.pop();
+            this.stack.popPose();
         }
     }
 

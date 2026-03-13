@@ -1,9 +1,8 @@
 package bodevelopment.client.blackout.randomstuff;
 
-import net.minecraft.util.math.ColorHelper;
-import net.minecraft.util.math.MathHelper;
-
 import java.awt.*;
+import net.minecraft.util.ARGB;
+import net.minecraft.util.Mth;
 
 public class BlackOutColor {
     public static final BlackOutColor WHITE = new BlackOutColor(255, 255, 255, 255);
@@ -20,7 +19,7 @@ public class BlackOutColor {
     }
 
     public static BlackOutColor from(int color) {
-        return new BlackOutColor(ColorHelper.getRed(color), ColorHelper.getGreen(color), ColorHelper.getBlue(color), ColorHelper.getAlpha(color));
+        return new BlackOutColor(ARGB.red(color), ARGB.green(color), ARGB.blue(color), ARGB.alpha(color));
     }
 
     public BlackOutColor copy() {
@@ -74,10 +73,10 @@ public class BlackOutColor {
 
     public BlackOutColor lerp(double delta, BlackOutColor to) {
         return new BlackOutColor(
-                (int) MathHelper.lerp(delta, this.red, to.red),
-                (int) MathHelper.lerp(delta, this.green, to.green),
-                (int) MathHelper.lerp(delta, this.blue, to.blue),
-                (int) MathHelper.lerp(delta, this.alpha, to.alpha)
+                (int) Mth.lerp(delta, this.red, to.red),
+                (int) Mth.lerp(delta, this.green, to.green),
+                (int) Mth.lerp(delta, this.blue, to.blue),
+                (int) Mth.lerp(delta, this.alpha, to.alpha)
         );
     }
 

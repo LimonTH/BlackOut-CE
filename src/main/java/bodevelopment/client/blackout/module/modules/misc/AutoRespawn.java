@@ -5,7 +5,7 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
-import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
+import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
 
 public class AutoRespawn extends Module {
     public AutoRespawn() {
@@ -15,10 +15,10 @@ public class AutoRespawn extends Module {
     @Event
     public void onReceive(PacketEvent.Receive.Pre event) {
         if (BlackOut.mc.player == null) return;
-        if (event.packet instanceof EntityStatusS2CPacket packet) {
-            if (packet.getStatus() == 3 && packet.getEntity(BlackOut.mc.world) == BlackOut.mc.player) {
-                BlackOut.mc.player.requestRespawn();
-                if (BlackOut.mc.currentScreen != null) {
+        if (event.packet instanceof ClientboundEntityEventPacket packet) {
+            if (packet.getEventId() == 3 && packet.getEntity(BlackOut.mc.level) == BlackOut.mc.player) {
+                BlackOut.mc.player.respawn();
+                if (BlackOut.mc.screen != null) {
                     BlackOut.mc.setScreen(null);
                 }
             }

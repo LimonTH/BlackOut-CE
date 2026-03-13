@@ -2,19 +2,28 @@ package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.manager.Managers;
-import net.minecraft.block.*;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.item.*;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.FluidTags;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.*;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.BedItem;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import java.time.LocalDateTime;
 import java.time.Year;
 import java.time.ZoneOffset;
@@ -72,27 +81,27 @@ public class OLEPOSSUtils {
         return (float) a / longer.length();
     }
 
-    public static boolean inWater(Box box) {
+    public static boolean inWater(AABB box) {
         return inFluid(box, FluidTags.WATER);
     }
 
-    public static boolean inLava(Box box) {
+    public static boolean inLava(AABB box) {
         return inFluid(box, FluidTags.LAVA);
     }
 
-    public static boolean inFluid(Box box, TagKey<Fluid> tag) {
-        int minX = MathHelper.floor(box.minX + 0.001);
-        int maxX = MathHelper.ceil(box.maxX - 0.001);
-        int minY = MathHelper.floor(box.minY + 0.001);
-        int maxY = MathHelper.ceil(box.maxY - 0.001);
-        int minZ = MathHelper.floor(box.minZ + 0.001);
-        int maxZ = MathHelper.ceil(box.maxZ - 0.001);
+    public static boolean inFluid(AABB box, TagKey<Fluid> tag) {
+        int minX = Mth.floor(box.minX + 0.001);
+        int maxX = Mth.ceil(box.maxX - 0.001);
+        int minY = Mth.floor(box.minY + 0.001);
+        int maxY = Mth.ceil(box.maxY - 0.001);
+        int minZ = Mth.floor(box.minZ + 0.001);
+        int maxZ = Mth.ceil(box.maxZ - 0.001);
 
         for (int x = minX; x <= maxX; x++) {
             for (int y = minY; y <= maxY; y++) {
                 for (int z = minZ; z <= maxZ; z++) {
-                    FluidState fluidState = BlackOut.mc.world.getFluidState(new BlockPos(x, y, z));
-                    if (fluidState.isIn(tag) && y + fluidState.getHeight() > minY) {
+                    FluidState fluidState = BlackOut.mc.level.getFluidState(new BlockPos(x, y, z));
+                    if (fluidState.is(tag) && y + fluidState.getOwnHeight() > minY) {
                         return true;
                     }
                 }
@@ -102,21 +111,21 @@ public class OLEPOSSUtils {
         return false;
     }
 
-    public static double fluidHeight(Box box, TagKey<Fluid> tag) {
-        int minX = MathHelper.floor(box.minX + 0.001);
-        int maxX = MathHelper.ceil(box.maxX - 0.001);
-        int minY = MathHelper.floor(box.minY + 0.001);
-        int maxY = MathHelper.ceil(box.maxY - 0.001);
-        int minZ = MathHelper.floor(box.minZ + 0.001);
-        int maxZ = MathHelper.ceil(box.maxZ - 0.001);
+    public static double fluidHeight(AABB box, TagKey<Fluid> tag) {
+        int minX = Mth.floor(box.minX + 0.001);
+        int maxX = Mth.ceil(box.maxX - 0.001);
+        int minY = Mth.floor(box.minY + 0.001);
+        int maxY = Mth.ceil(box.maxY - 0.001);
+        int minZ = Mth.floor(box.minZ + 0.001);
+        int maxZ = Mth.ceil(box.maxZ - 0.001);
         double maxHeight = 0.0;
 
         for (int x = minX; x <= maxX; x++) {
             for (int y = minY; y <= maxY; y++) {
                 for (int z = minZ; z <= maxZ; z++) {
-                    FluidState fluidState = BlackOut.mc.world.getFluidState(new BlockPos(x, y, z));
-                    if (fluidState.isIn(tag)) {
-                        maxHeight = Math.max(maxHeight, y + fluidState.getHeight() - box.minY);
+                    FluidState fluidState = BlackOut.mc.level.getFluidState(new BlockPos(x, y, z));
+                    if (fluidState.is(tag)) {
+                        maxHeight = Math.max(maxHeight, y + fluidState.getOwnHeight() - box.minY);
                     }
                 }
             }
@@ -129,20 +138,20 @@ public class OLEPOSSUtils {
         return to > from ? Math.min(from + delta, to) : Math.max(from - delta, to);
     }
 
-    public static Vec3d getLerpedPos(Entity entity, double tickDelta) {
-        double x = MathHelper.lerp(tickDelta, entity.prevX, entity.getX());
-        double y = MathHelper.lerp(tickDelta, entity.prevY, entity.getY());
-        double z = MathHelper.lerp(tickDelta, entity.prevZ, entity.getZ());
-        return new Vec3d(x, y, z);
+    public static Vec3 getLerpedPos(Entity entity, double tickDelta) {
+        double x = Mth.lerp(tickDelta, entity.xo, entity.getX());
+        double y = Mth.lerp(tickDelta, entity.yo, entity.getY());
+        double z = Mth.lerp(tickDelta, entity.zo, entity.getZ());
+        return new Vec3(x, y, z);
     }
 
-    public static Box getLerpedBox(Entity entity, double tickDelta) {
-        double x = MathHelper.lerp(tickDelta, entity.prevX, entity.getX());
-        double y = MathHelper.lerp(tickDelta, entity.prevY, entity.getY());
-        double z = MathHelper.lerp(tickDelta, entity.prevZ, entity.getZ());
-        double halfX = entity.getBoundingBox().getLengthX() / 2.0;
-        double halfZ = entity.getBoundingBox().getLengthZ() / 2.0;
-        return new Box(x - halfX, y, z - halfZ, x + halfX, y + entity.getBoundingBox().getLengthY(), z + halfZ);
+    public static AABB getLerpedBox(Entity entity, double tickDelta) {
+        double x = Mth.lerp(tickDelta, entity.xo, entity.getX());
+        double y = Mth.lerp(tickDelta, entity.yo, entity.getY());
+        double z = Mth.lerp(tickDelta, entity.zo, entity.getZ());
+        double halfX = entity.getBoundingBox().getXsize() / 2.0;
+        double halfZ = entity.getBoundingBox().getZsize() / 2.0;
+        return new AABB(x - halfX, y, z - halfZ, x + halfX, y + entity.getBoundingBox().getYsize(), z + halfZ);
     }
 
     public static int secondsSince(LocalDateTime dateTime) {
@@ -225,64 +234,64 @@ public class OLEPOSSUtils {
         return false;
     }
 
-    public static Hand getHand(Item item) {
+    public static InteractionHand getHand(Item item) {
         return getHand(stack -> stack.getItem() == item);
     }
 
-    public static Hand getHand(Predicate<ItemStack> predicate) {
+    public static InteractionHand getHand(Predicate<ItemStack> predicate) {
         if (predicate.test(Managers.PACKET.getStack())) {
-            return Hand.MAIN_HAND;
+            return InteractionHand.MAIN_HAND;
         } else {
-            return predicate.test(BlackOut.mc.player.getOffHandStack()) ? Hand.OFF_HAND : null;
+            return predicate.test(BlackOut.mc.player.getOffhandItem()) ? InteractionHand.OFF_HAND : null;
         }
     }
 
-    public static ItemStack getItem(Hand hand) {
-        return hand == Hand.MAIN_HAND ? Managers.PACKET.getStack() : (hand == Hand.OFF_HAND ? BlackOut.mc.player.getOffHandStack() : null);
+    public static ItemStack getItem(InteractionHand hand) {
+        return hand == InteractionHand.MAIN_HAND ? Managers.PACKET.getStack() : (hand == InteractionHand.OFF_HAND ? BlackOut.mc.player.getOffhandItem() : null);
     }
 
-    public static Vec3d getMiddle(Box box) {
-        return new Vec3d((box.minX + box.maxX) / 2.0, (box.minY + box.maxY) / 2.0, (box.minZ + box.maxZ) / 2.0);
+    public static Vec3 getMiddle(AABB box) {
+        return new Vec3((box.minX + box.maxX) / 2.0, (box.minY + box.maxY) / 2.0, (box.minZ + box.maxZ) / 2.0);
     }
 
-    public static boolean inside(Entity en, Box bb) {
-        if (BlackOut.mc.world == null) return false;
-        return BlackOut.mc.world.getBlockCollisions(en, bb).iterator().hasNext();
+    public static boolean inside(Entity en, AABB bb) {
+        if (BlackOut.mc.level == null) return false;
+        return BlackOut.mc.level.getBlockCollisions(en, bb).iterator().hasNext();
     }
 
     public static int closerToZero(int x) {
         return (int) (x - Math.signum((float) x));
     }
 
-    public static Vec3d getClosest(Vec3d playerPos, Vec3d feet, double width, double height) {
+    public static Vec3 getClosest(Vec3 playerPos, Vec3 feet, double width, double height) {
         double halfWidth = width / 2.0;
         return getClosest(
                 playerPos,
-                feet.getX() - halfWidth,
-                feet.getX() + halfWidth,
-                feet.getY(),
-                feet.getY() + height,
-                feet.getZ() - halfWidth,
-                feet.getZ() + halfWidth
+                feet.x() - halfWidth,
+                feet.x() + halfWidth,
+                feet.y(),
+                feet.y() + height,
+                feet.z() - halfWidth,
+                feet.z() + halfWidth
         );
     }
 
-    public static Vec3d getClosest(Vec3d playerPos, Box box) {
+    public static Vec3 getClosest(Vec3 playerPos, AABB box) {
         return getClosest(playerPos, box.minX, box.maxX, box.minY, box.maxY, box.minZ, box.maxZ);
     }
 
-    public static Vec3d getClosest(Vec3d playerPos, double minX, double maxX, double minY, double maxY, double minZ, double maxZ) {
-        return new Vec3d(
-                MathHelper.clamp(playerPos.getX(), minX, maxX),
-                MathHelper.clamp(playerPos.getY(), minY, maxY),
-                MathHelper.clamp(playerPos.getZ(), minZ, maxZ)
+    public static Vec3 getClosest(Vec3 playerPos, double minX, double maxX, double minY, double maxY, double minZ, double maxZ) {
+        return new Vec3(
+                Mth.clamp(playerPos.x(), minX, maxX),
+                Mth.clamp(playerPos.y(), minY, maxY),
+                Mth.clamp(playerPos.z(), minZ, maxZ)
         );
     }
 
     public static boolean strictDir(BlockPos pos, Direction dir, boolean ncp) {
         return switch (dir) {
-            case DOWN -> BlackOut.mc.player.getEyePos().y <= pos.getY() + (ncp ? 0.5 : 0.0);
-            case UP -> BlackOut.mc.player.getEyePos().y >= pos.getY() + (ncp ? 0.5 : 1.0);
+            case DOWN -> BlackOut.mc.player.getEyePosition().y <= pos.getY() + (ncp ? 0.5 : 0.0);
+            case UP -> BlackOut.mc.player.getEyePosition().y >= pos.getY() + (ncp ? 0.5 : 1.0);
             case NORTH -> BlackOut.mc.player.getZ() < pos.getZ();
             case SOUTH -> BlackOut.mc.player.getZ() >= pos.getZ() + 1;
             case WEST -> BlackOut.mc.player.getX() < pos.getX();
@@ -291,43 +300,43 @@ public class OLEPOSSUtils {
         };
     }
 
-    public static Box getCrystalBox(BlockPos pos) {
-        return new Box(pos.getX(), pos.getY() + 1, pos.getZ(), pos.getX() + 1, pos.getY() + 3, pos.getZ() + 1);
+    public static AABB getCrystalBox(BlockPos pos) {
+        return new AABB(pos.getX(), pos.getY() + 1, pos.getZ(), pos.getX() + 1, pos.getY() + 3, pos.getZ() + 1);
     }
 
-    public static Box getCrystalBox(Vec3d pos) {
-        return new Box(
-                pos.getX() - 1.0, pos.getY(), pos.getZ() - 1.0, pos.getX() + 1.0, pos.getY() + 2.0, pos.getZ() + 1.0
+    public static AABB getCrystalBox(Vec3 pos) {
+        return new AABB(
+                pos.x() - 1.0, pos.y(), pos.z() - 1.0, pos.x() + 1.0, pos.y() + 2.0, pos.z() + 1.0
         );
     }
 
 
     public static boolean replaceable(BlockPos pos) {
-        if (BlackOut.mc.world == null) return false;
-        return replaceable(BlackOut.mc.world.getBlockState(pos));
+        if (BlackOut.mc.level == null) return false;
+        return replaceable(BlackOut.mc.level.getBlockState(pos));
     }
 
     public static boolean replaceable(BlockState state) {
-        return state.isReplaceable();
+        return state.canBeReplaced();
     }
 
 
     // Основной метод с серьёзной проверкой на солидность
     public static boolean solid2(BlockPos block) {
-        if (BlackOut.mc.world == null) return false;
-        BlockState state = BlackOut.mc.world.getBlockState(block);
+        if (BlackOut.mc.level == null) return false;
+        BlockState state = BlackOut.mc.level.getBlockState(block);
 
-        return !state.getCollisionShape(BlackOut.mc.world, block,
-                BlackOut.mc.player != null ? ShapeContext.of(BlackOut.mc.player) : ShapeContext.absent()
+        return !state.getCollisionShape(BlackOut.mc.level, block,
+                BlackOut.mc.player != null ? CollisionContext.of(BlackOut.mc.player) : CollisionContext.empty()
         ).isEmpty();
     }
 
     // Доп метод для проверки установки факелов и прочего
     public static boolean solid(BlockPos block) {
-        if (BlackOut.mc.world == null) return false;
-        BlockState state = BlackOut.mc.world.getBlockState(block);
+        if (BlackOut.mc.level == null) return false;
+        BlockState state = BlackOut.mc.level.getBlockState(block);
 
-        return state.isSideSolidFullSquare(BlackOut.mc.world, block, Direction.UP);
+        return state.isFaceSturdy(BlackOut.mc.level, block, Direction.UP);
     }
 
     public static boolean isGapple(Item item) {
@@ -355,16 +364,16 @@ public class OLEPOSSUtils {
     }
 
     public static boolean collidable(BlockPos block) {
-        if (BlackOut.mc.world == null) return false;
-        BlockState state = BlackOut.mc.world.getBlockState(block);
-        return !state.getCollisionShape(BlackOut.mc.world, block).isEmpty();
+        if (BlackOut.mc.level == null) return false;
+        BlockState state = BlackOut.mc.level.getBlockState(block);
+        return !state.getCollisionShape(BlackOut.mc.level, block).isEmpty();
     }
 
-    public static int getEnchantmentLevel(net.minecraft.registry.RegistryKey<net.minecraft.enchantment.Enchantment> enchantmentKey, ItemStack stack) {
-        if (BlackOut.mc.world == null) return 0;
-        return EnchantmentHelper.getLevel(
-                BlackOut.mc.world.getRegistryManager()
-                        .getOrThrow(RegistryKeys.ENCHANTMENT)
+    public static int getEnchantmentLevel(net.minecraft.resources.ResourceKey<net.minecraft.world.item.enchantment.Enchantment> enchantmentKey, ItemStack stack) {
+        if (BlackOut.mc.level == null) return 0;
+        return EnchantmentHelper.getItemEnchantmentLevel(
+                BlackOut.mc.level.registryAccess()
+                        .lookupOrThrow(Registries.ENCHANTMENT)
                         .getOrThrow(enchantmentKey),
                 stack
         );
@@ -372,16 +381,16 @@ public class OLEPOSSUtils {
 
     // Проверка качества блока (Safe vs Unsafe)
     public static boolean isSafe(BlockPos pos) {
-        if (BlackOut.mc.world == null) return false;
-        float resistance = BlackOut.mc.world.getBlockState(pos).getBlock().getBlastResistance();
+        if (BlackOut.mc.level == null) return false;
+        float resistance = BlackOut.mc.level.getBlockState(pos).getBlock().getExplosionResistance();
         return resistance >= 600.0f;
     }
 
-    public static int getEquipmentEnchantmentLevel(net.minecraft.registry.RegistryKey<net.minecraft.enchantment.Enchantment> enchantmentKey, net.minecraft.entity.LivingEntity entity) {
-        if (BlackOut.mc.world == null) return 0;
-        return EnchantmentHelper.getEquipmentLevel(
-                BlackOut.mc.world.getRegistryManager()
-                        .getOrThrow(RegistryKeys.ENCHANTMENT)
+    public static int getEquipmentEnchantmentLevel(net.minecraft.resources.ResourceKey<net.minecraft.world.item.enchantment.Enchantment> enchantmentKey, net.minecraft.world.entity.LivingEntity entity) {
+        if (BlackOut.mc.level == null) return 0;
+        return EnchantmentHelper.getEnchantmentLevel(
+                BlackOut.mc.level.registryAccess()
+                        .lookupOrThrow(Registries.ENCHANTMENT)
                         .getOrThrow(enchantmentKey),
                 entity
         );

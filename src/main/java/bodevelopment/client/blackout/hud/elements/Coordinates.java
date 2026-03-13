@@ -8,12 +8,11 @@ import bodevelopment.client.blackout.module.setting.multisettings.BackgroundMult
 import bodevelopment.client.blackout.module.setting.multisettings.TextColorMultiSetting;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
 public class Coordinates extends HudElement {
     public final SettingGroup sgGeneral = this.addGroup("General");
@@ -40,19 +39,19 @@ public class Coordinates extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            String text = this.getString(BlackOut.mc.player.getPos());
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            String text = this.getString(BlackOut.mc.player.position());
             String otherWorldText = BlackOut.NAME + " Client coordinate calculation system thread 42069 has failed the mathing of the coordinates please hit your pc with a hammer to fix the issue";
-            this.stack.push();
+            this.stack.pushPose();
             float height;
             float width;
             if (this.drawingOther) {
-                RegistryKey<World> worldKey = BlackOut.mc.world.getRegistryKey();
+                ResourceKey<Level> worldKey = BlackOut.mc.level.dimension();
 
-                if (worldKey == World.OVERWORLD) {
-                    otherWorldText = this.getString(BlackOut.mc.player.getPos().multiply(0.125));
-                } else if (worldKey == World.NETHER) {
-                    otherWorldText = this.getString(BlackOut.mc.player.getPos().multiply(8.0));
+                if (worldKey == Level.OVERWORLD) {
+                    otherWorldText = this.getString(BlackOut.mc.player.position().scale(0.125));
+                } else if (worldKey == Level.NETHER) {
+                    otherWorldText = this.getString(BlackOut.mc.player.position().scale(8.0));
                 }
 
                 height = BlackOut.FONT.getHeight() * 2.0F - 2.0F;
@@ -78,17 +77,17 @@ public class Coordinates extends HudElement {
             }
 
             this.drawingOther = false;
-            this.updateComponents(BlackOut.mc.player.getPos());
+            this.updateComponents(BlackOut.mc.player.position());
             this.drawComponents(0.0F);
-            if (this.otherWorld.get() && BlackOut.mc.world.getRegistryKey() != World.END) {
-                Vec3d pos = null;
+            if (this.otherWorld.get() && BlackOut.mc.level.dimension() != Level.END) {
+                Vec3 pos = null;
 
-                RegistryKey<World> currentWorld = BlackOut.mc.world.getRegistryKey();
+                ResourceKey<Level> currentWorld = BlackOut.mc.level.dimension();
 
-                if (currentWorld == World.OVERWORLD) {
-                    pos = BlackOut.mc.player.getPos().multiply(0.125, 1.0, 0.125);
-                } else if (currentWorld == World.NETHER) {
-                    pos = BlackOut.mc.player.getPos().multiply(8.0, 1.0, 8.0);
+                if (currentWorld == Level.OVERWORLD) {
+                    pos = BlackOut.mc.player.position().multiply(0.125, 1.0, 0.125);
+                } else if (currentWorld == Level.NETHER) {
+                    pos = BlackOut.mc.player.position().multiply(8.0, 1.0, 8.0);
                 }
 
                 if (pos != null) {
@@ -99,7 +98,7 @@ public class Coordinates extends HudElement {
                 this.drawingOther = true;
             }
 
-            this.stack.pop();
+            this.stack.popPose();
         }
     }
 
@@ -116,11 +115,11 @@ public class Coordinates extends HudElement {
         });
     }
 
-    private String getString(Vec3d pos) {
+    private String getString(Vec3 pos) {
         return String.format("X: %.1f Y: %.1f Z: %.1f", pos.x, pos.y, pos.z);
     }
 
-    private void updateComponents(Vec3d pos) {
+    private void updateComponents(Vec3 pos) {
         this.i = 1;
         this.offset = 0.0F;
         this.components.clear();

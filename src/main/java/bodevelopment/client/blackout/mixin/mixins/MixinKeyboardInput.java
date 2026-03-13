@@ -4,9 +4,9 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.movement.ElytraFly;
 import bodevelopment.client.blackout.util.SettingUtils;
-import net.minecraft.client.input.KeyboardInput;
-import net.minecraft.client.option.GameOptions;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.Options;
+import net.minecraft.client.player.KeyboardInput;
+import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinKeyboardInput {
     @Shadow
     @Final
-    private GameOptions settings;
+    private Options options;
     @Unique
     private boolean move = false;
     @Unique
@@ -31,15 +31,15 @@ public abstract class MixinKeyboardInput {
     @Inject(method = "tick", at = @At("HEAD"))
     private void onMovement(boolean slowDown, float slowDownFactor, CallbackInfo ci) {
         Managers.ROTATION.updateNext();
-        Managers.ROTATION.moveLookYaw = MathHelper.wrapDegrees(Managers.ROTATION.nextYaw);
+        Managers.ROTATION.moveLookYaw = Mth.wrapDegrees(Managers.ROTATION.nextYaw);
         this.grim = SettingUtils.grimMovement();
-        float forward = this.getInput(this.settings.forwardKey.isPressed(), this.settings.backKey.isPressed());
-        float strafing = this.getInput(this.settings.leftKey.isPressed(), this.settings.rightKey.isPressed());
+        float forward = this.getInput(this.options.keyUp.isDown(), this.options.keyDown.isDown());
+        float strafing = this.getInput(this.options.keyLeft.isDown(), this.options.keyRight.isDown());
         float yaw = this.inputYaw(forward, strafing);
         this.offset = Managers.ROTATION.updateMove(yaw, this.move);
     }
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/input/KeyboardInput;getMovementMultiplier(ZZ)F", ordinal = 0))
+    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/KeyboardInput;calculateImpulse(ZZ)F", ordinal = 0))
     private float movementForward(boolean positive, boolean negative) {
         ElytraFly elytraFly = ElytraFly.getInstance();
         if (elytraFly.enabled && elytraFly.isBouncing()) {
@@ -61,7 +61,7 @@ public abstract class MixinKeyboardInput {
         }
     }
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/input/KeyboardInput;getMovementMultiplier(ZZ)F", ordinal = 1))
+    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/KeyboardInput;calculateImpulse(ZZ)F", ordinal = 1))
     private float movementStrafing(boolean positive, boolean negative) {
         ElytraFly elytraFly = ElytraFly.getInstance();
         if (elytraFly.enabled && elytraFly.isBouncing()) {
@@ -85,7 +85,7 @@ public abstract class MixinKeyboardInput {
 
     @Unique
     private float inputYaw(float forward, float strafing) {
-        float yaw = BlackOut.mc.player.getYaw();
+        float yaw = BlackOut.mc.player.getYRot();
         if (forward > 0.0F) {
             this.move = true;
             yaw += strafing > 0.0F ? -45.0F : (strafing < 0.0F ? 45.0F : 0.0F);

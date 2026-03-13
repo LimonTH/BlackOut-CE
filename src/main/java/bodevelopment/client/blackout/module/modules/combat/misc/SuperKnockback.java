@@ -8,9 +8,9 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.world.entity.LivingEntity;
 
 public class SuperKnockback extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -25,10 +25,10 @@ public class SuperKnockback extends Module {
     @Event
     public void onSend(PacketEvent.Send event) {
         if (BlackOut.mc.player != null) {
-            if (!this.check.get() || BlackOut.mc.player.getVelocity().getX() != 0.0 && BlackOut.mc.player.getVelocity().getZ() != 0.0) {
+            if (!this.check.get() || BlackOut.mc.player.getDeltaMovement().x() != 0.0 && BlackOut.mc.player.getDeltaMovement().z() != 0.0) {
                 if (event.packet instanceof AccessorInteractEntityC2SPacket packet
-                        && packet.getType().getType() == PlayerInteractEntityC2SPacket.InteractType.ATTACK
-                        && BlackOut.mc.world.getEntityById(packet.getId()) instanceof LivingEntity) {
+                        && packet.getType().getType() == ServerboundInteractPacket.ActionType.ATTACK
+                        && BlackOut.mc.level.getEntity(packet.getId()) instanceof LivingEntity) {
                     if (!BlackOut.mc.player.isSprinting()) {
                         this.start();
                     }
@@ -41,10 +41,10 @@ public class SuperKnockback extends Module {
     }
 
     private void stop() {
-        this.sendPacket(new ClientCommandC2SPacket(BlackOut.mc.player, ClientCommandC2SPacket.Mode.STOP_SPRINTING));
+        this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
     }
 
     private void start() {
-        this.sendPacket(new ClientCommandC2SPacket(BlackOut.mc.player, ClientCommandC2SPacket.Mode.START_SPRINTING));
+        this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.START_SPRINTING));
     }
 }

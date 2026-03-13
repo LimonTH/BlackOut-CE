@@ -13,18 +13,17 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec2f;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec2;
 
 public class Tracers extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -33,7 +32,7 @@ public class Tracers extends Module {
     private final Setting<BlackOutColor> line = this.sgGeneral.colorSetting("Default Tracer Color", new BlackOutColor(255, 255, 255, 100), "The color of the tracer lines for standard entities.");
     private final Setting<BlackOutColor> friendLine = this.sgGeneral.colorSetting("Friend Tracer Color", new BlackOutColor(150, 150, 255, 100), "The color of the tracer lines for entities on your friend list.");
 
-    private final MatrixStack stack = new MatrixStack();
+    private final PoseStack stack = new PoseStack();
     private final List<Entity> entities = new ArrayList<>();
 
     public Tracers() {
@@ -42,58 +41,58 @@ public class Tracers extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.world != null && BlackOut.mc.player != null) {
+        if (BlackOut.mc.level != null && BlackOut.mc.player != null) {
             this.entities.clear();
-            BlackOut.mc.world.entityList.forEach(entity -> {
+            BlackOut.mc.level.tickingEntities.forEach(entity -> {
                 if (this.shouldRender(entity)) {
                     this.entities.add(entity);
                 }
             });
-            this.entities.sort(Comparator.comparingDouble(entity -> -BlackOut.mc.gameRenderer.getCamera().getPos().distanceTo(entity.getPos())));
+            this.entities.sort(Comparator.comparingDouble(entity -> -BlackOut.mc.gameRenderer.getMainCamera().getPosition().distanceTo(entity.position())));
         }
     }
 
     @Event
     public void onRender(RenderEvent.Hud.Post event) {
-        if (BlackOut.mc.world != null && BlackOut.mc.player != null) {
-            this.stack.push();
+        if (BlackOut.mc.level != null && BlackOut.mc.player != null) {
+            this.stack.pushPose();
             RenderUtils.unGuiScale(this.stack);
             this.entities.forEach(entity -> this.renderTracer(event.tickDelta, entity));
-            this.stack.pop();
+            this.stack.popPose();
         }
     }
 
     public void renderTracer(double tickDelta, Entity entity) {
-        double x = MathHelper.lerp(tickDelta, entity.prevX, entity.getX());
-        double y = MathHelper.lerp(tickDelta, entity.prevY, entity.getY());
-        double z = MathHelper.lerp(tickDelta, entity.prevZ, entity.getZ());
-        this.stack.push();
+        double x = Mth.lerp(tickDelta, entity.xo, entity.getX());
+        double y = Mth.lerp(tickDelta, entity.yo, entity.getY());
+        double z = Mth.lerp(tickDelta, entity.zo, entity.getZ());
+        this.stack.pushPose();
         Color color;
-        if (entity instanceof PlayerEntity && Managers.FRIENDS.isFriend((PlayerEntity) entity)) {
+        if (entity instanceof Player && Managers.FRIENDS.isFriend((Player) entity)) {
             color = this.friendLine.get().getColor();
         } else {
             color = this.line.get().getColor();
         }
 
-        Vec2f f = RenderUtils.getCoords(x, y + entity.getBoundingBox().getLengthY() / 2.0, z, false);
+        Vec2 f = RenderUtils.getCoords(x, y + entity.getBoundingBox().getYsize() / 2.0, z, false);
         if (f == null) {
-            this.stack.pop();
+            this.stack.popPose();
         } else {
             RenderUtils.line(
                     this.stack,
-                    BlackOut.mc.getWindow().getWidth() / 2.0F,
-                    BlackOut.mc.getWindow().getHeight() / 2.0F,
+                    BlackOut.mc.getWindow().getScreenWidth() / 2.0F,
+                    BlackOut.mc.getWindow().getScreenHeight() / 2.0F,
                     f.x,
                     f.y,
                     color.getRGB()
             );
-            this.stack.pop();
+            this.stack.popPose();
         }
     }
 
     public boolean shouldRender(Entity entity) {
         AntiBot antiBot = AntiBot.getInstance();
-        if (antiBot.enabled && antiBot.mode.get() == AntiBot.HandlingMode.Ignore && entity instanceof AbstractClientPlayerEntity player && antiBot.getBots().contains(player)) {
+        if (antiBot.enabled && antiBot.mode.get() == AntiBot.HandlingMode.Ignore && entity instanceof AbstractClientPlayer player && antiBot.getBots().contains(player)) {
             return false;
         } else if (!this.entityTypes.get().contains(entity.getType())) {
             return false;

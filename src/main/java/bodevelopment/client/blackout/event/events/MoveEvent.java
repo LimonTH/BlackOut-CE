@@ -6,8 +6,8 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.modules.combat.defensive.Clip;
 import bodevelopment.client.blackout.module.modules.misc.Clear;
 import bodevelopment.client.blackout.module.modules.movement.*;
-import net.minecraft.entity.MovementType;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.phys.Vec3;
 
 public class MoveEvent {
     public static class Post {
@@ -32,13 +32,13 @@ public class MoveEvent {
 
     public static class Pre extends Cancellable {
         private static final Pre INSTANCE = new Pre();
-        public Vec3d originalMovement = new Vec3d(0.0, 0.0, 0.0);
-        public Vec3d movement = new Vec3d(0.0, 0.0, 0.0);
-        public MovementType movementType = MovementType.SELF;
+        public Vec3 originalMovement = new Vec3(0.0, 0.0, 0.0);
+        public Vec3 movement = new Vec3(0.0, 0.0, 0.0);
+        public MoverType movementType = MoverType.SELF;
         public int xzValue = 0;
         public int yValue = 0;
 
-        public static Pre get(Vec3d movement, MovementType type) {
+        public static Pre get(Vec3 movement, MoverType type) {
             INSTANCE.movement = movement;
             INSTANCE.movementType = type;
             INSTANCE.originalMovement = movement;

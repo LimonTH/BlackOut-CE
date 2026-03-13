@@ -11,9 +11,8 @@ import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.minecraft.util.math.MathHelper;
-
 import java.awt.*;
+import net.minecraft.util.Mth;
 
 public class DoubleSetting extends Setting<Double> {
     private static final Color CLEAR = new Color(255, 255, 255, 0);
@@ -41,17 +40,17 @@ public class DoubleSetting extends Setting<Double> {
         float sliderWidth = this.width - (sliderPadding * 2.0F);
 
         if (this.moving) {
-            this.sliderPos = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.mx, this.x + sliderPadding, this.x + this.width - sliderPadding), 0.0, 1.0);
-            float val = (float) MathHelper.lerp(this.sliderPos, this.min, this.max);
+            this.sliderPos = (float) Mth.clamp(Mth.inverseLerp(this.mx, this.x + sliderPadding, this.x + this.width - sliderPadding), 0.0, 1.0);
+            float val = (float) Mth.lerp(this.sliderPos, this.min, this.max);
             this.setValue(Math.round(val / this.step) * this.step);
         } else {
-            this.sliderPos = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.get(), this.min, this.max), 0.0, 1.0);
+            this.sliderPos = (float) Mth.clamp(Mth.inverseLerp(this.get(), this.min, this.max), 0.0, 1.0);
         }
 
         if (Float.isNaN(this.sliderAnim)) {
             this.sliderAnim = this.sliderPos;
         }
-        this.sliderAnim = MathHelper.clamp(MathHelper.clampedLerp(this.sliderAnim, this.sliderPos, this.frameTime * 20.0F), 0.0F, 1.0F);
+        this.sliderAnim = Mth.clamp(Mth.clampedLerp(this.sliderAnim, this.sliderPos, this.frameTime * 20.0F), 0.0F, 1.0F);
 
         float textScale = 2.0F;
         float baseH = 26.0F;
@@ -155,7 +154,7 @@ public class DoubleSetting extends Setting<Double> {
     @Override
     public void set(JsonElement element) {
         this.setValue(element.getAsDouble());
-        this.sliderPos = (float) MathHelper.clamp(MathHelper.getLerpProgress(this.get(), this.min, this.max), 0.0, 1.0);
+        this.sliderPos = (float) Mth.clamp(Mth.inverseLerp(this.get(), this.min, this.max), 0.0, 1.0);
         this.sliderAnim = this.sliderPos;
     }
 }

@@ -12,16 +12,15 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.ItemUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.client.gui.screen.DeathScreen;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.ArmorItem;
-import net.minecraft.screen.PlayerScreenHandler;
-import net.minecraft.screen.slot.SlotActionType;
-
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import net.minecraft.client.gui.screens.DeathScreen;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.item.ArmorItem;
 
 public class Suicide extends Module {
     private static Suicide INSTANCE;
@@ -65,7 +64,7 @@ public class Suicide extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.currentScreen instanceof DeathScreen && this.disableDeath.get()) {
+        if (BlackOut.mc.screen instanceof DeathScreen && this.disableDeath.get()) {
             this.disable("died");
         }
     }
@@ -75,20 +74,20 @@ public class Suicide extends Module {
             boolean dropped = false;
 
             for (EquipmentSlot equipmentSlot : this.toDrop(this.dropArmor.get())) {
-                BlackOut.mc.interactionManager.clickSlot(0, 8 - equipmentSlot.getEntitySlotId(), 0, SlotActionType.THROW, BlackOut.mc.player);
+                BlackOut.mc.gameMode.handleInventoryMouseClick(0, 8 - equipmentSlot.getIndex(), 0, ClickType.THROW, BlackOut.mc.player);
                 dropped = true;
             }
 
-            if (dropped && BlackOut.mc.player.currentScreenHandler instanceof PlayerScreenHandler) {
-                BlackOut.mc.player.closeHandledScreen();
+            if (dropped && BlackOut.mc.player.containerMenu instanceof InventoryMenu) {
+                BlackOut.mc.player.closeContainer();
             }
         }
     }
 
     private List<EquipmentSlot> toDrop(int amount) {
         List<EquipmentSlot> list = Arrays.stream(OLEPOSSUtils.equipmentSlots)
-                .filter(slot -> BlackOut.mc.player.getInventory().getArmorStack(slot.getEntitySlotId()).getItem() instanceof ArmorItem)
-                .sorted(Comparator.comparingDouble(slot -> ItemUtils.getArmorValue(BlackOut.mc.player.getInventory().getArmorStack(slot.getEntitySlotId()))))
+                .filter(slot -> BlackOut.mc.player.getInventory().getArmor(slot.getIndex()).getItem() instanceof ArmorItem)
+                .sorted(Comparator.comparingDouble(slot -> ItemUtils.getArmorValue(BlackOut.mc.player.getInventory().getArmor(slot.getIndex()))))
                 .collect(Collectors.toList());
         return list.subList(Math.max(0, list.size() - amount), list.size());
     }

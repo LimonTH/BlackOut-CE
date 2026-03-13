@@ -2,11 +2,10 @@ package bodevelopment.client.blackout.manager.managers;
 
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.module.modules.misc.PingSpoof;
-import net.minecraft.network.packet.Packet;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import net.minecraft.network.protocol.Packet;
 
 public class PingManager extends Manager {
     private final List<DelayedPacket> sending = Collections.synchronizedList(new ArrayList<>());

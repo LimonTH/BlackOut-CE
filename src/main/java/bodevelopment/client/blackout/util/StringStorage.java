@@ -1,8 +1,7 @@
 package bodevelopment.client.blackout.util;
 
-import net.minecraft.util.math.MathHelper;
-
 import java.util.concurrent.ThreadLocalRandom;
+import net.minecraft.util.Mth;
 
 public class StringStorage {
     private static final String[] adjectives = new String[]{
@@ -66,6 +65,6 @@ public class StringStorage {
     }
 
     private static <T> T getRandom(T[] array) {
-        return array[(int) Math.round(MathHelper.lerp(ThreadLocalRandom.current().nextDouble(), 0.0, array.length - 1))];
+        return array[(int) Math.round(Mth.lerp(ThreadLocalRandom.current().nextDouble(), 0.0, array.length - 1))];
     }
 }

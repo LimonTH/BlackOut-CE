@@ -16,11 +16,10 @@ import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.MathHelper;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.List;
+import net.minecraft.util.Mth;
 
 public class ModuleComponent extends Component {
     private static final Color disabledColor = new Color(150, 150, 150, 255);
@@ -33,7 +32,7 @@ public class ModuleComponent extends Component {
     private double toggleProgress = 0.0;
     private long prevTime = 0L;
 
-    public ModuleComponent(MatrixStack stack, Module module) {
+    public ModuleComponent(PoseStack stack, Module module) {
         super(stack);
         this.module = module;
     }
@@ -344,17 +343,17 @@ public class ModuleComponent extends Component {
 
     private void updateAnimation() {
         float dist = Math.abs(this.getHeight() - this.length);
-        float animationTime = MathHelper.clamp(dist / 100.0F, 1.0F, 10.0F);
-        this.openProgress = MathHelper.clamp(
+        float animationTime = Mth.clamp(dist / 100.0F, 1.0F, 10.0F);
+        this.openProgress = Mth.clamp(
                 this.openProgress + (this.opened ? this.frameTime * 20.0F / animationTime : -this.frameTime * 20.0F / animationTime), 0.0F, 1.0F
         );
-        this.maxLength = MathHelper.lerp((float) AnimUtils.easeInOutSine(this.openProgress), this.getHeight(), this.length);
+        this.maxLength = Mth.lerp((float) AnimUtils.easeInOutSine(this.openProgress), this.getHeight(), this.length);
     }
 
     private void shadowScissor() {
-        float sx = BlackOut.mc.getWindow().getWidth() / 2.0F - ClickGui.width / 2.0F * ClickGui.unscaled + ClickGui.x;
-        float y1 = BlackOut.mc.getWindow().getHeight() / 2.0F - (ClickGui.height / 2.0F + 10.0F) * ClickGui.unscaled - ClickGui.y;
-        float y2 = BlackOut.mc.getWindow().getHeight() / 2.0F + (ClickGui.height / 2.0F + 10.0F) * ClickGui.unscaled - ClickGui.y;
+        float sx = BlackOut.mc.getWindow().getScreenWidth() / 2.0F - ClickGui.width / 2.0F * ClickGui.unscaled + ClickGui.x;
+        float y1 = BlackOut.mc.getWindow().getScreenHeight() / 2.0F - (ClickGui.height / 2.0F + 10.0F) * ClickGui.unscaled - ClickGui.y;
+        float y2 = BlackOut.mc.getWindow().getScreenHeight() / 2.0F + (ClickGui.height / 2.0F + 10.0F) * ClickGui.unscaled - ClickGui.y;
         GlStateManager._enableScissorTest();
         GlStateManager._scissorBox((int) sx, (int) y1, (int) (ClickGui.width * ClickGui.unscaled), (int) Math.abs(y1 - y2));
     }
@@ -362,9 +361,9 @@ public class ModuleComponent extends Component {
     private void scissor() {
         float minY = Math.max(0, this.y);
         float maxY = Math.min(ClickGui.height, this.y + this.maxLength);
-        float sx = BlackOut.mc.getWindow().getWidth() / 2.0F - (ClickGui.width / 2.0F - this.x + 5.0F) * ClickGui.unscaled + ClickGui.x;
-        float y1 = BlackOut.mc.getWindow().getHeight() / 2.0F - (ClickGui.height / 2.0F - (ClickGui.height - maxY) + 5.0F) * ClickGui.unscaled - ClickGui.y;
-        float y2 = BlackOut.mc.getWindow().getHeight() / 2.0F + (ClickGui.height / 2.0F - minY + 10.0F) * ClickGui.unscaled - ClickGui.y;
+        float sx = BlackOut.mc.getWindow().getScreenWidth() / 2.0F - (ClickGui.width / 2.0F - this.x + 5.0F) * ClickGui.unscaled + ClickGui.x;
+        float y1 = BlackOut.mc.getWindow().getScreenHeight() / 2.0F - (ClickGui.height / 2.0F - (ClickGui.height - maxY) + 5.0F) * ClickGui.unscaled - ClickGui.y;
+        float y2 = BlackOut.mc.getWindow().getScreenHeight() / 2.0F + (ClickGui.height / 2.0F - minY + 10.0F) * ClickGui.unscaled - ClickGui.y;
         GlStateManager._scissorBox(
                 (int) sx, (int) Math.ceil(y1), (int) ((this.width + 10.0F) * ClickGui.unscaled), (int) Math.ceil(y1 > y2 ? 0.0 : Math.abs(y1 - y2))
         );
@@ -373,19 +372,19 @@ public class ModuleComponent extends Component {
     private float getX() {
         float closedX = GuiSettings.getInstance().centerXClosed.get()
                 ? this.x + this.width / 2.0F - BlackOut.FONT.getWidth(this.module.getDisplayName()) / 2.0F * this.getScale()
-                : MathHelper.lerp(
+                : Mth.lerp(
                 GuiSettings.getInstance().moduleXClosed.get().floatValue(),
                 this.x + 8,
                 this.x + this.width - this.getScale() * BlackOut.FONT.getWidth(this.module.getDisplayName()) - 38.0F
         );
         float openX = GuiSettings.getInstance().centerX.get()
                 ? this.x + this.width / 2.0F - BlackOut.FONT.getWidth(this.module.getDisplayName()) / 2.0F * this.getScale()
-                : MathHelper.lerp(
+                : Mth.lerp(
                 GuiSettings.getInstance().moduleX.get().floatValue(),
                 this.x + 8,
                 this.x + this.width - this.getScale() * BlackOut.FONT.getWidth(this.module.getDisplayName()) - 38.0F
         );
-        return MathHelper.lerp(this.openProgress, closedX, openX);
+        return Mth.lerp(this.openProgress, closedX, openX);
     }
 
     private float getY() {
@@ -394,7 +393,7 @@ public class ModuleComponent extends Component {
 
     private float getScale() {
         float fs = GuiSettings.getInstance().fontScale.get().floatValue();
-        float multiplier = MathHelper.lerp(
+        float multiplier = Mth.lerp(
                 this.openProgress,
                 GuiSettings.getInstance().moduleScaleClosed.get().floatValue(),
                 GuiSettings.getInstance().moduleScale.get().floatValue()
@@ -406,7 +405,7 @@ public class ModuleComponent extends Component {
         float currentScale = this.getScale();
         float minH = (BlackOut.FONT.getHeight() * currentScale) + (15.0F * currentScale);
 
-        float settingH = MathHelper.lerp(
+        float settingH = Mth.lerp(
                 this.openProgress,
                 GuiSettings.getInstance().moduleHeightClosed.get().floatValue(),
                 GuiSettings.getInstance().moduleHeight.get().floatValue()

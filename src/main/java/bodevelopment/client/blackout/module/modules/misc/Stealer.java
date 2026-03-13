@@ -17,19 +17,25 @@ import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.ItemUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.EquippableComponent;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.*;
-import net.minecraft.screen.GenericContainerScreenHandler;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-
+import net.minecraft.client.gui.screens.inventory.ContainerScreen;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.AxeItem;
+import net.minecraft.world.item.DiggerItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.PickaxeItem;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.equipment.Equippable;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -103,8 +109,8 @@ public class Stealer extends Module {
             return false;
         } else if (!this.stopRotations.get()) {
             return false;
-        } else if (BlackOut.mc.currentScreen instanceof GenericContainerScreen screen) {
-            return (!this.chestCheck.get() || screen.getTitle().getString().toLowerCase().contains("chest")) && BlackOut.mc.player.currentScreenHandler instanceof GenericContainerScreenHandler;
+        } else if (BlackOut.mc.screen instanceof ContainerScreen screen) {
+            return (!this.chestCheck.get() || screen.getTitle().getString().toLowerCase().contains("chest")) && BlackOut.mc.player.containerMenu instanceof ChestMenu;
         } else {
             return false;
         }
@@ -113,12 +119,12 @@ public class Stealer extends Module {
     public boolean isSilenting() {
         if (!this.enabled) {
             return false;
-        } else if (BlackOut.mc.player == null || BlackOut.mc.world == null) {
+        } else if (BlackOut.mc.player == null || BlackOut.mc.level == null) {
             return false;
         } else if (!this.silent.get()) {
             return false;
-        } else if (BlackOut.mc.currentScreen instanceof GenericContainerScreen screen) {
-            return (!this.chestCheck.get() || screen.getTitle().getString().toLowerCase().contains("chest")) && BlackOut.mc.player.currentScreenHandler instanceof GenericContainerScreenHandler;
+        } else if (BlackOut.mc.screen instanceof ContainerScreen screen) {
+            return (!this.chestCheck.get() || screen.getTitle().getString().toLowerCase().contains("chest")) && BlackOut.mc.player.containerMenu instanceof ChestMenu;
         } else {
             return false;
         }
@@ -134,7 +140,7 @@ public class Stealer extends Module {
     @Event
     public void onRender(RenderEvent.World.Pre event) {
         if (this.autoOpen.get()) {
-            this.calc(BlackOut.mc.getRenderTickCounter().getTickDelta(true));
+            this.calc(BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true));
         }
     }
 
@@ -149,8 +155,8 @@ public class Stealer extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            if (!(BlackOut.mc.player.currentScreenHandler instanceof GenericContainerScreenHandler handler && BlackOut.mc.currentScreen instanceof GenericContainerScreen screen)) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            if (!(BlackOut.mc.player.containerMenu instanceof ChestMenu handler && BlackOut.mc.screen instanceof ContainerScreen screen)) {
                 this.setOpen(false);
                 if (this.autoOpen.get()) {
                     this.calc(1.0F);
@@ -167,7 +173,7 @@ public class Stealer extends Module {
                     }
 
                     if (this.close.get() && !SettingUtils.inInteractRange(this.prevOpened)) {
-                        BlackOut.mc.player.closeHandledScreen();
+                        BlackOut.mc.player.closeContainer();
                     }
                 }
 
@@ -201,21 +207,21 @@ public class Stealer extends Module {
                 int x = i % d - this.calcR;
                 int y = i / d % d - this.calcR;
                 int z = i / d / d % d - this.calcR;
-                BlockPos pos = this.calcMiddle.add(x, y, z);
+                BlockPos pos = this.calcMiddle.offset(x, y, z);
                 this.calcPos(pos);
             }
         }
     }
 
     private void calcPos(BlockPos pos) {
-        BlockState state = BlackOut.mc.world.getBlockState(pos);
+        BlockState state = BlackOut.mc.level.getBlockState(pos);
         if (state.getBlock() == Blocks.CHEST) {
             if (!this.opened.contains(pos)) {
                 if (!this.retryTimers.contains(pos)) {
                     if (SettingUtils.inInteractRange(pos)) {
                         Direction dir = SettingUtils.getPlaceOnDirection(pos);
                         if (dir != null) {
-                            double dist = BlackOut.mc.player.getEyePos().squaredDistanceTo(pos.toCenterPos());
+                            double dist = BlackOut.mc.player.getEyePosition().distanceToSqr(pos.getCenter());
                             if (!(dist > this.bestDist)) {
                                 this.bestDist = dist;
                                 this.bestChest = pos;
@@ -233,7 +239,7 @@ public class Stealer extends Module {
             if (!(System.currentTimeMillis() - this.openStateChange < this.closeDelay.get() * 1000.0)) {
                 if (this.bestChest != null) {
                     if (!SettingUtils.shouldRotate(RotationType.Interact) || this.rotateBlock(this.bestChest, this.bestDir, RotationType.Interact, "open")) {
-                        this.interactBlock(Hand.MAIN_HAND, this.bestChest.toCenterPos(), this.bestDir, this.bestChest);
+                        this.interactBlock(InteractionHand.MAIN_HAND, this.bestChest.getCenter(), this.bestDir, this.bestChest);
                         this.retryTimers.add(this.bestChest, this.retryTime.get());
                         this.prevOpened = this.bestChest;
                         this.prevOpen = System.currentTimeMillis();
@@ -244,7 +250,7 @@ public class Stealer extends Module {
     }
 
     private void startCalc() {
-        this.calcMiddle = BlockPos.ofFloored(BlackOut.mc.player.getEyePos());
+        this.calcMiddle = BlockPos.containing(BlackOut.mc.player.getEyePosition());
         this.calcR = (int) Math.ceil(SettingUtils.maxInteractRange());
         this.progress = 0;
         this.bestDist = Double.MAX_VALUE;
@@ -252,13 +258,13 @@ public class Stealer extends Module {
         this.bestDir = null;
     }
 
-    private void updateClose(GenericContainerScreenHandler handler) {
+    private void updateClose(ChestMenu handler) {
         if (this.close.get() && this.movable.isEmpty()) {
-            BlackOut.mc.player.closeHandledScreen();
+            BlackOut.mc.player.closeContainer();
         }
     }
 
-    private void updateMoving(GenericContainerScreenHandler handler) {
+    private void updateMoving(ChestMenu handler) {
         this.movesLeft = this.movesLeft + this.speed.get() / 20.0;
 
         while ((this.movesLeft > 0.0 || this.instant.get()) && !this.movable.isEmpty()) {
@@ -268,15 +274,15 @@ public class Stealer extends Module {
         this.movesLeft = Math.min(this.movesLeft, 1.0);
     }
 
-    private void move(GenericContainerScreenHandler handler, Slot slot) {
-        BlackOut.mc.interactionManager.clickSlot(handler.syncId, slot.index, 0, SlotActionType.QUICK_MOVE, BlackOut.mc.player);
+    private void move(ChestMenu handler, Slot slot) {
+        BlackOut.mc.gameMode.handleInventoryMouseClick(handler.containerId, slot.index, 0, ClickType.QUICK_MOVE, BlackOut.mc.player);
         this.movesLeft--;
     }
 
-    private void update(GenericContainerScreenHandler handler) {
+    private void update(ChestMenu handler) {
         this.movable.clear();
-        this.getSlots(this.container, handler, true, 0, handler.getRows() * 9);
-        this.getSlots(this.inventory, handler, false, handler.getRows() * 9, handler.getStacks().size());
+        this.getSlots(this.container, handler, true, 0, handler.getRowCount() * 9);
+        this.getSlots(this.inventory, handler, false, handler.getRowCount() * 9, handler.getItems().size());
         if (this.bestWeapon.get()) {
             Slot bestWeapon = this.getBestWeapon();
             if (bestWeapon != null) {
@@ -302,7 +308,7 @@ public class Stealer extends Module {
         if (!this.tools.get()) {
             this.dump(slot -> {
                 ItemStack stack = slot.stack;
-                boolean isTool = stack.contains(DataComponentTypes.TOOL);
+                boolean isTool = stack.has(DataComponents.TOOL);
 
                 return isTool
                         && !this.weaponPredicate.test(stack)
@@ -311,7 +317,7 @@ public class Stealer extends Module {
         } else {
             this.steal(slot -> {
                 ItemStack stack = slot.stack;
-                boolean isTool = stack.contains(DataComponentTypes.TOOL);
+                boolean isTool = stack.has(DataComponents.TOOL);
 
                 return isTool
                         && !this.weaponPredicate.test(stack)
@@ -342,7 +348,7 @@ public class Stealer extends Module {
                             if (slot == best) return false;
 
                             ItemStack stack = slot.stack;
-                            EquippableComponent equippable = stack.get(DataComponentTypes.EQUIPPABLE);
+                            Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
 
                             return equippable != null && equippable.slot() == equipmentSlot;
                         });
@@ -354,7 +360,7 @@ public class Stealer extends Module {
         this.dump(slot -> {
             if (slot.stack().isEmpty()) {
                 return false;
-            } else if (!this.bestPickaxe.get() && slot.stack.getItem() instanceof MiningToolItem) {
+            } else if (!this.bestPickaxe.get() && slot.stack.getItem() instanceof DiggerItem) {
                 return false;
             } else if (slot.stack.getItem() instanceof ArmorItem) {
                 return false;
@@ -365,13 +371,13 @@ public class Stealer extends Module {
     }
 
     private Slot getBestArmor(EquipmentSlot equipmentSlot, List<Slot> list) {
-        Slot bestSlot = new Slot(false, -1, BlackOut.mc.player.getInventory().getArmorStack(equipmentSlot.getEntitySlotId()));
+        Slot bestSlot = new Slot(false, -1, BlackOut.mc.player.getInventory().getArmor(equipmentSlot.getIndex()));
         double bestValue = ItemUtils.getArmorValue(bestSlot.stack);
 
         for (Slot slot : list.stream()
                 .filter(slotx -> {
                     ItemStack stack = slotx.stack;
-                    EquippableComponent equippable = stack.get(DataComponentTypes.EQUIPPABLE);
+                    Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
                     return equippable != null && equippable.slot() == equipmentSlot;
                 })
                 .toList()) {
@@ -429,10 +435,10 @@ public class Stealer extends Module {
         return bestSlot;
     }
 
-    private void getSlots(List<Slot> slots, GenericContainerScreenHandler handler, boolean container, int start, int end) {
+    private void getSlots(List<Slot> slots, ChestMenu handler, boolean container, int start, int end) {
         slots.clear();
 
-        for (ItemStack stack : handler.getStacks().subList(start, end)) {
+        for (ItemStack stack : handler.getItems().subList(start, end)) {
             slots.add(new Slot(container, start++, stack));
         }
     }

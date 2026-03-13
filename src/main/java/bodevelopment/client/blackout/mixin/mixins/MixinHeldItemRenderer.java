@@ -4,14 +4,14 @@ import bodevelopment.client.blackout.module.modules.combat.offensive.Aura;
 import bodevelopment.client.blackout.module.modules.misc.Zoomify;
 import bodevelopment.client.blackout.module.modules.visual.misc.SwingModifier;
 import bodevelopment.client.blackout.module.modules.visual.misc.ViewModel;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.item.HeldItemRenderer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ModelTransformationMode;
-import net.minecraft.util.Hand;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.renderer.ItemInHandRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -22,32 +22,32 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
-@Mixin(HeldItemRenderer.class)
+@Mixin(ItemInHandRenderer.class)
 public abstract class MixinHeldItemRenderer {
     @Unique
-    private MatrixStack matrices;
+    private PoseStack matrices;
     @Unique
     private ItemStack item;
     @Unique
     private boolean mainHand;
     @Unique
-    private VertexConsumerProvider vertexConsumers;
+    private MultiBufferSource vertexConsumers;
     @Unique
     private int light;
 
-    @Shadow public abstract void renderItem(LivingEntity entity, ItemStack stack, ModelTransformationMode renderMode, boolean leftHanded, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light);
+    @Shadow public abstract void renderItem(LivingEntity entity, ItemStack stack, ItemDisplayContext renderMode, boolean leftHanded, PoseStack matrices, MultiBufferSource vertexConsumers, int light);
 
     @ModifyArgs(
-            method = "renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;Lnet/minecraft/client/network/ClientPlayerEntity;I)V",
+            method = "renderHandsWithItems",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/render/item/HeldItemRenderer;renderFirstPersonItem(Lnet/minecraft/client/network/AbstractClientPlayerEntity;FFLnet/minecraft/util/Hand;FLnet/minecraft/item/ItemStack;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V"
+                    target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderArmWithItem(Lnet/minecraft/client/player/AbstractClientPlayer;FFLnet/minecraft/world/InteractionHand;FLnet/minecraft/world/item/ItemStack;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V"
             )
     )
     private void setArgs(Args args) {
         this.matrices = args.get(7);
         this.item = args.get(5);
-        this.mainHand = args.get(3) == Hand.MAIN_HAND;
+        this.mainHand = args.get(3) == InteractionHand.MAIN_HAND;
         this.vertexConsumers = args.get(8);
         this.light = args.get(9);
 
@@ -58,17 +58,17 @@ public abstract class MixinHeldItemRenderer {
         }
     }
 
-    @Inject(method = "renderFirstPersonItem", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "renderArmWithItem", at = @At("HEAD"), cancellable = true)
     private void preRenderItem(
-            AbstractClientPlayerEntity player,
+            AbstractClientPlayer player,
             float tickDelta,
             float pitch,
-            Hand hand,
+            InteractionHand hand,
             float swingProgress,
             ItemStack item,
             float equipProgress,
-            MatrixStack matrices,
-            VertexConsumerProvider vertexConsumers,
+            PoseStack matrices,
+            MultiBufferSource vertexConsumers,
             int light,
             CallbackInfo ci
     ) {
@@ -86,17 +86,17 @@ public abstract class MixinHeldItemRenderer {
         }
     }
 
-    @Inject(method = "renderFirstPersonItem", at = @At("TAIL"))
+    @Inject(method = "renderArmWithItem", at = @At("TAIL"))
     private void postRenderItem(
-            AbstractClientPlayerEntity player,
+            AbstractClientPlayer player,
             float tickDelta,
             float pitch,
-            Hand hand,
+            InteractionHand hand,
             float swingProgress,
             ItemStack item,
             float equipProgress,
-            MatrixStack matrices,
-            VertexConsumerProvider vertexConsumers,
+            PoseStack matrices,
+            MultiBufferSource vertexConsumers,
             int light,
             CallbackInfo ci
     ) {
@@ -107,13 +107,13 @@ public abstract class MixinHeldItemRenderer {
     }
 
     @Inject(
-            method = "renderFirstPersonItem",
+            method = "renderArmWithItem",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/render/item/HeldItemRenderer;renderItem(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ModelTransformationMode;ZLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V"
+                    target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V"
             )
     )
-    private void onRenderItem(AbstractClientPlayerEntity player, float tickDelta, float pitch, Hand hand, float swingProgress, ItemStack item, float equipProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
+    private void onRenderItem(AbstractClientPlayer player, float tickDelta, float pitch, InteractionHand hand, float swingProgress, ItemStack item, float equipProgress, PoseStack matrices, MultiBufferSource vertexConsumers, int light, CallbackInfo ci) {
         ViewModel viewModel = ViewModel.getInstance();
         if (viewModel.enabled) {
             viewModel.scaleAndRotate(matrices, hand);
@@ -121,14 +121,14 @@ public abstract class MixinHeldItemRenderer {
     }
 
     @Inject(
-            method = "renderFirstPersonItem",
+            method = "renderArmWithItem",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/render/item/HeldItemRenderer;renderItem(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ModelTransformationMode;ZLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V",
+                    target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V",
                     shift = At.Shift.AFTER
             )
     )
-    private void onRenderItemPost(AbstractClientPlayerEntity player, float tickDelta, float pitch, Hand hand, float swingProgress, ItemStack item, float equipProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
+    private void onRenderItemPost(AbstractClientPlayer player, float tickDelta, float pitch, InteractionHand hand, float swingProgress, ItemStack item, float equipProgress, PoseStack matrices, MultiBufferSource vertexConsumers, int light, CallbackInfo ci) {
         ViewModel viewModel = ViewModel.getInstance();
         if (viewModel.enabled) {
             viewModel.postRender(matrices);
@@ -136,17 +136,17 @@ public abstract class MixinHeldItemRenderer {
     }
 
     @Redirect(
-            method = "renderFirstPersonItem",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;isUsingSpyglass()Z")
+            method = "renderArmWithItem",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;isScoping()Z")
     )
-    private boolean redirectRiptideTransform(AbstractClientPlayerEntity instance) {
-        if (instance.isUsingSpyglass()) {
+    private boolean redirectRiptideTransform(AbstractClientPlayer instance) {
+        if (instance.isScoping()) {
             return true;
         } else if (this.mainHand && Aura.getInstance().blockTransform(this.matrices)) {
             this.renderItem(
-                    instance, this.item, this.mainHand ? ModelTransformationMode.FIRST_PERSON_RIGHT_HAND : ModelTransformationMode.FIRST_PERSON_LEFT_HAND, !this.mainHand, this.matrices, this.vertexConsumers, this.light
+                    instance, this.item, this.mainHand ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND, !this.mainHand, this.matrices, this.vertexConsumers, this.light
             );
-            this.matrices.pop();
+            this.matrices.popPose();
             return true;
         } else {
             return false;

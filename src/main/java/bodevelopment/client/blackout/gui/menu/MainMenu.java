@@ -12,22 +12,21 @@ import bodevelopment.client.blackout.util.FileUtils;
 import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.SoundUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
-import net.minecraft.client.gui.screen.option.OptionsScreen;
-import net.minecraft.client.gui.screen.world.SelectWorldScreen;
-import net.minecraft.client.util.math.MatrixStack;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.Random;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
+import net.minecraft.client.gui.screens.options.OptionsScreen;
+import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 
 public class MainMenu {
     public static final int EMPTY_COLOR = new Color(0, 0, 0, 0).getRGB();
     private static final MainMenu INSTANCE = new MainMenu();
     public final String[] buttonNames = new String[]{"Singleplayer", "Multiplayer", "AltManager", "Options", "Quit"};
-    private final MatrixStack stack = new MatrixStack();
+    private final PoseStack stack = new PoseStack();
     private final ClickGui clickGui = Managers.CLICK_GUI.CLICK_GUI;
     private TitleScreen titleScreen;
     private float windowHeight;
@@ -73,11 +72,11 @@ public class MainMenu {
             },
             () -> {
                 Managers.ALT.switchToSelected();
-                this.startExit(new MultiplayerScreen(this.titleScreen));
+                this.startExit(new JoinMultiplayerScreen(this.titleScreen));
             },
             () -> this.startExit(new AltManagerScreen(this.titleScreen)),
             () -> this.startExit(new OptionsScreen(this.titleScreen, BlackOut.mc.options)),
-            BlackOut.mc::scheduleStop
+            BlackOut.mc::stop
     };
 
     private void startExit(Screen screen) {
@@ -86,7 +85,7 @@ public class MainMenu {
     }
 
     public static void init() {
-        BlackOut.EVENT_BUS.subscribe(INSTANCE, () -> !(BlackOut.mc.currentScreen instanceof TitleScreen));
+        BlackOut.EVENT_BUS.subscribe(INSTANCE, () -> !(BlackOut.mc.screen instanceof TitleScreen));
     }
 
     public static MainMenu getInstance() {
@@ -137,7 +136,7 @@ public class MainMenu {
         );
 
         if (guiAlpha > 0.01F) {
-            this.stack.push();
+            this.stack.pushPose();
             float bigW = 2000.0F;
             float bigH = this.windowHeight;
 
@@ -147,7 +146,7 @@ public class MainMenu {
             );
 
             RenderUtils.quad(this.stack, -bigW, -bigH, bigW * 2.0F, bigH * 2.0F, new Color(0, 0, 0, (int) (guiAlpha * 130)).getRGB());
-            this.stack.pop();
+            this.stack.popPose();
         }
 
         this.endRender();
@@ -155,17 +154,17 @@ public class MainMenu {
         if (globalFade < 1.0F) {
             int alpha = (int) ((1.0F - globalFade) * 255.0F);
             int blackColor = (alpha << 24);
-            float screenW = (float) BlackOut.mc.getWindow().getWidth();
-            float screenH = (float) BlackOut.mc.getWindow().getHeight();
+            float screenW = (float) BlackOut.mc.getWindow().getScreenWidth();
+            float screenH = (float) BlackOut.mc.getWindow().getScreenHeight();
 
-            stack.push();
+            stack.pushPose();
             RenderUtils.unGuiScale(stack);
             RenderUtils.quad(stack, 0, 0, screenW, screenH, blackColor);
-            stack.pop();
+            stack.popPose();
         }
 
         if (isGuiOpen) {
-            this.clickGui.render(new DrawContext(BlackOut.mc, BlackOut.mc.getBufferBuilders().getEntityVertexConsumers()), mouseX, mouseY, delta);
+            this.clickGui.render(new GuiGraphics(BlackOut.mc, BlackOut.mc.renderBuffers().bufferSource()), mouseX, mouseY, delta);
         }
     }
 
@@ -225,25 +224,25 @@ public class MainMenu {
     }
 
     private void updateWindowData() {
-        double physicalWidth = BlackOut.mc.getWindow().getWidth();
-        double physicalHeight = BlackOut.mc.getWindow().getHeight();
+        double physicalWidth = BlackOut.mc.getWindow().getScreenWidth();
+        double physicalHeight = BlackOut.mc.getWindow().getScreenHeight();
 
         this.scale = (float) (physicalWidth / 2000.0F);
         this.windowHeight = (float) (physicalHeight / physicalWidth * 2000.0F);
 
-        double logicalX = BlackOut.mc.mouse.getX();
-        double logicalY = BlackOut.mc.mouse.getY();
+        double logicalX = BlackOut.mc.mouseHandler.xpos();
+        double logicalY = BlackOut.mc.mouseHandler.ypos();
 
         this.mx = (float) ((logicalX - physicalWidth / 2.0) / this.scale);
         this.my = (float) ((logicalY - physicalHeight / 2.0) / this.scale);
     }
 
     private void startRender(float scale) {
-        this.stack.push();
+        this.stack.pushPose();
         RenderUtils.unGuiScale(this.stack);
 
-        int screenW = BlackOut.mc.getWindow().getWidth();
-        int screenH = BlackOut.mc.getWindow().getHeight();
+        int screenW = BlackOut.mc.getWindow().getScreenWidth();
+        int screenH = BlackOut.mc.getWindow().getScreenHeight();
 
         MainMenuSettings.getInstance()
                 .getRenderer()
@@ -277,12 +276,12 @@ public class MainMenu {
     }
 
     private void endRender() {
-        this.stack.pop();
+        this.stack.popPose();
     }
 
     @Event
     public void onMouse(MouseButtonEvent buttonEvent) {
-        if (BlackOut.mc.currentScreen instanceof TitleScreen && (this.clickGui.isOpen() || ClickGui.popUpDelta > 0.1F)) {
+        if (BlackOut.mc.screen instanceof TitleScreen && (this.clickGui.isOpen() || ClickGui.popUpDelta > 0.1F)) {
             this.updateWindowData();
             this.clickGui.onClick(buttonEvent);
             return;
@@ -348,7 +347,7 @@ public class MainMenu {
         return this.windowHeight;
     }
 
-    public MatrixStack getMatrixStack() {
+    public PoseStack getMatrixStack() {
         return this.stack;
     }
 

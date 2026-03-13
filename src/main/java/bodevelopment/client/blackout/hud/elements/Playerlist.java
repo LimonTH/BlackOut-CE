@@ -16,16 +16,15 @@ import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.Identifier;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
 
 public class Playerlist extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -56,8 +55,8 @@ public class Playerlist extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            this.stack.push();
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            this.stack.pushPose();
             this.setSize(Math.max(this.bgLength, 10.0F), this.y + 6.0F);
             this.currentLongest = BlackOut.FONT.getWidth("PlayersHealthPing" + (this.showPops.get() ? "pops" : ""));
             this.currentLongestPing = BlackOut.FONT.getWidth("Ping");
@@ -73,9 +72,9 @@ public class Playerlist extends HudElement {
             this.drawText(this.stack, 0.0F, 0.0F, "Players", "Health", "Ping", "Pops", true, 0.0F, 0.0F, 0.0F);
             this.y = 0.0F;
             this.players.forEach(player -> {
-                AbstractClientPlayerEntity current = (AbstractClientPlayerEntity) player;
+                AbstractClientPlayer current = (AbstractClientPlayer) player;
                 String name = this.nameMode.get().getName(current);
-                PlayerListEntry entry = BlackOut.mc.getNetworkHandler().getPlayerListEntry(current.getUuid());
+                PlayerInfo entry = BlackOut.mc.getConnection().getPlayerInfo(current.getUUID());
                 int pingValue = entry == null ? 0 : entry.getLatency();
                 float healthValue = Math.round(current.getHealth() + current.getAbsorptionAmount());
                 StatsManager.TrackerData trackerData = Managers.STATS.getStats(current);
@@ -91,18 +90,18 @@ public class Playerlist extends HudElement {
                     this.currentLongestPing = BlackOut.FONT.getWidth(ping);
                 }
 
-                this.drawFace(this.stack, 10.0F + this.y, current.getSkinTextures().texture());
+                this.drawFace(this.stack, 10.0F + this.y, current.getSkin().texture());
                 this.drawText(this.stack, 8.0F, 10.0F + this.y, name, health, ping, pops, false, healthValue, pingValue, popAmount);
                 this.y += 10.0F;
             });
             this.longest = this.currentLongest;
             this.longestPing = this.currentLongestPing;
-            this.stack.pop();
+            this.stack.popPose();
         }
     }
 
     private void drawText(
-            MatrixStack stack,
+            PoseStack stack,
             float x,
             float y,
             String string,
@@ -147,10 +146,10 @@ public class Playerlist extends HudElement {
 
     @Event
     public void onTickPost(TickEvent.Post event) {
-        if (BlackOut.mc.world != null && BlackOut.mc.player != null) {
+        if (BlackOut.mc.level != null && BlackOut.mc.player != null) {
             this.players.clear();
-            BlackOut.mc.world.entityList.forEach(entity -> {
-                if (entity instanceof AbstractClientPlayerEntity && this.shouldRender(entity)) {
+            BlackOut.mc.level.tickingEntities.forEach(entity -> {
+                if (entity instanceof AbstractClientPlayer && this.shouldRender(entity)) {
                     this.players.add(entity);
                 }
             });
@@ -160,13 +159,13 @@ public class Playerlist extends HudElement {
 
     public boolean shouldRender(Entity entity) {
         AntiBot antiBot = AntiBot.getInstance();
-        return (!antiBot.enabled || antiBot.mode.get() != AntiBot.HandlingMode.Ignore || !(entity instanceof AbstractClientPlayerEntity player) || !antiBot.getBots().contains(player)) && entity != BlackOut.mc.player && entity instanceof AbstractClientPlayerEntity;
+        return (!antiBot.enabled || antiBot.mode.get() != AntiBot.HandlingMode.Ignore || !(entity instanceof AbstractClientPlayer player) || !antiBot.getBots().contains(player)) && entity != BlackOut.mc.player && entity instanceof AbstractClientPlayer;
     }
 
-    private void drawFace(MatrixStack stack, float y, Identifier renderSkin) {
+    private void drawFace(PoseStack stack, float y, ResourceLocation renderSkin) {
         float size = 6.0F;
         if (renderSkin != null) {
-            TextureRenderer.renderQuad(stack, 0.0F, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, BlackOut.mc.getTextureManager().getTexture(renderSkin).getGlId());
+            TextureRenderer.renderQuad(stack, 0.0F, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, BlackOut.mc.getTextureManager().getTexture(renderSkin).getId());
         }
     }
 

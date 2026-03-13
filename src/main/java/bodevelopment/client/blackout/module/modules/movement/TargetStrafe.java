@@ -12,9 +12,9 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class TargetStrafe extends Module {
     private static TargetStrafe INSTANCE;
@@ -31,7 +31,7 @@ public class TargetStrafe extends Module {
     private boolean valid;
     private boolean right = false;
     private int sinceCollide = 0;
-    private PlayerEntity target;
+    private Player target;
 
     public TargetStrafe() {
         super("Target Strafe", "Maintains a circular orbital path around a target to maximize evasion during combat.", SubCategory.MOVEMENT, true);
@@ -42,11 +42,11 @@ public class TargetStrafe extends Module {
         return INSTANCE;
     }
 
-    public void onMove(Vec3d movement) {
+    public void onMove(Vec3 movement) {
         this.sinceCollide++;
         this.target = this.getTarget();
         if (this.target != null) {
-            double speed = movement.horizontalLength();
+            double speed = movement.horizontalDistance();
             if (!(speed <= 0.0)) {
                 double yaw = this.getYaw(speed);
                 if (this.valid) {
@@ -85,7 +85,7 @@ public class TargetStrafe extends Module {
     }
 
     private void calc(boolean right, double movement) {
-        double distance = BlackOut.mc.player.getPos().subtract(this.target.getPos()).horizontalLength();
+        double distance = BlackOut.mc.player.position().subtract(this.target.position()).horizontalDistance();
 
         for (double delta = -1.0; delta <= 1.0; delta += 0.01) {
             double d = distance + delta * movement * this.approach.get();
@@ -93,16 +93,16 @@ public class TargetStrafe extends Module {
             if (!(diff >= this.closest)) {
                 Double yaw = this.doTheMathing(movement, d, distance, right);
                 if (yaw != null) {
-                    Vec3d vec = new Vec3d(d * Math.cos(yaw), 0.0, d * Math.sin(yaw)).add(BlackOut.mc.player.getPos());
+                    Vec3 vec = new Vec3(d * Math.cos(yaw), 0.0, d * Math.sin(yaw)).add(BlackOut.mc.player.position());
                     double width = 0.3;
                     double height = 1.8;
-                    Box box = new Box(
-                            vec.getX() - width,
-                            vec.getY(),
-                            vec.getZ() - width,
-                            vec.getX() + width,
-                            vec.getY() + height,
-                            vec.getZ() + width
+                    AABB box = new AABB(
+                            vec.x() - width,
+                            vec.y(),
+                            vec.z() - width,
+                            vec.x() + width,
+                            vec.y() + height,
+                            vec.z() + width
                     );
                     if (!OLEPOSSUtils.inLava(box) && !this.wouldFall(box, this.target.getY())) {
                         this.closest = diff;
@@ -119,19 +119,19 @@ public class TargetStrafe extends Module {
         return Double.isNaN(angle) ? null : Math.toRadians(RotationUtils.getYaw(this.target)) + Math.abs(angle) * (reversed ? 1 : -1) + (float) (Math.PI / 2);
     }
 
-    private boolean wouldFall(Box box, double y) {
+    private boolean wouldFall(AABB box, double y) {
         double diff = Math.min(BlackOut.mc.player.getY() - y, 0.0);
-        return !OLEPOSSUtils.inside(BlackOut.mc.player, box.stretch(0.0, diff - 2.5, 0.0));
+        return !OLEPOSSUtils.inside(BlackOut.mc.player, box.expandTowards(0.0, diff - 2.5, 0.0));
     }
 
-    private PlayerEntity getTarget() {
+    private Player getTarget() {
         if (this.auraTarget.get()) {
             return Aura.targetedPlayer;
         } else {
-            PlayerEntity closest = null;
+            Player closest = null;
             double closestDist = 0.0;
 
-            for (PlayerEntity player : BlackOut.mc.world.getPlayers()) {
+            for (Player player : BlackOut.mc.level.players()) {
                 if (player != BlackOut.mc.player && !Managers.FRIENDS.isFriend(player)) {
                     double dist = BlackOut.mc.player.distanceTo(player);
                     if (!(dist > this.range.get()) && (closest == null || !(dist > closestDist))) {

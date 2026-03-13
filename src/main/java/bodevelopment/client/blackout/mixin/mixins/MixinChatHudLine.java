@@ -1,17 +1,17 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.interfaces.mixin.IChatHudLine;
-import net.minecraft.client.gui.hud.ChatHudLine;
-import net.minecraft.text.Text;
+import net.minecraft.client.GuiMessage;
+import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
-@Mixin(ChatHudLine.class)
+@Mixin(GuiMessage.class)
 public class MixinChatHudLine implements IChatHudLine {
     @Unique
     private int id;
     @Unique
-    private Text message;
+    private Component message;
     @Unique
     private int spam;
 
@@ -26,12 +26,12 @@ public class MixinChatHudLine implements IChatHudLine {
     }
 
     @Override
-    public Text blackout_Client$getMessage() {
+    public Component blackout_Client$getMessage() {
         return this.message;
     }
 
     @Override
-    public void blackout_Client$setMessage(Text message) {
+    public void blackout_Client$setMessage(Component message) {
         this.message = message;
     }
 

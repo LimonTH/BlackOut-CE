@@ -1,11 +1,11 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.interfaces.mixin.IUUIDHolder;
-import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
+import net.minecraft.client.renderer.entity.state.PlayerRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
-@Mixin(PlayerEntityRenderState.class)
+@Mixin(PlayerRenderState.class)
 public class MixinPlayerEntityRenderState implements IUUIDHolder {
     @Unique
     private java.util.UUID blackout$uuid;

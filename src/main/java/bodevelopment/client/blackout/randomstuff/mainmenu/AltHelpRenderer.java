@@ -2,13 +2,13 @@ package bodevelopment.client.blackout.randomstuff.mainmenu;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.MathHelper;
+import com.mojang.blaze3d.vertex.PoseStack;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.util.Mth;
 
 public class AltHelpRenderer {
     private final List<String> helpLines = new ArrayList<>();
@@ -41,7 +41,7 @@ public class AltHelpRenderer {
         helpLines.add("Script - You Script (Offline)");
     }
 
-    public void render(MatrixStack stack, float mx, float my) {
+    public void render(PoseStack stack, float mx, float my) {
         if (helpLines.isEmpty()) init();
 
         float fontScale = 1.4F;
@@ -49,7 +49,7 @@ public class AltHelpRenderer {
 
         float height = 65.0F + (helpLines.size() * fontHeight) + 20.0F;
 
-        boolean mousePressed = GLFW.glfwGetMouseButton(BlackOut.mc.getWindow().getHandle(), 0) == 1;
+        boolean mousePressed = GLFW.glfwGetMouseButton(BlackOut.mc.getWindow().getWindow(), 0) == 1;
         if (this.dragging) {
             if (mousePressed) {
                 this.targetX = mx - this.dragOffsetX;
@@ -65,10 +65,10 @@ public class AltHelpRenderer {
             }
         }
 
-        this.helpX = MathHelper.lerp(0.2F, this.helpX, this.targetX);
-        this.helpY = MathHelper.lerp(0.2F, this.helpY, this.targetY);
+        this.helpX = Mth.lerp(0.2F, this.helpX, this.targetX);
+        this.helpY = Mth.lerp(0.2F, this.helpY, this.targetY);
 
-        stack.push();
+        stack.pushPose();
         stack.translate(this.helpX, this.helpY, 0.0F);
 
         RenderUtils.roundedShadow(stack, 0.0F, 0.0F, width, height, 15.0F, 15.0F, new Color(0, 0, 0, 120).getRGB());
@@ -90,6 +90,6 @@ public class AltHelpRenderer {
             BlackOut.FONT.text(stack, line, fontScale, 20.0F, 52.0F + (i * fontHeight), color, false, false);
         }
 
-        stack.pop();
+        stack.popPose();
     }
 }

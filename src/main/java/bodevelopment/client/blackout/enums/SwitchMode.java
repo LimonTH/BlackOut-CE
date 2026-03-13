@@ -2,10 +2,9 @@ package bodevelopment.client.blackout.enums;
 
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.util.InvUtils;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-
 import java.util.function.Predicate;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 public enum SwitchMode {
     Disabled(false, false),

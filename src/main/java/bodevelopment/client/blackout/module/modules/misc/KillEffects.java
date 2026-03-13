@@ -7,11 +7,11 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LightningEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LightningBolt;
+import net.minecraft.world.entity.player.Player;
 
 public class KillEffects extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
@@ -27,21 +27,21 @@ public class KillEffects extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.ticks++;
             if (this.ticks >= this.tickDelay.get()) {
-                for (PlayerEntity player : BlackOut.mc.world.getPlayers()) {
+                for (Player player : BlackOut.mc.level.players()) {
                     if (player != BlackOut.mc.player
-                            && player.getPos().distanceTo(BlackOut.mc.player.getPos()) <= this.range.get()
-                            && (player.getHealth() <= 0.0F || player.isDead())) {
+                            && player.position().distanceTo(BlackOut.mc.player.position()) <= this.range.get()
+                            && (player.getHealth() <= 0.0F || player.isDeadOrDying())) {
                         this.ticks = 0;
-                        LightningEntity lightning = new LightningEntity(EntityType.LIGHTNING_BOLT, BlackOut.mc.world);
-                        lightning.setPosition(player.getX(), player.getY(), player.getZ());
-                        BlackOut.mc.world.addEntity(lightning);
+                        LightningBolt lightning = new LightningBolt(EntityType.LIGHTNING_BOLT, BlackOut.mc.level);
+                        lightning.setPos(player.getX(), player.getY(), player.getZ());
+                        BlackOut.mc.level.addEntity(lightning);
                         BlackOut.mc
-                                .world
-                                .playSound(
-                                        player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER, SoundCategory.WEATHER, 1.0F, 1.0F, true
+                                .level
+                                .playLocalSound(
+                                        player.getX(), player.getY(), player.getZ(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.WEATHER, 1.0F, 1.0F, true
                                 );
                     }
                 }

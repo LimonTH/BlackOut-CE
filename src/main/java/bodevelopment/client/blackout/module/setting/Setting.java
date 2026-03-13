@@ -4,8 +4,7 @@ import bodevelopment.client.blackout.interfaces.functional.SingleOut;
 import bodevelopment.client.blackout.manager.Managers;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.minecraft.client.util.math.MatrixStack;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.function.Consumer;
 
 public class Setting<T> {
@@ -21,7 +20,7 @@ public class Setting<T> {
     protected float width = 0.0F;
     protected float frameTime = 0.0F;
     private Consumer<T> changeListener = null;
-    protected MatrixStack stack = null;
+    protected PoseStack stack = null;
     private SingleOut<Boolean> visibilityOverride = null;
 
     public Setting(String name, T val, String description, SingleOut<Boolean> visible) {
@@ -58,7 +57,7 @@ public class Setting<T> {
         return this.visible == null || this.visible.get();
     }
 
-    public float onRender(MatrixStack stack, float frameTime, float width, float x, float y, double mx, double my, boolean shouldRender) {
+    public float onRender(PoseStack stack, float frameTime, float width, float x, float y, double mx, double my, boolean shouldRender) {
         this.stack = stack;
         this.frameTime = frameTime;
         this.x = x;

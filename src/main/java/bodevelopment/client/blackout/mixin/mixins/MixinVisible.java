@@ -1,16 +1,16 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.interfaces.mixin.IVisible;
-import net.minecraft.client.gui.hud.ChatHudLine;
+import net.minecraft.client.GuiMessage;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
-@Mixin(ChatHudLine.Visible.class)
+@Mixin(GuiMessage.Line.class)
 public class MixinVisible implements IVisible {
     @Unique
     private int id;
     @Unique
-    private ChatHudLine line;
+    private GuiMessage line;
 
     @Override
     public void blackout_Client$set(int id) {
@@ -23,7 +23,7 @@ public class MixinVisible implements IVisible {
     }
 
     @Override
-    public boolean blackout_Client$messageEquals(ChatHudLine other) {
+    public boolean blackout_Client$messageEquals(GuiMessage other) {
         if (this.line == null) {
             return false;
         }
@@ -31,7 +31,7 @@ public class MixinVisible implements IVisible {
     }
 
     @Override
-    public void blackout_Client$setLine(ChatHudLine line) {
+    public void blackout_Client$setLine(GuiMessage line) {
         this.line = line;
     }
 }

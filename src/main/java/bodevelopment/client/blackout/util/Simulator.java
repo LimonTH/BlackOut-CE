@@ -1,15 +1,15 @@
 package bodevelopment.client.blackout.util;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class Simulator {
     private static final double MAX_WATER_SPEED = 0.197;
     private static final double MAX_LAVA_SPEED = 0.0753;
 
-    public static Box extrapolate(SimulationContext ctx) {
+    public static AABB extrapolate(SimulationContext ctx) {
         ctx.onGround = ctx.isOnGround();
         ctx.prevOnGround = ctx.onGround;
 
@@ -46,7 +46,7 @@ public class Simulator {
     }
 
     private static void handleRecover(SimulationContext ctx) {
-        approachMotionXZ(ctx, 0.05, ctx.originalMotion.horizontalLength());
+        approachMotionXZ(ctx, 0.05, ctx.originalMotion.horizontalDistance());
     }
 
     private static void handleFluidMotion(SimulationContext ctx, double xz, double targetXZ) {
@@ -83,7 +83,7 @@ public class Simulator {
 
     private static void postMove(SimulationContext ctx) {
         if (ctx.inFluid() && !ctx.inFluidOriginal()) {
-            ctx.motionY = MathHelper.clamp(ctx.motionY, -0.0784, 0.13);
+            ctx.motionY = Mth.clamp(ctx.motionY, -0.0784, 0.13);
         }
 
         if (ctx.inFluidOriginal() && ctx.inFluid()) {
@@ -95,22 +95,22 @@ public class Simulator {
 
     private static void handleCollisions(SimulationContext ctx) {
         ctx.updateCollisions();
-        Vec3d movement = new Vec3d(ctx.motionX, shouldReverse(ctx) ? -ctx.reverseStep : ctx.motionY, ctx.motionZ);
-        Vec3d collidedMovement = movement.lengthSquared() == 0.0 ? movement : ctx.collide(movement, ctx.box);
+        Vec3 movement = new Vec3(ctx.motionX, shouldReverse(ctx) ? -ctx.reverseStep : ctx.motionY, ctx.motionZ);
+        Vec3 collidedMovement = movement.lengthSqr() == 0.0 ? movement : ctx.collide(movement, ctx.box);
         boolean collidedHorizontally = collidedMovement.x != ctx.motionX || collidedMovement.z != ctx.motionZ;
         boolean collidingWithFloor = ctx.motionY < 0.0 && collidedMovement.y != ctx.motionY;
         if ((ctx.onGround || collidingWithFloor) && collidedHorizontally) {
-            Vec3d vec2 = ctx.collide(new Vec3d(ctx.motionX, ctx.step, ctx.motionZ), ctx.box);
-            Vec3d vec3 = ctx.collide(new Vec3d(0.0, ctx.step, 0.0), ctx.box.stretch(ctx.motionX, 0.0, ctx.motionZ));
+            Vec3 vec2 = ctx.collide(new Vec3(ctx.motionX, ctx.step, ctx.motionZ), ctx.box);
+            Vec3 vec3 = ctx.collide(new Vec3(0.0, ctx.step, 0.0), ctx.box.expandTowards(ctx.motionX, 0.0, ctx.motionZ));
             if (vec3.y < ctx.step) {
-                Vec3d vec4 = ctx.collide(new Vec3d(movement.x, 0.0, movement.z), ctx.box.offset(vec3)).add(vec3);
-                if (vec4.horizontalLengthSquared() > vec2.horizontalLengthSquared()) {
+                Vec3 vec4 = ctx.collide(new Vec3(movement.x, 0.0, movement.z), ctx.box.move(vec3)).add(vec3);
+                if (vec4.horizontalDistanceSqr() > vec2.horizontalDistanceSqr()) {
                     vec2 = vec4;
                 }
             }
 
-            if (vec2.horizontalLengthSquared() > collidedMovement.horizontalLengthSquared()) {
-                Vec3d vec = vec2.add(ctx.collide(new Vec3d(0.0, -vec2.y + movement.y, 0.0), ctx.box.offset(vec2)));
+            if (vec2.horizontalDistanceSqr() > collidedMovement.horizontalDistanceSqr()) {
+                Vec3 vec = vec2.add(ctx.collide(new Vec3(0.0, -vec2.y + movement.y, 0.0), ctx.box.move(vec2)));
                 ctx.move(vec);
                 ctx.setOnGround(true);
                 return;
@@ -125,10 +125,10 @@ public class Simulator {
                 && ctx.prevOnGround
                 && !ctx.onGround
                 && ctx.motionY <= 0.0
-                && OLEPOSSUtils.inside(ctx.entity, ctx.box.stretch(0.0, -ctx.reverseStep, 0.0));
+                && OLEPOSSUtils.inside(ctx.entity, ctx.box.expandTowards(0.0, -ctx.reverseStep, 0.0));
     }
 
-    public static boolean isOnGround(Entity entity, Box box) {
-        return OLEPOSSUtils.inside(entity, box.stretch(0.0, -0.02, 0.0));
+    public static boolean isOnGround(Entity entity, AABB box) {
+        return OLEPOSSUtils.inside(entity, box.expandTowards(0.0, -0.02, 0.0));
     }
 }

@@ -7,8 +7,7 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.util.math.MatrixStack;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 
 public class KeyBind {
@@ -30,7 +29,7 @@ public class KeyBind {
         this.value = value;
     }
 
-    public void render(MatrixStack stack, float x, float y, float maxX, double mx, double my) {
+    public void render(PoseStack stack, float x, float y, float maxX, double mx, double my) {
         this.lastRenderTime = System.currentTimeMillis();
         this.x = x;
         this.y = y;

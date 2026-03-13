@@ -11,12 +11,11 @@ import bodevelopment.client.blackout.module.modules.client.Notifications;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.ChatUtils;
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
-import net.minecraft.util.math.MathHelper;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
+import net.minecraft.util.Mth;
 
 public class AutoChatGame extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -45,7 +44,7 @@ public class AutoChatGame extends Module {
 
     @Event
     public void onMessage(PacketEvent.Receive.Pre event) {
-        if (event.packet instanceof GameMessageS2CPacket packet) {
+        if (event.packet instanceof ClientboundSystemChatPacket packet) {
             String text = packet.content().getString();
             if (this.shouldSend(text)) {
                 this.message = text.split("\"")[1];
@@ -59,7 +58,7 @@ public class AutoChatGame extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null && this.message != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null && this.message != null) {
             if (System.currentTimeMillis() > this.sendTime) {
                 ChatUtils.sendMessage(this.message);
                 this.message = null;
@@ -76,7 +75,7 @@ public class AutoChatGame extends Module {
     private double getDelay() {
         return switch (this.delayMode.get()) {
             case Dumb ->
-                    MathHelper.lerp(ThreadLocalRandom.current().nextDouble(), this.minDelay.get(), this.maxDelay.get());
+                    Mth.lerp(ThreadLocalRandom.current().nextDouble(), this.minDelay.get(), this.maxDelay.get());
             case Smart -> this.getSmartDelay(this.message);
         };
     }

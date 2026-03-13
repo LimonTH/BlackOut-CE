@@ -20,24 +20,32 @@ import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ChargedProjectilesComponent;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.projectile.ProjectileUtil;
-import net.minecraft.item.*;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.client.renderer.CoreShaders;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.CrossbowItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.ChargedProjectiles;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.mutable.MutableDouble;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
@@ -70,13 +78,13 @@ public class Trajectories extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            ItemStack itemStack = BlackOut.mc.player.getMainHandStack();
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            ItemStack itemStack = BlackOut.mc.player.getMainHandItem();
             Item item = itemStack.getItem();
             if (this.dataMap.containsKey(item)) {
                 SimulationData data = this.dataMap.get(item);
-                MatrixStack stack = Render3DUtils.matrices;
-                stack.push();
+                PoseStack stack = Render3DUtils.matrices;
+                stack.pushPose();
                 Render3DUtils.setRotation(stack);
                 Render3DUtils.start();
                 float yaw = Managers.ROTATION.getNextYaw();
@@ -87,14 +95,14 @@ public class Trajectories extends Module {
                 }
 
                 Render3DUtils.end();
-                stack.pop();
+                stack.popPose();
             }
         }
     }
 
-    private void rotateVelocity(double[] velocity, Vec3d opposite, double yaw) {
+    private void rotateVelocity(double[] velocity, Vec3 opposite, double yaw) {
         Quaternionf quaternionf = new Quaternionf().setAngleAxis(yaw * (float) (Math.PI / 180.0), opposite.x, opposite.y, opposite.z);
-        Vec3d velocityVec = new Vec3d(velocity[0], velocity[1], velocity[2]);
+        Vec3 velocityVec = new Vec3(velocity[0], velocity[1], velocity[2]);
         Vector3f vector3f = velocityVec.toVector3f().rotate(quaternionf);
         velocity[0] = vector3f.x;
         velocity[1] = vector3f.y;
@@ -106,14 +114,14 @@ public class Trajectories extends Module {
             return false;
         }
 
-        var registry = BlackOut.mc.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
+        var registry = BlackOut.mc.level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
 
-        return registry.getEntry(Enchantments.MULTISHOT.getValue())
-                .map(entry -> EnchantmentHelper.getLevel(entry, itemStack) > 0)
+        return registry.get(Enchantments.MULTISHOT.location())
+                .map(entry -> EnchantmentHelper.getItemEnchantmentLevel(entry, itemStack) > 0)
                 .orElse(false);
     }
 
-    private void draw(SimulationData data, double[] velocity, ItemStack itemStack, float tickDelta, MatrixStack stack) {
+    private void draw(SimulationData data, double[] velocity, ItemStack itemStack, float tickDelta, PoseStack stack) {
         HitResult hitResult = this.drawLine(data, velocity, itemStack, tickDelta, stack);
 
         if (hitResult != null) {
@@ -122,10 +130,10 @@ public class Trajectories extends Module {
             double radius = 0.25;
 
             if (hitResult instanceof BlockHitResult blockHitResult) {
-                Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
-                Vec3d pos = blockHitResult.getPos().subtract(camPos);
+                Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
+                Vec3 pos = blockHitResult.getLocation().subtract(camPos);
 
-                Render3DUtils.Orientation orientation = switch (blockHitResult.getSide()) {
+                Render3DUtils.Orientation orientation = switch (blockHitResult.getDirection()) {
                     case DOWN, UP -> Render3DUtils.Orientation.XZ;
                     case NORTH, SOUTH -> Render3DUtils.Orientation.XY;
                     case WEST, EAST -> Render3DUtils.Orientation.YZ;
@@ -137,36 +145,36 @@ public class Trajectories extends Module {
                 Render3DUtils.fillCircle(stack, pos, radius, fillCol, 360, orientation);
 
             } else if (hitResult instanceof EntityHitResult entityHitResult) {
-                Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
-                Box box = OLEPOSSUtils.getLerpedBox(entityHitResult.getEntity(), tickDelta)
-                        .offset(-camPos.x, -camPos.y, -camPos.z);
+                Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
+                AABB box = OLEPOSSUtils.getLerpedBox(entityHitResult.getEntity(), tickDelta)
+                        .move(-camPos.x, -camPos.y, -camPos.z);
 
                 Render3DUtils.renderOutlines(stack, box, rgb);
             }
         }
     }
 
-    private HitResult drawLine(SimulationData data, double[] velocity, ItemStack itemStack, float tickDelta, MatrixStack stack) {
-        Vec3d pos = data.startPos.apply(itemStack, tickDelta);
-        Matrix4f matrix4f = stack.peek().getPositionMatrix();
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINE_STRIP, VertexFormats.POSITION_COLOR);
+    private HitResult drawLine(SimulationData data, double[] velocity, ItemStack itemStack, float tickDelta, PoseStack stack) {
+        Vec3 pos = data.startPos.apply(itemStack, tickDelta);
+        Matrix4f matrix4f = stack.last().pose();
+        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
+        Tesselator tessellator = Tesselator.getInstance();
+        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
         MutableDouble dist = new MutableDouble(0.0);
         this.vertex(bufferBuilder, matrix4f, pos, pos, dist);
-        Box box = this.getBox(pos, data);
+        AABB box = this.getBox(pos, data);
 
         for (int i = 0; i < this.maxTicks.get(); i++) {
-            Vec3d prevPos = pos;
+            Vec3 prevPos = pos;
             pos = pos.add(velocity[0], velocity[1], velocity[2]);
-            ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(prevPos, pos, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, BlackOut.mc.player);
+            ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(prevPos, pos, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
             HitResult blockHitResult = DamageUtils.raycast(DamageUtils.raycastContext, false);
-            EntityHitResult entityHitResult = ProjectileUtil.getEntityCollision(
-                    BlackOut.mc.world,
+            EntityHitResult entityHitResult = ProjectileUtil.getEntityHitResult(
+                    BlackOut.mc.level,
                     BlackOut.mc.player,
                     prevPos,
                     pos,
-                    box.stretch(velocity[0], velocity[1], velocity[2]).expand(1.0),
+                    box.expandTowards(velocity[0], velocity[1], velocity[2]).inflate(1.0),
                     entity -> entity != BlackOut.mc.player && this.canHit(entity),
                     0.3F
             );
@@ -174,7 +182,7 @@ public class Trajectories extends Module {
             boolean entityValid = entityHitResult != null && entityHitResult.getType() == HitResult.Type.ENTITY;
             HitResult hitResult;
             if (blockValid && entityValid) {
-                if (prevPos.distanceTo(entityHitResult.getPos()) < prevPos.distanceTo(blockHitResult.getPos())) {
+                if (prevPos.distanceTo(entityHitResult.getLocation()) < prevPos.distanceTo(blockHitResult.getLocation())) {
                     hitResult = entityHitResult;
                 } else {
                     hitResult = blockHitResult;
@@ -188,8 +196,8 @@ public class Trajectories extends Module {
             }
 
             if (hitResult != null) {
-                this.vertex(bufferBuilder, matrix4f, hitResult.getPos(), prevPos, dist);
-                BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+                this.vertex(bufferBuilder, matrix4f, hitResult.getLocation(), prevPos, dist);
+                BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
                 return hitResult;
             }
 
@@ -198,18 +206,18 @@ public class Trajectories extends Module {
             this.vertex(bufferBuilder, matrix4f, pos, prevPos, dist);
         }
 
-        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
         return null;
     }
 
-    private void vertex(BufferBuilder bufferBuilder, Matrix4f matrix4f, Vec3d pos, Vec3d prevPos, MutableDouble dist) {
-        DoubleConsumer<Vec3d, Double> consumer = (vec, d) -> {
+    private void vertex(BufferBuilder bufferBuilder, Matrix4f matrix4f, Vec3 pos, Vec3 prevPos, MutableDouble dist) {
+        DoubleConsumer<Vec3, Double> consumer = (vec, d) -> {
             Color color = this.withAlpha(this.getColor(), this.getAlpha(d));
-            Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
-            bufferBuilder.vertex(
+            Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
+            bufferBuilder.addVertex(
                             matrix4f, (float) (vec.x - camPos.x), (float) (vec.y - camPos.y), (float) (vec.z - camPos.z)
                     )
-                    .color(color.getRed() / 255.0F, color.getGreen() / 255.0F, color.getBlue() / 255.0F, color.getAlpha() / 255.0F)
+                    .setColor(color.getRed() / 255.0F, color.getGreen() / 255.0F, color.getBlue() / 255.0F, color.getAlpha() / 255.0F)
                     ;
         };
         double totalDist = prevPos.distanceTo(pos);
@@ -233,8 +241,8 @@ public class Trajectories extends Module {
         return (float) Math.min(dist / this.fadeLength.get(), 1.0);
     }
 
-    private Box getBox(Vec3d pos, SimulationData data) {
-        return new Box(
+    private AABB getBox(Vec3 pos, SimulationData data) {
+        return new AABB(
                 pos.x - data.width / 2.0,
                 pos.y,
                 pos.z - data.width / 2.0,
@@ -245,7 +253,7 @@ public class Trajectories extends Module {
     }
 
     private boolean canHit(Entity entity) {
-        return entity.canBeHitByProjectile() && !BlackOut.mc.player.isConnectedThroughVehicle(entity);
+        return entity.canBeHitByProjectile() && !BlackOut.mc.player.isPassengerOfSameVehicle(entity);
     }
 
     private Color getColor() {
@@ -261,9 +269,9 @@ public class Trajectories extends Module {
 
     private double[] getVelocity(double[] d, float yaw, double simulation) {
         double[] velocity = new double[]{
-                -MathHelper.sin(yaw * (float) (Math.PI / 180.0)) * MathHelper.cos(Managers.ROTATION.getNextPitch() * (float) (Math.PI / 180.0)),
-                -MathHelper.sin((Managers.ROTATION.getNextPitch() + (float) d[1]) * (float) (Math.PI / 180.0)),
-                MathHelper.cos(yaw * (float) (Math.PI / 180.0)) * MathHelper.cos(Managers.ROTATION.getNextPitch() * (float) (Math.PI / 180.0))
+                -Mth.sin(yaw * (float) (Math.PI / 180.0)) * Mth.cos(Managers.ROTATION.getNextPitch() * (float) (Math.PI / 180.0)),
+                -Mth.sin((Managers.ROTATION.getNextPitch() + (float) d[1]) * (float) (Math.PI / 180.0)),
+                Mth.cos(yaw * (float) (Math.PI / 180.0)) * Mth.cos(Managers.ROTATION.getNextPitch() * (float) (Math.PI / 180.0))
         };
         if (simulation != 0.0) {
             this.rotateVelocity(velocity, RotationUtils.rotationVec(yaw, Managers.ROTATION.getNextPitch() - 90.0F, 1.0), simulation);
@@ -273,12 +281,12 @@ public class Trajectories extends Module {
         velocity[1] *= d[0];
         velocity[2] *= d[0];
         if (this.playerVelocity.get()) {
-            velocity[0] += BlackOut.mc.player.getVelocity().x;
-            if (!BlackOut.mc.player.isOnGround()) {
-                velocity[1] += BlackOut.mc.player.getVelocity().y;
+            velocity[0] += BlackOut.mc.player.getDeltaMovement().x;
+            if (!BlackOut.mc.player.onGround()) {
+                velocity[1] += BlackOut.mc.player.getDeltaMovement().y;
             }
 
-            velocity[2] += BlackOut.mc.player.getVelocity().z;
+            velocity[2] += BlackOut.mc.player.getDeltaMovement().z;
         }
 
         return velocity;
@@ -311,13 +319,13 @@ public class Trajectories extends Module {
                 stack -> {
                     BowSpam bowSpam = BowSpam.getInstance();
                     int i;
-                    if (bowSpam.enabled && BlackOut.mc.options.useKey.isPressed()) {
+                    if (bowSpam.enabled && BlackOut.mc.options.keyUse.isDown()) {
                         i = bowSpam.charge.get();
                     } else {
-                        i = stack.getMaxUseTime(BlackOut.mc.player) - BlackOut.mc.player.getItemUseTimeLeft();
+                        i = stack.getUseDuration(BlackOut.mc.player) - BlackOut.mc.player.getUseItemRemainingTicks();
                     }
 
-                    float f = Math.max(BowItem.getPullProgress(i), 0.1F);
+                    float f = Math.max(BowItem.getPowerForTime(i), 0.1F);
                     return new double[]{f * 3.0, 0.0};
                 },
                 (box, vel) -> {
@@ -340,7 +348,7 @@ public class Trajectories extends Module {
                         ),
                 stack -> new double[]{isChargedWith(stack, Items.FIREWORK_ROCKET) ? 1.6 : 3.15, 0.0},
                 (box, vel) -> {
-                    if (!isChargedWith(BlackOut.mc.player.getMainHandStack(), Items.FIREWORK_ROCKET)) {
+                    if (!isChargedWith(BlackOut.mc.player.getMainHandItem(), Items.FIREWORK_ROCKET)) {
                         double f = OLEPOSSUtils.inWater(box) ? 0.6 : 0.99;
                         vel[0] *= f;
                         vel[1] *= f;
@@ -385,9 +393,9 @@ public class Trajectories extends Module {
     private void put(
             double width,
             double height,
-            DoubleFunction<ItemStack, Float, Vec3d> startPos,
+            DoubleFunction<ItemStack, Float, Vec3> startPos,
             Function<ItemStack, double[]> speed,
-            DoubleConsumer<Box, double[]> physics,
+            DoubleConsumer<AABB, double[]> physics,
             Item... items
     ) {
         for (Item item : items) {
@@ -398,18 +406,18 @@ public class Trajectories extends Module {
     private record SimulationData(
             double width,
             double height,
-            DoubleFunction<ItemStack, Float, Vec3d> startPos,
+            DoubleFunction<ItemStack, Float, Vec3> startPos,
             Function<ItemStack, double[]> speed,
-            DoubleConsumer<Box, double[]> physics
+            DoubleConsumer<AABB, double[]> physics
     ) {}
 
     private boolean isChargedWith(ItemStack crossbowStack, Item projectileItem) {
         if (!(crossbowStack.getItem() instanceof CrossbowItem)) return false;
-        ChargedProjectilesComponent charged = crossbowStack.get(DataComponentTypes.CHARGED_PROJECTILES);
+        ChargedProjectiles charged = crossbowStack.get(DataComponents.CHARGED_PROJECTILES);
         if (charged == null || charged.isEmpty()) return false;
 
-        for (ItemStack projectile : charged.getProjectiles()) {
-            if (projectile.isOf(projectileItem)) {
+        for (ItemStack projectile : charged.getItems()) {
+            if (projectile.is(projectileItem)) {
                 return true;
             }
         }

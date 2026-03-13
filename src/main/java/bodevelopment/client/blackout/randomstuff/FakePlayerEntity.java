@@ -4,47 +4,46 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.manager.managers.FakePlayerManager;
 import bodevelopment.client.blackout.module.modules.client.settings.FakeplayerSettings;
 import com.mojang.authlib.GameProfile;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ConsumableComponent;
-import net.minecraft.component.type.FoodComponent;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityPose;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.passive.WolfEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.consume.ApplyEffectsConsumeEffect;
-import net.minecraft.item.consume.ConsumeEffect;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.tag.DamageTypeTags;
-import net.minecraft.registry.tag.EntityTypeTags;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Uuids;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.random.Random;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.tags.EntityTypeTags;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.World;
-
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.animal.Wolf;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.Consumable;
+import net.minecraft.world.item.consume_effects.ApplyStatusEffectsConsumeEffect;
+import net.minecraft.world.item.consume_effects.ConsumeEffect;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class FakePlayerEntity extends AbstractClientPlayerEntity {
+public class FakePlayerEntity extends AbstractClientPlayer {
     private final List<PlayerPos> positions = new ArrayList<>();
-    private final Random random = this.getWorld().getRandom();
+    private final RandomSource random = this.level().getRandom();
     private final String name;
     public int progress;
     public int popped = 0;
@@ -53,40 +52,40 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
     private int sinceEat = 0;
 
     public FakePlayerEntity(String name, List<PlayerPos> recordedPositions) {
-        super(BlackOut.mc.world, new GameProfile(Uuids.getOfflinePlayerUuid(name), name));
+        super(BlackOut.mc.level, new GameProfile(UUIDUtil.createOfflinePlayerUUID(name), name));
 
         this.positions.addAll(recordedPositions);
         this.progress = 0;
 
-        EntityAttributeInstance stepAttr = this.getAttributeInstance(EntityAttributes.STEP_HEIGHT);
+        AttributeInstance stepAttr = this.getAttribute(Attributes.STEP_HEIGHT);
         if (stepAttr != null) {
             stepAttr.setBaseValue(1.0);
         }
-        this.noClip = true;
+        this.noPhysics = true;
         this.name = name;
         PlayerPos ownPos = FakePlayerManager.getPlayerPos(BlackOut.mc.player);
         this.updatePosition(ownPos);
         this.updatePosition(ownPos);
-        Byte playerModel = BlackOut.mc.player.getDataTracker().get(PlayerEntity.PLAYER_MODEL_PARTS);
-        this.dataTracker.set(PlayerEntity.PLAYER_MODEL_PARTS, playerModel);
-        this.getAttributes().setFrom(BlackOut.mc.player.getAttributes());
+        Byte playerModel = BlackOut.mc.player.getEntityData().get(Player.DATA_PLAYER_MODE_CUSTOMISATION);
+        this.entityData.set(Player.DATA_PLAYER_MODE_CUSTOMISATION, playerModel);
+        this.getAttributes().assignAllValues(BlackOut.mc.player.getAttributes());
         this.cloneInv(BlackOut.mc.player.getInventory());
         this.setHealth(20.0F);
         this.setAbsorptionAmount(16.0F);
         this.unsetRemoved();
 
-        BlackOut.mc.world.addEntity(this);
+        BlackOut.mc.level.addEntity(this);
 
     }
 
-    private void cloneInv(PlayerInventory inventory) {
-        PlayerInventory ownInventory = this.getInventory();
+    private void cloneInv(Inventory inventory) {
+        Inventory ownInventory = this.getInventory();
 
-        for (int i = 0; i < ownInventory.size(); i++) {
-            ownInventory.setStack(i, inventory.getStack(i).copy());
+        for (int i = 0; i < ownInventory.getContainerSize(); i++) {
+            ownInventory.setItem(i, inventory.getItem(i).copy());
         }
 
-        ownInventory.selectedSlot = inventory.selectedSlot;
+        ownInventory.selected = inventory.selected;
     }
 
     public boolean damage(DamageSource source, float amount) {
@@ -98,91 +97,91 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
     }
 
     private boolean innerDamage(DamageSource source, float amount) {
-        if (this.getWorld() instanceof ServerWorld serverWorld && this.isInvulnerableTo(serverWorld, source)) {
+        if (this.level() instanceof ServerLevel serverWorld && this.isInvulnerableTo(serverWorld, source)) {
             return false;
-        } else if (this.getAbilities().invulnerable && !source.isIn(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+        } else if (this.getAbilities().invulnerable && !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
             return false;
         } else {
             amount *= FakeplayerSettings.getInstance().damageMultiplier.get().floatValue();
-            this.despawnCounter = 0;
-            if (!this.isDead() && !(amount < 0.0F)) {
-                if (source.isScaledWithDifficulty()) {
-                    if (this.getEntityWorld().getDifficulty() == Difficulty.EASY) {
+            this.noActionTime = 0;
+            if (!this.isDeadOrDying() && !(amount < 0.0F)) {
+                if (source.scalesWithDifficulty()) {
+                    if (this.getCommandSenderWorld().getDifficulty() == Difficulty.EASY) {
                         amount = Math.min(amount / 2.0F + 1.0F, amount);
                     }
 
-                    if (this.getEntityWorld().getDifficulty() == Difficulty.HARD) {
+                    if (this.getCommandSenderWorld().getDifficulty() == Difficulty.HARD) {
                         amount = amount * 3.0F / 2.0F;
                     }
                 }
 
                 if (amount == 0.0F) {
                     return false;
-                } else if (this.getWorld() instanceof ServerWorld serverWorld && this.isInvulnerableTo(serverWorld, source)) {
+                } else if (this.level() instanceof ServerLevel serverWorld && this.isInvulnerableTo(serverWorld, source)) {
                     return false;
-                } else if (this.isDead()) {
+                } else if (this.isDeadOrDying()) {
                     return false;
-                } else if (source.isIn(DamageTypeTags.IS_FIRE) && this.hasStatusEffect(StatusEffects.FIRE_RESISTANCE)) {
+                } else if (source.is(DamageTypeTags.IS_FIRE) && this.hasEffect(MobEffects.FIRE_RESISTANCE)) {
                     return false;
                 } else {
-                    this.despawnCounter = 0;
+                    this.noActionTime = 0;
                     boolean bl = false;
-                    if (amount > 0.0F && this.blockedByShield(source)) {
-                        this.damageShield(amount);
+                    if (amount > 0.0F && this.isDamageSourceBlocked(source)) {
+                        this.hurtCurrentlyUsedShield(amount);
                         amount = 0.0F;
-                        if (!source.isIn(DamageTypeTags.IS_PROJECTILE) && source.getSource() instanceof LivingEntity livingEntity) {
-                            this.takeShieldHit(livingEntity);
+                        if (!source.is(DamageTypeTags.IS_PROJECTILE) && source.getDirectEntity() instanceof LivingEntity livingEntity) {
+                            this.blockUsingShield(livingEntity);
                         }
 
                         bl = true;
                     }
 
-                    if (source.isIn(DamageTypeTags.IS_FREEZING) && this.getType().isIn(EntityTypeTags.FREEZE_HURTS_EXTRA_TYPES)) {
+                    if (source.is(DamageTypeTags.IS_FREEZING) && this.getType().is(EntityTypeTags.FREEZE_HURTS_EXTRA_TYPES)) {
                         amount *= 5.0F;
                     }
 
-                    this.limbAnimator.setSpeed(1.5F);
+                    this.walkAnimation.setSpeed(1.5F);
                     boolean bl2 = true;
-                    if (this.timeUntilRegen > 10 && !source.isIn(DamageTypeTags.BYPASSES_COOLDOWN)) {
-                        if (amount <= this.lastDamageTaken) {
+                    if (this.invulnerableTime > 10 && !source.is(DamageTypeTags.BYPASSES_COOLDOWN)) {
+                        if (amount <= this.lastHurt) {
                             return false;
                         }
-                        if (this.getWorld() instanceof ServerWorld serverWorld) {
-                            this.applyDamage(serverWorld, source, amount - this.lastDamageTaken);
+                        if (this.level() instanceof ServerLevel serverWorld) {
+                            this.actuallyHurt(serverWorld, source, amount - this.lastHurt);
                         }
-                        this.lastDamageTaken = amount;
+                        this.lastHurt = amount;
                         bl2 = false;
                     } else {
-                        this.lastDamageTaken = amount;
-                        this.timeUntilRegen = 20;
-                        if (this.getWorld() instanceof ServerWorld serverWorld) {
-                            this.applyDamage(serverWorld, source, amount);
+                        this.lastHurt = amount;
+                        this.invulnerableTime = 20;
+                        if (this.level() instanceof ServerLevel serverWorld) {
+                            this.actuallyHurt(serverWorld, source, amount);
                         }
-                        this.maxHurtTime = 10;
-                        this.hurtTime = this.maxHurtTime;
+                        this.hurtDuration = 10;
+                        this.hurtTime = this.hurtDuration;
                     }
 
-                    if (source.isIn(DamageTypeTags.DAMAGES_HELMET) && !this.getEquippedStack(EquipmentSlot.HEAD).isEmpty()) {
-                        this.damageHelmet(source, amount);
+                    if (source.is(DamageTypeTags.DAMAGES_HELMET) && !this.getItemBySlot(EquipmentSlot.HEAD).isEmpty()) {
+                        this.hurtHelmet(source, amount);
                         amount *= 0.75F;
                     }
 
-                    Entity attacker = source.getAttacker();
-                    if (attacker instanceof LivingEntity livingEntity && !source.isIn(DamageTypeTags.NO_ANGER)) {
-                        this.setAttacker(livingEntity);
+                    Entity attacker = source.getEntity();
+                    if (attacker instanceof LivingEntity livingEntity && !source.is(DamageTypeTags.NO_ANGER)) {
+                        this.setLastHurtByMob(livingEntity);
                     }
 
-                    if (attacker instanceof PlayerEntity player) {
-                        this.playerHitTimer = 100;
-                        this.attackingPlayer = player;
-                    } else if (attacker instanceof WolfEntity wolf && wolf.isTamed()) {
-                        this.playerHitTimer = 100;
-                        this.attackingPlayer = wolf.getOwner() instanceof PlayerEntity owner ? owner : null;
+                    if (attacker instanceof Player player) {
+                        this.lastHurtByPlayerTime = 100;
+                        this.lastHurtByPlayer = player;
+                    } else if (attacker instanceof Wolf wolf && wolf.isTame()) {
+                        this.lastHurtByPlayerTime = 100;
+                        this.lastHurtByPlayer = wolf.getOwner() instanceof Player owner ? owner : null;
                     }
 
-                    if (this.isDead()) {
-                        if (!this.getOffHandStack().isOf(Items.TOTEM_OF_UNDYING)) {
-                            this.setStackInHand(Hand.OFF_HAND, Items.TOTEM_OF_UNDYING.getDefaultStack());
+                    if (this.isDeadOrDying()) {
+                        if (!this.getOffhandItem().is(Items.TOTEM_OF_UNDYING)) {
+                            this.setItemInHand(InteractionHand.OFF_HAND, Items.TOTEM_OF_UNDYING.getDefaultInstance());
                             this.sinceSwap = 0;
                             this.popped++;
                         }
@@ -190,33 +189,33 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
                         if (!this.checkTotemDeathProtection(source)) {
                             SoundEvent soundEvent = this.getDeathSound();
                             if (bl2 && soundEvent != null) {
-                                this.playSound(soundEvent, this.getSoundVolume(), this.getSoundPitch());
+                                this.playSound(soundEvent, this.getSoundVolume(), this.getVoicePitch());
                             }
                         } else {
-                            BlackOut.mc.particleManager.addEmitter(this, ParticleTypes.TOTEM_OF_UNDYING, 30);
+                            BlackOut.mc.particleEngine.createTrackingEmitter(this, ParticleTypes.TOTEM_OF_UNDYING, 30);
                             BlackOut.mc
-                                    .world
-                                    .playSound(
-                                            this.getX(), this.getY(), this.getZ(), SoundEvents.ITEM_TOTEM_USE, this.getSoundCategory(), 1.0F, 1.0F, true
+                                    .level
+                                    .playLocalSound(
+                                            this.getX(), this.getY(), this.getZ(), SoundEvents.TOTEM_USE, this.getSoundSource(), 1.0F, 1.0F, true
                                     );
                         }
                     } else if (bl2) {
                         this.hurtTime = 10;
-                        this.maxHurtTime = 10;
-                        this.lastDamageTaken = amount;
+                        this.hurtDuration = 10;
+                        this.lastHurt = amount;
 
-                        this.getWorld().sendEntityStatus(this, (byte) 2);
+                        this.level().broadcastEntityEvent(this, (byte) 2);
 
                         SoundEvent soundEvent = this.getHurtSound(source);
                         if (soundEvent != null) {
-                            this.playSound(soundEvent, this.getSoundVolume(), this.getSoundPitch());
+                            this.playSound(soundEvent, this.getSoundVolume(), this.getVoicePitch());
                         }
                     }
 
                     boolean bl3 = !bl || amount > 0.0F;
                     if (bl3) {
                         this.lastDamageSource = source;
-                        this.lastDamageTime = this.getEntityWorld().getTime();
+                        this.lastDamageStamp = this.getCommandSenderWorld().getGameTime();
                     }
 
                     return bl3;
@@ -228,17 +227,17 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
     }
 
     private boolean checkTotemDeathProtection(DamageSource source) {
-        if (source.isIn(net.minecraft.registry.tag.DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+        if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
             return false;
         }
 
         ItemStack totemStack = null;
-        for (Hand hand : Hand.values()) {
-            ItemStack stack = this.getStackInHand(hand);
-            if (stack.isOf(Items.TOTEM_OF_UNDYING)) {
+        for (InteractionHand hand : InteractionHand.values()) {
+            ItemStack stack = this.getItemInHand(hand);
+            if (stack.is(Items.TOTEM_OF_UNDYING)) {
                 totemStack = stack.copy();
-                if (!this.getAbilities().creativeMode) {
-                    stack.decrement(1);
+                if (!this.getAbilities().instabuild) {
+                    stack.shrink(1);
                 }
                 break;
             }
@@ -246,13 +245,13 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
 
         if (totemStack != null) {
             this.setHealth(1.0F);
-            this.clearStatusEffects();
+            this.removeAllEffects();
 
-            this.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 900, 1));
-            this.addStatusEffect(new StatusEffectInstance(StatusEffects.FIRE_RESISTANCE, 800, 0));
-            this.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 100, 1));
+            this.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 900, 1));
+            this.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 800, 0));
+            this.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 100, 1));
 
-            this.getWorld().sendEntityStatus(this, (byte) 35);
+            this.level().broadcastEntityEvent(this, (byte) 35);
 
             this.popped++;
 
@@ -262,7 +261,7 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
         return false;
     }
 
-    public boolean shouldRender(double distance) {
+    public boolean shouldRenderAtSqrDistance(double distance) {
         return true;
     }
 
@@ -272,7 +271,7 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
         FakeplayerSettings fakeplayerSettings = FakeplayerSettings.getInstance();
 
         // Логика тотемов (остается без изменений, если методы swapToOffhand на месте)
-        if (!this.getOffHandStack().isOf(Items.TOTEM_OF_UNDYING)) {
+        if (!this.getOffhandItem().is(Items.TOTEM_OF_UNDYING)) {
             if (fakeplayerSettings.swapDelay.get() == 0) {
                 if (this.popped < fakeplayerSettings.totems.get() || fakeplayerSettings.unlimitedTotems.get()) {
                     this.swapToOffhand();
@@ -289,28 +288,28 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
 
         // Логика поедания
         if (fakeplayerSettings.eating.get()) {
-            ItemStack handStack = this.getMainHandStack();
-            if (!handStack.isOf(Items.ENCHANTED_GOLDEN_APPLE)) {
+            ItemStack handStack = this.getMainHandItem();
+            if (!handStack.is(Items.ENCHANTED_GOLDEN_APPLE)) {
                 handStack = new ItemStack(Items.ENCHANTED_GOLDEN_APPLE, 64);
-                this.setStackInHand(Hand.MAIN_HAND, handStack);
+                this.setItemInHand(InteractionHand.MAIN_HAND, handStack);
             }
 
-            this.setCurrentHand(Hand.MAIN_HAND);
+            this.startUsingItem(InteractionHand.MAIN_HAND);
 
             if (this.sinceEat >= fakeplayerSettings.eatTime.get()) {
-                this.consumeItem();
+                this.completeUsingItem();
                 this.sinceEat = 0;
             } else {
                 if (this.sinceEat % 4 == 0) {
-                    ConsumableComponent consumable = handStack.get(DataComponentTypes.CONSUMABLE);
+                    Consumable consumable = handStack.get(DataComponents.CONSUMABLE);
                     if (consumable != null) {
-                        consumable.spawnParticlesAndPlaySound(this.random, this, handStack, 5);
+                        consumable.emitParticlesAndSounds(this.random, this, handStack, 5);
                     }
                 }
             }
         } else {
             if (this.isUsingItem()) {
-                this.stopUsingItem();
+                this.releaseUsingItem();
             }
             this.sinceEat = 0;
         }
@@ -318,21 +317,21 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
         super.tick();
     }
 
-    public void consumeItem() {
-        ItemStack itemStack = this.getMainHandStack().finishUsing(this.getWorld(), this);
+    public void completeUsingItem() {
+        ItemStack itemStack = this.getMainHandItem().finishUsingItem(this.level(), this);
 
-        if (itemStack != this.getMainHandStack()) {
-            this.setStackInHand(Hand.MAIN_HAND, itemStack);
+        if (itemStack != this.getMainHandItem()) {
+            this.setItemInHand(InteractionHand.MAIN_HAND, itemStack);
         }
     }
 
-    public ItemStack getStack(World world, ItemStack stack) {
-        FoodComponent food = stack.get(DataComponentTypes.FOOD);
+    public ItemStack getStack(Level world, ItemStack stack) {
+        FoodProperties food = stack.get(DataComponents.FOOD);
 
         if (food != null) {
-            ConsumableComponent consumable = stack.get(DataComponentTypes.CONSUMABLE);
+            Consumable consumable = stack.get(DataComponents.CONSUMABLE);
 
-            SoundEvent sound = SoundEvents.ENTITY_GENERIC_EAT.value();
+            SoundEvent sound = SoundEvents.GENERIC_EAT.value();
 
             if (consumable != null) {
                 sound = consumable.sound().value();
@@ -344,44 +343,44 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
                     this.getY(),
                     this.getZ(),
                     sound,
-                    SoundCategory.NEUTRAL,
+                    SoundSource.NEUTRAL,
                     1.0F,
                     1.0F + (this.random.nextFloat() - this.random.nextFloat()) * 0.4F
             );
 
             this.applyFoodEffects(stack);
 
-            if (!this.getAbilities().creativeMode) {
-                stack.decrement(1);
+            if (!this.getAbilities().instabuild) {
+                stack.shrink(1);
             }
         }
         return stack;
     }
 
-    public boolean clearStatusEffects() {
-        if (this.getWorld().isClient) return false;
+    public boolean removeAllEffects() {
+        if (this.level().isClientSide) return false;
 
-        return super.clearStatusEffects();
+        return super.removeAllEffects();
     }
 
 
-    protected void onStatusEffectsRemoved(Collection<StatusEffectInstance> effects) {
-        super.onStatusEffectsRemoved(effects);
+    protected void onEffectsRemoved(Collection<MobEffectInstance> effects) {
+        super.onEffectsRemoved(effects);
 
-        for (StatusEffectInstance effect : effects) {
-            effect.getEffectType().value().onRemoved(this.getAttributes());
+        for (MobEffectInstance effect : effects) {
+            effect.getEffect().value().removeAttributeModifiers(this.getAttributes());
         }
 
-        this.updateAttributes();
+        this.refreshDirtyAttributes();
     }
 
     private void applyFoodEffects(ItemStack stack) {
-        ConsumableComponent consumable = stack.get(DataComponentTypes.CONSUMABLE);
+        Consumable consumable = stack.get(DataComponents.CONSUMABLE);
         if (consumable != null) {
             for (ConsumeEffect effect : consumable.onConsumeEffects()) {
-                if (effect instanceof ApplyEffectsConsumeEffect applyEffects) {
-                    for (StatusEffectInstance effectInstance : applyEffects.effects()) {
-                        this.addStatusEffect(new StatusEffectInstance(effectInstance));
+                if (effect instanceof ApplyStatusEffectsConsumeEffect applyEffects) {
+                    for (MobEffectInstance effectInstance : applyEffects.effects()) {
+                        this.addEffect(new MobEffectInstance(effectInstance));
                     }
                 }
             }
@@ -389,13 +388,13 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
     }
 
     private void swapToOffhand() {
-        this.setStackInHand(Hand.OFF_HAND, Items.TOTEM_OF_UNDYING.getDefaultStack());
+        this.setItemInHand(InteractionHand.OFF_HAND, Items.TOTEM_OF_UNDYING.getDefaultInstance());
         this.sinceSwap = 0;
         this.popped++;
     }
 
     @Override
-    public void tickMovement() {
+    public void aiStep() {
         double dx = this.getX();
         double dz = this.getZ();
 
@@ -405,34 +404,34 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
         dz = this.getZ() - dz;
         float distanceMoved = (float) Math.sqrt(dx * dx + dz * dz);
 
-        this.prevStrideDistance = this.strideDistance;
+        this.oBob = this.bob;
 
-        this.updateLimbs(distanceMoved > 0.01F);
-        this.limbAnimator.updateLimbs(distanceMoved * 4.0F, 0.4F, 1.0F);
+        this.calculateEntityAnimation(distanceMoved > 0.01F);
+        this.walkAnimation.update(distanceMoved * 4.0F, 0.4F, 1.0F);
 
-        this.tickHandSwing();
+        this.updateSwingTime();
 
-        float f = (this.isOnGround() && !this.isDead()) ? (float) Math.min(0.1, distanceMoved) : 0.0F;
-        this.strideDistance = this.strideDistance + (f - this.strideDistance) * 0.4F;
+        float f = (this.onGround() && !this.isDeadOrDying()) ? (float) Math.min(0.1, distanceMoved) : 0.0F;
+        this.bob = this.bob + (f - this.bob) * 0.4F;
 
-        super.tickMovement();
+        super.aiStep();
     }
 
     public GameProfile getGameProfile() {
-        return new GameProfile(Uuids.getOfflinePlayerUuid(this.name), this.name);
+        return new GameProfile(UUIDUtil.createOfflinePlayerUUID(this.name), this.name);
     }
 
     private void updatePosition(PlayerPos playerPos) {
         this.currentPlayerPos = playerPos;
-        this.setPosition(this.currentPlayerPos.vec());
-        this.setRotation(this.currentPlayerPos.yaw(), this.currentPlayerPos.pitch());
-        this.setVelocity(this.currentPlayerPos.velocity());
-        this.headYaw = this.currentPlayerPos.headYaw();
-        this.bodyYaw = this.currentPlayerPos.bodyYaw();
+        this.setPos(this.currentPlayerPos.vec());
+        this.setRot(this.currentPlayerPos.yaw(), this.currentPlayerPos.pitch());
+        this.setDeltaMovement(this.currentPlayerPos.velocity());
+        this.yHeadRot = this.currentPlayerPos.headYaw();
+        this.yBodyRot = this.currentPlayerPos.bodyYaw();
     }
 
     public void tickRecord() {
-        if (this.positions.isEmpty() || this.isDead()) return;
+        if (this.positions.isEmpty() || this.isDeadOrDying()) return;
 
         if (this.progress >= this.positions.size()) {
             this.progress = 0;
@@ -452,7 +451,7 @@ public class FakePlayerEntity extends AbstractClientPlayerEntity {
         this.progress = 0;
     }
 
-    public record PlayerPos(Vec3d vec, Vec3d velocity, EntityPose pose, float pitch, float yaw, float headYaw,
+    public record PlayerPos(Vec3 vec, Vec3 velocity, Pose pose, float pitch, float yaw, float headYaw,
                             float bodyYaw) {
     }
 }

@@ -25,23 +25,39 @@ import bodevelopment.client.blackout.util.DamageUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
-import net.minecraft.client.gui.screen.DeathScreen;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.entity.*;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.item.*;
-import net.minecraft.network.packet.c2s.play.*;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.tag.ItemTags;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.*;
-
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
+import net.minecraft.client.gui.screens.DeathScreen;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.AreaEffectCloud;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.item.AxeItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -60,7 +76,7 @@ import java.util.concurrent.ThreadLocalRandom;
 // TODO: обработать конфликт с AntiBot/Teams в момент смены мира/перезахода.
 @OnlyDev
 public class Aura extends MoveUpdateModule {
-    public static AbstractClientPlayerEntity targetedPlayer = null;
+    public static AbstractClientPlayer targetedPlayer = null;
     private static Aura INSTANCE;
 
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -75,9 +91,9 @@ public class Aura extends MoveUpdateModule {
     private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Auto Switch", SwitchMode.Disabled, "Method for automatically switching to a combat weapon.");
     private final Setting<Boolean> onlyWeapon = this.sgGeneral.booleanSetting("Weapon Filter", true, "Restricts attacks to only occur when holding a valid weapon.");
     private final Setting<List<Item>> allowedItems = this.sgGeneral.itemFilteredListSetting("Allowed Items", "Whitelist of tools/weapons that are allowed for attacking (empty = any tool).", onlyWeapon::get, item -> {
-                ItemStack stack = item.getDefaultStack();
+                ItemStack stack = item.getDefaultInstance();
 
-                if (stack.contains(DataComponentTypes.TOOL)) return true;
+                if (stack.has(DataComponents.TOOL)) return true;
                 return item instanceof SwordItem
                         || item == Items.TRIDENT
                         || item == Items.MACE;
@@ -147,7 +163,7 @@ public class Aura extends MoveUpdateModule {
     private final Setting<Double> renderTime = this.sgRender.doubleSetting("Visual Duration", 1.0, 0.0, 10.0, 0.1, "How long the target highlight remains visible.");
     private final BoxMultiSetting rendering = BoxMultiSetting.of(this.sgRender, "Target Highlight");
 
-    private final RenderList<Box> renderBoxes = RenderList.getList(false);
+    private final RenderList<AABB> renderBoxes = RenderList.getList(false);
     private final ExtrapolationMap extrapolationMap = new ExtrapolationMap();
     public boolean isBlocking = false;
     public boolean isAttacking = false;
@@ -161,7 +177,7 @@ public class Aura extends MoveUpdateModule {
     private double random;
     private final List<Entity> targets = new ArrayList<>();
     private Entity target = null;
-    private Box renderBox = new Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    private AABB renderBox = new AABB(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
     public Aura() {
         super("Aura", "Automatically engages nearby entities using advanced targeting and timing algorithms.", SubCategory.OFFENSIVE);
@@ -210,8 +226,8 @@ public class Aura extends MoveUpdateModule {
 
     @Override
     public void onTickPre(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            if (BlackOut.mc.player.isOnGround()) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            if (BlackOut.mc.player.onGround()) {
                 this.timeOG++;
             } else {
                 this.timeOG = 0;
@@ -223,7 +239,7 @@ public class Aura extends MoveUpdateModule {
 
             if (this.enabled) {
                 super.onTickPre(event);
-                if (this.disableDead.get() && BlackOut.mc.currentScreen instanceof DeathScreen) {
+                if (this.disableDead.get() && BlackOut.mc.screen instanceof DeathScreen) {
                     this.disable(this.getDisplayName() + " was disabled due to dying");
                 } else if (this.holdingSword()) {
                     if (this.target == null) {
@@ -253,11 +269,11 @@ public class Aura extends MoveUpdateModule {
         if (!this.blocking.get()) {
             this.isBlocking = false;
         } else {
-            if (event.packet instanceof PlayerInteractItemC2SPacket && this.holdingSword()) {
+            if (event.packet instanceof ServerboundUseItemPacket && this.holdingSword()) {
                 this.isBlocking = true;
             }
 
-            if (event.packet instanceof PlayerActionC2SPacket packet && packet.getAction() == PlayerActionC2SPacket.Action.RELEASE_USE_ITEM) {
+            if (event.packet instanceof ServerboundPlayerActionPacket packet && packet.getAction() == ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM) {
                 this.isBlocking = false;
             }
         }
@@ -265,7 +281,7 @@ public class Aura extends MoveUpdateModule {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.renderBoxes.update((box, delta, time) -> this.rendering.render(box, (float) (1.0 - delta), 1.0F));
             if (!this.enabled) {
                 this.renderSingle(false, event.frameTime);
@@ -273,12 +289,12 @@ public class Aura extends MoveUpdateModule {
                 this.updateTarget();
                 if (this.target != null && this.shouldRender) {
                     this.renderBox = this.getBox(this.target);
-                    Vec3d offset = this.target
-                            .getPos()
-                            .subtract(this.target.prevX, this.target.prevY, this.target.prevZ)
-                            .multiply(BlackOut.mc.getRenderTickCounter().getTickDelta(true));
-                    this.renderBox = this.renderBox.offset(offset);
-                    if (this.target instanceof AbstractClientPlayerEntity player) {
+                    Vec3 offset = this.target
+                            .position()
+                            .subtract(this.target.xo, this.target.yo, this.target.zo)
+                            .scale(BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true));
+                    this.renderBox = this.renderBox.move(offset);
+                    if (this.target instanceof AbstractClientPlayer player) {
                         targetedPlayer = player;
                     } else {
                         targetedPlayer = null;
@@ -300,7 +316,7 @@ public class Aura extends MoveUpdateModule {
                 this.alwaysRenderTime -= frameTime;
             }
 
-            double progress = MathHelper.clamp(this.alwaysRenderTime / this.renderTime.get(), 0.0, 1.0);
+            double progress = Mth.clamp(this.alwaysRenderTime / this.renderTime.get(), 0.0, 1.0);
             this.rendering.render(this.renderBox, (float) progress, (float) progress);
         }
     }
@@ -312,11 +328,11 @@ public class Aura extends MoveUpdateModule {
         }
 
         this.shouldRender = false;
-        if (this.target != null && BlackOut.mc.player != null && BlackOut.mc.world != null && this.enabled) {
+        if (this.target != null && BlackOut.mc.player != null && BlackOut.mc.level != null && this.enabled) {
             int slot = this.bestSlot(this.switchMode.get().inventory);
-            boolean holding = !this.onlyWeapon.get() || isAllowedWeapon(BlackOut.mc.player.getMainHandStack());
+            boolean holding = !this.onlyWeapon.get() || isAllowedWeapon(BlackOut.mc.player.getMainHandItem());
             if (slot >= 0) {
-                if (!this.onlyWeapon.get() || BlackOut.mc.player.getInventory().getStack(slot).contains(net.minecraft.component.DataComponentTypes.TOOL)) {
+                if (!this.onlyWeapon.get() || BlackOut.mc.player.getInventory().getItem(slot).has(DataComponents.TOOL)) {
                     if (holding || this.switchMode.get() != SwitchMode.Disabled) {
                         this.shouldRender = true;
                         boolean rotated = this.rotationMode.get() != RotationMode.Constant
@@ -350,16 +366,16 @@ public class Aura extends MoveUpdateModule {
         }
     }
 
-    private Vec3d getRotationVec() {
-        double x = MathHelper.clamp(this.target.getVelocity().x + BlackOut.mc.player.getVelocity().x, -0.3, 0.3);
-        double y = MathHelper.clamp(this.getHitHeight(), this.target.getBoundingBox().minY, this.target.getBoundingBox().maxY);
-        double z = MathHelper.clamp(this.target.getVelocity().z + BlackOut.mc.player.getVelocity().z, -0.3, 0.3);
-        return new Vec3d(this.target.getX() + x, y, this.target.getZ() + z);
+    private Vec3 getRotationVec() {
+        double x = Mth.clamp(this.target.getDeltaMovement().x + BlackOut.mc.player.getDeltaMovement().x, -0.3, 0.3);
+        double y = Mth.clamp(this.getHitHeight(), this.target.getBoundingBox().minY, this.target.getBoundingBox().maxY);
+        double z = Mth.clamp(this.target.getDeltaMovement().z + BlackOut.mc.player.getDeltaMovement().z, -0.3, 0.3);
+        return new Vec3(this.target.getX() + x, y, this.target.getZ() + z);
     }
 
     private double getHitHeight() {
-        double targetY = MathHelper.lerp(this.hitHeight.get(), this.target.getBoundingBox().minY, this.target.getBoundingBox().maxY);
-        return MathHelper.lerp(this.dynamicHeight.get(), targetY, BlackOut.mc.player.getEyeY());
+        double targetY = Mth.lerp(this.hitHeight.get(), this.target.getBoundingBox().minY, this.target.getBoundingBox().maxY);
+        return Mth.lerp(this.dynamicHeight.get(), targetY, BlackOut.mc.player.getEyeY());
     }
 
     private boolean delayCheck() {
@@ -370,23 +386,23 @@ public class Aura extends MoveUpdateModule {
             return switch (this.delayMode.get()) {
                 case Basic -> timeSince > this.getDelay();
                 case Smart -> {
-                    double delay = Math.max(1.0 / BlackOut.mc.player.getAttributeValue(EntityAttributes.ATTACK_SPEED), this.minDelay.get());
+                    double delay = Math.max(1.0 / BlackOut.mc.player.getAttributeValue(Attributes.ATTACK_SPEED), this.minDelay.get());
                     yield timeSince > this.getRandom(delay - this.randomNegative.get(), delay + this.randomPositive.get());
                 }
                 case Vanilla -> timeSince >= this.minDelay.get()
-                        && BlackOut.mc.player.lastAttackedTicks >= 20.0 / BlackOut.mc.player.getAttributeValue(EntityAttributes.ATTACK_SPEED) * this.charge.get();
+                        && BlackOut.mc.player.attackStrengthTicker >= 20.0 / BlackOut.mc.player.getAttributeValue(Attributes.ATTACK_SPEED) * this.charge.get();
             };
         }
     }
 
     private double getRandom(double start, double end) {
-        return MathHelper.lerp(this.random, start, end);
+        return Mth.lerp(this.random, start, end);
     }
 
     private boolean shouldWaitCrit() {
-        return (this.critSprint.get() || !BlackOut.mc.player.isSprinting()) && (BlackOut.mc.player.isOnGround()
+        return (this.critSprint.get() || !BlackOut.mc.player.isSprinting()) && (BlackOut.mc.player.onGround()
                 || BlackOut.mc.player.fallDistance <= 0.0F
-                || BlackOut.mc.player.getVelocity().y >= -this.critVelocity.get());
+                || BlackOut.mc.player.getDeltaMovement().y >= -this.critVelocity.get());
     }
 
     private double getDelay() {
@@ -413,15 +429,15 @@ public class Aura extends MoveUpdateModule {
 
         this.prevAttack = System.currentTimeMillis();
         this.random = this.randomise.get().get();
-        SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
+        SettingUtils.swing(SwingState.Pre, SwingType.Attacking, InteractionHand.MAIN_HAND);
 
-        List<Vec3d> positions = null;
+        List<Vec3> positions = null;
         if (this.target != null && !SettingUtils.inAttackRange(this.target.getBoundingBox()) && this.teleport.get()) {
             positions = this.getPath(this.target);
             if (positions != null) {
-                positions.forEach(posx -> this.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(posx.getX(), posx.getY(), posx.getZ(), false, BlackOut.mc.player.horizontalCollision)));
+                positions.forEach(posx -> this.sendInstantly(new ServerboundMovePlayerPacket.Pos(posx.x(), posx.y(), posx.z(), false, BlackOut.mc.player.horizontalCollision)));
                 if (this.tpBack.get()) {
-                    BlackOut.mc.player.setPosition(positions.getLast());
+                    BlackOut.mc.player.setPos(positions.getLast());
                 }
             }
         }
@@ -432,12 +448,12 @@ public class Aura extends MoveUpdateModule {
             }
 
             boolean shouldCritSprint = this.critSprint.get()
-                    && !BlackOut.mc.player.isOnGround()
+                    && !BlackOut.mc.player.onGround()
                     && BlackOut.mc.player.fallDistance > 0.0F
                     && BlackOut.mc.player.isSprinting();
 
             if (shouldCritSprint) {
-                this.sendPacket(new ClientCommandC2SPacket(BlackOut.mc.player, ClientCommandC2SPacket.Mode.STOP_SPRINTING));
+                this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
             }
 
             for (Entity currentTarget : this.targets) {
@@ -445,35 +461,35 @@ public class Aura extends MoveUpdateModule {
                     continue;
                 }
 
-                if (currentTarget instanceof EndCrystalEntity && Managers.ENTITY.isDead(currentTarget.getId())) {
+                if (currentTarget instanceof EndCrystal && Managers.ENTITY.isDead(currentTarget.getId())) {
                     continue;
                 }
 
                 for (int i = 0; i < this.packets.get(); i++) {
-                    this.sendPacket(PlayerInteractEntityC2SPacket.attack(currentTarget, BlackOut.mc.player.isSneaking()));
+                    this.sendPacket(ServerboundInteractPacket.createAttackPacket(currentTarget, BlackOut.mc.player.isShiftKeyDown()));
                 }
 
-                if (currentTarget instanceof EndCrystalEntity) {
+                if (currentTarget instanceof EndCrystal) {
                     Managers.ENTITY.setSemiDead(currentTarget.getId());
                 }
             }
 
             if (shouldCritSprint) {
-                this.sendPacket(new ClientCommandC2SPacket(BlackOut.mc.player, ClientCommandC2SPacket.Mode.START_SPRINTING));
+                this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.START_SPRINTING));
             }
 
             this.spawnParticles();
         }
 
-        BlackOut.mc.player.lastAttackedTicks = 0;
-        SettingUtils.swing(SwingState.Post, SwingType.Attacking, Hand.MAIN_HAND);
+        BlackOut.mc.player.attackStrengthTicker = 0;
+        SettingUtils.swing(SwingState.Post, SwingType.Attacking, InteractionHand.MAIN_HAND);
 
         if (positions != null && this.tpBack.get()) {
             for (int i = positions.size() - 2; i >= 0; i--) {
-                Vec3d pos = positions.get(i);
-                this.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(pos.getX(), pos.getY(), pos.getZ(), false, BlackOut.mc.player.horizontalCollision));
+                Vec3 pos = positions.get(i);
+                this.sendInstantly(new ServerboundMovePlayerPacket.Pos(pos.x(), pos.y(), pos.z(), false, BlackOut.mc.player.horizontalCollision));
             }
-            this.sendInstantly(new PlayerMoveC2SPacket.PositionAndOnGround(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision));
+            this.sendInstantly(new ServerboundMovePlayerPacket.Pos(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision));
         }
 
         if (this.holdingSword() && this.block.get() == BlockMode.Spam && this.blocking.get()) {
@@ -485,7 +501,7 @@ public class Aura extends MoveUpdateModule {
         }
 
         if (this.swing.get()) {
-            this.clientSwing(this.swingHand.get(), Hand.MAIN_HAND);
+            this.clientSwing(this.swingHand.get(), InteractionHand.MAIN_HAND);
         }
         this.isAttacking = false;
     }
@@ -502,7 +518,7 @@ public class Aura extends MoveUpdateModule {
         if (stack.isEmpty()) return false;
 
         if (this.allowedItems.get().isEmpty()) {
-            return stack.contains(DataComponentTypes.TOOL);
+            return stack.has(DataComponents.TOOL);
         }
 
         return this.allowedItems.get().contains(stack.getItem());
@@ -514,17 +530,17 @@ public class Aura extends MoveUpdateModule {
 
     private void spawnParticles() {
         if (this.hitParticles.get()) {
-            BlackOut.mc.particleManager.addEmitter(this.target, ParticleTypes.CRIT);
+            BlackOut.mc.particleEngine.createTrackingEmitter(this.target, ParticleTypes.CRIT);
         }
     }
 
     private int bestSlot(boolean inventory) {
-        int limit = inventory ? BlackOut.mc.player.getInventory().size() + 1 : 9;
+        int limit = inventory ? BlackOut.mc.player.getInventory().getContainerSize() + 1 : 9;
         int bestSlot = -1;
         double bestDamage = -1.0;
 
         for (int i = 0; i < limit; i++) {
-            ItemStack stack = BlackOut.mc.player.getInventory().getStack(i);
+            ItemStack stack = BlackOut.mc.player.getInventory().getItem(i);
             if (!this.onlyWeapon.get() || this.isAllowedWeapon(stack)) {
                 double damage = DamageUtils.itemDamage(stack);
                 boolean preferred = matchesPreference(stack, this.weaponPreference.get());
@@ -552,7 +568,7 @@ public class Aura extends MoveUpdateModule {
             this.weaponPreference.get() != WeaponPreference.Damage) {
             bestDamage = -1.0;
             for (int i = 0; i < limit; i++) {
-                ItemStack stack = BlackOut.mc.player.getInventory().getStack(i);
+                ItemStack stack = BlackOut.mc.player.getInventory().getItem(i);
                 if (!this.onlyWeapon.get() || this.isAllowedWeapon(stack)) {
                     double damage = DamageUtils.itemDamage(stack);
                     if (damage > bestDamage) {
@@ -585,12 +601,12 @@ public class Aura extends MoveUpdateModule {
 
         List<Pair<Entity, Double>> candidates = new ArrayList<>();
         
-        BlackOut.mc.world.getEntities().forEach(entity -> {
+        BlackOut.mc.level.entitiesForRendering().forEach(entity -> {
             if (this.entities.get().contains(entity.getType()) && entity != BlackOut.mc.player) {
                 if (entity instanceof ItemEntity ||
-                        entity instanceof ExperienceOrbEntity ||
-                        entity instanceof ProjectileEntity ||
-                        entity instanceof AreaEffectCloudEntity) {
+                        entity instanceof ExperienceOrb ||
+                        entity instanceof Projectile ||
+                        entity instanceof AreaEffectCloud) {
                     return;
                 }
 
@@ -606,8 +622,8 @@ public class Aura extends MoveUpdateModule {
                     case Health ->
                             entity instanceof LivingEntity le ? 10000.0F - le.getHealth() - le.getAbsorptionAmount() : 50.0;
                     case Angle ->
-                            10000.0 - Math.abs(RotationUtils.yawAngle(BlackOut.mc.player.getYaw(), RotationUtils.getYaw(entity)));
-                    case Distance -> 10000.0 - BlackOut.mc.player.getPos().distanceTo(entity.getPos());
+                            10000.0 - Math.abs(RotationUtils.yawAngle(BlackOut.mc.player.getYRot(), RotationUtils.getYaw(entity)));
+                    case Distance -> 10000.0 - BlackOut.mc.player.position().distanceTo(entity.position());
                 };
                 
                 if (entity instanceof LivingEntity livingEntity) {
@@ -623,7 +639,7 @@ public class Aura extends MoveUpdateModule {
                     }
                 }
 
-                if (entity instanceof AbstractClientPlayerEntity player) {
+                if (entity instanceof AbstractClientPlayer player) {
                     AntiBot antiBot = AntiBot.getInstance();
                     Teams teams = Teams.getInstance();
                     if (antiBot.enabled && antiBot.mode.get() == AntiBot.HandlingMode.Ignore && antiBot.getBots().contains(player)) {
@@ -649,11 +665,11 @@ public class Aura extends MoveUpdateModule {
             }
         });
 
-        candidates.sort((a, b) -> Double.compare(b.getRight(), a.getRight()));
+        candidates.sort((a, b) -> Double.compare(b.getB(), a.getB()));
 
         int limit = Math.min(candidates.size(), this.maxTargets.get());
         for (int i = 0; i < limit; i++) {
-            this.targets.add(candidates.get(i).getLeft());
+            this.targets.add(candidates.get(i).getA());
         }
 
         this.target = this.targets.isEmpty() ? null : this.targets.getFirst();
@@ -677,19 +693,19 @@ public class Aura extends MoveUpdateModule {
     }
 
     private void startBlocking() {
-        this.sendSequenced(s -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, s, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch));
+        this.sendSequenced(s -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, s, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch));
     }
 
     private void stopBlocking() {
-        this.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN, 0));
+        this.sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM, BlockPos.ZERO, Direction.DOWN, 0));
     }
 
-    private Box getBox(Entity entity) {
-        Box box = this.extrapolationMap.get(entity);
+    private AABB getBox(Entity entity) {
+        AABB box = this.extrapolationMap.get(entity);
         return this.expand.get() > 0.0 ? this.expandHitbox(box, entity) : box;
     }
 
-    private Box expandHitbox(Box box, Entity entity) {
+    private AABB expandHitbox(AABB box, Entity entity) {
         for (int i = 0; i <= 20; i++) {
             box = this.expand(entity, box, 0.05, 0.0, 0.0);
             box = this.expand(entity, box, 0.0, 0.0, 0.05);
@@ -702,21 +718,21 @@ public class Aura extends MoveUpdateModule {
         return box;
     }
 
-    private Box expand(Entity entity, Box box, double x, double y, double z) {
-        Box newBox = box.stretch(x * this.expand.get(), y * this.expand.get(), z * this.expand.get());
+    private AABB expand(Entity entity, AABB box, double x, double y, double z) {
+        AABB newBox = box.expandTowards(x * this.expand.get(), y * this.expand.get(), z * this.expand.get());
         return OLEPOSSUtils.inside(entity, newBox) ? box : newBox;
     }
 
-    public boolean blockTransform(MatrixStack stack) {
-        if (this.enabled && this.target != null && BlackOut.mc.player.getMainHandStack().getItem() instanceof SwordItem) {
+    public boolean blockTransform(PoseStack stack) {
+        if (this.enabled && this.target != null && BlackOut.mc.player.getMainHandItem().getItem() instanceof SwordItem) {
             if (this.blockRender.get() != BlockRenderMode.Disabled && this.blocking.get()) {
-                stack.push();
-                this.f = this.f + BlackOut.mc.getRenderTickCounter().getLastFrameDuration() / 20.0F * this.speed.get().floatValue() * 5.0F;
+                stack.pushPose();
+                this.f = this.f + BlackOut.mc.getDeltaTracker().getGameTimeDeltaTicks() / 20.0F * this.speed.get().floatValue() * 5.0F;
                 this.f = this.f - (int) this.f;
-                float swingProgress = BlackOut.mc.player.getHandSwingProgress(BlackOut.mc.getRenderTickCounter().getTickDelta(true));
+                float swingProgress = BlackOut.mc.player.getAttackAnim(BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true));
                 float d;
                 if (this.target instanceof LivingEntity livingEntity) {
-                    float hurt = livingEntity.hurtTime - BlackOut.mc.getRenderTickCounter().getTickDelta(true);
+                    float hurt = livingEntity.hurtTime - BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
                     d = 1.0F - this.boAnimate(1.0F - Math.max(hurt, 0.0F) / 10.0F);
                 } else {
                     d = 0.0F;
@@ -725,69 +741,69 @@ public class Aura extends MoveUpdateModule {
                 switch (this.blockRender.get()) {
                     case BlackOut:
                         stack.translate(0.5, -0.5, -1.25);
-                        stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(65.0F));
-                        stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-60.0F + d * 75.0F));
-                        stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(90.0F));
+                        stack.mulPose(Axis.XP.rotationDegrees(65.0F));
+                        stack.mulPose(Axis.YP.rotationDegrees(-60.0F + d * 75.0F));
+                        stack.mulPose(Axis.ZP.rotationDegrees(90.0F));
                         break;
                     case KassuK:
                         stack.translate(0.5, -0.5, -1.25);
-                        stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(65.0F));
-                        stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-60.0F));
-                        stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(90.0F + d * 50.0F));
+                        stack.mulPose(Axis.XP.rotationDegrees(65.0F));
+                        stack.mulPose(Axis.YP.rotationDegrees(-60.0F));
+                        stack.mulPose(Axis.ZP.rotationDegrees(90.0F + d * 50.0F));
                         break;
                     case Retarded: {
                         float k = (float) Math.sin(System.currentTimeMillis() / 150.0);
                         stack.translate(0.3, -0.55 - 0.2 * k, -1.15);
-                        stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(65.0F));
-                        stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-45.0F));
-                        stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(100.0F + k * 50.0F));
+                        stack.mulPose(Axis.XP.rotationDegrees(65.0F));
+                        stack.mulPose(Axis.YP.rotationDegrees(-45.0F));
+                        stack.mulPose(Axis.ZP.rotationDegrees(100.0F + k * 50.0F));
                         break;
                     }
                     case KassuK2: {
                         float k = (float) Math.sin(System.currentTimeMillis() / 65.0);
                         stack.translate(0.3, -0.55 - 0.1 * k, -1.15);
-                        stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(65.0F - k * 10.0F));
-                        stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-45.0F - k * 10.0F));
-                        stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(90.0F + k * 10.0F));
+                        stack.mulPose(Axis.XP.rotationDegrees(65.0F - k * 10.0F));
+                        stack.mulPose(Axis.YP.rotationDegrees(-45.0F - k * 10.0F));
+                        stack.mulPose(Axis.ZP.rotationDegrees(90.0F + k * 10.0F));
                         break;
                     }
                     case KassuK3: {
                         float k = (float) Math.sin(System.currentTimeMillis() / 65.0);
                         stack.translate(0.3, -0.55 - 0.1 * k, -1.15);
-                        stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(65.0F));
-                        stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-45.0F + k * 10.0F));
-                        stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(90.0F));
+                        stack.mulPose(Axis.XP.rotationDegrees(65.0F));
+                        stack.mulPose(Axis.YP.rotationDegrees(-45.0F + k * 10.0F));
+                        stack.mulPose(Axis.ZP.rotationDegrees(90.0F));
                         break;
                     }
                     case Fan:
                         stack.translate(0.5, -0.5, -1.25);
-                        stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(65.0F));
-                        stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-360.0F * this.f));
-                        stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(90.0F));
+                        stack.mulPose(Axis.XP.rotationDegrees(65.0F));
+                        stack.mulPose(Axis.YP.rotationDegrees(-360.0F * this.f));
+                        stack.mulPose(Axis.ZP.rotationDegrees(90.0F));
                         break;
                     case Float:
                         this.transformItem(stack, -0.1F, this.f);
                         stack.translate(0.5, -0.4, -0.2);
-                        stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-70.0F));
-                        stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(32.0F));
-                        stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(40.0F));
+                        stack.mulPose(Axis.XP.rotationDegrees(-70.0F));
+                        stack.mulPose(Axis.YP.rotationDegrees(32.0F));
+                        stack.mulPose(Axis.ZP.rotationDegrees(40.0F));
                         break;
                     case Slap:
                         this.transformItem(stack, 0.0F, this.f);
                         stack.translate(0.5, -0.2, -0.2);
-                        stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-80.0F));
-                        stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(60.0F));
-                        stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(30.0F));
+                        stack.mulPose(Axis.XP.rotationDegrees(-80.0F));
+                        stack.mulPose(Axis.YP.rotationDegrees(60.0F));
+                        stack.mulPose(Axis.ZP.rotationDegrees(30.0F));
                         break;
                     case GPT:
                         stack.translate(0.5, -0.3, -1.2);
-                        stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-45.0F));
-                        stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(90.0F));
-                        stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(0.0F));
+                        stack.mulPose(Axis.XP.rotationDegrees(-45.0F));
+                        stack.mulPose(Axis.YP.rotationDegrees(90.0F));
+                        stack.mulPose(Axis.ZP.rotationDegrees(0.0F));
                         stack.translate(0.0, -0.5 * this.f, 0.0);
-                        stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-20.0F * this.f));
-                        stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(5.0F * this.f));
-                        stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(10.0F * this.f));
+                        stack.mulPose(Axis.XP.rotationDegrees(-20.0F * this.f));
+                        stack.mulPose(Axis.YP.rotationDegrees(5.0F * this.f));
+                        stack.mulPose(Axis.ZP.rotationDegrees(10.0F * this.f));
                         stack.scale(1.0F + 0.1F * this.f, 1.0F + 0.1F * this.f, 1.0F + 0.1F * this.f);
                 }
 
@@ -800,15 +816,15 @@ public class Aura extends MoveUpdateModule {
         }
     }
 
-    private void transformItem(MatrixStack stack, float equipProgress, float swingProgress) {
+    private void transformItem(PoseStack stack, float equipProgress, float swingProgress) {
         stack.translate(0.0, 0.0, -0.72);
         stack.translate(0.0, equipProgress * -0.6, 0.0);
-        stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(45.0F));
-        float f = MathHelper.sin(swingProgress * swingProgress * (float) Math.PI);
-        float f1 = MathHelper.sin(MathHelper.sqrt(swingProgress) * (float) Math.PI);
-        stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(f1 * -40.0F));
-        stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(f * -10.0F));
-        stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(f1 * -10.0F));
+        stack.mulPose(Axis.YP.rotationDegrees(45.0F));
+        float f = Mth.sin(swingProgress * swingProgress * (float) Math.PI);
+        float f1 = Mth.sin(Mth.sqrt(swingProgress) * (float) Math.PI);
+        stack.mulPose(Axis.XP.rotationDegrees(f1 * -40.0F));
+        stack.mulPose(Axis.YP.rotationDegrees(f * -10.0F));
+        stack.mulPose(Axis.ZP.rotationDegrees(f1 * -10.0F));
     }
 
     private float boAnimate(float d) {
@@ -820,9 +836,9 @@ public class Aura extends MoveUpdateModule {
         }
     }
 
-    private boolean getArmor(PlayerEntity entity) {
+    private boolean getArmor(Player entity) {
         for (int i = 0; i < 4; i++) {
-            if (!entity.getInventory().getArmorStack(i).isEmpty()) {
+            if (!entity.getInventory().getArmor(i).isEmpty()) {
                 return true;
             }
         }
@@ -835,32 +851,32 @@ public class Aura extends MoveUpdateModule {
         return !(distance > this.maxPackets.get() * this.maxDistance.get()) && this.raycastCheck(entity.getBoundingBox());
     }
 
-    private List<Vec3d> getPath(Entity entity) {
-        Vec3d diff = entity.getPos().subtract(BlackOut.mc.player.getPos());
-        List<Vec3d> path = new ArrayList<>();
+    private List<Vec3> getPath(Entity entity) {
+        Vec3 diff = entity.position().subtract(BlackOut.mc.player.position());
+        List<Vec3> path = new ArrayList<>();
 
         for (int i = 1; i <= this.maxPackets.get(); i++) {
             double delta = i / this.maxPackets.get().floatValue();
-            path.add(BlackOut.mc.player.getPos().add(diff.multiply(delta)));
+            path.add(BlackOut.mc.player.position().add(diff.scale(delta)));
         }
 
         return path;
     }
 
-    private boolean raycastCheck(Box f) {
-        f = f.contract(0.06);
-        Box b = BlackOut.mc.player.getBoundingBox().contract(0.06);
-        return this.raycast(new Vec3d(b.minX, b.minY, b.minZ), new Vec3d(f.minX, f.minY, f.minZ))
-                && this.raycast(new Vec3d(b.maxX, b.minY, b.minZ), new Vec3d(f.maxX, f.minY, f.minZ))
-                && this.raycast(new Vec3d(b.minX, b.minY, b.maxZ), new Vec3d(f.minX, f.minY, f.maxZ))
-                && this.raycast(new Vec3d(b.maxX, b.minY, b.maxZ), new Vec3d(f.maxX, f.minY, f.maxZ))
-                && this.raycast(new Vec3d(b.minX, b.maxY, b.minZ), new Vec3d(f.minX, f.maxY, f.minZ))
-                && this.raycast(new Vec3d(b.maxX, b.maxY, b.minZ), new Vec3d(f.maxX, f.maxY, f.minZ))
-                && this.raycast(new Vec3d(b.minX, b.maxY, b.maxZ), new Vec3d(f.minX, f.maxY, f.maxZ))
-                && this.raycast(new Vec3d(b.maxX, b.maxY, b.maxZ), new Vec3d(f.maxX, f.maxY, f.maxZ));
+    private boolean raycastCheck(AABB f) {
+        f = f.deflate(0.06);
+        AABB b = BlackOut.mc.player.getBoundingBox().deflate(0.06);
+        return this.raycast(new Vec3(b.minX, b.minY, b.minZ), new Vec3(f.minX, f.minY, f.minZ))
+                && this.raycast(new Vec3(b.maxX, b.minY, b.minZ), new Vec3(f.maxX, f.minY, f.minZ))
+                && this.raycast(new Vec3(b.minX, b.minY, b.maxZ), new Vec3(f.minX, f.minY, f.maxZ))
+                && this.raycast(new Vec3(b.maxX, b.minY, b.maxZ), new Vec3(f.maxX, f.minY, f.maxZ))
+                && this.raycast(new Vec3(b.minX, b.maxY, b.minZ), new Vec3(f.minX, f.maxY, f.minZ))
+                && this.raycast(new Vec3(b.maxX, b.maxY, b.minZ), new Vec3(f.maxX, f.maxY, f.minZ))
+                && this.raycast(new Vec3(b.minX, b.maxY, b.maxZ), new Vec3(f.minX, f.maxY, f.maxZ))
+                && this.raycast(new Vec3(b.maxX, b.maxY, b.maxZ), new Vec3(f.maxX, f.maxY, f.maxZ));
     }
 
-    private boolean raycast(Vec3d from, Vec3d to) {
+    private boolean raycast(Vec3 from, Vec3 to) {
         ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(from, to);
         return DamageUtils.raycast(DamageUtils.raycastContext, false).getType() == HitResult.Type.MISS;
     }

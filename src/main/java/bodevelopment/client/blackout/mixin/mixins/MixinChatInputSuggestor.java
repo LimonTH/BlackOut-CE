@@ -4,10 +4,6 @@ import bodevelopment.client.blackout.manager.Managers;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ChatInputSuggestor;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.command.CommandSource;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -16,49 +12,53 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.concurrent.CompletableFuture;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.CommandSuggestions;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.commands.SharedSuggestionProvider;
 
-@Mixin(ChatInputSuggestor.class)
+@Mixin(CommandSuggestions.class)
 public abstract class MixinChatInputSuggestor {
     @Shadow
     @Final
-    TextFieldWidget textField;
+    EditBox input;
     @Shadow
     @Final
-    MinecraftClient client;
+    Minecraft minecraft;
     @Shadow
-    boolean completingSuggestions;
+    boolean keepSuggestions;
     @Shadow
     private CompletableFuture<Suggestions> pendingSuggestions;
     @Shadow
-    private ChatInputSuggestor.SuggestionWindow window;
+    private CommandSuggestions.SuggestionsList suggestions;
 
     @Shadow
-    private ParseResults<CommandSource> parse;
+    private ParseResults<SharedSuggestionProvider> currentParse;
 
     @Shadow
-    public abstract void show(boolean narrateFirstSuggestion);
+    public abstract void showSuggestions(boolean narrateFirstSuggestion);
 
-    @Inject(method = "refresh", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "updateCommandInfo", at = @At("HEAD"), cancellable = true)
     private void onRefresh(CallbackInfo ci) {
-        String text = this.textField.getText();
+        String text = this.input.getValue();
         String prefix = "-";
 
         if (text.startsWith(prefix)) {
-            this.completingSuggestions = true;
+            this.keepSuggestions = true;
 
             SuggestionsBuilder builder = new SuggestionsBuilder(text, 1);
             this.pendingSuggestions = Managers.COMMANDS.getCommandSuggestions(builder);
 
-            this.pendingSuggestions.thenRun(() -> this.client.execute(() -> {
+            this.pendingSuggestions.thenRun(() -> this.minecraft.execute(() -> {
                 if (this.pendingSuggestions.isDone()) {
                     Suggestions suggestions = this.pendingSuggestions.join();
 
                     if (suggestions.isEmpty()) {
-                        this.window = null;
-                        this.textField.setSuggestion(null);
-                        this.parse = null;
+                        this.suggestions = null;
+                        this.input.setSuggestion(null);
+                        this.currentParse = null;
                     } else {
-                        this.show(false);
+                        this.showSuggestions(false);
                     }
                 }
             }));

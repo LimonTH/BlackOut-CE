@@ -16,13 +16,12 @@ import bodevelopment.client.blackout.util.SettingUtils;
 import bodevelopment.client.blackout.util.SharedFeatures;
 import it.unimi.dsi.fastutil.floats.FloatFloatImmutablePair;
 import it.unimi.dsi.fastutil.floats.FloatFloatPair;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
-import net.minecraft.util.math.MathHelper;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.util.Mth;
 
 public class RotationManager extends Manager {
     public final List<FloatFloatPair> rotationHistory = Collections.synchronizedList(new ArrayList<>());
@@ -69,26 +68,26 @@ public class RotationManager extends Manager {
     @Event
     public void onRender(RenderEvent.World.Pre event) {
         if (this.rotatingYaw == RotatePhase.Rotating && SettingUtils.shouldVanillaRotate()) {
-            BlackOut.mc.player.setYaw(MathHelper.lerp(event.tickDelta, this.prevRenderYaw, this.renderYaw));
+            BlackOut.mc.player.setYRot(Mth.lerp(event.tickDelta, this.prevRenderYaw, this.renderYaw));
         }
 
         if (this.rotatingPitch == RotatePhase.Rotating && SettingUtils.shouldVanillaRotate()) {
-            BlackOut.mc.player.setPitch(MathHelper.lerp(event.tickDelta, this.prevRenderPitch, this.renderPitch));
+            BlackOut.mc.player.setXRot(Mth.lerp(event.tickDelta, this.prevRenderPitch, this.renderPitch));
         }
     }
 
     @Event
     public void onRotate(PacketEvent.Sent event) {
-        if (event.packet instanceof PlayerMoveC2SPacket packet && packet.changesLook()) {
-            this.setPrev(packet.getYaw(0.0F), packet.getPitch(0.0F));
+        if (event.packet instanceof ServerboundMovePlayerPacket packet && packet.hasRotation()) {
+            this.setPrev(packet.getYRot(0.0F), packet.getXRot(0.0F));
             this.prevRotation = System.currentTimeMillis();
         }
     }
 
     @Event
     public void onSetback(PacketEvent.Received event) {
-        if (event.packet instanceof PlayerPositionLookS2CPacket packet) {
-            this.setPrev(packet.change().yaw(), packet.change().pitch());
+        if (event.packet instanceof ClientboundPlayerPositionPacket packet) {
+            this.setPrev(packet.change().yRot(), packet.change().xRot());
             this.updateRender();
         }
     }
@@ -124,7 +123,7 @@ public class RotationManager extends Manager {
     public int updateMove(float yaw, boolean move) {
         this.moveYaw = yaw;
         this.move = move;
-        int offset = Math.round(MathHelper.wrapDegrees(yaw - this.moveLookYaw) / 45.0F);
+        int offset = Math.round(Mth.wrapDegrees(yaw - this.moveLookYaw) / 45.0F);
         offset += this.moveOffset < -45.0F ? 1 : (this.moveOffset > 45.0F ? -1 : 0);
         this.moveOffset = this.moveOffset + (float) RotationUtils.yawAngle(yaw, this.moveLookYaw + offset * 45);
         int i = offset % 8;
@@ -146,7 +145,7 @@ public class RotationManager extends Manager {
     }
 
     private void updateNextYaw() {
-        float yaw = BlackOut.mc.player.getYaw();
+        float yaw = BlackOut.mc.player.getYRot();
         if (System.currentTimeMillis() > this.timeYaw) {
             if (this.rotatingYaw == RotatePhase.Rotating) {
                 this.rotatingYaw = RotatePhase.Returning;
@@ -176,7 +175,7 @@ public class RotationManager extends Manager {
             this.priorityPitch = 69420.0;
             this.nextPitch = elytraFly.getPitch();
         } else {
-            float pitch = BlackOut.mc.player.getPitch();
+            float pitch = BlackOut.mc.player.getXRot();
             if (System.currentTimeMillis() > this.timePitch) {
                 if (this.rotatingPitch == RotatePhase.Rotating) {
                     this.rotatingPitch = RotatePhase.Returning;

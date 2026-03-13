@@ -12,10 +12,10 @@ import bodevelopment.client.blackout.module.modules.misc.Timer;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.MovementUtils;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.InteractionHand;
 
 public class Flight extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -64,10 +64,10 @@ public class Flight extends Module {
 
         if (this.mode.get() == Mode.VerusDMG) {
             this.sendPacket(
-                    new PlayerMoveC2SPacket.PositionAndOnGround(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision)
+                    new ServerboundMovePlayerPacket.Pos(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision)
             );
             this.sendPacket(
-                    new PlayerMoveC2SPacket.PositionAndOnGround(
+                    new ServerboundMovePlayerPacket.Pos(
                             BlackOut.mc.player.getX(),
                             BlackOut.mc.player.getY() + this.verusDMGheight.get(),
                             BlackOut.mc.player.getZ(),
@@ -76,10 +76,10 @@ public class Flight extends Module {
                     )
             );
             this.sendPacket(
-                    new PlayerMoveC2SPacket.PositionAndOnGround(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision)
+                    new ServerboundMovePlayerPacket.Pos(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision)
             );
             this.sendPacket(
-                    new PlayerMoveC2SPacket.PositionAndOnGround(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), true, BlackOut.mc.player.horizontalCollision)
+                    new ServerboundMovePlayerPacket.Pos(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), true, BlackOut.mc.player.horizontalCollision)
             );
         }
     }
@@ -91,7 +91,7 @@ public class Flight extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             if (jumped) {
                 ticks++;
             }
@@ -118,14 +118,14 @@ public class Flight extends Module {
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             i++;
             double y = 0.0;
             switch (this.mode.get()) {
                 case Motion:
-                    if (BlackOut.mc.options.jumpKey.isPressed()) {
+                    if (BlackOut.mc.options.keyJump.isDown()) {
                         y = this.v.get();
-                    } else if (BlackOut.mc.options.sneakKey.isPressed() && !BlackOut.mc.player.isOnGround()) {
+                    } else if (BlackOut.mc.options.keyShift.isDown() && !BlackOut.mc.player.onGround()) {
                         y = -this.v.get();
                     }
 
@@ -177,9 +177,9 @@ public class Flight extends Module {
                         }
                     }
 
-                    BlockPos pos = BlackOut.mc.player.getBlockPos();
-                    if (!BlackOut.mc.player.isOnGround()) {
-                        this.placeBlock(Hand.MAIN_HAND, pos.toCenterPos(), Direction.UP, pos);
+                    BlockPos pos = BlackOut.mc.player.blockPosition();
+                    if (!BlackOut.mc.player.onGround()) {
+                        this.placeBlock(InteractionHand.MAIN_HAND, pos.getCenter(), Direction.UP, pos);
                     }
 
                     if (!Managers.ROTATION.move) {
@@ -242,15 +242,15 @@ public class Flight extends Module {
     }
 
     private void jump() {
-        BlackOut.mc.player.jump();
+        BlackOut.mc.player.jumpFromGround();
     }
 
     private boolean jumping() {
-        return BlackOut.mc.options.jumpKey.isPressed();
+        return BlackOut.mc.options.keyJump.isDown();
     }
 
     private boolean sneaking() {
-        return BlackOut.mc.options.sneakKey.isPressed();
+        return BlackOut.mc.options.keyShift.isDown();
     }
 
     public enum FallMode {

@@ -10,19 +10,18 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.FireworksComponent;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.projectile.FireworkRocketEntity;
-import net.minecraft.item.FireworkRocketItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Hand;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.projectile.FireworkRocketEntity;
+import net.minecraft.world.item.FireworkRocketItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.Fireworks;
 
 public class ElytraBoost extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -46,13 +45,13 @@ public class ElytraBoost extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.player == null || BlackOut.mc.world == null) return;
+        if (BlackOut.mc.player == null || BlackOut.mc.level == null) return;
 
         spawnedFireworks.removeIf(Entity::isRemoved);
 
-        if (BlackOut.mc.player.isGliding() && BlackOut.mc.options.useKey.isPressed()) {
+        if (BlackOut.mc.player.isFallFlying() && BlackOut.mc.options.keyUse.isDown()) {
 
-            Hand hand = OLEPOSSUtils.getHand(stack -> stack.getItem() instanceof FireworkRocketItem);
+            InteractionHand hand = OLEPOSSUtils.getHand(stack -> stack.getItem() instanceof FireworkRocketItem);
             FindResult result = this.switchMode.get().find(stack -> stack.getItem() instanceof FireworkRocketItem);
 
             if (hand != null || result.wasFound()) {
@@ -67,17 +66,17 @@ public class ElytraBoost extends Module {
     }
 
     private void doFakeBoost() {
-        ItemStack stack = Items.FIREWORK_ROCKET.getDefaultStack();
-        stack.set(DataComponentTypes.FIREWORKS, new FireworksComponent(fireworkLevel.get(), new ArrayList<>()));
+        ItemStack stack = Items.FIREWORK_ROCKET.getDefaultInstance();
+        stack.set(DataComponents.FIREWORKS, new Fireworks(fireworkLevel.get(), new ArrayList<>()));
 
-        FireworkRocketEntity rocket = new FireworkRocketEntity(BlackOut.mc.world, stack, BlackOut.mc.player);
+        FireworkRocketEntity rocket = new FireworkRocketEntity(BlackOut.mc.level, stack, BlackOut.mc.player);
         spawnedFireworks.add(rocket);
 
         if (playSound.get()) {
-            BlackOut.mc.world.playSoundFromEntity(BlackOut.mc.player, rocket,
-                    SoundEvents.ENTITY_FIREWORK_ROCKET_LAUNCH, SoundCategory.AMBIENT, 3.0F, 1.0F);
+            BlackOut.mc.level.playSound(BlackOut.mc.player, rocket,
+                    SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.AMBIENT, 3.0F, 1.0F);
         }
 
-        BlackOut.mc.world.addEntity(rocket);
+        BlackOut.mc.level.addEntity(rocket);
     }
 }

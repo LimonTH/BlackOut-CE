@@ -9,8 +9,8 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.util.BlockUtils;
 import bodevelopment.client.blackout.util.InvUtils;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.ItemStack;
 
 public class AutoTool extends Module {
 
@@ -20,9 +20,9 @@ public class AutoTool extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            if (BlackOut.mc.interactionManager.isBreakingBlock()) {
-                BlockPos pos = BlackOut.mc.interactionManager.currentBreakingPos;
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            if (BlackOut.mc.gameMode.isDestroying()) {
+                BlockPos pos = BlackOut.mc.gameMode.destroyBlockPos;
                 if (pos != null) {
                     FindResult best = this.bestSlot(pos);
                     if (best.wasFound()) {

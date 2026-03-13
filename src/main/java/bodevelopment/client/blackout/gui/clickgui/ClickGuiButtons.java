@@ -14,14 +14,14 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.MathHelper;
+import com.mojang.blaze3d.vertex.PoseStack;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import net.minecraft.util.Mth;
 
 public class ClickGuiButtons {
     public static final List<Button> buttons = new ArrayList<>();
@@ -40,12 +40,12 @@ public class ClickGuiButtons {
     }
 
     public void render(int mouseX, int mouseY, long openTime, float closeDelta) {
-        MatrixStack stack = RenderUtils.emptyStack;
-        stack.push();
+        PoseStack stack = RenderUtils.emptyStack;
+        stack.pushPose();
         RenderUtils.unGuiScale(stack);
 
-        double screenWidth = BlackOut.mc.getWindow().getWidth();
-        double screenHeight = BlackOut.mc.getWindow().getHeight();
+        double screenWidth = BlackOut.mc.getWindow().getScreenWidth();
+        double screenHeight = BlackOut.mc.getWindow().getScreenHeight();
 
         stack.translate((screenWidth - this.getWidth()) / 2.0,
                 screenHeight - 105.0 - BUTTON_SEPARATION, 0.0);
@@ -53,10 +53,10 @@ public class ClickGuiButtons {
         float delta = (float) (System.currentTimeMillis() - openTime - 200L) / 500.0F;
 
         for (Button button : buttons) {
-            this.renderButton(stack, button.icon(), MathHelper.clamp(delta -= 0.15F, 0.0F, 1.0F), closeDelta);
+            this.renderButton(stack, button.icon(), Mth.clamp(delta -= 0.15F, 0.0F, 1.0F), closeDelta);
         }
 
-        stack.pop();
+        stack.popPose();
     }
 
     public boolean onClick(int button) {
@@ -64,13 +64,13 @@ public class ClickGuiButtons {
 
         double[] xArr = new double[1];
         double[] yArr = new double[1];
-        GLFW.glfwGetCursorPos(BlackOut.mc.getWindow().getHandle(), xArr, yArr);
+        GLFW.glfwGetCursorPos(BlackOut.mc.getWindow().getWindow(), xArr, yArr);
 
         double rawX = xArr[0];
         double rawY = yArr[0];
 
-        double screenWidth = BlackOut.mc.getWindow().getWidth();
-        double screenHeight = BlackOut.mc.getWindow().getHeight();
+        double screenWidth = BlackOut.mc.getWindow().getScreenWidth();
+        double screenHeight = BlackOut.mc.getWindow().getScreenHeight();
 
         double startX = (screenWidth - this.getWidth()) / 2.0;
         double startY = screenHeight - 105.0 - BUTTON_SEPARATION;
@@ -95,7 +95,7 @@ public class ClickGuiButtons {
         return buttons.size() * BUTTON_WIDTH + (buttons.size() - 1) * BUTTON_SEPARATION;
     }
 
-    private void renderButton(MatrixStack stack, TextureRenderer icon, float delta, float closeDelta) {
+    private void renderButton(PoseStack stack, TextureRenderer icon, float delta, float closeDelta) {
         float prevAlpha = Renderer.getAlpha();
         Renderer.setAlpha((float) Math.sqrt(delta) * closeDelta);
 

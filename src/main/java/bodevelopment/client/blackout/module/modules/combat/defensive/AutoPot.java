@@ -16,18 +16,17 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.util.DamageUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.PotionContentsComponent;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ThrowablePotionItem;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-
 import java.util.function.Predicate;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ThrowablePotionItem;
+import net.minecraft.world.item.alchemy.PotionContents;
 
 public class AutoPot extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -73,10 +72,10 @@ public class AutoPot extends Module {
         if (!(stack.getItem() instanceof ThrowablePotionItem)) {
             return false;
         }
-        PotionContentsComponent contents = stack.get(DataComponentTypes.POTION_CONTENTS);
+        PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
         if (contents != null) {
-            for (StatusEffectInstance instance : contents.getEffects()) {
-                if (instance.getEffectType().equals(StatusEffects.INSTANT_HEALTH)) {
+            for (MobEffectInstance instance : contents.getAllEffects()) {
+                if (instance.getEffect().equals(MobEffects.HEAL)) {
                     return true;
                 }
             }
@@ -100,7 +99,7 @@ public class AutoPot extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             if (AutoCrystal.getInstance().placing) {
                 this.acTimer = this.autoCrystalPause.get();
             }
@@ -109,12 +108,12 @@ public class AutoPot extends Module {
                 this.surroundTimer = this.surroundPause.get();
             }
 
-            if (!BlackOut.mc.player.getBlockPos().equals(this.lastPos)) {
-                this.lastPos = BlackOut.mc.player.getBlockPos();
+            if (!BlackOut.mc.player.blockPosition().equals(this.lastPos)) {
+                this.lastPos = BlackOut.mc.player.blockPosition();
                 this.moveTimer = this.movePause.get();
             }
 
-            if (!BlackOut.mc.player.isOnGround()) {
+            if (!BlackOut.mc.player.onGround()) {
                 this.offGroundTimer = this.airPause.get();
             }
         }
@@ -122,7 +121,7 @@ public class AutoPot extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.throwsLeft = this.throwsLeft + this.throwSpeed.get() / 20.0;
             this.updateTimers();
             this.update();
@@ -131,7 +130,7 @@ public class AutoPot extends Module {
     }
 
     private void update() {
-        Hand hand = OLEPOSSUtils.getHand(this.healthPred);
+        InteractionHand hand = OLEPOSSUtils.getHand(this.healthPred);
         this.result = null;
         int bottlesLeft = 0;
         if (hand == null) {
@@ -139,7 +138,7 @@ public class AutoPot extends Module {
                 bottlesLeft = Math.min((int) Math.floor(this.throwsLeft), this.result.amount());
             }
         } else {
-            int b = hand == Hand.MAIN_HAND ? Managers.PACKET.getStack().getCount() : BlackOut.mc.player.getOffHandStack().getCount();
+            int b = hand == InteractionHand.MAIN_HAND ? Managers.PACKET.getStack().getCount() : BlackOut.mc.player.getOffhandItem().getCount();
             bottlesLeft = Math.min((int) Math.floor(this.throwsLeft), b);
         }
 
@@ -182,9 +181,9 @@ public class AutoPot extends Module {
     }
 
     private boolean inDanger() {
-        for (Entity entity : BlackOut.mc.world.getEntities()) {
-            if (entity instanceof EndCrystalEntity && entity.age <= this.maxExisted.get()) {
-                double damage = DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), entity.getPos());
+        for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
+            if (entity instanceof EndCrystal && entity.tickCount <= this.maxExisted.get()) {
+                double damage = DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), entity.position());
                 if (BlackOut.mc.player.getHealth() - damage <= this.safeHealth.get()) {
                     return true;
                 }
@@ -194,7 +193,7 @@ public class AutoPot extends Module {
         return false;
     }
 
-    private void throwBottle(Hand hand) {
+    private void throwBottle(InteractionHand hand) {
         if (hand != null || (this.switched = this.switchMode.get().swap(this.result.slot()))) {
             this.useItem(hand);
             if (this.renderSwing.get()) {

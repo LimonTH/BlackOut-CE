@@ -7,8 +7,8 @@ import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.util.DamageUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.Vec3;
 
 public class UtilsManager extends Manager {
     @Override
@@ -23,8 +23,8 @@ public class UtilsManager extends Manager {
 
     @Event
     public void onJoin(GameJoinEvent event) {
-        DamageUtils.raycastContext = new RaycastContext(
-                new Vec3d(0.0, 0.0, 0.0), new Vec3d(0.0, 0.0, 0.0), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, BlackOut.mc.player
+        DamageUtils.raycastContext = new ClipContext(
+                new Vec3(0.0, 0.0, 0.0), new Vec3(0.0, 0.0, 0.0), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player
         );
     }
 }

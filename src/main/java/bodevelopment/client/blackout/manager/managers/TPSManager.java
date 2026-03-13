@@ -5,12 +5,11 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.network.packet.s2c.play.WorldTimeUpdateS2CPacket;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import net.minecraft.network.protocol.game.ClientboundSetTimePacket;
 
 public class TPSManager extends Manager {
     private final List<Double> list = Collections.synchronizedList(new ArrayList<>());
@@ -25,8 +24,8 @@ public class TPSManager extends Manager {
 
     @Event
     public void onReceive(PacketEvent.Receive.Pre event) {
-        if (event.packet instanceof WorldTimeUpdateS2CPacket packet) {
-            long tickDelta = packet.time() - this.prevWorldTime;
+        if (event.packet instanceof ClientboundSetTimePacket packet) {
+            long tickDelta = packet.gameTime() - this.prevWorldTime;
             double sus = tickDelta / ((System.currentTimeMillis() - this.prevTime) / 1000.0);
             synchronized (this.list) {
                 this.list.addFirst(sus);
@@ -34,7 +33,7 @@ public class TPSManager extends Manager {
                 this.calcTps();
             }
 
-            this.prevWorldTime = packet.time();
+            this.prevWorldTime = packet.gameTime();
             this.prevTime = System.currentTimeMillis();
         }
     }

@@ -9,15 +9,14 @@ import bodevelopment.client.blackout.module.setting.multisettings.TextColorMulti
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.registry.entry.RegistryEntry;
-
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
+import net.minecraft.core.Holder;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
 
 public class Effects extends HudElement {
     public final SettingGroup sgGeneral = this.addGroup("General");
@@ -47,33 +46,33 @@ public class Effects extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            if (BlackOut.mc.player.getActiveStatusEffects() != null) {
-                this.stack.push();
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            if (BlackOut.mc.player.getActiveEffectsMap() != null) {
+                this.stack.pushPose();
                 float width = BlackOut.FONT.getWidth("idunnoman 4:20");
                 this.setSize(width, BlackOut.FONT.getHeight() * 2.0F + 1.0F);
                 if (this.side.get() == Side.Right) {
                     this.stack.translate(width, 0.0F, 0.0F);
                 }
 
-                Comparator<Entry<RegistryEntry<StatusEffect>, StatusEffectInstance>> comparator = Comparator.comparingDouble(this::getWidth);
+                Comparator<Entry<Holder<MobEffect>, MobEffectInstance>> comparator = Comparator.comparingDouble(this::getWidth);
                 BlackOut.mc
                         .player
-                        .getActiveStatusEffects()
+                        .getActiveEffectsMap()
                         .entrySet()
                         .stream()
                         .sorted(this.order.get() == Order.Shortest ? comparator : comparator.reversed())
                         .forEach(entry -> this.stack.translate(0.0F, this.render(entry.getKey().value(), entry.getValue()), 0.0F));
-                this.stack.pop();
+                this.stack.popPose();
             }
         }
     }
 
-    private float render(StatusEffect effect, StatusEffectInstance effectInstance) {
+    private float render(MobEffect effect, MobEffectInstance effectInstance) {
         int timeS = (int) Math.floor(effectInstance.getDuration() / 20.0);
         String timeString = (int) Math.floor(timeS / 60.0F) + ":" + (timeS % 60 < 10 ? "0" : "") + timeS % 60;
         String levelString = this.levelString(effectInstance);
-        String nameString = effect.getName().getString();
+        String nameString = effect.getDisplayName().getString();
         float returnHeight = 0.0F;
         switch (this.style.get()) {
             case Blackout:
@@ -135,19 +134,19 @@ public class Effects extends HudElement {
         return this.up.get() ? -returnHeight : returnHeight;
     }
 
-    private float getWidth(Entry<RegistryEntry<StatusEffect>, StatusEffectInstance> entry) {
+    private float getWidth(Entry<Holder<MobEffect>, MobEffectInstance> entry) {
         return this.getWidth(entry.getKey().value(), entry.getValue());
     }
 
-    private float getWidth(StatusEffect effect, StatusEffectInstance effectInstance) {
-        return this.getWidth(effect.getName().getString(), String.valueOf(effectInstance.getAmplifier()));
+    private float getWidth(MobEffect effect, MobEffectInstance effectInstance) {
+        return this.getWidth(effect.getDisplayName().getString(), String.valueOf(effectInstance.getAmplifier()));
     }
 
     private float getWidth(String name, String level) {
         return Math.max(BlackOut.FONT.getWidth(name + level) + 10.0F, this.minWidth.get().floatValue());
     }
 
-    private String levelString(StatusEffectInstance instance) {
+    private String levelString(MobEffectInstance instance) {
         if (instance.getAmplifier() < 0) {
             return "-";
         } else {

@@ -17,25 +17,23 @@ import bodevelopment.client.blackout.randomstuff.Rotation;
 import bodevelopment.client.blackout.randomstuff.timers.RenderList;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.util.*;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
 
 public class ObsidianModule extends Module {
 
@@ -84,7 +82,7 @@ public class ObsidianModule extends Module {
     private int tickTimer = 0;
     private double timer = 0.0;
     private boolean support = false;
-    private Hand hand = null;
+    private InteractionHand hand = null;
     private int blocksLeft = 0;
     private int placesLeft = 0;
     private FindResult result = null;
@@ -117,7 +115,7 @@ public class ObsidianModule extends Module {
 
     @Event
     public void onBlock(BlockStateEvent event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null && this.enabled) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null && this.enabled) {
             if (event.previousState.getBlock() != event.state.getBlock() && !OLEPOSSUtils.replaceable(event.pos)) {
                 if (this.blockPlacements.contains(event.pos)) {
                     this.render.add(event.pos, 0.5);
@@ -137,7 +135,7 @@ public class ObsidianModule extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player == null || BlackOut.mc.world == null) return;
+        if (BlackOut.mc.player == null || BlackOut.mc.level == null) return;
 
         if (!this.enabled) {
             this.render.update((pos, time, delta) ->
@@ -178,7 +176,7 @@ public class ObsidianModule extends Module {
                 this.firstCalc = false;
 
                 if (!this.pauseEat.get() || !BlackOut.mc.player.isUsingItem()) {
-                    if (!this.onlyOnGround.get() || BlackOut.mc.player.isOnGround()) {
+                    if (!this.onlyOnGround.get() || BlackOut.mc.player.onGround()) {
                         this.placeBlocks();
                     }
                 }
@@ -200,15 +198,15 @@ public class ObsidianModule extends Module {
                 Entity blocking = this.getBlocking();
                 if (blocking != null) {
                     if (!SettingUtils.shouldRotate(RotationType.Attacking) || this.attackRotate(blocking.getBoundingBox(), -0.1, "attacking")) {
-                        SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
-                        this.sendPacket(PlayerInteractEntityC2SPacket.attack(blocking, BlackOut.mc.player.isSneaking()));
-                        SettingUtils.swing(SwingState.Post, SwingType.Attacking, Hand.MAIN_HAND);
+                        SettingUtils.swing(SwingState.Pre, SwingType.Attacking, InteractionHand.MAIN_HAND);
+                        this.sendPacket(ServerboundInteractPacket.createAttackPacket(blocking, BlackOut.mc.player.isShiftKeyDown()));
+                        SettingUtils.swing(SwingState.Post, SwingType.Attacking, InteractionHand.MAIN_HAND);
                         if (SettingUtils.shouldRotate(RotationType.Attacking)) {
                             this.end("attacking");
                         }
 
                         if (this.attackSwing.get()) {
-                            this.clientSwing(this.attackHand.get(), Hand.MAIN_HAND);
+                            this.clientSwing(this.attackHand.get(), InteractionHand.MAIN_HAND);
                         }
 
                         this.lastAttack = System.currentTimeMillis();
@@ -222,12 +220,12 @@ public class ObsidianModule extends Module {
         Entity crystal = null;
         double lowest = 1000.0;
 
-        for (Entity entity : BlackOut.mc.world.getEntities()) {
-            if (entity instanceof EndCrystalEntity
+        for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
+            if (entity instanceof EndCrystal
                     && !(BlackOut.mc.player.distanceTo(entity) > 5.0F)
                     && SettingUtils.inAttackRange(entity.getBoundingBox())
                     && this.validForBlocking(entity)) {
-                double dmg = Math.max(10.0, DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), entity.getPos()));
+                double dmg = Math.max(10.0, DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), entity.position()));
                 if (dmg < lowest) {
                     lowest = dmg;
                     crystal = entity;
@@ -331,11 +329,11 @@ public class ObsidianModule extends Module {
 
                     if (this.switched || this.hand != null) {
                         if (SettingUtils.shouldRotate(RotationType.BlockPlace) && this.rotationMode.get() == RotationMode.Packet) {
-                            Rotation rotation = SettingUtils.getRotation(data.pos(), data.dir(), data.pos().toCenterPos(), RotationType.BlockPlace);
-                            this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(rotation.yaw(), rotation.pitch(), Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
+                            Rotation rotation = SettingUtils.getRotation(data.pos(), data.dir(), data.pos().getCenter(), RotationType.BlockPlace);
+                            this.sendPacket(new ServerboundMovePlayerPacket.Rot(rotation.yaw(), rotation.pitch(), Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
                         }
 
-                        this.placeBlock(this.hand, data.pos().toCenterPos(), data.dir(), data.pos());
+                        this.placeBlock(this.hand, data.pos().getCenter(), data.dir(), data.pos());
                         if (this.placeSwing.get()) {
                             this.clientSwing(this.placeHand.get(), this.hand);
                         }
@@ -357,9 +355,9 @@ public class ObsidianModule extends Module {
     }
 
     private void setBlock(BlockPos pos) {
-        if (BlackOut.mc.player.getInventory().getStack(this.result.slot()).getItem() instanceof BlockItem block) {
+        if (BlackOut.mc.player.getInventory().getItem(this.result.slot()).getItem() instanceof BlockItem block) {
             Managers.PACKET.addToQueue(handler -> {
-                BlackOut.mc.world.setBlockState(pos, block.getBlock().getDefaultState());
+                BlackOut.mc.level.setBlockAndUpdate(pos, block.getBlock().defaultBlockState());
                 this.blockPlaceSound(pos, this.result.stack());
             });
         }
@@ -371,7 +369,7 @@ public class ObsidianModule extends Module {
 
         for (BlockPos pos : this.blockPlacements) {
             if (this.validBlock(pos)) {
-                double y = RotationUtils.getYaw(pos.toCenterPos());
+                double y = RotationUtils.getYaw(pos.getCenter());
                 if (y < min) {
                     this.support = false;
                     min = y;
@@ -381,7 +379,7 @@ public class ObsidianModule extends Module {
 
         for (BlockPos posx : this.supportPositions) {
             if (this.validBlock(posx)) {
-                double y = RotationUtils.getYaw(posx.toCenterPos());
+                double y = RotationUtils.getYaw(posx.getCenter());
                 if (y < min) {
                     this.support = true;
                     min = y;
@@ -412,10 +410,10 @@ public class ObsidianModule extends Module {
         } else {
             for (Direction dir : Direction.values()) {
                 if (dir != Direction.UP) {
-                    BlockPos pos2 = pos.offset(dir);
+                    BlockPos pos2 = pos.relative(dir);
                     if (!this.blockPlacements.contains(pos2)
                             && !this.insideBlocks.contains(pos2)
-                            && !EntityUtils.intersects(BoxUtils.get(pos2), entity -> entity instanceof PlayerEntity && !entity.isSpectator())
+                            && !EntityUtils.intersects(BoxUtils.get(pos2), entity -> entity instanceof Player && !entity.isSpectator())
                             && SettingUtils.getPlaceData(pos2, !this.allowSneak.get()).valid()
                             && SettingUtils.inPlaceRange(pos2)
                             && SettingUtils.getPlaceData(pos, (p, d) -> d == dir, null, !this.allowSneak.get()).valid()) {
@@ -436,7 +434,7 @@ public class ObsidianModule extends Module {
             for (Direction dir : Direction.values()) {
                 PlaceData data2 = SettingUtils.getPlaceData(pos, (p, d) -> d == dir, null, !this.allowSneak.get());
                 if (data2.valid()) {
-                    BlockPos offsetPos = pos.offset(dir);
+                    BlockPos offsetPos = pos.relative(dir);
                     if (this.supportPositions.contains(offsetPos)) {
                         return true;
                     }
@@ -472,11 +470,11 @@ public class ObsidianModule extends Module {
     }
 
     protected boolean validEntity(Entity entity) {
-        return (!(entity instanceof EndCrystalEntity) || System.currentTimeMillis() - this.lastAttack >= 100L) && !(entity instanceof ItemEntity);
+        return (!(entity instanceof EndCrystal) || System.currentTimeMillis() - this.lastAttack >= 100L) && !(entity instanceof ItemEntity);
     }
 
-    protected boolean intersects(PlayerEntity player) {
-        Box playerBox = player.getBoundingBox().contract(1.0E-4, 1.0E-4, 1.0E-4);
+    protected boolean intersects(Player player) {
+        AABB playerBox = player.getBoundingBox().deflate(1.0E-4, 1.0E-4, 1.0E-4);
 
         for (BlockPos pos : this.blockPlacements) {
             if (playerBox.intersects(BoxUtils.get(pos))) {
@@ -487,7 +485,7 @@ public class ObsidianModule extends Module {
         return false;
     }
 
-    protected int[] getSize(PlayerEntity player) {
+    protected int[] getSize(Player player) {
         int[] size = new int[4];
         double x = player.getX() - player.getBlockX();
         double z = player.getZ() - player.getBlockZ();
@@ -512,7 +510,7 @@ public class ObsidianModule extends Module {
 
     protected BlockPos getPos() {
         return BlackOut.mc.player == null
-                ? BlockPos.ORIGIN
+                ? BlockPos.ZERO
                 : new BlockPos(BlackOut.mc.player.getBlockX(), (int) Math.round(BlackOut.mc.player.getY()), BlackOut.mc.player.getBlockZ());
     }
 

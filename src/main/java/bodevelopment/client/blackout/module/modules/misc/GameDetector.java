@@ -13,7 +13,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.InvUtils;
 import bodevelopment.client.blackout.util.SoundUtils;
-import net.minecraft.item.Items;
+import net.minecraft.world.item.Items;
 
 public class GameDetector extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -49,15 +49,15 @@ public class GameDetector extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            if (BlackOut.mc.player.age >= 20) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            if (BlackOut.mc.player.tickCount >= 20) {
                 if (this.gameStarted != this.prevState) {
                     this.toggleModules(this.gameStarted);
                     this.prevState = this.gameStarted;
                 }
 
                 this.gameStarted = !this.capabilities.get()
-                        || !BlackOut.mc.player.getAbilities().allowFlying
+                        || !BlackOut.mc.player.getAbilities().mayfly
                         && !BlackOut.mc.player.getAbilities().flying
                         && !BlackOut.mc.player.getAbilities().invulnerable;
                 if (this.compass.get() && InvUtils.count(true, false, stack -> stack.getItem() == Items.COMPASS) > 0) {

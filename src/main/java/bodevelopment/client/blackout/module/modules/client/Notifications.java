@@ -12,11 +12,10 @@ import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.MathHelper;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
+import net.minecraft.ChatFormatting;
+import net.minecraft.util.Mth;
 
 public class Notifications extends SettingsModule {
     private static Notifications INSTANCE;
@@ -53,11 +52,11 @@ public class Notifications extends SettingsModule {
             "Applies a Gaussian blur behind notifications to make them stand out from the game background.");
     private final Setting<Boolean> shadow = this.sgRender.booleanSetting("Shadow", true,
             "Enables a subtle drop shadow under the notification cards for a 3D effect.");
-    private final Setting<Formatting> nameColor = this.sgRender.enumSetting("Name Color", Formatting.RED,
+    private final Setting<ChatFormatting> nameColor = this.sgRender.enumSetting("Name Color", ChatFormatting.RED,
             "The color of the client name inside the chat prefix.");
-    private final Setting<Formatting> bracketColor = this.sgRender.enumSetting("Bracket Color", Formatting.DARK_GRAY,
+    private final Setting<ChatFormatting> bracketColor = this.sgRender.enumSetting("Bracket Color", ChatFormatting.DARK_GRAY,
             "The color of the square brackets [ ] that surround the prefix.");
-    private final Setting<Formatting> txtColor = this.sgRender.enumSetting("Chat Text Color", Formatting.WHITE,
+    private final Setting<ChatFormatting> txtColor = this.sgRender.enumSetting("Chat Text Color", ChatFormatting.WHITE,
             "The default color for the notification message body in chat.");
 
     public Notifications() {
@@ -77,9 +76,9 @@ public class Notifications extends SettingsModule {
         return String.format("%s[%s%s%s]%s", this.bracketColor.get(), this.nameColor.get(), prefixName, this.bracketColor.get(), this.txtColor.get());
     }
 
-    public float render(MatrixStack stack, NotificationManager.Notification n, float offset) {
+    public float render(PoseStack stack, NotificationManager.Notification n, float offset) {
         double delta = this.getAnimationProgress(n.startTime, n.time);
-        float y = BlackOut.mc.getWindow().getHeight() - offset;
+        float y = BlackOut.mc.getWindow().getScreenHeight() - offset;
         double bar = 1.0 - Math.min((double) (System.currentTimeMillis() - n.startTime), 1000.0) / 1000.0;
         float returnHeight = 0.0F;
 
@@ -105,7 +104,7 @@ public class Notifications extends SettingsModule {
             );
         };
         float fHeight = this.bold.get() ? BlackOut.BOLD_FONT.getHeight() : BlackOut.FONT.getHeight();
-        stack.push();
+        stack.pushPose();
         float width;
         float x;
         int r;
@@ -118,10 +117,10 @@ public class Notifications extends SettingsModule {
             case Classic:
                 returnHeight = 40.0F;
                 width = Math.max(150.0F, BlackOut.FONT.getWidth(n.text) * 2.0F + 50.0F);
-                x = (float) (BlackOut.mc.getWindow().getWidth() - (width + 20.0F) * delta);
+                x = (float) (BlackOut.mc.getWindow().getScreenWidth() - (width + 20.0F) * delta);
                 r = this.getRounding();
 
-                stack.push();
+                stack.pushPose();
                 stack.translate(x + r - 5.0F, y + r - 5.0F, 0.0F);
                 roundedWidth = width - r * 2 + 10.0F;
                 roundedHeight = 40.0F - r * 2 + 10.0F;
@@ -145,13 +144,13 @@ public class Notifications extends SettingsModule {
                 BlackOut.FONT.text(stack, "i", 3.0F, 0.0F, finalCenterY, Color.WHITE, true, true);
                 this.textColor.render(stack, n.text, 2.0F, 25.0F, yCorrection, false, true);
 
-                stack.pop();
+                stack.popPose();
                 break;
             case Slim:
                 returnHeight = 30.0F;
                 roundedHeight = fHeight * 3.0F;
                 width = this.getWidth(n.text) * 2.0F + 4.0F;
-                x = (float) (BlackOut.mc.getWindow().getWidth() - (width + 20.0F) * delta);
+                x = (float) (BlackOut.mc.getWindow().getScreenWidth() - (width + 20.0F) * delta);
                 stack.translate(x, y, 0.0F);
                 if (this.blur.get()) {
                     RenderUtils.drawLoadedBlur("hudblur", stack, renderer -> renderer.rounded(0.0F, 0.0F, width, roundedHeight, 6.0F, 10));
@@ -169,7 +168,7 @@ public class Notifications extends SettingsModule {
                 tHeight = t.getHeight() / 4.8F;
                 roundedHeight = fHeight * 3.0F;
                 width = this.getWidth(n.text) * 2.0F + 6.0F + tHeight;
-                x = (float) (BlackOut.mc.getWindow().getWidth() - (width + 20.0F) * delta);
+                x = (float) (BlackOut.mc.getWindow().getScreenWidth() - (width + 20.0F) * delta);
                 stack.translate(x, y, 0.0F);
                 if (this.blur.get()) {
                     RenderUtils.drawLoadedBlur("hudblur", stack, renderer -> renderer.rounded(0.0F, 0.0F, width, roundedHeight, 6.0F, 10));
@@ -184,7 +183,7 @@ public class Notifications extends SettingsModule {
                 returnHeight = 40.0F;
                 textWidth = Math.max(BlackOut.BOLD_FONT.getWidth(n.bigText) * 2.5F, BlackOut.FONT.getWidth(n.text) * 2.0F);
                 width = Math.max(150.0F, textWidth + 50.0F);
-                x = (float) (BlackOut.mc.getWindow().getWidth() - (width + 20.0F) * delta);
+                x = (float) (BlackOut.mc.getWindow().getScreenWidth() - (width + 20.0F) * delta);
                 r = this.getRounding();
                 stack.translate(x + r - 5.0F, y + r - 5.0F, 0.0F);
                 roundedWidth = width - r * 2 + 10.0F;
@@ -207,7 +206,7 @@ public class Notifications extends SettingsModule {
                 textWidth = Math.max(BlackOut.BOLD_FONT.getWidth(n.bigText) * 2.5F, BlackOut.FONT.getWidth(n.text) * 2.0F);
                 width = Math.max(150.0F, textWidth + 50.0F);
                 float height = 60.0F;
-                x = (float) (BlackOut.mc.getWindow().getWidth() - (width + 20.0F) * delta);
+                x = (float) (BlackOut.mc.getWindow().getScreenWidth() - (width + 20.0F) * delta);
                 stack.translate(x - 5.0F, y - 5.0F, 0.0F);
                 if (this.blur.get()) {
                     RenderUtils.drawLoadedBlur("hudblur", stack, renderer -> renderer.rounded(0.0F, 0.0F, width, height, 0.0F, 10));
@@ -226,8 +225,8 @@ public class Notifications extends SettingsModule {
                 t.quad(stack, width - tWidth - 5.0F, 5.0F, tWidth, tHeight);
         }
 
-        stack.pop();
-        return MathHelper.lerp((float) delta, returnHeight, returnHeight + 20.0F);
+        stack.popPose();
+        return Mth.lerp((float) delta, returnHeight, returnHeight + 20.0F);
     }
 
     private double getAnimationProgress(long start, long time) {

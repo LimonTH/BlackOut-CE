@@ -14,12 +14,16 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.math.Vec3d;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.client.renderer.CoreShaders;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
 import java.awt.*;
@@ -61,11 +65,11 @@ public class Trails extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.addPositions(event.tickDelta);
-            MatrixStack stack = Render3DUtils.matrices;
-            Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
-            stack.push();
+            PoseStack stack = Render3DUtils.matrices;
+            Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
+            stack.pushPose();
             Render3DUtils.setRotation(stack);
             Render3DUtils.start();
             this.map.forEach((entity, line) -> {
@@ -73,14 +77,14 @@ public class Trails extends Module {
                 line.render(stack, camPos, lineColor, this.renderTime.get(), this.fadeTime.get());
             });
             Render3DUtils.end();
-            stack.pop();
+            stack.popPose();
         }
     }
 
     private void addPositions(double tickDelta) {
         if (!(System.currentTimeMillis() - this.prevAdd < 1000.0 / this.maxFrequency.get())) {
             this.prevAdd = System.currentTimeMillis();
-            BlackOut.mc.world.getEntities().forEach(entity -> {
+            BlackOut.mc.level.entitiesForRendering().forEach(entity -> {
                 if (this.entities.get().contains(entity.getType())) {
                     if (this.map.containsKey(entity)) {
                         this.map.get(entity).positions.add(new Pair<>(this.renderHeight.get().function.apply(entity, tickDelta), System.currentTimeMillis()));
@@ -116,30 +120,30 @@ public class Trails extends Module {
 
     public enum HeightMode {
         Feet(OLEPOSSUtils::getLerpedPos),
-        Middle((entity, tickDelta) -> OLEPOSSUtils.getLerpedPos(entity, tickDelta).add(0.0, entity.getBoundingBox().getLengthY() / 2.0, 0.0));
+        Middle((entity, tickDelta) -> OLEPOSSUtils.getLerpedPos(entity, tickDelta).add(0.0, entity.getBoundingBox().getYsize() / 2.0, 0.0));
 
-        private final DoubleFunction<Entity, Double, Vec3d> function;
+        private final DoubleFunction<Entity, Double, Vec3> function;
 
-        HeightMode(DoubleFunction<Entity, Double, Vec3d> function) {
+        HeightMode(DoubleFunction<Entity, Double, Vec3> function) {
             this.function = function;
         }
     }
 
     private static class Line {
-        private final List<Pair<Vec3d, Long>> positions = new ArrayList<>();
+        private final List<Pair<Vec3, Long>> positions = new ArrayList<>();
 
-        private void render(MatrixStack stack, Vec3d camPos, Color color, double renderTime, double fadeTime) {
-            this.positions.removeIf(pairx -> System.currentTimeMillis() - pairx.getRight() > (renderTime + fadeTime) * 1000.0);
+        private void render(PoseStack stack, Vec3 camPos, Color color, double renderTime, double fadeTime) {
+            this.positions.removeIf(pairx -> System.currentTimeMillis() - pairx.getB() > (renderTime + fadeTime) * 1000.0);
 
             if (this.positions.size() >= 2) {
-                RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
+                RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
                 RenderSystem.lineWidth(Trails.getInstance().lineWidth.get().floatValue());
 
-                Tessellator tessellator = Tessellator.getInstance();
-                BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
+                Tesselator tessellator = Tesselator.getInstance();
+                BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
 
-                MatrixStack.Entry entry = stack.peek();
-                Matrix4f matrix4f = entry.getPositionMatrix();
+                PoseStack.Pose entry = stack.last();
+                Matrix4f matrix4f = entry.pose();
 
                 float r = color.getRed() / 255.0F;
                 float g = color.getGreen() / 255.0F;
@@ -147,36 +151,36 @@ public class Trails extends Module {
                 float a = color.getAlpha() / 255.0F;
 
                 for (int i = 0; i < this.positions.size() - 1; i++) {
-                    Pair<Vec3d, Long> pair = this.positions.get(i);
-                    Pair<Vec3d, Long> nextPair = this.positions.get(i + 1);
+                    Pair<Vec3, Long> pair = this.positions.get(i);
+                    Pair<Vec3, Long> nextPair = this.positions.get(i + 1);
 
-                    Vec3d vec = pair.getLeft();
-                    Vec3d nextVec = nextPair.getLeft();
+                    Vec3 vec = pair.getA();
+                    Vec3 nextVec = nextPair.getA();
 
-                    float alpha = this.getAlpha(pair.getRight(), renderTime, fadeTime) * a;
-                    float alpha2 = this.getAlpha(nextPair.getRight(), renderTime, fadeTime) * a;
+                    float alpha = this.getAlpha(pair.getB(), renderTime, fadeTime) * a;
+                    float alpha2 = this.getAlpha(nextPair.getB(), renderTime, fadeTime) * a;
 
-                    Vec3d diff = nextVec.subtract(vec);
-                    Vec3d normal = diff.normalize();
+                    Vec3 diff = nextVec.subtract(vec);
+                    Vec3 normal = diff.normalize();
 
-                    bufferBuilder.vertex(
+                    bufferBuilder.addVertex(
                                     matrix4f,
                                     (float) (vec.x - camPos.x),
                                     (float) (vec.y - camPos.y),
                                     (float) (vec.z - camPos.z)
-                            ).color(r, g, b, alpha)
-                            .normal((float) normal.x, (float) normal.y, (float) normal.z);
+                            ).setColor(r, g, b, alpha)
+                            .setNormal((float) normal.x, (float) normal.y, (float) normal.z);
 
-                    bufferBuilder.vertex(
+                    bufferBuilder.addVertex(
                                     matrix4f,
                                     (float) (nextVec.x - camPos.x),
                                     (float) (nextVec.y - camPos.y),
                                     (float) (nextVec.z - camPos.z)
-                            ).color(r, g, b, alpha2)
-                            .normal((float) normal.x, (float) normal.y, (float) normal.z);
+                            ).setColor(r, g, b, alpha2)
+                            .setNormal((float) normal.x, (float) normal.y, (float) normal.z);
                 }
 
-                BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+                BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
             }
         }
 

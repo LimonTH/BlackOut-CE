@@ -6,18 +6,17 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-
 import java.util.List;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
 
 public class NoInteract extends Module {
     private static NoInteract INSTANCE;
@@ -48,50 +47,50 @@ public class NoInteract extends Module {
         return INSTANCE;
     }
 
-    public ActionResult handleBlock(Hand hand, BlockPos pos, SingleOut<ActionResult> action) {
-        Item item = BlackOut.mc.player.getStackInHand(hand).getItem();
+    public InteractionResult handleBlock(InteractionHand hand, BlockPos pos, SingleOut<InteractionResult> action) {
+        Item item = BlackOut.mc.player.getItemInHand(hand).getItem();
         if (this.filterMode.get().shouldAccept(item, this.whenHolding)) {
             return action.get();
         } else {
-            Block block = BlackOut.mc.world.getBlockState(pos).getBlock();
+            Block block = BlackOut.mc.level.getBlockState(pos).getBlock();
             if (this.blockFilterMode.get().shouldAccept(block, this.blocks)) {
                 return action.get();
             } else {
                 switch (this.ignoreMode.get()) {
                     case Sneak: {
-                        this.sendPacket(new ClientCommandC2SPacket(BlackOut.mc.player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY));
-                        ActionResult actionResult = action.get();
-                        this.sendPacket(new ClientCommandC2SPacket(BlackOut.mc.player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY));
+                        this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.PRESS_SHIFT_KEY));
+                        InteractionResult actionResult = action.get();
+                        this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.RELEASE_SHIFT_KEY));
                         return actionResult;
                     }
                     case SneakBlocks: {
                         if (!(item instanceof BlockItem)) {
-                            return ActionResult.PASS;
+                            return InteractionResult.PASS;
                         }
 
-                        this.sendPacket(new ClientCommandC2SPacket(BlackOut.mc.player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY));
-                        ActionResult actionResult = action.get();
-                        this.sendPacket(new ClientCommandC2SPacket(BlackOut.mc.player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY));
+                        this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.PRESS_SHIFT_KEY));
+                        InteractionResult actionResult = action.get();
+                        this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.RELEASE_SHIFT_KEY));
                         return actionResult;
                     }
                     default:
-                        return ActionResult.PASS;
+                        return InteractionResult.PASS;
                 }
             }
         }
     }
 
-    public ActionResult handleEntity(Hand hand, Entity entity, SingleOut<ActionResult> action) {
-        Item item = BlackOut.mc.player.getStackInHand(hand).getItem();
+    public InteractionResult handleEntity(InteractionHand hand, Entity entity, SingleOut<InteractionResult> action) {
+        Item item = BlackOut.mc.player.getItemInHand(hand).getItem();
         if (this.filterModeEntity.get().shouldAccept(item, this.whenHoldingEntity)) {
             return action.get();
         } else {
-            return this.entityFilterMode.get().shouldAccept(entity.getType(), this.entities) ? action.get() : ActionResult.PASS;
+            return this.entityFilterMode.get().shouldAccept(entity.getType(), this.entities) ? action.get() : InteractionResult.PASS;
         }
     }
 
-    public ActionResult handleUse(Hand hand, SingleOut<ActionResult> action) {
-        return this.itemFilterMode.get().shouldAccept(BlackOut.mc.player.getStackInHand(hand).getItem(), this.items) ? action.get() : ActionResult.PASS;
+    public InteractionResult handleUse(InteractionHand hand, SingleOut<InteractionResult> action) {
+        return this.itemFilterMode.get().shouldAccept(BlackOut.mc.player.getItemInHand(hand).getItem(), this.items) ? action.get() : InteractionResult.PASS;
     }
 
     public enum IgnoreMode {

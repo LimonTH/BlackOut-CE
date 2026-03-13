@@ -13,11 +13,11 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.util.render.WireframeRenderer;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Camera;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Quaternionf;
 
 public class PopChams extends Module {
@@ -47,7 +47,7 @@ public class PopChams extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player == null || BlackOut.mc.world == null) return;
+        if (BlackOut.mc.player == null || BlackOut.mc.level == null) return;
 
         if (this.pops.getList().isEmpty()) return;
 
@@ -62,7 +62,7 @@ public class PopChams extends Module {
                 progress = (float) (now - timer.startTime) / (float) total;
             }
 
-            progress = MathHelper.clamp(progress, 0.0f, 1.0f);
+            progress = Mth.clamp(progress, 0.0f, 1.0f);
 
             if (!Float.isNaN(progress)) {
                 this.renderPop(event.stack, timer.value, progress);
@@ -78,7 +78,7 @@ public class PopChams extends Module {
         }
     }
 
-    private boolean shouldRender(AbstractClientPlayerEntity player) {
+    private boolean shouldRender(AbstractClientPlayer player) {
         if (player == BlackOut.mc.player) {
             return this.self.get();
         } else {
@@ -86,13 +86,13 @@ public class PopChams extends Module {
         }
     }
 
-    private void renderPop(MatrixStack stack, Pop pop, float progress) {
-        Camera camera = BlackOut.mc.gameRenderer.getCamera();
-        Vec3d camPos = camera.getPos();
+    private void renderPop(PoseStack stack, Pop pop, float progress) {
+        Camera camera = BlackOut.mc.gameRenderer.getMainCamera();
+        Vec3 camPos = camera.getPosition();
 
-        stack.push();
-        stack.loadIdentity();
-        stack.multiply(new Quaternionf(camera.getRotation()).conjugate());
+        stack.pushPose();
+        stack.setIdentity();
+        stack.mulPose(new Quaternionf(camera.rotation()).conjugate());
 
         double x = pop.x - camPos.x;
         double y = pop.y - camPos.y;
@@ -112,23 +112,23 @@ public class PopChams extends Module {
                 this.scale.get().floatValue()
         );
 
-        stack.pop();
+        stack.popPose();
     }
 
     private static class Pop {
-        private final AbstractClientPlayerEntity player;
+        private final AbstractClientPlayer player;
         private final double x;
         private final double y;
         private final double z;
         private final WireframeRenderer.ModelData modelData;
 
-        public Pop(AbstractClientPlayerEntity player) {
+        public Pop(AbstractClientPlayer player) {
             this.player = player;
-            float tickDelta = BlackOut.mc.getRenderTickCounter().getTickDelta(true);
+            float tickDelta = BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
-            this.x = MathHelper.lerp(tickDelta, player.lastRenderX, player.getX());
-            this.y = MathHelper.lerp(tickDelta, player.lastRenderY, player.getY());
-            this.z = MathHelper.lerp(tickDelta, player.lastRenderZ, player.getZ());
+            this.x = Mth.lerp(tickDelta, player.xOld, player.getX());
+            this.y = Mth.lerp(tickDelta, player.yOld, player.getY());
+            this.z = Mth.lerp(tickDelta, player.zOld, player.getZ());
 
             this.modelData = new WireframeRenderer.ModelData(player, tickDelta);
         }

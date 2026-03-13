@@ -10,16 +10,15 @@ import bodevelopment.client.blackout.util.FileUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
-import net.minecraft.client.session.Session;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.client.User;
 
 public class AltManager extends Manager {
     private final List<Account> accounts = new ArrayList<>();
     public Account selected;
     public Account currentSession;
-    private Session originalSession;
+    private User originalSession;
     private long lastSave = 0L;
     private boolean shouldSave = false;
 
@@ -27,9 +26,9 @@ public class AltManager extends Manager {
 
     @Override
     public void init() {
-        this.originalSession = BlackOut.mc.getSession();
+        this.originalSession = BlackOut.mc.getUser();
 
-        this.selected = new Account(BlackOut.mc.getSession());
+        this.selected = new Account(BlackOut.mc.getUser());
         this.currentSession = this.selected;
         BlackOut.EVENT_BUS.subscribe(this, () -> false);
         String path = "accounts.json";
@@ -41,7 +40,7 @@ public class AltManager extends Manager {
                 if (element instanceof JsonObject object) {
                     this.readData(object);
                 } else {
-                    this.getAccounts().add(new Account(entry.getKey(), null, null, "", null, null, Session.AccountType.MOJANG));
+                    this.getAccounts().add(new Account(entry.getKey(), null, null, "", null, null, User.Type.MOJANG));
                 }
             });
         } else {
@@ -57,7 +56,7 @@ public class AltManager extends Manager {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        boolean inWorld = BlackOut.mc.world != null;
+        boolean inWorld = BlackOut.mc.level != null;
 
         if (!inWorld && wasInWorld) {
             switchToSelected();
@@ -94,7 +93,7 @@ public class AltManager extends Manager {
 
     public void set(Account account) {
         this.selected = account;
-        if (BlackOut.mc.world == null) {
+        if (BlackOut.mc.level == null) {
             this.switchToSelected();
         }
         this.save();
@@ -103,12 +102,12 @@ public class AltManager extends Manager {
     public void switchToOriginal() {
         if (originalSession != null) {
             ((IMinecraftClient) BlackOut.mc).blackout_Client$setSession(
-                    originalSession.getUsername(),
-                    originalSession.getUuidOrNull(),
+                    originalSession.getName(),
+                    originalSession.getProfileId(),
                     originalSession.getAccessToken(),
                     originalSession.getXuid().orElse(null),
                     originalSession.getClientId().orElse(null),
-                    originalSession.getAccountType()
+                    originalSession.getType()
             );
         }
     }

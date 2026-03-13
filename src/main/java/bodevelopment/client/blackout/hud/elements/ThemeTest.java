@@ -27,8 +27,8 @@ public class ThemeTest extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            this.stack.push();
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            this.stack.pushPose();
             this.setSize(20.0F, 20.0F);
             ThemeSettings themeSettings = ThemeSettings.getInstance();
             this.i = 0;
@@ -63,7 +63,7 @@ public class ThemeTest extends HudElement {
                                 }
                             }
                     );
-            this.stack.pop();
+            this.stack.popPose();
         }
     }
 }

@@ -15,13 +15,17 @@ import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.client.renderer.CoreShaders;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
 public class Sight extends Module {
@@ -32,7 +36,7 @@ public class Sight extends Module {
     private final Setting<Double> fadeIn = this.sgGeneral.doubleSetting("Proximal Fade", 1.0, 0.0, 50.0, 0.5, "The distance from the player's eyes where the line starts to transition from transparent to opaque.");
     private final Setting<Double> length = this.sgGeneral.doubleSetting("Vector Magnitude", 5.0, 0.0, 50.0, 0.5, "The maximum distance the sight line extends before termination.");
 
-    private final MatrixStack stack = new MatrixStack();
+    private final PoseStack stack = new PoseStack();
 
     public Sight() {
         super("Sight", "Traces the visual trajectory of other players by rendering gaze vectors that reflect their current pitch and yaw.", SubCategory.ENTITIES, true);
@@ -40,29 +44,29 @@ public class Sight extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        this.stack.push();
+        this.stack.pushPose();
         Render3DUtils.setRotation(this.stack);
         Render3DUtils.start();
 
-        RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
+        RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
         RenderSystem.lineWidth(this.lineWidth.get().floatValue());
 
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
+        Tesselator tessellator = Tesselator.getInstance();
+        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
 
-        MatrixStack.Entry entry = this.stack.peek();
-        Matrix4f matrix4f = entry.getPositionMatrix();
-        Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
+        PoseStack.Pose entry = this.stack.last();
+        Matrix4f matrix4f = entry.pose();
+        Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
 
-        BlackOut.mc.world.getPlayers().forEach(player -> {
+        BlackOut.mc.level.players().forEach(player -> {
             if (player != BlackOut.mc.player) {
-                float tickDelta = BlackOut.mc.getRenderTickCounter().getTickDelta(true);
+                float tickDelta = BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
-                Vec3d eyePos = OLEPOSSUtils.getLerpedPos(player, tickDelta).add(0.0, player.getEyeHeight(player.getPose()), 0.0);
+                Vec3 eyePos = OLEPOSSUtils.getLerpedPos(player, tickDelta).add(0.0, player.getEyeHeight(player.getPose()), 0.0);
 
-                Vec3d lookPos = RotationUtils.rotationVec(
-                        MathHelper.lerp(tickDelta, player.prevYaw, player.getYaw()),
-                        MathHelper.lerp(tickDelta, player.prevPitch, player.getPitch()),
+                Vec3 lookPos = RotationUtils.rotationVec(
+                        Mth.lerp(tickDelta, player.yRotO, player.getYRot()),
+                        Mth.lerp(tickDelta, player.xRotO, player.getXRot()),
                         eyePos,
                         this.fadeIn.get() + this.length.get()
                 );
@@ -70,41 +74,41 @@ public class Sight extends Module {
                 ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(eyePos, lookPos);
                 BlockHitResult hitResult = DamageUtils.raycast(DamageUtils.raycastContext, false);
 
-                Vec3d hitPos = (hitResult.getType() == HitResult.Type.MISS) ? lookPos : hitResult.getPos();
+                Vec3 hitPos = (hitResult.getType() == HitResult.Type.MISS) ? lookPos : hitResult.getLocation();
 
                 this.render(bufferBuilder, matrix4f, entry, eyePos.subtract(camPos), hitPos.subtract(camPos));
             }
         });
 
-        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
 
         Render3DUtils.end();
-        this.stack.pop();
+        this.stack.popPose();
     }
 
-    private void render(BufferBuilder bufferBuilder, Matrix4f matrix4f, MatrixStack.Entry entry, Vec3d start, Vec3d end) {
+    private void render(BufferBuilder bufferBuilder, Matrix4f matrix4f, PoseStack.Pose entry, Vec3 start, Vec3 end) {
         double l = start.distanceTo(end);
         if (l != 0.0) {
             double lerpDelta = this.fadeIn.get() / l;
-            Vec3d lerpedPos = start.lerp(end, Math.min(lerpDelta, 1.0));
-            Vec3d normal = lerpedPos.subtract(start).normalize();
-            bufferBuilder.vertex(matrix4f, (float) start.x, (float) start.y, (float) start.z)
-                    .color(ColorUtils.withAlpha(this.lineColor.get().getRGB(), 0))
-                    .normal(entry, (float) normal.x, (float) normal.y, (float) normal.z)
+            Vec3 lerpedPos = start.lerp(end, Math.min(lerpDelta, 1.0));
+            Vec3 normal = lerpedPos.subtract(start).normalize();
+            bufferBuilder.addVertex(matrix4f, (float) start.x, (float) start.y, (float) start.z)
+                    .setColor(ColorUtils.withAlpha(this.lineColor.get().getRGB(), 0))
+                    .setNormal(entry, (float) normal.x, (float) normal.y, (float) normal.z)
                     ;
-            bufferBuilder.vertex(matrix4f, (float) lerpedPos.x, (float) lerpedPos.y, (float) lerpedPos.z)
-                    .color(ColorUtils.withAlpha(this.lineColor.get().getRGB(), Math.min((int) (1.0 / lerpDelta * 255.0), 255)))
-                    .normal(entry, (float) normal.x, (float) normal.y, (float) normal.z)
+            bufferBuilder.addVertex(matrix4f, (float) lerpedPos.x, (float) lerpedPos.y, (float) lerpedPos.z)
+                    .setColor(ColorUtils.withAlpha(this.lineColor.get().getRGB(), Math.min((int) (1.0 / lerpDelta * 255.0), 255)))
+                    .setNormal(entry, (float) normal.x, (float) normal.y, (float) normal.z)
                     ;
             if (!(lerpDelta >= 1.0)) {
-                Vec3d normal2 = end.subtract(lerpedPos).normalize();
-                bufferBuilder.vertex(matrix4f, (float) lerpedPos.x, (float) lerpedPos.y, (float) lerpedPos.z)
-                        .color(this.lineColor.get().getRGB())
-                        .normal(entry, (float) normal2.x, (float) normal2.y, (float) normal2.z)
+                Vec3 normal2 = end.subtract(lerpedPos).normalize();
+                bufferBuilder.addVertex(matrix4f, (float) lerpedPos.x, (float) lerpedPos.y, (float) lerpedPos.z)
+                        .setColor(this.lineColor.get().getRGB())
+                        .setNormal(entry, (float) normal2.x, (float) normal2.y, (float) normal2.z)
                         ;
-                bufferBuilder.vertex(matrix4f, (float) end.x, (float) end.y, (float) end.z)
-                        .color(this.lineColor.get().getRGB())
-                        .normal(entry, (float) normal2.x, (float) normal2.y, (float) normal2.z)
+                bufferBuilder.addVertex(matrix4f, (float) end.x, (float) end.y, (float) end.z)
+                        .setColor(this.lineColor.get().getRGB())
+                        .setNormal(entry, (float) normal2.x, (float) normal2.y, (float) normal2.z)
                         ;
             }
         }

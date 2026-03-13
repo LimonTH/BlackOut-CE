@@ -37,8 +37,8 @@ public class FrameBuffer {
     }
 
     private void load() {
-        this.width = BlackOut.mc.getWindow().getFramebufferWidth();
-        this.height = BlackOut.mc.getWindow().getFramebufferHeight();
+        this.width = BlackOut.mc.getWindow().getWidth();
+        this.height = BlackOut.mc.getWindow().getHeight();
         this.id = GL30C.glGenFramebuffers();
         this.textureId = GL30C.glGenTextures();
         this.depthId = GL30C.glGenTextures();
@@ -91,8 +91,8 @@ public class FrameBuffer {
 
     private void bindPrev() {
         RenderSystem.assertOnRenderThreadOrInit();
-        if (BlackOut.mc.getFramebuffer() != null) {
-            BlackOut.mc.getFramebuffer().beginWrite(true);
+        if (BlackOut.mc.getMainRenderTarget() != null) {
+            BlackOut.mc.getMainRenderTarget().bindWrite(true);
         } else {
             GlStateManager._glBindFramebuffer(36160, 0);
         }

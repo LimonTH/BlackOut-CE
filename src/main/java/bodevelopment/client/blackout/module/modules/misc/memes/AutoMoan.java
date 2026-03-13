@@ -9,9 +9,8 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.ChatUtils;
-import net.minecraft.entity.player.PlayerEntity;
-
 import java.util.concurrent.ThreadLocalRandom;
+import net.minecraft.world.entity.player.Player;
 
 public class AutoMoan extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -91,12 +90,12 @@ public class AutoMoan extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player == null || BlackOut.mc.world == null) return;
+        if (BlackOut.mc.player == null || BlackOut.mc.level == null) return;
 
         this.timer++;
 
         if (this.timer >= this.delay.get()) {
-            PlayerEntity target = this.getClosest();
+            Player target = this.getClosest();
             if (target != null) {
                 this.moanmode.get().send(target.getName().getString());
                 this.timer = 0;
@@ -104,16 +103,16 @@ public class AutoMoan extends Module {
         }
     }
 
-    private PlayerEntity getClosest() {
-        PlayerEntity closest = null;
+    private Player getClosest() {
+        Player closest = null;
         double minDistance = Double.MAX_VALUE;
 
-        for (PlayerEntity player : BlackOut.mc.world.getPlayers()) {
+        for (Player player : BlackOut.mc.level.players()) {
             if (player == BlackOut.mc.player) continue;
             if (this.ignoreFriends.get() && Managers.FRIENDS.isFriend(player)) continue;
             if (player.isSpectator()) continue;
 
-            double dist = BlackOut.mc.player.squaredDistanceTo(player);
+            double dist = BlackOut.mc.player.distanceToSqr(player);
             if (dist < minDistance) {
                 minDistance = dist;
                 closest = player;

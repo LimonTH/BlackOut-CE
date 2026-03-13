@@ -22,27 +22,26 @@ import bodevelopment.client.blackout.randomstuff.PlaceData;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import net.minecraft.block.AirBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ExperienceOrbEntity;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.entity.projectile.thrown.ExperienceBottleEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.s2c.play.BlockBreakingProgressS2CPacket;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.projectile.ThrownExperienceBottle;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.AirBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.Vec3;
 
 public class Blocker extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -122,7 +121,7 @@ public class Blocker extends Module {
     private int placesLeft = 0;
     private FindResult result = null;
     private boolean switched = false;
-    private Hand hand = null;
+    private InteractionHand hand = null;
     private int tickTimer = 0;
     private double timer = 0.0;
     private long lastTime = 0L;
@@ -147,7 +146,7 @@ public class Blocker extends Module {
     @Event
     public void onRender(RenderEvent.World.Post event) {
         this.placed.update();
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.timer = this.timer + (System.currentTimeMillis() - this.lastTime) / 1000.0;
             this.lastTime = System.currentTimeMillis();
             this.updateBlocks();
@@ -173,9 +172,9 @@ public class Blocker extends Module {
 
     @Event
     public void onReceive(PacketEvent.Receive.Pre event) {
-        if (event.packet instanceof BlockBreakingProgressS2CPacket p) {
-            this.mining.remove(timer -> timer.value.getRight() == p.getEntityId());
-            this.mining.add(new Pair<>(p.getPos(), p.getEntityId()), this.maxMineTime.get());
+        if (event.packet instanceof ClientboundBlockDestructionPacket p) {
+            this.mining.remove(timer -> timer.value.getB() == p.getId());
+            this.mining.add(new Pair<>(p.getPos(), p.getId()), this.maxMineTime.get());
         }
     }
 
@@ -192,7 +191,7 @@ public class Blocker extends Module {
             this.placePositions
                     .stream()
                     .filter(
-                            pos -> !EntityUtils.intersects(BoxUtils.get(pos), entity -> entity instanceof EndCrystalEntity && System.currentTimeMillis() - this.lastAttack > 100L)
+                            pos -> !EntityUtils.intersects(BoxUtils.get(pos), entity -> entity instanceof EndCrystal && System.currentTimeMillis() - this.lastAttack > 100L)
                     )
                     .forEach(this::place);
             if (this.switched) {
@@ -213,7 +212,7 @@ public class Blocker extends Module {
                             : dir != Direction.UP
                             && (this.surroundFloor.get() || !dir.getAxis().isHorizontal())
                             && (this.surroundFloorBottom.get() || dir != Direction.DOWN)) {
-                        BlockPos posx = p.pos.offset(dir);
+                        BlockPos posx = p.pos.relative(dir);
                         if (OLEPOSSUtils.replaceable(posx)) {
                             PlaceData datax = SettingUtils.getPlaceData(posx);
                             if (datax.valid() && SettingUtils.inPlaceRange(datax.pos()) && !EntityUtils.intersects(BoxUtils.get(posx), this::validForIntersects)) {
@@ -225,7 +224,7 @@ public class Blocker extends Module {
                 break;
             case 2:
             case 3:
-                BlockPos pos = p.pos.up();
+                BlockPos pos = p.pos.above();
                 if (!OLEPOSSUtils.replaceable(pos)) {
                     return;
                 }
@@ -259,7 +258,7 @@ public class Blocker extends Module {
                         }
 
                         if (this.attackSwing.get()) {
-                            this.clientSwing(this.attackHand.get(), Hand.MAIN_HAND);
+                            this.clientSwing(this.attackHand.get(), InteractionHand.MAIN_HAND);
                         }
 
                         this.lastAttack = System.currentTimeMillis();
@@ -273,11 +272,11 @@ public class Blocker extends Module {
         Entity crystal = null;
         double lowest = 1000.0;
 
-        for (Entity entity : BlackOut.mc.world.getEntities()) {
-            if (entity instanceof EndCrystalEntity && !(BlackOut.mc.player.distanceTo(entity) > 5.0F) && SettingUtils.inAttackRange(entity.getBoundingBox())) {
+        for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
+            if (entity instanceof EndCrystal && !(BlackOut.mc.player.distanceTo(entity) > 5.0F) && SettingUtils.inAttackRange(entity.getBoundingBox())) {
                 for (BlockPos pos : this.placePositions) {
                     if (BoxUtils.get(pos).intersects(entity.getBoundingBox())) {
-                        double dmg = DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), entity.getPos());
+                        double dmg = DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), entity.position());
                         if (dmg < lowest) {
                             crystal = entity;
                             lowest = dmg;
@@ -324,7 +323,7 @@ public class Blocker extends Module {
                     }
 
                     if (this.switched || this.hand != null) {
-                        this.placeBlock(this.hand, data.pos().toCenterPos(), data.dir(), data.pos());
+                        this.placeBlock(this.hand, data.pos().getCenter(), data.dir(), data.pos());
                         if (this.placeSwing.get()) {
                             this.clientSwing(this.placeHand.get(), this.hand);
                         }
@@ -346,14 +345,14 @@ public class Blocker extends Module {
     }
 
     private void setBlock(BlockPos pos) {
-        if (BlackOut.mc.player.getInventory().getStack(this.result.slot()).getItem() instanceof BlockItem block) {
+        if (BlackOut.mc.player.getInventory().getItem(this.result.slot()).getItem() instanceof BlockItem block) {
             Managers.PACKET
                     .addToQueue(
                             handler -> {
-                                BlackOut.mc.world.setBlockState(pos, block.getBlock().getDefaultState());
+                                BlackOut.mc.level.setBlockAndUpdate(pos, block.getBlock().defaultBlockState());
                                 BlackOut.mc
-                                        .world
-                                        .playSound(pos.getX(), pos.getY(), pos.getZ(), SoundEvents.BLOCK_STONE_PLACE, SoundCategory.BLOCKS, 1.0F, 1.0F, false);
+                                        .level
+                                        .playLocalSound(pos.getX(), pos.getY(), pos.getZ(), SoundEvents.STONE_PLACE, SoundSource.BLOCKS, 1.0F, 1.0F, false);
                             }
                     );
         }
@@ -363,35 +362,35 @@ public class Blocker extends Module {
         BlockPos pos = p.pos;
         switch (p.type) {
             case 1:
-                if (!OLEPOSSUtils.solid2(pos) || BlackOut.mc.world.getBlockState(pos).getBlock() == Blocks.BEDROCK) {
+                if (!OLEPOSSUtils.solid2(pos) || BlackOut.mc.level.getBlockState(pos).getBlock() == Blocks.BEDROCK) {
                     return false;
                 }
                 break;
             case 2:
             case 3:
-                if (BlackOut.mc.world.getBlockState(p.pos).getBlock() != Blocks.OBSIDIAN) {
+                if (BlackOut.mc.level.getBlockState(p.pos).getBlock() != Blocks.OBSIDIAN) {
                     return false;
                 }
 
-                if (!(BlackOut.mc.world.getBlockState(p.pos.up()).getBlock() instanceof AirBlock)) {
+                if (!(BlackOut.mc.level.getBlockState(p.pos.above()).getBlock() instanceof AirBlock)) {
                     return false;
                 }
 
-                if (SettingUtils.oldCrystals() && !(BlackOut.mc.world.getBlockState(p.pos.up(2)).getBlock() instanceof AirBlock)) {
+                if (SettingUtils.oldCrystals() && !(BlackOut.mc.level.getBlockState(p.pos.above(2)).getBlock() instanceof AirBlock)) {
                     return false;
                 }
         }
 
         return this.mining
                 .contains(
-                        timer -> timer.value.getLeft().equals(p.pos) && System.currentTimeMillis() - timer.startTime >= this.mineTime.get() * 1000.0
+                        timer -> timer.value.getA().equals(p.pos) && System.currentTimeMillis() - timer.startTime >= this.mineTime.get() * 1000.0
                 ) && this.damageCheck(pos, p.type);
     }
 
     private void updateBlocks() {
         this.toProtect.clear();
-        if (!this.onlyHole.get() || HoleUtils.inHole(BlackOut.mc.player.getBlockPos())) {
-            BlockPos e = BlockPos.ofFloored(
+        if (!this.onlyHole.get() || HoleUtils.inHole(BlackOut.mc.player.blockPosition())) {
+            BlockPos e = BlockPos.containing(
                     BlackOut.mc.player.getX(), BlackOut.mc.player.getBoundingBox().maxY, BlackOut.mc.player.getZ()
             );
             BlockPos pos = new BlockPos(
@@ -422,7 +421,7 @@ public class Blocker extends Module {
             }
 
             if (this.cev.get()) {
-                this.updateTop(e.up());
+                this.updateTop(e.above());
             }
         }
     }
@@ -435,7 +434,7 @@ public class Blocker extends Module {
         for (int x = size[0] - 1; x <= size[1] + 1; x++) {
             for (int z = size[2] - 1; z <= size[3] + 1; z++) {
                 if (x != size[0] - 1 && x != size[1] + 1 || z != size[2] - 1 && z != size[3] + 1) {
-                    this.toProtect.add(new ProtectBlock(pos.add(x, 0, z), 2));
+                    this.toProtect.add(new ProtectBlock(pos.offset(x, 0, z), 2));
                 }
             }
         }
@@ -450,10 +449,10 @@ public class Blocker extends Module {
                     boolean bz = z == size[2] - 1 || z == size[3] + 1;
                     if (by) {
                         if (!bx && !bz) {
-                            this.toProtect.add(new ProtectBlock(pos.add(x, y, z), 0));
+                            this.toProtect.add(new ProtectBlock(pos.offset(x, y, z), 0));
                         }
                     } else if (!bx || !bz) {
-                        this.toProtect.add(new ProtectBlock(pos.add(x, y, z), 1));
+                        this.toProtect.add(new ProtectBlock(pos.offset(x, y, z), 1));
                     }
                 }
             }
@@ -461,7 +460,7 @@ public class Blocker extends Module {
     }
 
     private boolean validForIntersects(Entity entity) {
-        return !(entity instanceof ItemEntity) && !(entity instanceof EndCrystalEntity);
+        return !(entity instanceof ItemEntity) && !(entity instanceof EndCrystal);
     }
 
     private boolean damageCheck(BlockPos blockPos, int type) {
@@ -473,11 +472,11 @@ public class Blocker extends Module {
                     for (int x = -2; x <= 2; x++) {
                         for (int y = -2; y <= 2; y++) {
                             for (int z = -2; z <= 2; z++) {
-                                BlockPos pos = blockPos.add(x, y, z);
-                                if (BlackOut.mc.world.getBlockState(pos).getBlock() instanceof AirBlock
-                                        && (!SettingUtils.oldCrystals() || BlackOut.mc.world.getBlockState(pos.up()).getBlock() instanceof AirBlock)
+                                BlockPos pos = blockPos.offset(x, y, z);
+                                if (BlackOut.mc.level.getBlockState(pos).getBlock() instanceof AirBlock
+                                        && (!SettingUtils.oldCrystals() || BlackOut.mc.level.getBlockState(pos.above()).getBlock() instanceof AirBlock)
                                         && !EntityUtils.intersects(
-                                        BoxUtils.crystalSpawnBox(pos), entity -> !(entity instanceof ExperienceOrbEntity) && !(entity instanceof ExperienceBottleEntity)
+                                        BoxUtils.crystalSpawnBox(pos), entity -> !(entity instanceof ExperienceOrb) && !(entity instanceof ThrownExperienceBottle)
                                 )
                                         && DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), this.feet(pos), blockPos)
                                         >= this.minDmg.get()) {
@@ -489,7 +488,7 @@ public class Blocker extends Module {
                     break;
                 case 2:
                 case 3:
-                    if (DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), this.feet(blockPos.up()), blockPos)
+                    if (DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), this.feet(blockPos.above()), blockPos)
                             >= this.minDmg.get()) {
                         return true;
                     }
@@ -499,8 +498,8 @@ public class Blocker extends Module {
         }
     }
 
-    private Vec3d feet(BlockPos pos) {
-        return new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+    private Vec3 feet(BlockPos pos) {
+        return new Vec3(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
     }
 
     public enum PlaceDelayMode {

@@ -16,9 +16,9 @@ import bodevelopment.client.blackout.randomstuff.Hole;
 import bodevelopment.client.blackout.util.HoleUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.world.phys.Vec3;
 
 public class HoleSnap extends Module {
     private static HoleSnap INSTANCE;
@@ -78,7 +78,7 @@ public class HoleSnap extends Module {
 
     @Event
     public void onPacket(PacketEvent.Receive.Pre event) {
-        if (event.packet instanceof PlayerPositionLookS2CPacket
+        if (event.packet instanceof ClientboundPlayerPositionPacket
                 && this.maxRubberbands.get() > 0
                 && ++this.rubberbands >= this.maxRubberbands.get()
                 && this.maxRubberbands.get() > 0) {
@@ -88,7 +88,7 @@ public class HoleSnap extends Module {
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null && event.xzValue <= 9) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null && event.xzValue <= 9) {
             Hole hole = this.singleTarget.get() ? this.singleHole : this.findHole();
             if (hole != null && !this.singleBlocked()) {
                 Timer.set(this.timer.get().floatValue());
@@ -99,7 +99,7 @@ public class HoleSnap extends Module {
                     double dX = hole.middle.x - BlackOut.mc.player.getX();
                     double z = this.getSpeed() * pit;
                     double dZ = hole.middle.z - BlackOut.mc.player.getZ();
-                    if (OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().offset(x, 0.0, z))) {
+                    if (OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(x, 0.0, z))) {
                         this.collisions++;
                         if (this.collisions >= this.maxCollisions.get() && this.maxCollisions.get() > 0) {
                             this.disable(this.getDisplayName() + " disabled, collided " + this.collisions + " times", 2, Notifications.Type.Alert);
@@ -110,7 +110,7 @@ public class HoleSnap extends Module {
 
                     if (this.ticks > 0) {
                         this.ticks--;
-                    } else if (OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().offset(0.0, -0.05, 0.0)) && this.jump.get()) {
+                    } else if (OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(0.0, -0.05, 0.0)) && this.jump.get()) {
                         this.ticks = this.jumpCooldown.get();
                         event.setY(this, 0.42);
                     }
@@ -120,7 +120,7 @@ public class HoleSnap extends Module {
                 } else if (BlackOut.mc.player.getY() <= hole.middle.y) {
                     this.disable(this.getDisplayName() + " disabled, in hole");
                     ((IVec3d) event.movement).blackout_Client$setXZ(0.0, 0.0);
-                } else if (OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().offset(0.0, -0.05, 0.0))) {
+                } else if (OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(0.0, -0.05, 0.0))) {
                     this.disable(this.getDisplayName() + " hole unreachable, disabling", 2, Notifications.Type.Alert);
                 } else {
                     event.setXZ(this, 0.0, 0.0);
@@ -152,7 +152,7 @@ public class HoleSnap extends Module {
         for (int x = -r; x <= r; x++) {
             for (int y = (int) (-Math.ceil(this.downRange.get())); y < 1; y++) {
                 for (int z = -r; z <= r; z++) {
-                    BlockPos pos = OLEPOSSUtils.roundedPos().add(x, y, z);
+                    BlockPos pos = OLEPOSSUtils.roundedPos().offset(x, y, z);
                     Hole hole = HoleUtils.getHole(pos, this.singleHoles.get(), this.doubleHoles.get(), this.quadHoles.get(), this.depth.get(), true);
                     if (hole.type != HoleType.NotHole) {
                         if (y == 0 && this.inHole(hole)) {
@@ -160,8 +160,8 @@ public class HoleSnap extends Module {
                         }
 
                         if (closest == null
-                                || hole.middle.subtract(BlackOut.mc.player.getPos()).horizontalLengthSquared()
-                                < closest.middle.subtract(BlackOut.mc.player.getPos()).horizontalLengthSquared()) {
+                                || hole.middle.subtract(BlackOut.mc.player.position()).horizontalDistanceSqr()
+                                < closest.middle.subtract(BlackOut.mc.player.position()).horizontalDistanceSqr()) {
                             closest = hole;
                         }
                     }
@@ -174,7 +174,7 @@ public class HoleSnap extends Module {
 
     private boolean inHole(Hole hole) {
         for (BlockPos pos : hole.positions) {
-            if (BlackOut.mc.player.getBlockPos().equals(pos)) {
+            if (BlackOut.mc.player.blockPosition().equals(pos)) {
                 return true;
             }
         }
@@ -182,7 +182,7 @@ public class HoleSnap extends Module {
         return false;
     }
 
-    private float getAngle(Vec3d pos) {
+    private float getAngle(Vec3 pos) {
         return (float) RotationUtils.getYaw(pos);
     }
 

@@ -4,10 +4,9 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.command.Command;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.manager.managers.FriendsManager;
-import net.minecraft.client.network.PlayerListEntry;
-
 import java.util.Collections;
 import java.util.List;
+import net.minecraft.client.multiplayer.PlayerInfo;
 
 public class FriendCommand extends Command {
     public FriendCommand() {
@@ -24,7 +23,7 @@ public class FriendCommand extends Command {
                         return "Who should be added?";
                     }
 
-                    PlayerListEntry entry = this.getEntry(args[1]);
+                    PlayerInfo entry = this.getEntry(args[1]);
                     if (entry != null) {
                         return Managers.FRIENDS.add(entry.getProfile().getName(), entry.getProfile().getId());
                     }
@@ -55,8 +54,8 @@ public class FriendCommand extends Command {
         return this.format;
     }
 
-    private PlayerListEntry getEntry(String name) {
-        for (PlayerListEntry entry : BlackOut.mc.getNetworkHandler().getPlayerList()) {
+    private PlayerInfo getEntry(String name) {
+        for (PlayerInfo entry : BlackOut.mc.getConnection().getOnlinePlayers()) {
             if (entry.getProfile().getName().equalsIgnoreCase(name)) {
                 return entry;
             }

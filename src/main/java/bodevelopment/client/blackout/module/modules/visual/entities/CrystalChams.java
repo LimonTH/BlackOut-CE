@@ -9,8 +9,8 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.Box;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.world.phys.AABB;
 
 public class CrystalChams extends Module {
     private static CrystalChams INSTANCE;
@@ -38,7 +38,7 @@ public class CrystalChams extends Module {
     public final Setting<Boolean> bounceSync = this.sgSync.booleanSetting("Global Oscillation Sync", false, "Synchronizes the vertical bounce timing across all rendered crystals.");
     public final Setting<Boolean> rotationSync = this.sgSync.booleanSetting("Global Angular Sync", false, "Synchronizes the rotation timing across all rendered crystals.");
 
-    private final Box box = new Box(-0.25, -0.25, -0.25, 0.25, 0.25, 0.25);
+    private final AABB box = new AABB(-0.25, -0.25, -0.25, 0.25, 0.25, 0.25);
     public int age = 0;
 
     public CrystalChams() {
@@ -55,7 +55,7 @@ public class CrystalChams extends Module {
         this.age++;
     }
 
-    public void renderBox(MatrixStack stack, int id) {
+    public void renderBox(PoseStack stack, int id) {
         BlackOutColor sideColor = this.getSideColor(id);
         BlackOutColor lineColor = this.getLineColor(id);
         RenderShape shape = this.getShape(id);

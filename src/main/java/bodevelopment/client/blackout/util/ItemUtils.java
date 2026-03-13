@@ -1,26 +1,26 @@
 package bodevelopment.client.blackout.util;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.AttributeModifiersComponent;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.block.Blocks;
 
 public class ItemUtils {
     public static double getArmorValue(ItemStack stack) {
         if (stack.isEmpty()) return 0.0;
 
-        AttributeModifiersComponent modifiers = stack.get(DataComponentTypes.ATTRIBUTE_MODIFIERS);
+        ItemAttributeModifiers modifiers = stack.get(DataComponents.ATTRIBUTE_MODIFIERS);
         if (modifiers == null) return 0.0;
-        var equippable = stack.get(DataComponentTypes.EQUIPPABLE);
+        var equippable = stack.get(DataComponents.EQUIPPABLE);
         if (equippable == null) return 0.0;
         EquipmentSlot itemSlot = equippable.slot();
 
@@ -28,14 +28,14 @@ public class ItemUtils {
         double toughness = 0;
         double knockbackResist = 0;
 
-        for (AttributeModifiersComponent.Entry entry : modifiers.modifiers()) {
-            if (entry.slot().matches(itemSlot)) {
-                if (entry.attribute().equals(EntityAttributes.ARMOR)) {
-                    armor += entry.modifier().value();
-                } else if (entry.attribute().equals(EntityAttributes.ARMOR_TOUGHNESS)) {
-                    toughness += entry.modifier().value();
-                } else if (entry.attribute().equals(EntityAttributes.KNOCKBACK_RESISTANCE)) {
-                    knockbackResist += entry.modifier().value();
+        for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) {
+            if (entry.slot().test(itemSlot)) {
+                if (entry.attribute().equals(Attributes.ARMOR)) {
+                    armor += entry.modifier().amount();
+                } else if (entry.attribute().equals(Attributes.ARMOR_TOUGHNESS)) {
+                    toughness += entry.modifier().amount();
+                } else if (entry.attribute().equals(Attributes.KNOCKBACK_RESISTANCE)) {
+                    knockbackResist += entry.modifier().amount();
                 }
             }
         }
@@ -56,7 +56,7 @@ public class ItemUtils {
     public static double getPickaxeValue(ItemStack stack) {
         if (stack.isEmpty()) return 0.0;
 
-        float speed = stack.getMiningSpeedMultiplier(Blocks.STONE.getDefaultState());
+        float speed = stack.getDestroySpeed(Blocks.STONE.defaultBlockState());
         int efficiency = getEnchantLevel(stack, Enchantments.EFFICIENCY);
 
         if (speed > 1.0f && efficiency > 0) {
@@ -68,7 +68,7 @@ public class ItemUtils {
     public static double getAxeValue(ItemStack stack) {
         if (stack.isEmpty()) return 0.0;
 
-        float speed = stack.getMiningSpeedMultiplier(Blocks.OAK_LOG.getDefaultState());
+        float speed = stack.getDestroySpeed(Blocks.OAK_LOG.defaultBlockState());
         int efficiency = getEnchantLevel(stack, Enchantments.EFFICIENCY);
 
         if (speed > 1.0f && efficiency > 0) {
@@ -86,15 +86,15 @@ public class ItemUtils {
         return damage;
     }
 
-    private static int getEnchantLevel(ItemStack stack, RegistryKey<Enchantment> key) {
-        var world = MinecraftClient.getInstance().world;
+    private static int getEnchantLevel(ItemStack stack, ResourceKey<Enchantment> key) {
+        var world = Minecraft.getInstance().level;
         if (world == null || stack.isEmpty()) return 0;
 
-        var registry = world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
-        RegistryEntry<Enchantment> entry = registry.getEntry(key.getValue()).orElse(null);
+        var registry = world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        Holder<Enchantment> entry = registry.get(key.location()).orElse(null);
 
         if (entry == null) return 0;
-        return EnchantmentHelper.getLevel(entry, stack);
+        return EnchantmentHelper.getItemEnchantmentLevel(entry, stack);
     }
 
     public static double getBowValue(ItemStack stack) {

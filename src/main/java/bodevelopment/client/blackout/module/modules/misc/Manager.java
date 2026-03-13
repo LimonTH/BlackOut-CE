@@ -13,21 +13,30 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.ItemUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.block.*;
-import net.minecraft.client.gui.screen.ingame.InventoryScreen;
-import net.minecraft.client.network.ClientPlayerInteractionManager;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.EquippableComponent;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.*;
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
-import net.minecraft.screen.PlayerScreenHandler;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.hit.BlockHitResult;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.multiplayer.MultiPlayerGameMode;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.AxeItem;
+import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.PickaxeItem;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.equipment.Equippable;
+import net.minecraft.world.level.block.AbstractChestBlock;
+import net.minecraft.world.level.block.AnvilBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DispenserBlock;
+import net.minecraft.world.level.block.HopperBlock;
+import net.minecraft.world.phys.BlockHitResult;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -139,9 +148,9 @@ public class Manager extends Module {
 
     @Event
     public void onSent(PacketEvent.Sent event) {
-        if (event.packet instanceof PlayerInteractBlockC2SPacket packet) {
-            BlockHitResult hitResult = packet.getBlockHitResult();
-            Block block = BlackOut.mc.world.getBlockState(hitResult.getBlockPos()).getBlock();
+        if (event.packet instanceof ServerboundUseItemOnPacket packet) {
+            BlockHitResult hitResult = packet.getHitResult();
+            Block block = BlackOut.mc.level.getBlockState(hitResult.getBlockPos()).getBlock();
             if (block instanceof AbstractChestBlock || block instanceof AnvilBlock || block instanceof HopperBlock || block instanceof DispenserBlock) {
                 this.containerInteractTime = System.currentTimeMillis();
             }
@@ -178,7 +187,7 @@ public class Manager extends Module {
     private void doChestSwap() {
         this.currentlyElytra = !this.currentlyElytra;
         this.sendNotification(
-                this.getDisplayName() + " " + Formatting.BLUE.toString() + " changed to " + (this.currentlyElytra ? "Elytra" : "Chestplate"),
+                this.getDisplayName() + " " + ChatFormatting.BLUE.toString() + " changed to " + (this.currentlyElytra ? "Elytra" : "Chestplate"),
                 this.getDisplayName() + "  changed to " + (this.currentlyElytra ? "Elytra" : "Chestplate"),
                 "Chest Swap",
                 Notifications.Type.Info,
@@ -188,8 +197,8 @@ public class Manager extends Module {
 
     private void checkChestSwap() {
         if (BlackOut.mc.player != null) {
-            ItemStack stack = BlackOut.mc.player.getInventory().getArmorStack(EquipmentSlot.CHEST.getEntitySlotId());
-            boolean isElytra = stack.isOf(Items.ELYTRA);
+            ItemStack stack = BlackOut.mc.player.getInventory().getArmor(EquipmentSlot.CHEST.getIndex());
+            boolean isElytra = stack.is(Items.ELYTRA);
             if (this.currentlyElytra == null) {
                 this.currentlyElytra = isElytra;
             }
@@ -197,7 +206,7 @@ public class Manager extends Module {
     }
 
     private boolean canUpdate() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             if (BlackOut.mc.player.hurtTime > 0) {
                 this.prevDamage = System.currentTimeMillis();
             }
@@ -206,7 +215,7 @@ public class Manager extends Module {
                 return false;
             } else {
                 if (this.onlyInv.get()) {
-                    boolean open = BlackOut.mc.currentScreen instanceof InventoryScreen;
+                    boolean open = BlackOut.mc.screen instanceof InventoryScreen;
                     if (open && !this.prevOpen) {
                         this.openTime = System.currentTimeMillis();
                     }
@@ -221,7 +230,7 @@ public class Manager extends Module {
                     }
                 }
 
-                return BlackOut.mc.player.currentScreenHandler instanceof PlayerScreenHandler;
+                return BlackOut.mc.player.containerMenu instanceof InventoryMenu;
             }
         } else {
             return false;
@@ -230,7 +239,7 @@ public class Manager extends Module {
 
     private void update() {
         for (int i = 0; i < 9; i++) {
-            ItemStack stack = BlackOut.mc.player.currentScreenHandler.getSlot(36 + i).getStack();
+            ItemStack stack = BlackOut.mc.player.containerMenu.getSlot(36 + i).getItem();
             ReplenishSlot slot = this.replenishItems[i];
             if (stack.isEmpty()) {
                 if (System.currentTimeMillis() - slot.lastSeen > this.replenishMemory.get() * 1000.0) {
@@ -257,7 +266,7 @@ public class Manager extends Module {
 
     private void handleAction() {
         if (this.currentAction instanceof Drop drop && this.delayCheck()) {
-            drop.consumer.accept(BlackOut.mc.interactionManager, BlackOut.mc.player.currentScreenHandler);
+            drop.consumer.accept(BlackOut.mc.gameMode, BlackOut.mc.player.containerMenu);
             this.setPrev();
             this.closeIfPossible();
             this.resetAction();
@@ -272,14 +281,14 @@ public class Manager extends Module {
         }
 
         if (this.currentAction instanceof QuickMove quickMove && this.delayCheck()) {
-            quickMove.consumer.accept(BlackOut.mc.interactionManager, BlackOut.mc.player.currentScreenHandler);
+            quickMove.consumer.accept(BlackOut.mc.gameMode, BlackOut.mc.player.containerMenu);
             this.setPrev();
             this.closeIfPossible();
             this.resetAction();
         }
 
         if (this.currentAction instanceof Swap swap && this.delayCheck()) {
-            swap.consumer.accept(BlackOut.mc.interactionManager, BlackOut.mc.player.currentScreenHandler);
+            swap.consumer.accept(BlackOut.mc.gameMode, BlackOut.mc.player.containerMenu);
             this.setPrev();
             this.closeIfPossible();
             this.resetAction();
@@ -288,16 +297,16 @@ public class Manager extends Module {
 
     private void moveInstantly(Move move) {
         if (this.isPicked(move.predicate)) {
-            this.clickSlot(move.to, 0, SlotActionType.PICKUP);
+            this.clickSlot(move.to, 0, ClickType.PICKUP);
         } else {
-            this.clickSlot(move.from, 0, SlotActionType.PICKUP);
-            this.clickSlot(move.to, 0, SlotActionType.PICKUP);
+            this.clickSlot(move.from, 0, ClickType.PICKUP);
+            this.clickSlot(move.to, 0, ClickType.PICKUP);
         }
 
         if (this.anythingPicked()) {
-            Slot empty = this.findSlot(slot -> slot.getStack().isEmpty(), null, FindArea.Both);
+            Slot empty = this.findSlot(slot -> slot.getItem().isEmpty(), null, FindArea.Both);
             if (empty != null) {
-                this.clickSlot(empty.id, 0, SlotActionType.PICKUP);
+                this.clickSlot(empty.index, 0, ClickType.PICKUP);
             }
         }
 
@@ -307,15 +316,15 @@ public class Manager extends Module {
     }
 
     private boolean isPicked(Predicate<ItemStack> predicate) {
-        return predicate.test(BlackOut.mc.player.currentScreenHandler.getCursorStack());
+        return predicate.test(BlackOut.mc.player.containerMenu.getCarried());
     }
 
     private boolean anythingPicked() {
-        return !BlackOut.mc.player.currentScreenHandler.getCursorStack().isEmpty();
+        return !BlackOut.mc.player.containerMenu.getCarried().isEmpty();
     }
 
     private boolean shouldInstant() {
-        return BlackOut.mc.currentScreen instanceof InventoryScreen ? this.inInventoryInstant.get() : this.silentInstant.get();
+        return BlackOut.mc.screen instanceof InventoryScreen ? this.inInventoryInstant.get() : this.silentInstant.get();
     }
 
     private void closeIfPossible() {
@@ -328,35 +337,35 @@ public class Manager extends Module {
         switch (this.moveProgress) {
             case 0:
                 if (this.delayCheck()) {
-                    this.clickSlot(move.from, 0, SlotActionType.PICKUP);
+                    this.clickSlot(move.from, 0, ClickType.PICKUP);
                     this.moveProgress++;
                     return true;
                 }
                 break;
             case 1:
-                if (!move.predicate.test(BlackOut.mc.player.currentScreenHandler.getCursorStack())) {
+                if (!move.predicate.test(BlackOut.mc.player.containerMenu.getCarried())) {
                     this.resetAction();
                     this.closeIfPossible();
                     return false;
                 }
 
                 if (this.delayCheck()) {
-                    this.clickSlot(move.to, 0, SlotActionType.PICKUP);
+                    this.clickSlot(move.to, 0, ClickType.PICKUP);
                     this.moveProgress++;
                     return true;
                 }
                 break;
             case 2:
-                if (!move.predicate.test(BlackOut.mc.player.currentScreenHandler.getCursorStack())) {
+                if (!move.predicate.test(BlackOut.mc.player.containerMenu.getCarried())) {
                     this.resetAction();
                     this.closeIfPossible();
                     return false;
                 }
 
                 if (this.delayCheck()) {
-                    Slot empty = this.findSlot(slot -> slot.getStack().isEmpty(), null, FindArea.Inventory);
+                    Slot empty = this.findSlot(slot -> slot.getItem().isEmpty(), null, FindArea.Inventory);
                     if (empty != null) {
-                        this.clickSlot(empty.id, 0, SlotActionType.PICKUP);
+                        this.clickSlot(empty.index, 0, ClickType.PICKUP);
                     }
 
                     this.closeIfPossible();
@@ -373,9 +382,9 @@ public class Manager extends Module {
         this.moveProgress = 0;
     }
 
-    private void clickSlot(int id, int button, SlotActionType actionType) {
-        ScreenHandler handler = BlackOut.mc.player.currentScreenHandler;
-        BlackOut.mc.interactionManager.clickSlot(handler.syncId, id, button, actionType, BlackOut.mc.player);
+    private void clickSlot(int id, int button, ClickType actionType) {
+        AbstractContainerMenu handler = BlackOut.mc.player.containerMenu;
+        BlackOut.mc.gameMode.handleInventoryMouseClick(handler.containerId, id, button, actionType, BlackOut.mc.player);
     }
 
     private boolean delayCheck() {
@@ -393,7 +402,7 @@ public class Manager extends Module {
         } else {
             Slot cleanerSlot = this.findCleaner();
             if (cleanerSlot != null) {
-                return new Drop(cleanerSlot.id);
+                return new Drop(cleanerSlot.index);
             } else {
                 if (this.autoArmor.get()) {
                     Action autoArmorAction = this.findAutoArmor();
@@ -415,26 +424,26 @@ public class Manager extends Module {
     private Action findReplenish() {
         for (int i = 1; i <= 9; i++) {
             int slotId = 35 + i;
-            Slot slot = BlackOut.mc.player.currentScreenHandler.getSlot(slotId);
-            ItemStack stack = slot.getStack();
+            Slot slot = BlackOut.mc.player.containerMenu.getSlot(slotId);
+            ItemStack stack = slot.getItem();
             if (stack.isEmpty()) {
                 Item item = this.replenishItems[i - 1].item;
-                if (item != null && (this.unstackableReplenish.get() || item.getMaxCount() > 1)) {
-                    Slot from = this.findSlot(s -> s.getStack().isOf(item), s -> s.getStack().getCount(), FindArea.Inventory);
+                if (item != null && (this.unstackableReplenish.get() || item.getDefaultMaxStackSize() > 1)) {
+                    Slot from = this.findSlot(s -> s.getItem().is(item), s -> s.getItem().getCount(), FindArea.Inventory);
                     if (from != null) {
-                        return new Swap(from.id, i - 1);
+                        return new Swap(from.index, i - 1);
                     }
                 }
-            } else if (!((float) slot.getStack().getCount() / slot.getStack().getMaxCount() * 100.0F > this.percetageLeft.get())) {
+            } else if (!((float) slot.getItem().getCount() / slot.getItem().getMaxStackSize() * 100.0F > this.percetageLeft.get())) {
                 Slot from = this.findSlot(
-                        s -> ItemStack.areItemsAndComponentsEqual(stack, s.getStack()), s -> -s.getStack().getCount(), FindArea.Inventory
+                        s -> ItemStack.isSameItemSameComponents(stack, s.getItem()), s -> -s.getItem().getCount(), FindArea.Inventory
                 );
                 if (from != null) {
                     if (this.shouldQuick(i)) {
-                        return new QuickMove(from.id);
+                        return new QuickMove(from.index);
                     }
 
-                    return new Move(from.id, slotId);
+                    return new Move(from.index, slotId);
                 }
             }
         }
@@ -444,7 +453,7 @@ public class Manager extends Module {
 
     private boolean shouldQuick(int hotbarSlot) {
         for (int i = 1; i <= 9; i++) {
-            if (i != hotbarSlot && BlackOut.mc.player.currentScreenHandler.getSlot(35 + i).getStack().isEmpty()) {
+            if (i != hotbarSlot && BlackOut.mc.player.containerMenu.getSlot(35 + i).getItem().isEmpty()) {
                 return false;
             }
         }
@@ -455,12 +464,12 @@ public class Manager extends Module {
     private Action findHotbar() {
         for (int i = 1; i <= 9; i++) {
             int slotId = 35 + i;
-            Slot slot = BlackOut.mc.player.currentScreenHandler.getSlot(slotId);
+            Slot slot = BlackOut.mc.player.containerMenu.getSlot(slotId);
             HotbarSearch search = this.getHotbarSearch(i);
             if (!search.predicate().test(slot)) {
                 Slot fromSlot = this.findSlot(s -> search.predicate().test(s) && !this.alreadyValid(s), search.function(), FindArea.Both);
                 if (fromSlot != null) {
-                    return new Swap(fromSlot.id, i - 1);
+                    return new Swap(fromSlot.index, i - 1);
                 }
             }
         }
@@ -469,10 +478,10 @@ public class Manager extends Module {
     }
 
     private boolean alreadyValid(Slot slot) {
-        if (slot.id < 36) {
+        if (slot.index < 36) {
             return false;
         } else {
-            int slotId = slot.id - 35;
+            int slotId = slot.index - 35;
             HotbarSearch hotbarSearch = this.getHotbarSearch(slotId);
             return hotbarSearch.predicate().test(slot);
         }
@@ -481,15 +490,15 @@ public class Manager extends Module {
     private HotbarSearch getHotbarSearch(int slot) {
         return this.weaponSlot.get() == slot
                 ? this.weaponMode.get().search
-                : new HotbarSearch(s -> this.slotSettings[slot - 1].get().contains(s.getStack().getItem()), s -> s.getStack().getCount());
+                : new HotbarSearch(s -> this.slotSettings[slot - 1].get().contains(s.getItem().getItem()), s -> s.getItem().getCount());
     }
 
     private Action findAutoArmor() {
         for (EquipmentSlot equipmentSlot : OLEPOSSUtils.equipmentSlots) {
-            int toSlot = 8 - equipmentSlot.getEntitySlotId();
+            int toSlot = 8 - equipmentSlot.getIndex();
             Slot bestArmor = this.findBestArmor(equipmentSlot);
-            if (bestArmor != null && bestArmor.id != toSlot) {
-                return new Move(bestArmor.id, toSlot);
+            if (bestArmor != null && bestArmor.index != toSlot) {
+                return new Move(bestArmor.index, toSlot);
             }
         }
 
@@ -499,18 +508,18 @@ public class Manager extends Module {
     private Slot findBestArmor(EquipmentSlot equipmentSlot) {
         Slot bestArmor = this.findSlot(
                 slot -> {
-                    ItemStack stack = slot.getStack();
-                    EquippableComponent equippable = stack.get(DataComponentTypes.EQUIPPABLE);
+                    ItemStack stack = slot.getItem();
+                    Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
                     return equippable != null && equippable.slot() == equipmentSlot;
                 },
-                slot -> ItemUtils.getArmorValue(slot.getStack()),
+                slot -> ItemUtils.getArmorValue(slot.getItem()),
                 FindArea.All
         );
         if (equipmentSlot != EquipmentSlot.CHEST) {
             return bestArmor;
         } else {
             Slot bestElytra = this.findSlot(
-                    slot -> slot.getStack().contains(net.minecraft.component.DataComponentTypes.GLIDER), slot -> ItemUtils.getElytraValue(slot.getStack()), FindArea.All
+                    slot -> slot.getItem().has(DataComponents.GLIDER), slot -> ItemUtils.getElytraValue(slot.getItem()), FindArea.All
             );
             boolean elytraPriority = this.swapBinded() ? this.currentlyElytra != null && this.currentlyElytra : this.elytra.get();
             Slot higherPriority = elytraPriority ? bestElytra : bestArmor;
@@ -528,7 +537,7 @@ public class Manager extends Module {
     }
 
     private Slot findCleaner() {
-        Slot basicCleaner = this.findSlot(slot -> this.cleanerItems.get().contains(slot.getStack().getItem()), null, FindArea.Both);
+        Slot basicCleaner = this.findSlot(slot -> this.cleanerItems.get().contains(slot.getItem().getItem()), null, FindArea.Both);
         if (basicCleaner != null) {
             return basicCleaner;
         } else {
@@ -536,11 +545,11 @@ public class Manager extends Module {
                 for (EquipmentSlot equipmentSlot : OLEPOSSUtils.equipmentSlots) {
                     Slot badArmor = this.findBadItem(
                             slot -> {
-                                ItemStack stack = slot.getStack();
-                                EquippableComponent equippable = stack.get(DataComponentTypes.EQUIPPABLE);
+                                ItemStack stack = slot.getItem();
+                                Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
                                 return equippable != null && equippable.slot() == equipmentSlot;
                             },
-                            slot -> ItemUtils.getArmorValue(slot.getStack()),
+                            slot -> ItemUtils.getArmorValue(slot.getItem()),
                             FindArea.All
                     );
                     if (badArmor != null) {
@@ -551,7 +560,7 @@ public class Manager extends Module {
 
             if (this.badSwords.get()) {
                 Slot badSword = this.findBadItem(
-                        slot -> slot.getStack().getItem() instanceof SwordItem, slot -> ItemUtils.getWeaponValue(slot.getStack()), FindArea.Both
+                        slot -> slot.getItem().getItem() instanceof SwordItem, slot -> ItemUtils.getWeaponValue(slot.getItem()), FindArea.Both
                 );
                 if (badSword != null) {
                     return badSword;
@@ -560,7 +569,7 @@ public class Manager extends Module {
 
             if (this.badAxes.get()) {
                 Slot badAxe = this.findBadItem(
-                        slot -> slot.getStack().getItem() instanceof AxeItem, this.axeComparing.get().function, FindArea.Both
+                        slot -> slot.getItem().getItem() instanceof AxeItem, this.axeComparing.get().function, FindArea.Both
                 );
                 if (badAxe != null) {
                     return badAxe;
@@ -569,7 +578,7 @@ public class Manager extends Module {
 
             if (this.badPickaxes.get()) {
                 Slot badPickaxe = this.findBadItem(
-                        slot -> slot.getStack().getItem() instanceof PickaxeItem, slot -> ItemUtils.getPickaxeValue(slot.getStack()), FindArea.Both
+                        slot -> slot.getItem().getItem() instanceof PickaxeItem, slot -> ItemUtils.getPickaxeValue(slot.getItem()), FindArea.Both
                 );
                 if (badPickaxe != null) {
                     return badPickaxe;
@@ -578,7 +587,7 @@ public class Manager extends Module {
 
             return this.badBows.get()
                     ? this.findBadItem(
-                    slot -> slot.getStack().getItem() instanceof BowItem, slot -> ItemUtils.getBowValue(slot.getStack()), FindArea.Both
+                    slot -> slot.getItem().getItem() instanceof BowItem, slot -> ItemUtils.getBowValue(slot.getItem()), FindArea.Both
             )
                     : null;
         }
@@ -594,7 +603,7 @@ public class Manager extends Module {
         List<Slot> valid = best ? new ArrayList<>() : null;
 
         for (int i = area.start; i <= area.end; i++) {
-            Slot slot = BlackOut.mc.player.currentScreenHandler.getSlot(i);
+            Slot slot = BlackOut.mc.player.containerMenu.getSlot(i);
             if (predicate.test(slot)) {
                 if (!best) {
                     return slot;
@@ -612,8 +621,8 @@ public class Manager extends Module {
     }
 
     public enum AxeCompareMode {
-        Damage(slot -> ItemUtils.getWeaponValue(slot.getStack())),
-        Efficiency(slot -> ItemUtils.getAxeValue(slot.getStack()));
+        Damage(slot -> ItemUtils.getWeaponValue(slot.getItem())),
+        Efficiency(slot -> ItemUtils.getAxeValue(slot.getItem()));
 
         private final ToDoubleFunction<Slot> function;
 
@@ -639,17 +648,17 @@ public class Manager extends Module {
     }
 
     public enum WeaponMode {
-        Sword(slot -> slot.getStack().getItem() instanceof SwordItem),
-        Axe(slot -> slot.getStack().getItem() instanceof AxeItem),
+        Sword(slot -> slot.getItem().getItem() instanceof SwordItem),
+        Axe(slot -> slot.getItem().getItem() instanceof AxeItem),
         Both(slot -> {
-            Item item = slot.getStack().getItem();
+            Item item = slot.getItem().getItem();
             return item instanceof SwordItem || item instanceof AxeItem;
         });
 
         private final HotbarSearch search;
 
         WeaponMode(Predicate<Slot> predicate) {
-            this.search = new HotbarSearch(predicate, slot -> ItemUtils.getWeaponValue(slot.getStack()));
+            this.search = new HotbarSearch(predicate, slot -> ItemUtils.getWeaponValue(slot.getItem()));
         }
     }
 
@@ -660,10 +669,10 @@ public class Manager extends Module {
     }
 
     private static class Drop extends Action {
-        private final DoubleConsumer<ClientPlayerInteractionManager, ScreenHandler> consumer;
+        private final DoubleConsumer<MultiPlayerGameMode, AbstractContainerMenu> consumer;
 
         private Drop(int id) {
-            this.consumer = (manager, handler) -> manager.clickSlot(handler.syncId, id, 1, SlotActionType.THROW, BlackOut.mc.player);
+            this.consumer = (manager, handler) -> manager.handleInventoryMouseClick(handler.containerId, id, 1, ClickType.THROW, BlackOut.mc.player);
         }
     }
 
@@ -675,16 +684,16 @@ public class Manager extends Module {
         private Move(int from, int to) {
             this.from = from;
             this.to = to;
-            ItemStack copy = BlackOut.mc.player.currentScreenHandler.getSlot(from).getStack().copy();
-            this.predicate = stack -> ItemStack.areItemsEqual(stack, copy);
+            ItemStack copy = BlackOut.mc.player.containerMenu.getSlot(from).getItem().copy();
+            this.predicate = stack -> ItemStack.isSameItem(stack, copy);
         }
     }
 
     private static class QuickMove extends Action {
-        private final DoubleConsumer<ClientPlayerInteractionManager, ScreenHandler> consumer;
+        private final DoubleConsumer<MultiPlayerGameMode, AbstractContainerMenu> consumer;
 
         private QuickMove(int id) {
-            this.consumer = (manager, handler) -> manager.clickSlot(handler.syncId, id, 0, SlotActionType.QUICK_MOVE, BlackOut.mc.player);
+            this.consumer = (manager, handler) -> manager.handleInventoryMouseClick(handler.containerId, id, 0, ClickType.QUICK_MOVE, BlackOut.mc.player);
         }
     }
 
@@ -694,10 +703,10 @@ public class Manager extends Module {
     }
 
     private static class Swap extends Action {
-        private final DoubleConsumer<ClientPlayerInteractionManager, ScreenHandler> consumer;
+        private final DoubleConsumer<MultiPlayerGameMode, AbstractContainerMenu> consumer;
 
         private Swap(int id, int slotId) {
-            this.consumer = (manager, handler) -> manager.clickSlot(handler.syncId, id, slotId, SlotActionType.SWAP, BlackOut.mc.player);
+            this.consumer = (manager, handler) -> manager.handleInventoryMouseClick(handler.containerId, id, slotId, ClickType.SWAP, BlackOut.mc.player);
         }
     }
 }

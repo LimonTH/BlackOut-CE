@@ -13,10 +13,10 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.util.MovementUtils;
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.network.protocol.game.ClientboundExplodePacket;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
+import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.mutable.MutableDouble;
 
 public class LongJump extends Module {
@@ -49,7 +49,7 @@ public class LongJump extends Module {
 
     private final TimerList<Double> boosts = new TimerList<>(true);
     private int phase = 0;
-    private Vec3d prevMovement = new Vec3d(0.0, 0.0, 0.0);
+    private Vec3 prevMovement = new Vec3(0.0, 0.0, 0.0);
     private int ticks = 0;
     private int jumped = 0;
     private boolean changedTimer = false;
@@ -77,7 +77,7 @@ public class LongJump extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             if (this.timer.get() != 1.0 && this.enabled) {
                 Timer.set(this.timer.get().floatValue());
                 this.changedTimer = true;
@@ -85,9 +85,9 @@ public class LongJump extends Module {
 
             this.prevMovement = BlackOut.mc
                     .player
-                    .getPos()
-                    .subtract(BlackOut.mc.player.prevX, BlackOut.mc.player.prevY, BlackOut.mc.player.prevZ);
-            if (BlackOut.mc.player.isTouchingWater()) {
+                    .position()
+                    .subtract(BlackOut.mc.player.xo, BlackOut.mc.player.yo, BlackOut.mc.player.zo);
+            if (BlackOut.mc.player.isInWater()) {
                 this.disable(this.getDisplayName() + " disabled, touching water");
             }
         }
@@ -95,7 +95,7 @@ public class LongJump extends Module {
 
     @Event
     public void onPacket(PacketEvent.Receive.Pre event) {
-        if (event.packet instanceof PlayerPositionLookS2CPacket) {
+        if (event.packet instanceof ClientboundPlayerPositionPacket) {
             if (this.enabled) {
                 this.disable(this.getDisplayName() + " was disabled to prevent rubberbanding", 4, Notifications.Type.Alert);
             }
@@ -104,25 +104,25 @@ public class LongJump extends Module {
             this.boosts.clear();
         } else if (this.damageBoost.get()) {
             if (System.currentTimeMillis() - this.prevRubberband >= 1000L) {
-                Vec3d vel = null;
+                Vec3 vel = null;
 
-                if (event.packet instanceof EntityVelocityUpdateS2CPacket packet) {
-                    if (BlackOut.mc.player == null || BlackOut.mc.player.getId() != packet.getEntityId()) {
+                if (event.packet instanceof ClientboundSetEntityMotionPacket packet) {
+                    if (BlackOut.mc.player == null || BlackOut.mc.player.getId() != packet.getId()) {
                         return;
                     }
 
-                    vel = new Vec3d(packet.getVelocityX(), packet.getVelocityY(), packet.getVelocityZ())
-                            .subtract(BlackOut.mc.player.getVelocity());
+                    vel = new Vec3(packet.getXa(), packet.getYa(), packet.getZa())
+                            .subtract(BlackOut.mc.player.getDeltaMovement());
                 }
 
-                if (event.packet instanceof ExplosionS2CPacket packet) {
+                if (event.packet instanceof ClientboundExplodePacket packet) {
                     if (packet.playerKnockback().isPresent()) {
                         vel = packet.playerKnockback().get();
                     }
                 }
 
                 if (vel != null) {
-                    double hLen = this.prevMovement.horizontalLength();
+                    double hLen = this.prevMovement.horizontalDistance();
                     double boost;
 
                     if (this.directionalBoost.get() && hLen > 0.0001) {
@@ -132,7 +132,7 @@ public class LongJump extends Module {
                         double dot = vel.x * x + vel.z * z;
                         boost = Math.max(dot, 0.0);
                     } else {
-                        boost = vel.horizontalLength();
+                        boost = vel.horizontalDistance();
                     }
 
                     if (boost > 0) {
@@ -153,8 +153,8 @@ public class LongJump extends Module {
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (this.enabled && BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            if (this.phase == 0 && BlackOut.mc.player.isOnGround()) {
+        if (this.enabled && BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            if (this.phase == 0 && BlackOut.mc.player.onGround()) {
                 this.phase = 1;
                 this.ticks = this.chargeTicks.get();
             }
@@ -165,8 +165,8 @@ public class LongJump extends Module {
                 } else {
                     event.setXZ(
                             this,
-                            MovementUtils.xMovement(this.chargeMotion.get(), BlackOut.mc.player.getYaw()),
-                            MovementUtils.zMovement(this.chargeMotion.get(), BlackOut.mc.player.getYaw())
+                            MovementUtils.xMovement(this.chargeMotion.get(), BlackOut.mc.player.getYRot()),
+                            MovementUtils.zMovement(this.chargeMotion.get(), BlackOut.mc.player.getYRot())
                     );
                     if (this.chargeSprint.get()) {
                         BlackOut.mc.player.setSprinting(true);
@@ -181,14 +181,14 @@ public class LongJump extends Module {
                     speed *= this.boostMulti.get();
                     event.set(
                             this,
-                            MovementUtils.xMovement(speed, BlackOut.mc.player.getYaw()),
+                            MovementUtils.xMovement(speed, BlackOut.mc.player.getYRot()),
                             this.jumpPower.get().floatValue(),
-                            MovementUtils.zMovement(speed, BlackOut.mc.player.getYaw())
+                            MovementUtils.zMovement(speed, BlackOut.mc.player.getYRot())
                     );
                     this.jumped++;
                     this.phase = 3;
                 } else {
-                    if (BlackOut.mc.player.isOnGround()) {
+                    if (BlackOut.mc.player.onGround()) {
                         if (this.jumped >= this.jumps.get() && this.jumps.get() != 0) {
                             this.disable(this.getDisplayName() + " was disabled due to landing");
                         } else {
@@ -196,14 +196,14 @@ public class LongJump extends Module {
                         }
                     }
 
-                    double velocity = this.prevMovement.horizontalLength() * this.friction.get();
+                    double velocity = this.prevMovement.horizontalDistance() * this.friction.get();
                     if (this.phase == 3) {
                         velocity /= this.boostDiv.get();
                         this.phase = 4;
                     }
 
                     velocity = Math.max(velocity, this.getMinSpeed());
-                    double yaw = Math.toRadians(BlackOut.mc.player.getYaw() + 90.0F);
+                    double yaw = Math.toRadians(BlackOut.mc.player.getYRot() + 90.0F);
                     event.setXZ(this, velocity * Math.cos(yaw), velocity * Math.sin(yaw));
                 }
             }

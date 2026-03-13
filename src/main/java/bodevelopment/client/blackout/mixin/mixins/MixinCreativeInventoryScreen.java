@@ -1,19 +1,19 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.interfaces.mixin.ICreativeInventoryScreen;
-import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen;
-import net.minecraft.item.ItemGroup;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
+import net.minecraft.world.item.CreativeModeTab;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(CreativeInventoryScreen.class)
+@Mixin(CreativeModeInventoryScreen.class)
 public abstract class MixinCreativeInventoryScreen implements ICreativeInventoryScreen {
 
     @Shadow
-    private static ItemGroup selectedTab;
+    private static CreativeModeTab selectedTab;
 
     @Override
-    public ItemGroup blackout_Client$getSelectedTab() {
+    public CreativeModeTab blackout_Client$getSelectedTab() {
         return selectedTab;
     }
 }

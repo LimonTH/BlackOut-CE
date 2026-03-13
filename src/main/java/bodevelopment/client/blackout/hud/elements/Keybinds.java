@@ -37,7 +37,7 @@ public class Keybinds extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             Comparator<Module> comparator = Comparator.comparingDouble(m -> BlackOut.FONT.getWidth(m.getDisplayName() + m.bind.get().getName()));
             List<Module> modules = Managers.MODULES
                     .getModules()
@@ -46,7 +46,7 @@ public class Keybinds extends HudElement {
                     .sorted(comparator.reversed())
                     .toList();
             this.i = 0;
-            this.stack.push();
+            this.stack.pushPose();
             this.checked = false;
             modules.forEach(
                     module -> {
@@ -89,7 +89,7 @@ public class Keybinds extends HudElement {
                         this.i++;
                     }
             );
-            this.stack.pop();
+            this.stack.popPose();
         }
     }
 }

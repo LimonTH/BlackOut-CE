@@ -1,11 +1,10 @@
 package bodevelopment.client.blackout.randomstuff.timers;
 
-import net.minecraft.util.math.MathHelper;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
+import net.minecraft.util.Mth;
 
 public class RenderList<T> {
     protected final List<Timer<T>> timers = Collections.synchronizedList(new ArrayList<>());
@@ -33,7 +32,7 @@ public class RenderList<T> {
                     long duration = item.endTime - item.startTime;
 
                     double progress = (duration <= 0) ? 1.0 :
-                            MathHelper.clamp((double) (now - item.startTime) / duration, 0.0, 1.0);
+                            Mth.clamp((double) (now - item.startTime) / duration, 0.0, 1.0);
 
                     consumer.accept(
                             item.value,

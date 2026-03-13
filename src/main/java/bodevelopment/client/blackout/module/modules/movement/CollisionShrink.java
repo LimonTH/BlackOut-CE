@@ -4,7 +4,7 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.util.math.Box;
+import net.minecraft.world.phys.AABB;
 
 public class CollisionShrink extends Module {
     private static CollisionShrink INSTANCE;
@@ -22,8 +22,8 @@ public class CollisionShrink extends Module {
         return INSTANCE;
     }
 
-    public Box getBox(Box normal) {
+    public AABB getBox(AABB normal) {
         double amount = 0.0625 * Math.pow(10.0, this.shrinkAmount.get()) / 1.0E10;
-        return normal.contract(amount, 0.0, amount);
+        return normal.deflate(amount, 0.0, amount);
     }
 }

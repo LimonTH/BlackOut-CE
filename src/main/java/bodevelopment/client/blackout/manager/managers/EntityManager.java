@@ -7,12 +7,12 @@ import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.mixin.accessors.AccessorInteractEntityC2SPacket;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 
 public class EntityManager extends Manager {
     private final TimerList<Integer> renderDead = new TimerList<>(true);
@@ -23,7 +23,7 @@ public class EntityManager extends Manager {
 
     public void setDead(int id, boolean full) {
         if (full) {
-            BlackOut.mc.world.removeEntity(id, Entity.RemovalReason.KILLED);
+            BlackOut.mc.level.removeEntity(id, Entity.RemovalReason.KILLED);
         } else {
             this.renderDead.add(id, 1.0);
         }
@@ -72,7 +72,7 @@ public class EntityManager extends Manager {
     @Event
     public void onEntity(EntityAddEvent.Post event) {
         if (event.entity.getType() == EntityType.ITEM) {
-            BlockPos pos = event.entity.getBlockPos();
+            BlockPos pos = event.entity.blockPosition();
             if (this.spawningItems.contains(pos)) {
                 this.removeSpawning(pos);
             }
@@ -86,16 +86,16 @@ public class EntityManager extends Manager {
 
     @Event
     public void packetSendEvent(PacketEvent.Sent event) {
-        if (event.packet instanceof PlayerInteractEntityC2SPacket packet) {
+        if (event.packet instanceof ServerboundInteractPacket packet) {
             AccessorInteractEntityC2SPacket packetAccessor = (AccessorInteractEntityC2SPacket) packet;
-            if (packetAccessor.getType().getType() == PlayerInteractEntityC2SPacket.InteractType.ATTACK) {
+            if (packetAccessor.getType().getType() == ServerboundInteractPacket.ActionType.ATTACK) {
                 int id = packetAccessor.getId();
-                Entity entity = BlackOut.mc.world.getEntityById(id);
-                if (entity instanceof EndCrystalEntity && !this.attacked.contains(id)) {
-                    BlockPos center = entity.getBlockPos();
+                Entity entity = BlackOut.mc.level.getEntity(id);
+                if (entity instanceof EndCrystal && !this.attacked.contains(id)) {
+                    BlockPos center = entity.blockPosition();
 
                     for (Direction dir : Direction.values()) {
-                        this.removeItems(center.offset(dir));
+                        this.removeItems(center.relative(dir));
                     }
                 }
 

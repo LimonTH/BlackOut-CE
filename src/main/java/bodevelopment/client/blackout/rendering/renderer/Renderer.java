@@ -2,19 +2,19 @@ package bodevelopment.client.blackout.rendering.renderer;
 
 import bodevelopment.client.blackout.interfaces.functional.QuadConsumer;
 import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.util.math.MatrixStack;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import org.joml.Matrix4f;
 
 import java.util.function.Consumer;
 
 public class Renderer {
-    public static final Matrix4f emptyMatrix = new MatrixStack().peek().getPositionMatrix();
+    public static final Matrix4f emptyMatrix = new PoseStack().last().pose();
     private static long prevHUDBlur = 0L;
     private static long prev3DBlur = 0L;
     private static float alpha = 1.0F;
-    private static MatrixStack matrices;
+    private static PoseStack matrices;
     protected BufferBuilder renderBuffer;
     protected Matrix4f renderMatrix;
     protected float renderRed;
@@ -46,11 +46,11 @@ public class Renderer {
         Renderer.alpha = alpha;
     }
 
-    public static MatrixStack getMatrices() {
+    public static PoseStack getMatrices() {
         return matrices;
     }
 
-    public static void setMatrices(MatrixStack matrices) {
+    public static void setMatrices(PoseStack matrices) {
         Renderer.matrices = matrices;
     }
 
@@ -72,7 +72,7 @@ public class Renderer {
     }
 
     public void vertex(float x, float y) {
-        this.renderBuffer.vertex(this.renderMatrix, x, y, 0.0F);
+        this.renderBuffer.addVertex(this.renderMatrix, x, y, 0.0F);
     }
 
     public void vertex(double x, double y, double z) {
@@ -80,7 +80,7 @@ public class Renderer {
     }
 
     public void vertex(float x, float y, float z) {
-        this.renderBuffer.vertex(this.renderMatrix, x, y, z);
+        this.renderBuffer.addVertex(this.renderMatrix, x, y, z);
     }
 
     public void vertex(double x, double y, double z, double r, double g, double b, double a) {
@@ -88,7 +88,7 @@ public class Renderer {
     }
 
     public void vertex(float x, float y, float z, float r, float g, float b, float a) {
-        this.renderBuffer.vertex(this.renderMatrix, x, y, z).color(r, g, b, a);
+        this.renderBuffer.addVertex(this.renderMatrix, x, y, z).setColor(r, g, b, a);
     }
 
     public void colorNormalVertex(double x, double y, double z, float r, float g, float b, float a, float nx, float ny, float nz) {
@@ -96,15 +96,15 @@ public class Renderer {
     }
 
     public void colorNormalVertex(float x, float y, float z, float r, float g, float b, float a, float nx, float ny, float nz) {
-        this.renderBuffer.vertex(this.renderMatrix, x, y, z).color(r, g, b, a).normal(nx, ny, nz);
+        this.renderBuffer.addVertex(this.renderMatrix, x, y, z).setColor(r, g, b, a).setNormal(nx, ny, nz);
     }
 
     public VertexConsumer vertex2D(float x, float y) {
-        return this.renderBuffer.vertex(emptyMatrix, x, y, 0.0F);
+        return this.renderBuffer.addVertex(emptyMatrix, x, y, 0.0F);
     }
 
     public void vertex2D(float x, float y, float r, float g, float b, float a) {
-        this.renderBuffer.vertex(emptyMatrix, x, y, 0.0F).color(r, g, b, a);
+        this.renderBuffer.addVertex(emptyMatrix, x, y, 0.0F).setColor(r, g, b, a);
     }
 
     public void smooth(float x, float y, float rad, int steps, float angle1, float angle2) {

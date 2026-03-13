@@ -31,18 +31,18 @@ import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
 public class ClickGui extends Screen {
     public static float popUpDelta = 0.0F;
@@ -55,7 +55,7 @@ public class ClickGui extends Screen {
     public static SubCategory selectedCategory = SubCategory.OFFENSIVE;
     public final List<ModuleComponent> moduleComponents = new ArrayList<>();
     public final List<CategoryComponent> categoryComponents = new ArrayList<>();
-    private final MatrixStack stack = new MatrixStack();
+    private final PoseStack stack = new PoseStack();
     private final ClickGuiButtons buttons = new ClickGuiButtons();
     public long toggleTime = 0L;
     public float moduleLength = 0.0F;
@@ -87,7 +87,7 @@ public class ClickGui extends Screen {
     private boolean guiStateChanged = false;
 
     public ClickGui() {
-        super(Text.of("Click GUI"));
+        super(Component.nullToEmpty("Click GUI"));
     }
 
     public void initGui() {
@@ -111,31 +111,31 @@ public class ClickGui extends Screen {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.world != null) {
+        if (BlackOut.mc.level != null) {
             this.renderBlur();
         }
     }
 
-    public void close() {
+    public void onClose() {
         this.setOpen(false);
         this.toggleTime = System.currentTimeMillis();
 
-        if (BlackOut.mc.currentScreen == this) {
-            super.close();
+        if (BlackOut.mc.screen == this) {
+            super.onClose();
         }
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        if (this.client == null) this.client = BlackOut.mc;
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+        if (this.minecraft == null) this.minecraft = BlackOut.mc;
 
         if (this.open) {
-            popUpDelta = (float) MathHelper.clamp(System.currentTimeMillis() - this.toggleTime, 0L, 500L) / 500.0F;
+            popUpDelta = (float) Mth.clamp(System.currentTimeMillis() - this.toggleTime, 0L, 500L) / 500.0F;
             scale = (float) AnimUtils.easeOutBack(popUpDelta);
         } else {
-            popUpDelta = 1.0F - (float) MathHelper.clamp(System.currentTimeMillis() - this.toggleTime, 0L, 250L) / 250.0F;
+            popUpDelta = 1.0F - (float) Mth.clamp(System.currentTimeMillis() - this.toggleTime, 0L, 250L) / 250.0F;
             if (popUpDelta <= 0.0F && this.openTime != 0) {
-                this.close();
+                this.onClose();
                 return;
             }
             scale = (float) AnimUtils.easeOutQuart(popUpDelta);
@@ -172,8 +172,8 @@ public class ClickGui extends Screen {
         float currentScale = RenderUtils.getScale();
         scale = scale / (currentScale == 0 ? 1 : currentScale);
 
-        double screenWidth = BlackOut.mc.getWindow().getWidth();
-        double screenHeight = BlackOut.mc.getWindow().getHeight();
+        double screenWidth = BlackOut.mc.getWindow().getScreenWidth();
+        double screenHeight = BlackOut.mc.getWindow().getScreenHeight();
 
         double startX = (screenWidth / 2.0 + x - width / 2.0F) / unscaled;
         double startY = (screenHeight / 2.0 + y - height / 2.0F) / unscaled;
@@ -187,7 +187,7 @@ public class ClickGui extends Screen {
         RenderUtils.startClickGui(this.stack, unscaled, scale, width, height, x, y);
         GlStateManager._disableScissorTest();
 
-        if (BlackOut.mc.world != null) {
+        if (BlackOut.mc.level != null) {
             this.renderBlur();
         }
 
@@ -273,9 +273,9 @@ public class ClickGui extends Screen {
         long waitTime = 600L;
 
         if (lastDescription != null && (System.currentTimeMillis() - hoverTime > waitTime || descAlpha > 0.3F)) {
-            descAlpha = MathHelper.clamp(descAlpha + frameTime * 7.0F, 0.0F, 1.0F);
+            descAlpha = Mth.clamp(descAlpha + frameTime * 7.0F, 0.0F, 1.0F);
         } else {
-            descAlpha = MathHelper.clamp(descAlpha - frameTime * 8.0F, 0.0F, 1.0F);
+            descAlpha = Mth.clamp(descAlpha - frameTime * 8.0F, 0.0F, 1.0F);
         }
         if (this.openedScreen == null) {
             if (descAlpha > 0.0F && lastDescription != null) {
@@ -319,7 +319,7 @@ public class ClickGui extends Screen {
         }
 
         this.buttons.render(mouseX, mouseY, this.openTime, this.open ? 1.0F : popUpDelta);
-        this.stack.pop();
+        this.stack.popPose();
     }
 
     public void setScreen(ClickGuiScreen screen) {
@@ -342,7 +342,7 @@ public class ClickGui extends Screen {
 
     private void renderFade() {
         ColorRenderer renderer = ColorRenderer.getInstance();
-        renderer.startRender(this.stack, VertexFormat.DrawMode.TRIANGLE_FAN);
+        renderer.startRender(this.stack, VertexFormat.Mode.TRIANGLE_FAN);
         renderer.vertex(
                 235.0F, height - 10.0F, 0.0F, GuiColorUtils.bg1.getRed() / 255.0F, GuiColorUtils.bg1.getGreen() / 255.0F, GuiColorUtils.bg1.getBlue() / 255.0F, 0.0F
         );
@@ -365,7 +365,7 @@ public class ClickGui extends Screen {
                     GuiColorUtils.bg1.getRed() / 255.0F,
                     GuiColorUtils.bg1.getGreen() / 255.0F,
                     GuiColorUtils.bg1.getBlue() / 255.0F,
-                    MathHelper.getLerpProgress(y, -10.0F, 10.0F)
+                    Mth.inverseLerp(y, -10.0F, 10.0F)
             );
         }
 
@@ -379,7 +379,7 @@ public class ClickGui extends Screen {
                 0.0F
         );
         renderer.endRender();
-        renderer.startRender(this.stack, VertexFormat.DrawMode.TRIANGLE_FAN);
+        renderer.startRender(this.stack, VertexFormat.Mode.TRIANGLE_FAN);
         renderer.vertex(
                 235.0F,
                 -10.0F,
@@ -405,7 +405,7 @@ public class ClickGui extends Screen {
                     GuiColorUtils.bg1.getRed() / 255.0F,
                     GuiColorUtils.bg1.getGreen() / 255.0F,
                     GuiColorUtils.bg1.getBlue() / 255.0F,
-                    MathHelper.getLerpProgress(y, 10.0F, -10.0F)
+                    Mth.inverseLerp(y, 10.0F, -10.0F)
             );
         }
 
@@ -420,7 +420,7 @@ public class ClickGui extends Screen {
             float ts = 1200.0F * guiSettings.logoScale.get().floatValue();
             float cx = width - 100.0F;
             float cy = height - 350.0F;
-            t.startRender(this.stack, cx - ts / 2.0F, cy - ts / 2.0F, ts, ts, 1.0F, 1.0F, 1.0F, 1.0F, alpha, VertexFormat.DrawMode.TRIANGLE_FAN);
+            t.startRender(this.stack, cx - ts / 2.0F, cy - ts / 2.0F, ts, ts, 1.0F, 1.0F, 1.0F, 1.0F, alpha, VertexFormat.Mode.TRIANGLE_FAN);
 
             for (int i = 90; i >= 0; i -= 9) {
                 t.vertex(width + Math.cos(Math.toRadians(i)) * 10.0, height + Math.sin(Math.toRadians(i)) * 10.0);
@@ -488,7 +488,7 @@ public class ClickGui extends Screen {
     }
 
     private int getColumns() {
-        return MathHelper.clamp((int) ((width - 200.0F) / 320.0F), 1, 4);
+        return Mth.clamp((int) ((width - 200.0F) / 320.0F), 1, 4);
     }
 
     private int getColumnOffset(int columns, float moduleWidth) {
@@ -504,9 +504,9 @@ public class ClickGui extends Screen {
         float currentY = 110.0F - this.categoryScroll.get();
 
         GlStateManager._enableScissorTest();
-        float sx = BlackOut.mc.getWindow().getWidth() / 2.0F - width / 2.0F * unscaled + x;
-        float y1 = BlackOut.mc.getWindow().getHeight() / 2.0F - (height / 2.0F + 10.0F) * unscaled - y;
-        float y2 = BlackOut.mc.getWindow().getHeight() / 2.0F + (height / 2.0F - 100.0F) * unscaled - y;
+        float sx = BlackOut.mc.getWindow().getScreenWidth() / 2.0F - width / 2.0F * unscaled + x;
+        float y1 = BlackOut.mc.getWindow().getScreenHeight() / 2.0F - (height / 2.0F + 10.0F) * unscaled - y;
+        float y2 = BlackOut.mc.getWindow().getScreenHeight() / 2.0F + (height / 2.0F - 100.0F) * unscaled - y;
         float scissorHeight = Math.abs(y1 - y2);
         GlStateManager._scissorBox((int) sx, (int) y1, (int) (210.0F * unscaled), (int) scissorHeight);
 
@@ -632,12 +632,12 @@ public class ClickGui extends Screen {
                 float targetProgress = isTarget ? 1.0F : 0.0F;
 
                 float fs = GuiSettings.getInstance().fontScale.get().floatValue();
-                float multiplier = MathHelper.lerp(targetProgress,
+                float multiplier = Mth.lerp(targetProgress,
                         GuiSettings.getInstance().moduleScaleClosed.get().floatValue(),
                         GuiSettings.getInstance().moduleScale.get().floatValue());
                 float scale = Math.max(fs, fs * multiplier);
                 float finalHeaderHeight = Math.max((BlackOut.FONT.getHeight() * scale) + (15.0F * scale),
-                        MathHelper.lerp(targetProgress,
+                        Mth.lerp(targetProgress,
                                 GuiSettings.getInstance().moduleHeightClosed.get().floatValue(),
                                 GuiSettings.getInstance().moduleHeight.get().floatValue()));
 
@@ -730,7 +730,7 @@ public class ClickGui extends Screen {
 
     @Event
     public void onScroll(MouseScrollEvent event) {
-        if (BlackOut.mc.currentScreen instanceof TitleScreen && !event.isCancelled()) {
+        if (BlackOut.mc.screen instanceof TitleScreen && !event.isCancelled()) {
             return;
         }
         if (this.openedScreen == null || !this.openedScreen.handleScroll(event.horizontal, event.vertical)) {
@@ -743,7 +743,7 @@ public class ClickGui extends Screen {
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
@@ -805,13 +805,13 @@ public class ClickGui extends Screen {
                 return true;
             }
 
-            this.close();
+            this.onClose();
             return true;
         }
 
         if (keyCode == 344) {
             if (System.currentTimeMillis() - this.openTime > 100L) {
-                this.close();
+                this.onClose();
                 return true;
             }
             return true;

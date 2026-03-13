@@ -13,9 +13,9 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.MovementUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.registry.tag.FluidTags;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 
 // TODO: NEED PATCHES
 // TODO: исправить условие в onTick: должно быть && для player/world (сейчас ||).
@@ -54,7 +54,7 @@ public class Speed extends Module {
     private final Setting<Boolean> pauseElytra = this.sgPause.booleanSetting("Pause on Flight", true, "Temporarily disables the module while using an Elytra.");
     private final Setting<Boolean> pauseFly = this.sgPause.booleanSetting("Pause on Creative Fly", true, "Temporarily disables the module while in creative flight mode.");
 
-    private Vec3d prevMovement = Vec3d.ZERO;
+    private Vec3 prevMovement = Vec3.ZERO;
     private double velocity = 0.0;
     private double yaw = 0.0;
     private boolean setTimer = false;
@@ -73,8 +73,8 @@ public class Speed extends Module {
     @Override
     public void onEnable() {
         if (BlackOut.mc.player != null) {
-            this.velocity = this.prevMovement.horizontalLength();
-            this.yaw = MathHelper.wrapDegrees(Math.toDegrees(Math.atan2(this.prevMovement.z, this.prevMovement.x)));
+            this.velocity = this.prevMovement.horizontalDistance();
+            this.yaw = Mth.wrapDegrees(Math.toDegrees(Math.atan2(this.prevMovement.z, this.prevMovement.x)));
         }
     }
 
@@ -95,27 +95,27 @@ public class Speed extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null || BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null || BlackOut.mc.level != null) {
             this.prevMovement = BlackOut.mc
                     .player
-                    .getPos()
-                    .subtract(BlackOut.mc.player.prevX, BlackOut.mc.player.prevY, BlackOut.mc.player.prevZ);
-            if (this.enabled && BlackOut.mc.player.isOnGround() && (this.mode.get() == SpeedMode.Vulcan || this.mode.get() == SpeedMode.Verus)) {
-                BlackOut.mc.player.jump();
+                    .position()
+                    .subtract(BlackOut.mc.player.xo, BlackOut.mc.player.yo, BlackOut.mc.player.zo);
+            if (this.enabled && BlackOut.mc.player.onGround() && (this.mode.get() == SpeedMode.Vulcan || this.mode.get() == SpeedMode.Verus)) {
+                BlackOut.mc.player.jumpFromGround();
             }
         }
     }
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null && this.enabled && !this.isPaused() && this.mode.get() != SpeedMode.Vanilla) {
-            if (this.mode.get() != SpeedMode.Vulcan || BlackOut.mc.player.isOnGround()) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null && this.enabled && !this.isPaused() && this.mode.get() != SpeedMode.Vanilla) {
+            if (this.mode.get() != SpeedMode.Vulcan || BlackOut.mc.player.onGround()) {
                 this.yaw = Managers.ROTATION.moveYaw + 90.0F;
             }
 
             this.boost = this.boost * this.boostDecay.get();
             if (this.prevMovement.y > 0.6
-                    && BlackOut.mc.player.isOnGround()
+                    && BlackOut.mc.player.onGround()
                     && System.currentTimeMillis() - this.prevBoost > this.stepBoostCooldown.get() * 1000.0) {
                 this.boost = MovementUtils.getSpeed(this.stepBoost.get());
                 this.prevBoost = System.currentTimeMillis();
@@ -154,7 +154,7 @@ public class Speed extends Module {
     private void setMovement(MoveEvent.Pre event, double yaw) {
         switch (this.mode.get()) {
             case NCPOld:
-                if (BlackOut.mc.player.isOnGround()) {
+                if (BlackOut.mc.player.onGround()) {
                     event.setY(this, 0.3995);
                     this.velocity = MovementUtils.getSpeed(0.2873 * this.speedMulti.get());
                 }
@@ -173,25 +173,25 @@ public class Speed extends Module {
 
         return switch (this.mode.get()) {
             case NCPOld -> {
-                if (BlackOut.mc.player.isOnGround()) {
+                if (BlackOut.mc.player.onGround()) {
                     yield baseSpeed * this.speedMulti.get();
                 }
                 // Используем strict friction для обхода NCP
                 yield this.prevVelocity() * (this.strict.get() ? 0.91 : 0.98);
             }
             case Instant -> OLEPOSSUtils.approach(
-                    this.prevMovement.horizontalLength(),
+                    this.prevMovement.horizontalDistance(),
                     baseSpeed,
                     baseSpeed / Math.max(1, this.accelerationTicks.get())
             );
             case Vanilla -> baseSpeed * vanillaSpeed.get();
-            case Verus -> BlackOut.mc.player.isOnGround() ? 0.612 : 0.355; // Verus чуть быстрее
-            case Vulcan -> BlackOut.mc.player.isOnGround() ? 0.485 : 0.325;
+            case Verus -> BlackOut.mc.player.onGround() ? 0.612 : 0.355; // Verus чуть быстрее
+            case Vulcan -> BlackOut.mc.player.onGround() ? 0.485 : 0.325;
         };
     }
 
     private double prevVelocity() {
-        return this.strict.get() ? this.prevMovement.horizontalLength() : this.velocity;
+        return this.strict.get() ? this.prevMovement.horizontalDistance() : this.velocity;
     }
 
     private double getSpeed() {
@@ -199,22 +199,22 @@ public class Speed extends Module {
     }
 
     private boolean isPaused() {
-        if (this.pauseSneak.get() && BlackOut.mc.player.isSneaking()) return true;
-        if (this.pauseElytra.get() && BlackOut.mc.player.isGliding()) return true;
+        if (this.pauseSneak.get() && BlackOut.mc.player.isShiftKeyDown()) return true;
+        if (this.pauseElytra.get() && BlackOut.mc.player.isFallFlying()) return true;
         if (this.pauseFly.get() && BlackOut.mc.player.getAbilities().flying) return true;
 
         boolean inWater = switch (this.pauseWater.get()) {
-            case Touching -> BlackOut.mc.player.isTouchingWater();
-            case Submerged -> BlackOut.mc.player.isSubmergedIn(FluidTags.WATER);
-            case Both -> BlackOut.mc.player.isTouchingWater() || BlackOut.mc.player.isSubmergedIn(FluidTags.WATER);
+            case Touching -> BlackOut.mc.player.isInWater();
+            case Submerged -> BlackOut.mc.player.isEyeInFluid(FluidTags.WATER);
+            case Both -> BlackOut.mc.player.isInWater() || BlackOut.mc.player.isEyeInFluid(FluidTags.WATER);
             case Disabled -> false;
         };
         if (inWater) return true;
 
         return switch (this.pauseLava.get()) {
             case Touching -> BlackOut.mc.player.isInLava();
-            case Submerged -> BlackOut.mc.player.isSubmergedIn(FluidTags.LAVA);
-            case Both -> BlackOut.mc.player.isInLava() || BlackOut.mc.player.isSubmergedIn(FluidTags.LAVA);
+            case Submerged -> BlackOut.mc.player.isEyeInFluid(FluidTags.LAVA);
+            case Both -> BlackOut.mc.player.isInLava() || BlackOut.mc.player.isEyeInFluid(FluidTags.LAVA);
             case Disabled -> false;
         };
     }

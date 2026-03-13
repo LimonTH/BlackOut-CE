@@ -12,12 +12,12 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.util.InvUtils;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
 
 public class ElytraFly extends Module {
     private static ElytraFly INSTANCE;
@@ -83,7 +83,7 @@ public class ElytraFly extends Module {
         if (mode.get() == Mode.Glide) {
             info += String.format(" [%.1f]", currentSpeedAvg);
             if (showRockets.get()) {
-                int rockets = InvUtils.count(true, true, stack -> stack.isOf(Items.FIREWORK_ROCKET));
+                int rockets = InvUtils.count(true, true, stack -> stack.is(Items.FIREWORK_ROCKET));
                 info += " " + rockets;
             }
         }
@@ -95,8 +95,8 @@ public class ElytraFly extends Module {
         if (BlackOut.mc.player == null) return;
 
         if (autoStop.get()) {
-            ItemStack chest = BlackOut.mc.player.getInventory().getArmorStack(2);
-            if (chest.getItem() == Items.ELYTRA && (chest.getMaxDamage() - chest.getDamage()) < minDurability.get()) {
+            ItemStack chest = BlackOut.mc.player.getInventory().getArmor(2);
+            if (chest.getItem() == Items.ELYTRA && (chest.getMaxDamage() - chest.getDamageValue()) < minDurability.get()) {
                 this.disable();
                 return;
             }
@@ -105,19 +105,19 @@ public class ElytraFly extends Module {
         calculateAverageSpeed();
 
         if (this.mode.get() == Mode.Bounce) {
-            if (!BlackOut.mc.options.jumpKey.isPressed()) this.sus = false;
+            if (!BlackOut.mc.options.keyJump.isDown()) this.sus = false;
             BlackOut.mc.player.setSprinting(true);
 
-            if (this.sinceFalling <= 1 && BlackOut.mc.player.isOnGround()) {
-                BlackOut.mc.player.jump();
+            if (this.sinceFalling <= 1 && BlackOut.mc.player.onGround()) {
+                BlackOut.mc.player.jumpFromGround();
                 this.sinceJump = 0;
-                if (BlackOut.mc.options.jumpKey.isPressed()) this.sus = true;
-            } else if (this.sinceJump > this.bounceDelay.get() && BlackOut.mc.player.checkGliding()) {
-                Managers.PACKET.sendInstantly(new ClientCommandC2SPacket(BlackOut.mc.player, ClientCommandC2SPacket.Mode.START_FALL_FLYING));
+                if (BlackOut.mc.options.keyJump.isDown()) this.sus = true;
+            } else if (this.sinceJump > this.bounceDelay.get() && BlackOut.mc.player.tryToStartFallFlying()) {
+                Managers.PACKET.sendInstantly(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
             }
 
             this.sinceJump++;
-            this.sinceFalling = BlackOut.mc.player.isGliding() ? 0 : this.sinceFalling + 1;
+            this.sinceFalling = BlackOut.mc.player.isFallFlying() ? 0 : this.sinceFalling + 1;
         }
     }
 
@@ -135,15 +135,15 @@ public class ElytraFly extends Module {
     }
 
     private void handleBounceMove(MoveEvent.Pre ignored) {
-        if (BlackOut.mc.player.isGliding() && !this.sus) {
+        if (BlackOut.mc.player.isFallFlying() && !this.sus) {
             float target = getPitch();
-            lerpedPitch = (float) MathHelper.lerp(pitchLerp.get(), lerpedPitch, target);
-            BlackOut.mc.player.setPitch(lerpedPitch);
+            lerpedPitch = (float) Mth.lerp(pitchLerp.get(), lerpedPitch, target);
+            BlackOut.mc.player.setXRot(lerpedPitch);
         }
     }
 
     private void handleGlide(MoveEvent.Pre ignored) {
-        if (!BlackOut.mc.player.isGliding()) return;
+        if (!BlackOut.mc.player.isFallFlying()) return;
 
         double playerY = BlackOut.mc.player.getY();
         long currentTime = System.currentTimeMillis();
@@ -183,31 +183,31 @@ public class ElytraFly extends Module {
             targetPitch = (float) -(4.0 + (8.0 * (0.5 * (tri + 1.0))));
         }
 
-        BlackOut.mc.player.setPitch(MathHelper.stepTowards(
-                BlackOut.mc.player.getPitch(),
+        BlackOut.mc.player.setXRot(Mth.approach(
+                BlackOut.mc.player.getXRot(),
                 targetPitch,
                 glidePitchStep.get().floatValue())
         );
     }
 
     private void handleRotation(MoveEvent.Pre event) {
-        if (!BlackOut.mc.player.isGliding()) return;
-        Vec3d dir = getNamiControlDir();
+        if (!BlackOut.mc.player.isFallFlying()) return;
+        Vec3 dir = getNamiControlDir();
         if (dir != null) {
             float targetYaw = (float) Math.toDegrees(Math.atan2(dir.z, dir.x)) - 90f;
-            BlackOut.mc.player.setYaw(targetYaw);
-            if (Math.abs(dir.y) > 0.5) BlackOut.mc.player.setPitch(dir.y > 0 ? -90f : 90f);
-            else if (lockPitch.get()) BlackOut.mc.player.setPitch(fixedPitchValue.get().floatValue());
+            BlackOut.mc.player.setYRot(targetYaw);
+            if (Math.abs(dir.y) > 0.5) BlackOut.mc.player.setXRot(dir.y > 0 ? -90f : 90f);
+            else if (lockPitch.get()) BlackOut.mc.player.setXRot(fixedPitchValue.get().floatValue());
             event.set(this, dir.x * horizontalSpeed.get(), dir.y * verticalSpeed.get(), dir.z * horizontalSpeed.get());
         } else if (idleWobble.get()) {
             if (System.currentTimeMillis() - lastHoverTime > 500) {
                 hoverB = !hoverB; lastHoverTime = System.currentTimeMillis();
             }
-            BlackOut.mc.player.setYaw(BlackOut.mc.player.getYaw() + (hoverB ? 0.4f : -0.4f));
-            if (lockPitch.get()) BlackOut.mc.player.setPitch(fixedPitchValue.get().floatValue());
+            BlackOut.mc.player.setYRot(BlackOut.mc.player.getYRot() + (hoverB ? 0.4f : -0.4f));
+            if (lockPitch.get()) BlackOut.mc.player.setXRot(fixedPitchValue.get().floatValue());
             event.set(this, 0, -0.0001, 0);
         }
-        BlackOut.mc.player.setVelocity(0, 0, 0);
+        BlackOut.mc.player.setDeltaMovement(0, 0, 0);
     }
 
     private void calculateAverageSpeed() {
@@ -224,17 +224,17 @@ public class ElytraFly extends Module {
     }
 
     private boolean useRocket() {
-        FindResult result = rocketSwitchMode.get().find(stack -> stack.isOf(Items.FIREWORK_ROCKET));
+        FindResult result = rocketSwitchMode.get().find(stack -> stack.is(Items.FIREWORK_ROCKET));
         if (!result.wasFound()) return false;
 
-        if (BlackOut.mc.player.getMainHandStack().isOf(Items.FIREWORK_ROCKET)) {
-            BlackOut.mc.interactionManager.interactItem(BlackOut.mc.player, Hand.MAIN_HAND);
+        if (BlackOut.mc.player.getMainHandItem().is(Items.FIREWORK_ROCKET)) {
+            BlackOut.mc.gameMode.useItem(BlackOut.mc.player, InteractionHand.MAIN_HAND);
             return true;
         }
 
         if (rocketSwitchMode.get().swap(result.slot())) {
 
-            BlackOut.mc.interactionManager.interactItem(BlackOut.mc.player, Hand.MAIN_HAND);
+            BlackOut.mc.gameMode.useItem(BlackOut.mc.player, InteractionHand.MAIN_HAND);
             rocketSwitchMode.get().swapBack();
             return true;
         }
@@ -243,50 +243,50 @@ public class ElytraFly extends Module {
     }
 
     public float getPitch() {
-        return this.sus ? BlackOut.mc.player.getPitch() : MathHelper.clampedLerp(
-                slowPitch.get().floatValue(), fastPitch.get().floatValue(), (float) BlackOut.mc.player.getVelocity().horizontalLength()
+        return this.sus ? BlackOut.mc.player.getXRot() : Mth.clampedLerp(
+                slowPitch.get().floatValue(), fastPitch.get().floatValue(), (float) BlackOut.mc.player.getDeltaMovement().horizontalDistance()
         );
     }
 
     public boolean isBouncing() {
-        return this.mode.get() == Mode.Bounce && (BlackOut.mc.player.isGliding() || this.sinceFalling < 5);
+        return this.mode.get() == Mode.Bounce && (BlackOut.mc.player.isFallFlying() || this.sinceFalling < 5);
     }
 
-    private Vec3d getNamiControlDir() {
-        float f = BlackOut.mc.player.input.movementForward;
-        float s = BlackOut.mc.player.input.movementSideways;
-        if (f == 0 && s == 0 && !BlackOut.mc.options.jumpKey.isPressed() && !BlackOut.mc.options.sneakKey.isPressed()) return null;
-        if (BlackOut.mc.options.jumpKey.isPressed()) return new Vec3d(0, 1, 0);
-        if (BlackOut.mc.options.sneakKey.isPressed()) return new Vec3d(0, -1, 0);
-        float yawRad = (float) Math.toRadians(BlackOut.mc.player.getYaw());
-        return new Vec3d(-Math.sin(yawRad) * f + -Math.sin(yawRad + 1.57) * s, 0, Math.cos(yawRad) * f + Math.cos(yawRad + 1.57) * s).normalize();
+    private Vec3 getNamiControlDir() {
+        float f = BlackOut.mc.player.input.forwardImpulse;
+        float s = BlackOut.mc.player.input.leftImpulse;
+        if (f == 0 && s == 0 && !BlackOut.mc.options.keyJump.isDown() && !BlackOut.mc.options.keyShift.isDown()) return null;
+        if (BlackOut.mc.options.keyJump.isDown()) return new Vec3(0, 1, 0);
+        if (BlackOut.mc.options.keyShift.isDown()) return new Vec3(0, -1, 0);
+        float yawRad = (float) Math.toRadians(BlackOut.mc.player.getYRot());
+        return new Vec3(-Math.sin(yawRad) * f + -Math.sin(yawRad + 1.57) * s, 0, Math.cos(yawRad) * f + Math.cos(yawRad + 1.57) * s).normalize();
     }
 
     public void waspTick(MoveEvent.Pre event) {
-        if (!BlackOut.mc.player.isGliding()) return;
+        if (!BlackOut.mc.player.isFallFlying()) return;
         updateControlMovement();
         double x = moving ? Math.cos(Math.toRadians(yaw + 90)) * horizontalSpeed.get() : 0;
         double z = moving ? Math.sin(Math.toRadians(yaw + 90)) * horizontalSpeed.get() : 0;
-        double y = BlackOut.mc.options.jumpKey.isPressed() ? verticalSpeed.get() : (BlackOut.mc.options.sneakKey.isPressed() ? -verticalSpeed.get() : -passiveDescent.get());
-        if (liftSensing.get()) y *= Math.abs(Math.sin(Math.toRadians(BlackOut.mc.player.getPitch())));
+        double y = BlackOut.mc.options.keyJump.isDown() ? verticalSpeed.get() : (BlackOut.mc.options.keyShift.isDown() ? -verticalSpeed.get() : -passiveDescent.get());
+        if (liftSensing.get()) y *= Math.abs(Math.sin(Math.toRadians(BlackOut.mc.player.getXRot())));
         event.set(this, x, y, z);
-        BlackOut.mc.player.setVelocity(0, 0, 0);
+        BlackOut.mc.player.setDeltaMovement(0, 0, 0);
     }
 
     public void controlTick(MoveEvent.Pre event) {
-        if (!BlackOut.mc.player.isGliding()) return;
+        if (!BlackOut.mc.player.isFallFlying()) return;
         updateControlMovement();
         double x = moving ? Math.cos(Math.toRadians(yaw + 90)) * horizontalSpeed.get() : 0;
         double z = moving ? Math.sin(Math.toRadians(yaw + 90)) * horizontalSpeed.get() : 0;
-        double y = BlackOut.mc.options.jumpKey.isPressed() ? verticalSpeed.get() : (BlackOut.mc.options.sneakKey.isPressed() ? -verticalSpeed.get() : -passiveDescent.get());
+        double y = BlackOut.mc.options.keyJump.isDown() ? verticalSpeed.get() : (BlackOut.mc.options.keyShift.isDown() ? -verticalSpeed.get() : -passiveDescent.get());
         event.set(this, x, y, z);
-        BlackOut.mc.player.setVelocity(0, 0, 0);
+        BlackOut.mc.player.setDeltaMovement(0, 0, 0);
     }
 
     private void updateControlMovement() {
-        float f = BlackOut.mc.player.input.movementForward;
-        float s = BlackOut.mc.player.input.movementSideways;
-        float y = BlackOut.mc.player.getYaw();
+        float f = BlackOut.mc.player.input.forwardImpulse;
+        float s = BlackOut.mc.player.input.leftImpulse;
+        float y = BlackOut.mc.player.getYRot();
         if (f > 0) { moving = true; y += s > 0 ? -45 : (s < 0 ? 45 : 0); }
         else if (f < 0) { moving = true; y += s > 0 ? -135 : (s < 0 ? 135 : 180); }
         else { moving = s != 0; y += s > 0 ? -90 : (s < 0 ? 90 : 0); }

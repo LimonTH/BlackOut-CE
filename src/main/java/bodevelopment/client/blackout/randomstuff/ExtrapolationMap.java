@@ -2,27 +2,26 @@ package bodevelopment.client.blackout.randomstuff;
 
 import bodevelopment.client.blackout.interfaces.functional.EpicInterface;
 import bodevelopment.client.blackout.manager.Managers;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.Box;
-
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.AABB;
 
 public class ExtrapolationMap {
-    private final Map<Entity, Box> boxMap = new ConcurrentHashMap<>();
+    private final Map<Entity, AABB> boxMap = new ConcurrentHashMap<>();
 
     public void update(EpicInterface<Entity, Integer> extrapolation) {
         Managers.EXTRAPOLATION.extrapolateMap(this.boxMap, extrapolation);
     }
 
-    public Box get(Entity player) {
+    public AABB get(Entity player) {
         return !this.boxMap.containsKey(player) ? player.getBoundingBox() : this.boxMap.get(player);
     }
 
-    public Map<Entity, Box> getMap() {
+    public Map<Entity, AABB> getMap() {
         return this.boxMap;
     }
 
@@ -34,11 +33,11 @@ public class ExtrapolationMap {
         return this.boxMap.containsKey(player);
     }
 
-    public Set<Entry<Entity, Box>> entrySet() {
+    public Set<Entry<Entity, AABB>> entrySet() {
         return this.boxMap.entrySet();
     }
 
-    public void forEach(BiConsumer<Entity, Box> consumer) {
+    public void forEach(BiConsumer<Entity, AABB> consumer) {
         this.boxMap.forEach(consumer);
     }
 

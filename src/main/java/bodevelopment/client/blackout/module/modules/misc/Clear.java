@@ -8,17 +8,16 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.block.AirBlock;
-import net.minecraft.block.Blocks;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.block.AirBlock;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.Vec3;
 
 public class Clear extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -125,16 +124,16 @@ public class Clear extends Module {
     }
 
     private void updatePos() {
-        Vec3d pos = this.getPos();
-        BlackOut.mc.player.setPosition(pos);
-        this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(pos.x, pos.y, pos.z, BlackOut.mc.player.isOnGround(), BlackOut.mc.player.horizontalCollision));
+        Vec3 pos = this.getPos();
+        BlackOut.mc.player.setPos(pos);
+        this.sendPacket(new ServerboundMovePlayerPacket.Pos(pos.x, pos.y, pos.z, BlackOut.mc.player.onGround(), BlackOut.mc.player.horizontalCollision));
     }
 
-    private Vec3d getPos() {
-        return new Vec3d(
-                MathHelper.lerp((float) this.x / this.sizeX, this.minX.get(), this.maxX.get()),
-                MathHelper.lerp((float) this.y / this.sizeY, this.minY.get(), this.maxY.get()),
-                MathHelper.lerp((float) this.z / this.sizeZ, this.minZ.get(), this.maxZ.get())
+    private Vec3 getPos() {
+        return new Vec3(
+                Mth.lerpInt((float) this.x / this.sizeX, this.minX.get(), this.maxX.get()),
+                Mth.lerpInt((float) this.y / this.sizeY, this.minY.get(), this.maxY.get()),
+                Mth.lerpInt((float) this.z / this.sizeZ, this.minZ.get(), this.maxZ.get())
         );
     }
 
@@ -145,16 +144,16 @@ public class Clear extends Module {
     }
 
     private void find(List<BlockPos> list) {
-        Vec3d eyePos = this.getPos().add(0.0, BlackOut.mc.player.getEyeHeight(BlackOut.mc.player.getPose()), 0.0);
-        BlockPos center = BlockPos.ofFloored(eyePos);
+        Vec3 eyePos = this.getPos().add(0.0, BlackOut.mc.player.getEyeHeight(BlackOut.mc.player.getPose()), 0.0);
+        BlockPos center = BlockPos.containing(eyePos);
         int r = (int) Math.ceil(this.range.get());
 
         for (int x = -r; x <= r; x++) {
             for (int y = -r; y <= r; y++) {
                 for (int z = -r; z <= r; z++) {
-                    BlockPos pos = center.add(x, y, z);
-                    if (!(eyePos.squaredDistanceTo(pos.toCenterPos()) > this.range.get() * this.range.get())
-                            && !(BlackOut.mc.world.getBlockState(pos).getBlock() instanceof AirBlock)) {
+                    BlockPos pos = center.offset(x, y, z);
+                    if (!(eyePos.distanceToSqr(pos.getCenter()) > this.range.get() * this.range.get())
+                            && !(BlackOut.mc.level.getBlockState(pos).getBlock() instanceof AirBlock)) {
                         list.add(pos);
                     }
                 }
@@ -163,7 +162,7 @@ public class Clear extends Module {
     }
 
     private void clickBlock(BlockPos pos) {
-        this.sendSequenced(sequence -> new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN, sequence));
-        BlackOut.mc.world.setBlockState(pos, Blocks.AIR.getDefaultState());
+        this.sendSequenced(sequence -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN, sequence));
+        BlackOut.mc.level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
     }
 }

@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.event.events;
 
 import bodevelopment.client.blackout.event.Cancellable;
-import net.minecraft.entity.Entity;
+import net.minecraft.world.entity.Entity;
 
 public class EntityAddEvent {
     public static class Post {

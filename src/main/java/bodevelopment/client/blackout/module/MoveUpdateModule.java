@@ -6,7 +6,7 @@ import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.util.MovementPrediction;
 import bodevelopment.client.blackout.util.SettingUtils;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 
 public class MoveUpdateModule extends Module {
     private Mode type = Mode.Normal;
@@ -66,10 +66,10 @@ public class MoveUpdateModule extends Module {
 
     private void spoofedCalc() {
         if (BlackOut.mc.player != null) {
-            Vec3d pos = BlackOut.mc.player.getPos();
-            BlackOut.mc.player.setPosition(MovementPrediction.predict(BlackOut.mc.player));
+            Vec3 pos = BlackOut.mc.player.position();
+            BlackOut.mc.player.setPos(MovementPrediction.predict(BlackOut.mc.player));
             this.update(false, true);
-            BlackOut.mc.player.setPosition(pos);
+            BlackOut.mc.player.setPos(pos);
         }
     }
 

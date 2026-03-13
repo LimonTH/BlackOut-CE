@@ -7,7 +7,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.util.math.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 public class BackgroundMultiSetting {
     private final Setting<BackgroundType> mode;
@@ -74,7 +74,7 @@ public class BackgroundMultiSetting {
         return this.mode.get() == BackgroundType.Static;
     }
 
-    public void render(MatrixStack stack, float x, float y, float w, float h, float r, float sr) {
+    public void render(PoseStack stack, float x, float y, float w, float h, float r, float sr) {
         ThemeSettings themeSettings = ThemeSettings.getInstance();
         switch (this.mode.get()) {
             case Static:

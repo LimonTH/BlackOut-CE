@@ -8,10 +8,14 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.DamageUtils;
 import bodevelopment.client.blackout.util.NCPRaytracer;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.*;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 
 public class RaytraceSettings extends SettingsModule {
     private static RaytraceSettings INSTANCE;
@@ -81,7 +85,7 @@ public class RaytraceSettings extends SettingsModule {
     private final Setting<Boolean> mineNCP = this.sgMine.booleanSetting("Mine NCP", false,
             "Utilizes NCP-style raytracing for mining visibility checks.");
 
-    private RaycastContext raycastContext;
+    private ClipContext raycastContext;
     private BlockHitResult result;
     private int hit = 0;
 
@@ -114,10 +118,10 @@ public class RaytraceSettings extends SettingsModule {
             Setting<Double> ph2
     ) {
         this.updateContext();
-        Vec3d vec;
+        Vec3 vec;
         switch (mode.get()) {
             case SinglePoint:
-                Vec3d to = new Vec3d(pos.getX() + 0.5, pos.getY() + ph.get(), pos.getZ() + 0.5);
+                Vec3 to = new Vec3(pos.getX() + 0.5, pos.getY() + ph.get(), pos.getZ() + 0.5);
                 if (ncp) {
                     return this.ncpRaytrace(to, BoxUtils.get(pos));
                 }
@@ -126,8 +130,8 @@ public class RaytraceSettings extends SettingsModule {
                 this.result = DamageUtils.raycast(this.raycastContext, false);
                 return this.result.getType() == HitResult.Type.MISS || this.result.getBlockPos().equals(pos);
             case DoublePoint:
-                Vec3d to1 = new Vec3d(pos.getX() + 0.5, pos.getY() + ph1.get(), pos.getZ() + 0.5);
-                Vec3d to2 = new Vec3d(pos.getX() + 0.5, pos.getY() + ph2.get(), pos.getZ() + 0.5);
+                Vec3 to1 = new Vec3(pos.getX() + 0.5, pos.getY() + ph1.get(), pos.getZ() + 0.5);
+                Vec3 to2 = new Vec3(pos.getX() + 0.5, pos.getY() + ph2.get(), pos.getZ() + 0.5);
                 if (ncp) {
                     return this.ncpRaytrace(to1, BoxUtils.get(pos)) || this.ncpRaytrace(to2, BoxUtils.get(pos));
                 }
@@ -142,16 +146,16 @@ public class RaytraceSettings extends SettingsModule {
                 this.result = DamageUtils.raycast(this.raycastContext, false);
                 return this.result.getType() == HitResult.Type.MISS || this.result.getBlockPos().equals(pos);
             case Sides:
-                vec = new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+                vec = new Vec3(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
 
                 for (Direction dir : Direction.values()) {
-                    Vec3d vec2 = vec.add(dir.getOffsetX() / 2.0F, dir.getOffsetY() / 2.0F, dir.getOffsetZ() / 2.0F);
+                    Vec3 vec2 = vec.add(dir.getStepX() / 2.0F, dir.getStepY() / 2.0F, dir.getStepZ() / 2.0F);
                     if (ncp) {
                         return this.ncpRaytrace(vec2, BoxUtils.get(pos));
                     }
 
                     ((IRaycastContext) this.raycastContext)
-                            .blackout_Client$setEnd(vec.add(dir.getOffsetX() / 2.0F, dir.getOffsetY() / 2.0F, dir.getOffsetZ() / 2.0F));
+                            .blackout_Client$setEnd(vec.add(dir.getStepX() / 2.0F, dir.getStepY() / 2.0F, dir.getStepZ() / 2.0F));
                     this.result = DamageUtils.raycast(this.raycastContext, false);
                     if (this.result.getType() == HitResult.Type.MISS || this.result.getBlockPos().equals(pos)) {
                         return true;
@@ -159,13 +163,13 @@ public class RaytraceSettings extends SettingsModule {
                 }
                 break;
             case Exposure:
-                vec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
+                vec = new Vec3(pos.getX(), pos.getY(), pos.getZ());
                 this.hit = 0;
 
                 for (int x = 0; x <= 2; x++) {
                     for (int y = 0; y <= 2; y++) {
                         for (int zx = 0; zx <= 2; zx++) {
-                            Vec3d vec2 = vec.add(0.1 + x * 0.4, 0.1 + y * 0.4, 0.1 + zx * 0.4);
+                            Vec3 vec2 = vec.add(0.1 + x * 0.4, 0.1 + y * 0.4, 0.1 + zx * 0.4);
                             if (ncp) {
                                 if (this.ncpRaytrace(vec2, BoxUtils.get(pos)) && ++this.hit >= exposure.get() / 100.0 * 27.0) {
                                     return true;
@@ -185,13 +189,13 @@ public class RaytraceSettings extends SettingsModule {
                 }
                 break;
             case Any:
-                vec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
+                vec = new Vec3(pos.getX(), pos.getY(), pos.getZ());
                 this.hit = 0;
 
                 for (int x = 0; x <= 2; x++) {
                     for (int y = 0; y <= 2; y++) {
                         for (int z = 0; z <= 2; z++) {
-                            Vec3d vec2 = vec.add(0.1 + x * 0.4, 0.1 + y * 0.4, 0.1 + z * 0.4);
+                            Vec3 vec2 = vec.add(0.1 + x * 0.4, 0.1 + y * 0.4, 0.1 + z * 0.4);
                             if (ncp) {
                                 if (this.ncpRaytrace(vec2, BoxUtils.get(pos))) {
                                     return true;
@@ -211,18 +215,18 @@ public class RaytraceSettings extends SettingsModule {
         return false;
     }
 
-    public boolean attackTrace(Box box) {
+    public boolean attackTrace(AABB box) {
         if (!this.attackTrace.get()) {
             return true;
         } else {
             this.updateContext();
-            Vec3d vec;
+            Vec3 vec;
             double xl;
             double yl;
             double zl;
             switch (this.attackMode.get()) {
                 case SinglePoint:
-                    Vec3d to = new Vec3d(
+                    Vec3 to = new Vec3(
                             (box.minX + box.maxX) / 2.0, box.minY + this.attackHeight.get(), (box.minZ + box.maxZ) / 2.0
                     );
                     if (this.attackNCP.get()) {
@@ -230,42 +234,42 @@ public class RaytraceSettings extends SettingsModule {
                     }
 
                     ((IRaycastContext) DamageUtils.raycastContext)
-                            .blackout_Client$set(BlackOut.mc.player.getEyePos(), to, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, BlackOut.mc.player);
+                            .blackout_Client$set(BlackOut.mc.player.getEyePosition(), to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
                     return DamageUtils.raycast(DamageUtils.raycastContext, false).getType() != HitResult.Type.BLOCK;
                 case DoublePoint:
-                    Vec3d to1 = new Vec3d(
+                    Vec3 to1 = new Vec3(
                             (box.minX + box.maxX) / 2.0, box.minY + this.attackHeight1.get(), (box.minZ + box.maxZ) / 2.0
                     );
-                    Vec3d to2 = new Vec3d(
+                    Vec3 to2 = new Vec3(
                             (box.minX + box.maxX) / 2.0, box.minY + this.attackHeight2.get(), (box.minZ + box.maxZ) / 2.0
                     );
                     if (!this.attackNCP.get()) {
                         ((IRaycastContext) DamageUtils.raycastContext)
-                                .blackout_Client$set(BlackOut.mc.player.getEyePos(), to1, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, BlackOut.mc.player);
+                                .blackout_Client$set(BlackOut.mc.player.getEyePosition(), to1, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
                         if (DamageUtils.raycast(DamageUtils.raycastContext, false).getType() != HitResult.Type.BLOCK) {
                             return true;
                         }
 
                         ((IRaycastContext) DamageUtils.raycastContext)
-                                .blackout_Client$set(BlackOut.mc.player.getEyePos(), to2, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, BlackOut.mc.player);
+                                .blackout_Client$set(BlackOut.mc.player.getEyePosition(), to2, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
                         return DamageUtils.raycast(DamageUtils.raycastContext, false).getType() != HitResult.Type.BLOCK;
                     }
 
                     return this.ncpRaytrace(to1, box) || this.ncpRaytrace(to2, box);
                 case Exposure:
-                    vec = new Vec3d(box.minX, box.minY, box.minZ);
-                    xl = box.getLengthX();
-                    yl = box.getLengthY();
-                    zl = box.getLengthZ();
+                    vec = new Vec3(box.minX, box.minY, box.minZ);
+                    xl = box.getXsize();
+                    yl = box.getYsize();
+                    zl = box.getZsize();
                     this.hit = 0;
 
                     for (int x = 0; x <= 2; x++) {
                         for (int y = 0; y <= 2; y++) {
                             for (int zx = 0; zx <= 2; zx++) {
-                                Vec3d vec2 = vec.add(
-                                        MathHelper.lerp(x / 2.0F, xl * 0.1, xl * 0.9),
-                                        MathHelper.lerp(y / 2.0F, yl * 0.1, yl * 0.9),
-                                        MathHelper.lerp(zx / 2.0F, zl * 0.1, zl * 0.9)
+                                Vec3 vec2 = vec.add(
+                                        Mth.lerp(x / 2.0F, xl * 0.1, xl * 0.9),
+                                        Mth.lerp(y / 2.0F, yl * 0.1, yl * 0.9),
+                                        Mth.lerp(zx / 2.0F, zl * 0.1, zl * 0.9)
                                 );
                                 if (this.attackNCP.get()) {
                                     if (this.ncpRaytrace(vec2, box) && ++this.hit >= this.attackExposure.get() / 100.0 * 27.0) {
@@ -286,18 +290,18 @@ public class RaytraceSettings extends SettingsModule {
                     }
                     break;
                 case Any:
-                    vec = new Vec3d(box.minX, box.minY, box.minZ);
-                    xl = box.getLengthX();
-                    yl = box.getLengthY();
-                    zl = box.getLengthZ();
+                    vec = new Vec3(box.minX, box.minY, box.minZ);
+                    xl = box.getXsize();
+                    yl = box.getYsize();
+                    zl = box.getZsize();
 
                     for (int x = 0; x <= 2; x++) {
                         for (int y = 0; y <= 2; y++) {
                             for (int z = 0; z <= 2; z++) {
-                                Vec3d vec2 = vec.add(
-                                        MathHelper.lerp(x / 2.0F, xl * 0.1, xl * 0.9),
-                                        MathHelper.lerp(y / 2.0F, yl * 0.1, yl * 0.9),
-                                        MathHelper.lerp(z / 2.0F, zl * 0.1, zl * 0.9)
+                                Vec3 vec2 = vec.add(
+                                        Mth.lerp(x / 2.0F, xl * 0.1, xl * 0.9),
+                                        Mth.lerp(y / 2.0F, yl * 0.1, yl * 0.9),
+                                        Mth.lerp(z / 2.0F, zl * 0.1, zl * 0.9)
                                 );
                                 if (this.attackNCP.get()) {
                                     if (this.ncpRaytrace(vec2, box)) {
@@ -323,15 +327,15 @@ public class RaytraceSettings extends SettingsModule {
         return !this.mineTrace.get() || this.blockTrace(pos, this.mineNCP.get(), this.mineMode, this.mineExposure, this.mineHeight, this.mineHeight1, this.mineHeight2);
     }
 
-    private boolean ncpRaytrace(Vec3d to, Box box) {
-        return NCPRaytracer.raytrace(BlackOut.mc.player.getEyePos(), to, box);
+    private boolean ncpRaytrace(Vec3 to, AABB box) {
+        return NCPRaytracer.raytrace(BlackOut.mc.player.getEyePosition(), to, box);
     }
 
     private void updateContext() {
         if (this.raycastContext == null) {
-            this.raycastContext = new RaycastContext(BlackOut.mc.player.getEyePos(), null, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.ANY, BlackOut.mc.player);
+            this.raycastContext = new ClipContext(BlackOut.mc.player.getEyePosition(), null, ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, BlackOut.mc.player);
         } else {
-            ((IRaycastContext) this.raycastContext).blackout_Client$setStart(BlackOut.mc.player.getEyePos());
+            ((IRaycastContext) this.raycastContext).blackout_Client$setStart(BlackOut.mc.player.getEyePosition());
         }
     }
 

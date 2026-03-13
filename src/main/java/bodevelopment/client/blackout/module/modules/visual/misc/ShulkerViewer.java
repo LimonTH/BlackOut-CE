@@ -12,18 +12,17 @@ import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.block.ShulkerBoxBlock;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ContainerComponent;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.collection.DefaultedList;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemContainerContents;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
 
 public class ShulkerViewer extends Module {
     private static ShulkerViewer INSTANCE;
@@ -41,24 +40,24 @@ public class ShulkerViewer extends Module {
         INSTANCE = this;
     }
 
-    public void renderOnTop(DrawContext context, int mouseX, int mouseY) {
-        if (BlackOut.mc.player == null || BlackOut.mc.currentScreen == null) return;
+    public void renderOnTop(GuiGraphics context, int mouseX, int mouseY) {
+        if (BlackOut.mc.player == null || BlackOut.mc.screen == null) return;
 
-        ItemStack hoveredStack = getHoveredStack(BlackOut.mc.currentScreen);
+        ItemStack hoveredStack = getHoveredStack(BlackOut.mc.screen);
         if (hoveredStack == null || hoveredStack.isEmpty()) return;
         if (!(hoveredStack.getItem() instanceof BlockItem blockItem && blockItem.getBlock() instanceof ShulkerBoxBlock)) return;
 
-        ContainerComponent container = hoveredStack.get(DataComponentTypes.CONTAINER);
+        ItemContainerContents container = hoveredStack.get(DataComponents.CONTAINER);
         if (container == null) return;
 
-        DefaultedList<ItemStack> items = DefaultedList.ofSize(27, ItemStack.EMPTY);
-        container.copyTo(items);
+        NonNullList<ItemStack> items = NonNullList.withSize(27, ItemStack.EMPTY);
+        container.copyInto(items);
 
-        renderGui(context, mouseX, mouseY, items, hoveredStack.getName().getString());
+        renderGui(context, mouseX, mouseY, items, hoveredStack.getHoverName().getString());
     }
 
-    private void renderGui(DrawContext context, int mouseX, int mouseY, DefaultedList<ItemStack> items, String name) {
-        context.draw();
+    private void renderGui(GuiGraphics context, int mouseX, int mouseY, NonNullList<ItemStack> items, String name) {
+        context.flush();
 
         float s = scale.get().floatValue();
         float width = (162 + 10) * s;
@@ -68,16 +67,16 @@ public class ShulkerViewer extends Module {
         float posX = mouseX + 12;
         float posY = mouseY - height / 2;
 
-        if (posX + width > BlackOut.mc.getWindow().getScaledWidth()) posX = mouseX - width - 12;
-        if (posY + height > BlackOut.mc.getWindow().getScaledHeight()) posY = BlackOut.mc.getWindow().getScaledHeight() - height - 5;
+        if (posX + width > BlackOut.mc.getWindow().getGuiScaledWidth()) posX = mouseX - width - 12;
+        if (posY + height > BlackOut.mc.getWindow().getGuiScaledHeight()) posY = BlackOut.mc.getWindow().getGuiScaledHeight() - height - 5;
         if (posY < 5) posY = 5;
 
-        MatrixStack stack = context.getMatrices();
+        PoseStack stack = context.pose();
 
         RenderSystem.enableBlend();
         RenderSystem.disableDepthTest();
 
-        stack.push();
+        stack.pushPose();
         stack.translate(0, 0, RenderLayer.GUI);
 
         if (shadow.get()) {
@@ -100,24 +99,24 @@ public class ShulkerViewer extends Module {
             RenderUtils.renderItem(stack, itemStack, itemX, itemY, 16.0F * s, RenderLayer.WORLD, true);
         }
 
-        stack.pop();
+        stack.popPose();
 
         RenderSystem.enableDepthTest();
-        context.draw();
+        context.flush();
     }
 
     private ItemStack getHoveredStack(Screen screen) {
-        if (screen instanceof HandledScreen<?> handledScreen && handledScreen instanceof IHandledScreen accessor) {
+        if (screen instanceof AbstractContainerScreen<?> handledScreen && handledScreen instanceof IHandledScreen accessor) {
             if (accessor.blackout_Client$getFocusedSlot() != null) {
-                return accessor.blackout_Client$getFocusedSlot().getStack();
+                return accessor.blackout_Client$getFocusedSlot().getItem();
             }
         }
         return null;
     }
 
     public boolean isHoveringShulker() {
-        if (BlackOut.mc.currentScreen == null) return false;
-        ItemStack stack = getHoveredStack(BlackOut.mc.currentScreen);
+        if (BlackOut.mc.screen == null) return false;
+        ItemStack stack = getHoveredStack(BlackOut.mc.screen);
         return stack != null && !stack.isEmpty() &&
                 stack.getItem() instanceof BlockItem bi &&
                 bi.getBlock() instanceof ShulkerBoxBlock;

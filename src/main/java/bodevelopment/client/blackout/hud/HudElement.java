@@ -7,9 +7,8 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.rendering.renderer.ColorRenderer;
 import com.google.gson.JsonObject;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.util.math.MatrixStack;
-
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +29,7 @@ public class HudElement {
     public boolean enabled = true;
     public long toggleTime = 0L;
     protected float frameTime;
-    protected MatrixStack stack;
+    protected PoseStack stack;
     private float width = 0.0F;
     private float height = 0.0F;
     public HudElement(String name, String description) {
@@ -52,7 +51,7 @@ public class HudElement {
         this.height = height;
     }
 
-    public void renderElement(MatrixStack stack, float frameTime) {
+    public void renderElement(PoseStack stack, float frameTime) {
         if (this.enabled || HudEditor.isOpen()) {
             this.frameTime = frameTime;
             this.stack = stack;
@@ -62,27 +61,27 @@ public class HudElement {
         }
     }
 
-    public void renderQuad(MatrixStack stack, boolean selected) {
+    public void renderQuad(PoseStack stack, boolean selected) {
         this.pushStack(stack);
         ColorRenderer renderer = ColorRenderer.getInstance();
         float r = 1.0F;
         float g = this.enabled ? 1.0F : 0.0F;
         float b = this.enabled ? 1.0F : 0.0F;
         renderer.quad(stack, 0.0F, 0.0F, 0.0F, this.width, this.height, r, g, b, selected ? 0.1F : 0.05F);
-        renderer.startRender(stack, VertexFormat.DrawMode.DEBUG_LINE_STRIP);
+        renderer.startRender(stack, VertexFormat.Mode.DEBUG_LINE_STRIP);
         renderer.quadOutlineShape(0.0F, 0.0F, 0.0F, this.width, this.height, r, g, b, selected ? 1.0F : 0.5F);
         renderer.endRender();
         this.popStack(stack);
     }
 
-    private void pushStack(MatrixStack stack) {
-        stack.push();
+    private void pushStack(PoseStack stack) {
+        stack.pushPose();
         stack.translate(this.x, this.y, 0.0F);
         stack.scale(this.getScale(), this.getScale(), 0.0F);
     }
 
-    private void popStack(MatrixStack stack) {
-        stack.pop();
+    private void popStack(PoseStack stack) {
+        stack.popPose();
     }
 
     protected void render() {

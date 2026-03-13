@@ -20,23 +20,28 @@ import bodevelopment.client.blackout.util.ChatUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 import bodevelopment.client.blackout.util.SoundUtils;
 import com.google.gson.JsonObject;
-import net.minecraft.client.network.PendingUpdateManager;
-import net.minecraft.client.network.SequencedPacketCreator;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.c2s.play.*;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.multiplayer.prediction.BlockStatePredictionHandler;
+import net.minecraft.client.multiplayer.prediction.PredictiveAction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -114,7 +119,7 @@ public class Module extends RotationHelper {
             this.toggleTime = System.currentTimeMillis();
             if (sendNotification) {
                 this.sendNotification(
-                        message == null ? this.getDisplayName() + Formatting.GREEN.toString() + " Enabled" : " " + message,
+                        message == null ? this.getDisplayName() + ChatFormatting.GREEN.toString() + " Enabled" : " " + message,
                         message == null ? "Enabled " + this.getDisplayName() : message,
                         "Module Toggle",
                         Notifications.Type.Enable,
@@ -155,7 +160,7 @@ public class Module extends RotationHelper {
             this.toggleTime = System.currentTimeMillis();
             if (sendNotification) {
                 this.sendNotification(
-                        message == null ? this.getDisplayName() + Formatting.RED.toString() + " OFF" : " " + message,
+                        message == null ? this.getDisplayName() + ChatFormatting.RED.toString() + " OFF" : " " + message,
                         message == null ? "Disabled " + this.getDisplayName() : message,
                         "Module Toggle",
                         type,
@@ -199,48 +204,48 @@ public class Module extends RotationHelper {
         Managers.PACKET.sendInstantly(packet);
     }
 
-    protected void sendSequencedInstantly(SequencedPacketCreator packetCreator) {
-        if (BlackOut.mc.interactionManager != null && BlackOut.mc.world != null) {
-            PendingUpdateManager sequence = BlackOut.mc.world.getPendingUpdateManager().incrementSequence();
-            Packet<?> packet = packetCreator.predict(sequence.getSequence());
+    protected void sendSequencedInstantly(PredictiveAction packetCreator) {
+        if (BlackOut.mc.gameMode != null && BlackOut.mc.level != null) {
+            BlockStatePredictionHandler sequence = BlackOut.mc.level.getBlockStatePredictionHandler().startPredicting();
+            Packet<?> packet = packetCreator.predict(sequence.currentSequence());
             this.sendInstantly(packet);
             sequence.close();
         }
     }
 
-    protected void sendSequenced(SequencedPacketCreator packetCreator) {
-        if (BlackOut.mc.interactionManager != null && BlackOut.mc.world != null) {
-            PendingUpdateManager sequence = BlackOut.mc.world.getPendingUpdateManager().incrementSequence();
-            Packet<?> packet = packetCreator.predict(sequence.getSequence());
+    protected void sendSequenced(PredictiveAction packetCreator) {
+        if (BlackOut.mc.gameMode != null && BlackOut.mc.level != null) {
+            BlockStatePredictionHandler sequence = BlackOut.mc.level.getBlockStatePredictionHandler().startPredicting();
+            Packet<?> packet = packetCreator.predict(sequence.currentSequence());
             this.sendPacket(packet);
             sequence.close();
         }
     }
 
-    protected void sendSequencedPostGrim(SequencedPacketCreator packetCreator) {
-        if (BlackOut.mc.interactionManager != null && BlackOut.mc.world != null) {
-            PendingUpdateManager sequence = BlackOut.mc.world.getPendingUpdateManager().incrementSequence();
-            Packet<?> packet = packetCreator.predict(sequence.getSequence());
+    protected void sendSequencedPostGrim(PredictiveAction packetCreator) {
+        if (BlackOut.mc.gameMode != null && BlackOut.mc.level != null) {
+            BlockStatePredictionHandler sequence = BlackOut.mc.level.getBlockStatePredictionHandler().startPredicting();
+            Packet<?> packet = packetCreator.predict(sequence.currentSequence());
             Managers.PACKET.sendPostPacket(packet);
             sequence.close();
         }
     }
 
-    protected void placeBlock(Hand hand, PlaceData data) {
-        boolean shouldSneak = data.sneak() && !BlackOut.mc.player.isSneaking();
+    protected void placeBlock(InteractionHand hand, PlaceData data) {
+        boolean shouldSneak = data.sneak() && !BlackOut.mc.player.isShiftKeyDown();
         if (shouldSneak) {
-            this.sendPacket(new ClientCommandC2SPacket(BlackOut.mc.player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY));
+            this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.PRESS_SHIFT_KEY));
         }
 
-        this.placeBlock(hand, data.pos().toCenterPos(), data.dir(), data.pos());
+        this.placeBlock(hand, data.pos().getCenter(), data.dir(), data.pos());
         if (shouldSneak) {
-            this.sendPacket(new ClientCommandC2SPacket(BlackOut.mc.player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY));
+            this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.RELEASE_SHIFT_KEY));
         }
     }
 
-    protected void placeBlock(Hand hand, Vec3d blockHitVec, Direction blockDirection, BlockPos pos) {
-        Hand finalHand = Objects.requireNonNullElse(hand, Hand.MAIN_HAND);
-        Vec3d eyes = BlackOut.mc.player.getEyePos();
+    protected void placeBlock(InteractionHand hand, Vec3 blockHitVec, Direction blockDirection, BlockPos pos) {
+        InteractionHand finalHand = Objects.requireNonNullElse(hand, InteractionHand.MAIN_HAND);
+        Vec3 eyes = BlackOut.mc.player.getEyePosition();
         boolean inside = eyes.x > pos.getX()
                 && eyes.x < pos.getX() + 1
                 && eyes.y > pos.getY()
@@ -248,13 +253,13 @@ public class Module extends RotationHelper {
                 && eyes.z > pos.getZ()
                 && eyes.z < pos.getZ() + 1;
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, finalHand);
-        this.sendSequenced(s -> new PlayerInteractBlockC2SPacket(finalHand, new BlockHitResult(blockHitVec, blockDirection, pos, inside), s));
+        this.sendSequenced(s -> new ServerboundUseItemOnPacket(finalHand, new BlockHitResult(blockHitVec, blockDirection, pos, inside), s));
         SettingUtils.swing(SwingState.Post, SwingType.Placing, finalHand);
     }
 
-    protected void interactBlock(Hand hand, Vec3d blockHitVec, Direction blockDirection, BlockPos pos) {
-        Hand finalHand = Objects.requireNonNullElse(hand, Hand.MAIN_HAND);
-        Vec3d eyes = BlackOut.mc.player.getEyePos();
+    protected void interactBlock(InteractionHand hand, Vec3 blockHitVec, Direction blockDirection, BlockPos pos) {
+        InteractionHand finalHand = Objects.requireNonNullElse(hand, InteractionHand.MAIN_HAND);
+        Vec3 eyes = BlackOut.mc.player.getEyePosition();
         boolean inside = eyes.x > pos.getX()
                 && eyes.x < pos.getX() + 1
                 && eyes.y > pos.getY()
@@ -262,17 +267,17 @@ public class Module extends RotationHelper {
                 && eyes.z > pos.getZ()
                 && eyes.z < pos.getZ() + 1;
         SettingUtils.swing(SwingState.Pre, SwingType.Interact, finalHand);
-        this.sendSequenced(s -> new PlayerInteractBlockC2SPacket(finalHand, new BlockHitResult(blockHitVec, blockDirection, pos, inside), s));
+        this.sendSequenced(s -> new ServerboundUseItemOnPacket(finalHand, new BlockHitResult(blockHitVec, blockDirection, pos, inside), s));
         SettingUtils.swing(SwingState.Post, SwingType.Interact, finalHand);
     }
 
-    protected void useItem(Hand hand) {
-        Hand finalHand = Objects.requireNonNullElse(hand, Hand.MAIN_HAND);
+    protected void useItem(InteractionHand hand) {
+        InteractionHand finalHand = Objects.requireNonNullElse(hand, InteractionHand.MAIN_HAND);
         float yaw = Managers.ROTATION.prevYaw;
         float pitch = Managers.ROTATION.prevPitch;
         if (SettingUtils.grimUsing()) {
             this.sendPacket(
-                    new PlayerMoveC2SPacket.Full(
+                    new ServerboundMovePlayerPacket.PosRot(
                             BlackOut.mc.player.getX(),
                             BlackOut.mc.player.getY(),
                             BlackOut.mc.player.getZ(),
@@ -285,17 +290,17 @@ public class Module extends RotationHelper {
         }
 
         SettingUtils.swing(SwingState.Pre, SwingType.Using, finalHand);
-        this.sendSequenced(s -> new PlayerInteractItemC2SPacket(finalHand, s, yaw, pitch));
+        this.sendSequenced(s -> new ServerboundUseItemPacket(finalHand, s, yaw, pitch));
         SettingUtils.swing(SwingState.Post, SwingType.Using, finalHand);
     }
 
-    protected void useItemInstantly(Hand hand) {
-        Hand finalHand = Objects.requireNonNullElse(hand, Hand.MAIN_HAND);
+    protected void useItemInstantly(InteractionHand hand) {
+        InteractionHand finalHand = Objects.requireNonNullElse(hand, InteractionHand.MAIN_HAND);
         float yaw = Managers.ROTATION.prevYaw;
         float pitch = Managers.ROTATION.prevPitch;
         if (SettingUtils.grimUsing()) {
             this.sendPacket(
-                    new PlayerMoveC2SPacket.Full(
+                    new ServerboundMovePlayerPacket.PosRot(
                             BlackOut.mc.player.getX(),
                             BlackOut.mc.player.getY(),
                             BlackOut.mc.player.getZ(),
@@ -308,30 +313,30 @@ public class Module extends RotationHelper {
         }
 
         SettingUtils.swing(SwingState.Pre, SwingType.Using, finalHand);
-        this.sendSequencedInstantly(s -> new PlayerInteractItemC2SPacket(finalHand, s, yaw, pitch));
+        this.sendSequencedInstantly(s -> new ServerboundUseItemPacket(finalHand, s, yaw, pitch));
         SettingUtils.swing(SwingState.Post, SwingType.Using, finalHand);
     }
 
     protected void releaseUseItem() {
-        this.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN, 0));
+        this.sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM, BlockPos.ZERO, Direction.DOWN, 0));
     }
 
     protected void attackEntity(Entity entity) {
-        SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
-        this.sendPacket(PlayerInteractEntityC2SPacket.attack(entity, BlackOut.mc.player.isSneaking()));
-        SettingUtils.swing(SwingState.Post, SwingType.Attacking, Hand.MAIN_HAND);
-        if (entity instanceof EndCrystalEntity) {
+        SettingUtils.swing(SwingState.Pre, SwingType.Attacking, InteractionHand.MAIN_HAND);
+        this.sendPacket(ServerboundInteractPacket.createAttackPacket(entity, BlackOut.mc.player.isShiftKeyDown()));
+        SettingUtils.swing(SwingState.Post, SwingType.Attacking, InteractionHand.MAIN_HAND);
+        if (entity instanceof EndCrystal) {
             Managers.ENTITY.setSemiDead(entity.getId());
         }
     }
 
-    protected void clientSwing(SwingHand swingHand, Hand realHand) {
-        Hand hand = switch (swingHand) {
-            case MainHand -> Hand.MAIN_HAND;
-            case OffHand -> Hand.OFF_HAND;
-            case RealHand -> Objects.requireNonNullElse(realHand, Hand.MAIN_HAND);
+    protected void clientSwing(SwingHand swingHand, InteractionHand realHand) {
+        InteractionHand hand = switch (swingHand) {
+            case MainHand -> InteractionHand.MAIN_HAND;
+            case OffHand -> InteractionHand.OFF_HAND;
+            case RealHand -> Objects.requireNonNullElse(realHand, InteractionHand.MAIN_HAND);
         };
-        BlackOut.mc.player.swingHand(hand, true);
+        BlackOut.mc.player.swing(hand, true);
         SwingModifier.getInstance().startSwing(hand);
     }
 
@@ -349,13 +354,13 @@ public class Module extends RotationHelper {
 
     protected void blockPlaceSound(BlockPos pos, BlockItem blockItem) {
         BlackOut.mc
-                .world
-                .playSound(
+                .level
+                .playLocalSound(
                         pos.getX() + 0.5,
                         pos.getY() + 0.5,
                         pos.getZ() + 0.5,
-                        blockItem.getPlaceSound(BlackOut.mc.world.getBlockState(pos)),
-                        SoundCategory.BLOCKS,
+                        blockItem.getPlaceSound(BlackOut.mc.level.getBlockState(pos)),
+                        SoundSource.BLOCKS,
                         1.0F,
                         1.0F,
                         true
@@ -364,13 +369,13 @@ public class Module extends RotationHelper {
 
     protected void blockPlaceSound(BlockPos pos, BlockItem blockItem, float volume, float pitch, boolean distance) {
         BlackOut.mc
-                .world
-                .playSound(
+                .level
+                .playLocalSound(
                         pos.getX() + 0.5,
                         pos.getY() + 0.5,
                         pos.getZ() + 0.5,
-                        blockItem.getPlaceSound(BlackOut.mc.world.getBlockState(pos)),
-                        SoundCategory.BLOCKS,
+                        blockItem.getPlaceSound(BlackOut.mc.level.getBlockState(pos)),
+                        SoundSource.BLOCKS,
                         volume,
                         pitch,
                         distance
@@ -402,7 +407,7 @@ public class Module extends RotationHelper {
     }
 
     protected void closeInventory() {
-        this.sendPacket(new CloseHandledScreenC2SPacket(BlackOut.mc.player.currentScreenHandler.syncId));
+        this.sendPacket(new ServerboundContainerClosePacket(BlackOut.mc.player.containerMenu.containerId));
     }
 
     @Override

@@ -17,22 +17,21 @@ import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.randomstuff.timers.TimerMap;
 import bodevelopment.client.blackout.util.InvUtils;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 
 public class AnchorCharge extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -50,7 +49,7 @@ public class AnchorCharge extends Module {
     private final Map<BlockPos, BlockState> realStates = new ConcurrentHashMap<>();
     private final Predicate<ItemStack> emptyPredicate = stack -> {
         if (stack != null && !stack.isEmpty()) {
-            return stack.contains(DataComponentTypes.TOOL);
+            return stack.has(DataComponents.TOOL);
         } else {
             return true;
         }
@@ -71,7 +70,7 @@ public class AnchorCharge extends Module {
             if (this.charges.containsKey(pos)) {
                 return false;
             } else {
-                BlackOut.mc.world.setBlockState(pos, entry.getValue());
+                BlackOut.mc.level.setBlockAndUpdate(pos, entry.getValue());
                 return true;
             }
         });
@@ -82,7 +81,7 @@ public class AnchorCharge extends Module {
         this.charges.update();
         if (this.charges.containsKey(event.pos)) {
             if (event.state.getBlock() == Blocks.RESPAWN_ANCHOR) {
-                int c = event.state.get(Properties.CHARGES);
+                int c = event.state.getValue(BlockStateProperties.RESPAWN_ANCHOR_CHARGES);
                 if (c < this.charges.get(event.pos)) {
                     event.setCancelled(true);
                 }
@@ -97,9 +96,9 @@ public class AnchorCharge extends Module {
 
     @Event
     public void onSent(PacketEvent.Sent event) {
-        if (event.packet instanceof PlayerInteractBlockC2SPacket packet) {
-            BlockPos pos = packet.getBlockHitResult().getBlockPos().offset(packet.getBlockHitResult().getSide());
-            ItemStack holdingStack = packet.getHand() == Hand.MAIN_HAND ? Managers.PACKET.getStack() : BlackOut.mc.player.getOffHandStack();
+        if (event.packet instanceof ServerboundUseItemOnPacket packet) {
+            BlockPos pos = packet.getHitResult().getBlockPos().relative(packet.getHitResult().getDirection());
+            ItemStack holdingStack = packet.getHand() == InteractionHand.MAIN_HAND ? Managers.PACKET.getStack() : BlackOut.mc.player.getOffhandItem();
             if (holdingStack.getItem() == Items.RESPAWN_ANCHOR) {
                 this.own.add(pos, this.ownTime.get());
             }
@@ -109,18 +108,18 @@ public class AnchorCharge extends Module {
     @Event
     public void onTick(TickEvent.Pre event) {
         this.own.update();
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             if (Managers.PACKET.getStack().getItem() == Items.RESPAWN_ANCHOR) {
                 this.prevAnchor = Managers.PACKET.slot;
             }
 
-            if (BlackOut.mc.crosshairTarget instanceof BlockHitResult hitResult) {
+            if (BlackOut.mc.hitResult instanceof BlockHitResult hitResult) {
                 if (hitResult.getType() != HitResult.Type.MISS) {
-                    BlockState state = BlackOut.mc.world.getBlockState(hitResult.getBlockPos());
+                    BlockState state = BlackOut.mc.level.getBlockState(hitResult.getBlockPos());
                     if (state.getBlock() == Blocks.RESPAWN_ANCHOR) {
                         if (!this.onlyOwn.get() || this.own.contains(hitResult.getBlockPos())) {
                             if (!(this.actions <= 0.0)) {
-                                if (!this.fullCharge.get() && state.get(Properties.CHARGES) > 0) {
+                                if (!this.fullCharge.get() && state.getValue(BlockStateProperties.RESPAWN_ANCHOR_CHARGES) > 0) {
                                     this.explode(hitResult);
                                 } else {
                                     this.charge(hitResult);
@@ -134,32 +133,32 @@ public class AnchorCharge extends Module {
     }
 
     private void charge(BlockHitResult blockHitResult) {
-        Hand hand = null;
+        InteractionHand hand = null;
         if (Managers.PACKET.getStack().getItem() == Items.GLOWSTONE) {
-            hand = Hand.MAIN_HAND;
+            hand = InteractionHand.MAIN_HAND;
         }
 
-        if (this.allowOffhand.get() && BlackOut.mc.player.getOffHandStack().getItem() == Items.GLOWSTONE) {
-            hand = Hand.OFF_HAND;
+        if (this.allowOffhand.get() && BlackOut.mc.player.getOffhandItem().getItem() == Items.GLOWSTONE) {
+            hand = InteractionHand.OFF_HAND;
         }
 
         FindResult result = this.glowstoneSwitch.get().find(Items.GLOWSTONE);
         boolean switched = false;
         if (hand != null || result.wasFound() && (switched = this.glowstoneSwitch.get().swap(result.slot()))) {
-            hand = hand == null ? Hand.MAIN_HAND : hand;
+            hand = hand == null ? InteractionHand.MAIN_HAND : hand;
             BlockPos pos = blockHitResult.getBlockPos();
-            BlockState state = BlackOut.mc.world.getBlockState(pos);
-            if (state.get(Properties.CHARGES) < 4) {
-                int c = state.get(Properties.CHARGES) + 1;
+            BlockState state = BlackOut.mc.level.getBlockState(pos);
+            if (state.getValue(BlockStateProperties.RESPAWN_ANCHOR_CHARGES) < 4) {
+                int c = state.getValue(BlockStateProperties.RESPAWN_ANCHOR_CHARGES) + 1;
                 this.charges.add(pos, c, 0.3);
-                BlackOut.mc.world.setBlockState(pos, state.with(Properties.CHARGES, c));
+                BlackOut.mc.level.setBlockAndUpdate(pos, state.setValue(BlockStateProperties.RESPAWN_ANCHOR_CHARGES, c));
             } else {
                 this.charges.add(pos, -1, 0.3);
-                BlackOut.mc.world.setBlockState(pos, Blocks.AIR.getDefaultState());
+                BlackOut.mc.level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
             }
 
-            BlackOut.mc.interactionManager.interactBlock(BlackOut.mc.player, hand, blockHitResult);
-            BlackOut.mc.getNetworkHandler().sendPacket(new HandSwingC2SPacket(hand));
+            BlackOut.mc.gameMode.useItemOn(BlackOut.mc.player, hand, blockHitResult);
+            BlackOut.mc.getConnection().send(new ServerboundSwingPacket(hand));
             this.clientSwing(SwingHand.RealHand, hand);
             this.actions--;
             if (switched) {
@@ -169,22 +168,22 @@ public class AnchorCharge extends Module {
     }
 
     private void explode(BlockHitResult blockHitResult) {
-        Hand hand = null;
+        InteractionHand hand = null;
         FindResult result = InvUtils.findNullable(this.explodeSwitch.get().hotbar, false, this.emptyPredicate);
         boolean switched = false;
         if (this.prevAnchor > -1
-                && BlackOut.mc.player.getInventory().getStack(this.prevAnchor).getItem() == Items.RESPAWN_ANCHOR
+                && BlackOut.mc.player.getInventory().getItem(this.prevAnchor).getItem() == Items.RESPAWN_ANCHOR
                 && this.explodeSwitch.get().hotbar) {
             if (!(switched = this.explodeSwitch.get().swap(this.prevAnchor))) {
                 return;
             }
         } else {
             if (this.emptyPredicate.test(Managers.PACKET.getStack())) {
-                hand = Hand.MAIN_HAND;
+                hand = InteractionHand.MAIN_HAND;
             }
 
             if (this.allowOffhand.get() && this.emptyPredicate.test(Managers.PACKET.getStack())) {
-                hand = Hand.OFF_HAND;
+                hand = InteractionHand.OFF_HAND;
             }
 
             if (hand == null && (!result.wasFound() || !(switched = this.explodeSwitch.get().swap(result.slot())))) {
@@ -194,9 +193,9 @@ public class AnchorCharge extends Module {
 
         BlockPos pos = blockHitResult.getBlockPos();
         this.charges.add(pos, -1, 0.3);
-        BlackOut.mc.world.setBlockState(pos, Blocks.AIR.getDefaultState());
-        hand = hand == null ? Hand.MAIN_HAND : hand;
-        BlackOut.mc.interactionManager.interactBlock(BlackOut.mc.player, hand, blockHitResult);
+        BlackOut.mc.level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+        hand = hand == null ? InteractionHand.MAIN_HAND : hand;
+        BlackOut.mc.gameMode.useItemOn(BlackOut.mc.player, hand, blockHitResult);
         this.clientSwing(SwingHand.RealHand, hand);
         this.actions--;
         if (switched) {

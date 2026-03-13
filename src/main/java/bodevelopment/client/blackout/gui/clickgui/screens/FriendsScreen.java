@@ -11,17 +11,16 @@ import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.util.DefaultSkinHelper;
-import net.minecraft.util.Identifier;
-
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
+import net.minecraft.client.resources.DefaultPlayerSkin;
+import net.minecraft.resources.ResourceLocation;
 
 public class FriendsScreen extends ClickGuiScreen {
     private static final float ITEM_HEIGHT = 75.0F;
     private boolean first;
-    private final Map<String, Identifier> skinCache = new HashMap<>();
+    private final Map<String, ResourceLocation> skinCache = new HashMap<>();
 
     public FriendsScreen() {
         super("Friends", 800.0F, 500.0F, true);
@@ -36,7 +35,7 @@ public class FriendsScreen extends ClickGuiScreen {
     public void render() {
         RenderUtils.rounded(this.stack, 0, 0, width, height - 40.0F, 10, 10, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
 
-        this.stack.push();
+        this.stack.pushPose();
 
         this.stack.translate(0.0F, (float) Math.round(10.0F - this.scroll.get()), 0.0F);
 
@@ -47,7 +46,7 @@ public class FriendsScreen extends ClickGuiScreen {
             Managers.FRIENDS.getFriends().forEach(this::renderFriend);
         }
 
-        this.stack.pop();
+        this.stack.popPose();
     }
 
     private void renderFriend(FriendsManager.Friend friend) {
@@ -56,7 +55,7 @@ public class FriendsScreen extends ClickGuiScreen {
         }
         this.first = false;
 
-        this.stack.push();
+        this.stack.pushPose();
 
         renderFriendHead(friend);
 
@@ -71,25 +70,25 @@ public class FriendsScreen extends ClickGuiScreen {
             RenderUtils.rounded(this.stack, width - 100, 20, 85, 35, 7, 0, new Color(255, 50, 50, 35).getRGB(), 0);
             BlackOut.FONT.text(this.stack, "REMOVE", 1.5F, width - 57.0F, 37.0F, Color.RED, true, true);
         }
-        this.stack.pop();
+        this.stack.popPose();
 
         this.stack.translate(0.0F, ITEM_HEIGHT, 0.0F);
     }
 
     private void renderFriendHead(FriendsManager.Friend friend) {
-        Identifier skin = skinCache.get(friend.getName());
+        ResourceLocation skin = skinCache.get(friend.getName());
 
         if (skin == null) {
             if (friend.getUuid() != null) {
                 new Thread(() -> {
                     try {
-                        var profileResult = BlackOut.mc.getSessionService().fetchProfile(friend.getUuid(), false);
+                        var profileResult = BlackOut.mc.getMinecraftSessionService().fetchProfile(friend.getUuid(), false);
 
                         if (profileResult != null) {
                             GameProfile fullProfile = profileResult.profile();
 
-                            var skinTextures = BlackOut.mc.getSkinProvider().getSkinTextures(fullProfile);
-                            Identifier loadedSkin = skinTextures.texture();
+                            var skinTextures = BlackOut.mc.getSkinManager().getInsecureSkin(fullProfile);
+                            ResourceLocation loadedSkin = skinTextures.texture();
 
                             if (!loadedSkin.getPath().contains("textures/entity/player/")) {
                                 skinCache.put(friend.getName(), loadedSkin);
@@ -100,13 +99,13 @@ public class FriendsScreen extends ClickGuiScreen {
                     }
                 }).start();
 
-                skin = DefaultSkinHelper.getSkinTextures(friend.getUuid()).texture();
+                skin = DefaultPlayerSkin.get(friend.getUuid()).texture();
             } else {
-                skin = DefaultSkinHelper.getTexture();
+                skin = DefaultPlayerSkin.getDefaultTexture();
             }
         }
 
-        int glId = BlackOut.mc.getTextureManager().getTexture(skin).getGlId();
+        int glId = BlackOut.mc.getTextureManager().getTexture(skin).getId();
 
         RenderSystem.setShaderTexture(0, skin);
         RenderSystem.texParameter(3553, 10241, 9728);

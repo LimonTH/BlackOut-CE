@@ -3,8 +3,8 @@ package bodevelopment.client.blackout.util;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.HoleType;
 import bodevelopment.client.blackout.randomstuff.Hole;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class HoleUtils {
     public static Hole getHole(BlockPos pos) {
@@ -56,18 +56,18 @@ public class HoleUtils {
 
 
     static boolean isBlock(BlockPos pos) {
-        if (BlackOut.mc.world == null) return false;
+        if (BlackOut.mc.level == null) return false;
         return OLEPOSSUtils.collidable(pos) && OLEPOSSUtils.solid2(pos) && OLEPOSSUtils.isSafe(pos);
     }
 
     static boolean isAir(BlockPos pos, int depth, boolean floor) {
-        if (BlackOut.mc.world == null) return false;
+        if (BlackOut.mc.level == null) return false;
 
-        if (floor && !isBlock(pos.down())) return false;
+        if (floor && !isBlock(pos.below())) return false;
 
         for (int i = 0; i < depth; i++) {
-            BlockState state = BlackOut.mc.world.getBlockState(pos.up(i));
-            if (!state.isAir() && !state.isReplaceable() && !OLEPOSSUtils.replaceable(pos.up(i))) {
+            BlockState state = BlackOut.mc.level.getBlockState(pos.above(i));
+            if (!state.isAir() && !state.canBeReplaced() && !OLEPOSSUtils.replaceable(pos.above(i))) {
                 return false;
             }
         }
@@ -77,7 +77,7 @@ public class HoleUtils {
     public static Hole currentHole(BlockPos pos) {
         for (int x = -1; x <= 0; x++) {
             for (int z = -1; z <= 0; z++) {
-                Hole hole = getHole(pos.add(x, 0, z), 1);
+                Hole hole = getHole(pos.offset(x, 0, z), 1);
                 if (hole.type != HoleType.NotHole) {
                     if (isPosInHole(pos, hole)) return hole;
                 }

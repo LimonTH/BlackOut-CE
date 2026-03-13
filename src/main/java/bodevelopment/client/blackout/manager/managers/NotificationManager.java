@@ -6,15 +6,14 @@ import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.module.modules.client.Notifications;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.util.math.MatrixStack;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class NotificationManager extends Manager {
     private final List<Notification> notifications = Collections.synchronizedList(new ArrayList<>());
-    private final MatrixStack stack = new MatrixStack();
+    private final PoseStack stack = new PoseStack();
     private float y = 0.0F;
 
     @Override
@@ -24,9 +23,9 @@ public class NotificationManager extends Manager {
 
     @Event
     public void onRender2D(RenderEvent.Hud.Pre event) {
-        if (BlackOut.mc.currentScreen == null && BlackOut.mc.world != null && BlackOut.mc.player != null) {
+        if (BlackOut.mc.screen == null && BlackOut.mc.level != null && BlackOut.mc.player != null) {
             this.y = 100.0F;
-            this.stack.push();
+            this.stack.pushPose();
             RenderUtils.unGuiScale(this.stack);
             synchronized (this.notifications) {
                 this.notifications.removeIf(notification -> {
@@ -39,7 +38,7 @@ public class NotificationManager extends Manager {
                 });
             }
 
-            this.stack.pop();
+            this.stack.popPose();
         }
     }
 

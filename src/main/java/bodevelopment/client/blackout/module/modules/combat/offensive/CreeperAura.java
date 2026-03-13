@@ -22,21 +22,20 @@ import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.randomstuff.PlaceData;
 import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import net.minecraft.block.AirBlock;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.AirBlock;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 // TODO: NEED PATCHES
 // TODO: добавить проверку наличия spawn egg до расчётов/рендера.
@@ -107,7 +106,7 @@ public class CreeperAura extends Module {
     private final Setting<Double> enemyDistance = this.sgCalculation.doubleSetting("Scan Range", 10.0, 0.0, 100.0, 1.0, "The maximum distance to search for targets.");
 
     private final ExtrapolationMap extMap = new ExtrapolationMap();
-    private final List<PlayerEntity> targets = new ArrayList<>();
+    private final List<Player> targets = new ArrayList<>();
     private BlockPos placePos = null;
     private double selfHealth = 0.0;
     private double enemyHealth = 0.0;
@@ -138,7 +137,7 @@ public class CreeperAura extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.calc(1.0F);
             this.updatePos();
         }
@@ -146,7 +145,7 @@ public class CreeperAura extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.updateFacePlacing();
             this.calc(event.tickDelta);
             this.updateRender();
@@ -171,12 +170,12 @@ public class CreeperAura extends Module {
     }
 
     private void render(BlockPos feetPos, Setting<BlackOutColor> lines, Setting<BlackOutColor> sides, Setting<RenderShape> shape, double alpha) {
-        Box box = this.getBoxAt(feetPos);
+        AABB box = this.getBoxAt(feetPos);
         Render3DUtils.box(box, sides.get().alphaMulti(alpha), lines.get().alphaMulti(alpha), shape.get());
     }
 
-    private Box getBoxAt(BlockPos pos) {
-        return new Box(
+    private AABB getBoxAt(BlockPos pos) {
+        return new AABB(
                 pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 0.55, pos.getZ() + 1
         );
     }
@@ -209,8 +208,8 @@ public class CreeperAura extends Module {
         } else if (this.target == null) {
             return false;
         } else {
-            for (ItemStack stack : this.target.getArmorItems()) {
-                if (stack.isDamageable() && 1.0 - (double) stack.getDamage() / stack.getMaxDamage() <= this.armorFacePlace.get() / 100.0) {
+            for (ItemStack stack : this.target.getArmorSlots()) {
+                if (stack.isDamageableItem() && 1.0 - (double) stack.getDamageValue() / stack.getMaxDamage() <= this.armorFacePlace.get() / 100.0) {
                     return true;
                 }
             }
@@ -231,14 +230,14 @@ public class CreeperAura extends Module {
     private void place() {
         PlaceData data = SettingUtils.getPlaceData(this.placePos);
         if (data.valid()) {
-            Hand hand = OLEPOSSUtils.getHand(Items.CREEPER_SPAWN_EGG);
+            InteractionHand hand = OLEPOSSUtils.getHand(Items.CREEPER_SPAWN_EGG);
             FindResult result = this.switchMode.get().find(Items.CREEPER_SPAWN_EGG);
             if (hand != null || result.wasFound()) {
                 if (!SettingUtils.shouldRotate(RotationType.Interact)
-                        || this.rotateBlock(data, data.pos().toCenterPos().offset(data.dir(), 0.5), RotationType.BlockPlace, "placing")) {
+                        || this.rotateBlock(data, data.pos().getCenter().relative(data.dir(), 0.5), RotationType.BlockPlace, "placing")) {
                     boolean switched = false;
                     if (hand != null || (switched = this.switchMode.get().swap(result.slot()))) {
-                        this.interactBlock(hand, data.pos().toCenterPos(), data.dir(), data.pos());
+                        this.interactBlock(hand, data.pos().getCenter(), data.dir(), data.pos());
                         this.lastPlace = System.currentTimeMillis();
                         if (this.placeSwing.get()) {
                             this.clientSwing(this.placeHand.get(), hand);
@@ -264,7 +263,7 @@ public class CreeperAura extends Module {
                 int x = i % d - this.calcR;
                 int y = i / d % d - this.calcR;
                 int z = i / d / d % d - this.calcR;
-                this.calcPos(this.calcMiddle.add(x, y, z));
+                this.calcPos(this.calcMiddle.offset(x, y, z));
             }
         }
     }
@@ -298,7 +297,7 @@ public class CreeperAura extends Module {
     }
 
     private void calcPos(BlockPos pos) {
-        if (BlackOut.mc.world.getBlockState(pos).getBlock() instanceof AirBlock) {
+        if (BlackOut.mc.level.getBlockState(pos).getBlock() instanceof AirBlock) {
             if (this.inRangeToEnemies(pos)) {
                 PlaceData data = SettingUtils.getPlaceData(pos);
                 if (data.valid()) {
@@ -332,13 +331,13 @@ public class CreeperAura extends Module {
         this.calcValue = -42069.0;
         this.progress = 0;
         this.calcR = (int) Math.ceil(SettingUtils.maxInteractRange());
-        this.calcMiddle = BlockPos.ofFloored(BlackOut.mc.player.getEyePos());
+        this.calcMiddle = BlockPos.containing(BlackOut.mc.player.getEyePosition());
     }
 
     private double getValue(BlockPos pos, boolean place) {
         double value = 0.0;
         if (place && SettingUtils.shouldRotate(RotationType.BlockPlace) || !place && SettingUtils.shouldRotate(RotationType.Interact)) {
-            value += this.rotationMod(pos.toCenterPos());
+            value += this.rotationMod(pos.getCenter());
         }
 
         value += this.enemyMod();
@@ -358,7 +357,7 @@ public class CreeperAura extends Module {
         return this.friendDamage * this.friendDmgValue.get();
     }
 
-    private double rotationMod(Vec3d pos) {
+    private double rotationMod(Vec3 pos) {
         double yawStep = 45.0;
         double pitchStep = 22.0;
         int yawSteps = (int) Math.ceil(Math.abs(RotationUtils.yawAngle(Managers.ROTATION.prevYaw, RotationUtils.getYaw(pos)) / yawStep));
@@ -368,11 +367,11 @@ public class CreeperAura extends Module {
     }
 
     private boolean inRangeToEnemies(BlockPos pos) {
-        Vec3d vec = pos.toCenterPos();
+        Vec3 vec = pos.getCenter();
         if (this.suicide) {
             return BoxUtils.middle(BlackOut.mc.player.getBoundingBox()).distanceTo(vec) < 3.0;
         } else {
-            for (PlayerEntity player : this.targets) {
+            for (Player player : this.targets) {
                 if (BoxUtils.middle(player.getBoundingBox()).distanceTo(vec) < 3.0) {
                     return true;
                 }
@@ -383,16 +382,16 @@ public class CreeperAura extends Module {
     }
 
     private void findTargets() {
-        Map<PlayerEntity, Double> map = new HashMap<>();
+        Map<Player, Double> map = new HashMap<>();
 
-        for (PlayerEntity player : BlackOut.mc.world.getPlayers()) {
+        for (Player player : BlackOut.mc.level.players()) {
             if (player != BlackOut.mc.player && !(player.getHealth() <= 0.0F)) {
                 double distance = BlackOut.mc.player.distanceTo(player);
                 if (!(distance > this.enemyDistance.get())) {
                     if (map.size() < this.maxTargets.get()) {
                         map.put(player, distance);
                     } else {
-                        for (Entry<PlayerEntity, Double> entry : map.entrySet()) {
+                        for (Entry<Player, Double> entry : map.entrySet()) {
                             if (entry.getValue() > distance) {
                                 map.remove(entry.getKey());
                                 map.put(player, distance);
@@ -409,7 +408,7 @@ public class CreeperAura extends Module {
     }
 
     private void calcDamage(BlockPos pos) {
-        Vec3d vec = pos.toCenterPos();
+        Vec3 vec = pos.getCenter();
         this.selfDamage = DamageUtils.creeperDamage(BlackOut.mc.player, this.extMap.get(BlackOut.mc.player), vec, pos);
         this.enemyDamage = 0.0;
         this.friendDamage = 0.0;
@@ -423,7 +422,7 @@ public class CreeperAura extends Module {
             this.enemyHealth = 20.0;
             this.friendHealth = 20.0;
             this.targets.forEach(player -> {
-                Box box = this.extMap.get(player);
+                AABB box = this.extMap.get(player);
                 if (!(player.getHealth() <= 0.0F) && player != BlackOut.mc.player) {
                     double dmg = DamageUtils.creeperDamage(player, box, vec, pos);
                     double health = this.getHealth(player);

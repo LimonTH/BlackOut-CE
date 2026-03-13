@@ -79,7 +79,7 @@ public class BOTextures {
         GL13C.glTexParameteri(3553, 10240, 9729);
         GL13C.glTexParameteri(3553, 10241, 9729);
         GL13C.glTexImage2D(3553, 0, 32856, image.getWidth(), image.getHeight(), 0, 6408, 5121, buffer);
-        GL13C.glBindTexture(3553, GlStateManager.TEXTURES[0].boundTexture);
+        GL13C.glBindTexture(3553, GlStateManager.TEXTURES[0].binding);
         GL13C.glActiveTexture(33984 | GlStateManager.activeTexture);
         return new UploadData(id, image.getWidth(), image.getHeight());
     }

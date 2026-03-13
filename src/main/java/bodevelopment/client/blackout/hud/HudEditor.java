@@ -12,20 +12,19 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.rendering.renderer.ColorRenderer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
-
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
 public class HudEditor extends Screen {
-    private final MatrixStack stack = new MatrixStack();
+    private final PoseStack stack = new PoseStack();
     private final List<HudElement> selectedElements = new ArrayList<>();
     private final List<HudElement> picked = new ArrayList<>();
     private final int bgColor = new Color(0, 0, 0, 50).getRGB();
@@ -46,7 +45,7 @@ public class HudEditor extends Screen {
     private static boolean isOpen = false;
 
     public HudEditor() {
-        super(Text.of("HUD Editor"));
+        super(Component.nullToEmpty("HUD Editor"));
         BlackOut.EVENT_BUS.subscribe(this, () -> !(HudEditor.isOpen()));
     }
 
@@ -54,21 +53,21 @@ public class HudEditor extends Screen {
         this.elementList.init();
     }
 
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         isOpen = true;
         float prevMx = this.mx;
         float prevMy = this.my;
         this.mx = (float) mouseX * RenderUtils.getScale();
         this.my = (float) mouseY * RenderUtils.getScale();
         float frameTime = delta / 20.0F;
-        float scale = 1000.0F / BlackOut.mc.getFramebuffer().viewportWidth;
-        this.screenHeight = BlackOut.mc.getFramebuffer().viewportHeight * scale;
-        this.screenWidth = BlackOut.mc.getFramebuffer().viewportWidth * scale;
+        float scale = 1000.0F / BlackOut.mc.getMainRenderTarget().viewWidth;
+        this.screenHeight = BlackOut.mc.getMainRenderTarget().viewHeight * scale;
+        this.screenWidth = BlackOut.mc.getMainRenderTarget().viewWidth * scale;
         this.mx *= scale;
         this.my *= scale;
         float deltaX = this.mx - prevMx;
         float deltaY = this.my - prevMy;
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             if (this.holding && this.moved() && this.still) {
                 this.still = false;
                 HudElement holding = this.holdElement();
@@ -85,8 +84,8 @@ public class HudEditor extends Screen {
                     float newX = element.x + deltaX;
                     float newY = element.y + deltaY;
 
-                    element.x = MathHelper.clamp(newX, 0.0F, 1000.0F - element.getWidth());
-                    element.y = MathHelper.clamp(newY, 0.0F, this.screenHeight - element.getHeight());
+                    element.x = Mth.clamp(newX, 0.0F, 1000.0F - element.getWidth());
+                    element.y = Mth.clamp(newY, 0.0F, this.screenHeight - element.getHeight());
                 }
             }
 
@@ -96,21 +95,21 @@ public class HudEditor extends Screen {
             Managers.HUD.forEachElement((id, elementx) -> elementx.renderQuad(this.stack, this.selectedElements.contains(elementx)));
             this.renderSelecting();
             Managers.HUD.end(this.stack);
-            this.stack.push();
+            this.stack.pushPose();
             RenderUtils.unGuiScale(this.stack);
             RenderSystem.disableDepthTest();
             this.settings.render(this.stack, frameTime, mouseX, mouseY);
             this.elementList.render(this.stack, frameTime, mouseX, mouseY);
 
             if (this.openedScreen != null) {
-                this.stack.push();
+                this.stack.pushPose();
 
                 this.openedScreen.onRender(frameTime, mouseX, mouseY);
-                this.stack.pop();
+                this.stack.popPose();
             }
 
             RenderSystem.enableDepthTest();
-            this.stack.pop();
+            this.stack.popPose();
         }
     }
 
@@ -231,8 +230,8 @@ public class HudEditor extends Screen {
         float targetX = this.mx - element.getWidth() / 2.0F;
         float targetY = this.my - element.getHeight() / 2.0F;
 
-        element.x = MathHelper.clamp(targetX, 0.0F, 1000.0F - element.getWidth());
-        element.y = MathHelper.clamp(targetY, 0.0F, this.screenHeight - element.getHeight());
+        element.x = Mth.clamp(targetX, 0.0F, 1000.0F - element.getWidth());
+        element.y = Mth.clamp(targetY, 0.0F, this.screenHeight - element.getHeight());
 
         this.picked.clear();
         this.picked.add(element);
@@ -261,10 +260,10 @@ public class HudEditor extends Screen {
             float y = Math.min(this.holdY, this.my);
             float w = Math.max(this.holdX, this.mx) - x;
             float h = Math.max(this.holdY, this.my) - y;
-            renderer.startRender(this.stack, VertexFormat.DrawMode.QUADS);
+            renderer.startRender(this.stack, VertexFormat.Mode.QUADS);
             renderer.quadShape(x, y, w, h, 0.0F, 1.0F, 0.0F, 0.0F, 0.15F);
             renderer.endRender();
-            renderer.startRender(this.stack, VertexFormat.DrawMode.DEBUG_LINE_STRIP);
+            renderer.startRender(this.stack, VertexFormat.Mode.DEBUG_LINE_STRIP);
             renderer.quadOutlineShape(x, y, 0.0F, w, h, 1.0F, 0.0F, 0.0F, 0.5F);
             renderer.endRender();
         }
@@ -310,18 +309,18 @@ public class HudEditor extends Screen {
                 return true;
             }
 
-            this.close();
+            this.onClose();
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
-    public void close() {
+    public void onClose() {
         isOpen = false;
         Managers.CONFIG.save(ConfigType.HUD);
         Managers.CONFIG.save(ConfigType.Binds);
-        super.close();
+        super.onClose();
     }
 
     @Override
@@ -332,7 +331,7 @@ public class HudEditor extends Screen {
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 

@@ -2,10 +2,9 @@ package bodevelopment.client.blackout.command.commands;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.command.Command;
-import net.minecraft.client.network.ServerInfo;
-
 import java.util.Collections;
 import java.util.List;
+import net.minecraft.client.multiplayer.ServerData;
 
 public class DebugCommand extends Command {
     public DebugCommand() {
@@ -18,13 +17,13 @@ public class DebugCommand extends Command {
 
             String ip = "Main Menu";
 
-            if (BlackOut.mc.isInSingleplayer()) {
+            if (BlackOut.mc.isLocalServer()) {
                 ip = "Singleplayer";
             }
-            if (!BlackOut.mc.isInSingleplayer() && BlackOut.mc.getNetworkHandler() != null) {
-                ServerInfo serverInfo = BlackOut.mc.getNetworkHandler().getServerInfo();
+            if (!BlackOut.mc.isLocalServer() && BlackOut.mc.getConnection() != null) {
+                ServerData serverInfo = BlackOut.mc.getConnection().getServerData();
                 if (serverInfo != null) {
-                    ip = serverInfo.address;
+                    ip = serverInfo.ip;
                 }
             }
 

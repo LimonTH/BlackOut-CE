@@ -9,12 +9,11 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.Notifications;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.network.protocol.game.ClientboundExplodePacket;
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 
 public class StaffCheck extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -42,15 +41,15 @@ public class StaffCheck extends Module {
 
     @Event
     public void onVelocity(PacketEvent.Receive.Pre event) {
-        if (event.packet instanceof EntityVelocityUpdateS2CPacket packet) {
-            if (BlackOut.mc.player != null && BlackOut.mc.player.getId() != packet.getEntityId()) {
+        if (event.packet instanceof ClientboundSetEntityMotionPacket packet) {
+            if (BlackOut.mc.player != null && BlackOut.mc.player.getId() != packet.getId()) {
                 return;
             }
 
-            this.checkVelocity((float) packet.getVelocityX(), (float) packet.getVelocityZ(), (float) packet.getVelocityY());
+            this.checkVelocity((float) packet.getXa(), (float) packet.getZa(), (float) packet.getYa());
         }
 
-        if (event.packet instanceof ExplosionS2CPacket packet) {
+        if (event.packet instanceof ClientboundExplodePacket packet) {
             if (packet.playerKnockback().isPresent()) {
                 double velX = packet.playerKnockback().get().x;
                 double velZ = packet.playerKnockback().get().z;
@@ -64,21 +63,21 @@ public class StaffCheck extends Module {
         if (BlackOut.mc.player != null) {
             if (x == 0.0F && z == 0.0F && y > 0.0F && this.kb.get()) {
                 Managers.NOTIFICATIONS
-                        .addNotification("Suspicious Knockback taken at tick " + BlackOut.mc.player.age, this.getDisplayName(), 2.0, Notifications.Type.Alert);
+                        .addNotification("Suspicious Knockback taken at tick " + BlackOut.mc.player.tickCount, this.getDisplayName(), 2.0, Notifications.Type.Alert);
             }
         }
     }
 
     @Event
     public void onSend(PacketEvent.Receive.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             if (this.nameCheck.get()) {
-                if (event.packet instanceof PlayerListS2CPacket packet) {
-                    List<PlayerListS2CPacket.Entry> entries = packet.getPlayerAdditionEntries();
+                if (event.packet instanceof ClientboundPlayerInfoUpdatePacket packet) {
+                    List<ClientboundPlayerInfoUpdatePacket.Entry> entries = packet.newEntries();
                     entries.forEach(
                             entry -> {
                                 if (entry.displayName() != null
-                                        && this.staff.contains(entry.displayName().withoutStyle().toString())
+                                        && this.staff.contains(entry.displayName().toFlatList().toString())
                                         && System.currentTimeMillis() - this.prevTime > 5000L) {
                                     Managers.NOTIFICATIONS.addNotification("Detected Staff", this.getDisplayName(), 2.0, Notifications.Type.Alert);
                                     this.prevTime = System.currentTimeMillis();

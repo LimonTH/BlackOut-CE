@@ -2,10 +2,10 @@ package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.util.render.AnimUtils;
-import net.minecraft.util.math.MathHelper;
 import bodevelopment.client.blackout.hud.HudElement;
 
 import java.awt.*;
+import net.minecraft.util.Mth;
 
 public class GuiColorUtils {
     public static Color bg1 = getColor(25);
@@ -100,7 +100,7 @@ public class GuiColorUtils {
     }
 
     private static float getColorProgress(long time) {
-        float toggleProgress = (float) MathHelper.clamp(System.currentTimeMillis() - time, 0L, 500L) / 500.0F;
+        float toggleProgress = (float) Mth.clamp(System.currentTimeMillis() - time, 0L, 500L) / 500.0F;
         return (float) AnimUtils.easeInOutCubic(toggleProgress);
     }
 }

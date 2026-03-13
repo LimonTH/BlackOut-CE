@@ -2,12 +2,12 @@ package bodevelopment.client.blackout.randomstuff.mainmenu;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.MathHelper;
+import com.mojang.blaze3d.vertex.PoseStack;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.ArrayList;
+import net.minecraft.util.Mth;
 
 public class ChangelogRenderer {
     private final ArrayList<String> changelog = new ArrayList<>();
@@ -35,7 +35,7 @@ public class ChangelogRenderer {
         longest = maxW + 60.0F;
     }
 
-    public void render(MatrixStack stack, float mx, float my, boolean themeMode, Color mainColor, Color secondColor, float speed) {
+    public void render(PoseStack stack, float mx, float my, boolean themeMode, Color mainColor, Color secondColor, float speed) {
         if (changelog.isEmpty()) {
             initChangelog();
         }
@@ -47,7 +47,7 @@ public class ChangelogRenderer {
         float width = Math.max(longest, 350.0F);
         float height = (BlackOut.BOLD_FONT.getHeight() * 2.2F) + (Math.min(changelog.size(), maxLines) * fontHeight) + 60.0F;
 
-        boolean mousePressed = GLFW.glfwGetMouseButton(BlackOut.mc.getWindow().getHandle(), 0) == 1;
+        boolean mousePressed = GLFW.glfwGetMouseButton(BlackOut.mc.getWindow().getWindow(), 0) == 1;
         if (this.dragging) {
             if (mousePressed) {
                 this.targetX = mx - this.dragOffsetX;
@@ -62,10 +62,10 @@ public class ChangelogRenderer {
                 this.dragOffsetY = my - this.changelogY;
             }
         }
-        this.changelogX = MathHelper.lerp(0.2F, this.changelogX, this.targetX);
-        this.changelogY = MathHelper.lerp(0.2F, this.changelogY, this.targetY);
+        this.changelogX = Mth.lerp(0.2F, this.changelogX, this.targetX);
+        this.changelogY = Mth.lerp(0.2F, this.changelogY, this.targetY);
 
-        stack.push();
+        stack.pushPose();
         stack.translate(this.changelogX, this.changelogY, 0.0F);
 
         RenderUtils.roundedShadow(stack, 0.0F, 0.0F, width, height, 15.0F, 15.0F, new Color(0, 0, 0, 120).getRGB());
@@ -96,6 +96,6 @@ public class ChangelogRenderer {
                     false, false
             );
         }
-        stack.pop();
+        stack.popPose();
     }
 }

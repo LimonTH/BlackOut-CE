@@ -12,17 +12,16 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.randomstuff.timers.RenderList;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec2f;
-import net.minecraft.util.math.Vec3d;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.List;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
 
 public class SoundESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -31,13 +30,13 @@ public class SoundESP extends Module {
     private final Setting<List<SoundEvent>> sounds = this.sgGeneral.registrySetting(
             "Tracked Sounds",
             "The specific sound events to be visualized in the world.",
-            Registries.SOUND_EVENT,
+            BuiltInRegistries.SOUND_EVENT,
             sound -> {
-                String key = "subtitles." + sound.id().toTranslationKey();
-                String translated = net.minecraft.text.Text.translatable(key).getString();
-                return translated.equals(key) ? sound.id().getPath() : translated;
+                String key = "subtitles." + sound.location().toLanguageKey();
+                String translated = Component.translatable(key).getString();
+                return translated.equals(key) ? sound.location().getPath() : translated;
             },
-            SoundEvents.ENTITY_GENERIC_EXPLODE.value()
+            SoundEvents.GENERIC_EXPLODE.value()
     );
     private final Setting<BlackOutColor> color = this.sgGeneral.colorSetting("Text Color", new BlackOutColor(255, 255, 255, 255), "The color and transparency of the rendered sound labels.");
     private final Setting<Double> fadeIn = this.sgGeneral.doubleSetting("Fade-In Duration", 0.1, 0.0, 10.0, 0.1, "The time in seconds for the label to reach full opacity.");
@@ -47,7 +46,7 @@ public class SoundESP extends Module {
     private final Setting<Double> scaleInc = this.sgGeneral.doubleSetting("Distance Scaling", 1.0, 0.0, 5.0, 0.05, "Adjusts label size based on distance to ensure visibility from afar.");
 
     private final RenderList<SoundRender> renderList = RenderList.getList(false);
-    private final MatrixStack stack = new MatrixStack();
+    private final PoseStack stack = new PoseStack();
 
     public SoundESP() {
         super("Sound ESP", "Captures and displays localized sound events as spatial text labels, providing visual situational awareness for audio cues.", SubCategory.WORLD, true);
@@ -61,12 +60,12 @@ public class SoundESP extends Module {
         if ((this.filterMode.get() == FilterMode.Blacklist && !contains) ||
                 (this.filterMode.get() == FilterMode.Whitelist && contains)) {
 
-            String translationKey = "subtitles." + instance.getId().toTranslationKey();
+            String translationKey = "subtitles." + instance.getLocation().toLanguageKey();
 
-            String localizedName = Text.translatable(translationKey).getString();
+            String localizedName = Component.translatable(translationKey).getString();
 
             if (localizedName.equals(translationKey)) {
-                localizedName = instance.getId().getPath();
+                localizedName = instance.getLocation().getPath();
             }
 
             this.renderList.add(
@@ -78,23 +77,23 @@ public class SoundESP extends Module {
 
     @Event
     public void onRender(RenderEvent.Hud.Post event) {
-        this.stack.push();
+        this.stack.pushPose();
         RenderUtils.unGuiScale(this.stack);
-        Vec3d camPos = BlackOut.mc.gameRenderer.getCamera().getPos();
+        Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
         this.renderList.update((render, time, delta) -> this.draw(render.x(), render.y(), render.z(), render.text(), time, camPos));
-        this.stack.pop();
+        this.stack.popPose();
     }
 
-    private void draw(double x, double y, double z, String string, double time, Vec3d camPos) {
-        Vec2f f = RenderUtils.getCoords(x, y, z, true);
+    private void draw(double x, double y, double z, String string, double time, Vec3 camPos) {
+        Vec2 f = RenderUtils.getCoords(x, y, z, true);
         if (f != null) {
-            double alpha = MathHelper.clamp(this.getAlpha(time), 0.0, 1.0);
+            double alpha = Mth.clamp(this.getAlpha(time), 0.0, 1.0);
             float scale = this.getScale(x, y, z, camPos);
             BlackOut.FONT.text(this.stack, string, scale, f.x, f.y, this.color.get().alphaMultiRGB(alpha), true, true);
         }
     }
 
-    private float getScale(double x, double y, double z, Vec3d camPos) {
+    private float getScale(double x, double y, double z, Vec3 camPos) {
         double dx = x - camPos.x;
         double dy = y - camPos.y;
         double dz = z - camPos.z;
@@ -114,7 +113,7 @@ public class SoundESP extends Module {
 
     private boolean contains(SoundInstance instance) {
         for (SoundEvent event : this.sounds.get()) {
-            if (instance.getId().equals(event.id())) {
+            if (instance.getLocation().equals(event.location())) {
                 return true;
             }
         }

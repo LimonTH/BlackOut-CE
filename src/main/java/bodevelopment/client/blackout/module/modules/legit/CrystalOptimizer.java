@@ -6,9 +6,9 @@ import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.mixin.accessors.AccessorInteractEntityC2SPacket;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 
 public class CrystalOptimizer extends Module {
     private static CrystalOptimizer INSTANCE;
@@ -24,10 +24,10 @@ public class CrystalOptimizer extends Module {
 
     @Event
     public void onSent(PacketEvent.Sent event) {
-        if (event.packet instanceof PlayerInteractEntityC2SPacket packet
-                && ((AccessorInteractEntityC2SPacket) packet).getType().getType() == PlayerInteractEntityC2SPacket.InteractType.ATTACK
-                && BlackOut.mc.world.getEntityById(((AccessorInteractEntityC2SPacket) packet).getId()) instanceof EndCrystalEntity entity) {
-            BlackOut.mc.world.removeEntity(entity.getId(), Entity.RemovalReason.KILLED);
+        if (event.packet instanceof ServerboundInteractPacket packet
+                && ((AccessorInteractEntityC2SPacket) packet).getType().getType() == ServerboundInteractPacket.ActionType.ATTACK
+                && BlackOut.mc.level.getEntity(((AccessorInteractEntityC2SPacket) packet).getId()) instanceof EndCrystal entity) {
+            BlackOut.mc.level.removeEntity(entity.getId(), Entity.RemovalReason.KILLED);
         }
     }
 }

@@ -10,27 +10,27 @@ import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.ColorHelper;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.util.ARGB;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class ParticleManager extends Manager {
     private final TimerList<Particle> particles = new TimerList<>(true);
 
     private static int alphaMulti(int c, double alpha) {
-        int r = ColorHelper.getRed(c);
-        int g = ColorHelper.getGreen(c);
-        int b = ColorHelper.getBlue(c);
-        int a = ColorHelper.getAlpha(c);
+        int r = ARGB.red(c);
+        int g = ARGB.green(c);
+        int b = ARGB.blue(c);
+        int a = ARGB.alpha(c);
         int alp = (int) Math.round(a * alpha);
         return (alp & 0xFF) << 24 | (r & 0xFF) << 16 | (g & 0xFF) << 8 | b & 0xFF;
     }
 
     @Override
     public void init() {
-        BlackOut.EVENT_BUS.subscribe(this, () -> BlackOut.mc.world == null || BlackOut.mc.player == null);
+        BlackOut.EVENT_BUS.subscribe(this, () -> BlackOut.mc.level == null || BlackOut.mc.player == null);
     }
 
     @Event
@@ -40,9 +40,9 @@ public class ParticleManager extends Manager {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        Vec3d cameraPos = BlackOut.mc.gameRenderer.getCamera().getPos();
-        MatrixStack stack = Render3DUtils.matrices;
-        stack.push();
+        Vec3 cameraPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
+        PoseStack stack = Render3DUtils.matrices;
+        stack.pushPose();
         Render3DUtils.setRotation(stack);
         GlStateManager._disableDepthTest();
         GlStateManager._enableBlend();
@@ -51,10 +51,10 @@ public class ParticleManager extends Manager {
                 .forEach(
                         timer -> timer.value
                                 .render(
-                                        this.calcAlpha(MathHelper.clamp((System.currentTimeMillis() - timer.startTime) / 1000.0 / timer.time, 0.0, 1.0)), stack, cameraPos
+                                        this.calcAlpha(Mth.clamp((System.currentTimeMillis() - timer.startTime) / 1000.0 / timer.time, 0.0, 1.0)), stack, cameraPos
                                 )
                 );
-        stack.pop();
+        stack.popPose();
     }
 
     private float calcAlpha(double delta) {
@@ -65,30 +65,30 @@ public class ParticleManager extends Manager {
         }
     }
 
-    public void addBouncy(Vec3d pos, Vec3d motion, double time, int color, int shadowColor) {
+    public void addBouncy(Vec3 pos, Vec3 motion, double time, int color, int shadowColor) {
         this.particles.add(new BouncyParticle(pos, motion, color, shadowColor), time);
     }
 
-    public void addFriction(Vec3d pos, Vec3d motion, double friction, double time, int color, int shadowColor) {
+    public void addFriction(Vec3 pos, Vec3 motion, double friction, double time, int color, int shadowColor) {
         this.particles.add(new FrictionParticle(pos, motion, friction, color, shadowColor), time);
     }
 
     private interface Particle {
         void tick();
 
-        void render(double alpha, MatrixStack stack, Vec3d cameraPos);
+        void render(double alpha, PoseStack stack, Vec3 cameraPos);
     }
 
     private static class BouncyParticle implements Particle {
         private final int color;
         private final int shadowColor;
-        private Vec3d pos;
-        private Vec3d prev;
+        private Vec3 pos;
+        private Vec3 prev;
         private double motionX;
         private double motionY;
         private double motionZ;
 
-        private BouncyParticle(Vec3d pos, Vec3d motion, int color, int shadowColor) {
+        private BouncyParticle(Vec3 pos, Vec3 motion, int color, int shadowColor) {
             this.pos = pos;
             this.prev = pos;
             this.motionX = motion.x;
@@ -102,16 +102,16 @@ public class ParticleManager extends Manager {
         @Override
         public void tick() {
             this.prev = this.pos;
-            Box box = Box.of(this.pos, 0.05, 0.05, 0.05);
-            if (OLEPOSSUtils.inside(BlackOut.mc.player, box.stretch(this.motionX, 0.0, 0.0))) {
+            AABB box = AABB.ofSize(this.pos, 0.05, 0.05, 0.05);
+            if (OLEPOSSUtils.inside(BlackOut.mc.player, box.expandTowards(this.motionX, 0.0, 0.0))) {
                 this.motionX = this.doTheBounciness(this.motionX);
             }
 
-            if (OLEPOSSUtils.inside(BlackOut.mc.player, box.stretch(0.0, this.motionY, 0.0))) {
+            if (OLEPOSSUtils.inside(BlackOut.mc.player, box.expandTowards(0.0, this.motionY, 0.0))) {
                 this.motionY = this.doTheBounciness(this.motionY);
             }
 
-            if (OLEPOSSUtils.inside(BlackOut.mc.player, box.stretch(0.0, 0.0, this.motionZ))) {
+            if (OLEPOSSUtils.inside(BlackOut.mc.player, box.expandTowards(0.0, 0.0, this.motionZ))) {
                 this.motionZ = this.doTheBounciness(this.motionZ);
             }
 
@@ -126,20 +126,20 @@ public class ParticleManager extends Manager {
         }
 
         @Override
-        public void render(double alpha, MatrixStack stack, Vec3d cameraPos) {
-            double x = MathHelper.lerp(BlackOut.mc.getRenderTickCounter().getTickDelta(true), this.prev.x, this.pos.x) - cameraPos.x;
-            double y = MathHelper.lerp(BlackOut.mc.getRenderTickCounter().getTickDelta(true), this.prev.y, this.pos.y) - cameraPos.y;
-            double z = MathHelper.lerp(BlackOut.mc.getRenderTickCounter().getTickDelta(true), this.prev.z, this.pos.z) - cameraPos.z;
-            stack.push();
+        public void render(double alpha, PoseStack stack, Vec3 cameraPos) {
+            double x = Mth.lerp(BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true), this.prev.x, this.pos.x) - cameraPos.x;
+            double y = Mth.lerp(BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true), this.prev.y, this.pos.y) - cameraPos.y;
+            double z = Mth.lerp(BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true), this.prev.z, this.pos.z) - cameraPos.z;
+            stack.pushPose();
             stack.translate(x, y, z);
             stack.scale(0.02F, 0.02F, 0.02F);
-            stack.multiply(BlackOut.mc.gameRenderer.getCamera().getRotation());
-            stack.push();
+            stack.mulPose(BlackOut.mc.gameRenderer.getMainCamera().rotation());
+            stack.pushPose();
             RenderUtils.rounded(
                     stack, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 5.0F, ParticleManager.alphaMulti(this.color, alpha), ParticleManager.alphaMulti(this.shadowColor, alpha)
             );
-            stack.pop();
-            stack.pop();
+            stack.popPose();
+            stack.popPose();
         }
     }
 
@@ -147,11 +147,11 @@ public class ParticleManager extends Manager {
         private final double friction;
         private final int color;
         private final int shadowColor;
-        private Vec3d pos;
-        private Vec3d prev;
-        private Vec3d motion;
+        private Vec3 pos;
+        private Vec3 prev;
+        private Vec3 motion;
 
-        private FrictionParticle(Vec3d pos, Vec3d motion, double friction, int color, int shadowColor) {
+        private FrictionParticle(Vec3 pos, Vec3 motion, double friction, int color, int shadowColor) {
             this.pos = pos;
             this.prev = pos;
             this.motion = motion;
@@ -164,24 +164,24 @@ public class ParticleManager extends Manager {
         @Override
         public void tick() {
             this.prev = this.pos;
-            this.pos = this.pos.add(this.motion = this.motion.multiply(this.friction));
+            this.pos = this.pos.add(this.motion = this.motion.scale(this.friction));
         }
 
         @Override
-        public void render(double alpha, MatrixStack stack, Vec3d cameraPos) {
-            double x = MathHelper.lerp(BlackOut.mc.getRenderTickCounter().getTickDelta(true), this.prev.x, this.pos.x) - cameraPos.x;
-            double y = MathHelper.lerp(BlackOut.mc.getRenderTickCounter().getTickDelta(true), this.prev.y, this.pos.y) - cameraPos.y;
-            double z = MathHelper.lerp(BlackOut.mc.getRenderTickCounter().getTickDelta(true), this.prev.z, this.pos.z) - cameraPos.z;
-            stack.push();
+        public void render(double alpha, PoseStack stack, Vec3 cameraPos) {
+            double x = Mth.lerp(BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true), this.prev.x, this.pos.x) - cameraPos.x;
+            double y = Mth.lerp(BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true), this.prev.y, this.pos.y) - cameraPos.y;
+            double z = Mth.lerp(BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true), this.prev.z, this.pos.z) - cameraPos.z;
+            stack.pushPose();
             stack.translate(x, y, z);
             stack.scale(0.02F, 0.02F, 0.02F);
-            stack.multiply(BlackOut.mc.gameRenderer.getCamera().getRotation());
-            stack.push();
+            stack.mulPose(BlackOut.mc.gameRenderer.getMainCamera().rotation());
+            stack.pushPose();
             RenderUtils.rounded(
                     stack, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 5.0F, ParticleManager.alphaMulti(this.color, alpha), ParticleManager.alphaMulti(this.shadowColor, alpha)
             );
-            stack.pop();
-            stack.pop();
+            stack.popPose();
+            stack.popPose();
         }
     }
 }

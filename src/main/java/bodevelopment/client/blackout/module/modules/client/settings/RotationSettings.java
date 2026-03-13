@@ -15,13 +15,16 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.Rotation;
 import bodevelopment.client.blackout.util.*;
 import it.unimi.dsi.fastutil.floats.FloatFloatPair;
-import net.minecraft.block.BlockState;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.*;
-import net.minecraft.util.shape.VoxelShape;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -173,7 +176,7 @@ public class RotationSettings extends SettingsModule {
             "Interact", this.sgInteract, () -> this.interactMode.get() == BlockRotationCheckMode.Raytrace);
 
     private int sinceRotated = 0;
-    public final Vec3d vec = new Vec3d(0.0, 0.0, 0.0);
+    public final Vec3 vec = new Vec3(0.0, 0.0, 0.0);
     public RotationSettings() {
         super("Rotate", false, true);
         INSTANCE = this;
@@ -226,12 +229,12 @@ public class RotationSettings extends SettingsModule {
 
     public boolean blockRotationCheck(BlockPos pos, Direction dir, float yaw, float pitch, RotationType type) {
         BlockRotationCheckMode m = this.mode(type);
-        Vec3d end;
+        Vec3 end;
         BlockHitResult result;
         switch (m) {
             case Raytrace:
-                Box boxx = this.expandedBox(pos, type);
-                if (boxx.contains(BlackOut.mc.player.getEyePos())) {
+                AABB boxx = this.expandedBox(pos, type);
+                if (boxx.contains(BlackOut.mc.player.getEyePosition())) {
                     return true;
                 }
 
@@ -240,35 +243,35 @@ public class RotationSettings extends SettingsModule {
                 }
                 break;
             case DirectionRaytrace:
-                return this.directionRaytraceCheck(BlackOut.mc.player.getEyePos(), yaw, pitch, pos, dir);
+                return this.directionRaytraceCheck(BlackOut.mc.player.getEyePosition(), yaw, pitch, pos, dir);
             case StrictRaytrace:
-                end = RotationUtils.rotationVec(yaw, pitch, BlackOut.mc.player.getEyePos(), 7.0);
-                Box boxxx = BoxUtils.get(pos);
-                if (boxxx.contains(BlackOut.mc.player.getEyePos())) {
+                end = RotationUtils.rotationVec(yaw, pitch, BlackOut.mc.player.getEyePosition(), 7.0);
+                AABB boxxx = BoxUtils.get(pos);
+                if (boxxx.contains(BlackOut.mc.player.getEyePosition())) {
                     return true;
                 }
 
-                ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePos(), end);
+                ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePosition(), end);
                 result = DamageUtils.raycast(DamageUtils.raycastContext, false);
                 if (result.getType() == HitResult.Type.BLOCK && result.getBlockPos().equals(pos)) {
                     return true;
                 }
 
-                return this.raytraceCheck(BlackOut.mc.player.getEyePos(), yaw, pitch, boxxx)
+                return this.raytraceCheck(BlackOut.mc.player.getEyePosition(), yaw, pitch, boxxx)
                         && SettingUtils.placeRangeTo(pos) < SettingUtils.getPlaceWallsRange();
             case DirectionStrict:
-                end = RotationUtils.rotationVec(yaw, pitch, BlackOut.mc.player.getEyePos(), 7.0);
-                ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePos(), end);
+                end = RotationUtils.rotationVec(yaw, pitch, BlackOut.mc.player.getEyePosition(), 7.0);
+                ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePosition(), end);
                 result = DamageUtils.raycast(DamageUtils.raycastContext, false);
-                if (result.getType() == HitResult.Type.BLOCK && result.getBlockPos().equals(pos) && result.getSide() == dir) {
+                if (result.getType() == HitResult.Type.BLOCK && result.getBlockPos().equals(pos) && result.getDirection() == dir) {
                     return true;
                 }
 
-                return this.directionRaytraceCheck(BlackOut.mc.player.getEyePos(), yaw, pitch, pos, dir)
+                return this.directionRaytraceCheck(BlackOut.mc.player.getEyePosition(), yaw, pitch, pos, dir)
                         && SettingUtils.placeRangeTo(pos) < SettingUtils.getPlaceWallsRange();
             case Angle:
-                Box box = BoxUtils.get(pos);
-                if (box.contains(BlackOut.mc.player.getEyePos())) {
+                AABB box = BoxUtils.get(pos);
+                if (box.contains(BlackOut.mc.player.getEyePosition())) {
                     return true;
                 }
 
@@ -283,7 +286,7 @@ public class RotationSettings extends SettingsModule {
         return false;
     }
 
-    private Box expandedBox(BlockPos pos, RotationType type) {
+    private AABB expandedBox(BlockPos pos, RotationType type) {
         double up = switch (type.checkType) {
             case Interact -> this.interactUpExpand.get();
             case BlockPlace -> this.blockUpExpand.get();
@@ -304,7 +307,7 @@ public class RotationSettings extends SettingsModule {
             case Mining -> this.mineXZExpand.get();
             default -> 0.0;
         };
-        return new Box(
+        return new AABB(
                 pos.getX() - hz,
                 pos.getY() - down,
                 pos.getZ() - hz,
@@ -324,7 +327,7 @@ public class RotationSettings extends SettingsModule {
         double o = this.jitterStrength.get() / 5.0;
         o *= o * o;
         oy += (float) ((ThreadLocalRandom.current().nextDouble() - 0.5) * o);
-        op = (float) MathHelper.clamp(op + (ThreadLocalRandom.current().nextDouble() - 0.5) * o, -90.0, 90.0);
+        op = (float) Mth.clamp(op + (ThreadLocalRandom.current().nextDouble() - 0.5) * o, -90.0, 90.0);
         rotation = new Rotation(oy, op);
         if (type.instant) {
             return rotation;
@@ -383,8 +386,8 @@ public class RotationSettings extends SettingsModule {
                     if (this.pauseRotated.get() && this.sinceRotated < this.delay.get()) {
                         speed = 0.0;
                     } else {
-                        speed = MathHelper.clampedLerp(
-                                this.minSmoothSpeed.get(), this.maxSmoothSpeed.get(), MathHelper.getLerpProgress(total, this.minSmoothAngle.get(), this.maxSmoothAngle.get())
+                        speed = Mth.clampedLerp(
+                                this.minSmoothSpeed.get(), this.maxSmoothSpeed.get(), Mth.inverseLerp(total, this.minSmoothAngle.get(), this.maxSmoothAngle.get())
                         );
                     }
 
@@ -415,7 +418,7 @@ public class RotationSettings extends SettingsModule {
                 total += Math.min(Math.sqrt(yaw * yaw + pitch * pitch), 180.0);
             }
 
-            return MathHelper.clamp(this.averageSpeed.get() * length - total, 0.0, this.maxSpeed.get());
+            return Mth.clamp(this.averageSpeed.get() * length - total, 0.0, this.maxSpeed.get());
         }
     }
 
@@ -435,37 +438,37 @@ public class RotationSettings extends SettingsModule {
         return !this.timeBasedSpeed.get() ? 1.0 : Math.min((System.currentTimeMillis() - Managers.ROTATION.prevRotation) / 50.0, this.maxMulti.get());
     }
 
-    public boolean attackRotationCheck(Box box, float yaw, float pitch) {
-        if (box.contains(BlackOut.mc.player.getEyePos())) {
+    public boolean attackRotationCheck(AABB box, float yaw, float pitch) {
+        if (box.contains(BlackOut.mc.player.getEyePosition())) {
             return true;
         } else {
             switch (this.attackMode.get()) {
                 case Raytrace:
-                    if (this.raytraceCheck(BlackOut.mc.player.getEyePos(), yaw, pitch, box)) {
+                    if (this.raytraceCheck(BlackOut.mc.player.getEyePosition(), yaw, pitch, box)) {
                         return true;
                     }
                     break;
                 case StrictRaytrace:
-                    Vec3d end = RotationUtils.rotationVec(yaw, pitch, BlackOut.mc.player.getEyePos(), 7.0);
-                    Optional<Vec3d> pos = box.raycast(BlackOut.mc.player.getEyePos(), end);
+                    Vec3 end = RotationUtils.rotationVec(yaw, pitch, BlackOut.mc.player.getEyePosition(), 7.0);
+                    Optional<Vec3> pos = box.clip(BlackOut.mc.player.getEyePosition(), end);
                     if (pos.isEmpty()) {
                         return false;
                     }
 
-                    ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePos(), pos.get());
+                    ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePosition(), pos.get());
                     boolean visible = DamageUtils.raycast(DamageUtils.raycastContext, false).getType() == HitResult.Type.MISS;
                     if (visible) {
                         return true;
                     }
 
-                    return this.raytraceCheck(BlackOut.mc.player.getEyePos(), yaw, pitch, box)
-                            && SettingUtils.attackRangeTo(box, BlackOut.mc.player.getPos()) < SettingUtils.getAttackWallsRange();
+                    return this.raytraceCheck(BlackOut.mc.player.getEyePosition(), yaw, pitch, box)
+                            && SettingUtils.attackRangeTo(box, BlackOut.mc.player.position()) < SettingUtils.getAttackWallsRange();
                 case Angle:
                     if (this.angleCheck(Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, box, RotationType.Attacking)) {
                         return true;
                     }
 
-                    if (this.raytraceCheck(BlackOut.mc.player.getEyePos(), yaw, pitch, box)) {
+                    if (this.raytraceCheck(BlackOut.mc.player.getEyePosition(), yaw, pitch, box)) {
                         return true;
                     }
                     break;
@@ -477,19 +480,19 @@ public class RotationSettings extends SettingsModule {
         }
     }
 
-    public Vec3d getRotationVec(BlockPos pos, Direction dir, Vec3d vec, RotationType type) {
+    public Vec3 getRotationVec(BlockPos pos, Direction dir, Vec3 vec, RotationType type) {
         BlockRotationCheckMode mode = this.mode(type);
         if (mode != BlockRotationCheckMode.Raytrace && mode != BlockRotationCheckMode.Angle) {
             if (mode == BlockRotationCheckMode.DirectionRaytrace) {
-                return pos.toCenterPos().add(dir.getOffsetX() / 2.0F, dir.getOffsetY() / 2.0F, dir.getOffsetZ() / 2.0F);
+                return pos.getCenter().add(dir.getStepX() / 2.0F, dir.getStepY() / 2.0F, dir.getStepZ() / 2.0F);
             } else {
-                BlockState state = BlackOut.mc.world.getBlockState(pos);
-                VoxelShape shape = state.getOutlineShape(BlackOut.mc.world, pos);
-                Box box;
+                BlockState state = BlackOut.mc.level.getBlockState(pos);
+                VoxelShape shape = state.getShape(BlackOut.mc.level, pos);
+                AABB box;
                 if (shape.isEmpty()) {
-                    box = new Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+                    box = new AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
                 } else {
-                    box = shape.getBoundingBox();
+                    box = shape.bounds();
                 }
 
                 double minX = box.minX;
@@ -499,26 +502,26 @@ public class RotationSettings extends SettingsModule {
                 double maxY = box.maxY;
                 double maxZ = box.maxZ;
                 if (mode == BlockRotationCheckMode.DirectionStrict) {
-                    minX = dir.getOffsetX() > 0 ? maxX : minX;
-                    minY = dir.getOffsetY() > 0 ? maxY : minY;
-                    minZ = dir.getOffsetZ() > 0 ? maxZ : minZ;
-                    maxX = dir.getOffsetX() < 0 ? minX : maxX;
-                    maxY = dir.getOffsetY() < 0 ? minY : maxY;
-                    maxZ = dir.getOffsetZ() < 0 ? minZ : maxZ;
+                    minX = dir.getStepX() > 0 ? maxX : minX;
+                    minY = dir.getStepY() > 0 ? maxY : minY;
+                    minZ = dir.getStepZ() > 0 ? maxZ : minZ;
+                    maxX = dir.getStepX() < 0 ? minX : maxX;
+                    maxY = dir.getStepY() < 0 ? minY : maxY;
+                    maxZ = dir.getStepZ() < 0 ? minZ : maxZ;
                 }
 
-                return this.getRaytraceRotationVec(new Box(minX, minY, minZ, maxX, maxY, maxZ), vec);
+                return this.getRaytraceRotationVec(new AABB(minX, minY, minZ, maxX, maxY, maxZ), vec);
             }
         } else {
-            return vec == null ? pos.toCenterPos() : vec;
+            return vec == null ? pos.getCenter() : vec;
         }
     }
 
-    public Rotation getRotation(BlockPos pos, Direction dir, Vec3d vec, RotationType type) {
+    public Rotation getRotation(BlockPos pos, Direction dir, Vec3 vec, RotationType type) {
         return this.getRotation(this.getRotationVec(pos, dir, vec, type));
     }
 
-    public Vec3d getAttackRotationVec(Box box, Vec3d vec) {
+    public Vec3 getAttackRotationVec(AABB box, Vec3 vec) {
         RotationCheckMode mode = this.attackMode.get();
         if (mode != RotationCheckMode.Raytrace && mode != RotationCheckMode.Angle) {
             return this.getRaytraceRotationVec(box, vec);
@@ -527,15 +530,15 @@ public class RotationSettings extends SettingsModule {
         }
     }
 
-    public Vec3d getRaytraceRotationVec(Box box, Vec3d vec) {
-        Vec3d v = new Vec3d(0.0, 0.0, 0.0);
+    public Vec3 getRaytraceRotationVec(AABB box, Vec3 vec) {
+        Vec3 v = new Vec3(0.0, 0.0, 0.0);
         double cd = 100.0;
-        double ox = MathHelper.getLerpProgress(vec.x, box.minX, box.maxX);
-        double oy = MathHelper.getLerpProgress(vec.y, box.minY, box.maxY);
-        double oz = MathHelper.getLerpProgress(vec.z, box.minZ, box.maxZ);
-        double lenX = box.getLengthX();
-        double lenY = box.getLengthY();
-        double lenZ = box.getLengthZ();
+        double ox = Mth.inverseLerp(vec.x, box.minX, box.maxX);
+        double oy = Mth.inverseLerp(vec.y, box.minY, box.maxY);
+        double oz = Mth.inverseLerp(vec.z, box.minZ, box.maxZ);
+        double lenX = box.getXsize();
+        double lenY = box.getYsize();
+        double lenZ = box.getZsize();
 
         for (int i = 1; i <= 9; i++) {
             double x = i / 10.0;
@@ -549,10 +552,10 @@ public class RotationSettings extends SettingsModule {
                     double z = k / 10.0;
                     ((IVec3d) v).blackout_Client$setZ(box.minZ + lenZ * z);
 
-                    double distance = BlackOut.mc.player.getEyePos().distanceTo(v);
+                    double distance = BlackOut.mc.player.getEyePosition().distanceTo(v);
                     if (!(distance >= SettingUtils.getAttackRange())) {
                         if (distance > SettingUtils.getAttackWallsRange()) {
-                            ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePos(), v);
+                            ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePosition(), v);
                             BlockHitResult result = DamageUtils.raycast(DamageUtils.raycastContext, false);
                             if (result.getType() != HitResult.Type.MISS) {
                                 continue;
@@ -575,11 +578,11 @@ public class RotationSettings extends SettingsModule {
         return vec;
     }
 
-    public Rotation getAttackRotation(Box box, Vec3d vec) {
+    public Rotation getAttackRotation(AABB box, Vec3 vec) {
         return this.getRotation(this.getAttackRotationVec(box, vec));
     }
 
-    public Rotation getRotation(Vec3d vec) {
+    public Rotation getRotation(Vec3 vec) {
         return new Rotation((float) RotationUtils.getYaw(vec), (float) RotationUtils.getPitch(vec));
     }
 
@@ -630,19 +633,19 @@ public class RotationSettings extends SettingsModule {
         return type.instant ? 42069.0 : this.pitchStep.get() + (ThreadLocalRandom.current().nextDouble() - 0.5) * 2.0 * this.pitchRandom.get();
     }
 
-    public boolean angleCheck(double y, double p, Box box, RotationType type) {
-        double yawTo = RotationUtils.getYaw(BlackOut.mc.player.getEyePos(), box.getCenter(), y);
-        double pitchTo = RotationUtils.getPitch(BlackOut.mc.player.getEyePos(), box.getCenter());
+    public boolean angleCheck(double y, double p, AABB box, RotationType type) {
+        double yawTo = RotationUtils.getYaw(BlackOut.mc.player.getEyePosition(), box.getCenter(), y);
+        double pitchTo = RotationUtils.getPitch(BlackOut.mc.player.getEyePosition(), box.getCenter());
         return Math.abs(RotationUtils.yawAngle(y, yawTo)) <= this.yawAngle(type) && Math.abs(p - pitchTo) <= this.pitchAngle(type);
     }
 
-    public boolean raytraceCheck(Box box) {
-        return this.raytraceCheck(BlackOut.mc.player.getEyePos(), Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, box);
+    public boolean raytraceCheck(AABB box) {
+        return this.raytraceCheck(BlackOut.mc.player.getEyePosition(), Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, box);
     }
 
-    public boolean raytraceCheck(Vec3d pos, double y, double p, Box box) {
+    public boolean raytraceCheck(Vec3 pos, double y, double p, AABB box) {
         double range = pos.distanceTo(OLEPOSSUtils.getMiddle(box)) + 3.0;
-        Vec3d end = RotationUtils.rotationVec(y, p, pos, range);
+        Vec3 end = RotationUtils.rotationVec(y, p, pos, range);
 
         for (float i = 0.0F; i < 1.0F; i = (float) (i + 0.01)) {
             if (box.contains(
@@ -657,9 +660,9 @@ public class RotationSettings extends SettingsModule {
         return false;
     }
 
-    public boolean directionRaytraceCheck(Vec3d pos, double yaw, double pitch, BlockPos block, Direction dir) {
-        double range = pos.distanceTo(block.toCenterPos()) + 3.0;
-        Vec3d end = RotationUtils.rotationVec(yaw, pitch, pos, range);
+    public boolean directionRaytraceCheck(Vec3 pos, double yaw, double pitch, BlockPos block, Direction dir) {
+        double range = pos.distanceTo(block.getCenter()) + 3.0;
+        Vec3 end = RotationUtils.rotationVec(yaw, pitch, pos, range);
 
         for (float i = 0.0F; i < 1.0F; i = (float) (i + 0.001)) {
             double x = pos.x + (end.x - pos.x) * i;
@@ -684,7 +687,7 @@ public class RotationSettings extends SettingsModule {
         double dist = 0.0;
 
         for (Direction dir : Direction.values()) {
-            double d = dir.getVector().getSquaredDistance(offsetX, offsetY, offsetZ);
+            double d = dir.getUnitVec3i().distToLowCornerSqr(offsetX, offsetY, offsetZ);
             if (closest == null || d < dist) {
                 closest = dir;
                 dist = d;
@@ -732,24 +735,24 @@ public class RotationSettings extends SettingsModule {
     public enum PacketRotationMode {
         Disabled(null),
         Basic((yaw, pitch) -> {
-            Vec3d pos = Managers.PACKET.pos;
-            Managers.PACKET.sendPacket(new PlayerMoveC2SPacket.Full(pos.getX(), pos.getY(), pos.getZ(), yaw, pitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
+            Vec3 pos = Managers.PACKET.pos;
+            Managers.PACKET.sendPacket(new ServerboundMovePlayerPacket.PosRot(pos.x(), pos.y(), pos.z(), yaw, pitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
         }),
         Double((yaw, pitch) -> {
-            Vec3d pos = Managers.PACKET.pos;
+            Vec3 pos = Managers.PACKET.pos;
 
             for (int i = 0; i < 2; i++) {
-                Managers.PACKET.sendPacket(new PlayerMoveC2SPacket.Full(pos.getX(), pos.getY(), pos.getZ(), yaw, pitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
+                Managers.PACKET.sendPacket(new ServerboundMovePlayerPacket.PosRot(pos.x(), pos.y(), pos.z(), yaw, pitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
             }
         }),
         Return(
                 (yaw, pitch) -> {
                     float prevYaw = Managers.ROTATION.prevYaw;
                     float prevPitch = Managers.ROTATION.prevPitch;
-                    Vec3d pos = Managers.PACKET.pos;
-                    Managers.PACKET.sendPacket(new PlayerMoveC2SPacket.Full(pos.getX(), pos.getY(), pos.getZ(), yaw, pitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
+                    Vec3 pos = Managers.PACKET.pos;
+                    Managers.PACKET.sendPacket(new ServerboundMovePlayerPacket.PosRot(pos.x(), pos.y(), pos.z(), yaw, pitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
                     Managers.PACKET
-                            .sendPacket(new PlayerMoveC2SPacket.Full(pos.getX(), pos.getY(), pos.getZ(), prevYaw, prevPitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
+                            .sendPacket(new ServerboundMovePlayerPacket.PosRot(pos.x(), pos.y(), pos.z(), prevYaw, prevPitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
                 }
         );
 

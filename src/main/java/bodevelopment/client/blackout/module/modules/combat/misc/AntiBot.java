@@ -11,11 +11,10 @@ import bodevelopment.client.blackout.module.modules.client.Notifications;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.entity.Entity;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.world.entity.Entity;
 
 public class AntiBot extends Module {
     private static AntiBot INSTANCE;
@@ -41,7 +40,7 @@ public class AntiBot extends Module {
     public final Setting<Boolean> remove = this.sgGeneral.booleanSetting("Remove Notification", false,
             "Alerts you when an entity is no longer considered a bot.");
 
-    private final List<AbstractClientPlayerEntity> bots = new ArrayList<>();
+    private final List<AbstractClientPlayer> bots = new ArrayList<>();
     private String info = "";
 
     public AntiBot() {
@@ -65,15 +64,15 @@ public class AntiBot extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             OLEPOSSUtils.limitList(this.bots, 100);
             BlackOut.mc
-                    .world
-                    .getPlayers()
+                    .level
+                    .players()
                     .forEach(
                             player -> {
                                 if (this.WD.get()) {
-                                    if (player.getUuid() == null) {
+                                    if (player.getUUID() == null) {
                                         this.addBot(player);
                                     } else {
                                         this.removeBot(player);
@@ -83,8 +82,8 @@ public class AntiBot extends Module {
                                 }
 
                                 if (this.smart.get()) {
-                                    if (player.age < 10
-                                            && BlackOut.mc.player.age > 10
+                                    if (player.tickCount < 10
+                                            && BlackOut.mc.player.tickCount > 10
                                             && BlackOut.mc.player.distanceTo(player) < this.range.get()
                                             && player != BlackOut.mc.player) {
                                         this.addBot(player);
@@ -127,7 +126,7 @@ public class AntiBot extends Module {
                             }
                     );
             if (this.mode.get() == HandlingMode.Remove) {
-                this.getBots().forEach(bot -> BlackOut.mc.world.removeEntity(bot.getId(), Entity.RemovalReason.DISCARDED));
+                this.getBots().forEach(bot -> BlackOut.mc.level.removeEntity(bot.getId(), Entity.RemovalReason.DISCARDED));
             }
         }
     }
@@ -137,7 +136,7 @@ public class AntiBot extends Module {
         this.bots.clear();
     }
 
-    private void addBot(AbstractClientPlayerEntity bot) {
+    private void addBot(AbstractClientPlayer bot) {
         if (!this.bots.contains(bot)) {
             this.bots.add(bot);
             if (this.notif.get()) {
@@ -147,14 +146,14 @@ public class AntiBot extends Module {
         }
     }
 
-    private void removeBot(AbstractClientPlayerEntity bot) {
+    private void removeBot(AbstractClientPlayer bot) {
         this.bots.remove(bot);
         if (this.notif.get() && this.remove.get()) {
             Managers.NOTIFICATIONS.addNotification(bot.getName().getString() + " was set as a player!", this.getDisplayName(), 2.0, Notifications.Type.Info);
         }
     }
 
-    public List<AbstractClientPlayerEntity> getBots() {
+    public List<AbstractClientPlayer> getBots() {
         return this.bots;
     }
 

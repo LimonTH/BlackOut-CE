@@ -31,8 +31,8 @@ public class AntiVoid extends Module {
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            if (BlackOut.mc.player.isOnGround()) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            if (BlackOut.mc.player.onGround()) {
                 this.prevOG = BlackOut.mc.player.getY();
             }
 
@@ -48,7 +48,7 @@ public class AntiVoid extends Module {
                         case Position:
                             BlackOut.mc
                                     .player
-                                    .setPosition(BlackOut.mc.player.getX(), BlackOut.mc.player.getY() + 1.0, BlackOut.mc.player.getZ());
+                                    .setPos(BlackOut.mc.player.getX(), BlackOut.mc.player.getY() + 1.0, BlackOut.mc.player.getZ());
                     }
 
                     BlackOut.mc.player.fallDistance = 0.0F;
@@ -60,7 +60,7 @@ public class AntiVoid extends Module {
 
     public boolean aboveVoid() {
         for (int i = 1; i < 30.0 - Math.ceil(this.prevOG) + BlackOut.mc.player.getBlockY(); i++) {
-            if (OLEPOSSUtils.collidable(BlackOut.mc.player.getBlockPos().down(i))) {
+            if (OLEPOSSUtils.collidable(BlackOut.mc.player.blockPosition().below(i))) {
                 return false;
             }
         }

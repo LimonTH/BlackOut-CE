@@ -54,7 +54,7 @@ public class EnumSetting<T extends Enum<?>> extends Setting<T> {
 
         float listHeight = (this.values.length - 1) * entryHeight;
 
-        this.stack.push();
+        this.stack.pushPose();
         this.stack.translate(0, 0, RenderLayer.GUI_ELEMENT);
 
         RenderUtils.rounded(this.stack, listX, listY, listWidth, listHeight, 4.0F, 8.0F, new Color(0, 0, 0, 200).getRGB(), ColorUtils.SHADOW100I);
@@ -87,12 +87,12 @@ public class EnumSetting<T extends Enum<?>> extends Setting<T> {
             index++;
         }
 
-        this.stack.pop();
+        this.stack.popPose();
     }
 
     @Override
     public float render() {
-        if (BlackOut.mc.textRenderer != null && this.maxWidth == 0.0) {
+        if (BlackOut.mc.font != null && this.maxWidth == 0.0) {
             this.maxWidth = 0.0;
             for (T v : this.values) {
                 double w = BlackOut.FONT.getWidth(v.name()) * 2.0F;

@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.event.events;
 
 import bodevelopment.client.blackout.event.Cancellable;
-import net.minecraft.client.sound.SoundInstance;
+import net.minecraft.client.resources.sounds.SoundInstance;
 
 public class PlaySoundEvent extends Cancellable {
     private static final PlaySoundEvent INSTANCE = new PlaySoundEvent();

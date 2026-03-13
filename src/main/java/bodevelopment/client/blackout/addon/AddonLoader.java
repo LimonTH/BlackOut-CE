@@ -43,7 +43,7 @@ public class AddonLoader {
 
                         if (addon.hudPath != null) {
                             scan(addonLoader, addon.hudPath, HudElement.class, instance -> {
-                                if (Managers.HUD.getElements().stream().noneMatch(p -> p.getRight().equals(instance.getClass()))) {
+                                if (Managers.HUD.getElements().stream().noneMatch(p -> p.getB().equals(instance.getClass()))) {
                                     Managers.HUD.add(instance);
                                     addon.hudElements.add(instance);
                                 }

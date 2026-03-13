@@ -11,16 +11,16 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
 import org.apache.commons.lang3.mutable.MutableDouble;
 
 import java.util.HashMap;
 import java.util.Map;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class Highlight extends Module {
     private static Highlight INSTANCE;
@@ -36,8 +36,8 @@ public class Highlight extends Module {
     private final Setting<Double> fadeOut = this.sgGeneral.doubleSetting("Opacity Decay", 1.0, 0.0, 20.0, 0.2, "How quickly the highlight vanishes after moving your crosshair.");
 
     private final Map<BlockPos, MutableDouble> alphas = new HashMap<>();
-    private Vec3d middle = null;
-    private Vec3d targetPos = null;
+    private Vec3 middle = null;
+    private Vec3 targetPos = null;
     private double lx = 0.0;
     private double ly = 0.0;
     private double lz = 0.0;
@@ -57,7 +57,7 @@ public class Highlight extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             BlockPos pos = this.getCurrentPos();
             switch (this.mode.get()) {
                 case Move:
@@ -71,10 +71,10 @@ public class Highlight extends Module {
     }
 
     private BlockPos getCurrentPos() {
-        return BlackOut.mc.crosshairTarget instanceof BlockHitResult blockHitResult ? blockHitResult.getBlockPos() : null;
+        return BlackOut.mc.hitResult instanceof BlockHitResult blockHitResult ? blockHitResult.getBlockPos() : null;
     }
 
-    private void moveRender(Box box, double frameTime) {
+    private void moveRender(AABB box, double frameTime) {
         if (box == null) {
             this.alpha = Math.max(this.alpha - frameTime * this.fadeOut.get() * 5.0, 0.0);
         } else {
@@ -83,21 +83,21 @@ public class Highlight extends Module {
 
         if (box != null) {
             this.targetPos = BoxUtils.middle(box);
-            this.tlx = box.getLengthX();
-            this.tly = box.getLengthY();
-            this.tlz = box.getLengthZ();
+            this.tlx = box.getXsize();
+            this.tly = box.getYsize();
+            this.tlz = box.getZsize();
         }
 
         this.animLengths(frameTime);
         this.movePos(frameTime);
         if (this.middle != null) {
-            Box box1 = new Box(
-                    this.middle.getX() - this.lx / 2.0,
-                    this.middle.getY() - this.ly / 2.0,
-                    this.middle.getZ() - this.lz / 2.0,
-                    this.middle.getX() + this.lx / 2.0,
-                    this.middle.getY() + this.ly / 2.0,
-                    this.middle.getZ() + this.lz / 2.0
+            AABB box1 = new AABB(
+                    this.middle.x() - this.lx / 2.0,
+                    this.middle.y() - this.ly / 2.0,
+                    this.middle.z() - this.lz / 2.0,
+                    this.middle.x() + this.lx / 2.0,
+                    this.middle.y() + this.ly / 2.0,
+                    this.middle.z() + this.lz / 2.0
             );
             Render3DUtils.box(box1, this.sideColor.get().alphaMulti(this.alpha), this.lineColor.get().alphaMulti(this.alpha), this.shape.get());
         }
@@ -125,7 +125,7 @@ public class Highlight extends Module {
                     this.middle = this.targetPos;
                 }
 
-                Vec3d diff = this.targetPos.subtract(this.middle);
+                Vec3 diff = this.targetPos.subtract(this.middle);
                 double length = diff.length();
                 if (Double.isNaN(length)) {
                     this.middle = this.targetPos;
@@ -134,7 +134,7 @@ public class Highlight extends Module {
                     if (delta >= 1.0) {
                         this.middle = this.targetPos;
                     } else {
-                        this.middle = this.middle.add(diff.multiply(delta));
+                        this.middle = this.middle.add(diff.scale(delta));
                     }
                 }
             }
@@ -160,7 +160,7 @@ public class Highlight extends Module {
                 a.setValue(reduced);
             }
 
-            Box box = this.getBox(p);
+            AABB box = this.getBox(p);
             if (box == null) {
                 return false;
             } else {
@@ -170,13 +170,13 @@ public class Highlight extends Module {
         });
     }
 
-    private Box getBox(BlockPos pos) {
+    private AABB getBox(BlockPos pos) {
         if (pos == null) {
             return null;
         } else {
-            BlockState state = BlackOut.mc.world.getBlockState(pos);
-            VoxelShape shape = state.getOutlineShape(BlackOut.mc.world, pos);
-            return shape.isEmpty() ? null : shape.getBoundingBox().offset(pos);
+            BlockState state = BlackOut.mc.level.getBlockState(pos);
+            VoxelShape shape = state.getShape(BlackOut.mc.level, pos);
+            return shape.isEmpty() ? null : shape.bounds().move(pos);
         }
     }
 

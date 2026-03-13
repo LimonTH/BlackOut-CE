@@ -15,7 +15,7 @@ import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.util.math.Box;
+import net.minecraft.world.phys.AABB;
 
 public class BoxMultiSetting {
     public static int id = 0;
@@ -69,7 +69,7 @@ public class BoxMultiSetting {
                 "The color of the glow/bloom aura surrounding the box.",
                 () -> this.mode.get() == BoxRenderMode.Shader && visible.get());
 
-        BlackOut.EVENT_BUS.subscribe(this, () -> BlackOut.mc.player == null || BlackOut.mc.world == null);
+        BlackOut.EVENT_BUS.subscribe(this, () -> BlackOut.mc.player == null || BlackOut.mc.level == null);
     }
 
     public static BoxMultiSetting of(SettingGroup sg) {
@@ -126,11 +126,11 @@ public class BoxMultiSetting {
         }
     }
 
-    public void render(Box box) {
+    public void render(AABB box) {
         this.render(box, 1.0F, 1.0F);
     }
 
-    public void render(Box box, float alpha, float alphaS) {
+    public void render(AABB box, float alpha, float alphaS) {
         switch (this.mode.get()) {
             case Normal:
                 Render3DUtils.box(box, this.sideColor.get().alphaMulti(alpha), this.lineColor.get().alphaMulti(alpha), this.shape.get());

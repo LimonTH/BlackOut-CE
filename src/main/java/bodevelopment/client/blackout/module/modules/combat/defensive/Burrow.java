@@ -18,18 +18,17 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
-
 import java.util.List;
 import java.util.function.Predicate;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 
 public class Burrow extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -94,8 +93,8 @@ public class Burrow extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null && !this.success) {
-            Hand hand = OLEPOSSUtils.getHand(this.predicate);
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null && !this.success) {
+            InteractionHand hand = OLEPOSSUtils.getHand(this.predicate);
             boolean blocksPresent = hand != null;
             FindResult result = this.switchMode.get().find(this.predicate);
             if (!blocksPresent) {
@@ -116,7 +115,7 @@ public class Burrow extends Module {
                         this.disable(this.getDisplayName() + " correct blocks not found", 2, Notifications.Type.Alert);
                     } else {
                         if (this.instaRot.get() && SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-                            this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(Managers.ROTATION.nextYaw, 90.0F, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
+                            this.sendPacket(new ServerboundMovePlayerPacket.Rot(Managers.ROTATION.nextYaw, 90.0F, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
                         }
 
                         double y = 0.0;
@@ -126,15 +125,15 @@ public class Burrow extends Module {
                             y += velocity;
                             velocity = (velocity - 0.08) * 0.98;
                             this.sendPacket(
-                                    new PlayerMoveC2SPacket.PositionAndOnGround(
+                                    new ServerboundMovePlayerPacket.Pos(
                                             BlackOut.mc.player.getX(), BlackOut.mc.player.getY() + y, BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision));
                         }
 
                         this.placeBlock(
                                 hand,
-                                BlackOut.mc.player.getBlockPos().down().toCenterPos(),
+                                BlackOut.mc.player.blockPosition().below().getCenter(),
                                 Direction.UP,
-                                BlackOut.mc.player.getBlockPos().down()
+                                BlackOut.mc.player.blockPosition().below()
                         );
                         if (this.renderSwing.get()) {
                             this.clientSwing(this.swingHand.get(), hand);
@@ -161,7 +160,7 @@ public class Burrow extends Module {
 
     @Event
     public void onPacket(PacketEvent.Receive.Pre event) {
-        if (this.pFly.get() && this.success && event.packet instanceof PlayerPositionLookS2CPacket) {
+        if (this.pFly.get() && this.success && event.packet instanceof ClientboundPlayerPositionPacket) {
             PacketFly packetFly = PacketFly.getInstance();
             if (!packetFly.enabled) {
                 this.enabledPFly = true;
@@ -178,7 +177,7 @@ public class Burrow extends Module {
     private void lagBack(double y) {
         for (int i = 0; i < this.lagBackPackets.get(); i++) {
             this.sendPacket(
-                    new PlayerMoveC2SPacket.PositionAndOnGround(
+                    new ServerboundMovePlayerPacket.Pos(
                             BlackOut.mc.player.getX(),
                             BlackOut.mc.player.getY() + y + this.lagBackOffset.get(),
                             BlackOut.mc.player.getZ(),
@@ -189,16 +188,16 @@ public class Burrow extends Module {
         }
 
         if (this.smooth.get()) {
-            this.sendPacket(Managers.PACKET.incrementedPacket(BlackOut.mc.player.getPos()));
+            this.sendPacket(Managers.PACKET.incrementedPacket(BlackOut.mc.player.position()));
             if (this.syncPacket.get()) {
-                float yaw = MathHelper.wrapDegrees(Managers.ROTATION.prevYaw);
+                float yaw = Mth.wrapDegrees(Managers.ROTATION.prevYaw);
                 if (yaw < 0.0F) {
                     yaw += 360.0F;
                 }
 
                 Managers.PACKET
                         .sendInstantly(
-                                new PlayerMoveC2SPacket.Full(
+                                new ServerboundMovePlayerPacket.PosRot(
                                         BlackOut.mc.player.getX(),
                                         BlackOut.mc.player.getY(),
                                         BlackOut.mc.player.getZ(),

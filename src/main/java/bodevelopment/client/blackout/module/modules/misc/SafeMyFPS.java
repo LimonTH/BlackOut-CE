@@ -37,15 +37,15 @@ public class SafeMyFPS extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.world == null) return;
-        boolean focused = BlackOut.mc.isWindowFocused();
+        if (BlackOut.mc.level == null) return;
+        boolean focused = BlackOut.mc.isWindowActive();
         if (!focused) {
             lowFpsTime = -1;
             return;
         }
-        int currentFps = BlackOut.mc.getCurrentFps();
+        int currentFps = BlackOut.mc.getFps();
         if (currentFps < minFps.get()) {
-            if (BlackOut.mc.options.getMaxFps().getValue() <= minFps.get()) {
+            if (BlackOut.mc.options.framerateLimit().get() <= minFps.get()) {
                 lowFpsTime = -1;
                 return;
             }

@@ -8,8 +8,8 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.client.input.Input;
-import net.minecraft.registry.tag.FluidTags;
+import net.minecraft.client.player.ClientInput;
+import net.minecraft.tags.FluidTags;
 
 public class FastSwim extends Module {
     private final SettingGroup sgSpeed = this.addGroup("Speed");
@@ -34,8 +34,8 @@ public class FastSwim extends Module {
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        boolean touchingWater = BlackOut.mc.player.isTouchingWater();
-        boolean diving = BlackOut.mc.player.isInSwimmingPose() && touchingWater;
+        boolean touchingWater = BlackOut.mc.player.isInWater();
+        boolean diving = BlackOut.mc.player.isVisuallySwimming() && touchingWater;
         double targetSpeed;
         if (diving) {
             targetSpeed = this.waterDiving.get();
@@ -44,7 +44,7 @@ public class FastSwim extends Module {
         }
 
         if (!(targetSpeed <= 0.0)) {
-            if (!diving && this.modifyVertical.get() && BlackOut.mc.player.input.playerInput.jump() ^ BlackOut.mc.player.input.playerInput.sneak()) {
+            if (!diving && this.modifyVertical.get() && BlackOut.mc.player.input.keyPresses.jump() ^ BlackOut.mc.player.input.keyPresses.shift()) {
                 event.setY(this, this.getVertical(touchingWater && !BlackOut.mc.player.isInLava()));
             } else if (this.canBeStill(diving)) {
                 event.setY(this, 0.0);
@@ -66,23 +66,23 @@ public class FastSwim extends Module {
     }
 
     private double getVertical(boolean water) {
-        return BlackOut.mc.player.input.playerInput.jump() ? (water ? this.waterUp : this.lavaUp).get() : -(water ? this.waterDown : this.lavaDown).get();
+        return BlackOut.mc.player.input.keyPresses.jump() ? (water ? this.waterUp : this.lavaUp).get() : -(water ? this.waterDown : this.lavaDown).get();
     }
 
-    private double horizontalMulti(Input i) {
-        if (i.getMovementInput().lengthSquared() == 0.0F) {
+    private double horizontalMulti(ClientInput i) {
+        if (i.getMoveVector().lengthSquared() == 0.0F) {
             return 0.0;
         } else {
-            return i.playerInput.jump() ^ i.playerInput.sneak() ? 0.707106781 : 1.0;
+            return i.keyPresses.jump() ^ i.keyPresses.shift() ? 0.707106781 : 1.0;
         }
     }
 
-    private double verticalMulti(Input i) {
-        if (i.playerInput.jump() == i.playerInput.sneak()) {
+    private double verticalMulti(ClientInput i) {
+        if (i.keyPresses.jump() == i.keyPresses.shift()) {
             return 0.0;
         } else {
-            double sus = i.getMovementInput().lengthSquared() == 0.0F ? 1.0 : 0.707106781;
-            return i.playerInput.jump() ? sus : -sus;
+            double sus = i.getMoveVector().lengthSquared() == 0.0F ? 1.0 : 0.707106781;
+            return i.keyPresses.jump() ? sus : -sus;
         }
     }
 
@@ -90,14 +90,14 @@ public class FastSwim extends Module {
         if (!this.stillVertical.get()) {
             return false;
         } else {
-            Input i = BlackOut.mc.player.input;
-            return diving ? !i.playerInput.jump() && !i.playerInput.sneak() && i.getMovementInput().lengthSquared() == 0.0F : !i.playerInput.jump() && !i.playerInput.sneak();
+            ClientInput i = BlackOut.mc.player.input;
+            return diving ? !i.keyPresses.jump() && !i.keyPresses.shift() && i.getMoveVector().lengthSquared() == 0.0F : !i.keyPresses.jump() && !i.keyPresses.shift();
         }
     }
 
     private double getSpeed(boolean touchingWater) {
-        boolean submergedWater = BlackOut.mc.player.isSubmergedInWater();
-        boolean submergedLava = BlackOut.mc.player.isSubmergedIn(FluidTags.LAVA);
+        boolean submergedWater = BlackOut.mc.player.isUnderWater();
+        boolean submergedLava = BlackOut.mc.player.isEyeInFluid(FluidTags.LAVA);
         boolean touchingLava = BlackOut.mc.player.isInLava();
         if (submergedWater && submergedLava) {
             return Math.min(this.waterSubmerged.get(), this.lavaSubmerged.get());

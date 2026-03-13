@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -11,7 +11,7 @@ public class BOLogger {
         LOGGER.info(message);
     }
 
-    public static void info(Text text) {
+    public static void info(Component text) {
         LOGGER.info(text.getString());
     }
 
@@ -19,7 +19,7 @@ public class BOLogger {
         LOGGER.warn(message);
     }
 
-    public static void warn(Text text) {
+    public static void warn(Component text) {
         LOGGER.warn(text);
     }
 

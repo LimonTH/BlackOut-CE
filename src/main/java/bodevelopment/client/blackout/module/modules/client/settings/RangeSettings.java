@@ -13,12 +13,12 @@ import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
-import net.minecraft.entity.Entity;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class RangeSettings extends SettingsModule {
     private static RangeSettings INSTANCE;
@@ -105,8 +105,8 @@ public class RangeSettings extends SettingsModule {
 
     @Event
     public void onAttack(PacketEvent.Sent event) {
-        if (event.packet instanceof PlayerInteractEntityC2SPacket packet && ((AccessorInteractEntityC2SPacket) packet).getType().getType() == PlayerInteractEntityC2SPacket.InteractType.ATTACK) {
-            Entity entity = BlackOut.mc.world.getEntityById(((AccessorInteractEntityC2SPacket) packet).getId());
+        if (event.packet instanceof ServerboundInteractPacket packet && ((AccessorInteractEntityC2SPacket) packet).getType().getType() == ServerboundInteractPacket.ActionType.ATTACK) {
+            Entity entity = BlackOut.mc.level.getEntity(((AccessorInteractEntityC2SPacket) packet).getId());
             if (entity != null) {
                 this.registerAttack(entity.getBoundingBox());
             }
@@ -115,10 +115,10 @@ public class RangeSettings extends SettingsModule {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        this.reducedAmount = MathHelper.clamp(this.reducedAmount, 0.0, this.reduceAmount.get());
+        this.reducedAmount = Mth.clamp(this.reducedAmount, 0.0, this.reduceAmount.get());
     }
 
-    private void registerAttack(Box bb) {
+    private void registerAttack(AABB bb) {
         double distance = this.attackRangeTo(bb, null);
         double range = SettingUtils.attackTrace(bb) ? this.attackRange.get() : this.attackRangeWalls.get();
         if (distance <= range - this.reduceAmount.get()) {
@@ -128,63 +128,63 @@ public class RangeSettings extends SettingsModule {
         }
     }
 
-    public boolean inInteractRange(BlockPos pos, Vec3d from) {
+    public boolean inInteractRange(BlockPos pos, Vec3 from) {
         double dist = this.interactRangeTo(pos, from);
         return dist >= 0.0 && dist <= (SettingUtils.interactTrace(pos) ? this.interactRange.get() : this.interactRangeWalls.get());
     }
 
-    public boolean inInteractRangeNoTrace(BlockPos pos, Vec3d from) {
+    public boolean inInteractRangeNoTrace(BlockPos pos, Vec3 from) {
         double dist = this.interactRangeTo(pos, from);
         return dist >= 0.0 && dist <= Math.max(this.interactRange.get(), this.interactRangeWalls.get());
     }
 
-    public double interactRangeTo(BlockPos pos, Vec3d from) {
+    public double interactRangeTo(BlockPos pos, Vec3 from) {
         if (from == null) {
-            from = BlackOut.mc.player.getPos();
+            from = BlackOut.mc.player.position();
         }
 
         from = from.add(0.0, BlackOut.mc.player.getEyeHeight(BlackOut.mc.player.getPose()), 0.0);
-        Vec3d bottom = new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+        Vec3 bottom = new Vec3(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
 
         return switch (this.interactRangeMode.get()) {
             case NCP -> from.distanceTo(bottom.add(0.0, 0.5, 0.0));
             case Height -> from.distanceTo(bottom.add(0.0, this.interactHeight.get(), 0.0));
-            case Vanilla -> from.distanceTo(OLEPOSSUtils.getClosest(BlackOut.mc.player.getEyePos(), bottom, 1.0, 1.0));
+            case Vanilla -> from.distanceTo(OLEPOSSUtils.getClosest(BlackOut.mc.player.getEyePosition(), bottom, 1.0, 1.0));
             case CustomBox -> from.distanceTo(
-                    OLEPOSSUtils.getClosest(BlackOut.mc.player.getEyePos(), bottom, this.interactBlockWidth.get(), this.interactBlockHeight.get())
+                    OLEPOSSUtils.getClosest(BlackOut.mc.player.getEyePosition(), bottom, this.interactBlockWidth.get(), this.interactBlockHeight.get())
             );
         };
     }
 
-    public boolean inPlaceRange(BlockPos pos, Vec3d from) {
+    public boolean inPlaceRange(BlockPos pos, Vec3 from) {
         double dist = this.placeRangeTo(pos, from);
 
         return dist >= 0.0 && dist <= (SettingUtils.placeTrace(pos) ? this.placeRange.get() : this.placeRangeWalls.get());
     }
 
-    public boolean inPlaceRangeNoTrace(BlockPos pos, Vec3d from) {
+    public boolean inPlaceRangeNoTrace(BlockPos pos, Vec3 from) {
         double dist = this.placeRangeTo(pos, from);
         return dist >= 0.0 && dist <= Math.max(this.placeRange.get(), this.placeRangeWalls.get());
     }
 
-    public double placeRangeTo(BlockPos pos, Vec3d from) {
+    public double placeRangeTo(BlockPos pos, Vec3 from) {
         if (from == null) {
-            from = BlackOut.mc.player.getPos();
+            from = BlackOut.mc.player.position();
         }
 
         from = from.add(0.0, BlackOut.mc.player.getEyeHeight(BlackOut.mc.player.getPose()), 0.0);
-        Vec3d feet = new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+        Vec3 feet = new Vec3(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
 
         return switch (this.placeRangeMode.get()) {
             case NCP -> from.distanceTo(feet.add(0.0, 0.5, 0.0));
             case Height -> from.distanceTo(feet.add(0.0, this.placeHeight.get(), 0.0));
-            case Vanilla -> from.distanceTo(OLEPOSSUtils.getClosest(BlackOut.mc.player.getEyePos(), feet, 1.0, 1.0));
+            case Vanilla -> from.distanceTo(OLEPOSSUtils.getClosest(BlackOut.mc.player.getEyePosition(), feet, 1.0, 1.0));
             case CustomBox ->
-                    from.distanceTo(OLEPOSSUtils.getClosest(BlackOut.mc.player.getEyePos(), feet, this.blockWidth.get(), this.blockHeight.get()));
+                    from.distanceTo(OLEPOSSUtils.getClosest(BlackOut.mc.player.getEyePosition(), feet, this.blockWidth.get(), this.blockHeight.get()));
         };
     }
 
-    public boolean inAttackRange(Box bb, Vec3d from) {
+    public boolean inAttackRange(AABB bb, Vec3 from) {
         boolean visible = SettingUtils.attackTrace(bb);
         return this.innerAttackRangeTo(bb, from, !visible) <= this.reducedRange(visible ? this.attackRange : this.attackRangeWalls, visible);
     }
@@ -193,22 +193,22 @@ public class RangeSettings extends SettingsModule {
         return (walls ? this.wallReduce : this.reduce).get() ? distance.get() - this.reducedAmount : distance.get();
     }
 
-    public boolean inAttackRangeNoTrace(Box bb, Vec3d from) {
+    public boolean inAttackRangeNoTrace(AABB bb, Vec3 from) {
         return this.attackRangeTo(bb, from) <= this.reducedRange(this.attackRange, false);
     }
 
-    private double wallAttackRangeTo(Box bb, Vec3d from) {
+    private double wallAttackRangeTo(AABB bb, Vec3 from) {
         return this.innerAttackRangeTo(bb, from, true);
     }
 
-    private double attackRangeTo(Box bb, Vec3d from) {
+    private double attackRangeTo(AABB bb, Vec3 from) {
         return this.innerAttackRangeTo(bb, from, false);
     }
 
-    public double innerAttackRangeTo(Box bb, Vec3d from, boolean walls) {
+    public double innerAttackRangeTo(AABB bb, Vec3 from, boolean walls) {
         AttackRangeMode mode = (walls ? this.wallAttackRangeMode : this.attackRangeMode).get();
         if (from == null) {
-            from = BlackOut.mc.player.getPos();
+            from = BlackOut.mc.player.position();
         }
 
         if (mode != AttackRangeMode.Simple) {
@@ -216,52 +216,52 @@ public class RangeSettings extends SettingsModule {
         }
         return switch (mode) {
             case NCP -> {
-                Vec3d feet = BoxUtils.feet(bb);
-                yield from.distanceTo(new Vec3d(feet.x, Math.min(Math.max(from.getY(), bb.minY), bb.maxY), feet.z));
+                Vec3 feet = BoxUtils.feet(bb);
+                yield from.distanceTo(new Vec3(feet.x, Math.min(Math.max(from.y(), bb.minY), bb.maxY), feet.z));
             }
             case Vanilla -> from.distanceTo(
                     OLEPOSSUtils.getClosest(
-                            BlackOut.mc.player.getEyePos(), BoxUtils.feet(bb), Math.abs(bb.minX - bb.maxX), Math.abs(bb.minY - bb.maxY)
+                            BlackOut.mc.player.getEyePosition(), BoxUtils.feet(bb), Math.abs(bb.minX - bb.maxX), Math.abs(bb.minY - bb.maxY)
                     )
             );
             case Middle -> from.distanceTo(
-                    new Vec3d((bb.minX + bb.maxX) / 2.0, (bb.minY + bb.maxY) / 2.0, (bb.minZ + bb.maxZ) / 2.0)
+                    new Vec3((bb.minX + bb.maxX) / 2.0, (bb.minY + bb.maxY) / 2.0, (bb.minZ + bb.maxZ) / 2.0)
             );
             case CustomBox -> from.distanceTo(
                     OLEPOSSUtils.getClosest(
-                            BlackOut.mc.player.getEyePos(),
+                            BlackOut.mc.player.getEyePosition(),
                             BoxUtils.feet(bb),
                             Math.abs(bb.minX - bb.maxX) * this.closestWallAttackWidth.get(),
                             Math.abs(bb.minY - bb.maxY) * this.closestWallAttackHeight.get()
                     )
             );
             case UpdatedNCP -> {
-                Vec3d feet = BoxUtils.feet(bb);
-                yield from.distanceTo(new Vec3d(feet.x, Math.min(Math.max(from.getY(), bb.minY), bb.maxY), feet.z))
+                Vec3 feet = BoxUtils.feet(bb);
+                yield from.distanceTo(new Vec3(feet.x, Math.min(Math.max(from.y(), bb.minY), bb.maxY), feet.z))
                         - this.getDistFromCenter(bb, feet, from);
             }
             case Simple -> from.distanceTo(BoxUtils.feet(bb));
         };
     }
 
-    public double getDistFromCenter(Box bb, Vec3d feet, Vec3d from) {
-        Vec3d pos = new Vec3d(feet.x, feet.y, feet.z);
-        Vec3d vec1 = new Vec3d(from.getX() - pos.getX(), 0.0, from.getZ() - pos.getZ());
-        double halfWidth = bb.getLengthX() / 2.0;
-        if (vec1.length() < halfWidth * MathHelper.SQUARE_ROOT_OF_TWO) {
+    public double getDistFromCenter(AABB bb, Vec3 feet, Vec3 from) {
+        Vec3 pos = new Vec3(feet.x, feet.y, feet.z);
+        Vec3 vec1 = new Vec3(from.x() - pos.x(), 0.0, from.z() - pos.z());
+        double halfWidth = bb.getXsize() / 2.0;
+        if (vec1.length() < halfWidth * Mth.SQRT_OF_TWO) {
             return 0.0;
         } else {
-            if (vec1.getZ() > 0.0) {
-                ((IVec3d) pos).blackout_Client$setZ(pos.getZ() + halfWidth);
-            } else if (vec1.getZ() < 0.0) {
-                ((IVec3d) pos).blackout_Client$setZ(pos.getZ() - halfWidth);
-            } else if (vec1.getX() > 0.0) {
-                ((IVec3d) pos).blackout_Client$setX(pos.getX() + halfWidth);
+            if (vec1.z() > 0.0) {
+                ((IVec3d) pos).blackout_Client$setZ(pos.z() + halfWidth);
+            } else if (vec1.z() < 0.0) {
+                ((IVec3d) pos).blackout_Client$setZ(pos.z() - halfWidth);
+            } else if (vec1.x() > 0.0) {
+                ((IVec3d) pos).blackout_Client$setX(pos.x() + halfWidth);
             } else {
-                ((IVec3d) pos).blackout_Client$setX(pos.getX() - halfWidth);
+                ((IVec3d) pos).blackout_Client$setX(pos.x() - halfWidth);
             }
 
-            Vec3d vec2 = new Vec3d(pos.getX() - feet.getX(), 0.0, pos.getZ() - feet.getZ());
+            Vec3 vec2 = new Vec3(pos.x() - feet.x(), 0.0, pos.z() - feet.z());
             double angle = RotationUtils.radAngle(vec1, vec2);
             if (angle > Math.PI / 4) {
                 angle = (Math.PI / 2) - angle;
@@ -281,20 +281,20 @@ public class RangeSettings extends SettingsModule {
         return dist >= 0.0 && dist <= Math.max(this.mineRange.get(), this.mineRangeWalls.get());
     }
 
-    public double miningRangeTo(BlockPos pos, Vec3d from) {
+    public double miningRangeTo(BlockPos pos, Vec3 from) {
         if (from == null) {
-            from = BlackOut.mc.player.getPos();
+            from = BlackOut.mc.player.position();
         }
 
         from = from.add(0.0, BlackOut.mc.player.getEyeHeight(BlackOut.mc.player.getPose()), 0.0);
-        Vec3d feet = new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+        Vec3 feet = new Vec3(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
 
         return switch (this.mineRangeMode.get()) {
             case NCP -> from.distanceTo(feet.add(0.0, 0.5, 0.0));
             case Height -> from.distanceTo(feet.add(0.0, this.miningHeight.get(), 0.0));
-            case Vanilla -> from.distanceTo(OLEPOSSUtils.getClosest(BlackOut.mc.player.getEyePos(), feet, 1.0, 1.0));
+            case Vanilla -> from.distanceTo(OLEPOSSUtils.getClosest(BlackOut.mc.player.getEyePosition(), feet, 1.0, 1.0));
             case CustomBox -> from.distanceTo(
-                    OLEPOSSUtils.getClosest(BlackOut.mc.player.getEyePos(), feet, this.closestMiningWidth.get(), this.closestMiningHeight.get())
+                    OLEPOSSUtils.getClosest(BlackOut.mc.player.getEyePosition(), feet, this.closestMiningWidth.get(), this.closestMiningHeight.get())
             );
         };
     }

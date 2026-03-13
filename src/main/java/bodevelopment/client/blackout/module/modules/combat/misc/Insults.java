@@ -10,13 +10,12 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.ChatUtils;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 
 public class Insults extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -305,7 +304,7 @@ public class Insults extends Module {
     @Event
     public void onTick(TickEvent.Pre event) {
         this.timer++;
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             if (!this.anyDead(this.range.get()) || !this.kill.get()) {
                 this.lastState = false;
             } else if (!this.lastState) {
@@ -313,7 +312,7 @@ public class Insults extends Module {
                 this.sendKillMessage();
             }
 
-            if (this.timer >= this.tickDelay.get() && !this.messageQueue.isEmpty() && BlackOut.mc.getNetworkHandler() != null) {
+            if (this.timer >= this.tickDelay.get() && !this.messageQueue.isEmpty() && BlackOut.mc.getConnection() != null) {
                 Message msg = this.messageQueue.getFirst();
                 ChatUtils.sendMessage(String.valueOf(msg.message));
                 this.timer = 0;
@@ -328,24 +327,24 @@ public class Insults extends Module {
 
     @Event
     public void onReceive(PacketEvent.Receive.Pre event) {
-        if (event.packet instanceof EntityStatusS2CPacket packet && packet.getStatus() == 35) {
-            Entity entity = packet.getEntity(BlackOut.mc.world);
+        if (event.packet instanceof ClientboundEntityEventPacket packet && packet.getEventId() == 35) {
+            Entity entity = packet.getEntity(BlackOut.mc.level);
             if (this.pop.get()
                     && BlackOut.mc.player != null
-                    && BlackOut.mc.world != null
-                    && entity instanceof PlayerEntity
+                    && BlackOut.mc.level != null
+                    && entity instanceof Player
                     && entity != BlackOut.mc.player
-                    && !Managers.FRIENDS.isFriend((PlayerEntity) entity)
-                    && BlackOut.mc.player.getPos().distanceTo(entity.getPos()) <= this.range.get()) {
+                    && !Managers.FRIENDS.isFriend((Player) entity)
+                    && BlackOut.mc.player.position().distanceTo(entity.position()) <= this.range.get()) {
             }
         }
     }
 
     private boolean anyDead(double range) {
-        for (PlayerEntity pl : BlackOut.mc.world.getPlayers()) {
+        for (Player pl : BlackOut.mc.level.players()) {
             if (pl != BlackOut.mc.player
                     && !Managers.FRIENDS.isFriend(pl)
-                    && pl.getPos().distanceTo(BlackOut.mc.player.getPos()) <= range
+                    && pl.position().distanceTo(BlackOut.mc.player.position()) <= range
                     && pl.getHealth() <= 0.0F) {
                 this.name = pl.getName().getString();
                 return true;

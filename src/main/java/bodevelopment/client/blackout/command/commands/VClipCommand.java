@@ -18,7 +18,7 @@ public class VClipCommand extends Command {
                 double value = Double.parseDouble(args[0].replace(",", "."));
                 BlackOut.mc
                         .player
-                        .setPosition(BlackOut.mc.player.getX(), BlackOut.mc.player.getY() + value, BlackOut.mc.player.getZ());
+                        .setPos(BlackOut.mc.player.getX(), BlackOut.mc.player.getY() + value, BlackOut.mc.player.getZ());
                 return "Teleported " + value + " blocks horizontally.";
             } catch (Exception e) {
                 return "invalid amount";

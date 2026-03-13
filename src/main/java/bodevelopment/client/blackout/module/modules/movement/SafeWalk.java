@@ -7,8 +7,8 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.entity.MovementType;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.phys.Vec3;
 
 public class SafeWalk extends Module {
     private static SafeWalk INSTANCE;
@@ -33,15 +33,15 @@ public class SafeWalk extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null && this.sneak.get()) {
-            Vec3d movement = BlackOut.mc.player.getVelocity();
-            Vec3d newMovement = BlackOut.mc.player.adjustMovementForSneaking(movement, MovementType.SELF);
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null && this.sneak.get()) {
+            Vec3 movement = BlackOut.mc.player.getDeltaMovement();
+            Vec3 newMovement = BlackOut.mc.player.maybeBackOffFromEdge(movement, MoverType.SELF);
             if (!movement.equals(newMovement)) {
-                BlackOut.mc.player.setSneaking(true);
-                BlackOut.mc.options.sneakKey.setPressed(true);
+                BlackOut.mc.player.setShiftKeyDown(true);
+                BlackOut.mc.options.keyShift.setDown(true);
             } else {
-                BlackOut.mc.player.setSneaking(false);
-                BlackOut.mc.options.sneakKey.setPressed(false);
+                BlackOut.mc.player.setShiftKeyDown(false);
+                BlackOut.mc.options.keyShift.setDown(false);
             }
         }
     }

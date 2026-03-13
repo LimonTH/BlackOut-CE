@@ -11,11 +11,10 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-
 import java.util.List;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 public class FastUse extends Module {
     private static FastUse INSTANCE;
@@ -70,10 +69,10 @@ public class FastUse extends Module {
     }
 
     public boolean rotateIfNeeded(ItemStack stack) {
-        if (stack.isOf(Items.EXPERIENCE_BOTTLE)) {
+        if (stack.is(Items.EXPERIENCE_BOTTLE)) {
             switch (this.rotate.get()) {
                 case Vanilla:
-                    BlackOut.mc.player.setPitch(90.0F);
+                    BlackOut.mc.player.setXRot(90.0F);
                     return Math.abs(Managers.ROTATION.prevPitch - 90.0F) > 1.0F;
                 case Normal:
                     return !this.rotatePitch(90.0F, RotationType.Other, "exp");
@@ -91,10 +90,10 @@ public class FastUse extends Module {
 
     public ItemStack getStack() {
         if (BlackOut.mc.player != null
-                && BlackOut.mc.world != null
+                && BlackOut.mc.level != null
                 && !BlackOut.mc.player.isUsingItem()
-                && BlackOut.mc.options.useKey.isPressed()) {
-            ItemStack stack = BlackOut.mc.player.getMainHandStack();
+                && BlackOut.mc.options.keyUse.isDown()) {
+            ItemStack stack = BlackOut.mc.player.getMainHandItem();
             return stack != null && !stack.isEmpty() ? stack : null;
         } else {
             return null;

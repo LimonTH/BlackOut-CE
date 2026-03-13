@@ -7,16 +7,16 @@ import bodevelopment.client.blackout.module.modules.misc.NoRotate;
 import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
 import bodevelopment.client.blackout.module.modules.visual.world.Ambience;
 import bodevelopment.client.blackout.util.CompatUtils;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientboundLoginPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,69 +24,69 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(ClientPlayNetworkHandler.class)
+@Mixin(ClientPacketListener.class)
 public class MixinClientPlayNetworkHandler {
     @Unique
     private static float lastServerYaw;
     @Unique
     private static float lastServerPitch;
 
-    @Inject(method = "onGameJoin", at = @At("TAIL"))
-    private void onJoin(GameJoinS2CPacket packet, CallbackInfo ci) {
+    @Inject(method = "handleLogin", at = @At("TAIL"))
+    private void onJoin(ClientboundLoginPacket packet, CallbackInfo ci) {
         BlackOut.EVENT_BUS.post(GameJoinEvent.get(packet));
     }
 
     @Redirect(
-            method = "setPosition",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;setYaw(F)V")
+            method = "setValuesFromPositionPacket",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;setYRot(F)V")
     )
     private static void rubberbandYaw(Entity entity, float yaw) {
-        if (!(entity instanceof PlayerEntity player)) {
-            entity.setYaw(yaw);
+        if (!(entity instanceof Player player)) {
+            entity.setYRot(yaw);
             return;
         }
 
         NoRotate noRotate = NoRotate.getInstance();
 
         if (noRotate.enabled && noRotate.mode.get() == NoRotate.NoRotateMode.Rel) {
-            noRotate.relYaw = yaw - player.getYaw();
+            noRotate.relYaw = yaw - player.getYRot();
         } else if (!noRotate.enabled) {
-            player.setYaw(yaw);
+            player.setYRot(yaw);
         }
         lastServerYaw = yaw;
     }
 
     @Redirect(
-            method = "setPosition",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;setPitch(F)V")
+            method = "setValuesFromPositionPacket",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;setXRot(F)V")
     )
     private static void rubberbandPitch(Entity entity, float pitch) {
-        if (!(entity instanceof PlayerEntity player)) {
-            entity.setPitch(pitch);
+        if (!(entity instanceof Player player)) {
+            entity.setXRot(pitch);
             return;
         }
 
         NoRotate noRotate = NoRotate.getInstance();
 
         if (noRotate.enabled && noRotate.mode.get() == NoRotate.NoRotateMode.Rel) {
-            noRotate.relPitch = pitch - player.getPitch();
+            noRotate.relPitch = pitch - player.getXRot();
         } else if (!noRotate.enabled) {
-            player.setPitch(pitch);
+            player.setXRot(pitch);
         }
         lastServerPitch = pitch;
     }
 
     @Redirect(
-            method = "onPlayerPositionLook",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/packet/Packet;)V", ordinal = 1)
+            method = "handleMovePlayer",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Connection;send(Lnet/minecraft/network/protocol/Packet;)V", ordinal = 1)
     )
-    private void sendFull(ClientConnection instance, Packet<?> packet) {
+    private void sendFull(Connection instance, Packet<?> packet) {
         if (CompatUtils.isBaritonePathing()) {
             instance.send(packet);
             return;
         }
 
-        if (packet instanceof PlayerMoveC2SPacket.Full moveC2SPacket) {
+        if (packet instanceof ServerboundMovePlayerPacket.PosRot moveC2SPacket) {
             NoRotate noRotate = NoRotate.getInstance();
 
             if (noRotate.enabled) {
@@ -101,8 +101,8 @@ public class MixinClientPlayNetworkHandler {
 
                         if (noRotate.mode.get() == NoRotate.NoRotateMode.Rel) {
                             if (BlackOut.mc.player != null) {
-                                BlackOut.mc.player.setYaw(BlackOut.mc.player.getYaw() + noRotate.relYaw);
-                                BlackOut.mc.player.setPitch(BlackOut.mc.player.getPitch() + noRotate.relPitch);
+                                BlackOut.mc.player.setYRot(BlackOut.mc.player.getYRot() + noRotate.relYaw);
+                                BlackOut.mc.player.setXRot(BlackOut.mc.player.getXRot() + noRotate.relPitch);
                             }
                             noRotate.relYaw = 0;
                             noRotate.relPitch = 0;
@@ -117,27 +117,27 @@ public class MixinClientPlayNetworkHandler {
     }
 
     @Redirect(
-            method = "onWorldTimeUpdate",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;setTime(JJZ)V")
+            method = "handleSetTime",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;setTimeFromServer(JJZ)V")
     )
-    private void redirectSetTime(ClientWorld world, long time, long timeOfDay, boolean shouldTickTimeOfDay) {
+    private void redirectSetTime(ClientLevel world, long time, long timeOfDay, boolean shouldTickTimeOfDay) {
         Ambience ambience = Ambience.getInstance();
 
         long finalTimeOfDay = (ambience.enabled && ambience.modifyTime.get())
                 ? ambience.time.get().longValue()
                 : timeOfDay;
 
-        world.setTime(time, finalTimeOfDay, shouldTickTimeOfDay);
+        world.setTimeFromServer(time, finalTimeOfDay, shouldTickTimeOfDay);
     }
 
     @Redirect(
-            method = "onEntityStatus",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;showFloatingItem(Lnet/minecraft/item/ItemStack;)V")
+            method = "handleEntityEvent",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;displayItemActivation(Lnet/minecraft/world/item/ItemStack;)V")
     )
     private void showTotemAnimation(GameRenderer instance, ItemStack floatingItem) {
         NoRender noRender = NoRender.getInstance();
         if (!noRender.enabled || !noRender.totem.get()) {
-            instance.showFloatingItem(floatingItem);
+            instance.displayItemActivation(floatingItem);
         }
     }
 }

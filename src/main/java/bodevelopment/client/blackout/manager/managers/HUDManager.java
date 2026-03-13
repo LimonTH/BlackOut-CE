@@ -17,17 +17,16 @@ import bodevelopment.client.blackout.util.ClassUtils;
 import bodevelopment.client.blackout.util.SharedFeatures;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.*;
 import java.util.function.BiConsumer;
+import net.minecraft.client.gui.screens.Screen;
 
 public class HUDManager extends Manager {
     public final HudEditor HUD_EDITOR = new HudEditor();
     private final List<Pair<String, Class<? extends HudElement>>> elements = new ArrayList<>();
     private final Map<Integer, HudElement> loaded = new HashMap<>();
-    private final MatrixStack stack = new MatrixStack();
+    private final PoseStack stack = new PoseStack();
     private float progress = 0.0F;
 
     public List<Pair<String, Class<? extends HudElement>>> getElements() {
@@ -40,8 +39,8 @@ public class HUDManager extends Manager {
 
     public Class<? extends HudElement> getClass(String name) {
         for (Pair<String, Class<? extends HudElement>> pair : this.elements) {
-            if (pair.getLeft().equals(name) || pair.getRight().getSimpleName().equals(name)) {
-                return pair.getRight();
+            if (pair.getA().equals(name) || pair.getB().getSimpleName().equals(name)) {
+                return pair.getB();
             }
         }
         return null;
@@ -96,12 +95,12 @@ public class HUDManager extends Manager {
         String name = tempInstance.name;
         boolean added = false;
 
-        if (elements.stream().noneMatch(p -> p.getLeft().equals(name))) {
+        if (elements.stream().noneMatch(p -> p.getA().equals(name))) {
             this.elements.add(new Pair<>(name, clazz));
             added = true;
         } else {
             String fullName = clazz.getName();
-            if (elements.stream().noneMatch(p -> p.getLeft().equals(fullName))) {
+            if (elements.stream().noneMatch(p -> p.getA().equals(fullName))) {
                 this.elements.add(new Pair<>(fullName, clazz));
                 added = true;
             }
@@ -112,16 +111,16 @@ public class HUDManager extends Manager {
 
     @Event
     public void onKey(KeyEvent event) {
-        if (event.key == 345 && event.pressed && BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            if (BlackOut.mc.currentScreen == null || HudEditor.isOpen()) {
+        if (event.key == 345 && event.pressed && BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            if (BlackOut.mc.screen == null || HudEditor.isOpen()) {
                 this.toggle();
             }
         }
     }
 
     private float getProgress(float delta) {
-        Screen screen = BlackOut.mc.currentScreen;
-        if (BlackOut.mc.player == null || BlackOut.mc.world == null) {
+        Screen screen = BlackOut.mc.screen;
+        if (BlackOut.mc.player == null || BlackOut.mc.level == null) {
             return 0.0F;
         } else if (screen instanceof HudEditor) {
             return 1.0F;
@@ -132,15 +131,15 @@ public class HUDManager extends Manager {
         }
     }
 
-    public void start(MatrixStack stack) {
-        stack.push();
-        float s = 1000.0F / BlackOut.mc.getFramebuffer().viewportWidth;
+    public void start(PoseStack stack) {
+        stack.pushPose();
+        float s = 1000.0F / BlackOut.mc.getMainRenderTarget().viewWidth;
         RenderUtils.unGuiScale(stack);
         s = 1.0F / s;
         stack.scale(s, s, s);
     }
 
-    public void render(MatrixStack stack, float frameTime) {
+    public void render(PoseStack stack, float frameTime) {
         Managers.HUD.forEachElement((id, element) -> element.renderElement(stack, frameTime));
     }
 
@@ -155,8 +154,8 @@ public class HUDManager extends Manager {
         }
     }
 
-    public void end(MatrixStack stack) {
-        stack.pop();
+    public void end(PoseStack stack) {
+        stack.popPose();
     }
 
     public void forEachElement(BiConsumer<? super Integer, ? super HudElement> consumer) {

@@ -12,24 +12,23 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.BoxMultiSetting;
 import bodevelopment.client.blackout.util.BoxUtils;
-import net.minecraft.block.Block;
-import net.minecraft.client.world.ClientChunkManager;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.chunk.WorldChunk;
-
 import java.util.*;
 import java.util.concurrent.*;
+import net.minecraft.client.multiplayer.ClientChunkCache;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class Search extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRender = this.addGroup("Visuals");
 
-    private final Map<BlockPos, Box> positions = new ConcurrentHashMap<>();
+    private final Map<BlockPos, AABB> positions = new ConcurrentHashMap<>();
     private final Set<ChunkPos> prevChunks = new HashSet<>();
     private final Queue<ChunkPos> toScan = new ConcurrentLinkedQueue<>();
 
@@ -55,7 +54,7 @@ public class Search extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.world != null) {
+        if (BlackOut.mc.level != null) {
             this.checkChunks();
             this.find();
         }
@@ -68,7 +67,7 @@ public class Search extends Module {
 
     @Event
     public void onState(BlockStateEvent event) {
-        if (BlackOut.mc.world != null) {
+        if (BlackOut.mc.level != null) {
             this.onBlock(event.state.getBlock(), event.pos, true);
         }
     }
@@ -80,7 +79,7 @@ public class Search extends Module {
     }
 
     private void refresh() {
-        if (BlackOut.mc.world == null) return;
+        if (BlackOut.mc.level == null) return;
         positions.clear();
         for (ChunkPos pos : prevChunks) {
             if (!toScan.contains(pos)) {
@@ -103,23 +102,23 @@ public class Search extends Module {
 
     private void scan(ChunkPos pos) {
         try {
-            var chunkView = BlackOut.mc.world.getChunkManager().getChunk(pos.x, pos.z);
-            if (!(chunkView instanceof WorldChunk chunk) || chunk.isEmpty()) {
+            var chunkView = BlackOut.mc.level.getChunkSource().getChunkForLighting(pos.x, pos.z);
+            if (!(chunkView instanceof LevelChunk chunk) || chunk.isEmpty()) {
                 return;
             }
-            ChunkSection[] sections = chunk.getSectionArray();
+            LevelChunkSection[] sections = chunk.getSections();
 
             for (int i = 0; i < sections.length; i++) {
-                ChunkSection section = sections[i];
-                if (section == null || section.isEmpty()) continue;
+                LevelChunkSection section = sections[i];
+                if (section == null || section.hasOnlyAir()) continue;
 
-                if (!section.getBlockStateContainer().hasAny(state -> this.blocks.get().contains(state.getBlock()))) {
+                if (!section.getStates().maybeHas(state -> this.blocks.get().contains(state.getBlock()))) {
                     continue;
                 }
 
-                int startX = pos.getStartX();
-                int startZ = pos.getStartZ();
-                int minY = chunk.getBottomY() + (i * 16);
+                int startX = pos.getMinBlockX();
+                int startZ = pos.getMinBlockZ();
+                int minY = chunk.getMinY() + (i * 16);
 
                 List<FoundBlock> batch = new ArrayList<>();
 
@@ -147,11 +146,11 @@ public class Search extends Module {
     }
 
     private void checkChunks() {
-        ClientChunkManager.ClientChunkMap map = BlackOut.mc.world.getChunkManager().chunks;
+        ClientChunkCache.Storage map = BlackOut.mc.level.getChunkSource().storage;
         Set<ChunkPos> currentChunks = new HashSet<>();
 
         for (int i = 0; i < map.chunks.length(); i++) {
-            WorldChunk chunk = map.chunks.get(i);
+            LevelChunk chunk = map.chunks.get(i);
             if (chunk != null) currentChunks.add(chunk.getPos());
         }
 
@@ -174,8 +173,8 @@ public class Search extends Module {
     private void unScan(ChunkPos pos) {
         this.toScan.remove(pos);
         this.positions.keySet().removeIf(p ->
-                p.getX() >= pos.getStartX() && p.getX() <= pos.getEndX() &&
-                        p.getZ() >= pos.getStartZ() && p.getZ() <= pos.getEndZ()
+                p.getX() >= pos.getMinBlockX() && p.getX() <= pos.getMaxBlockX() &&
+                        p.getZ() >= pos.getMinBlockZ() && p.getZ() <= pos.getMaxBlockZ()
         );
     }
 
@@ -185,7 +184,7 @@ public class Search extends Module {
         if (valid && this.onlyExposed.get()) {
             valid = false;
             for (Direction dir : Direction.values()) {
-                if (!BlackOut.mc.world.getBlockState(pos.offset(dir)).isOpaque()) {
+                if (!BlackOut.mc.level.getBlockState(pos.relative(dir)).canOcclude()) {
                     valid = true;
                     break;
                 }
@@ -202,16 +201,16 @@ public class Search extends Module {
 
         if (updateNeighbors) {
             for (Direction dir : Direction.values()) {
-                BlockPos offsetPos = pos.offset(dir);
-                this.onBlock(BlackOut.mc.world.getBlockState(offsetPos).getBlock(), offsetPos, false);
+                BlockPos offsetPos = pos.relative(dir);
+                this.onBlock(BlackOut.mc.level.getBlockState(offsetPos).getBlock(), offsetPos, false);
             }
         }
     }
 
-    private Box getBox(BlockPos pos) {
+    private AABB getBox(BlockPos pos) {
         if (this.dynamicBox.get()) {
-            VoxelShape shape = BlackOut.mc.world.getBlockState(pos).getOutlineShape(BlackOut.mc.world, pos);
-            if (!shape.isEmpty()) return shape.getBoundingBox().offset(pos);
+            VoxelShape shape = BlackOut.mc.level.getBlockState(pos).getShape(BlackOut.mc.level, pos);
+            if (!shape.isEmpty()) return shape.bounds().move(pos);
         }
         return BoxUtils.get(pos);
     }

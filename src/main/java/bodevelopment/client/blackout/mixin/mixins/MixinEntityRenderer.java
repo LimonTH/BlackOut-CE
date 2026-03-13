@@ -3,12 +3,12 @@ package bodevelopment.client.blackout.mixin.mixins;
 import bodevelopment.client.blackout.module.modules.visual.entities.Nametags;
 import bodevelopment.client.blackout.module.modules.visual.entities.ShaderESP;
 import bodevelopment.client.blackout.util.render.RenderEntityCapture;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EntityRenderer;
-import net.minecraft.client.render.entity.state.EntityRenderState;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.text.Text;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,15 +19,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinEntityRenderer {
 
     @Inject(
-            method = "renderLabelIfPresent",
+            method = "renderNameTag",
             at = @At("HEAD"),
             cancellable = true
     )
     private void shouldRenderNametag(
             EntityRenderState state,
-            Text text,
-            MatrixStack matrices,
-            VertexConsumerProvider vertexConsumers,
+            Component text,
+            PoseStack matrices,
+            MultiBufferSource vertexConsumers,
             int light,
             CallbackInfo ci
     ) {

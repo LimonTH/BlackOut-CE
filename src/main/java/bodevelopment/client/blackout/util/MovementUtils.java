@@ -2,9 +2,9 @@ package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class MovementUtils {
     public static double xMovement(double speed, double yaw) {
@@ -21,7 +21,7 @@ public class MovementUtils {
 
     public static double getSpeed(double baseSpeed, double multi) {
         double effectMulti = getEffectMulti();
-        if (BlackOut.mc.player.isSneaking()) {
+        if (BlackOut.mc.player.isShiftKeyDown()) {
             baseSpeed *= 0.3;
             effectMulti++;
         } else {
@@ -33,20 +33,20 @@ public class MovementUtils {
 
     public static double getEffectMulti() {
         double multiBonus = 0.0;
-        if (BlackOut.mc.player.hasStatusEffect(StatusEffects.SPEED)) {
-            multiBonus += BlackOut.mc.player.getStatusEffect(StatusEffects.SPEED).getAmplifier() * 0.2 + 0.2;
+        if (BlackOut.mc.player.hasEffect(MobEffects.MOVEMENT_SPEED)) {
+            multiBonus += BlackOut.mc.player.getEffect(MobEffects.MOVEMENT_SPEED).getAmplifier() * 0.2 + 0.2;
         }
 
-        if (BlackOut.mc.player.hasStatusEffect(StatusEffects.SLOWNESS)) {
-            multiBonus -= BlackOut.mc.player.getStatusEffect(StatusEffects.SLOWNESS).getAmplifier() * 0.2 + 0.2;
+        if (BlackOut.mc.player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN)) {
+            multiBonus -= BlackOut.mc.player.getEffect(MobEffects.MOVEMENT_SLOWDOWN).getAmplifier() * 0.2 + 0.2;
         }
 
         return multiBonus;
     }
 
-    public static void moveTowards(Vec3d movement, double baseSpeed, Vec3d vec, int step, int reverseStep) {
+    public static void moveTowards(Vec3 movement, double baseSpeed, Vec3 vec, int step, int reverseStep) {
         double speed = getSpeed(baseSpeed);
-        double yaw = RotationUtils.getYaw(BlackOut.mc.player.getPos(), vec, 0.0);
+        double yaw = RotationUtils.getYaw(BlackOut.mc.player.position(), vec, 0.0);
         double xm = xMovement(speed, yaw);
         double zm = zMovement(speed, yaw);
         double xd = vec.x - BlackOut.mc.player.getX();
@@ -57,30 +57,30 @@ public class MovementUtils {
         ((IVec3d) movement).blackout_Client$setXZ(x, z);
     }
 
-    private static void y(Vec3d movement, double x, double z, int step, int rev) {
-        if (BlackOut.mc.player.isOnGround()
+    private static void y(Vec3 movement, double x, double z, int step, int rev) {
+        if (BlackOut.mc.player.onGround()
                 && !OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox())
-                && OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().offset(x, 0.0, z))) {
-            double s = getStep(BlackOut.mc.player.getBoundingBox().offset(x, 0.0, z), step);
+                && OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(x, 0.0, z))) {
+            double s = getStep(BlackOut.mc.player.getBoundingBox().move(x, 0.0, z), step);
             if (s > 0.0) {
                 ((IVec3d) movement).blackout_Client$setY(s);
-                BlackOut.mc.player.setVelocity(BlackOut.mc.player.getVelocity().x, 0.0, BlackOut.mc.player.getVelocity().z);
+                BlackOut.mc.player.setDeltaMovement(BlackOut.mc.player.getDeltaMovement().x, 0.0, BlackOut.mc.player.getDeltaMovement().z);
             }
         } else {
-            if (BlackOut.mc.player.isOnGround()
-                    && !OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().offset(x, -0.04, z))) {
+            if (BlackOut.mc.player.onGround()
+                    && !OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(x, -0.04, z))) {
                 double s = getReverse(BlackOut.mc.player.getBoundingBox(), rev);
                 if (s > 0.0) {
                     ((IVec3d) movement).blackout_Client$setY(-s);
-                    BlackOut.mc.player.setVelocity(BlackOut.mc.player.getVelocity().x, 0.0, BlackOut.mc.player.getVelocity().z);
+                    BlackOut.mc.player.setDeltaMovement(BlackOut.mc.player.getDeltaMovement().x, 0.0, BlackOut.mc.player.getDeltaMovement().z);
                 }
             }
         }
     }
 
-    private static double getStep(Box box, int step) {
+    private static double getStep(AABB box, int step) {
         for (double i = 0.0; i <= step + 0.125; i += 0.125) {
-            if (!OLEPOSSUtils.inside(BlackOut.mc.player, box.offset(0.0, i, 0.0))) {
+            if (!OLEPOSSUtils.inside(BlackOut.mc.player, box.move(0.0, i, 0.0))) {
                 return i;
             }
         }
@@ -88,9 +88,9 @@ public class MovementUtils {
         return 0.0;
     }
 
-    private static double getReverse(Box box, int reverse) {
+    private static double getReverse(AABB box, int reverse) {
         for (double i = 0.0; i <= reverse; i += 0.125) {
-            if (OLEPOSSUtils.inside(BlackOut.mc.player, box.offset(0.0, -i - 0.125, 0.0))) {
+            if (OLEPOSSUtils.inside(BlackOut.mc.player, box.move(0.0, -i - 0.125, 0.0))) {
                 return i;
             }
         }

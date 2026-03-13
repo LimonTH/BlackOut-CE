@@ -1,51 +1,50 @@
 package bodevelopment.client.blackout.util;
 
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.text.Text;
-import net.minecraft.registry.entry.RegistryEntry;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.core.Holder;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.Enchantments;
 
 public class EnchantmentNames {
-    public static final List<RegistryKey<Enchantment>> enchantments = new ArrayList<>();
-    private static final Map<RegistryKey<Enchantment>, String[]> map = new HashMap<>();
+    public static final List<ResourceKey<Enchantment>> enchantments = new ArrayList<>();
+    private static final Map<ResourceKey<Enchantment>, String[]> map = new HashMap<>();
 
-    public static String getName(RegistryEntry<Enchantment> enchantment, boolean shortName) {
-        return enchantment.getKey().map(key -> shortName ? getShortName(key) : getLongName(key)).orElse("Unknown");
+    public static String getName(Holder<Enchantment> enchantment, boolean shortName) {
+        return enchantment.unwrapKey().map(key -> shortName ? getShortName(key) : getLongName(key)).orElse("Unknown");
     }
 
-    public static String getLongName(RegistryKey<Enchantment> key) {
+    public static String getLongName(ResourceKey<Enchantment> key) {
         String[] names = map.get(key);
-        return names != null ? names[0] : key.getValue().getPath();
+        return names != null ? names[0] : key.location().getPath();
     }
 
-    public static String getShortName(RegistryKey<Enchantment> key) {
+    public static String getShortName(ResourceKey<Enchantment> key) {
         String[] names = map.get(key);
-        return names != null ? names[1] : key.getValue().getPath().substring(0, Math.min(3, key.getValue().getPath().length()));
+        return names != null ? names[1] : key.location().getPath().substring(0, Math.min(3, key.location().getPath().length()));
     }
 
     public static void init() {
         map.clear();
         enchantments.clear();
 
-        Map<RegistryKey<Enchantment>, String> shortNames = getShortNames();
+        Map<ResourceKey<Enchantment>, String> shortNames = getShortNames();
 
         shortNames.forEach((key, shortName) -> {
-            String translationKey = "enchantment." + key.getValue().getNamespace() + "." + key.getValue().getPath();
-            String longName = Text.translatable(translationKey).getString();
+            String translationKey = "enchantment." + key.location().getNamespace() + "." + key.location().getPath();
+            String longName = Component.translatable(translationKey).getString();
 
             map.put(key, new String[]{longName, shortName});
             enchantments.add(key);
         });
     }
 
-    private static Map<RegistryKey<Enchantment>, String> getShortNames() {
-        Map<RegistryKey<Enchantment>, String> map = new HashMap<>();
+    private static Map<ResourceKey<Enchantment>, String> getShortNames() {
+        Map<ResourceKey<Enchantment>, String> map = new HashMap<>();
         put(map, Enchantments.PROTECTION, "prot");
         put(map, Enchantments.FIRE_PROTECTION, "fire");
         put(map, Enchantments.FEATHER_FALLING, "feat");
@@ -92,7 +91,7 @@ public class EnchantmentNames {
         return map;
     }
 
-    private static void put(Map<RegistryKey<Enchantment>, String> map, RegistryKey<Enchantment> key, String name) {
+    private static void put(Map<ResourceKey<Enchantment>, String> map, ResourceKey<Enchantment> key, String name) {
         map.put(key, name);
     }
 }

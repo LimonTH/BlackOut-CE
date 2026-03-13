@@ -11,8 +11,8 @@ public class FPS extends TextElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
-            this.drawElement(this.stack, "FPS:", String.valueOf(BlackOut.mc.getCurrentFps()));
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            this.drawElement(this.stack, "FPS:", String.valueOf(BlackOut.mc.getFps()));
         }
     }
 }

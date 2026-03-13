@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.interfaces.mixin;
 
-import net.minecraft.item.ItemGroup;
+import net.minecraft.world.item.CreativeModeTab;
 
 public interface ICreativeInventoryScreen {
-    ItemGroup blackout_Client$getSelectedTab();
+    CreativeModeTab blackout_Client$getSelectedTab();
 }

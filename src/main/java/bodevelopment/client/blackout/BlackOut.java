@@ -10,8 +10,7 @@ import bodevelopment.client.blackout.util.ClassUtils;
 import bodevelopment.client.blackout.util.EnchantmentNames;
 import bodevelopment.client.blackout.util.FileUtils;
 import net.fabricmc.api.ClientModInitializer;
-import net.minecraft.client.MinecraftClient;
-
+import net.minecraft.client.Minecraft;
 import java.awt.*;
 import java.io.File;
 
@@ -20,8 +19,8 @@ public final class BlackOut extends bodevelopment.client.blackout.BlackOutInfo i
     public static final String VERSION = bodevelopment.client.blackout.BlackOutInfo.VERSION;
     public static final Type TYPE = Type.Dev;
     public static final Color TYPECOLOR = TYPE.getColor();
-    public static final MinecraftClient mc = MinecraftClient.getInstance();
-    public static final File RUN_DIRECTORY = mc.runDirectory;
+    public static final Minecraft mc = Minecraft.getInstance();
+    public static final File RUN_DIRECTORY = mc.gameDirectory;
     public static final EventBus EVENT_BUS = new EventBus();
     public static final CustomFontRenderer FONT = new CustomFontRenderer("ubuntu");
     public static final CustomFontRenderer BOLD_FONT = new CustomFontRenderer("ubuntu-bold");

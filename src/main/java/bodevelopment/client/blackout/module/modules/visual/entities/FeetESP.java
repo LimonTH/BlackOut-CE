@@ -10,11 +10,10 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.List;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class FeetESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -30,19 +29,19 @@ public class FeetESP extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.world == null || BlackOut.mc.player == null) return;
+        if (BlackOut.mc.level == null || BlackOut.mc.player == null) return;
 
         Render3DUtils.start();
 
-        BlackOut.mc.world.getEntities().forEach(entity -> {
+        BlackOut.mc.level.entitiesForRendering().forEach(entity -> {
             if (this.entities.get().contains(entity.getType())) {
-                Vec3d pos = new Vec3d(entity.prevX, entity.prevY, entity.prevZ)
-                        .lerp(entity.getPos(), BlackOut.mc.getRenderTickCounter().getTickDelta(true));
+                Vec3 pos = new Vec3(entity.xo, entity.yo, entity.zo)
+                        .lerp(entity.position(), BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true));
 
-                double halfWidth = entity.getBoundingBox().getLengthX() / 2.0;
-                double halfDepth = entity.getBoundingBox().getLengthZ() / 2.0;
+                double halfWidth = entity.getBoundingBox().getXsize() / 2.0;
+                double halfDepth = entity.getBoundingBox().getZsize() / 2.0;
 
-                Box feetBox = new Box(
+                AABB feetBox = new AABB(
                         pos.x - halfWidth, pos.y, pos.z - halfDepth,
                         pos.x + halfWidth, pos.y + 0.01, pos.z + halfDepth
                 );

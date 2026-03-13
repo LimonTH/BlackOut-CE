@@ -13,15 +13,14 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.Pair;
 import bodevelopment.client.blackout.util.MovementUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 
 public class Clip extends Module {
     private static Clip INSTANCE;
@@ -85,14 +84,14 @@ public class Clip extends Module {
         this.noRotateTime--;
         double currentX = BlackOut.mc.player.getX() - BlackOut.mc.player.getBlockX();
         double currentZ = BlackOut.mc.player.getZ() - BlackOut.mc.player.getBlockZ();
-        if (!this.pauseMove.get() || BlackOut.mc.player.input.movementForward == 0.0F && BlackOut.mc.player.input.movementSideways == 0.0F) {
+        if (!this.pauseMove.get() || BlackOut.mc.player.input.forwardImpulse == 0.0F && BlackOut.mc.player.input.leftImpulse == 0.0F) {
             if (!this.findCorner(
                     currentX,
                     currentZ,
                     new BlockPos(BlackOut.mc.player.getBlockX(), (int) Math.round(BlackOut.mc.player.getY()), BlackOut.mc.player.getBlockZ())
             )) {
-                double targetX = MathHelper.lerp(this.cornerX, 0.3, 0.7);
-                double targetZ = MathHelper.lerp(this.cornerZ, 0.3, 0.7);
+                double targetX = Mth.lerp(this.cornerX, 0.3, 0.7);
+                double targetZ = Mth.lerp(this.cornerZ, 0.3, 0.7);
                 double centerX = currentX - 0.5;
                 double centerZ = currentZ - 0.5;
                 if (Math.abs(centerX) >= 0.19999
@@ -125,7 +124,7 @@ public class Clip extends Module {
             double depth = this.offset.get().depth;
             targetX -= Math.signum(0.5 - targetX) * depth;
             targetZ -= Math.signum(0.5 - targetZ) * depth;
-            double yaw = MathHelper.wrapDegrees(Math.toDegrees(Math.atan2(targetZ - currentZ, targetX - currentX)) - 90.0);
+            double yaw = Mth.wrapDegrees(Math.toDegrees(Math.atan2(targetZ - currentZ, targetX - currentX)) - 90.0);
             double x = Math.cos(Math.toRadians(yaw + 90.0));
             double z = Math.sin(Math.toRadians(yaw + 90.0));
             double dx = currentX - targetX;
@@ -139,7 +138,7 @@ public class Clip extends Module {
                     this.timer = this.movementDelay.get();
                     double ox = BlackOut.mc.player.getBlockX() + currentX + mx;
                     double oz = BlackOut.mc.player.getBlockZ() + currentZ + mz;
-                    BlackOut.mc.player.setPos(ox, BlackOut.mc.player.getY(), oz);
+                    BlackOut.mc.player.setPosRaw(ox, BlackOut.mc.player.getY(), oz);
                     this.sendPos(ox, oz, true);
                     event.setXZ(this, 0.0, 0.0);
                     this.shouldBounds = true;
@@ -155,7 +154,7 @@ public class Clip extends Module {
 
     private void outMove(MoveEvent.Pre event, double targetX, double targetZ, double currentX, double currentZ) {
         this.ticksStill = this.stillTicks.get();
-        double yaw = MathHelper.wrapDegrees(Math.toDegrees(Math.atan2(targetZ - currentZ, targetX - currentX)) - 90.0);
+        double yaw = Mth.wrapDegrees(Math.toDegrees(Math.atan2(targetZ - currentZ, targetX - currentX)) - 90.0);
         double x = Math.cos(Math.toRadians(yaw + 90.0));
         double z = Math.sin(Math.toRadians(yaw + 90.0));
         double dx = currentX - targetX;
@@ -165,11 +164,11 @@ public class Clip extends Module {
     }
 
     private void sendBounds() {
-        Vec3d bounds = this.getBounds();
-        this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(bounds.x, bounds.y, bounds.z, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
+        Vec3 bounds = this.getBounds();
+        this.sendPacket(new ServerboundMovePlayerPacket.Pos(bounds.x, bounds.y, bounds.z, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
     }
 
-    private Vec3d getBounds() {
+    private Vec3 getBounds() {
         double yaw = ThreadLocalRandom.current().nextDouble() * Math.PI * 2.0;
         double x = 0.0;
         double y = 0.0;
@@ -196,18 +195,18 @@ public class Clip extends Module {
                 }
         }
 
-        return new Vec3d(x, y, z);
+        return new Vec3(x, y, z);
     }
 
     private void sendPos(double x, double z, boolean onGround) {
-        this.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(x, BlackOut.mc.player.getY(), z, onGround, BlackOut.mc.player.horizontalCollision));
+        this.sendPacket(new ServerboundMovePlayerPacket.Pos(x, BlackOut.mc.player.getY(), z, onGround, BlackOut.mc.player.horizontalCollision));
     }
 
     private boolean findCorner(double x, double z, BlockPos pos) {
-        boolean minX = !OLEPOSSUtils.replaceable(pos.offset(Direction.WEST));
-        boolean minZ = !OLEPOSSUtils.replaceable(pos.offset(Direction.NORTH));
-        boolean maxX = !OLEPOSSUtils.replaceable(pos.offset(Direction.EAST));
-        boolean maxZ = !OLEPOSSUtils.replaceable(pos.offset(Direction.SOUTH));
+        boolean minX = !OLEPOSSUtils.replaceable(pos.relative(Direction.WEST));
+        boolean minZ = !OLEPOSSUtils.replaceable(pos.relative(Direction.NORTH));
+        boolean maxX = !OLEPOSSUtils.replaceable(pos.relative(Direction.EAST));
+        boolean maxZ = !OLEPOSSUtils.replaceable(pos.relative(Direction.SOUTH));
         List<Pair<Double, Double>> corners = new ArrayList<>();
         if (minX) {
             if (minZ) {
@@ -235,12 +234,12 @@ public class Clip extends Module {
             double distC = 1000.0;
 
             for (Pair<Double, Double> pair : corners) {
-                double dx = x - pair.getLeft();
-                double dz = z - pair.getRight();
+                double dx = x - pair.getA();
+                double dz = z - pair.getB();
                 double dist = Math.sqrt(dx * dx + dz * dz);
                 if (dist < distC) {
                     distC = dist;
-                    this.set(pair.getLeft(), pair.getRight());
+                    this.set(pair.getA(), pair.getB());
                 }
             }
 

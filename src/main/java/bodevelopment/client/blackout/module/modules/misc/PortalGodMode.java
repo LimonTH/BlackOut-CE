@@ -4,7 +4,7 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
-import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket;
+import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket;
 
 public class PortalGodMode extends Module {
     public PortalGodMode() {
@@ -13,7 +13,7 @@ public class PortalGodMode extends Module {
 
     @Event
     public void onSend(PacketEvent.Send event) {
-        if (event.packet instanceof TeleportConfirmC2SPacket) {
+        if (event.packet instanceof ServerboundAcceptTeleportationPacket) {
             event.setCancelled(true);
         }
     }

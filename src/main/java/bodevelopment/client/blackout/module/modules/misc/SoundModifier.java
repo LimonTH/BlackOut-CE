@@ -8,36 +8,35 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.SoundUtils;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Identifier;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 
 public class SoundModifier extends Module {
-    private final Map<Identifier[], SoundSettingGroup> soundSettings = new HashMap<>();
+    private final Map<ResourceLocation[], SoundSettingGroup> soundSettings = new HashMap<>();
 
     public SoundModifier() {
         super("Sound Modifier", "Customizes or mutes specific in-game sound effects such as explosions, hits, and totem pops.", SubCategory.MISC, true);
-        this.put("Explosion", SoundEvents.ENTITY_GENERIC_EXPLODE.value());
+        this.put("Explosion", SoundEvents.GENERIC_EXPLODE.value());
         this.put(
-                "Hit", SoundEvents.ENTITY_PLAYER_ATTACK_WEAK, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE, SoundEvents.ENTITY_PLAYER_ATTACK_STRONG, SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP
+                "Hit", SoundEvents.PLAYER_ATTACK_WEAK, SoundEvents.PLAYER_ATTACK_CRIT, SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundEvents.PLAYER_ATTACK_NODAMAGE, SoundEvents.PLAYER_ATTACK_STRONG, SoundEvents.PLAYER_ATTACK_SWEEP
         );
-        this.put("Damage", SoundEvents.ENTITY_PLAYER_HURT, SoundEvents.ENTITY_PLAYER_HURT_DROWN, SoundEvents.ENTITY_PLAYER_HURT_FREEZE, SoundEvents.ENTITY_PLAYER_HURT_ON_FIRE, SoundEvents.ENTITY_PLAYER_HURT_SWEET_BERRY_BUSH);
-        this.put("Totem", SoundEvents.ITEM_TOTEM_USE);
+        this.put("Damage", SoundEvents.PLAYER_HURT, SoundEvents.PLAYER_HURT_DROWN, SoundEvents.PLAYER_HURT_FREEZE, SoundEvents.PLAYER_HURT_ON_FIRE, SoundEvents.PLAYER_HURT_SWEET_BERRY_BUSH);
+        this.put("Totem", SoundEvents.TOTEM_USE);
     }
 
     private void put(String name, SoundEvent... events) {
         this.soundSettings.put(this.getIdentifiers(events), this.addSSGroup(name));
     }
 
-    private Identifier[] getIdentifiers(SoundEvent[] events) {
-        Identifier[] identifiers = new Identifier[events.length];
+    private ResourceLocation[] getIdentifiers(SoundEvent[] events) {
+        ResourceLocation[] identifiers = new ResourceLocation[events.length];
 
         for (int i = 0; i < events.length; i++) {
-            identifiers[i] = events[i].id();
+            identifiers[i] = events[i].location();
         }
 
         return identifiers;
@@ -54,7 +53,7 @@ public class SoundModifier extends Module {
 
     @Event
     public void onSound(PlaySoundEvent event) {
-        SoundSettingGroup group = this.getGroup(event.sound.getId());
+        SoundSettingGroup group = this.getGroup(event.sound.getLocation());
         if (group != null) {
             if (group.cancel.get()) {
                 event.setCancelled(true);
@@ -75,8 +74,8 @@ public class SoundModifier extends Module {
         }
     }
 
-    private SoundSettingGroup getGroup(Identifier identifier) {
-        for (Entry<Identifier[], SoundSettingGroup> entry : this.soundSettings.entrySet()) {
+    private SoundSettingGroup getGroup(ResourceLocation identifier) {
+        for (Entry<ResourceLocation[], SoundSettingGroup> entry : this.soundSettings.entrySet()) {
             if (this.contains(entry.getKey(), identifier)) {
                 return entry.getValue();
             }
@@ -85,8 +84,8 @@ public class SoundModifier extends Module {
         return null;
     }
 
-    private boolean contains(Identifier[] identifiers, Identifier identifier) {
-        for (Identifier id : identifiers) {
+    private boolean contains(ResourceLocation[] identifiers, ResourceLocation identifier) {
+        for (ResourceLocation id : identifiers) {
             if (id.equals(identifier)) {
                 return true;
             }

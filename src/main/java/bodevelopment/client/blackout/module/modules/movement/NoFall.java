@@ -8,8 +8,8 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.phys.Vec3;
 
 public class NoFall extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -35,9 +35,9 @@ public class NoFall extends Module {
         if (this.grim) {
             this.grim = false;
             if (!Managers.PACKET.isOnGround()) {
-                Vec3d vec = Managers.PACKET.pos;
+                Vec3 vec = Managers.PACKET.pos;
                 this.sendPacket(
-                        new PlayerMoveC2SPacket.Full(vec.x, vec.y + 1.0E-6, vec.z, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, false, BlackOut.mc.player.horizontalCollision)
+                        new ServerboundMovePlayerPacket.PosRot(vec.x, vec.y + 1.0E-6, vec.z, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch, false, BlackOut.mc.player.horizontalCollision)
                 );
                 BlackOut.mc.player.fallDistance = 0.0F;
             }
@@ -46,7 +46,7 @@ public class NoFall extends Module {
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             if (BlackOut.mc.player.fallDistance == 0.0F) {
                 this.fallDist = 0.0F;
             }
@@ -66,7 +66,7 @@ public class NoFall extends Module {
                         this.tg = false;
                     }
 
-                    if (BlackOut.mc.player.isOnGround()) {
+                    if (BlackOut.mc.player.onGround()) {
                         this.tg = true;
                     }
                     break;

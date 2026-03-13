@@ -15,36 +15,45 @@ import bodevelopment.client.blackout.randomstuff.FakePlayerEntity;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.randomstuff.timers.TimerMap;
 import bodevelopment.client.blackout.util.SettingUtils;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.c2s.play.*;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
-import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.UpdateSelectedSlotS2CPacket;
-import net.minecraft.screen.PlayerScreenHandler;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket;
+import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket;
+import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundPickItemPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
 public class PacketManager extends Manager {
     public final TimerList<Integer> ids = new TimerList<>(true);
-    public final TimerMap<Integer, Vec3d> validPos = new TimerMap<>(true);
+    public final TimerMap<Integer, Vec3> validPos = new TimerMap<>(true);
     public final TimerList<Integer> ignoreSetSlot = new TimerList<>(true);
-    public final TimerList<ScreenHandlerSlotUpdateS2CPacket> ignoredInventory = new TimerList<>(true);
-    private final List<Consumer<? super ClientPlayNetworkHandler>> grimQueue = new ArrayList<>();
-    private final List<Consumer<? super ClientPlayNetworkHandler>> postGrimQueue = new ArrayList<>();
+    public final TimerList<ClientboundContainerSetSlotPacket> ignoredInventory = new TimerList<>(true);
+    private final List<Consumer<? super ClientPacketListener>> grimQueue = new ArrayList<>();
+    private final List<Consumer<? super ClientPacketListener>> postGrimQueue = new ArrayList<>();
     private final TimerList<BlockPos> own = new TimerList<>(true);
     public int slot = 0;
-    public Vec3d pos = Vec3d.ZERO;
+    public Vec3 pos = Vec3.ZERO;
     public int teleportId = 0;
     public int receivedId = 0;
     public int prevReceived = 0;
@@ -60,29 +69,29 @@ public class PacketManager extends Manager {
 
     @Event
     public void onSent(PacketEvent.Sent event) {
-        if (event.packet instanceof UpdateSelectedSlotC2SPacket packet && packet.getSelectedSlot() >= 0) {
-            this.slot = packet.getSelectedSlot();
-            BlackOut.mc.interactionManager.lastSelectedSlot = packet.getSelectedSlot();
+        if (event.packet instanceof ServerboundSetCarriedItemPacket packet && packet.getSlot() >= 0) {
+            this.slot = packet.getSlot();
+            BlackOut.mc.gameMode.carriedIndex = packet.getSlot();
         }
 
-        if (event.packet instanceof PlayerMoveC2SPacket packet) {
+        if (event.packet instanceof ServerboundMovePlayerPacket packet) {
             this.onGround = packet.isOnGround();
-            if (packet.changesPosition()) {
-                this.pos = new Vec3d(packet.getX(0.0), packet.getY(0.0), packet.getZ(0.0));
+            if (packet.hasPosition()) {
+                this.pos = new Vec3(packet.getX(0.0), packet.getY(0.0), packet.getZ(0.0));
             }
         }
 
-        if (event.packet instanceof TeleportConfirmC2SPacket packetx) {
-            this.teleportId = packetx.getTeleportId();
+        if (event.packet instanceof ServerboundAcceptTeleportationPacket packetx) {
+            this.teleportId = packetx.getId();
         }
 
-        if (event.packet instanceof PlayerInteractEntityC2SPacket packetx && ((AccessorInteractEntityC2SPacket) packetx).getType().getType() == PlayerInteractEntityC2SPacket.InteractType.ATTACK) {
-            if (BlackOut.mc.world.getEntityById(((AccessorInteractEntityC2SPacket) packetx).getId()) instanceof FakePlayerEntity player) {
+        if (event.packet instanceof ServerboundInteractPacket packetx && ((AccessorInteractEntityC2SPacket) packetx).getType().getType() == ServerboundInteractPacket.ActionType.ATTACK) {
+            if (BlackOut.mc.level.getEntity(((AccessorInteractEntityC2SPacket) packetx).getId()) instanceof FakePlayerEntity player) {
                 Managers.FAKE_PLAYER.onAttack(player);
             }
 
             if (Simulation.getInstance().hitReset()) {
-                BlackOut.mc.player.resetLastAttackedTicks();
+                BlackOut.mc.player.resetAttackStrengthTicker();
             }
 
             if (Simulation.getInstance().stopSprint()) {
@@ -90,13 +99,13 @@ public class PacketManager extends Manager {
             }
         }
 
-        if (event.packet instanceof PlayerInteractBlockC2SPacket packetx && this.handStack(packetx.getHand()).isOf(Items.END_CRYSTAL)) {
-            this.own.replace(packetx.getBlockHitResult().getBlockPos().up(), 1.0);
+        if (event.packet instanceof ServerboundUseItemOnPacket packetx && this.handStack(packetx.getHand()).is(Items.END_CRYSTAL)) {
+            this.own.replace(packetx.getHitResult().getBlockPos().above(), 1.0);
         }
     }
 
     public void syncRotation(float yaw, float pitch) {
-        this.sendInstantly(new PlayerMoveC2SPacket.LookAndOnGround(yaw, pitch, this.isOnGround(), BlackOut.mc.player.horizontalCollision));
+        this.sendInstantly(new ServerboundMovePlayerPacket.Rot(yaw, pitch, this.isOnGround(), BlackOut.mc.player.horizontalCollision));
     }
 
     public boolean isQueueHeavy() {
@@ -105,14 +114,14 @@ public class PacketManager extends Manager {
 
     @Event
     public void onEntityAdd(EntityAddEvent.Post event) {
-        if (event.entity instanceof EndCrystalEntity entity && this.own.contains(entity.getBlockPos())) {
+        if (event.entity instanceof EndCrystal entity && this.own.contains(entity.blockPosition())) {
             ((IEndCrystalEntity) entity).blackout_Client$markOwn();
         }
     }
 
     @Event
     public void onSend(PacketEvent.Send event) {
-        if (event.packet instanceof PlayerMoveC2SPacket packet && this.spoofOG) {
+        if (event.packet instanceof ServerboundMovePlayerPacket packet && this.spoofOG) {
             ((AccessorPlayerMoveC2SPacket) packet).setOnGround(this.spoofedOG);
             this.spoofOG = false;
         }
@@ -120,26 +129,26 @@ public class PacketManager extends Manager {
 
     @Event
     public void onReceive(PacketEvent.Receive.Post e) {
-        if (e.packet instanceof PlayerPositionLookS2CPacket packet) {
-            Vec3d vec = new Vec3d(packet.change().position().getX(), packet.change().position().getY(), packet.change().position().getZ());
-            int id = packet.teleportId();
+        if (e.packet instanceof ClientboundPlayerPositionPacket packet) {
+            Vec3 vec = new Vec3(packet.change().position().x(), packet.change().position().y(), packet.change().position().z());
+            int id = packet.id();
             if (this.validPos.containsKey(id) && this.validPos.get(id).equals(vec)) {
                 e.setCancelled(true);
-                this.validPos.removeKey(packet.teleportId());
+                this.validPos.removeKey(packet.id());
             }
 
             this.prevReceived = this.receivedId;
-            this.receivedId = packet.teleportId();
+            this.receivedId = packet.id();
             if (!this.ids.contains(id)) {
                 this.teleportId = id;
             }
         }
 
-        if (e.packet instanceof UpdateSelectedSlotS2CPacket packet && this.ignoreSetSlot.contains(packet.getSlot())) {
+        if (e.packet instanceof ClientboundSetHeldSlotPacket packet && this.ignoreSetSlot.contains(packet.getSlot())) {
             e.setCancelled(true);
         }
 
-        if (e.packet instanceof ScreenHandlerSlotUpdateS2CPacket packet
+        if (e.packet instanceof ClientboundContainerSetSlotPacket packet
                 && this.ignoredInventory.contains(timer -> this.inventoryEquals(packet, timer.value))
                 && !this.isItemEquals(packet)) {
             e.setCancelled(true);
@@ -151,37 +160,37 @@ public class PacketManager extends Manager {
         this.sendPackets();
     }
 
-    private boolean isItemEquals(ScreenHandlerSlotUpdateS2CPacket packet) {
-        return this.getStackInSlot(packet).isOf(packet.getStack().getItem());
+    private boolean isItemEquals(ClientboundContainerSetSlotPacket packet) {
+        return this.getStackInSlot(packet).is(packet.getItem().getItem());
     }
 
-    private ItemStack getStackInSlot(ScreenHandlerSlotUpdateS2CPacket packet) {
-        if (packet.getSyncId() == -1) {
+    private ItemStack getStackInSlot(ClientboundContainerSetSlotPacket packet) {
+        if (packet.getContainerId() == -1) {
             return null;
-        } else if (packet.getSyncId() == -2) {
-            return BlackOut.mc.player.getInventory().getStack(packet.getSlot());
-        } else if (packet.getSyncId() == 0 && PlayerScreenHandler.isInHotbar(packet.getSlot())) {
-            return BlackOut.mc.player.playerScreenHandler.getSlot(packet.getSlot()).getStack();
+        } else if (packet.getContainerId() == -2) {
+            return BlackOut.mc.player.getInventory().getItem(packet.getSlot());
+        } else if (packet.getContainerId() == 0 && InventoryMenu.isHotbarSlot(packet.getSlot())) {
+            return BlackOut.mc.player.inventoryMenu.getSlot(packet.getSlot()).getItem();
         } else {
-            return packet.getSyncId() == BlackOut.mc.player.currentScreenHandler.syncId
-                    ? BlackOut.mc.player.currentScreenHandler.getSlot(packet.getSlot()).getStack()
+            return packet.getContainerId() == BlackOut.mc.player.containerMenu.containerId
+                    ? BlackOut.mc.player.containerMenu.getSlot(packet.getSlot()).getItem()
                     : null;
         }
     }
 
     public void sendPackets() {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.sendList(this.grimQueue);
             this.sendList(this.postGrimQueue);
         }
     }
 
-    private void sendList(List<Consumer<? super ClientPlayNetworkHandler>> list) {
-        list.forEach(consumer -> this.sendPacket(BlackOut.mc.getNetworkHandler(), consumer));
+    private void sendList(List<Consumer<? super ClientPacketListener>> list) {
+        list.forEach(consumer -> this.sendPacket(BlackOut.mc.getConnection(), consumer));
         list.clear();
     }
 
-    private void sendPacket(ClientPlayNetworkHandler handler, Consumer<? super ClientPlayNetworkHandler> consumer) {
+    private void sendPacket(ClientPacketListener handler, Consumer<? super ClientPacketListener> consumer) {
         if (handler != null) {
             consumer.accept(handler);
         }
@@ -196,30 +205,30 @@ public class PacketManager extends Manager {
     }
 
     public void sendInstantly(Packet<?> packet) {
-        this.sendPacket(BlackOut.mc.getNetworkHandler(), handler -> handler.sendPacket(packet));
+        this.sendPacket(BlackOut.mc.getConnection(), handler -> handler.send(packet));
     }
 
-    private void sendPacketToList(Packet<?> packet, List<Consumer<? super ClientPlayNetworkHandler>> list) {
+    private void sendPacketToList(Packet<?> packet, List<Consumer<? super ClientPacketListener>> list) {
         if (this.shouldBeDelayed(packet)) {
-            this.addToQueue(handler -> handler.sendPacket(packet), list);
+            this.addToQueue(handler -> handler.send(packet), list);
         } else {
-            BlackOut.mc.getNetworkHandler().sendPacket(packet);
+            BlackOut.mc.getConnection().send(packet);
         }
     }
 
-    public void addToQueue(Consumer<? super ClientPlayNetworkHandler> consumer) {
+    public void addToQueue(Consumer<? super ClientPacketListener> consumer) {
         this.addToQueue(consumer, this.grimQueue);
     }
 
-    public void addToPostQueue(Consumer<? super ClientPlayNetworkHandler> consumer) {
+    public void addToPostQueue(Consumer<? super ClientPacketListener> consumer) {
         this.addToQueue(consumer, this.postGrimQueue);
     }
 
-    private void addToQueue(Consumer<? super ClientPlayNetworkHandler> consumer, List<Consumer<? super ClientPlayNetworkHandler>> list) {
+    private void addToQueue(Consumer<? super ClientPacketListener> consumer, List<Consumer<? super ClientPacketListener>> list) {
         if (SettingUtils.grimPackets()) {
             list.add(consumer);
         } else {
-            consumer.accept(BlackOut.mc.getNetworkHandler());
+            consumer.accept(BlackOut.mc.getConnection());
         }
     }
 
@@ -227,15 +236,15 @@ public class PacketManager extends Manager {
         if (!SettingUtils.grimPackets()) {
             return false;
         }
-        return packet instanceof PlayerInteractEntityC2SPacket
-                || packet instanceof PlayerInteractBlockC2SPacket
-                || packet instanceof PlayerInteractItemC2SPacket
-                || packet instanceof PlayerActionC2SPacket
-                || packet instanceof HandSwingC2SPacket
-                || packet instanceof UpdateSelectedSlotC2SPacket
-                || packet instanceof ClickSlotC2SPacket
-                || packet instanceof PickFromInventoryC2SPacket
-                || packet instanceof PlayerInputC2SPacket;
+        return packet instanceof ServerboundInteractPacket
+                || packet instanceof ServerboundUseItemOnPacket
+                || packet instanceof ServerboundUseItemPacket
+                || packet instanceof ServerboundPlayerActionPacket
+                || packet instanceof ServerboundSwingPacket
+                || packet instanceof ServerboundSetCarriedItemPacket
+                || packet instanceof ServerboundContainerClickPacket
+                || packet instanceof ServerboundPickItemPacket
+                || packet instanceof ServerboundPlayerInputPacket;
     }
 
     public boolean isOnGround() {
@@ -243,13 +252,13 @@ public class PacketManager extends Manager {
     }
 
     public ItemStack getStack() {
-        return BlackOut.mc.player.getInventory().getStack(this.slot);
+        return BlackOut.mc.player.getInventory().getItem(this.slot);
     }
 
-    public ItemStack stackInHand(Hand hand) {
+    public ItemStack stackInHand(InteractionHand hand) {
         return switch (hand) {
             case MAIN_HAND -> this.getStack();
-            case OFF_HAND -> BlackOut.mc.player.getOffHandStack();
+            case OFF_HAND -> BlackOut.mc.player.getOffhandItem();
             default -> throw new IncompatibleClassChangeError();
         };
     }
@@ -279,41 +288,41 @@ public class PacketManager extends Manager {
         this.spoofedOG = state;
     }
 
-    public ItemStack handStack(Hand hand) {
-        return hand == Hand.MAIN_HAND ? this.getStack() : BlackOut.mc.player.getOffHandStack();
+    public ItemStack handStack(InteractionHand hand) {
+        return hand == InteractionHand.MAIN_HAND ? this.getStack() : BlackOut.mc.player.getOffhandItem();
     }
 
-    public TeleportConfirmC2SPacket incrementedPacket(Vec3d vec3d) {
+    public ServerboundAcceptTeleportationPacket incrementedPacket(Vec3 vec3d) {
         int id = this.teleportId + 1;
         this.ids.add(id, 1.0);
         this.validPos.add(id, vec3d, 1.0);
-        return new TeleportConfirmC2SPacket(id);
+        return new ServerboundAcceptTeleportationPacket(id);
     }
 
-    public TeleportConfirmC2SPacket incrementedPacket2(Vec3d vec3d) {
+    public ServerboundAcceptTeleportationPacket incrementedPacket2(Vec3 vec3d) {
         int id = this.receivedId + 1;
         this.ids.replace(id, 1.0);
         this.validPos.add(id, vec3d, 1.0);
-        return new TeleportConfirmC2SPacket(id);
+        return new ServerboundAcceptTeleportationPacket(id);
     }
 
-    public void preApply(ScreenHandlerSlotUpdateS2CPacket packet) {
-        packet.apply(BlackOut.mc.getNetworkHandler());
+    public void preApply(ClientboundContainerSetSlotPacket packet) {
+        packet.handle(BlackOut.mc.getConnection());
         this.addInvIgnore(packet);
     }
 
-    public void addInvIgnore(ScreenHandlerSlotUpdateS2CPacket packet) {
+    public void addInvIgnore(ClientboundContainerSetSlotPacket packet) {
         this.ignoredInventory.remove(timer -> this.inventoryEquals(timer.value, packet));
         this.ignoredInventory.add(packet, 0.3);
     }
 
-    private boolean inventoryEquals(ScreenHandlerSlotUpdateS2CPacket packet1, ScreenHandlerSlotUpdateS2CPacket packet2) {
-        return packet1.getSlot() == packet2.getSlot() && packet1.getStack().isOf(packet2.getStack().getItem());
+    private boolean inventoryEquals(ClientboundContainerSetSlotPacket packet1, ClientboundContainerSetSlotPacket packet2) {
+        return packet1.getSlot() == packet2.getSlot() && packet1.getItem().is(packet2.getItem().getItem());
     }
 
     public void sendPreUse() {
         this.sendInstantly(
-                new PlayerMoveC2SPacket.Full(
+                new ServerboundMovePlayerPacket.PosRot(
                         BlackOut.mc.player.getX(),
                         BlackOut.mc.player.getY(),
                         BlackOut.mc.player.getZ(),
@@ -325,12 +334,12 @@ public class PacketManager extends Manager {
         );
     }
 
-    public void sendPositionSync(Vec3d pos, float yaw, float pitch) {
-        yaw = MathHelper.wrapDegrees(yaw);
+    public void sendPositionSync(Vec3 pos, float yaw, float pitch) {
+        yaw = Mth.wrapDegrees(yaw);
         if (yaw >= 0.0F) {
             yaw = -180.0F - (180.0F - yaw);
         }
 
-        Managers.PACKET.sendInstantly(new PlayerMoveC2SPacket.Full(pos.x, pos.y, pos.z, yaw, pitch, false, BlackOut.mc.player.horizontalCollision));
+        Managers.PACKET.sendInstantly(new ServerboundMovePlayerPacket.PosRot(pos.x, pos.y, pos.z, yaw, pitch, false, BlackOut.mc.player.horizontalCollision));
     }
 }

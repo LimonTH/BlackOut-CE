@@ -8,9 +8,9 @@ import bodevelopment.client.blackout.module.modules.combat.misc.AutoTrap;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.SettingUtils;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.Entity;
 
 public class SelfTrap extends ObsidianModule {
     private final SettingGroup sgToggle = this.addGroup("Toggle");
@@ -25,7 +25,7 @@ public class SelfTrap extends ObsidianModule {
 
     private final Direction[] directions = new Direction[]{
             Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST, Direction.UP};
-    private BlockPos prevPos = BlockPos.ORIGIN;
+    private BlockPos prevPos = BlockPos.ZERO;
 
     public SelfTrap() {
         super("Self Trap", "Builds an obsidian 'cocoon' around your upper body to block overhead crystal damage.", SubCategory.DEFENSIVE);
@@ -64,9 +64,9 @@ public class SelfTrap extends ObsidianModule {
                         pos -> {
                             for (Direction dir : this.directions) {
                                 if (this.trapMode.get().allowed(dir)
-                                        && !this.blockPlacements.contains(pos.offset(dir))
-                                        && !this.insideBlocks.contains(pos.offset(dir))) {
-                                    this.blockPlacements.add(pos.offset(dir));
+                                        && !this.blockPlacements.contains(pos.relative(dir))
+                                        && !this.insideBlocks.contains(pos.relative(dir))) {
+                                    this.blockPlacements.add(pos.relative(dir));
                                 }
                             }
                         }
@@ -84,8 +84,8 @@ public class SelfTrap extends ObsidianModule {
 
         for (int x = size[0]; x <= size[1]; x++) {
             for (int z = size[2]; z <= size[3]; z++) {
-                BlockPos p = entity.getBlockPos().add(x, 0, z).withY(eyeY - 1);
-                if (!(BlackOut.mc.world.getBlockState(p).getBlock().getBlastResistance() > 600.0F) && SettingUtils.inPlaceRange(p)) {
+                BlockPos p = entity.blockPosition().offset(x, 0, z).atY(eyeY - 1);
+                if (!(BlackOut.mc.level.getBlockState(p).getBlock().getExplosionResistance() > 600.0F) && SettingUtils.inPlaceRange(p)) {
                     this.insideBlocks.add(p);
                 }
             }

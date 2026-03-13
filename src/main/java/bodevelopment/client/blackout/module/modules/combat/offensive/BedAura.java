@@ -22,21 +22,25 @@ import bodevelopment.client.blackout.randomstuff.timers.RenderList;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import net.minecraft.block.*;
-import net.minecraft.block.enums.BedPart;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BedItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BedItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.FireBlock;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BedPart;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -156,10 +160,10 @@ public class BedAura extends Module {
     private final Setting<Integer> maxTargets = this.sgCalculation.intSetting("Target Limit", 3, 1, 10, 1, "The maximum number of simultaneous targets to evaluate.");
     private final Setting<Double> enemyDistance = this.sgCalculation.doubleSetting("Scan Range", 10.0, 0.0, 100.0, 1.0, "The maximum distance to search for targets.");
 
-    public static AbstractClientPlayerEntity targetedPlayer = null;
+    public static AbstractClientPlayer targetedPlayer = null;
     private final ExtrapolationMap extMap = new ExtrapolationMap();
     private final ExtrapolationMap hitboxMap = new ExtrapolationMap();
-    private final List<PlayerEntity> targets = new ArrayList<>();
+    private final List<Player> targets = new ArrayList<>();
     private final RenderList<Pair<BlockPos, Direction>> renderList = RenderList.getList(false);
     private final TimerList<BlockPos> explodeTimers = new TimerList<>(true);
     private final TimerList<BlockPos> ignoreState = new TimerList<>(true);
@@ -216,7 +220,7 @@ public class BedAura extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.calc(1.0F);
             this.updatePos();
         }
@@ -224,7 +228,7 @@ public class BedAura extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.updateFacePlacing();
             this.calc(event.tickDelta);
             targetedPlayer = null;
@@ -234,8 +238,8 @@ public class BedAura extends Module {
 
             this.updateRender();
             if (this.placePos != null && this.place.get() && !this.pausedPlacing()) {
-                this.calcDamage(this.placePos.offset(this.placeDir));
-                if (this.target instanceof AbstractClientPlayerEntity player) {
+                this.calcDamage(this.placePos.relative(this.placeDir));
+                if (this.target instanceof AbstractClientPlayer player) {
                     targetedPlayer = player;
                 }
 
@@ -273,8 +277,8 @@ public class BedAura extends Module {
             this.renderList
                     .update(
                             (pair, time, delta) -> this.render(
-                                    pair.getLeft(),
-                                    pair.getRight(),
+                                    pair.getA(),
+                                    pair.getB(),
                                     this.separateExplode,
                                     this.explodeHeadLineColor,
                                     this.explodeHeadSideColor,
@@ -306,20 +310,20 @@ public class BedAura extends Module {
     ) {
         if (separate.get()) {
             Render3DUtils.box(this.getBoxAt(feetPos), feetSides.get().alphaMulti(alpha), feetLines.get().alphaMulti(alpha), feetShape.get());
-            Render3DUtils.box(this.getBoxAt(feetPos.offset(dir)), headSides.get().alphaMulti(alpha), headLines.get().alphaMulti(alpha), headShape.get());
+            Render3DUtils.box(this.getBoxAt(feetPos.relative(dir)), headSides.get().alphaMulti(alpha), headLines.get().alphaMulti(alpha), headShape.get());
         } else {
-            Box box = this.getDirectionBox(feetPos, dir);
+            AABB box = this.getDirectionBox(feetPos, dir);
             Render3DUtils.box(box, headSides.get().alphaMulti(alpha), headLines.get().alphaMulti(alpha), headShape.get());
         }
     }
 
-    private Box getBoxAt(BlockPos pos) {
-        return new Box(
+    private AABB getBoxAt(BlockPos pos) {
+        return new AABB(
                 pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 0.55, pos.getZ() + 1
         );
     }
 
-    private Box getDirectionBox(BlockPos pos, Direction dir) {
+    private AABB getDirectionBox(BlockPos pos, Direction dir) {
         double minX = pos.getX();
         double minY = pos.getY();
         double minZ = pos.getZ();
@@ -340,7 +344,7 @@ public class BedAura extends Module {
                 maxX++;
         }
 
-        return new Box(minX, minY, minZ, maxX, maxY, maxZ);
+        return new AABB(minX, minY, minZ, maxX, maxY, maxZ);
     }
 
     private boolean pausedExploding() {
@@ -375,8 +379,8 @@ public class BedAura extends Module {
         } else if (this.target == null) {
             return false;
         } else {
-            for (ItemStack stack : this.target.getArmorItems()) {
-                if (stack.isDamageable() && 1.0 - (double) stack.getDamage() / stack.getMaxDamage() <= this.armorFacePlace.get() / 100.0) {
+            for (ItemStack stack : this.target.getArmorSlots()) {
+                if (stack.isDamageableItem() && 1.0 - (double) stack.getDamageValue() / stack.getMaxDamage() <= this.armorFacePlace.get() / 100.0) {
                     return true;
                 }
             }
@@ -386,7 +390,7 @@ public class BedAura extends Module {
     }
 
     private boolean shouldSlow() {
-        this.calcDamage(this.placePos.offset(this.placeDir));
+        this.calcDamage(this.placePos.relative(this.placeDir));
         if (this.ignoreSlow.get() && this.shouldFacePlace()) {
             return false;
         } else {
@@ -398,42 +402,42 @@ public class BedAura extends Module {
         PlaceData data = SettingUtils.getPlaceData(
                 this.placePos,
                 null,
-                (p, d) -> (!this.floor.get() || d == Direction.DOWN) && !(BlackOut.mc.world.getBlockState(p).getBlock() instanceof BedBlock)
+                (p, d) -> (!this.floor.get() || d == Direction.DOWN) && !(BlackOut.mc.level.getBlockState(p).getBlock() instanceof BedBlock)
         );
         if (data.valid()) {
-            Hand hand = OLEPOSSUtils.getHand(OLEPOSSUtils::isBed);
+            InteractionHand hand = OLEPOSSUtils.getHand(OLEPOSSUtils::isBed);
             FindResult result = this.switchMode.get().find(OLEPOSSUtils::isBed);
             if (hand != null || result.wasFound()) {
                 if (!SettingUtils.shouldRotate(RotationType.BlockPlace)
-                        || this.rotateBlock(data, data.pos().toCenterPos().offset(data.dir(), 0.5), RotationType.BlockPlace, "placing")) {
-                    if (!this.pauseOffGround.get() || BlackOut.mc.player.isOnGround()) {
+                        || this.rotateBlock(data, data.pos().getCenter().relative(data.dir(), 0.5), RotationType.BlockPlace, "placing")) {
+                    if (!this.pauseOffGround.get() || BlackOut.mc.player.onGround()) {
                         switch (this.rotationMode.get()) {
                             case Instant:
-                                this.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(this.placeDir.asRotation(), Managers.ROTATION.nextPitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
+                                this.sendPacket(new ServerboundMovePlayerPacket.Rot(this.placeDir.toYRot(), Managers.ROTATION.nextPitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
                                 break;
                             case Manager:
-                                if (!this.rotateYaw(this.placeDir.asRotation(), RotationType.Other, "placing")) {
+                                if (!this.rotateYaw(this.placeDir.toYRot(), RotationType.Other, "placing")) {
                                     return;
                                 }
                         }
 
                         boolean switched = false;
                         if (hand != null || (switched = this.switchMode.get().swap(result.slot()))) {
-                            this.placeBlock(hand, data.pos().toCenterPos(), data.dir(), data.pos());
+                            this.placeBlock(hand, data.pos().getCenter(), data.dir(), data.pos());
                             ItemStack stack = hand == null ? result.stack() : Managers.PACKET.handStack(hand);
                             if (stack.getItem() instanceof BedItem bedItem) {
                                 BlockState feetState = bedItem.getBlock()
-                                        .getDefaultState()
-                                        .with(BedBlock.PART, BedPart.FOOT)
-                                        .with(HorizontalFacingBlock.FACING, this.placeDir);
+                                        .defaultBlockState()
+                                        .setValue(BedBlock.PART, BedPart.FOOT)
+                                        .setValue(HorizontalDirectionalBlock.FACING, this.placeDir);
                                 BlockState headState = bedItem.getBlock()
-                                        .getDefaultState()
-                                        .with(BedBlock.PART, BedPart.HEAD)
-                                        .with(HorizontalFacingBlock.FACING, this.placeDir);
-                                BlackOut.mc.world.setBlockState(this.placePos, feetState);
-                                BlackOut.mc.world.setBlockState(this.placePos.offset(this.placeDir), headState);
+                                        .defaultBlockState()
+                                        .setValue(BedBlock.PART, BedPart.HEAD)
+                                        .setValue(HorizontalDirectionalBlock.FACING, this.placeDir);
+                                BlackOut.mc.level.setBlockAndUpdate(this.placePos, feetState);
+                                BlackOut.mc.level.setBlockAndUpdate(this.placePos.relative(this.placeDir), headState);
                                 this.ignoreState.add(this.placePos, 0.3);
-                                this.ignoreState.add(this.placePos.offset(this.placeDir), 0.3);
+                                this.ignoreState.add(this.placePos.relative(this.placeDir), 0.3);
                             }
 
                             this.lastPlace = System.currentTimeMillis();
@@ -453,7 +457,7 @@ public class BedAura extends Module {
     }
 
     private void updateExplode() {
-        BlockState state = BlackOut.mc.world.getBlockState(this.explodePos);
+        BlockState state = BlackOut.mc.level.getBlockState(this.explodePos);
         if (state.getBlock() instanceof BedBlock) {
             switch (this.explodeSpeedMode.get()) {
                 case Sync:
@@ -478,32 +482,32 @@ public class BedAura extends Module {
     private void explode(BlockPos pos) {
         Direction dir = SettingUtils.getPlaceOnDirection(pos);
         if (dir != null) {
-            Vec3d placeVec = new Vec3d(pos.getX() + 0.5, pos.getY() + this.rotationHeight.get(), pos.getZ() + 0.5);
+            Vec3 placeVec = new Vec3(pos.getX() + 0.5, pos.getY() + this.rotationHeight.get(), pos.getZ() + 0.5);
             this.end("placing");
             if (!SettingUtils.shouldRotate(RotationType.Interact) || this.rotateBlock(pos, dir, placeVec, RotationType.Interact, 0.1, "explode")) {
-                BlockState state = BlackOut.mc.world.getBlockState(pos);
-                Direction direction = state.get(HorizontalFacingBlock.FACING);
+                BlockState state = BlackOut.mc.level.getBlockState(pos);
+                Direction direction = state.getValue(HorizontalDirectionalBlock.FACING);
                 BlockPos headPos;
                 BlockPos feetPos;
-                if (state.get(BedBlock.PART) == BedPart.HEAD) {
+                if (state.getValue(BedBlock.PART) == BedPart.HEAD) {
                     headPos = pos;
-                    feetPos = pos.offset(direction.getOpposite());
+                    feetPos = pos.relative(direction.getOpposite());
                 } else {
                     feetPos = pos;
-                    headPos = pos.offset(direction);
+                    headPos = pos.relative(direction);
                 }
 
                 this.renderList.add(new Pair<>(feetPos, direction), this.explodeRenderTime.get() + this.explodeFadeTime.get());
-                BlackOut.mc.world.setBlockState(feetPos, Blocks.AIR.getDefaultState());
-                BlackOut.mc.world.setBlockState(headPos, Blocks.AIR.getDefaultState());
+                BlackOut.mc.level.setBlockAndUpdate(feetPos, Blocks.AIR.defaultBlockState());
+                BlackOut.mc.level.setBlockAndUpdate(headPos, Blocks.AIR.defaultBlockState());
                 this.ignoreState.add(feetPos, 0.3);
                 this.ignoreState.add(headPos, 0.3);
-                this.interactBlock(Hand.MAIN_HAND, placeVec, dir, pos);
+                this.interactBlock(InteractionHand.MAIN_HAND, placeVec, dir, pos);
                 this.explodeTimers.add(pos, 1.0 / this.constantExplodeSpeed.get());
                 this.lastExplode = System.currentTimeMillis();
                 this.explodePos = null;
                 if (this.explodeSwing.get()) {
-                    this.clientSwing(this.explodeHand.get(), Hand.MAIN_HAND);
+                    this.clientSwing(this.explodeHand.get(), InteractionHand.MAIN_HAND);
                 }
 
                 this.end("explode");
@@ -521,7 +525,7 @@ public class BedAura extends Module {
                 int x = i % d - this.calcR;
                 int y = i / d % d - this.calcR;
                 int z = i / d / d % d - this.calcR;
-                BlockPos pos = this.calcMiddle.add(x, y, z);
+                BlockPos pos = this.calcMiddle.offset(x, y, z);
                 this.calcPos(pos);
             }
 
@@ -533,21 +537,21 @@ public class BedAura extends Module {
                 int x = i % d - this.targetCalcR;
                 int y = i / d % d - this.targetCalcR;
                 int z = i / d / d % d - this.targetCalcR;
-                BlockPos pos = this.calcMiddle.add(x, y, z);
+                BlockPos pos = this.calcMiddle.offset(x, y, z);
                 this.calcTarget(pos);
             }
         }
     }
 
     private void calcTarget(BlockPos pos) {
-        BlockState state = BlackOut.mc.world.getBlockState(pos);
+        BlockState state = BlackOut.mc.level.getBlockState(pos);
         if (state.getBlock() instanceof BedBlock) {
             if (SettingUtils.getPlaceOnDirection(pos) != null) {
                 if (SettingUtils.inPlaceRange(pos)) {
                     this.calcDamage(
-                            state.get(BedBlock.PART) == BedPart.HEAD
+                            state.getValue(BedBlock.PART) == BedPart.HEAD
                                     ? pos
-                                    : pos.offset(state.get(HorizontalFacingBlock.FACING))
+                                    : pos.relative(state.getValue(HorizontalDirectionalBlock.FACING))
                     );
                     if (this.explodeDamageCheck()) {
                         double value = this.getValue(pos, false);
@@ -619,22 +623,22 @@ public class BedAura extends Module {
 
     private void calcPos(BlockPos pos) {
         if (this.validBlock(pos)) {
-            if (!this.floor.get() || this.validFloor(pos.down())) {
+            if (!this.floor.get() || this.validFloor(pos.below())) {
                 if (this.inRangeToEnemies(pos)) {
                     boolean midInRange = SettingUtils.inInteractRange(pos) && SettingUtils.getPlaceOnDirection(pos) != null;
                     this.calcDamage(pos);
                     if (this.placeDamageCheck()) {
                         double value = this.getValue(pos, true);
                         if (!(value <= this.calcValue)) {
-                            for (Direction dir : Direction.Type.HORIZONTAL) {
-                                BlockPos pos2 = pos.offset(dir);
-                                if ((!this.serverDir.get() || !(Math.abs(RotationUtils.yawAngle(RotationUtils.getYaw(pos2), dir.getOpposite().asRotation())) > 45.0))
+                            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                                BlockPos pos2 = pos.relative(dir);
+                                if ((!this.serverDir.get() || !(Math.abs(RotationUtils.yawAngle(RotationUtils.getYaw(pos2), dir.getOpposite().toYRot())) > 45.0))
                                         && this.validBlock(pos2)
-                                        && (!this.floor.get() || this.validFloor(pos2.down()))) {
+                                        && (!this.floor.get() || this.validFloor(pos2.below()))) {
                                     PlaceData data = SettingUtils.getPlaceData(
                                             pos2,
                                             null,
-                                            (p, d) -> (!this.floor.get() || d == Direction.DOWN) && !(BlackOut.mc.world.getBlockState(p).getBlock() instanceof BedBlock)
+                                            (p, d) -> (!this.floor.get() || d == Direction.DOWN) && !(BlackOut.mc.level.getBlockState(p).getBlock() instanceof BedBlock)
                                     );
                                     if (data.valid()
                                             && (midInRange || SettingUtils.getPlaceOnDirection(pos2) != null)
@@ -659,12 +663,12 @@ public class BedAura extends Module {
     }
 
     private boolean validFloor(BlockPos pos) {
-        return !(BlackOut.mc.world.getBlockState(pos).getBlock() instanceof BedBlock) && OLEPOSSUtils.solid2(pos);
+        return !(BlackOut.mc.level.getBlockState(pos).getBlock() instanceof BedBlock) && OLEPOSSUtils.solid2(pos);
     }
 
     private boolean validBlock(BlockPos pos) {
-        Block block = BlackOut.mc.world.getBlockState(pos).getBlock();
-        return (this.validBlock(BlackOut.mc.world.getBlockState(pos)) || block instanceof BedBlock) && (!this.fireBlocking.get() || !(block instanceof FireBlock));
+        Block block = BlackOut.mc.level.getBlockState(pos).getBlock();
+        return (this.validBlock(BlackOut.mc.level.getBlockState(pos)) || block instanceof BedBlock) && (!this.fireBlocking.get() || !(block instanceof FireBlock));
     }
 
     private void updatePos() {
@@ -673,7 +677,7 @@ public class BedAura extends Module {
         this.findTargets();
         this.extMap.update(player -> player == BlackOut.mc.player ? this.selfExt.get() : this.extrapolation.get());
         this.hitboxMap.update(player -> player == BlackOut.mc.player ? 0 : this.hitboxExt.get());
-        this.placePos = this.calcBest == null ? null : this.calcBest.offset(this.calcDir);
+        this.placePos = this.calcBest == null ? null : this.calcBest.relative(this.calcDir);
         this.placeDir = this.calcDir == null ? null : this.calcDir.getOpposite();
         this.explodePos = this.targetCalcBest;
         this.startCalc();
@@ -685,7 +689,7 @@ public class BedAura extends Module {
         this.calcValue = -42069.0;
         this.progress = 0;
         this.calcR = (int) Math.ceil(SettingUtils.maxPlaceRange());
-        this.calcMiddle = BlockPos.ofFloored(BlackOut.mc.player.getEyePos());
+        this.calcMiddle = BlockPos.containing(BlackOut.mc.player.getEyePosition());
         this.targetCalcBest = null;
         this.targetCalcValue = -42069.0;
         this.targetCalcR = (int) Math.ceil(SettingUtils.maxInteractRange());
@@ -696,7 +700,7 @@ public class BedAura extends Module {
     private double getValue(BlockPos pos, boolean place) {
         double value = 0.0;
         if (place && SettingUtils.shouldRotate(RotationType.BlockPlace) || !place && SettingUtils.shouldRotate(RotationType.Interact)) {
-            value += this.rotationMod(pos.toCenterPos());
+            value += this.rotationMod(pos.getCenter());
         }
 
         value += this.enemyMod();
@@ -716,7 +720,7 @@ public class BedAura extends Module {
         return this.friendDamage * this.friendDmgValue.get();
     }
 
-    private double rotationMod(Vec3d pos) {
+    private double rotationMod(Vec3 pos) {
         double yawStep = 45.0;
         double pitchStep = 22.0;
         int yawSteps = (int) Math.ceil(Math.abs(RotationUtils.yawAngle(Managers.ROTATION.prevYaw, RotationUtils.getYaw(pos)) / yawStep));
@@ -726,11 +730,11 @@ public class BedAura extends Module {
     }
 
     private boolean inRangeToEnemies(BlockPos pos) {
-        Vec3d vec = pos.toCenterPos();
+        Vec3 vec = pos.getCenter();
         if (this.suicide) {
             return BoxUtils.middle(BlackOut.mc.player.getBoundingBox()).distanceTo(vec) < 3.0;
         } else {
-            for (PlayerEntity player : this.targets) {
+            for (Player player : this.targets) {
                 if (BoxUtils.middle(player.getBoundingBox()).distanceTo(vec) < 3.0) {
                     return true;
                 }
@@ -741,16 +745,16 @@ public class BedAura extends Module {
     }
 
     private void findTargets() {
-        Map<PlayerEntity, Double> map = new HashMap<>();
+        Map<Player, Double> map = new HashMap<>();
 
-        for (PlayerEntity player : BlackOut.mc.world.getPlayers()) {
+        for (Player player : BlackOut.mc.level.players()) {
             if (player != BlackOut.mc.player && !(player.getHealth() <= 0.0F)) {
                 double distance = BlackOut.mc.player.distanceTo(player);
                 if (!(distance > this.enemyDistance.get())) {
                     if (map.size() < this.maxTargets.get()) {
                         map.put(player, distance);
                     } else {
-                        for (Entry<PlayerEntity, Double> entry : map.entrySet()) {
+                        for (Entry<Player, Double> entry : map.entrySet()) {
                             if (entry.getValue() > distance) {
                                 map.remove(entry.getKey());
                                 map.put(player, distance);
@@ -767,7 +771,7 @@ public class BedAura extends Module {
     }
 
     private void calcDamage(BlockPos pos) {
-        Vec3d vec = pos.toCenterPos();
+        Vec3 vec = pos.getCenter();
         if (this.damageCache.containsKey(pos)) {
             Double[] array = this.damageCache.get(pos);
             this.selfDamage = array[0];
@@ -790,7 +794,7 @@ public class BedAura extends Module {
                 this.enemyHealth = 20.0;
                 this.friendHealth = 20.0;
                 this.targets.forEach(player -> {
-                    Box box = this.extMap.get(player);
+                    AABB box = this.extMap.get(player);
                     if (!(player.getHealth() <= 0.0F) && player != BlackOut.mc.player) {
                         double dmg = DamageUtils.anchorDamage(player, box, vec, pos);
                         double health = this.getHealth(player);

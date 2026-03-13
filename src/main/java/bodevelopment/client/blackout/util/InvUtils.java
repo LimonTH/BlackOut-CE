@@ -7,19 +7,18 @@ import bodevelopment.client.blackout.module.modules.misc.Simulation;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
-import net.minecraft.network.packet.c2s.play.PickFromInventoryC2SPacket;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.collection.DefaultedList;
-
 import java.util.ArrayList;
 import java.util.function.Predicate;
+import net.minecraft.core.NonNullList;
+import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
+import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
+import net.minecraft.network.protocol.game.ServerboundPickItemPacket;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 public class InvUtils {
     public static int pickSlot = -1;
@@ -29,8 +28,8 @@ public class InvUtils {
     public static int count(boolean hotbar, boolean inventory, Predicate<ItemStack> predicate) {
         int count = 0;
 
-        for (int i = hotbar ? 0 : 9; i < (inventory ? BlackOut.mc.player.getInventory().size() : 9); i++) {
-            ItemStack stack = BlackOut.mc.player.getInventory().getStack(i);
+        for (int i = hotbar ? 0 : 9; i < (inventory ? BlackOut.mc.player.getInventory().getContainerSize() : 9); i++) {
+            ItemStack stack = BlackOut.mc.player.getInventory().getItem(i);
             if (stack != null && predicate.test(stack)) {
                 count += stack.getCount();
             }
@@ -45,8 +44,8 @@ public class InvUtils {
 
     public static FindResult find(boolean hotbar, boolean inventory, Predicate<ItemStack> predicate) {
         if (BlackOut.mc.player != null) {
-            for (int i = hotbar ? 0 : 9; i < (inventory ? BlackOut.mc.player.getInventory().size() : 9); i++) {
-                ItemStack stack = BlackOut.mc.player.getInventory().getStack(i);
+            for (int i = hotbar ? 0 : 9; i < (inventory ? BlackOut.mc.player.getInventory().getContainerSize() : 9); i++) {
+                ItemStack stack = BlackOut.mc.player.getInventory().getItem(i);
                 if (stack != null && predicate.test(stack)) {
                     return new FindResult(i, stack.getCount(), stack);
                 }
@@ -62,8 +61,8 @@ public class InvUtils {
 
     public static FindResult findNullable(boolean hotbar, boolean inventory, Predicate<ItemStack> predicate) {
         if (BlackOut.mc.player != null) {
-            for (int i = hotbar ? 0 : 9; i < (inventory ? BlackOut.mc.player.getInventory().size() : 9); i++) {
-                ItemStack stack = BlackOut.mc.player.getInventory().getStack(i);
+            for (int i = hotbar ? 0 : 9; i < (inventory ? BlackOut.mc.player.getInventory().getContainerSize() : 9); i++) {
+                ItemStack stack = BlackOut.mc.player.getInventory().getItem(i);
                 if (predicate.test(stack)) {
                     return new FindResult(i, stack.getCount(), stack);
                 }
@@ -78,8 +77,8 @@ public class InvUtils {
             double bestValue = Double.NEGATIVE_INFINITY;
             FindResult best = null;
 
-            for (int i = hotbar ? 0 : 9; i < (inventory ? BlackOut.mc.player.getInventory().size() : 9); i++) {
-                ItemStack stack = BlackOut.mc.player.getInventory().getStack(i);
+            for (int i = hotbar ? 0 : 9; i < (inventory ? BlackOut.mc.player.getInventory().getContainerSize() : 9); i++) {
+                ItemStack stack = BlackOut.mc.player.getInventory().getItem(i);
                 double value = test.get(stack);
                 if (best == null || value > bestValue) {
                     bestValue = value;
@@ -96,50 +95,50 @@ public class InvUtils {
     }
 
     public static int getId(int slot) {
-        ScreenHandler screen = BlackOut.mc.player.currentScreenHandler;
+        AbstractContainerMenu screen = BlackOut.mc.player.containerMenu;
         int length = screen.slots.size();
         return slot < 9 ? length + slot - 10 : slot + length - 46;
     }
 
     public static void clickF(int slot) {
-        clickSlot(slot, 40, SlotActionType.SWAP);
+        clickSlot(slot, 40, ClickType.SWAP);
     }
 
-    public static void clickSlot(int slot, int button, SlotActionType action) {
-        ScreenHandler handler = BlackOut.mc.player.currentScreenHandler;
-        interactSlot(handler.syncId, getId(slot), button, action);
+    public static void clickSlot(int slot, int button, ClickType action) {
+        AbstractContainerMenu handler = BlackOut.mc.player.containerMenu;
+        interactSlot(handler.containerId, getId(slot), button, action);
     }
 
-    private static void clickSlotInstantly(int slot, int button, SlotActionType action) {
-        ScreenHandler handler = BlackOut.mc.player.currentScreenHandler;
-        interactSlot(handler.syncId, getId(slot), button, action, true);
+    private static void clickSlotInstantly(int slot, int button, ClickType action) {
+        AbstractContainerMenu handler = BlackOut.mc.player.containerMenu;
+        interactSlot(handler.containerId, getId(slot), button, action, true);
     }
 
-    public static void interactSlot(int syncId, int slotId, int button, SlotActionType actionType) {
+    public static void interactSlot(int syncId, int slotId, int button, ClickType actionType) {
         interactSlot(syncId, slotId, button, actionType, false);
     }
 
-    public static void interactHandler(int slot, int button, SlotActionType actionType) {
-        interactSlot(BlackOut.mc.player.currentScreenHandler.syncId, slot, button, actionType);
+    public static void interactHandler(int slot, int button, ClickType actionType) {
+        interactSlot(BlackOut.mc.player.containerMenu.containerId, slot, button, actionType);
     }
 
-    public static void interactSlot(int syncId, int slotId, int button, SlotActionType actionType, boolean instant) {
-        ScreenHandler screenHandler = BlackOut.mc.player.currentScreenHandler;
-        DefaultedList<Slot> defaultedList = screenHandler.slots;
+    public static void interactSlot(int syncId, int slotId, int button, ClickType actionType, boolean instant) {
+        AbstractContainerMenu screenHandler = BlackOut.mc.player.containerMenu;
+        NonNullList<Slot> defaultedList = screenHandler.slots;
         int i = defaultedList.size();
         ArrayList<ItemStack> list = Lists.newArrayListWithCapacity(i);
 
         for (Slot slot : defaultedList) {
-            list.add(slot.getStack().copy());
+            list.add(slot.getItem().copy());
         }
 
-        screenHandler.onSlotClick(slotId, button, actionType, BlackOut.mc.player);
+        screenHandler.clicked(slotId, button, actionType, BlackOut.mc.player);
         Int2ObjectOpenHashMap<ItemStack> int2ObjectMap = new Int2ObjectOpenHashMap<>();
 
         for (int j = 0; j < i; j++) {
             ItemStack itemStack = list.get(j);
-            ItemStack itemStack2 = defaultedList.get(j).getStack();
-            if (!ItemStack.areEqual(itemStack, itemStack2)) {
+            ItemStack itemStack2 = defaultedList.get(j).getItem();
+            if (!ItemStack.matches(itemStack, itemStack2)) {
                 int2ObjectMap.put(j, itemStack2.copy());
             }
         }
@@ -147,12 +146,12 @@ public class InvUtils {
         if (instant) {
             Managers.PACKET
                     .sendInstantly(
-                            new ClickSlotC2SPacket(syncId, screenHandler.getRevision(), slotId, button, actionType, screenHandler.getCursorStack().copy(), int2ObjectMap)
+                            new ServerboundContainerClickPacket(syncId, screenHandler.getStateId(), slotId, button, actionType, screenHandler.getCarried().copy(), int2ObjectMap)
                     );
         } else {
             Managers.PACKET
                     .sendPacket(
-                            new ClickSlotC2SPacket(syncId, screenHandler.getRevision(), slotId, button, actionType, screenHandler.getCursorStack().copy(), int2ObjectMap)
+                            new ServerboundContainerClickPacket(syncId, screenHandler.getStateId(), slotId, button, actionType, screenHandler.getCarried().copy(), int2ObjectMap)
                     );
         }
     }
@@ -191,28 +190,28 @@ public class InvUtils {
 
     private static void sendPick(int slot, boolean instant) {
         if (instant) {
-            Managers.PACKET.sendInstantly(new PickFromInventoryC2SPacket(slot));
+            Managers.PACKET.sendInstantly(new ServerboundPickItemPacket(slot));
         } else {
-            Managers.PACKET.sendPacket(new PickFromInventoryC2SPacket(slot));
+            Managers.PACKET.sendPacket(new ServerboundPickItemPacket(slot));
         }
 
         if (Simulation.getInstance().pickSwitch()) {
-            int hbSlot = BlackOut.mc.player.getInventory().getSwappableHotbarSlot();
+            int hbSlot = BlackOut.mc.player.getInventory().getSuitableHotbarSlot();
             Managers.PACKET.ignoreSetSlot.replace(hbSlot, 0.3);
-            BlackOut.mc.player.getInventory().selectedSlot = hbSlot;
-            ItemStack stack1 = BlackOut.mc.player.getInventory().getStack(slot);
-            ItemStack stack2 = BlackOut.mc.player.getInventory().getStack(hbSlot);
-            Managers.PACKET.preApply(new ScreenHandlerSlotUpdateS2CPacket(-2, 0, hbSlot, stack1));
-            Managers.PACKET.preApply(new ScreenHandlerSlotUpdateS2CPacket(-2, 0, slot, stack2));
-            Managers.PACKET.addInvIgnore(new ScreenHandlerSlotUpdateS2CPacket(0, 0, getId(slot), stack1));
-            Managers.PACKET.addInvIgnore(new ScreenHandlerSlotUpdateS2CPacket(0, 0, getId(hbSlot), stack2));
+            BlackOut.mc.player.getInventory().selected = hbSlot;
+            ItemStack stack1 = BlackOut.mc.player.getInventory().getItem(slot);
+            ItemStack stack2 = BlackOut.mc.player.getInventory().getItem(hbSlot);
+            Managers.PACKET.preApply(new ClientboundContainerSetSlotPacket(-2, 0, hbSlot, stack1));
+            Managers.PACKET.preApply(new ClientboundContainerSetSlotPacket(-2, 0, slot, stack2));
+            Managers.PACKET.addInvIgnore(new ClientboundContainerSetSlotPacket(0, 0, getId(slot), stack1));
+            Managers.PACKET.addInvIgnore(new ClientboundContainerSetSlotPacket(0, 0, getId(hbSlot), stack2));
         }
     }
 
     public static boolean invSwap(int slot) {
         if (slot < 0 || slot >= 36) return false;
-        int currentSlot = BlackOut.mc.player.getInventory().selectedSlot;
-        clickSlot(slot, currentSlot, SlotActionType.SWAP);
+        int currentSlot = BlackOut.mc.player.getInventory().selected;
+        clickSlot(slot, currentSlot, ClickType.SWAP);
         slots = new int[]{slot, currentSlot};
         if (Managers.PACKET.slot != currentSlot) {
             Managers.PACKET.slot = currentSlot;
@@ -222,8 +221,8 @@ public class InvUtils {
 
     public static boolean invSwapInstantly(int slot) {
         if (slot < 0 || slot >= 36) return false;
-        int currentSlot = BlackOut.mc.player.getInventory().selectedSlot;
-        clickSlotInstantly(slot, currentSlot, SlotActionType.SWAP);
+        int currentSlot = BlackOut.mc.player.getInventory().selected;
+        clickSlotInstantly(slot, currentSlot, ClickType.SWAP);
         slots = new int[]{slot, currentSlot};
         if (Managers.PACKET.slot != currentSlot) {
             Managers.PACKET.slot = currentSlot;
@@ -233,7 +232,7 @@ public class InvUtils {
 
     public static boolean invSwapBack() {
         if (slots != null) {
-            clickSlot(slots[0], slots[1], SlotActionType.SWAP);
+            clickSlot(slots[0], slots[1], ClickType.SWAP);
             return true;
         }
         return false;
@@ -241,31 +240,31 @@ public class InvUtils {
 
     public static boolean invSwapBackInstantly() {
         if (slots != null) {
-            clickSlotInstantly(slots[0], slots[1], SlotActionType.SWAP);
+            clickSlotInstantly(slots[0], slots[1], ClickType.SWAP);
             return true;
         }
         return false;
     }
 
     public static boolean swap(int to) {
-        prevSlot = BlackOut.mc.player.getInventory().selectedSlot;
-        BlackOut.mc.player.getInventory().selectedSlot = to;
+        prevSlot = BlackOut.mc.player.getInventory().selected;
+        BlackOut.mc.player.getInventory().selected = to;
         return syncSlot(false);
     }
 
     public static boolean swapInstantly(int to) {
-        prevSlot = BlackOut.mc.player.getInventory().selectedSlot;
-        BlackOut.mc.player.getInventory().selectedSlot = to;
+        prevSlot = BlackOut.mc.player.getInventory().selected;
+        BlackOut.mc.player.getInventory().selected = to;
         return syncSlot(true);
     }
 
     private static boolean syncSlot(boolean instant) {
-        int i = BlackOut.mc.player.getInventory().selectedSlot;
+        int i = BlackOut.mc.player.getInventory().selected;
         if (i != Managers.PACKET.slot) {
             if (instant) {
-                Managers.PACKET.sendInstantly(new UpdateSelectedSlotC2SPacket(i));
+                Managers.PACKET.sendInstantly(new ServerboundSetCarriedItemPacket(i));
             } else {
-                Managers.PACKET.sendPacket(new UpdateSelectedSlotC2SPacket(i));
+                Managers.PACKET.sendPacket(new ServerboundSetCarriedItemPacket(i));
             }
             Managers.PACKET.slot = i;
             return true;

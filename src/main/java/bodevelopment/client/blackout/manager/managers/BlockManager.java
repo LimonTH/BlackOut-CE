@@ -6,9 +6,9 @@ import bodevelopment.client.blackout.event.events.BlockStateEvent;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.module.modules.misc.Simulation;
 import bodevelopment.client.blackout.randomstuff.timers.TimerMap;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class BlockManager extends Manager {
     private final TimerMap<BlockPos, SpoofedBlock> timers = new TimerMap<>(true);
@@ -27,22 +27,22 @@ public class BlockManager extends Manager {
         if (Simulation.getInstance().blocks() && this.timers.containsKey(pos)) {
             SpoofedBlock block = this.timers.get(pos);
             if (block != null && block.damage()) {
-                return block.type().getDefaultState();
+                return block.type().defaultBlockState();
             }
         }
 
-        return BlackOut.mc.world.getBlockState(pos);
+        return BlackOut.mc.level.getBlockState(pos);
     }
 
     public BlockState blockState(BlockPos pos) {
         if (Simulation.getInstance().blocks() && this.timers.containsKey(pos)) {
             SpoofedBlock block = this.timers.get(pos);
             if (block != null && block.placing()) {
-                return block.type().getDefaultState();
+                return block.type().defaultBlockState();
             }
         }
 
-        return BlackOut.mc.world.getBlockState(pos);
+        return BlackOut.mc.level.getBlockState(pos);
     }
 
     @Override

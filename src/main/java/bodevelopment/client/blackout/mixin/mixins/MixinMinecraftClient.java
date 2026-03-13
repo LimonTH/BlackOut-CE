@@ -22,24 +22,6 @@ import bodevelopment.client.blackout.util.SettingUtils;
 import bodevelopment.client.blackout.util.SharedFeatures;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Overlay;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.network.ClientPlayerInteractionManager;
-import net.minecraft.client.option.GameOptions;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.option.Perspective;
-import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.client.session.Session;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.TridentItem;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.EntityHitResult;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.*;
@@ -48,49 +30,67 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Optional;
 import java.util.UUID;
+import net.minecraft.client.CameraType;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
+import net.minecraft.client.User;
+import net.minecraft.client.gui.screens.Overlay;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.MultiPlayerGameMode;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TridentItem;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
 
-@Mixin(value = MinecraftClient.class, priority = 500)
+@Mixin(value = Minecraft.class, priority = 500)
 public abstract class MixinMinecraftClient implements IMinecraftClient {
     @Shadow
-    static MinecraftClient instance;
+    static Minecraft instance;
     @Shadow
     @Nullable
-    public ClientPlayerEntity player;
+    public LocalPlayer player;
     @Shadow
     @Final
-    public GameOptions options;
+    public Options options;
     @Shadow
     @Final
     @Mutable
-    private Session session;
+    private User user;
     @Shadow
     @Final
-    private RenderTickCounter.Dynamic renderTickCounter;
+    private DeltaTracker.Timer deltaTracker;
 
 
     @Shadow
-    protected abstract void render(boolean tick);
+    protected abstract void runTick(boolean tick);
 
     @Shadow
-    public abstract void updateWindowTitle();
+    public abstract void updateTitle();
 
     @Shadow
-    protected abstract void doItemUse();
+    protected abstract void startUseItem();
 
     @Redirect(
-            method = "handleInputEvents",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/Perspective;next()Lnet/minecraft/client/option/Perspective;")
+            method = "handleKeybinds",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/CameraType;cycle()Lnet/minecraft/client/CameraType;")
     )
-    private Perspective setPerspective(Perspective instance) {
+    private CameraType setPerspective(CameraType instance) {
         CameraModifier modifier = CameraModifier.getInstance();
         if (modifier != null && modifier.enabled && modifier.noInverse.get()) {
-            if (instance == Perspective.FIRST_PERSON) {
-                return Perspective.THIRD_PERSON_BACK;
+            if (instance == CameraType.FIRST_PERSON) {
+                return CameraType.THIRD_PERSON_BACK;
             } else {
-                return Perspective.FIRST_PERSON;
+                return CameraType.FIRST_PERSON;
             }
         } else {
-            return instance.next();
+            return instance.cycle();
         }
     }
 
@@ -105,9 +105,9 @@ public abstract class MixinMinecraftClient implements IMinecraftClient {
 
     @WrapOperation(
             method = "openChatScreen",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;setScreen(Lnet/minecraft/client/gui/screen/Screen;)V")
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V")
     )
-    private void wrapChatOpening(MinecraftClient instance, Screen screen, Operation<Void> original) {
+    private void wrapChatOpening(Minecraft instance, Screen screen, Operation<Void> original) {
         Screen targetScreen = CustomChat.getInstance().enabled ? new CustomChatScreen() : screen;
 
         original.call(instance, targetScreen);
@@ -115,18 +115,18 @@ public abstract class MixinMinecraftClient implements IMinecraftClient {
 
     @WrapOperation(
             method = "tick",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;currentScreen:Lnet/minecraft/client/gui/screen/Screen;", ordinal = 6, opcode = Opcodes.GETFIELD)
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", ordinal = 6, opcode = Opcodes.GETFIELD)
     )
-    private Screen wrapCurrentScreen(MinecraftClient instance, Operation<Screen> original) {
+    private Screen wrapCurrentScreen(Minecraft instance, Operation<Screen> original) {
         Screen realScreen = original.call(instance);
         return SharedFeatures.shouldSilentScreen() ? null : realScreen;
     }
 
     @WrapOperation(
             method = "tick",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;overlay:Lnet/minecraft/client/gui/screen/Overlay;", opcode = Opcodes.GETFIELD)
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;overlay:Lnet/minecraft/client/gui/screens/Overlay;", opcode = Opcodes.GETFIELD)
     )
-    private Overlay wrapOverlay(MinecraftClient instance, Operation<Overlay> original) {
+    private Overlay wrapOverlay(Minecraft instance, Operation<Overlay> original) {
         Overlay realOverlay = original.call(instance);
         return SharedFeatures.shouldSilentScreen() ? null : realOverlay;
     }
@@ -136,134 +136,134 @@ public abstract class MixinMinecraftClient implements IMinecraftClient {
         BlackOut.EVENT_BUS.post(TickEvent.Post.get());
     }
 
-    @Inject(method = "render", at = @At("HEAD"))
+    @Inject(method = "runTick", at = @At("HEAD"))
     private void onRun(CallbackInfo ci) {
-        this.updateWindowTitle();
+        this.updateTitle();
         Timer timer = Timer.getInstance();
-        ((IRenderTickCounter) this.renderTickCounter).blackout_Client$set(timer.getTickTime());
-        if (BlackOut.mc.world != null) {
-            BlackOut.mc.world.getTickManager().setTickRate(timer.getTPS());
+        ((IRenderTickCounter) this.deltaTracker).blackout_Client$set(timer.getTickTime());
+        if (BlackOut.mc.level != null) {
+            BlackOut.mc.level.tickRateManager().setTickRate(timer.getTPS());
         }
     }
 
-    @Redirect(method = "handleBlockBreaking", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"))
-    private boolean isUsing(ClientPlayerEntity instance) {
+    @Redirect(method = "continueAttack", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z"))
+    private boolean isUsing(LocalPlayer instance) {
         return !MultiTask.getInstance().enabled && instance.isUsingItem();
     }
 
     @Override
     public void blackout_Client$setSession(
-            String username, UUID uuid, String accessToken, String xuid, String clientId, Session.AccountType accountType
+            String username, UUID uuid, String accessToken, String xuid, String clientId, User.Type accountType
     ) {
-        this.session = new Session(username, uuid, accessToken, Optional.ofNullable(xuid), Optional.ofNullable(clientId), accountType);
+        this.user = new User(username, uuid, accessToken, Optional.ofNullable(xuid), Optional.ofNullable(clientId), accountType);
     }
 
     @Override
-    public void blackout_Client$setSession(Session session) {
-        this.session = session;
+    public void blackout_Client$setSession(User session) {
+        this.user = session;
     }
 
     @Override
     public void blackout_Client$useItem() {
-        this.doItemUse();
+        this.startUseItem();
     }
 
     @Redirect(
-            method = "doItemUse",
+            method = "startUseItem",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;interactBlock(Lnet/minecraft/client/network/ClientPlayerEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/util/hit/BlockHitResult;)Lnet/minecraft/util/ActionResult;"
+                    target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;useItemOn(Lnet/minecraft/client/player/LocalPlayer;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/BlockHitResult;)Lnet/minecraft/world/InteractionResult;"
             )
     )
-    private ActionResult onInteractBlock(ClientPlayerInteractionManager instance, ClientPlayerEntity player, Hand hand, BlockHitResult hitResult) {
+    private InteractionResult onInteractBlock(MultiPlayerGameMode instance, LocalPlayer player, InteractionHand hand, BlockHitResult hitResult) {
         if (!BlackOut.EVENT_BUS.post(InteractBlockEvent.get(hitResult, hand)).isCancelled()) {
             NoInteract noInteract = NoInteract.getInstance();
             return noInteract.enabled
-                    ? noInteract.handleBlock(hand, hitResult.getBlockPos(), () -> instance.interactBlock(player, hand, hitResult))
-                    : instance.interactBlock(player, hand, hitResult);
+                    ? noInteract.handleBlock(hand, hitResult.getBlockPos(), () -> instance.useItemOn(player, hand, hitResult))
+                    : instance.useItemOn(player, hand, hitResult);
         } else {
-            return ActionResult.FAIL;
+            return InteractionResult.FAIL;
         }
     }
 
     @Redirect(
-            method = "doItemUse",
+            method = "startUseItem",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;interactEntityAtLocation(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/entity/Entity;Lnet/minecraft/util/hit/EntityHitResult;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/ActionResult;"
+                    target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;interactAt(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/EntityHitResult;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"
             )
     )
-    private ActionResult onEntityInteractAt(ClientPlayerInteractionManager instance, PlayerEntity player, Entity entity, EntityHitResult hitResult, Hand hand) {
+    private InteractionResult onEntityInteractAt(MultiPlayerGameMode instance, Player player, Entity entity, EntityHitResult hitResult, InteractionHand hand) {
         NoInteract noInteract = NoInteract.getInstance();
         return noInteract.enabled
-                ? noInteract.handleEntity(hand, entity, () -> instance.interactEntityAtLocation(player, entity, hitResult, hand))
-                : instance.interactEntityAtLocation(player, entity, hitResult, hand);
+                ? noInteract.handleEntity(hand, entity, () -> instance.interactAt(player, entity, hitResult, hand))
+                : instance.interactAt(player, entity, hitResult, hand);
     }
 
     @Redirect(
-            method = "doItemUse",
+            method = "startUseItem",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;interactEntity(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/entity/Entity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/ActionResult;"
+                    target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;interact(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"
             )
     )
-    private ActionResult onEntityInteract(ClientPlayerInteractionManager instance, PlayerEntity player, Entity entity, Hand hand) {
+    private InteractionResult onEntityInteract(MultiPlayerGameMode instance, Player player, Entity entity, InteractionHand hand) {
         NoInteract noInteract = NoInteract.getInstance();
         return noInteract.enabled
-                ? noInteract.handleEntity(hand, entity, () -> instance.interactEntity(player, entity, hand))
-                : instance.interactEntity(player, entity, hand);
+                ? noInteract.handleEntity(hand, entity, () -> instance.interact(player, entity, hand))
+                : instance.interact(player, entity, hand);
     }
 
     @Redirect(
-            method = "doItemUse",
+            method = "startUseItem",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;interactItem(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/ActionResult;"
+                    target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;useItem(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"
             )
     )
-    private ActionResult onItemInteract(ClientPlayerInteractionManager instance, PlayerEntity player, Hand hand) {
+    private InteractionResult onItemInteract(MultiPlayerGameMode instance, Player player, InteractionHand hand) {
         NoInteract noInteract = NoInteract.getInstance();
-        return noInteract.enabled ? noInteract.handleUse(hand, () -> instance.interactItem(player, hand)) : instance.interactItem(player, hand);
+        return noInteract.enabled ? noInteract.handleUse(hand, () -> instance.useItem(player, hand)) : instance.useItem(player, hand);
     }
 
     @Redirect(
-            method = "handleInputEvents",
+            method = "handleKeybinds",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;stopUsingItem(Lnet/minecraft/entity/player/PlayerEntity;)V"
+                    target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;releaseUsingItem(Lnet/minecraft/world/entity/player/Player;)V"
             )
     )
-    private void onReleaseUsing(ClientPlayerInteractionManager instance, PlayerEntity player) {
+    private void onReleaseUsing(MultiPlayerGameMode instance, Player player) {
         if (!Quiver.charging && !FastEat.eating()) {
-            instance.stopUsingItem(player);
+            instance.releaseUsingItem(player);
         }
     }
 
-    @Redirect(method = "handleInputEvents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
-    private boolean shouldKeepUsing(KeyBinding instance) {
+    @Redirect(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/KeyMapping;isDown()Z"))
+    private boolean shouldKeepUsing(KeyMapping instance) {
         FastRiptide fastRiptide = FastRiptide.getInstance();
-        ItemStack activeItem = BlackOut.mc.player != null ? BlackOut.mc.player.getActiveItem() : null;
+        ItemStack activeItem = BlackOut.mc.player != null ? BlackOut.mc.player.getUseItem() : null;
         return fastRiptide.enabled && activeItem != null && activeItem.getItem() instanceof TridentItem
                 ? System.currentTimeMillis() - fastRiptide.prevRiptide < fastRiptide.cooldown.get() * 1000.0
-                : instance.isPressed();
+                : instance.isDown();
     }
 
-    @Inject(method = "onResolutionChanged", at = @At("TAIL"))
+    @Inject(method = "resizeDisplay", at = @At("TAIL"))
     private void onResize(CallbackInfo ci) {
         Managers.FRAME_BUFFER.onResize();
     }
 
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getWindowTitle()Ljava/lang/String;"))
-    private String windowTitle(MinecraftClient instance) {
+    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;createTitle()Ljava/lang/String;"))
+    private String windowTitle(Minecraft instance) {
         return this.getBOTitle();
     }
 
-    @Redirect(method = "updateWindowTitle", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getWindowTitle()Ljava/lang/String;"))
-    private String updateTitle(MinecraftClient instance) {
+    @Redirect(method = "updateTitle", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;createTitle()Ljava/lang/String;"))
+    private String updateTitle(Minecraft instance) {
         return this.getBOTitle();
     }
 
-    @ModifyConstant(method = "doItemUse", constant = @Constant(intValue = 4))
+    @ModifyConstant(method = "startUseItem", constant = @Constant(intValue = 4))
     private int itemUseCooldown(int constant) {
         FastUse fastUse = FastUse.getInstance();
         if (fastUse.enabled && fastUse.timing.get() == FastUse.Timing.Tick) {
@@ -274,8 +274,8 @@ public abstract class MixinMinecraftClient implements IMinecraftClient {
         }
     }
 
-    @Redirect(method = "doItemUse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;isBreakingBlock()Z"))
-    private boolean multiTaskThingy(ClientPlayerInteractionManager instance) {
+    @Redirect(method = "startUseItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;isDestroying()Z"))
+    private boolean multiTaskThingy(MultiPlayerGameMode instance) {
         MultiTask multiTask = MultiTask.getInstance();
         FastUse fastUse = FastUse.getInstance();
         if (fastUse.enabled) {
@@ -285,7 +285,7 @@ public abstract class MixinMinecraftClient implements IMinecraftClient {
             }
         }
 
-        return !multiTask.enabled && instance.isBreakingBlock();
+        return !multiTask.enabled && instance.isDestroying();
     }
 
     @Unique

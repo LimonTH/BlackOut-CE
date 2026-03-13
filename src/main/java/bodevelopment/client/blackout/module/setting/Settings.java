@@ -5,15 +5,13 @@ import bodevelopment.client.blackout.interfaces.functional.SingleOut;
 import bodevelopment.client.blackout.keys.KeyBind;
 import bodevelopment.client.blackout.module.setting.settings.*;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
-import net.minecraft.block.Block;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-
 import java.util.List;
 import java.util.function.Predicate;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
 
 public class Settings {
     public static Setting<Boolean> booleanSetting(String name, boolean value, String description, SingleOut<Boolean> visible) {
@@ -45,23 +43,23 @@ public class Settings {
     }
 
     public static Setting<List<Block>> blockListSetting(String name, String description, SingleOut<Boolean> visible, Block... value) {
-        return new RegistrySetting<>(name, Registries.BLOCK, block -> block.getName().getString(), description, visible, value);
+        return new RegistrySetting<>(name, BuiltInRegistries.BLOCK, block -> block.getName().getString(), description, visible, value);
     }
 
     public static Setting<List<Item>> itemListSetting(String name, String description, SingleOut<Boolean> visible, Item... value) {
-        return registrySetting(name, description, visible, Registries.ITEM, item -> item.getName().getString(), value);
+        return registrySetting(name, description, visible, BuiltInRegistries.ITEM, item -> item.getName().getString(), value);
     }
 
     public static Setting<List<Item>> itemFilterdListSetting(String name, String description, SingleOut<Boolean> visible, Predicate<Item> filter, Item... value) {
-        return filteredRegistrySetting(name, description, visible, Registries.ITEM, entity -> entity.getName().getString(), filter, value);
+        return filteredRegistrySetting(name, description, visible, BuiltInRegistries.ITEM, entity -> entity.getName().getString(), filter, value);
     }
 
     public static Setting<List<EntityType<?>>> entityListSetting(String name, String description, SingleOut<Boolean> visible, EntityType<?>... value) {
-        return registrySetting(name, description, visible, Registries.ENTITY_TYPE, entity -> entity.getName().getString(), value);
+        return registrySetting(name, description, visible, BuiltInRegistries.ENTITY_TYPE, entity -> entity.getDescription().getString(), value);
     }
 
     public static Setting<List<EntityType<?>>> entityFilterdListSetting(String name, String description, SingleOut<Boolean> visible, Predicate<EntityType<?>> filter, EntityType<?>... value) {
-        return filteredRegistrySetting(name, description, visible, Registries.ENTITY_TYPE, entity -> entity.getName().getString(), filter, value);
+        return filteredRegistrySetting(name, description, visible, BuiltInRegistries.ENTITY_TYPE, entity -> entity.getDescription().getString(), filter, value);
     }
 
     @SafeVarargs

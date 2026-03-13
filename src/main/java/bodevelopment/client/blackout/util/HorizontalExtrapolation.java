@@ -2,43 +2,42 @@ package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.manager.managers.ExtrapolationManager;
 import bodevelopment.client.blackout.randomstuff.MotionData;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.List;
+import net.minecraft.world.phys.Vec3;
 
 public class HorizontalExtrapolation {
     public static MotionData getMotion(ExtrapolationManager.ExtrapolationData data) {
-        List<Vec3d> motions = OLEPOSSUtils.reverse(data.motions);
+        List<Vec3> motions = OLEPOSSUtils.reverse(data.motions);
         if (motions.size() < 5) {
-            return MotionData.of(motions.isEmpty() ? new Vec3d(0.0, 0.0, 0.0) : motions.getFirst());
+            return MotionData.of(motions.isEmpty() ? new Vec3(0.0, 0.0, 0.0) : motions.getFirst());
         } else {
             double prev = motionYaw(motions.getFirst());
             Yaw[] yaws = new Yaw[motions.size() - 1];
 
             for (int i = 0; i < yaws.length; i++) {
-                Vec3d motion = motions.get(i + 1);
+                Vec3 motion = motions.get(i + 1);
                 double yaw = motionYaw(motion);
-                yaws[i] = new Yaw(yaw, yaw - prev, motion.horizontalLength());
+                yaws[i] = new Yaw(yaw, yaw - prev, motion.horizontalDistance());
                 prev = yaw;
             }
 
             double avg = avgDiff(yaws);
             double lastDiff = yaws[3].diff();
             if (Math.abs(lastDiff) > 115.0 && Math.abs(avg) > 10.0) {
-                Vec3d average = averageMotion(motions);
-                return average.horizontalLength() > 0.15
-                        ? MotionData.of(averageMotion(motions).multiply(0.0)).reset()
-                        : MotionData.of(averageMotion(motions).multiply(0.0));
+                Vec3 average = averageMotion(motions);
+                return average.horizontalDistance() > 0.15
+                        ? MotionData.of(averageMotion(motions).scale(0.0)).reset()
+                        : MotionData.of(averageMotion(motions).scale(0.0));
             } else {
                 return MotionData.of(averageMotion(motions));
             }
         }
     }
 
-    private static Vec3d averageMotion(List<Vec3d> motions) {
-        Vec3d total = new Vec3d(0.0, 0.0, 0.0);
+    private static Vec3 averageMotion(List<Vec3> motions) {
+        Vec3 total = new Vec3(0.0, 0.0, 0.0);
 
-        for (Vec3d motion : motions) {
+        for (Vec3 motion : motions) {
             total = total.add(motion);
         }
 
@@ -55,8 +54,8 @@ public class HorizontalExtrapolation {
         return avg;
     }
 
-    private static double motionYaw(Vec3d motion) {
-        return RotationUtils.getYaw(Vec3d.ZERO, motion, 0.0);
+    private static double motionYaw(Vec3 motion) {
+        return RotationUtils.getYaw(Vec3.ZERO, motion, 0.0);
     }
 
     private record Yaw(double yaw, double diff, double length) {

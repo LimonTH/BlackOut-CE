@@ -22,24 +22,24 @@ import bodevelopment.client.blackout.util.render.WireframeRenderer;
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec2f;
-import net.minecraft.util.math.Vec3d;
+import com.mojang.blaze3d.vertex.PoseStack;
 import org.joml.Quaternionf;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
+import net.minecraft.client.Camera;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.protocol.game.ClientboundLoginPacket;
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
 
 public class LogoutSpots extends Module {
     private static LogoutSpots INSTANCE;
@@ -67,8 +67,8 @@ public class LogoutSpots extends Module {
     private final List<Spot> spots = new CopyOnWriteArrayList<>();
     private final TimerMap<UUID, ItemStack[]> prevItems = new TimerMap<>(true);
     private final TimerList<UUID> removedUUIDs = new TimerList<>(true);
-    private final TimerList<AbstractClientPlayerEntity> removedEntities = new TimerList<>(true);
-    private final MatrixStack matrixStack = new MatrixStack();
+    private final TimerList<AbstractClientPlayer> removedEntities = new TimerList<>(true);
+    private final PoseStack matrixStack = new PoseStack();
     private float alphaMulti;
 
     public LogoutSpots() {
@@ -91,28 +91,28 @@ public class LogoutSpots extends Module {
     }
 
     @Event
-    public void onJoin(GameJoinS2CPacket event) {
+    public void onJoin(ClientboundLoginPacket event) {
         this.spots.clear();
     }
 
     @Event
     public void onEntityRemove(PacketEvent.Receive.Pre event) {
-        if (event.packet instanceof PlayerRemoveS2CPacket(List<UUID> profileIds)) {
+        if (event.packet instanceof ClientboundPlayerInfoRemovePacket(List<UUID> profileIds)) {
             profileIds.stream().filter(this::checkMatchingEntities).forEach(uuid -> this.removedUUIDs.add(uuid, 1.0));
         }
     }
 
     @Event
     public void onRemove(RemoveEvent event) {
-        if (event.entity instanceof AbstractClientPlayerEntity player && this.checkMatchingUUIDs(player)) {
+        if (event.entity instanceof AbstractClientPlayer player && this.checkMatchingUUIDs(player)) {
             this.removedEntities.add(player, 1.0);
         }
     }
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.world != null) {
-            BlackOut.mc.world.getPlayers().forEach(player -> {
+        if (BlackOut.mc.level != null) {
+            BlackOut.mc.level.players().forEach(player -> {
                 UUID uuid = player.getGameProfile().getId();
                 if (!this.itemsEmpty(player)) {
                     ItemStack[] stacks;
@@ -123,11 +123,11 @@ public class LogoutSpots extends Module {
                     }
 
                     for (int i = 0; i < 4; i++) {
-                        stacks[i + 1] = player.getInventory().getArmorStack(3 - i);
+                        stacks[i + 1] = player.getInventory().getArmor(3 - i);
                     }
 
-                    stacks[0] = player.getMainHandStack();
-                    stacks[5] = player.getOffHandStack();
+                    stacks[0] = player.getMainHandItem();
+                    stacks[5] = player.getOffhandItem();
                     this.prevItems.removeKey(uuid);
                     this.prevItems.add(uuid, stacks, 0.3);
                 }
@@ -137,10 +137,10 @@ public class LogoutSpots extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player == null || BlackOut.mc.world == null) return;
+        if (BlackOut.mc.player == null || BlackOut.mc.level == null) return;
 
-        Camera camera = BlackOut.mc.gameRenderer.getCamera();
-        Vec3d camPos = camera.getPos();
+        Camera camera = BlackOut.mc.gameRenderer.getMainCamera();
+        Vec3 camPos = camera.getPosition();
 
         this.spots.removeIf(spot -> {
             UUID uuid = spot.player.getGameProfile().getId();
@@ -149,10 +149,10 @@ public class LogoutSpots extends Module {
             this.setAlpha(spot);
             if (this.alphaMulti <= 0.0F) return true;
 
-            event.stack.push();
+            event.stack.pushPose();
 
-            event.stack.loadIdentity();
-            event.stack.multiply(new Quaternionf(camera.getRotation()).conjugate());
+            event.stack.setIdentity();
+            event.stack.mulPose(new Quaternionf(camera.rotation()).conjugate());
 
             double x = spot.x - camPos.x;
             double y = spot.y - camPos.y;
@@ -173,14 +173,14 @@ public class LogoutSpots extends Module {
                 );
             } else {
                 Render3DUtils.start();
-                Box rawBox = spot.player.getBoundingBox();
-                Box absoluteBox = new net.minecraft.util.math.Box(
-                        spot.x - (rawBox.getLengthX() / 2.0),
+                AABB rawBox = spot.player.getBoundingBox();
+                AABB absoluteBox = new AABB(
+                        spot.x - (rawBox.getXsize() / 2.0),
                         spot.y,
-                        spot.z - (rawBox.getLengthZ() / 2.0),
-                        spot.x + (rawBox.getLengthX() / 2.0),
-                        spot.y + rawBox.getLengthY(),
-                        spot.z + (rawBox.getLengthZ() / 2.0)
+                        spot.z - (rawBox.getZsize() / 2.0),
+                        spot.x + (rawBox.getXsize() / 2.0),
+                        spot.y + rawBox.getYsize(),
+                        spot.z + (rawBox.getZsize() / 2.0)
                 );
 
                 Render3DUtils.box(
@@ -191,7 +191,7 @@ public class LogoutSpots extends Module {
                 );
                 Render3DUtils.end();
             }
-            event.stack.pop();
+            event.stack.popPose();
 
             if (this.infinite.get()) return false;
 
@@ -202,19 +202,19 @@ public class LogoutSpots extends Module {
 
     @Event
     public void onRender2D(RenderEvent.Hud.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             GlStateManager._disableDepthTest();
             GlStateManager._enableBlend();
             GlStateManager._disableCull();
-            this.matrixStack.push();
+            this.matrixStack.pushPose();
             RenderUtils.unGuiScale(this.matrixStack);
             this.spots.forEach(this::renderInfo);
-            this.matrixStack.pop();
+            this.matrixStack.popPose();
         }
     }
 
     private boolean anyPlayerMatches(UUID uuid) {
-        for (AbstractClientPlayerEntity player : BlackOut.mc.world.getPlayers()) {
+        for (AbstractClientPlayer player : BlackOut.mc.level.players()) {
             if (player.getGameProfile().getId().equals(uuid)) {
                 return true;
             }
@@ -223,15 +223,15 @@ public class LogoutSpots extends Module {
         return false;
     }
 
-    private boolean itemsEmpty(AbstractClientPlayerEntity player) {
+    private boolean itemsEmpty(AbstractClientPlayer player) {
         for (int i = 0; i < 4; i++) {
-            ItemStack armorStack = player.getInventory().getArmorStack(3 - i);
+            ItemStack armorStack = player.getInventory().getArmor(3 - i);
             if (!armorStack.isEmpty()) {
                 return false;
             }
         }
 
-        return player.getMainHandStack().isEmpty() && player.getOffHandStack().isEmpty();
+        return player.getMainHandItem().isEmpty() && player.getOffhandItem().isEmpty();
     }
 
     private void setAlpha(Spot spot) {
@@ -254,10 +254,10 @@ public class LogoutSpots extends Module {
     private void renderInfo(Spot spot) {
         this.setAlpha(spot);
         int textColor = ColorUtils.withAlpha(-1, (int) (this.alphaMulti * 255.0F));
-        Vec3d pos = this.infoPos(spot);
-        Vec2f coords = RenderUtils.getCoords(pos.getX(), pos.getY(), pos.getZ(), true);
+        Vec3 pos = this.infoPos(spot);
+        Vec2 coords = RenderUtils.getCoords(pos.x(), pos.y(), pos.z(), true);
         if (coords != null) {
-            this.matrixStack.push();
+            this.matrixStack.pushPose();
             this.matrixStack.translate(coords.x, coords.y, 0.0F);
             float scale = this.infoScale(pos) * this.infoScale.get().floatValue();
             this.matrixStack.scale(scale, scale, 1.0F);
@@ -278,7 +278,7 @@ public class LogoutSpots extends Module {
                 this.renderTime(spot, textColor);
             }
 
-            this.matrixStack.pop();
+            this.matrixStack.popPose();
         }
     }
 
@@ -307,7 +307,7 @@ public class LogoutSpots extends Module {
             width += BlackOut.FONT.getWidth(string);
         }
 
-        this.matrixStack.push();
+        this.matrixStack.pushPose();
         this.matrixStack.translate(-width / 2.0, 0.0, 0.0);
 
         for (String string : strings) {
@@ -315,7 +315,7 @@ public class LogoutSpots extends Module {
             this.matrixStack.translate(BlackOut.FONT.getWidth(string) + 3.0F, 0.0F, 0.0F);
         }
 
-        this.matrixStack.pop();
+        this.matrixStack.popPose();
         this.matrixStack.translate(0.0F, BlackOut.FONT.getHeight(), 0.0F);
     }
 
@@ -331,7 +331,7 @@ public class LogoutSpots extends Module {
 
         if (toRender.isEmpty()) return;
 
-        this.matrixStack.push();
+        this.matrixStack.pushPose();
         this.matrixStack.translate(-toRender.size() * 8, 0, 0);
 
         for (ItemComponent item : toRender) {
@@ -342,10 +342,10 @@ public class LogoutSpots extends Module {
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
             if (item.armor()) {
-                boolean isUnbreakable = stack.get(DataComponentTypes.UNBREAKABLE) != null;
-                if (!isUnbreakable && stack.isDamageable()) {
+                boolean isUnbreakable = stack.get(DataComponents.UNBREAKABLE) != null;
+                if (!isUnbreakable && stack.isDamageableItem()) {
                     float maxDamage = (float) stack.getMaxDamage();
-                    int dur = Math.round((maxDamage - stack.getDamage()) * 100.0F / maxDamage);
+                    int dur = Math.round((maxDamage - stack.getDamageValue()) * 100.0F / maxDamage);
                     BlackOut.FONT.text(this.matrixStack, dur + "%", 0.7F, 8.0F, 16.0F, color, true, true);
                 }
             } else if (stack.getCount() > 1) {
@@ -355,7 +355,7 @@ public class LogoutSpots extends Module {
             this.matrixStack.translate(16.0F, 0.0F, 0.0F);
         }
 
-        this.matrixStack.pop();
+        this.matrixStack.popPose();
         this.matrixStack.translate(0.0F, 20.0F, 0.0F);
     }
 
@@ -390,19 +390,19 @@ public class LogoutSpots extends Module {
         return false;
     }
 
-    private float infoScale(Vec3d pos) {
-        double distance = BlackOut.mc.gameRenderer.getCamera().getPos().subtract(pos).length();
+    private float infoScale(Vec3 pos) {
+        double distance = BlackOut.mc.gameRenderer.getMainCamera().getPosition().subtract(pos).length();
         float distSqrt = (float) Math.sqrt(distance);
         return 8.0F / distSqrt + 0.05F * distSqrt;
     }
 
-    private Vec3d infoPos(Spot spot) {
+    private Vec3 infoPos(Spot spot) {
         return BoxUtils.middle(spot.player.getBoundingBox());
     }
 
     private boolean checkMatchingEntities(UUID uuid) {
         return !this.removedEntities.removeAll(timer -> {
-            AbstractClientPlayerEntity player = timer.value;
+            AbstractClientPlayer player = timer.value;
             GameProfile profile = player.getGameProfile();
             if (uuid.equals(profile.getId())) {
                 this.spots.add(new Spot(player));
@@ -413,7 +413,7 @@ public class LogoutSpots extends Module {
         });
     }
 
-    private boolean checkMatchingUUIDs(AbstractClientPlayerEntity player) {
+    private boolean checkMatchingUUIDs(AbstractClientPlayer player) {
         GameProfile profile = player.getGameProfile();
         return !this.removedUUIDs.removeAll(timer -> {
             UUID uuid = timer.value;
@@ -430,7 +430,7 @@ public class LogoutSpots extends Module {
     }
 
     private static class Spot {
-        private final AbstractClientPlayerEntity player;
+        private final AbstractClientPlayer player;
         private final WireframeRenderer.ModelData modelData;
         private final double x, y, z;
         private final List<ItemComponent> items = new ArrayList<>();
@@ -440,18 +440,18 @@ public class LogoutSpots extends Module {
         private boolean seen = false;
         private long seenSince = 0L;
 
-        public Spot(AbstractClientPlayerEntity player) {
+        public Spot(AbstractClientPlayer player) {
             this.player = player;
-            float tickDelta = BlackOut.mc.getRenderTickCounter().getTickDelta(true);
+            float tickDelta = BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
-            this.x = MathHelper.lerp(tickDelta, player.lastRenderX, player.getX());
-            this.y = MathHelper.lerp(tickDelta, player.lastRenderY, player.getY());
-            this.z = MathHelper.lerp(tickDelta, player.lastRenderZ, player.getZ());
+            this.x = Mth.lerp(tickDelta, player.xOld, player.getX());
+            this.y = Mth.lerp(tickDelta, player.yOld, player.getY());
+            this.z = Mth.lerp(tickDelta, player.zOld, player.getZ());
 
             this.modelData = new WireframeRenderer.ModelData(player, tickDelta);
 
             this.health = player.getHealth() + player.getAbsorptionAmount();
-            PlayerListEntry entry = BlackOut.mc.getNetworkHandler().getPlayerListEntry(player.getGameProfile().getId());
+            PlayerInfo entry = BlackOut.mc.getConnection().getPlayerInfo(player.getGameProfile().getId());
             this.ping = entry != null ? entry.getLatency() : -1;
 
             StatsManager.TrackerData tracker = Managers.STATS.getStats(player);

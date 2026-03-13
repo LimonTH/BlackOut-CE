@@ -11,8 +11,8 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
-import net.minecraft.item.Items;
-import net.minecraft.util.Hand;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Items;
 
 public class MCP extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
@@ -27,9 +27,9 @@ public class MCP extends Module {
 
     @Event
     public void mouseClick(MouseButtonEvent event) {
-        if ((BlackOut.mc.player != null || BlackOut.mc.world != null) && BlackOut.mc.currentScreen == null) {
+        if ((BlackOut.mc.player != null || BlackOut.mc.level != null) && BlackOut.mc.screen == null) {
             if (event.button == 2) {
-                Hand hand = OLEPOSSUtils.getHand(Items.ENDER_PEARL);
+                InteractionHand hand = OLEPOSSUtils.getHand(Items.ENDER_PEARL);
                 FindResult result = this.mode.get().find(Items.ENDER_PEARL);
                 if (result.wasFound() || hand != null) {
                     if (hand != null || this.mode.get().swap(result.slot())) {

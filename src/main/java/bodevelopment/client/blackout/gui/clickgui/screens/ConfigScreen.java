@@ -8,7 +8,6 @@ import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import net.minecraft.util.math.MathHelper;
 import org.apache.commons.lang3.mutable.MutableDouble;
 
 import java.awt.*;
@@ -23,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
+import net.minecraft.util.Mth;
 
 public class ConfigScreen extends ClickGuiScreen {
     private static final int lineColor = new Color(50, 50, 50, 255).getRGB();
@@ -266,7 +266,7 @@ public class ConfigScreen extends ClickGuiScreen {
 
     private void renderConfigs() {
         this.prevLength = (this.configs.size() + this.cloudConfigs.size()) * 70 + 165;
-        this.stack.push();
+        this.stack.pushPose();
         this.stack.translate(0.0F, 15.0F - this.scroll.get(), 0.0F);
 
         this.first = true;
@@ -281,18 +281,18 @@ public class ConfigScreen extends ClickGuiScreen {
         this.first = true;
         this.cloudConfigs.forEach(this::renderCloudConfig);
 
-        this.stack.pop();
+        this.stack.popPose();
     }
 
     private void renderAdd() {
-        this.stack.push();
+        this.stack.pushPose();
         this.stack.translate(this.width / 2.0F, 30.0F, 0.0F);
         RenderUtils.roundedLeft(this.stack, -50.0F, 0.0F, 50.0F, 0.0F, 20.0F, 15.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
         RenderUtils.roundedRight(this.stack, 0.0F, 0.0F, 50.0F, 0.0F, 20.0F, 15.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
         BOTextures.getCloudIconRenderer().quad(this.stack, 15.0F, -20.0F, 40.0F, 40.0F);
         BOTextures.getPlusIconRenderer().quad(this.stack, -55.0F, -20.0F, 40.0F, 40.0F);
         RenderUtils.line(this.stack, 0.0F, -20.0F, 0.0F, 20.0F, lineColor);
-        this.stack.pop();
+        this.stack.popPose();
     }
 
     private void renderBottomBG() {
@@ -302,7 +302,7 @@ public class ConfigScreen extends ClickGuiScreen {
     }
 
     private void renderBottom() {
-        this.stack.push();
+        this.stack.pushPose();
         this.stack.translate(250.0F, this.height - 70.0F, 0.0F);
 
         for (int i = 0; i < 8; i++) {
@@ -312,7 +312,7 @@ public class ConfigScreen extends ClickGuiScreen {
 
             BlackOut.FONT.text(this.stack, iconNames[i], 1.6F, 0.0F, 18.0F, Color.WHITE, true, true);
         }
-        this.stack.pop();
+        this.stack.popPose();
     }
 
     private void renderCloudConfig(CloudConfig config) {
@@ -330,7 +330,7 @@ public class ConfigScreen extends ClickGuiScreen {
         if (!this.first) RenderUtils.line(this.stack, -10.0F, 0.0F, this.width + 10.0F, 0.0F, lineColor);
         this.first = false;
 
-        this.stack.push();
+        this.stack.pushPose();
         this.stack.translate(250.0F, 35.0F, 0.0F);
         boolean inUse = false;
 
@@ -348,7 +348,7 @@ public class ConfigScreen extends ClickGuiScreen {
 
             String animKey = name + i;
             MutableDouble anim = slotAnims.computeIfAbsent(animKey, k -> new MutableDouble(0));
-            anim.setValue(MathHelper.lerp(this.frameTime * 10.0F, (float)anim.getValue().doubleValue(), isHovered ? 1.0F : 0.0F));
+            anim.setValue(Mth.lerp(this.frameTime * 10.0F, (float)anim.getValue().doubleValue(), isHovered ? 1.0F : 0.0F));
             float animVal = anim.getValue().floatValue();
 
             RenderUtils.roundedShadow(this.stack, -4.0F, -4.0F, 8.0F, 8.0F, 10.0F, 10.0F, ColorUtils.SHADOW100I);
@@ -362,7 +362,7 @@ public class ConfigScreen extends ClickGuiScreen {
                 RenderUtils.rounded(this.stack, -size, -size, size * 2, size * 2, size, 0, ColorUtils.withAlpha(Color.WHITE.getRGB(), (int) (animVal * 120)), 0);
             }
         }
-        this.stack.pop();
+        this.stack.popPose();
 
         BOTextures.getCopyIconRenderer().quad(this.stack, 200.0F, 20.0F, 30.0F, 30.0F, Color.WHITE.getRGB());
         double time = mutableDouble.getValue();
@@ -382,17 +382,17 @@ public class ConfigScreen extends ClickGuiScreen {
 
     private int trashTextColor(double time) {
         float a = time <= 1.0 ? (float) Math.sqrt(time) : (time >= 4.5 ? 1f - (float) Math.sqrt((time - 4.5) * 2) : 1f);
-        return ColorUtils.withAlpha(Color.WHITE.getRGB(), (int) (MathHelper.clamp(a, 0, 1) * 255));
+        return ColorUtils.withAlpha(Color.WHITE.getRGB(), (int) (Mth.clamp(a, 0, 1) * 255));
     }
 
     private int lockColor(double time) {
         float a = time <= 0.7 ? 0 : (time <= 1.2 ? (float) Math.sqrt(time - 0.7) / 2f : (time >= 5.0 ? 1f : 0.35f));
-        return ColorUtils.withAlpha(Color.WHITE.getRGB(), (int) (MathHelper.clamp(a, 0, 1) * 255));
+        return ColorUtils.withAlpha(Color.WHITE.getRGB(), (int) (Mth.clamp(a, 0, 1) * 255));
     }
 
     private int trashColor(double time) {
         float a = time <= 1.0 ? 1f - (float) Math.sqrt(time) : 0f;
-        return ColorUtils.withAlpha(Color.WHITE.getRGB(), (int) (MathHelper.clamp(a, 0, 1) * 255));
+        return ColorUtils.withAlpha(Color.WHITE.getRGB(), (int) (Mth.clamp(a, 0, 1) * 255));
     }
 
     private void updateConfigs() {

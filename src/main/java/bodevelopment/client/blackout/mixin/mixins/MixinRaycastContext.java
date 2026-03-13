@@ -1,67 +1,67 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.interfaces.mixin.IRaycastContext;
-import net.minecraft.block.ShapeContext;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(RaycastContext.class)
+@Mixin(ClipContext.class)
 public class MixinRaycastContext implements IRaycastContext {
     @Mutable
     @Shadow
     @Final
-    private RaycastContext.ShapeType shapeType;
+    private ClipContext.Block block;
     @Mutable
     @Shadow
     @Final
-    private RaycastContext.FluidHandling fluid;
+    private ClipContext.Fluid fluid;
     @Mutable
     @Shadow
     @Final
-    private ShapeContext shapeContext;
+    private CollisionContext collisionContext;
     @Mutable
     @Shadow
     @Final
-    private Vec3d start;
+    private Vec3 from;
     @Mutable
     @Shadow
     @Final
-    private Vec3d end;
+    private Vec3 to;
 
     @Override
-    public void blackout_Client$set(Vec3d start, Vec3d end, RaycastContext.ShapeType shapeType, RaycastContext.FluidHandling fluidHandling, Entity entity) {
-        this.shapeType = shapeType;
+    public void blackout_Client$set(Vec3 start, Vec3 end, ClipContext.Block shapeType, ClipContext.Fluid fluidHandling, Entity entity) {
+        this.block = shapeType;
         this.fluid = fluidHandling;
-        this.shapeContext = ShapeContext.of(entity);
-        this.start = start;
-        this.end = end;
+        this.collisionContext = CollisionContext.of(entity);
+        this.from = start;
+        this.to = end;
     }
 
     @Override
-    public void blackout_Client$set(Vec3d start, Vec3d end) {
-        this.start = start;
-        this.end = end;
+    public void blackout_Client$set(Vec3 start, Vec3 end) {
+        this.from = start;
+        this.to = end;
     }
 
     @Override
-    public void blackout_Client$set(RaycastContext.ShapeType shapeType, RaycastContext.FluidHandling fluidHandling, Entity entity) {
-        this.shapeType = shapeType;
+    public void blackout_Client$set(ClipContext.Block shapeType, ClipContext.Fluid fluidHandling, Entity entity) {
+        this.block = shapeType;
         this.fluid = fluidHandling;
-        this.shapeContext = ShapeContext.of(entity);
+        this.collisionContext = CollisionContext.of(entity);
     }
 
     @Override
-    public void blackout_Client$setStart(Vec3d start) {
-        this.start = start;
+    public void blackout_Client$setStart(Vec3 start) {
+        this.from = start;
     }
 
     @Override
-    public void blackout_Client$setEnd(Vec3d end) {
-        this.end = end;
+    public void blackout_Client$setEnd(Vec3 end) {
+        this.to = end;
     }
 }

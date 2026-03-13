@@ -1,6 +1,6 @@
 package bodevelopment.client.blackout.event.events;
 
-import net.minecraft.entity.Entity;
+import net.minecraft.world.entity.Entity;
 
 public class RemoveEvent {
     private static final RemoveEvent INSTANCE = new RemoveEvent();

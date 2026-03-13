@@ -23,24 +23,27 @@ import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import net.minecraft.block.AirBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ExperienceOrbEntity;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.thrown.ExperienceBottleEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.SwordItem;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.*;
-import net.minecraft.util.shape.VoxelShape;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.ThrownExperienceBottle;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.level.block.AirBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -146,18 +149,18 @@ public class AutoMine extends Module {
     private final Setting<BlackOutColor> instaSideColor = this.sgRender.colorSetting("Instant Fill Color", new BlackOutColor(255, 0, 0, 50), "Fill color for instant mining.");
 
     private final TimerList<BlockPos> crystals = new TimerList<>(false);
-    private final List<PlayerEntity> enemies = new ArrayList<>();
+    private final List<Player> enemies = new ArrayList<>();
     public BlockPos minePos = null;
     public BlockPos crystalPos = null;
-    public AutoMine.MineType mineType = null;
+    public MineType mineType = null;
     public boolean started = false;
     private BlockPos prevPos = null;
-    private PlayerEntity target = null;
+    private Player target = null;
     private double progress = 0.0;
     private int minedFor = 0;
     private double prevProgress = 0.0;
     private double currentProgress = 0.0;
-    private BlockState prevState = Blocks.AIR.getDefaultState();
+    private BlockState prevState = Blocks.AIR.defaultBlockState();
     private boolean startedThisTick = false;
     private long lastPlace = 0L;
     private long lastAttack = 0L;
@@ -175,7 +178,7 @@ public class AutoMine extends Module {
 
     @Event
     public void onSent(PacketEvent.Sent event) {
-        if (this.resetOnSwitch.get() && event.packet instanceof UpdateSelectedSlotC2SPacket) {
+        if (this.resetOnSwitch.get() && event.packet instanceof ServerboundSetCarriedItemPacket) {
             this.shouldRestart = true;
         }
     }
@@ -187,10 +190,10 @@ public class AutoMine extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.world != null) {
+        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             this.crystals.update();
             this.enemies.clear();
-            BlackOut.mc.world.getPlayers().forEach(player -> {
+            BlackOut.mc.level.players().forEach(player -> {
                 if (!(BlackOut.mc.player.distanceTo(player) > 10.0F)) {
                     if (player != BlackOut.mc.player) {
                         if (!Managers.FRIENDS.isFriend(player)) {
@@ -201,13 +204,13 @@ public class AutoMine extends Module {
             });
             this.startedThisTick = false;
             this.updatePos();
-            if (this.minePos != null && this.mineType == AutoMine.MineType.Manual) {
+            if (this.minePos != null && this.mineType == MineType.Manual) {
                 if (this.manualRangeReset.get() && !SettingUtils.inMineRange(this.minePos)) {
                     this.prevMined = null;
                     this.started = false;
                     this.minePos = null;
                 } else {
-                    BlockState state = BlackOut.mc.world.getBlockState(this.minePos);
+                    BlockState state = BlackOut.mc.level.getBlockState(this.minePos);
                     if (!(state.getBlock() instanceof AirBlock)) {
                         this.prevState = state;
                     }
@@ -253,7 +256,7 @@ public class AutoMine extends Module {
     }
 
     private boolean paused(boolean placing) {
-        return (placing ? this.pauseEatPlacing : this.pauseEat).get() && BlackOut.mc.player.isUsingItem() || this.pauseSword.get() && BlackOut.mc.player.getMainHandStack().getItem() instanceof SwordItem;
+        return (placing ? this.pauseEatPlacing : this.pauseEat).get() && BlackOut.mc.player.isUsingItem() || this.pauseSword.get() && BlackOut.mc.player.getMainHandItem().getItem() instanceof SwordItem;
     }
 
     private boolean shouldRotateStart() {
@@ -273,20 +276,20 @@ public class AutoMine extends Module {
         if (this.prevMined != null) {
             Render3DUtils.box(BoxUtils.get(this.prevMined), this.instaSideColor.get(), this.instaLineColor.get(), this.instaRenderShape.get());
         } else if (this.minePos != null && this.started && this.prevProgress < p && p < Double.POSITIVE_INFINITY) {
-            p = MathHelper.lerp(tickDelta, this.prevProgress, p);
-            p = MathHelper.clamp(p, 0.0, 1.0);
+            p = Mth.lerp(tickDelta, this.prevProgress, p);
+            p = Mth.clamp(p, 0.0, 1.0);
             p = 1.0 - Math.pow(1.0 - p, this.animationExponent.get());
             p = Math.min(p / 2.0, 0.5);
             BlackOutColor sideColor = this.getSideColor(p * 2.0);
             BlackOutColor lineColor = this.getLineColor(p * 2.0);
-            Box box = this.getBox(p, this.animationMode.get());
+            AABB box = this.getBox(p, this.animationMode.get());
             if (box != null) {
                 Render3DUtils.box(box, sideColor, lineColor, this.renderShape.get());
             }
         }
     }
 
-    private Box getBox(double p, AutoMine.AnimationMode mode) {
+    private AABB getBox(double p, AnimationMode mode) {
         double up = 0.5;
         double down = 0.5;
         double sides = 0.5;
@@ -312,21 +315,21 @@ public class AutoMine extends Module {
         return this.getBox(sides, up, down);
     }
 
-    private Box getBox(double sides, double up, double down) {
+    private AABB getBox(double sides, double up, double down) {
         BlockState state = this.ncpState();
-        VoxelShape shape = state.getOutlineShape(BlackOut.mc.world, this.minePos);
+        VoxelShape shape = state.getShape(BlackOut.mc.level, this.minePos);
         if (shape.isEmpty()) {
             return null;
         } else {
-            Box from = shape.getBoundingBox();
-            Vec3d middle = BoxUtils.middle(from);
-            Vec3d scale = new Vec3d(from.getLengthX(), from.getLengthY(), from.getLengthZ());
-            return this.fromScale(middle, scale, sides, up, down).offset(this.minePos);
+            AABB from = shape.bounds();
+            Vec3 middle = BoxUtils.middle(from);
+            Vec3 scale = new Vec3(from.getXsize(), from.getYsize(), from.getZsize());
+            return this.fromScale(middle, scale, sides, up, down).move(this.minePos);
         }
     }
 
-    private Box fromScale(Vec3d m, Vec3d s, double sides, double up, double down) {
-        return new Box(
+    private AABB fromScale(Vec3 m, Vec3 s, double sides, double up, double down) {
+        return new AABB(
                 m.x - sides * s.x,
                 m.y - down * s.y,
                 m.z - sides * s.z,
@@ -375,14 +378,14 @@ public class AutoMine extends Module {
     }
 
     private BlockState ncpState() {
-        return this.mineType == AutoMine.MineType.Manual && this.manualRemine.get() && this.fastRemine.get() && !this.shouldInstant()
+        return this.mineType == MineType.Manual && this.manualRemine.get() && this.fastRemine.get() && !this.shouldInstant()
                 ? this.prevState
-                : BlackOut.mc.world.getBlockState(this.minePos);
+                : BlackOut.mc.level.getBlockState(this.minePos);
     }
 
     private void updatePos() {
-        if (this.minePos == null || this.mineType != AutoMine.MineType.Manual) {
-            AutoMine.Target target = this.getTarget();
+        if (this.minePos == null || this.mineType != MineType.Manual) {
+            Target target = this.getTarget();
             this.minePos = target.pos;
             this.crystalPos = target.crystal;
             this.mineType = target.type;
@@ -390,8 +393,8 @@ public class AutoMine extends Module {
         }
     }
 
-    private AutoMine.Target getTarget() {
-        AutoMine.Target target = null;
+    private Target getTarget() {
+        Target target = null;
         if (this.autoMine.get()) {
             target = this.targetCheck(target, this.getCev(), this.cevPriority);
             target = this.targetCheck(target, this.getTrapCev(), this.trapCevPriority);
@@ -400,23 +403,23 @@ public class AutoMine extends Module {
             target = this.targetCheck(target, this.getAntiBurrow(), this.antiBurrowPriority);
         }
 
-        return target == null ? new  AutoMine.Target(null, null, null, 0, null) : target;
+        return target == null ? new  Target(null, null, null, 0, null) : target;
     }
 
-    private int getPriority(AutoMine.Target target) {
+    private int getPriority(Target target) {
         return target == null ? 0 : target.priority;
     }
 
-    private  AutoMine.Target getCev() {
+    private  Target getCev() {
         BlockPos best = null;
-        PlayerEntity bestPlayer = null;
+        Player bestPlayer = null;
         double bestDist = 1000.0;
 
-        for (PlayerEntity player : this.enemies) {
+        for (Player player : this.enemies) {
             BlockPos pos = new BlockPos(player.getBlockX(), (int) Math.ceil(player.getBoundingBox().maxY), player.getBlockZ());
             if (!this.invalidCev(pos, player, this.minCevDamage, this.maxCevDamage, this.cevDamageCheck)) {
                 if (pos.equals(this.minePos)) {
-                    return new  AutoMine.Target(pos, pos.up(),  AutoMine.MineType.Cev, this.cevPriority.get().priority, player);
+                    return new  Target(pos, pos.above(),  MineType.Cev, this.cevPriority.get().priority, player);
                 }
 
                 if (!this.ignored(pos)) {
@@ -430,22 +433,22 @@ public class AutoMine extends Module {
             }
         }
 
-        return best == null ? null : new  AutoMine.Target(best, best.up(),  AutoMine.MineType.Cev, this.cevPriority.get().priority, bestPlayer);
+        return best == null ? null : new  Target(best, best.above(),  MineType.Cev, this.cevPriority.get().priority, bestPlayer);
     }
 
-    private  AutoMine.Target getTrapCev() {
+    private  Target getTrapCev() {
         BlockPos best = null;
-        PlayerEntity bestPlayer = null;
+        Player bestPlayer = null;
         double bestDist = 1000.0;
 
-        for (PlayerEntity player : this.enemies) {
+        for (Player player : this.enemies) {
             BlockPos eyePos = new BlockPos(player.getBlockX(), (int) Math.ceil(player.getBoundingBox().maxY) - 1, player.getBlockZ());
 
-            for (Direction dir : Direction.Type.HORIZONTAL) {
-                BlockPos pos = eyePos.offset(dir);
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                BlockPos pos = eyePos.relative(dir);
                 if (!this.invalidCev(pos, player, this.minTrapCevDamage, this.maxTrapCevDamage, this.trapCevDamageCheck)) {
                     if (pos.equals(this.minePos)) {
-                        return new  AutoMine.Target(pos, pos.up(),  AutoMine.MineType.TrapCev, this.trapCevPriority.get().priority, player);
+                        return new  Target(pos, pos.above(),  MineType.TrapCev, this.trapCevPriority.get().priority, player);
                     }
 
                     if (!this.ignored(pos)) {
@@ -460,22 +463,22 @@ public class AutoMine extends Module {
             }
         }
 
-        return best == null ? null : new  AutoMine.Target(best, best.up(),  AutoMine.MineType.TrapCev, this.trapCevPriority.get().priority, bestPlayer);
+        return best == null ? null : new  Target(best, best.above(),  MineType.TrapCev, this.trapCevPriority.get().priority, bestPlayer);
     }
 
-    private  AutoMine.Target getSurroundCev() {
+    private  Target getSurroundCev() {
         BlockPos best = null;
-        PlayerEntity bestPlayer = null;
+        Player bestPlayer = null;
         double bestDist = 1000.0;
 
-        for (PlayerEntity player : this.enemies) {
+        for (Player player : this.enemies) {
             BlockPos feetPos = new BlockPos(player.getBlockX(), (int) Math.round(player.getY()), player.getBlockZ());
 
-            for (Direction dir : Direction.Type.HORIZONTAL) {
-                BlockPos pos = feetPos.offset(dir);
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                BlockPos pos = feetPos.relative(dir);
                 if (!this.invalidCev(pos, player, this.minSurroundCevDamage, this.maxSurroundCevDamage, this.surroundCevDamageCheck)) {
                     if (pos.equals(this.minePos)) {
-                        return new  AutoMine.Target(pos, pos.up(),  AutoMine.MineType.SurroundCev, this.surroundCevPriority.get().priority, player);
+                        return new  Target(pos, pos.above(),  MineType.SurroundCev, this.surroundCevPriority.get().priority, player);
                     }
 
                     if (!this.ignored(pos)) {
@@ -492,34 +495,34 @@ public class AutoMine extends Module {
 
         return best == null
                 ? null
-                : new  AutoMine.Target(best, best.up(),  AutoMine.MineType.SurroundCev, this.surroundCevPriority.get().priority, bestPlayer);
+                : new  Target(best, best.above(),  MineType.SurroundCev, this.surroundCevPriority.get().priority, bestPlayer);
     }
 
-    private  AutoMine.Target getAutoCity() {
+    private  Target getAutoCity() {
         BlockPos best = null;
         BlockPos bestCrystal = null;
-        PlayerEntity bestPlayer = null;
+        Player bestPlayer = null;
         double bestDist = 1000.0;
 
-        for (PlayerEntity player : this.enemies) {
+        for (Player player : this.enemies) {
             BlockPos feetPos = new BlockPos(player.getBlockX(), (int) Math.round(player.getY()), player.getBlockZ());
 
-            for (Direction dir : Direction.Type.HORIZONTAL) {
-                BlockPos pos = feetPos.offset(dir);
-                BlockPos crystal = pos.offset(dir);
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                BlockPos pos = feetPos.relative(dir);
+                BlockPos crystal = pos.relative(dir);
                 if (SettingUtils.getPlaceOnDirection(pos) != null
-                        && SettingUtils.getPlaceOnDirection(crystal.down()) != null
-                        && this.crystalBlock(crystal.down(), false)
+                        && SettingUtils.getPlaceOnDirection(crystal.below()) != null
+                        && this.crystalBlock(crystal.below(), false)
                         && SettingUtils.inMineRange(pos)
-                        && SettingUtils.inInteractRange(crystal.down())
+                        && SettingUtils.inInteractRange(crystal.below())
                         && SettingUtils.inAttackRange(OLEPOSSUtils.getCrystalBox(crystal))) {
                     if (this.isInstant(pos)) {
-                        return new  AutoMine.Target(pos, crystal,  AutoMine.MineType.AutoCity, this.autoCityPriority.get().priority, player);
+                        return new  Target(pos, crystal,  MineType.AutoCity, this.autoCityPriority.get().priority, player);
                     }
 
                     if (!this.ignored(pos) && BlockUtils.mineable(pos)) {
                         if (this.autoCityDamageCheck.get()) {
-                            Vec3d crystalFeet = new Vec3d(crystal.getX() + 0.5, crystal.getY(), crystal.getZ() + 0.5);
+                            Vec3 crystalFeet = new Vec3(crystal.getX() + 0.5, crystal.getY(), crystal.getZ() + 0.5);
                             if (DamageUtils.crystalDamage(player, player.getBoundingBox(), crystalFeet, pos) < this.minAutoCityDamage.get()
                                     || DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), crystalFeet, pos)
                                     > this.maxAutoCityDamage.get()) {
@@ -539,19 +542,19 @@ public class AutoMine extends Module {
             }
         }
 
-        return best == null ? null : new  AutoMine.Target(best, bestCrystal,  AutoMine.MineType.AutoCity, this.autoCityPriority.get().priority, bestPlayer);
+        return best == null ? null : new  Target(best, bestCrystal,  MineType.AutoCity, this.autoCityPriority.get().priority, bestPlayer);
     }
 
-    private  AutoMine.Target getAntiBurrow() {
+    private  Target getAntiBurrow() {
         BlockPos best = null;
-        PlayerEntity bestPlayer = null;
+        Player bestPlayer = null;
         double bestDist = 1000.0;
 
-        for (PlayerEntity player : this.enemies) {
+        for (Player player : this.enemies) {
             BlockPos pos = new BlockPos(player.getBlockX(), (int) Math.round(player.getY()), player.getBlockZ());
             if (SettingUtils.getPlaceOnDirection(pos) != null && SettingUtils.inMineRange(pos)) {
                 if (this.isInstant(pos)) {
-                    return new  AutoMine.Target(pos, null,  AutoMine.MineType.AntiBurrow, this.antiBurrowPriority.get().priority, player);
+                    return new  Target(pos, null,  MineType.AntiBurrow, this.antiBurrowPriority.get().priority, player);
                 }
 
                 if (!this.ignored(pos) && BlockUtils.mineable(pos)) {
@@ -565,27 +568,27 @@ public class AutoMine extends Module {
             }
         }
 
-        return best == null ? null : new  AutoMine.Target(best, null,  AutoMine.MineType.AntiBurrow, this.antiBurrowPriority.get().priority, bestPlayer);
+        return best == null ? null : new  Target(best, null,  MineType.AntiBurrow, this.antiBurrowPriority.get().priority, bestPlayer);
     }
 
-    private boolean invalidCev(BlockPos pos, PlayerEntity player, Setting<Double> minDmg, Setting<Double> maxDmg, Setting<Boolean> dmgCheck) {
+    private boolean invalidCev(BlockPos pos, Player player, Setting<Double> minDmg, Setting<Double> maxDmg, Setting<Boolean> dmgCheck) {
         if (!this.crystalBlock(pos, true)) {
             return true;
         } else if (SettingUtils.getPlaceOnDirection(pos) == null) {
             return true;
         } else if (!SettingUtils.inMineRange(pos)
                 || !SettingUtils.inInteractRange(pos)
-                || !SettingUtils.inAttackRange(OLEPOSSUtils.getCrystalBox(pos.up()))) {
+                || !SettingUtils.inAttackRange(OLEPOSSUtils.getCrystalBox(pos.above()))) {
             return true;
         } else if (this.isInstant(pos)) {
             return false;
         } else if (EntityUtils.intersects(
-                BoxUtils.crystalSpawnBox(pos.up()),
-                entity -> !(entity instanceof EndCrystalEntity) && !(entity instanceof ExperienceOrbEntity) && !(entity instanceof ExperienceBottleEntity)
+                BoxUtils.crystalSpawnBox(pos.above()),
+                entity -> !(entity instanceof EndCrystal) && !(entity instanceof ExperienceOrb) && !(entity instanceof ThrownExperienceBottle)
         )) {
             return true;
         } else {
-            Vec3d crystalFeet = new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5);
+            Vec3 crystalFeet = new Vec3(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5);
             if (dmgCheck.get()) {
                 return DamageUtils.crystalDamage(player, player.getBoundingBox(), crystalFeet, pos) < minDmg.get() || DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), crystalFeet, pos) > maxDmg.get();
             } else {
@@ -595,7 +598,7 @@ public class AutoMine extends Module {
     }
 
     private boolean ignored(BlockPos pos) {
-        return this.ignore.get().contains(BlackOut.mc.world.getBlockState(pos).getBlock());
+        return this.ignore.get().contains(BlackOut.mc.level.getBlockState(pos).getBlock());
     }
 
     private boolean isInstant(BlockPos pos) {
@@ -603,16 +606,16 @@ public class AutoMine extends Module {
     }
 
     private double getDist(BlockPos pos) {
-        return BlackOut.mc.player.getEyePos().distanceTo(pos.toCenterPos());
+        return BlackOut.mc.player.getEyePosition().distanceTo(pos.getCenter());
     }
 
     private boolean crystalBlock(BlockPos pos, boolean cev) {
         Block bottom = this.getBlock(pos);
-        if (SettingUtils.oldCrystals() && !(this.getBlock(pos.up()) instanceof AirBlock)) {
+        if (SettingUtils.oldCrystals() && !(this.getBlock(pos.above()) instanceof AirBlock)) {
             return false;
         } else if (cev && bottom == Blocks.BEDROCK) {
             return false;
-        } else if (!(this.getBlock(pos.up()) instanceof AirBlock)) {
+        } else if (!(this.getBlock(pos.above()) instanceof AirBlock)) {
             return false;
         } else {
             return this.isInstant(pos) || bottom == Blocks.OBSIDIAN || bottom == Blocks.BEDROCK;
@@ -623,18 +626,18 @@ public class AutoMine extends Module {
         return Managers.BLOCK.blockState(pos).getBlock();
     }
 
-    private  AutoMine.Target targetCheck( AutoMine.Target target,  AutoMine.Target newTarget, Setting< AutoMine.Priority> prioritySetting) {
+    private  Target targetCheck( Target target,  Target newTarget, Setting< Priority> prioritySetting) {
         int priority = prioritySetting.get().priority;
         return priority >= 0 && newTarget != null && priority >= this.getPriority(target) ? newTarget : target;
     }
 
     private void updateAttacking() {
-        EndCrystalEntity target = this.getTargetCrystal();
+        EndCrystal target = this.getTargetCrystal();
         if (target != null) {
             if (this.rotateCheck(target)) {
                 if (!(System.currentTimeMillis() - this.lastAttack <= 1000.0 / this.attackSpeed.get())) {
                     if (this.attackSwing.get()) {
-                        this.clientSwing(this.attackHand.get(), Hand.MAIN_HAND);
+                        this.clientSwing(this.attackHand.get(), InteractionHand.MAIN_HAND);
                     }
 
                     this.attackEntity(target);
@@ -645,7 +648,7 @@ public class AutoMine extends Module {
         }
     }
 
-    private boolean rotateCheck(EndCrystalEntity target) {
+    private boolean rotateCheck(EndCrystal target) {
         if (!SettingUtils.shouldRotate(RotationType.Attacking)) {
             return true;
         } else {
@@ -655,13 +658,13 @@ public class AutoMine extends Module {
         }
     }
 
-    private EndCrystalEntity getTargetCrystal() {
-        EndCrystalEntity closestCrystal = null;
+    private EndCrystal getTargetCrystal() {
+        EndCrystal closestCrystal = null;
         double closestDistance = 69420.0;
 
-        for (Entity entity : BlackOut.mc.world.getEntities()) {
-            if (entity instanceof EndCrystalEntity crystal
-                    && this.crystals.contains(crystal.getBlockPos())
+        for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
+            if (entity instanceof EndCrystal crystal
+                    && this.crystals.contains(crystal.blockPosition())
                     && !AutoCrystal.getInstance().shouldAutoMineStop(entity)
                     && SettingUtils.inAttackRange(entity.getBoundingBox())) {
                 double distance = BlackOut.mc.player.distanceTo(entity);
@@ -684,7 +687,7 @@ public class AutoMine extends Module {
                             )
                     )
                     .slot();
-            ItemStack bestStack = holding ? Managers.PACKET.getStack() : BlackOut.mc.player.getInventory().getStack(slot);
+            ItemStack bestStack = holding ? Managers.PACKET.getStack() : BlackOut.mc.player.getInventory().getItem(slot);
             if (this.ncpProgress.get()) {
                 this.minedFor++;
             } else {
@@ -708,7 +711,7 @@ public class AutoMine extends Module {
 
     private boolean damageSyncCheck() {
         if (this.damageSync.get() && this.target != null) {
-            int amogus = -this.target.timeUntilRegen + 11 + this.syncPredict.get();
+            int amogus = -this.target.invulnerableTime + 11 + this.syncPredict.get();
             return amogus > 0 && amogus <= this.syncLength.get();
         } else {
             return true;
@@ -716,7 +719,7 @@ public class AutoMine extends Module {
     }
 
     private void mineEndUpdate(boolean holding, int slot) {
-        EndCrystalEntity crystalAt = this.endCrystalAt(this.crystalPos);
+        EndCrystal crystalAt = this.endCrystalAt(this.crystalPos);
         if (!this.notPressed() && !this.ignored(this.minePos)) {
             switch (this.mineType) {
                 case Cev:
@@ -725,7 +728,7 @@ public class AutoMine extends Module {
                             return;
                         }
 
-                        if (!this.placeCrystal(this.crystalPos.down())) {
+                        if (!this.placeCrystal(this.crystalPos.below())) {
                             return;
                         }
 
@@ -740,7 +743,7 @@ public class AutoMine extends Module {
                             return;
                         }
 
-                        if (!this.placeCrystal(this.crystalPos.down())) {
+                        if (!this.placeCrystal(this.crystalPos.below())) {
                             return;
                         }
 
@@ -752,13 +755,13 @@ public class AutoMine extends Module {
                 case SurroundCev:
                     if (crystalAt == null
                             && (
-                            !this.acceptCollide.get() || !EntityUtils.intersects(BoxUtils.get(this.crystalPos.down()), entity -> entity instanceof EndCrystalEntity)
+                            !this.acceptCollide.get() || !EntityUtils.intersects(BoxUtils.get(this.crystalPos.below()), entity -> entity instanceof EndCrystal)
                     )) {
                         if (EntityUtils.intersects(BoxUtils.crystalSpawnBox(this.crystalPos), entity -> true)) {
                             return;
                         }
 
-                        if (!this.placeCrystal(this.crystalPos.down())) {
+                        if (!this.placeCrystal(this.crystalPos.below())) {
                             return;
                         }
 
@@ -768,7 +771,7 @@ public class AutoMine extends Module {
                     }
                     break;
                 case AutoCity:
-                    if (crystalAt == null && this.placeCrystal.get() && !this.placeCrystal(this.crystalPos.down())) {
+                    if (crystalAt == null && this.placeCrystal.get() && !this.placeCrystal(this.crystalPos.below())) {
                         return;
                     }
             }
@@ -802,21 +805,21 @@ public class AutoMine extends Module {
                     if (!this.shouldRotateEnd() || this.rotateBlock(this.minePos, dir, this.getMineEndRotationVec(), RotationType.Mining, "mining")) {
                         boolean switched = false;
                         if (holding || (switched = this.pickaxeSwitch.get().swap(slot))) {
-                            this.sendSequenced(s -> new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, this.minePos, dir, s));
+                            this.sendSequenced(s -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, this.minePos, dir, s));
                             SettingUtils.mineSwing(SwingSettings.MiningSwingState.End);
                             if (this.mineEndSwing.get()) {
-                                this.clientSwing(this.mineHand.get(), Hand.MAIN_HAND);
+                                this.clientSwing(this.mineHand.get(), InteractionHand.MAIN_HAND);
                             }
 
                             if (!this.packet.get()) {
-                                BlackOut.mc.world.setBlockState(this.minePos, Blocks.AIR.getDefaultState());
+                                BlackOut.mc.level.setBlockAndUpdate(this.minePos, Blocks.AIR.defaultBlockState());
                             }
 
                             Managers.BLOCK.set(this.minePos, Blocks.AIR, true, true);
                             Managers.ENTITY.addSpawning(this.minePos);
                             if (this.shouldInstant()) {
                                 this.prevMined = this.minePos;
-                            } else if (!this.manualRemine.get() || this.mineType !=  AutoMine.MineType.Manual) {
+                            } else if (!this.manualRemine.get() || this.mineType !=  MineType.Manual) {
                                 this.prevMined = null;
                                 this.started = false;
                                 this.minePos = null;
@@ -861,7 +864,7 @@ public class AutoMine extends Module {
     }
 
     public void onStart(BlockPos pos) {
-        if (this.mineType ==  AutoMine.MineType.Manual && pos.equals(this.minePos)) {
+        if (this.mineType ==  MineType.Manual && pos.equals(this.minePos)) {
             if (!this.isMining(pos)) {
                 this.started = false;
             }
@@ -871,7 +874,7 @@ public class AutoMine extends Module {
             if (this.manualMine.get() && this.getBlock(pos) != Blocks.BEDROCK) {
                 this.started = false;
                 this.minePos = pos;
-                this.mineType =  AutoMine.MineType.Manual;
+                this.mineType =  MineType.Manual;
                 this.crystalPos = null;
             }
         }
@@ -891,9 +894,9 @@ public class AutoMine extends Module {
         };
     }
 
-    private EndCrystalEntity endCrystalAt(BlockPos pos) {
-        for (Entity entity : BlackOut.mc.world.getEntities()) {
-            if (entity instanceof EndCrystalEntity crystal && entity.getBlockPos().equals(pos)) {
+    private EndCrystal endCrystalAt(BlockPos pos) {
+        for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
+            if (entity instanceof EndCrystal crystal && entity.blockPosition().equals(pos)) {
                 return crystal;
             }
         }
@@ -911,7 +914,7 @@ public class AutoMine extends Module {
             if (placeDir == null) {
                 return false;
             } else {
-                Hand hand = OLEPOSSUtils.getHand(Items.END_CRYSTAL);
+                InteractionHand hand = OLEPOSSUtils.getHand(Items.END_CRYSTAL);
                 boolean switched = false;
                 FindResult result = this.crystalSwitch.get().find(Items.END_CRYSTAL);
                 if (hand == null && !result.wasFound()) {
@@ -926,7 +929,7 @@ public class AutoMine extends Module {
                         this.clientSwing(this.placeHand.get(), hand);
                     }
 
-                    this.interactBlock(hand, pos.toCenterPos(), placeDir, pos);
+                    this.interactBlock(hand, pos.getCenter(), placeDir, pos);
                     this.lastPlace = System.currentTimeMillis();
                     this.end("crystal");
                     if (switched) {
@@ -964,7 +967,7 @@ public class AutoMine extends Module {
                     this.pickaxeSwitch.get().swap(slot);
                 }
 
-                this.sendSequenced(s -> new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, dir, s));
+                this.sendSequenced(s -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, dir, s));
                 SettingUtils.mineSwing(SwingSettings.MiningSwingState.Start);
                 this.end("mining");
                 if (!isRemine && this.preSwitch.get()) {
@@ -972,14 +975,14 @@ public class AutoMine extends Module {
                 }
 
                 if (this.mineStartSwing.get()) {
-                    this.clientSwing(this.mineHand.get(), Hand.MAIN_HAND);
+                    this.clientSwing(this.mineHand.get(), InteractionHand.MAIN_HAND);
                 }
             }
         }
     }
 
     private void abort(BlockPos pos) {
-        this.sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN, 0));
+        this.sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN, 0));
         this.started = false;
     }
 
@@ -1033,53 +1036,53 @@ public class AutoMine extends Module {
         return this.currentProgress;
     }
 
-    private Vec3d getMineStartRotationVec(Direction dir) {
-        return this.minePos.toCenterPos();
+    private Vec3 getMineStartRotationVec(Direction dir) {
+        return this.minePos.getCenter();
     }
 
-    private Vec3d getMineEndRotationVec() {
+    private Vec3 getMineEndRotationVec() {
         switch (this.mineType) {
             case Cev:
             case TrapCev:
-                return new Vec3d(this.minePos.getX() + 0.5, this.minePos.getY() + 1, this.minePos.getZ() + 0.5);
+                return new Vec3(this.minePos.getX() + 0.5, this.minePos.getY() + 1, this.minePos.getZ() + 0.5);
             case SurroundCev:
             case SurroundMiner:
-                return new Vec3d(this.minePos.getX() + 0.5, this.minePos.getY(), this.minePos.getZ() + 0.5);
+                return new Vec3(this.minePos.getX() + 0.5, this.minePos.getY(), this.minePos.getZ() + 0.5);
             case AutoCity:
                 double x = Integer.compare(this.crystalPos.getX(), this.minePos.getX()) * 0.4;
                 double z = Integer.compare(this.crystalPos.getZ(), this.minePos.getZ()) * 0.4;
-                return new Vec3d(this.minePos.getX() + 0.5 + x, this.minePos.getY() + 0.1, this.minePos.getZ() + 0.5 + z);
+                return new Vec3(this.minePos.getX() + 0.5 + x, this.minePos.getY() + 0.1, this.minePos.getZ() + 0.5 + z);
             case Manual:
                 if (this.crystalBlock(this.minePos, true)) {
-                    return new Vec3d(this.minePos.getX() + 0.5, this.minePos.getY() + 1, this.minePos.getZ() + 0.5);
+                    return new Vec3(this.minePos.getX() + 0.5, this.minePos.getY() + 1, this.minePos.getZ() + 0.5);
                 }
 
-                return this.minePos.toCenterPos();
+                return this.minePos.getCenter();
             default:
-                return this.minePos.toCenterPos();
+                return this.minePos.getCenter();
         }
     }
 
-    private Vec3d getPlaceRotationVec(BlockPos pos) {
+    private Vec3 getPlaceRotationVec(BlockPos pos) {
         switch (this.mineType) {
             case Cev:
             case TrapCev:
-                return new Vec3d(this.minePos.getX() + 0.5, this.minePos.getY() + 1, this.minePos.getZ() + 0.5);
+                return new Vec3(this.minePos.getX() + 0.5, this.minePos.getY() + 1, this.minePos.getZ() + 0.5);
             case SurroundCev:
             case SurroundMiner:
-                return new Vec3d(this.minePos.getX() + 0.5, this.minePos.getY(), this.minePos.getZ() + 0.5);
+                return new Vec3(this.minePos.getX() + 0.5, this.minePos.getY(), this.minePos.getZ() + 0.5);
             case AutoCity:
                 double x = Integer.compare(this.minePos.getX(), pos.getX()) / 3.0;
                 double z = Integer.compare(this.minePos.getZ(), pos.getZ()) / 3.0;
-                return new Vec3d(pos.getX() + 0.5 + x, pos.getY() + 0.9, pos.getZ() + 0.5 + z);
+                return new Vec3(pos.getX() + 0.5 + x, pos.getY() + 0.9, pos.getZ() + 0.5 + z);
             case Manual:
             default:
-                return new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+                return new Vec3(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
         }
     }
 
-    private Vec3d getAttackRotationVec(EndCrystalEntity entity) {
-        return entity.getPos();
+    private Vec3 getAttackRotationVec(EndCrystal entity) {
+        return entity.position();
     }
 
     public enum AnimationMode {
@@ -1137,7 +1140,7 @@ public class AutoMine extends Module {
     }
 
     private record Target(BlockPos pos, BlockPos crystal,
-                           AutoMine.MineType type,
-                          int priority, PlayerEntity target) {
+                           MineType type,
+                          int priority, Player target) {
     }
 }
