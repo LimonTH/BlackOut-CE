@@ -22,6 +22,7 @@ import org.joml.Matrix4f;
 
 import java.util.List;
 
+// TODO: Треугольники говно, вернуть квадраты
 // TODO: Модели предметов и большинство вообщем-то слепков рендерятся не соблюдая своих граней, допустим предметы выглядят как квадраты, а не аккуратные контуры
 public class WireframeRenderer extends WireframeContext {
     public static final ModelVertexConsumerProvider provider = new ModelVertexConsumerProvider();
@@ -110,12 +111,30 @@ public class WireframeRenderer extends WireframeContext {
         HumanoidModel<PlayerRenderState> model = (HumanoidModel<PlayerRenderState>) rawModel;
         // TODO: слепок не принимает анимации родителя, стоит как статуя
         PlayerRenderState state = new PlayerRenderState();
-        state.isPassenger = data.riding;
-        state.isBaby = false;
-        state.attackTime = data.swingProgress;
-        state.swinging = data.swingProgress > 0;
+        state.eyeHeight = data.eyeHeight;
         state.isDiscrete = player.isShiftKeyDown();
+        state.ageInTicks = data.animationProgress;
+
+        state.bodyRot = data.bodyYaw;
+        state.yRot = data.headYaw;
+        state.xRot = data.pitch;
+        state.walkAnimationPos = data.limbPos;
+        state.walkAnimationSpeed = data.limbSpeed;
+        state.scale = data.scale;
+        state.isUpsideDown = data.flip;
+        state.bedOrientation = data.sleepDir;
+        state.pose = data.sleeping ? Pose.SLEEPING : (player.isShiftKeyDown() ? Pose.CROUCHING : Pose.STANDING);
+
+        state.isPassenger = data.riding;
+        state.attackTime = data.swingProgress;
+        state.swimAmount = data.leaningPitch;
+        state.isCrouching = player.isShiftKeyDown();
+        state.isVisuallySwimming = player.isVisuallySwimming();
+
         state.skin = player.getSkin();
+        state.swinging = data.swingProgress > 0;
+        state.showHat = true;
+        state.showJacket = true;
         model.setupAnim(state);
 
         stack.pushPose();
