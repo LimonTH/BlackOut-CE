@@ -46,28 +46,18 @@ public class ObsidianModule extends Module {
     public final SettingGroup sgAttack = this.addGroup("Attack");
     public final SettingGroup sgRender = this.addGroup("Render");
 
-    public final Setting<List<Block>> blocks = this.sgBlocks.blockListSetting("Blocks",
-            "The primary blocks to use for your protection (Obsidian/E-Chests).", Blocks.OBSIDIAN);
-    public final Setting<List<Block>> supportBlocks = this.sgBlocks.blockListSetting("Support Blocks",
-            "Blocks used to fill gaps below the surround to provide a placement surface.", Blocks.OBSIDIAN);
+    public final Setting<List<Block>> blocks = this.sgBlocks.blockListSetting("Blocks", "The primary blocks to use for your protection (Obsidian/E-Chests).", Blocks.OBSIDIAN);
+    public final Setting<List<Block>> supportBlocks = this.sgBlocks.blockListSetting("Support Blocks", "Blocks used to fill gaps below the surround to provide a placement surface.", Blocks.OBSIDIAN);
 
-    protected final Setting<Double> cooldown = this.sgSpeed.doubleSetting("Cooldown", 0.3, 0.0, 1.0, 0.01,
-            "Time in seconds to wait before retrying a failed placement at the same spot.");
-    private final Setting<Surround.PlaceDelayMode> placeDelayMode = this.sgSpeed.enumSetting("Place Delay Mode", Surround.PlaceDelayMode.Ticks,
-            "Whether to use game ticks or seconds for placement timing.");
-    private final Setting<Integer> placeDelayT = this.sgSpeed.intSetting("Place Tick Delay", 1, 0, 20, 1,
-            "Delay in ticks between placements.", () -> this.placeDelayMode.get() == Surround.PlaceDelayMode.Ticks);
-    private final Setting<Double> placeDelayS = this.sgSpeed.doubleSetting("Place Delay", 0.1, 0.0, 1.0, 0.01,
-            "Delay in seconds between placements.", () -> this.placeDelayMode.get() == Surround.PlaceDelayMode.Seconds);
-    private final Setting<Integer> places = this.sgSpeed.intSetting("Places", 1, 1, 20, 1,
-            "Maximum blocks to place per execution cycle.");
+    protected final Setting<Double> cooldown = this.sgSpeed.doubleSetting("Cooldown", 0.3, 0.0, 1.0, 0.01, "Time in seconds to wait before retrying a failed placement at the same spot.");
+    private final Setting<Surround.PlaceDelayMode> placeDelayMode = this.sgSpeed.enumSetting("Place Delay Mode", Surround.PlaceDelayMode.Ticks, "Whether to use game ticks or seconds for placement timing.");
+    private final Setting<Integer> placeDelayT = this.sgSpeed.intSetting("Place Tick Delay", 1, 0, 20, 1, "Delay in ticks between placements.", () -> this.placeDelayMode.get() == Surround.PlaceDelayMode.Ticks);
+    private final Setting<Double> placeDelayS = this.sgSpeed.doubleSetting("Place Delay", 0.1, 0.0, 1.0, 0.01, "Delay in seconds between placements.", () -> this.placeDelayMode.get() == Surround.PlaceDelayMode.Seconds);
+    private final Setting<Integer> places = this.sgSpeed.intSetting("Places", 1, 1, 20, 1, "Maximum blocks to place per execution cycle.");
 
-    protected final Setting<Boolean> attack = this.sgAttack.booleanSetting("Attack", true,
-            "Automatically clears crystals that obstruct your surround blocks.");
-    private final Setting<Double> attackSpeed = this.sgAttack.doubleSetting("Attack Speed", 4.0, 0.0, 20.0, 0.05,
-            "Frequency of attacks per second against obstructing crystals.", this.attack::get);
-    private final Setting<Boolean> alwaysAttack = this.sgAttack.booleanSetting("Always Attack", false,
-            "Continuously attack crystals even if the block is already placed.", this.attack::get);
+    protected final Setting<Boolean> attack = this.sgAttack.booleanSetting("Attack", true, "Automatically clears crystals that obstruct your surround blocks.");
+    private final Setting<Double> attackSpeed = this.sgAttack.doubleSetting("Attack Speed", 4.0, 0.0, 20.0, 0.05, "Frequency of attacks per second against obstructing crystals.", this.attack::get);
+    private final Setting<Boolean> alwaysAttack = this.sgAttack.booleanSetting("Always Attack", false, "Continuously attack crystals even if the block is already placed.", this.attack::get);
 
     private final Setting<Boolean> pauseEat = this.sgGeneral.booleanSetting("Pause Eat", false, "Pauses placement while using items.");
     private final Setting<Boolean> packet = this.sgGeneral.booleanSetting("Packet", false, "Uses packet-based placement for speed.");

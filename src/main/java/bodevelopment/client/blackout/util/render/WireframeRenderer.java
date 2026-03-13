@@ -27,9 +27,6 @@ public class WireframeRenderer extends WireframeContext {
     public static final ModelVertexConsumerProvider provider = new ModelVertexConsumerProvider();
     public static boolean hidden = false;
 
-    /**
-     * Рендер для статических анимаций (PopChams, LogoutSpots) с поддержкой прогресса.
-     */
     public static void renderServerPlayer(MatrixStack stack, AbstractClientPlayerEntity player,
                                           ModelData data, BlackOutColor lineColor,
                                           BlackOutColor sideColor, RenderShape shape,
@@ -77,24 +74,20 @@ public class WireframeRenderer extends WireframeContext {
         Render3DUtils.end();
     }
 
-    /**
-     * Обычный рендер модели без прогресса и анимаций.
-     */
     public static void renderModel(MatrixStack stack, AbstractClientPlayerEntity player,
                                    ModelData data, BlackOutColor lineColor,
                                    BlackOutColor sideColor, RenderShape shape) {
-
+        RenderSystem.enableDepthTest();
+        RenderSystem.enablePolygonOffset();
+        RenderSystem.polygonOffset(-1.0f, -1.0f);
         Render3DUtils.start();
         provider.consumer.start();
-
         MatrixStack modelStack = new MatrixStack();
         modelStack.loadIdentity();
 
         drawStaticPlayerModel(modelStack, player, data);
-
         List<Vec3d[]> positions = provider.consumer.positions;
         Matrix4f matrix = stack.peek().getPositionMatrix();
-
         if (shape.sides) {
             RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
             drawQuads(matrix, positions, sideColor.red / 255.0F, sideColor.green / 255.0F, sideColor.blue / 255.0F, sideColor.alpha / 255.0F);
@@ -106,6 +99,7 @@ public class WireframeRenderer extends WireframeContext {
         }
 
         Render3DUtils.end();
+        RenderSystem.disablePolygonOffset();
     }
 
     @SuppressWarnings("unchecked")
@@ -125,12 +119,17 @@ public class WireframeRenderer extends WireframeContext {
         state.baby = false;
         state.handSwingProgress = data.swingProgress;
         state.handSwinging = data.swingProgress > 0;
-        state.skinTextures = player.getSkinTextures();
 
-        state.field_53536 = !data.hasVehicle ? data.limbPos : 0.0F;
-        state.field_53537 = !data.hasVehicle ? Math.min(data.limbSpeed, 1.0F) : 0.0F;
+        state.field_53536 = data.limbPos;
+        state.field_53537 = data.limbSpeed;
         state.field_53538 = data.animationProgress;
-        state.leaningPitch = data.leaningPitch;
+
+        state.yawDegrees = data.headYaw;
+        state.pitch = data.pitch;
+        state.sneaking = player.isSneaking();
+        state.isGliding = player.isGliding();
+        state.isSwimming = player.isInSwimmingPose();
+        state.skinTextures = player.getSkinTextures();
 
         stack.push();
 
@@ -183,8 +182,18 @@ public class WireframeRenderer extends WireframeContext {
             for (int i = 0; i < 4; i++) {
                 Vec3d p1 = arr[i];
                 Vec3d p2 = arr[(i + 1) % 4];
-                builder.vertex(matrix, (float) p1.x, (float) p1.y, (float) p1.z).color(red, green, blue, alpha).normal(0, 1, 0);
-                builder.vertex(matrix, (float) p2.x, (float) p2.y, (float) p2.z).color(red, green, blue, alpha).normal(0, 1, 0);
+
+                float dx = (float) (p2.x - p1.x);
+                float dy = (float) (p2.y - p1.y);
+                float dz = (float) (p2.z - p1.z);
+
+                builder.vertex(matrix, (float) p1.x, (float) p1.y, (float) p1.z)
+                        .color(red, green, blue, alpha)
+                        .normal(dx, dy, dz);
+
+                builder.vertex(matrix, (float) p2.x, (float) p2.y, (float) p2.z)
+                        .color(red, green, blue, alpha)
+                        .normal(-dx, -dy, -dz);
             }
         });
         BufferRenderer.drawWithGlobalProgram(builder.end());
