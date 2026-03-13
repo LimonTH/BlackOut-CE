@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026.
+ * Original module logic by RegalMagic.
+ * Refined by Limon_TH.
+ */
+
 package bodevelopment.client.blackout.module.modules.combat.offensive;
 
 import bodevelopment.client.blackout.BlackOut;
@@ -89,10 +95,11 @@ public class AutoCrystalBase extends ObsidianModule {
 
                     if (!isValidForBase(pos, ac)) continue;
 
-                    double tDmg = getDmg(target, pos);
+                    double tDmg = getSimulatedDmg(target, pos);
+
                     if (tDmg < ac.getMinPlace().get()) continue;
 
-                    double sDmg = getDmg(BlackOut.mc.player, pos);
+                    double sDmg = getSimulatedDmg(BlackOut.mc.player, pos);
                     if (sDmg > ac.getMaxSelfPlace().get()) continue;
 
                     if (!isFriendSafe(pos, ac, tDmg)) continue;
@@ -111,7 +118,7 @@ public class AutoCrystalBase extends ObsidianModule {
     }
 
     private boolean isCurrentBaseBetter(BlockPos bestPos, AutoCrystal ac) {
-        double bestScore = getDmg(target, bestPos);
+        double bestScore = getSimulatedDmg(target, bestPos);
         BlockPos targetPos = target.getBlockPos();
 
         double rH = searchRadius.get();
@@ -156,6 +163,18 @@ public class AutoCrystalBase extends ObsidianModule {
         }
 
         return true;
+    }
+
+    private double getSimulatedDmg(PlayerEntity p, BlockPos pos) {
+        if (BlackOut.mc.world == null) return 0;
+
+        net.minecraft.block.BlockState oldState = BlackOut.mc.world.getBlockState(pos);
+        BlackOut.mc.world.setBlockState(pos, Blocks.OBSIDIAN.getDefaultState(), 0);
+
+        double dmg = DamageUtils.crystalDamage(p, p.getBoundingBox(), pos.toCenterPos().add(0, 0.5, 0));
+        BlackOut.mc.world.setBlockState(pos, oldState, 0);
+
+        return dmg;
     }
 
     private boolean isFriendSafe(BlockPos pos, AutoCrystal ac, double targetDmg) {
