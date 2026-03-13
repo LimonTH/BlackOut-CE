@@ -22,6 +22,7 @@ public class Setting<T> {
     protected float frameTime = 0.0F;
     private Consumer<T> changeListener = null;
     protected MatrixStack stack = null;
+    private SingleOut<Boolean> visibilityOverride = null;
 
     public Setting(String name, T val, String description, SingleOut<Boolean> visible) {
         this.name = name;
@@ -53,6 +54,7 @@ public class Setting<T> {
     }
 
     public boolean isVisible() {
+        if (this.visibilityOverride != null) return this.visibilityOverride.get();
         return this.visible == null || this.visible.get();
     }
 
@@ -115,5 +117,11 @@ public class Setting<T> {
 
     public void reset() {
         this.value = this.defaultValue;
+    }
+
+    public Setting<T> hide(T goodbyeValue) {
+        this.value = goodbyeValue;
+        this.visibilityOverride = () -> false;
+        return this;
     }
 }
