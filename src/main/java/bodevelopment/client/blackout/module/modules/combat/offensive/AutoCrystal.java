@@ -1344,7 +1344,7 @@ public class AutoCrystal extends Module {
         }
     }
 
-    private boolean inAttackRangePlacing(BlockPos pos) {
+    protected boolean inAttackRangePlacing(BlockPos pos) {
         switch (this.rangeExtMode.get()) {
             case Semi:
                 if (this.inAttackRangePlacing(OLEPOSSUtils.getCrystalBox(pos), null)) {
@@ -1372,7 +1372,7 @@ public class AutoCrystal extends Module {
         return !this.raytraceBypass.get() ? SettingUtils.inInteractRange(pos) : SettingUtils.inInteractRangeNoTrace(pos);
     }
 
-    private boolean intersects(BlockPos pos) {
+    protected boolean intersects(BlockPos pos) {
         Box box = new Box(
                 pos.getX(),
                 pos.getY(),
@@ -1733,7 +1733,7 @@ public class AutoCrystal extends Module {
         return player.getHealth() + player.getAbsorptionAmount();
     }
 
-    private boolean crystalBlock(BlockPos pos) {
+    protected boolean crystalBlock(BlockPos pos) {
         Block block = this.getState(pos.down()).getBlock();
         if (block != Blocks.OBSIDIAN && block != Blocks.BEDROCK) {
             return false;
@@ -1850,6 +1850,14 @@ public class AutoCrystal extends Module {
             return InvUtils.find(this.hotbar, this.inventory, item);
         }
     }
+
+    public Setting<Double> getMinPlace() { return minPlace; }
+    public Setting<Double> getMaxSelfPlace() { return maxSelfPlace; }
+    public Setting<Double> getMinSelfRatio() { return minSelfRatio; }
+    public Setting<Boolean> getCheckSelfPlacing() { return checkSelfPlacing; }
+    public Setting<Boolean> getCheckFriendPlacing() { return checkFriendPlacing; }
+    public Setting<Double> getMaxFriendPlace() { return maxFriendPlace; }
+    public Setting<Double> getMinFriendRatio() { return minFriendRatio; }
 
     public enum ActionSpeedMode {
         Sync,
