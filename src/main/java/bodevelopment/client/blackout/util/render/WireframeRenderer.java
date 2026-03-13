@@ -22,6 +22,7 @@ import org.joml.Matrix4f;
 
 import java.util.List;
 
+// TODO: Модели предметов и большинство вообщем-то слепков рендерятся не соблюдая своих граней, допустим предметы выглядят как квадраты, а не аккуратные контуры
 public class WireframeRenderer extends WireframeContext {
     public static final ModelVertexConsumerProvider provider = new ModelVertexConsumerProvider();
     public static boolean hidden = false;
@@ -166,22 +167,29 @@ public class WireframeRenderer extends WireframeContext {
     }
 
     public static void drawLinesFromList(Matrix4f matrix, List<Vec3> vertices, float red, float green, float blue, float alpha) {
-        if (vertices == null || vertices.size() < 2 || alpha <= 0) return;
+        if (vertices == null || vertices.size() < 6 || alpha <= 0) return;
+
+        RenderSystem.enableDepthTest();
+        RenderSystem.enableCull();
 
         Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder builder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
 
-        for (int i = 0; i < vertices.size() - 2; i += 3) {
-            Vec3 v1 = vertices.get(i);
-            Vec3 v2 = vertices.get(i + 1);
-            Vec3 v3 = vertices.get(i + 2);
+        for (int i = 0; i < vertices.size() - 5; i += 6) {
+            Vec3 v0 = vertices.get(i);
+            Vec3 v1 = vertices.get(i + 1);
+            Vec3 v2 = vertices.get(i + 2);
 
+            Vec3 v3 = vertices.get(i + 4);
+
+            addLine(builder, matrix, v0, v1, red, green, blue, alpha);
             addLine(builder, matrix, v1, v2, red, green, blue, alpha);
             addLine(builder, matrix, v2, v3, red, green, blue, alpha);
-            addLine(builder, matrix, v3, v1, red, green, blue, alpha);
+            addLine(builder, matrix, v3, v0, red, green, blue, alpha);
         }
 
         BufferUploader.drawWithShader(builder.buildOrThrow());
+        RenderSystem.disableCull();
     }
 
     private static void addLine(BufferBuilder builder, Matrix4f matrix, Vec3 p1, Vec3 p2, float r, float g, float b, float a) {
