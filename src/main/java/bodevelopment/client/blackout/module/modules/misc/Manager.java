@@ -148,6 +148,7 @@ public class Manager extends Module {
 
     @Event
     public void onKey(KeyEvent event) {
+        if (BlackOut.mc.currentScreen instanceof net.minecraft.client.gui.screen.ChatScreen) return;
         if (event.pressed && this.chestSwap.get().isKey(event.key) && this.currentlyElytra != null) {
             this.doChestSwap();
         }
@@ -155,6 +156,7 @@ public class Manager extends Module {
 
     @Event
     public void onKey(MouseButtonEvent event) {
+        if (BlackOut.mc.currentScreen instanceof net.minecraft.client.gui.screen.ChatScreen) return;
         if (event.pressed && this.chestSwap.get().isMouse(event.button) && this.currentlyElytra != null) {
             this.doChestSwap();
         }

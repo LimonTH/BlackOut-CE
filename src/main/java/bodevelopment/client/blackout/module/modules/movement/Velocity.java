@@ -219,8 +219,8 @@ public class Velocity extends Module {
     }
 
     private void sendGrimPackets() {
-        Vec3d vec = Managers.PACKET.pos;
-        BlockPos pos = new BlockPos((int) Math.floor(vec.x), (int) Math.floor(vec.y) - 1, (int) Math.floor(vec.z));
+        if (BlackOut.mc.player == null) return;
+        BlockPos pos = BlackOut.mc.player.isCrawling() ? BlackOut.mc.player.getBlockPos() : BlackOut.mc.player.getBlockPos().up();
         Managers.PACKET.sendInstantly(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN, 0));
         Managers.PACKET.sendInstantly(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN, 0));
     }
