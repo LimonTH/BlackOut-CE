@@ -14,11 +14,11 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FakePlayerEntity;
 import bodevelopment.client.blackout.randomstuff.timers.TickTimerList;
 import java.util.concurrent.ThreadLocalRandom;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
+
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.network.protocol.game.ClientboundExplodePacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.entity.Entity;
@@ -26,6 +26,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.entity.vehicle.Minecart;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.phys.Vec3;
 
 public class Velocity extends Module {
@@ -35,8 +36,8 @@ public class Velocity extends Module {
     private final SettingGroup sgPush = this.addGroup("Push");
 
     public final Setting<Mode> mode = this.sgKnockback.enumSetting("Reduction Mode", Mode.Simple, "The algorithm used to process incoming velocity packets.");
-    public final Setting<Double> horizontal = this.sgKnockback.doubleSetting("Horizontal Factor", 0.0, 0.0, 1.0, 0.01, "The percentage of horizontal impulse to retain. (1.00 is full cancel)", () -> this.mode.get() == Mode.Simple || this.mode.get() == Mode.Matrix_AAC);
-    public final Setting<Double> vertical = this.sgKnockback.doubleSetting("Vertical Factor", 0.0, 0.0, 1.0, 0.01, "The percentage of vertical impulse to retain. (1.00 is full cancel)", () -> this.mode.get() == Mode.Simple || this.mode.get() == Mode.Matrix_AAC);
+    public final Setting<Double> horizontal = this.sgKnockback.doubleSetting("Horizontal Velocity", 0.0, 0.0, 1.0, 0.01, "How much horizontal velocity to KEEP. (0.00 = No KB, 1.00 = Vanilla)");
+    public final Setting<Double> vertical = this.sgKnockback.doubleSetting("Vertical Velocity", 0.0, 0.0, 1.0, 0.01, "How much vertical velocity to KEEP. (0.00 = No KB, 1.00 = Vanilla)");
     public final Setting<Double> hChance = this.sgKnockback.doubleSetting("Horizontal Probability", 1.0, 0.0, 1.0, 0.01, "The likelihood that horizontal reduction will be applied to a packet.", () -> this.mode.get() == Mode.Simple || this.mode.get() == Mode.Matrix_AAC);
     public final Setting<Double> vChance = this.sgKnockback.doubleSetting("Vertical Probability", 1.0, 0.0, 1.0, 0.01, "The likelihood that vertical reduction will be applied to a packet.", () -> this.mode.get() == Mode.Simple || this.mode.get() == Mode.Matrix_AAC);
     public final Setting<Double> chance = this.sgKnockback.doubleSetting("Execution Chance", 1.0, 0.0, 1.0, 0.01, "The overall probability of the velocity cancellation triggering.", () -> this.mode.get() == Mode.Grim);
@@ -102,27 +103,26 @@ public class Velocity extends Module {
     }
 
     @Event
-    public void onVelocity(PacketEvent.Receive.Post event) {
+    public void onVelocity(PacketEvent.Receive.Pre event) {
         if (event.packet instanceof ClientboundSetEntityMotionPacket packet) {
             if (BlackOut.mc.player == null || BlackOut.mc.player.getId() != packet.getId()) {
                 return;
             }
             switch (this.mode.get()) {
                 case Simple:
-                    int x = (int) (packet.getXa() - BlackOut.mc.player.getDeltaMovement().x * 8000.0);
-                    int y = (int) (packet.getYa() - BlackOut.mc.player.getDeltaMovement().y * 8000.0);
-                    int z = (int) (packet.getZa() - BlackOut.mc.player.getDeltaMovement().z * 8000.0);
+                    double xVel = packet.getXa();
+                    double yVel = packet.getYa();
+                    double zVel = packet.getZa();
+
                     double random = ThreadLocalRandom.current().nextDouble();
+
                     if (this.hChance.get() >= random) {
-                        ((IEntityVelocityUpdateS2CPacket) packet)
-                                .blackout_Client$setX((int) (x * this.horizontal.get() + BlackOut.mc.player.getDeltaMovement().x * 8000.0));
-                        ((IEntityVelocityUpdateS2CPacket) packet)
-                                .blackout_Client$setZ((int) (z * this.horizontal.get() + BlackOut.mc.player.getDeltaMovement().z * 8000.0));
+                        ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setX((int) (xVel * this.horizontal.get()));
+                        ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setZ((int) (zVel * this.horizontal.get()));
                     }
 
                     if (this.vChance.get() >= random) {
-                        ((IEntityVelocityUpdateS2CPacket) packet)
-                                .blackout_Client$setY((int) (y * this.vertical.get() + BlackOut.mc.player.getDeltaMovement().y * 8000.0));
+                        ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setY((int) (yVel * this.vertical.get()));
                     }
                     break;
                 case Delayed:
@@ -232,22 +232,15 @@ public class Velocity extends Module {
 
     private void sendGrimPackets() {
         if (BlackOut.mc.player == null) return;
-        BlockPos pos = BlackOut.mc.player.isVisuallyCrawling() ? BlackOut.mc.player.blockPosition() : BlackOut.mc.player.blockPosition().above();
-        Managers.PACKET.sendInstantly(new ServerboundPlayerActionPacket(
-                ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK,
-                pos,
-                Direction.DOWN,
-                0
-        ));
-        Managers.PACKET.sendInstantly(new ServerboundPlayerActionPacket(
-                ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
-                pos,
-                Direction.DOWN,
-                0
+
+        Managers.PACKET.sendInstantly(new ServerboundContainerClickPacket(
+                0, 0, -1, 0, ClickType.PICKUP,
+                BlackOut.mc.player.getInventory().getSelected(),
+                new Int2ObjectOpenHashMap<>()
         ));
     }
 
-    private void grimCancel(PacketEvent.Receive.Post event, boolean explosion) {
+    private void grimCancel(PacketEvent.Receive.Pre event, boolean explosion) {
         this.sendGrimPackets();
         event.setCancelled(true);
     }

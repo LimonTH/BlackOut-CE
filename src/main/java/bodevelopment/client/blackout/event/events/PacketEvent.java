@@ -16,12 +16,13 @@ public class PacketEvent {
             }
         }
 
-        public static class Pre {
+        public static class Pre extends Cancellable {
             private static final Pre INSTANCE = new Pre();
             public Packet<?> packet = null;
 
             public static Pre get(Packet<?> packet) {
                 INSTANCE.packet = packet;
+                INSTANCE.setCancelled(false);
                 return INSTANCE;
             }
         }
