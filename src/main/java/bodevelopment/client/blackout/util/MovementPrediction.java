@@ -1,6 +1,6 @@
 package bodevelopment.client.blackout.util;
 
-import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
+import bodevelopment.client.blackout.interfaces.mixin.IVec3;
 import java.util.List;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
@@ -59,7 +59,7 @@ public class MovementPrediction {
     }
 
     private static void set(Vec3 vec, Vec3 to) {
-        ((IVec3d) vec).blackout_Client$set(to.x, to.y, to.z);
+        ((IVec3) vec).blackout_Client$set(to.x, to.y, to.z);
     }
 
     public static double approximateYVelocity(double deltaY, int tickDelta, int iterations) {

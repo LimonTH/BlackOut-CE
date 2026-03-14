@@ -3,7 +3,7 @@ package bodevelopment.client.blackout.module.modules.combat.misc;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
-import bodevelopment.client.blackout.mixin.accessors.AccessorInteractEntityC2SPacket;
+import bodevelopment.client.blackout.mixin.accessors.AccessorServerboundInteractPacket;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -26,7 +26,7 @@ public class SuperKnockback extends Module {
     public void onSend(PacketEvent.Send event) {
         if (BlackOut.mc.player != null) {
             if (!this.check.get() || BlackOut.mc.player.getDeltaMovement().x() != 0.0 && BlackOut.mc.player.getDeltaMovement().z() != 0.0) {
-                if (event.packet instanceof AccessorInteractEntityC2SPacket packet
+                if (event.packet instanceof AccessorServerboundInteractPacket packet
                         && packet.getType().getType() == ServerboundInteractPacket.ActionType.ATTACK
                         && BlackOut.mc.level.getEntity(packet.getId()) instanceof LivingEntity) {
                     if (!BlackOut.mc.player.isSprinting()) {

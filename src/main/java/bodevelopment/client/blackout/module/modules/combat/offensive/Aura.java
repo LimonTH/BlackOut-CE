@@ -7,7 +7,7 @@ import bodevelopment.client.blackout.event.events.GameJoinEvent;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
-import bodevelopment.client.blackout.interfaces.mixin.IRaycastContext;
+import bodevelopment.client.blackout.interfaces.mixin.IClipContext;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.MoveUpdateModule;
 import bodevelopment.client.blackout.module.OnlyDev;
@@ -879,7 +879,7 @@ public class Aura extends MoveUpdateModule {
     }
 
     private boolean raycast(Vec3 from, Vec3 to) {
-        ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(from, to);
+        ((IClipContext) DamageUtils.raycastContext).blackout_Client$set(from, to);
         return DamageUtils.raycast(DamageUtils.raycastContext, false).getType() == HitResult.Type.MISS;
     }
 

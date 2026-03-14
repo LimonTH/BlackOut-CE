@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.event.events;
 
 import bodevelopment.client.blackout.event.Cancellable;
-import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
+import bodevelopment.client.blackout.interfaces.mixin.IVec3;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.modules.combat.defensive.Clip;
 import bodevelopment.client.blackout.module.modules.misc.Clear;
@@ -51,7 +51,7 @@ public class MoveEvent {
         public void setXZ(Module module, double x, double z) {
             int v = this.getValue(module);
             if (this.xzValue <= v) {
-                ((IVec3d) this.movement).blackout_Client$setXZ(x, z);
+                ((IVec3) this.movement).blackout_Client$setXZ(x, z);
                 this.xzValue = v;
             }
         }
@@ -59,7 +59,7 @@ public class MoveEvent {
         public void setY(Module module, double y) {
             int v = this.getValue(module);
             if (this.yValue <= v) {
-                ((IVec3d) this.movement).blackout_Client$setY(y);
+                ((IVec3) this.movement).blackout_Client$setY(y);
                 this.yValue = v;
             }
         }

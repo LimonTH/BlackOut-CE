@@ -4,7 +4,7 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.gui.menu.Account;
-import bodevelopment.client.blackout.interfaces.mixin.IMinecraftClient;
+import bodevelopment.client.blackout.interfaces.mixin.IMinecraft;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.util.FileUtils;
 import com.google.gson.JsonElement;
@@ -101,7 +101,7 @@ public class AltManager extends Manager {
 
     public void switchToOriginal() {
         if (originalSession != null) {
-            ((IMinecraftClient) BlackOut.mc).blackout_Client$setSession(
+            ((IMinecraft) BlackOut.mc).blackout_Client$setSession(
                     originalSession.getName(),
                     originalSession.getProfileId(),
                     originalSession.getAccessToken(),

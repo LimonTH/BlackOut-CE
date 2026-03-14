@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
-import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
+import bodevelopment.client.blackout.interfaces.mixin.IVec3;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -54,7 +54,7 @@ public class MovementUtils {
         double x = Math.abs(xm) <= Math.abs(xd) ? xm : xd;
         double z = Math.abs(zm) <= Math.abs(zd) ? zm : zd;
         y(movement, x, z, step, reverseStep);
-        ((IVec3d) movement).blackout_Client$setXZ(x, z);
+        ((IVec3) movement).blackout_Client$setXZ(x, z);
     }
 
     private static void y(Vec3 movement, double x, double z, int step, int rev) {
@@ -63,7 +63,7 @@ public class MovementUtils {
                 && OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(x, 0.0, z))) {
             double s = getStep(BlackOut.mc.player.getBoundingBox().move(x, 0.0, z), step);
             if (s > 0.0) {
-                ((IVec3d) movement).blackout_Client$setY(s);
+                ((IVec3) movement).blackout_Client$setY(s);
                 BlackOut.mc.player.setDeltaMovement(BlackOut.mc.player.getDeltaMovement().x, 0.0, BlackOut.mc.player.getDeltaMovement().z);
             }
         } else {
@@ -71,7 +71,7 @@ public class MovementUtils {
                     && !OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(x, -0.04, z))) {
                 double s = getReverse(BlackOut.mc.player.getBoundingBox(), rev);
                 if (s > 0.0) {
-                    ((IVec3d) movement).blackout_Client$setY(-s);
+                    ((IVec3) movement).blackout_Client$setY(-s);
                     BlackOut.mc.player.setDeltaMovement(BlackOut.mc.player.getDeltaMovement().x, 0.0, BlackOut.mc.player.getDeltaMovement().z);
                 }
             }

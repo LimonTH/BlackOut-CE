@@ -6,8 +6,8 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.interfaces.functional.DoubleConsumer;
 import bodevelopment.client.blackout.interfaces.functional.SingleOut;
-import bodevelopment.client.blackout.interfaces.mixin.IRaycastContext;
-import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
+import bodevelopment.client.blackout.interfaces.mixin.IClipContext;
+import bodevelopment.client.blackout.interfaces.mixin.IVec3;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.SettingsModule;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -251,7 +251,7 @@ public class RotationSettings extends SettingsModule {
                     return true;
                 }
 
-                ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePosition(), end);
+                ((IClipContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePosition(), end);
                 result = DamageUtils.raycast(DamageUtils.raycastContext, false);
                 if (result.getType() == HitResult.Type.BLOCK && result.getBlockPos().equals(pos)) {
                     return true;
@@ -261,7 +261,7 @@ public class RotationSettings extends SettingsModule {
                         && SettingUtils.placeRangeTo(pos) < SettingUtils.getPlaceWallsRange();
             case DirectionStrict:
                 end = RotationUtils.rotationVec(yaw, pitch, BlackOut.mc.player.getEyePosition(), 7.0);
-                ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePosition(), end);
+                ((IClipContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePosition(), end);
                 result = DamageUtils.raycast(DamageUtils.raycastContext, false);
                 if (result.getType() == HitResult.Type.BLOCK && result.getBlockPos().equals(pos) && result.getDirection() == dir) {
                     return true;
@@ -455,7 +455,7 @@ public class RotationSettings extends SettingsModule {
                         return false;
                     }
 
-                    ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePosition(), pos.get());
+                    ((IClipContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePosition(), pos.get());
                     boolean visible = DamageUtils.raycast(DamageUtils.raycastContext, false).getType() == HitResult.Type.MISS;
                     if (visible) {
                         return true;
@@ -542,20 +542,20 @@ public class RotationSettings extends SettingsModule {
 
         for (int i = 1; i <= 9; i++) {
             double x = i / 10.0;
-            ((IVec3d) v).blackout_Client$setX(box.minX + lenX * x);
+            ((IVec3) v).blackout_Client$setX(box.minX + lenX * x);
 
             for (int j = 1; j <= 9; j++) {
                 double y = j / 10.0;
-                ((IVec3d) v).blackout_Client$setY(box.minY + lenY * y);
+                ((IVec3) v).blackout_Client$setY(box.minY + lenY * y);
 
                 for (int k = 1; k <= 9; k++) {
                     double z = k / 10.0;
-                    ((IVec3d) v).blackout_Client$setZ(box.minZ + lenZ * z);
+                    ((IVec3) v).blackout_Client$setZ(box.minZ + lenZ * z);
 
                     double distance = BlackOut.mc.player.getEyePosition().distanceTo(v);
                     if (!(distance >= SettingUtils.getAttackRange())) {
                         if (distance > SettingUtils.getAttackWallsRange()) {
-                            ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePosition(), v);
+                            ((IClipContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePosition(), v);
                             BlockHitResult result = DamageUtils.raycast(DamageUtils.raycastContext, false);
                             if (result.getType() != HitResult.Type.MISS) {
                                 continue;
@@ -568,7 +568,7 @@ public class RotationSettings extends SettingsModule {
                         double d = dx * dx + dy * dy + dz * dz;
                         if (!(d >= cd)) {
                             cd = d;
-                            ((IVec3d) vec).blackout_Client$set(v.x, v.y, v.z);
+                            ((IVec3) vec).blackout_Client$set(v.x, v.y, v.z);
                         }
                     }
                 }

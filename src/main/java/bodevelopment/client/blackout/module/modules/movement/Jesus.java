@@ -4,7 +4,7 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.event.events.PacketEvent;
-import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
+import bodevelopment.client.blackout.interfaces.mixin.IVec3;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
@@ -100,7 +100,7 @@ public class Jesus extends Module {
     private void tickFast(MoveEvent.Pre event) {
         if (BlackOut.mc.player.isInWater() && !BlackOut.mc.player.isUnderWater()
                 || BlackOut.mc.player.isInLava() && !BlackOut.mc.player.isEyeInFluid(FluidTags.LAVA)) {
-            ((IVec3d) BlackOut.mc.player.getDeltaMovement()).blackout_Client$setY(this.bob.get());
+            ((IVec3) BlackOut.mc.player.getDeltaMovement()).blackout_Client$setY(this.bob.get());
             if (this.toggle.get() && (!BlackOut.mc.player.isInLava() || BlackOut.mc.player.isEyeInFluid(FluidTags.LAVA)) && !this.isSlowed) {
                 double motion = MovementUtils.getSpeed(this.waterSpeed.get());
                 if (BlackOut.mc.player.hasEffect(MobEffects.MOVEMENT_SPEED)) {

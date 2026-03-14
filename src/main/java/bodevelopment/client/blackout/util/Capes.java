@@ -2,7 +2,6 @@ package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.interfaces.mixin.IUUIDHolder;
-import bodevelopment.client.blackout.mixin.mixins.MixinPlayerEntityRenderState;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import com.mojang.blaze3d.systems.RenderSystem;
 import javax.imageio.ImageIO;

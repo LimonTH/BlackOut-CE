@@ -5,7 +5,7 @@ import bodevelopment.client.blackout.enums.HoleType;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.event.events.PacketEvent;
-import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
+import bodevelopment.client.blackout.interfaces.mixin.IVec3;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.Notifications;
@@ -119,7 +119,7 @@ public class HoleSnap extends Module {
                     event.setXZ(this, Math.abs(x) < Math.abs(dX) ? x : dX, Math.abs(z) < Math.abs(dZ) ? z : dZ);
                 } else if (BlackOut.mc.player.getY() <= hole.middle.y) {
                     this.disable(this.getDisplayName() + " disabled, in hole");
-                    ((IVec3d) event.movement).blackout_Client$setXZ(0.0, 0.0);
+                    ((IVec3) event.movement).blackout_Client$setXZ(0.0, 0.0);
                 } else if (OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(0.0, -0.05, 0.0))) {
                     this.disable(this.getDisplayName() + " hole unreachable, disabling", 2, Notifications.Type.Alert);
                 } else {

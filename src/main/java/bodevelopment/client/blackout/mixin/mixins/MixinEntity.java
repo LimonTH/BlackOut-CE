@@ -3,7 +3,7 @@ package bodevelopment.client.blackout.mixin.mixins;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.event.events.RemoveEvent;
-import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
+import bodevelopment.client.blackout.interfaces.mixin.IVec3;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.legit.HitCrystal;
 import bodevelopment.client.blackout.module.modules.misc.Timer;
@@ -111,7 +111,7 @@ public abstract class MixinEntity {
     private Vec3 getStep(Step step, Vec3 movement) {
         if (step.stepProgress > -1 && step.slow.get() && step.offsets != null) {
             if (movement.horizontalDistanceSqr() <= 0.0) {
-                ((IVec3d) movement).blackout_Client$setXZ(step.prevMovement.x, step.prevMovement.z);
+                ((IVec3) movement).blackout_Client$setXZ(step.prevMovement.x, step.prevMovement.z);
             }
 
             step.prevMovement = movement.scale(1.0);

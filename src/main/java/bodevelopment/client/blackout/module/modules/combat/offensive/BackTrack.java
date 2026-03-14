@@ -6,7 +6,7 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
-import bodevelopment.client.blackout.mixin.accessors.AccessorInteractEntityC2SPacket;
+import bodevelopment.client.blackout.mixin.accessors.AccessorServerboundInteractPacket;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -48,7 +48,7 @@ public class BackTrack extends Module {
     @Event
     public void onSend(PacketEvent.Send event) {
         if (event.packet instanceof ServerboundInteractPacket packet) {
-            AccessorInteractEntityC2SPacket accessor = (AccessorInteractEntityC2SPacket) packet;
+            AccessorServerboundInteractPacket accessor = (AccessorServerboundInteractPacket) packet;
             if (accessor.getType().getType() == ServerboundInteractPacket.ActionType.ATTACK && BlackOut.mc.level.getEntity(accessor.getId()) instanceof RemotePlayer player) {
                 AABB box = player.getBoundingBox();
                 Pair<RemotePlayer, AABB> pair = new Pair<>(player, box);

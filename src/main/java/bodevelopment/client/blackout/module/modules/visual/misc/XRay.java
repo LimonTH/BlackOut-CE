@@ -35,7 +35,7 @@ public class XRay extends Module {
             Blocks.LAPIS_ORE,
             Blocks.DEEPSLATE_LAPIS_ORE
     ).onChanged(v -> {
-        if (this.enabled && BlackOut.mc.levelRenderer != null) {
+        if (this.enabled) {
             BlackOut.mc.levelRenderer.allChanged();
         }
     });
@@ -47,16 +47,12 @@ public class XRay extends Module {
 
     @Override
     public void onEnable() {
-        if (BlackOut.mc.levelRenderer != null) {
-            BlackOut.mc.levelRenderer.allChanged();
-        }
+        BlackOut.mc.levelRenderer.allChanged();
     }
 
     @Override
     public void onDisable() {
-        if (BlackOut.mc.levelRenderer != null) {
-            BlackOut.mc.levelRenderer.allChanged();
-        }
+        BlackOut.mc.levelRenderer.allChanged();
     }
 
     public static XRay getInstance() {

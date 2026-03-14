@@ -4,7 +4,6 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
-import bodevelopment.client.blackout.gui.clickgui.ClickGui;
 import bodevelopment.client.blackout.hud.HudEditor;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
@@ -12,7 +11,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import com.mojang.blaze3d.platform.InputConstants;
-import bodevelopment.client.blackout.interfaces.mixin.ICreativeInventoryScreen;
+import bodevelopment.client.blackout.interfaces.mixin.ICreativeModeInventoryScreen;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.inventory.AbstractCommandBlockEditScreen;
@@ -123,7 +122,7 @@ public class GUIMove extends Module {
                 || BlackOut.mc.screen instanceof StructureBlockEditScreen) return true;
 
         if (BlackOut.mc.screen instanceof CreativeModeInventoryScreen screen) {
-            CreativeModeTab selectedGroup = ((ICreativeInventoryScreen) screen).blackout_Client$getSelectedTab();
+            CreativeModeTab selectedGroup = ((ICreativeModeInventoryScreen) screen).blackout_Client$getSelectedTab();
             return selectedGroup != null && selectedGroup.getType() == CreativeModeTab.Type.SEARCH;
         }
 

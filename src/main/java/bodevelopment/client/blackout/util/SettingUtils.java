@@ -4,7 +4,7 @@ import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.enums.SwingState;
 import bodevelopment.client.blackout.enums.SwingType;
 import bodevelopment.client.blackout.interfaces.functional.DoublePredicate;
-import bodevelopment.client.blackout.interfaces.mixin.IEndCrystalEntity;
+import bodevelopment.client.blackout.interfaces.mixin.IEndCrystal;
 import bodevelopment.client.blackout.module.modules.client.settings.*;
 import bodevelopment.client.blackout.randomstuff.PlaceData;
 import bodevelopment.client.blackout.randomstuff.Rotation;
@@ -227,7 +227,7 @@ public class SettingUtils {
     }
 
     public static boolean shouldIgnoreRotations(EndCrystal entity) {
-        IEndCrystalEntity iEntity = (IEndCrystalEntity) entity;
+        IEndCrystal iEntity = (IEndCrystal) entity;
         long since = System.currentTimeMillis() - iEntity.blackout_Client$getSpawnTime();
         return since < (iEntity.blackout_Client$isOwn() ? rotation.noOwnTime : rotation.noOtherTime).get() * 1000.0;
     }
