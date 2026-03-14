@@ -104,6 +104,7 @@ public class Aura extends MoveUpdateModule {
     private final Setting<Boolean> critSprint = this.sgGeneral.booleanSetting("Sprint Reset Crit", true, "Sends a stop-sprint packet before hitting to ensure a critical hit occurs.");
     private final Setting<Double> scanRange = this.sgGeneral.doubleSetting("Tracing Range", 0.0, 0.0, 10.0, 0.1, "Maximum distance to scan for targets with a direct line of sight.");
     private final Setting<Double> wallScanRange = this.sgGeneral.doubleSetting("Wall Tracing Range", 0.0, 0.0, 10.0, 0.1, "Maximum distance to scan for targets behind obstacles.");
+    private final Setting<Boolean> pauseOnEat = this.sgGeneral.booleanSetting("Pause on Eat", true, "Pauses the aura while you are using an item (eating, drinking, etc.).");
 
     private final Setting<Boolean> teleport = this.sgTeleport.booleanSetting("Teleport Attacks", false, "Enables attacking targets outside of normal range by teleporting.");
     private final Setting<Integer> maxPackets = this.sgTeleport.intSetting("TP Packet Limit", 1, 1, 10, 1, "Max number of position packets sent to reach the target.");
@@ -299,10 +300,12 @@ public class Aura extends MoveUpdateModule {
 
     @Override
     protected void update(boolean allowAction, boolean fakePos) {
+        if (BlackOut.mc.player == null || (this.pauseOnEat.get() && BlackOut.mc.player.isUsingItem())) {
+            return;
+        }
         if (this.target == null) {
             this.fatigue = Math.max(this.fatigue - this.fatigueDecrease.get(), 0);
         }
-
         this.shouldRender = false;
         if (this.target != null && BlackOut.mc.player != null && BlackOut.mc.world != null && this.enabled) {
             int slot = this.bestSlot(this.switchMode.get().inventory);
