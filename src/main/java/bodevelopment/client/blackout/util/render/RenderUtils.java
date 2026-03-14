@@ -10,6 +10,7 @@ import bodevelopment.client.blackout.rendering.renderer.ShaderRenderer;
 import bodevelopment.client.blackout.rendering.shader.Shader;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -19,6 +20,7 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -27,7 +29,9 @@ import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector4f;
 
 import java.awt.*;
@@ -62,24 +66,37 @@ public class RenderUtils {
     }
 
     public static Vec2 getCoords(double x, double y, double z, boolean checkVisible) {
-        Matrix4f matrix4f = new Matrix4f();
-        Camera camera = BlackOut.mc.gameRenderer.getMainCamera();
-        matrix4f.rotate(Axis.XP.rotationDegrees(camera.getXRot()));
-        matrix4f.rotate(Axis.YP.rotationDegrees(camera.getYRot() + 180.0F));
-        matrix4f.translate(
-                (float) (x - camera.getPosition().x), (float) (y - camera.getPosition().y), (float) (z - camera.getPosition().z)
+        Minecraft mc = BlackOut.mc;
+        float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        Camera camera = mc.gameRenderer.getMainCamera();
+        Vec3 cameraPos = camera.getPosition();
+
+        Vector4f pos = new Vector4f(
+                (float) (x - cameraPos.x),
+                (float) (y - cameraPos.y),
+                (float) (z - cameraPos.z),
+                1.0F
         );
-        Vector4f f = matrix4f.transform(new Vector4f(0.0F, 0.0F, 0.0F, 1.0F));
-        Vector4f f2 = new Vector4f(f.x, f.y, f.z, 1.0F).mul(modelMat).mul(projMat);
-        return f2.z < 0.0F && checkVisible
-                ? null
-                : new Vec2(
-                (float) ((f2.x / 2.0F / Math.abs(f2.z) + 0.5) * BlackOut.mc.getWindow().getScreenWidth()),
-                (float) ((1.0F - f2.y / 2.0F / Math.abs(f2.z) - 0.5) * BlackOut.mc.getWindow().getScreenHeight())
-        );
+
+        float fov = mc.gameRenderer.getFov(camera, partialTick, true);
+        Matrix4f projMat = mc.gameRenderer.getProjectionMatrix(fov);
+
+        Matrix4f modelViewMat = new Matrix4f().rotation(camera.rotation().conjugate());
+
+        pos.mul(modelViewMat);
+        pos.mul(projMat);
+
+        if (pos.w() <= 0.0F && checkVisible) return null;
+
+        float ndcX = pos.x() / pos.w();
+        float ndcY = pos.y() / pos.w();
+
+        Window window = mc.getWindow();
+        float screenX = (ndcX + 1.0F) * 0.5F * (float) window.getWidth();
+        float screenY = (1.0F - ndcY) * 0.5F * (float) window.getHeight();
+
+        return new Vec2(screenX, screenY);
     }
-
-
 
     public static void renderItem(PoseStack stack, ItemStack itemStack, float x, float y, float scale, float zOffset, boolean overlay) {
         if (itemStack.isEmpty()) return;
