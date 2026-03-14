@@ -26,7 +26,7 @@
   "accessWidener": "blackout.accesswidener",
   "depends": {
     "java": ">=${java_version}",
-    "minecraft": ">=${minecraft_version}",
+    "minecraft": "<=${minecraft_version}",
     "fabricloader": ">=${loader_version}"
   },
 
