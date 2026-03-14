@@ -242,6 +242,7 @@ public class Offhand extends Module {
         }
         
         boolean shouldSG = this.swordGapple.get()
+                && !lookingAtInteractive
                 && BlackOut.mc.options.useKey.isPressed()
                 && BlackOut.mc.player.getMainHandStack().getItem() instanceof SwordItem;
 
