@@ -214,7 +214,7 @@ public class Offhand extends Module {
         }
 
         Optional<Slot> optional = possible.stream()
-                .min(Comparator.comparingLong(slotx -> this.movedFrom.containsKey(slotx.id) ? this.movedFrom.get(slotx.id) : 0L));
+                .max(Comparator.comparingLong(slotx -> this.movedFrom.containsKey(slotx.id) ? this.movedFrom.get(slotx.id) : 0L));
         return optional.orElse(null);
     }
 
@@ -232,6 +232,15 @@ public class Offhand extends Module {
     }
 
     private Predicate<ItemStack> getItem() {
+        boolean lookingAtInteractive = false;
+
+        if (BlackOut.mc.crosshairTarget instanceof net.minecraft.util.hit.BlockHitResult bhr) {
+            net.minecraft.block.Block block = BlackOut.mc.world.getBlockState(bhr.getBlockPos()).getBlock();
+            if (block instanceof net.minecraft.block.BlockWithEntity || block instanceof net.minecraft.block.CraftingTableBlock || block instanceof net.minecraft.block.AnvilBlock) {
+                lookingAtInteractive = true;
+            }
+        }
+        
         boolean shouldSG = this.swordGapple.get()
                 && BlackOut.mc.options.useKey.isPressed()
                 && BlackOut.mc.player.getMainHandStack().getItem() instanceof SwordItem;
