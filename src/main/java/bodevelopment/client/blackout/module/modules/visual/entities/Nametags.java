@@ -127,11 +127,9 @@ public class Nametags extends Module {
         }
     }
 
-    // TODO: ПЕРЕКРЫВАЕТ СВОИМ РЕНДЕРОМ ВСЕ ЛЮБЫЕ ЭЛЕМЕНТЫ HUD, КРОМЕ ПРЕДМЕТОВ
     @Event
     public void onRender(RenderEvent.Hud.Post event) {
         if (BlackOut.mc.level == null || BlackOut.mc.player == null) return;
-
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
 

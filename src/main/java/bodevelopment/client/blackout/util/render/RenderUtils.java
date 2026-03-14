@@ -10,7 +10,6 @@ import bodevelopment.client.blackout.rendering.renderer.ShaderRenderer;
 import bodevelopment.client.blackout.rendering.shader.Shader;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -18,12 +17,10 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.CoreShaders;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
@@ -31,7 +28,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
-import org.joml.Quaternionf;
 import org.joml.Vector4f;
 
 import java.awt.*;
@@ -40,9 +36,9 @@ import java.util.function.Consumer;
 public class RenderUtils {
     public static final long initTime = System.currentTimeMillis();
     public static final PoseStack emptyStack = new PoseStack();
-    private static MultiBufferSource.BufferSource vertexConsumers = null;
-    private static Matrix4f projMat;
-    private static Matrix4f modelMat;
+    private static final Matrix4f lastProjMat = new Matrix4f();
+    private static final Matrix4f lastModelViewMat = new Matrix4f();
+    private static Vec3 lastCamPos = Vec3.ZERO;
 
     public static boolean insideRounded(double mx, double my, double x, double y, double width, double height, double rad) {
         double offsetX = mx - x;
@@ -52,49 +48,37 @@ public class RenderUtils {
         return dx * dx + dy * dy <= rad * rad;
     }
 
-    private static MultiBufferSource.BufferSource getVertexConsumers() {
-        if (vertexConsumers == null) {
-            vertexConsumers = BlackOut.mc.gameRenderer.renderBuffers.bufferSource();
-        }
-
-        return vertexConsumers;
-    }
-
     public static void onRender() {
-        projMat = RenderSystem.getProjectionMatrix();
-        modelMat = RenderSystem.getModelViewMatrix();
+        Minecraft mc = BlackOut.mc;
+        if (mc.level == null || mc.player == null) return;
+        Camera camera = mc.gameRenderer.getMainCamera();
+        float tickDelta = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        lastCamPos = camera.getPosition();
+        lastModelViewMat.set(new Matrix4f().rotation(camera.rotation().conjugate()));
+        float fov = mc.gameRenderer.getFov(camera, tickDelta, true);
+        lastProjMat.set(mc.gameRenderer.getProjectionMatrix(fov));
     }
 
     public static Vec2 getCoords(double x, double y, double z, boolean checkVisible) {
         Minecraft mc = BlackOut.mc;
-        float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
-        Camera camera = mc.gameRenderer.getMainCamera();
-        Vec3 cameraPos = camera.getPosition();
-
         Vector4f pos = new Vector4f(
-                (float) (x - cameraPos.x),
-                (float) (y - cameraPos.y),
-                (float) (z - cameraPos.z),
+                (float) (x - lastCamPos.x),
+                (float) (y - lastCamPos.y),
+                (float) (z - lastCamPos.z),
                 1.0F
         );
+        pos.mul(lastModelViewMat);
+        pos.mul(lastProjMat);
 
-        float fov = mc.gameRenderer.getFov(camera, partialTick, true);
-        Matrix4f projMat = mc.gameRenderer.getProjectionMatrix(fov);
+        if (pos.w() <= 0.0f && checkVisible) {
+            return null;
+        }
 
-        Matrix4f modelViewMat = new Matrix4f().rotation(camera.rotation().conjugate());
-
-        pos.mul(modelViewMat);
-        pos.mul(projMat);
-
-        if (pos.w() <= 0.0F && checkVisible) return null;
-
-        float ndcX = pos.x() / pos.w();
-        float ndcY = pos.y() / pos.w();
-
-        Window window = mc.getWindow();
-        float screenX = (ndcX + 1.0F) * 0.5F * (float) window.getWidth();
-        float screenY = (1.0F - ndcY) * 0.5F * (float) window.getHeight();
-
+        float w = Math.abs(pos.w());
+        float ndcX = pos.x() / w;
+        float ndcY = pos.y() / w;
+        float screenX = (ndcX + 1.0F) * 0.5F * (float) mc.getWindow().getScreenWidth();
+        float screenY = (1.0F - ndcY) * 0.5F * (float) mc.getWindow().getScreenHeight();
         return new Vec2(screenX, screenY);
     }
 
