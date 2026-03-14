@@ -231,10 +231,20 @@ public class Velocity extends Module {
     }
 
     private void sendGrimPackets() {
-        Vec3 vec = Managers.PACKET.pos;
-        BlockPos pos = new BlockPos((int) Math.floor(vec.x), (int) Math.floor(vec.y) - 1, (int) Math.floor(vec.z));
-        Managers.PACKET.sendInstantly(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN, 0));
-        Managers.PACKET.sendInstantly(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN, 0));
+        if (BlackOut.mc.player == null) return;
+        BlockPos pos = BlackOut.mc.player.isVisuallyCrawling() ? BlackOut.mc.player.blockPosition() : BlackOut.mc.player.blockPosition().above();
+        Managers.PACKET.sendInstantly(new ServerboundPlayerActionPacket(
+                ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK,
+                pos,
+                Direction.DOWN,
+                0
+        ));
+        Managers.PACKET.sendInstantly(new ServerboundPlayerActionPacket(
+                ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
+                pos,
+                Direction.DOWN,
+                0
+        ));
     }
 
     private void grimCancel(PacketEvent.Receive.Post event, boolean explosion) {

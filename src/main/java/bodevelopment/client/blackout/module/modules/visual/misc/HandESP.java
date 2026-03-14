@@ -7,16 +7,11 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.randomstuff.ShaderSetup;
-import bodevelopment.client.blackout.rendering.framebuffer.BlendFrameBuffer;
 import bodevelopment.client.blackout.rendering.framebuffer.FrameBuffer;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import bodevelopment.client.blackout.util.render.WireframeRenderer;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.renderer.CoreShaders;
-import org.joml.Matrix4f;
 
 import java.awt.*;
 
