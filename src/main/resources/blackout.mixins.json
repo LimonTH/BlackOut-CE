@@ -39,6 +39,7 @@
     "mixins.MixinHeldItemRenderer",
     "mixins.MixinInGameHud",
     "mixins.MixinInGameOverlayRenderer",
+    "mixins.MixinItemInHandRenderer",
     "mixins.MixinKeyboard",
     "mixins.MixinKeyboardInput",
     "mixins.MixinLightmapTextureManager",

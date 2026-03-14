@@ -13,6 +13,10 @@ import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.WireframeRenderer;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.renderer.CoreShaders;
+import org.joml.Matrix4f;
 
 import java.awt.*;
 
@@ -40,43 +44,45 @@ public class HandESP extends Module {
         return INSTANCE;
     }
 
+    public static boolean rendering = false;
+
     public void draw(Runnable runnable) {
-        if (!this.enabled) {
-            runnable.run();
-        } else {
-            BlendFrameBuffer buffer = Managers.FRAME_BUFFER.getBlend("handESP");
-            buffer.start();
-            runnable.run();
-            buffer.unbind();
-        }
+        runnable.run();
     }
 
     public void renderHud() {
         FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("handESP");
+        FrameBuffer convertBuffer = Managers.FRAME_BUFFER.getBuffer("handESP-convert");
         FrameBuffer bloomBuffer = Managers.FRAME_BUFFER.getBuffer("handESP-bloom");
-        if (this.texture.get()) {
-            RenderUtils.renderBufferWith(buffer, Shaders.screentexcolor, new ShaderSetup(setup -> setup.color("clr", this.insideColor.get().getRGB())));
-        }
 
-        buffer.bind(true);
+        convertBuffer.clear(0.0F, 0.0F, 0.0F, 0.0F);
+        convertBuffer.bind(true);
         RenderUtils.renderBufferWith(buffer, Shaders.convert, new ShaderSetup());
-        buffer.unbind();
+        convertBuffer.unbind();
+
+        RenderUtils.renderBufferWith(convertBuffer, Shaders.shaderbloom,
+                new ShaderSetup(setup -> setup.color("clr", this.getColor(true))));
+
         if (this.dist.get() > 0) {
             bloomBuffer.clear(0.0F, 0.0F, 0.0F, 1.0F);
             bloomBuffer.bind(true);
-            RenderUtils.renderBufferWith(buffer, Shaders.screentex, new ShaderSetup(setup -> setup.set("alpha", 1.0F)));
+            RenderUtils.renderBufferWith(convertBuffer, Shaders.screentex, new ShaderSetup(setup -> setup.set("alpha", 1.0F)));
             bloomBuffer.unbind();
+
             RenderUtils.blurBufferBW("handESP-bloom", this.dist.get() + 1);
+
             bloomBuffer.bind(true);
-            Renderer.setTexture(buffer.getTexture(), 1);
+            Renderer.setTexture(convertBuffer.getTexture(), 1);
             RenderUtils.renderBufferWith(bloomBuffer, Shaders.subtract, new ShaderSetup(setup -> {
                 setup.set("uTexture0", 0);
                 setup.set("uTexture1", 1);
             }));
             bloomBuffer.unbind();
-            RenderUtils.renderBufferWith(bloomBuffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.getColor(false))));
-            buffer.clear(1.0F, 1.0F, 1.0F, 0.0F);
+
+            RenderUtils.renderBufferWith(bloomBuffer, Shaders.shaderbloom,
+                    new ShaderSetup(setup -> setup.color("clr", this.getColor(false))));
         }
+        buffer.clear(0, 0, 0, 0);
     }
 
     private int getColor(boolean inside) {

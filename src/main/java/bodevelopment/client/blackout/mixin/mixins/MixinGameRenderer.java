@@ -96,10 +96,7 @@ public abstract class MixinGameRenderer {
 
     @Redirect(
             method = "renderLevel",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemInHand(Lnet/minecraft/client/Camera;FLorg/joml/Matrix4f;)V"
-            )
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemInHand(Lnet/minecraft/client/Camera;FLorg/joml/Matrix4f;)V")
     )
     private void renderHeldItems(GameRenderer instance, Camera camera, float tickDelta, Matrix4f matrix4f) {
         HandESP.getInstance().draw(() -> this.renderItemInHand(camera, tickDelta, matrix4f));
