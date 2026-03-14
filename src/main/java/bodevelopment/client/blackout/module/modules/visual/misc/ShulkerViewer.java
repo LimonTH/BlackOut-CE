@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.module.modules.visual.misc;
 
 import bodevelopment.client.blackout.BlackOut;
-import bodevelopment.client.blackout.interfaces.mixin.IHandledScreen;
+import bodevelopment.client.blackout.interfaces.mixin.IAbstractContainerScreen;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -106,7 +106,7 @@ public class ShulkerViewer extends Module {
     }
 
     private ItemStack getHoveredStack(Screen screen) {
-        if (screen instanceof AbstractContainerScreen<?> handledScreen && handledScreen instanceof IHandledScreen accessor) {
+        if (screen instanceof AbstractContainerScreen<?> handledScreen && handledScreen instanceof IAbstractContainerScreen accessor) {
             if (accessor.blackout_Client$getFocusedSlot() != null) {
                 return accessor.blackout_Client$getFocusedSlot().getItem();
             }

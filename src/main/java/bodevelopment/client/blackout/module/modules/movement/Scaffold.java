@@ -7,7 +7,7 @@ import bodevelopment.client.blackout.enums.SwitchMode;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.event.events.RenderEvent;
-import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
+import bodevelopment.client.blackout.interfaces.mixin.IVec3;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.MoveUpdateModule;
 import bodevelopment.client.blackout.module.SubCategory;
@@ -289,7 +289,7 @@ public class Scaffold extends MoveUpdateModule {
                             }
 
                             event.setY(this, this.velocities[this.jumpProgress]);
-                            ((IVec3d) BlackOut.mc.player.getDeltaMovement()).blackout_Client$setY(this.velocities[this.jumpProgress]);
+                            ((IVec3) BlackOut.mc.player.getDeltaMovement()).blackout_Client$setY(this.velocities[this.jumpProgress]);
                             this.jumpProgress++;
                         }
                     } else {
@@ -311,7 +311,7 @@ public class Scaffold extends MoveUpdateModule {
                             }
 
                             event.setY(this, this.slowVelocities[this.jumpProgress]);
-                            ((IVec3d) BlackOut.mc.player.getDeltaMovement()).blackout_Client$setY(this.slowVelocities[this.jumpProgress]);
+                            ((IVec3) BlackOut.mc.player.getDeltaMovement()).blackout_Client$setY(this.slowVelocities[this.jumpProgress]);
                             this.jumpProgress++;
                         }
                     } else {
@@ -333,7 +333,7 @@ public class Scaffold extends MoveUpdateModule {
                             }
 
                             event.setY(this, 1.0);
-                            ((IVec3d) BlackOut.mc.player.getDeltaMovement()).blackout_Client$setY(1.0);
+                            ((IVec3) BlackOut.mc.player.getDeltaMovement()).blackout_Client$setY(1.0);
                             this.jumpProgress++;
                         }
                     } else {

@@ -4,8 +4,8 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
-import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
-import bodevelopment.client.blackout.mixin.accessors.AccessorInteractEntityC2SPacket;
+import bodevelopment.client.blackout.interfaces.mixin.IVec3;
+import bodevelopment.client.blackout.mixin.accessors.AccessorServerboundInteractPacket;
 import bodevelopment.client.blackout.module.SettingsModule;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -105,8 +105,8 @@ public class RangeSettings extends SettingsModule {
 
     @Event
     public void onAttack(PacketEvent.Sent event) {
-        if (event.packet instanceof ServerboundInteractPacket packet && ((AccessorInteractEntityC2SPacket) packet).getType().getType() == ServerboundInteractPacket.ActionType.ATTACK) {
-            Entity entity = BlackOut.mc.level.getEntity(((AccessorInteractEntityC2SPacket) packet).getId());
+        if (event.packet instanceof ServerboundInteractPacket packet && ((AccessorServerboundInteractPacket) packet).getType().getType() == ServerboundInteractPacket.ActionType.ATTACK) {
+            Entity entity = BlackOut.mc.level.getEntity(((AccessorServerboundInteractPacket) packet).getId());
             if (entity != null) {
                 this.registerAttack(entity.getBoundingBox());
             }
@@ -252,13 +252,13 @@ public class RangeSettings extends SettingsModule {
             return 0.0;
         } else {
             if (vec1.z() > 0.0) {
-                ((IVec3d) pos).blackout_Client$setZ(pos.z() + halfWidth);
+                ((IVec3) pos).blackout_Client$setZ(pos.z() + halfWidth);
             } else if (vec1.z() < 0.0) {
-                ((IVec3d) pos).blackout_Client$setZ(pos.z() - halfWidth);
+                ((IVec3) pos).blackout_Client$setZ(pos.z() - halfWidth);
             } else if (vec1.x() > 0.0) {
-                ((IVec3d) pos).blackout_Client$setX(pos.x() + halfWidth);
+                ((IVec3) pos).blackout_Client$setX(pos.x() + halfWidth);
             } else {
-                ((IVec3d) pos).blackout_Client$setX(pos.x() - halfWidth);
+                ((IVec3) pos).blackout_Client$setX(pos.x() - halfWidth);
             }
 
             Vec3 vec2 = new Vec3(pos.x() - feet.x(), 0.0, pos.z() - feet.z());

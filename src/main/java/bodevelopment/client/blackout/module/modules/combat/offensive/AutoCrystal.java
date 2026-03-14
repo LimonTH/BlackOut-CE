@@ -5,11 +5,11 @@ import bodevelopment.client.blackout.enums.*;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.*;
 import bodevelopment.client.blackout.interfaces.functional.EpicInterface;
-import bodevelopment.client.blackout.interfaces.mixin.IEndCrystalEntity;
-import bodevelopment.client.blackout.interfaces.mixin.IRaycastContext;
+import bodevelopment.client.blackout.interfaces.mixin.IEndCrystal;
+import bodevelopment.client.blackout.interfaces.mixin.IClipContext;
 import bodevelopment.client.blackout.keys.KeyBind;
 import bodevelopment.client.blackout.manager.Managers;
-import bodevelopment.client.blackout.mixin.accessors.AccessorInteractEntityC2SPacket;
+import bodevelopment.client.blackout.mixin.accessors.AccessorServerboundInteractPacket;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
@@ -480,7 +480,7 @@ public class AutoCrystal extends Module {
     @Event
     public void onRemove(RemoveEvent event) {
         if (this.removeTime.get() && event.entity instanceof EndCrystal entity) {
-            long diff = System.currentTimeMillis() - ((IEndCrystalEntity) entity).blackout_Client$getSpawnTime();
+            long diff = System.currentTimeMillis() - ((IEndCrystal) entity).blackout_Client$getSpawnTime();
             this.debug("removed after", diff + "ms");
         }
     }
@@ -960,7 +960,7 @@ public class AutoCrystal extends Module {
             this.spawning.clear();
             this.end("attacking");
             if (this.debugAttack.get()) {
-                this.debug("attacked after", System.currentTimeMillis() - ((IEndCrystalEntity) this.targetCrystal).blackout_Client$getSpawnTime() + "ms");
+                this.debug("attacked after", System.currentTimeMillis() - ((IEndCrystal) this.targetCrystal).blackout_Client$getSpawnTime() + "ms");
             }
 
             if (this.setDead.get() != SetDeadMode.Disabled) {
@@ -973,7 +973,7 @@ public class AutoCrystal extends Module {
 
     private void sendAttack(int id, boolean swing) {
         ServerboundInteractPacket packet = ServerboundInteractPacket.createAttackPacket(BlackOut.mc.player, BlackOut.mc.player.isShiftKeyDown());
-        ((AccessorInteractEntityC2SPacket) packet).setId(id);
+        ((AccessorServerboundInteractPacket) packet).setId(id);
         if (swing) {
             SettingUtils.swing(SwingState.Pre, SwingType.Attacking, InteractionHand.MAIN_HAND);
         }
@@ -1425,7 +1425,7 @@ public class AutoCrystal extends Module {
             return false;
         }
 
-        if (this.onlyOwn.get() && !((IEndCrystalEntity) entity).blackout_Client$isOwn()) {
+        if (this.onlyOwn.get() && !((IEndCrystal) entity).blackout_Client$isOwn()) {
             return false;
         } else if (!placing && this.inhibit.get() && this.inhibitList.contains(timer -> timer.value[0] == entity.getId() && timer.value[1] <= 0)) {
             return false;
@@ -1769,7 +1769,7 @@ public class AutoCrystal extends Module {
             Vec3 vec = SettingUtils.getRotationVec(pos.below(), placeDir, this.getPlaceVec(pos), RotationType.Interact);
             Rotation rotation = SettingUtils.getRotation(vec);
             double minDist = BlackOut.mc.player.getEyePosition().distanceToSqr(vec);
-            ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
+            ((IClipContext) DamageUtils.raycastContext).blackout_Client$set(ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
             float bestDist = 69420.0F;
             float bestPitch = -420.0F;
             boolean prevWas = false;
@@ -1778,7 +1778,7 @@ public class AutoCrystal extends Module {
                 float dist = Math.abs(rotation.pitch() - p);
                 if (!(dist < this.raytraceAngle.get()) && !(dist > bestDist)) {
                     Vec3 pitchPos = RotationUtils.rotationVec(rotation.yaw(), p, BlackOut.mc.player.getEyePosition(), 10.0);
-                    ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePosition(), pitchPos);
+                    ((IClipContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePosition(), pitchPos);
                     BlockHitResult result = DamageUtils.raycast(DamageUtils.raycastContext, false);
                     boolean isHigher = BlackOut.mc.player.getEyePosition().distanceToSqr(result.getLocation()) > minDist;
                     if (isHigher && prevWas) {

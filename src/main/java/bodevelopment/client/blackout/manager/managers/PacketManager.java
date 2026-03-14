@@ -5,11 +5,11 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.EntityAddEvent;
 import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.event.events.PacketEvent;
-import bodevelopment.client.blackout.interfaces.mixin.IEndCrystalEntity;
+import bodevelopment.client.blackout.interfaces.mixin.IEndCrystal;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.manager.Managers;
-import bodevelopment.client.blackout.mixin.accessors.AccessorInteractEntityC2SPacket;
-import bodevelopment.client.blackout.mixin.accessors.AccessorPlayerMoveC2SPacket;
+import bodevelopment.client.blackout.mixin.accessors.AccessorServerboundInteractPacket;
+import bodevelopment.client.blackout.mixin.accessors.AccessorServerboundMovePlayerPacket;
 import bodevelopment.client.blackout.module.modules.misc.Simulation;
 import bodevelopment.client.blackout.randomstuff.FakePlayerEntity;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
@@ -85,8 +85,8 @@ public class PacketManager extends Manager {
             this.teleportId = packetx.getId();
         }
 
-        if (event.packet instanceof ServerboundInteractPacket packetx && ((AccessorInteractEntityC2SPacket) packetx).getType().getType() == ServerboundInteractPacket.ActionType.ATTACK) {
-            if (BlackOut.mc.level.getEntity(((AccessorInteractEntityC2SPacket) packetx).getId()) instanceof FakePlayerEntity player) {
+        if (event.packet instanceof ServerboundInteractPacket packetx && ((AccessorServerboundInteractPacket) packetx).getType().getType() == ServerboundInteractPacket.ActionType.ATTACK) {
+            if (BlackOut.mc.level.getEntity(((AccessorServerboundInteractPacket) packetx).getId()) instanceof FakePlayerEntity player) {
                 Managers.FAKE_PLAYER.onAttack(player);
             }
 
@@ -115,14 +115,14 @@ public class PacketManager extends Manager {
     @Event
     public void onEntityAdd(EntityAddEvent.Post event) {
         if (event.entity instanceof EndCrystal entity && this.own.contains(entity.blockPosition())) {
-            ((IEndCrystalEntity) entity).blackout_Client$markOwn();
+            ((IEndCrystal) entity).blackout_Client$markOwn();
         }
     }
 
     @Event
     public void onSend(PacketEvent.Send event) {
         if (event.packet instanceof ServerboundMovePlayerPacket packet && this.spoofOG) {
-            ((AccessorPlayerMoveC2SPacket) packet).setOnGround(this.spoofedOG);
+            ((AccessorServerboundMovePlayerPacket) packet).setOnGround(this.spoofedOG);
             this.spoofOG = false;
         }
     }

@@ -5,7 +5,7 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
-import bodevelopment.client.blackout.interfaces.mixin.IEntityVelocityUpdateS2CPacket;
+import bodevelopment.client.blackout.interfaces.mixin.IClientboundSetEntityMotionPacket;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
@@ -117,12 +117,12 @@ public class Velocity extends Module {
                     double random = ThreadLocalRandom.current().nextDouble();
 
                     if (this.hChance.get() >= random) {
-                        ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setX((int) (xVel * this.horizontal.get()));
-                        ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setZ((int) (zVel * this.horizontal.get()));
+                        ((IClientboundSetEntityMotionPacket) packet).blackout_Client$setX((int) (xVel * this.horizontal.get()));
+                        ((IClientboundSetEntityMotionPacket) packet).blackout_Client$setZ((int) (zVel * this.horizontal.get()));
                     }
 
                     if (this.vChance.get() >= random) {
-                        ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setY((int) (yVel * this.vertical.get()));
+                        ((IClientboundSetEntityMotionPacket) packet).blackout_Client$setY((int) (yVel * this.vertical.get()));
                     }
                     break;
                 case Delayed:
@@ -138,15 +138,15 @@ public class Velocity extends Module {
                     double velY = (packet.getYa() / 8000.0 - BlackOut.mc.player.getDeltaMovement().y) * this.vertical.get();
                     double velZ = (packet.getZa() / 8000.0 - BlackOut.mc.player.getDeltaMovement().z) * this.horizontal.get();
 
-                    ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setX((int) ((velX + BlackOut.mc.player.getDeltaMovement().x) * 8000.0));
-                    ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setY((int) ((velY + BlackOut.mc.player.getDeltaMovement().y) * 8000.0));
-                    ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setZ((int) ((velZ + BlackOut.mc.player.getDeltaMovement().z) * 8000.0));
+                    ((IClientboundSetEntityMotionPacket) packet).blackout_Client$setX((int) ((velX + BlackOut.mc.player.getDeltaMovement().x) * 8000.0));
+                    ((IClientboundSetEntityMotionPacket) packet).blackout_Client$setY((int) ((velY + BlackOut.mc.player.getDeltaMovement().y) * 8000.0));
+                    ((IClientboundSetEntityMotionPacket) packet).blackout_Client$setZ((int) ((velZ + BlackOut.mc.player.getDeltaMovement().z) * 8000.0));
                     break;
                 case Vulcan:
                     if (BlackOut.mc.player.onGround()) {
-                        ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setY((int) (0.42 * 8000.0));
-                        ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setX(0);
-                        ((IEntityVelocityUpdateS2CPacket) packet).blackout_Client$setZ(0);
+                        ((IClientboundSetEntityMotionPacket) packet).blackout_Client$setY((int) (0.42 * 8000.0));
+                        ((IClientboundSetEntityMotionPacket) packet).blackout_Client$setX(0);
+                        ((IClientboundSetEntityMotionPacket) packet).blackout_Client$setZ(0);
                     }
                     break;
                 case Grim:

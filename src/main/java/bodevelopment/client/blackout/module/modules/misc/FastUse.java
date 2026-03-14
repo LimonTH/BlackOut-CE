@@ -5,7 +5,7 @@ import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
-import bodevelopment.client.blackout.interfaces.mixin.IMinecraftClient;
+import bodevelopment.client.blackout.interfaces.mixin.IMinecraft;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
@@ -61,7 +61,7 @@ public class FastUse extends Module {
                 if (!this.rotateIfNeeded(this.getStack())) {
                     if (!(System.currentTimeMillis() - this.prevUse < this.delaySeconds.get() * 1000.0)) {
                         this.prevUse = System.currentTimeMillis();
-                        ((IMinecraftClient) BlackOut.mc).blackout_Client$useItem();
+                        ((IMinecraft) BlackOut.mc).blackout_Client$useItem();
                     }
                 }
             }

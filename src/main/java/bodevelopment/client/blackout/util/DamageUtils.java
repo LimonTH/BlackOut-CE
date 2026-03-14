@@ -1,8 +1,8 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
-import bodevelopment.client.blackout.interfaces.mixin.IRaycastContext;
-import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
+import bodevelopment.client.blackout.interfaces.mixin.IClipContext;
+import bodevelopment.client.blackout.interfaces.mixin.IVec3;
 import bodevelopment.client.blackout.manager.Managers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -132,8 +132,8 @@ public class DamageUtils {
     }
 
     public static double getExposure(Vec3 source, AABB box, BlockPos ignorePos) {
-        ((IRaycastContext) raycastContext).blackout_Client$set(ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
-        ((IRaycastContext) raycastContext).blackout_Client$setStart(source);
+        ((IClipContext) raycastContext).blackout_Client$set(ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
+        ((IClipContext) raycastContext).blackout_Client$setStart(source);
         Vec3 vec3d = new Vec3(0.0, 0.0, 0.0);
         double lx = box.getXsize();
         double ly = box.getYsize();
@@ -152,15 +152,15 @@ public class DamageUtils {
             double x = box.minX + offsetX;
 
             for (double maxX = box.maxX + offsetX; x <= maxX; x += stepX) {
-                ((IVec3d) vec3d).blackout_Client$setX(x);
+                ((IVec3) vec3d).blackout_Client$setX(x);
 
                 for (double y = box.minY; y <= box.maxY; y += stepY) {
-                    ((IVec3d) vec3d).blackout_Client$setY(y);
+                    ((IVec3) vec3d).blackout_Client$setY(y);
                     double z = box.minZ + offsetZ;
 
                     for (double maxZ = box.maxZ + offsetZ; z <= maxZ; z += stepZ) {
-                        ((IVec3d) vec3d).blackout_Client$setZ(z);
-                        ((IRaycastContext) raycastContext).blackout_Client$setEnd(vec3d);
+                        ((IVec3) vec3d).blackout_Client$setZ(z);
+                        ((IClipContext) raycastContext).blackout_Client$setEnd(vec3d);
                         if (raycast(raycastContext, true, ignorePos).getType() == HitResult.Type.MISS) {
                             i++;
                         }

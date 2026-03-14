@@ -5,7 +5,7 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.EntityAddEvent;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.manager.Manager;
-import bodevelopment.client.blackout.mixin.accessors.AccessorInteractEntityC2SPacket;
+import bodevelopment.client.blackout.mixin.accessors.AccessorServerboundInteractPacket;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -87,7 +87,7 @@ public class EntityManager extends Manager {
     @Event
     public void packetSendEvent(PacketEvent.Sent event) {
         if (event.packet instanceof ServerboundInteractPacket packet) {
-            AccessorInteractEntityC2SPacket packetAccessor = (AccessorInteractEntityC2SPacket) packet;
+            AccessorServerboundInteractPacket packetAccessor = (AccessorServerboundInteractPacket) packet;
             if (packetAccessor.getType().getType() == ServerboundInteractPacket.ActionType.ATTACK) {
                 int id = packetAccessor.getId();
                 Entity entity = BlackOut.mc.level.getEntity(id);

@@ -5,7 +5,7 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.interfaces.functional.DoubleConsumer;
 import bodevelopment.client.blackout.interfaces.functional.DoubleFunction;
-import bodevelopment.client.blackout.interfaces.mixin.IRaycastContext;
+import bodevelopment.client.blackout.interfaces.mixin.IClipContext;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
@@ -167,7 +167,7 @@ public class Trajectories extends Module {
         for (int i = 0; i < this.maxTicks.get(); i++) {
             Vec3 prevPos = pos;
             pos = pos.add(velocity[0], velocity[1], velocity[2]);
-            ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(prevPos, pos, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
+            ((IClipContext) DamageUtils.raycastContext).blackout_Client$set(prevPos, pos, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
             HitResult blockHitResult = DamageUtils.raycast(DamageUtils.raycastContext, false);
             EntityHitResult entityHitResult = ProjectileUtil.getEntityHitResult(
                     BlackOut.mc.level,

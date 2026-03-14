@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
-import bodevelopment.client.blackout.interfaces.mixin.IChatHud;
+import bodevelopment.client.blackout.interfaces.mixin.IChatComponent;
 import net.minecraft.network.chat.Component;
 
 public class ChatUtils {
@@ -22,11 +22,11 @@ public class ChatUtils {
     }
 
     public static void addMessage(Component text) {
-        ((IChatHud) BlackOut.mc.gui.getChat()).blackout_Client$addMessageToChat(text, -1);
+        ((IChatComponent) BlackOut.mc.gui.getChat()).blackout_Client$addMessageToChat(text, -1);
     }
 
     public static void addMessage(Component text, int id) {
-        ((IChatHud) BlackOut.mc.gui.getChat()).blackout_Client$addMessageToChat(text, id);
+        ((IChatComponent) BlackOut.mc.gui.getChat()).blackout_Client$addMessageToChat(text, id);
     }
 
     public static void sendMessage(String text) {

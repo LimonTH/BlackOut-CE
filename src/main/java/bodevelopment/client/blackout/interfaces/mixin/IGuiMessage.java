@@ -1,0 +1,12 @@
+package bodevelopment.client.blackout.interfaces.mixin;
+
+import net.minecraft.network.chat.Component;
+
+public interface IGuiMessage {
+    void blackout_Client$setId(int id);
+    boolean blackout_Client$idEquals(int id);
+    void blackout_Client$setSpam(int count);
+    int blackout_Client$getSpam();
+    void blackout_Client$setMessage(Component text);
+    Component blackout_Client$getMessage();
+}

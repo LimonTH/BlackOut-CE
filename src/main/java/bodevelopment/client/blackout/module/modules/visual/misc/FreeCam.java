@@ -3,7 +3,7 @@ package bodevelopment.client.blackout.module.modules.visual.misc;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
-import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
+import bodevelopment.client.blackout.interfaces.mixin.IVec3;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -82,7 +82,7 @@ public class FreeCam extends Module {
                 x = this.smoothen(this.velocity.x, x);
                 y = this.smoothen(this.velocity.y, y);
                 z = this.smoothen(this.velocity.z, z);
-                ((IVec3d) this.velocity).blackout_Client$set(x, y, z);
+                ((IVec3) this.velocity).blackout_Client$set(x, y, z);
                 movement = this.velocity.multiply(this.speedH.get(), this.speedV.get(), this.speedH.get());
                 break;
             case Directional:

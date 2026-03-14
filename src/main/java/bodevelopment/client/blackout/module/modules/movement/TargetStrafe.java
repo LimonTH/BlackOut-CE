@@ -3,7 +3,7 @@ package bodevelopment.client.blackout.module.modules.movement;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
-import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
+import bodevelopment.client.blackout.interfaces.mixin.IVec3;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
@@ -52,7 +52,7 @@ public class TargetStrafe extends Module {
                 if (this.valid) {
                     double x = Math.cos(yaw);
                     double z = Math.sin(yaw);
-                    ((IVec3d) movement).blackout_Client$setXZ(x * speed, z * speed);
+                    ((IVec3) movement).blackout_Client$setXZ(x * speed, z * speed);
                 }
             }
         }

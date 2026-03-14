@@ -127,6 +127,7 @@ public class Nametags extends Module {
         }
     }
 
+    // TODO: ПЕРЕКРЫВАЕТ СВОИМ РЕНДЕРОМ ЭЛЕМЕНТЫ HUD
     @Event
     public void onRender(RenderEvent.Hud.Post event) {
         if (BlackOut.mc.level == null || BlackOut.mc.player == null) return;

@@ -5,7 +5,7 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
-import bodevelopment.client.blackout.mixin.accessors.AccessorInteractEntityC2SPacket;
+import bodevelopment.client.blackout.mixin.accessors.AccessorServerboundInteractPacket;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
@@ -61,7 +61,7 @@ public class Criticals extends Module {
         if (BlackOut.mc.player == null || BlackOut.mc.level == null) return;
         if (Aura.getInstance().enabled && Aura.getInstance().isAttacking) return;
 
-        if (event.packet instanceof AccessorInteractEntityC2SPacket packet
+        if (event.packet instanceof AccessorServerboundInteractPacket packet
                 && packet.getType().getType() == ServerboundInteractPacket.ActionType.ATTACK) {
 
             Entity attackedEntity = BlackOut.mc.level.getEntity(packet.getId());

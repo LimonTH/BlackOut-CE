@@ -3,7 +3,7 @@ package bodevelopment.client.blackout.module.modules.legit;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
-import bodevelopment.client.blackout.mixin.accessors.AccessorInteractEntityC2SPacket;
+import bodevelopment.client.blackout.mixin.accessors.AccessorServerboundInteractPacket;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import net.minecraft.network.protocol.game.ServerboundInteractPacket;
@@ -25,8 +25,8 @@ public class CrystalOptimizer extends Module {
     @Event
     public void onSent(PacketEvent.Sent event) {
         if (event.packet instanceof ServerboundInteractPacket packet
-                && ((AccessorInteractEntityC2SPacket) packet).getType().getType() == ServerboundInteractPacket.ActionType.ATTACK
-                && BlackOut.mc.level.getEntity(((AccessorInteractEntityC2SPacket) packet).getId()) instanceof EndCrystal entity) {
+                && ((AccessorServerboundInteractPacket) packet).getType().getType() == ServerboundInteractPacket.ActionType.ATTACK
+                && BlackOut.mc.level.getEntity(((AccessorServerboundInteractPacket) packet).getId()) instanceof EndCrystal entity) {
             BlackOut.mc.level.removeEntity(entity.getId(), Entity.RemovalReason.KILLED);
         }
     }

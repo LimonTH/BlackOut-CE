@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.module.modules.client.settings;
 
 import bodevelopment.client.blackout.BlackOut;
-import bodevelopment.client.blackout.interfaces.mixin.IRaycastContext;
+import bodevelopment.client.blackout.interfaces.mixin.IClipContext;
 import bodevelopment.client.blackout.module.SettingsModule;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -126,7 +126,7 @@ public class RaytraceSettings extends SettingsModule {
                     return this.ncpRaytrace(to, BoxUtils.get(pos));
                 }
 
-                ((IRaycastContext) this.raycastContext).blackout_Client$setEnd(to);
+                ((IClipContext) this.raycastContext).blackout_Client$setEnd(to);
                 this.result = DamageUtils.raycast(this.raycastContext, false);
                 return this.result.getType() == HitResult.Type.MISS || this.result.getBlockPos().equals(pos);
             case DoublePoint:
@@ -136,13 +136,13 @@ public class RaytraceSettings extends SettingsModule {
                     return this.ncpRaytrace(to1, BoxUtils.get(pos)) || this.ncpRaytrace(to2, BoxUtils.get(pos));
                 }
 
-                ((IRaycastContext) this.raycastContext).blackout_Client$setEnd(to1);
+                ((IClipContext) this.raycastContext).blackout_Client$setEnd(to1);
                 this.result = DamageUtils.raycast(this.raycastContext, false);
                 if (this.result.getBlockPos().equals(pos)) {
                     return true;
                 }
 
-                ((IRaycastContext) this.raycastContext).blackout_Client$setEnd(to2);
+                ((IClipContext) this.raycastContext).blackout_Client$setEnd(to2);
                 this.result = DamageUtils.raycast(this.raycastContext, false);
                 return this.result.getType() == HitResult.Type.MISS || this.result.getBlockPos().equals(pos);
             case Sides:
@@ -154,7 +154,7 @@ public class RaytraceSettings extends SettingsModule {
                         return this.ncpRaytrace(vec2, BoxUtils.get(pos));
                     }
 
-                    ((IRaycastContext) this.raycastContext)
+                    ((IClipContext) this.raycastContext)
                             .blackout_Client$setEnd(vec.add(dir.getStepX() / 2.0F, dir.getStepY() / 2.0F, dir.getStepZ() / 2.0F));
                     this.result = DamageUtils.raycast(this.raycastContext, false);
                     if (this.result.getType() == HitResult.Type.MISS || this.result.getBlockPos().equals(pos)) {
@@ -175,7 +175,7 @@ public class RaytraceSettings extends SettingsModule {
                                     return true;
                                 }
                             } else {
-                                ((IRaycastContext) this.raycastContext).blackout_Client$setEnd(vec2);
+                                ((IClipContext) this.raycastContext).blackout_Client$setEnd(vec2);
                                 this.result = DamageUtils.raycast(this.raycastContext, false);
                                 if (this.result.getType() == HitResult.Type.MISS || this.result.getBlockPos().equals(pos)) {
                                     this.hit++;
@@ -201,7 +201,7 @@ public class RaytraceSettings extends SettingsModule {
                                     return true;
                                 }
                             } else {
-                                ((IRaycastContext) this.raycastContext).blackout_Client$setEnd(vec2);
+                                ((IClipContext) this.raycastContext).blackout_Client$setEnd(vec2);
                                 this.result = DamageUtils.raycast(this.raycastContext, false);
                                 if (this.result.getType() == HitResult.Type.MISS || this.result.getBlockPos().equals(pos)) {
                                     return true;
@@ -233,7 +233,7 @@ public class RaytraceSettings extends SettingsModule {
                         return this.ncpRaytrace(to, box);
                     }
 
-                    ((IRaycastContext) DamageUtils.raycastContext)
+                    ((IClipContext) DamageUtils.raycastContext)
                             .blackout_Client$set(BlackOut.mc.player.getEyePosition(), to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
                     return DamageUtils.raycast(DamageUtils.raycastContext, false).getType() != HitResult.Type.BLOCK;
                 case DoublePoint:
@@ -244,13 +244,13 @@ public class RaytraceSettings extends SettingsModule {
                             (box.minX + box.maxX) / 2.0, box.minY + this.attackHeight2.get(), (box.minZ + box.maxZ) / 2.0
                     );
                     if (!this.attackNCP.get()) {
-                        ((IRaycastContext) DamageUtils.raycastContext)
+                        ((IClipContext) DamageUtils.raycastContext)
                                 .blackout_Client$set(BlackOut.mc.player.getEyePosition(), to1, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
                         if (DamageUtils.raycast(DamageUtils.raycastContext, false).getType() != HitResult.Type.BLOCK) {
                             return true;
                         }
 
-                        ((IRaycastContext) DamageUtils.raycastContext)
+                        ((IClipContext) DamageUtils.raycastContext)
                                 .blackout_Client$set(BlackOut.mc.player.getEyePosition(), to2, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
                         return DamageUtils.raycast(DamageUtils.raycastContext, false).getType() != HitResult.Type.BLOCK;
                     }
@@ -276,7 +276,7 @@ public class RaytraceSettings extends SettingsModule {
                                         return true;
                                     }
                                 } else {
-                                    ((IRaycastContext) this.raycastContext).blackout_Client$setEnd(vec2);
+                                    ((IClipContext) this.raycastContext).blackout_Client$setEnd(vec2);
                                     this.result = DamageUtils.raycast(this.raycastContext, false);
                                     if (this.result.getType() != HitResult.Type.BLOCK) {
                                         this.hit++;
@@ -308,7 +308,7 @@ public class RaytraceSettings extends SettingsModule {
                                         return true;
                                     }
                                 } else {
-                                    ((IRaycastContext) this.raycastContext).blackout_Client$setEnd(vec2);
+                                    ((IClipContext) this.raycastContext).blackout_Client$setEnd(vec2);
                                     this.result = DamageUtils.raycast(this.raycastContext, false);
                                     if (this.result.getType() != HitResult.Type.BLOCK) {
                                         return true;
@@ -335,7 +335,7 @@ public class RaytraceSettings extends SettingsModule {
         if (this.raycastContext == null) {
             this.raycastContext = new ClipContext(BlackOut.mc.player.getEyePosition(), null, ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, BlackOut.mc.player);
         } else {
-            ((IRaycastContext) this.raycastContext).blackout_Client$setStart(BlackOut.mc.player.getEyePosition());
+            ((IClipContext) this.raycastContext).blackout_Client$setStart(BlackOut.mc.player.getEyePosition());
         }
     }
 

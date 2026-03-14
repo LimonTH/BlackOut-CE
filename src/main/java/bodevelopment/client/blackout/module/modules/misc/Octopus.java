@@ -5,7 +5,7 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.KeyEvent;
 import bodevelopment.client.blackout.event.events.MouseButtonEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
-import bodevelopment.client.blackout.interfaces.mixin.IMinecraftClient;
+import bodevelopment.client.blackout.interfaces.mixin.IMinecraft;
 import bodevelopment.client.blackout.keys.KeyBind;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
@@ -77,7 +77,7 @@ public class Octopus extends Module {
             switched = true;
         }
 
-        ((IMinecraftClient) BlackOut.mc).blackout_Client$useItem();
+        ((IMinecraft) BlackOut.mc).blackout_Client$useItem();
         if (switched) {
             InvUtils.swapBack();
         }

@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.gui.menu;
 
 import bodevelopment.client.blackout.BlackOut;
-import bodevelopment.client.blackout.interfaces.mixin.IMinecraftClient;
+import bodevelopment.client.blackout.interfaces.mixin.IMinecraft;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.google.gson.JsonObject;
@@ -203,7 +203,7 @@ public class Account {
     }
 
     public void setSession() {
-        ((IMinecraftClient) BlackOut.mc).blackout_Client$setSession(this.name, this.uuid, this.accessToken, this.xuid, this.clientId, this.accountType);
+        ((IMinecraft) BlackOut.mc).blackout_Client$setSession(this.name, this.uuid, this.accessToken, this.xuid, this.clientId, this.accountType);
     }
 
     private User.Type getAccountType(String from) {

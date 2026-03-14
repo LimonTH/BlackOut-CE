@@ -5,7 +5,7 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
-import bodevelopment.client.blackout.mixin.accessors.AccessorEntityStatusC2SPacket;
+import bodevelopment.client.blackout.mixin.accessors.AccessorClientboundEntityEventPacket;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -56,7 +56,7 @@ public class FastEat extends Module {
     public void onReceive(PacketEvent.Receive.Pre event) {
         if (event.packet instanceof ClientboundEntityEventPacket packet
                 && BlackOut.mc.player != null
-                && ((AccessorEntityStatusC2SPacket) packet).getId() == BlackOut.mc.player.getId()) {
+                && ((AccessorClientboundEntityEventPacket) packet).getId() == BlackOut.mc.player.getId()) {
             InteractionHand hand = getHand();
             if (hand != null && BlackOut.mc.options.keyUse.isDown()) {
                 this.sendSequenced(s -> new ServerboundUseItemPacket(hand, s, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch));

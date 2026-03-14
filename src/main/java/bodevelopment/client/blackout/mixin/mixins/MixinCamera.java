@@ -1,6 +1,6 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
-import bodevelopment.client.blackout.interfaces.mixin.IVec3d;
+import bodevelopment.client.blackout.interfaces.mixin.IVec3;
 import bodevelopment.client.blackout.module.modules.visual.misc.CameraModifier;
 import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
 import bodevelopment.client.blackout.module.modules.visual.misc.Spectate;
@@ -122,7 +122,7 @@ public abstract class MixinCamera {
         }
 
         if (!freecam.enabled) {
-            ((IVec3d) freecam.velocity).blackout_Client$set(0.0, 0.0, 0.0);
+            ((IVec3) freecam.velocity).blackout_Client$set(0.0, 0.0, 0.0);
         }
 
         if (spectateEntity != null) {

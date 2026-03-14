@@ -3,7 +3,7 @@ package bodevelopment.client.blackout.module.modules.visual.entities;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
-import bodevelopment.client.blackout.interfaces.mixin.IRaycastContext;
+import bodevelopment.client.blackout.interfaces.mixin.IClipContext;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -71,7 +71,7 @@ public class Sight extends Module {
                         this.fadeIn.get() + this.length.get()
                 );
 
-                ((IRaycastContext) DamageUtils.raycastContext).blackout_Client$set(eyePos, lookPos);
+                ((IClipContext) DamageUtils.raycastContext).blackout_Client$set(eyePos, lookPos);
                 BlockHitResult hitResult = DamageUtils.raycast(DamageUtils.raycastContext, false);
 
                 Vec3 hitPos = (hitResult.getType() == HitResult.Type.MISS) ? lookPos : hitResult.getLocation();
