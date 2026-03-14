@@ -94,12 +94,6 @@ public class ModelVertexConsumer implements VertexConsumer {
             return this;
         }
 
-        @Override
-        public void addVertex(float x, float y, float z, int color, float u, float v, int overlay, int light, float nx, float ny, float nz) {
-            parent.addVertex(x, y, z);
-            parent.checkPolygon();
-        }
-
         @Override public @NotNull VertexConsumer setColor(int r, int g, int b, int a) { return this; }
         @Override public @NotNull VertexConsumer setUv(float u, float v) { return this; }
         @Override public @NotNull VertexConsumer setUv1(int u, int v) { return this; }
