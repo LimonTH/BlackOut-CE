@@ -12,6 +12,7 @@ accessible method net/minecraft/client/multiplayer/ClientLevel              getE
 accessible method net/minecraft/world/entity/player/Player                  maybeBackOffFromEdge           (Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/entity/MoverType;)Lnet/minecraft/world/phys/Vec3;
 accessible method net/minecraft/world/item/BlockItem                        getPlaceSound                  (Lnet/minecraft/world/level/block/state/BlockState;)Lnet/minecraft/sounds/SoundEvent;
 accessible method net/minecraft/world/entity/LivingEntity                   refreshDirtyAttributes         ()V
+accessible method net/minecraft/client/renderer/entity/EntityRenderer       renderNameTag                  (Lnet/minecraft/client/renderer/entity/state/EntityRenderState;Lnet/minecraft/network/chat/Component;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V
 
 accessible field net/minecraft/world/entity/player/Player                   POSES                          Ljava/util/Map;
 accessible field  com/mojang/blaze3d/platform/GlStateManager                TEXTURES                       [Lcom/mojang/blaze3d/platform/GlStateManager$TextureState;
