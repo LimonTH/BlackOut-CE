@@ -158,38 +158,40 @@ public class Velocity extends Module {
 
         if (event.packet instanceof ClientboundExplodePacket packet && this.explosions.get()) {
             packet.playerKnockback().ifPresent(knockback -> {
-                double velX = knockback.x;
-                double velY = knockback.y;
-                double velZ = knockback.z;
+                double vX = knockback.x;
+                double vY = knockback.y;
+                double vZ = knockback.z;
 
                 switch (this.mode.get()) {
                     case Simple:
-                        boolean hBoost = this.hChance.get() >= ThreadLocalRandom.current().nextDouble();
-                        boolean vBoost = this.vChance.get() >= ThreadLocalRandom.current().nextDouble();
-
-                        if (hBoost || vBoost) {
-                            double finalX = hBoost ? velX * this.horizontal.get() : velX;
-                            double finalY = vBoost ? velY * this.vertical.get() : velY;
-                            double finalZ = hBoost ? velZ * this.horizontal.get() : velZ;
-
-                            if (BlackOut.mc.player != null) {
-                                BlackOut.mc.player.push(finalX, finalY, finalZ);
-                            }
-
+                        boolean hB = this.hChance.get() >= ThreadLocalRandom.current().nextDouble();
+                        boolean vB = this.vChance.get() >= ThreadLocalRandom.current().nextDouble();
+                        if (hB || vB) {
+                            BlackOut.mc.player.push(hB ? vX * this.horizontal.get() : vX, vB ? vY * this.vertical.get() : vY, hB ? vZ * this.horizontal.get() : vZ);
                             event.setCancelled(true);
                         }
                         break;
 
-                    case Delayed:
-                        if (this.delayExplosion.get()) {
-                            this.delayed.add(new Tuple<>(new Vec3(velX, velY, velZ), true), this.getDelay());
-                            event.setCancelled(true);
-                        }
+                    case Matrix_AAC:
+                        BlackOut.mc.player.push(vX * Math.max(0.05, this.horizontal.get()), vY * this.vertical.get(), vZ * Math.max(0.05, this.horizontal.get()));
+                        event.setCancelled(true);
+                        break;
+
+                    case Vulcan:
+                        BlackOut.mc.player.push(0, vY * 0.2, 0);
+                        event.setCancelled(true);
                         break;
 
                     case Grim:
                         if (this.chance.get() >= ThreadLocalRandom.current().nextDouble()) {
                             this.grimCancel(event, true);
+                        }
+                        break;
+
+                    case Delayed:
+                        if (this.delayExplosion.get()) {
+                            this.delayed.add(new Tuple<>(new Vec3(vX, vY, vZ), true), this.getDelay());
+                            event.setCancelled(true);
                         }
                         break;
                 }
