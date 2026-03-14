@@ -46,7 +46,11 @@ public abstract class MixinClientConnection {
 
     @Inject(method = "genericsFtw", at = @At("HEAD"), cancellable = true)
     private static void preReceivePacket(Packet<?> packet, PacketListener listener, CallbackInfo ci) {
-        BlackOut.EVENT_BUS.post(PacketEvent.Receive.Pre.get(packet));
+        if (BlackOut.EVENT_BUS.post(PacketEvent.Receive.Pre.get(packet)).isCancelled()) {
+            ci.cancel();
+            return;
+        }
+
         if (BlackOut.EVENT_BUS.post(PacketEvent.Receive.Post.get(packet)).isCancelled()) {
             ci.cancel();
         }
