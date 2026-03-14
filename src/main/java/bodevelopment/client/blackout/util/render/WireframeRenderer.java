@@ -17,13 +17,12 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
 import java.util.List;
 
-// TODO: Треугольники говно, вернуть квадраты
-// TODO: Модели предметов и большинство вообщем-то слепков рендерятся не соблюдая своих граней, допустим предметы выглядят как квадраты, а не аккуратные контуры
 public class WireframeRenderer extends WireframeContext {
     public static final ModelVertexConsumerProvider provider = new ModelVertexConsumerProvider();
     public static boolean hidden = false;
@@ -109,14 +108,13 @@ public class WireframeRenderer extends WireframeContext {
         if (!(rawModel instanceof HumanoidModel<?>)) return;
 
         HumanoidModel<PlayerRenderState> model = (HumanoidModel<PlayerRenderState>) rawModel;
-        // TODO: слепок не принимает анимации родителя, стоит как статуя
         PlayerRenderState state = new PlayerRenderState();
         state.eyeHeight = data.eyeHeight;
         state.isDiscrete = player.isShiftKeyDown();
         state.ageInTicks = data.animationProgress;
 
         state.bodyRot = data.bodyYaw;
-        state.yRot = data.headYaw;
+        state.yRot = data.headYaw - data.bodyYaw;;
         state.xRot = data.pitch;
         state.walkAnimationPos = data.limbPos;
         state.walkAnimationSpeed = data.limbSpeed;
@@ -124,6 +122,28 @@ public class WireframeRenderer extends WireframeContext {
         state.isUpsideDown = data.flip;
         state.bedOrientation = data.sleepDir;
         state.pose = data.sleeping ? Pose.SLEEPING : (player.isShiftKeyDown() ? Pose.CROUCHING : Pose.STANDING);
+
+        state.mainArm = player.getMainArm();
+        state.mainHandState.isEmpty = player.getMainHandItem().isEmpty();
+        state.mainHandState.useAnimation = player.getMainHandItem().getUseAnimation();
+        if (player.getMainHandItem().getItem() instanceof CrossbowItem) {
+            state.mainHandState.holdsChargedCrossbow = CrossbowItem.isCharged(player.getMainHandItem());
+        }
+        state.offhandState.isEmpty = player.getOffhandItem().isEmpty();
+        state.offhandState.useAnimation = player.getOffhandItem().getUseAnimation();
+        if (player.getOffhandItem().getItem() instanceof CrossbowItem) {
+            state.offhandState.holdsChargedCrossbow = CrossbowItem.isCharged(player.getOffhandItem());
+        }
+        state.isUsingItem = player.isUsingItem();
+        state.useItemHand = player.getUsedItemHand();
+        state.ticksUsingItem = player.getTicksUsingItem();
+        state.rightHandItem = player.getMainHandItem();
+        state.leftHandItem = player.getOffhandItem();
+
+        model.setupAnim(state);
+
+        state.rightHandItemModel = BlackOut.mc.getItemRenderer().getModel(state.rightHandItem, null, null, 0);
+        state.leftHandItemModel = BlackOut.mc.getItemRenderer().getModel(state.leftHandItem, null, null, 0);
 
         state.isPassenger = data.riding;
         state.attackTime = data.swingProgress;
@@ -174,6 +194,13 @@ public class WireframeRenderer extends WireframeContext {
     public static void drawEverything(Matrix4f matrix, List<Vec3> vertices, float red, float green, float blue, float alpha) {
         if (vertices == null || vertices.isEmpty() || alpha <= 0) return;
 
+        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.disableDepthTest();
+
+        RenderSystem.disableCull();
+
         Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder builder = tessellator.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
 
@@ -181,15 +208,22 @@ public class WireframeRenderer extends WireframeContext {
             builder.addVertex(matrix, (float) pos.x, (float) pos.y, (float) pos.z)
                     .setColor(red, green, blue, alpha);
         }
-        RenderSystem.disableCull();
+
         BufferUploader.drawWithShader(builder.buildOrThrow());
+        RenderSystem.disablePolygonOffset();
+        RenderSystem.enableCull();
+        RenderSystem.enableDepthTest();
+    }
+
+    private static boolean isSame(Vec3 v1, Vec3 v2) {
+        return v1.distanceToSqr(v2) < 0.00001;
     }
 
     public static void drawLinesFromList(Matrix4f matrix, List<Vec3> vertices, float red, float green, float blue, float alpha) {
         if (vertices == null || vertices.size() < 6 || alpha <= 0) return;
 
-        RenderSystem.enableDepthTest();
-        RenderSystem.enableCull();
+        RenderSystem.disableDepthTest();
+        RenderSystem.disableCull();
 
         Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder builder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
@@ -199,25 +233,53 @@ public class WireframeRenderer extends WireframeContext {
             Vec3 v1 = vertices.get(i + 1);
             Vec3 v2 = vertices.get(i + 2);
 
-            Vec3 v3 = vertices.get(i + 4);
+            Vec3 v3 = null;
+            for (int j = 3; j < 6; j++) {
+                Vec3 candidate = vertices.get(i + j);
+                if (!isSame(candidate, v0) && !isSame(candidate, v1) && !isSame(candidate, v2)) {
+                    v3 = candidate;
+                    break;
+                }
+            }
 
-            addLine(builder, matrix, v0, v1, red, green, blue, alpha);
-            addLine(builder, matrix, v1, v2, red, green, blue, alpha);
-            addLine(builder, matrix, v2, v3, red, green, blue, alpha);
-            addLine(builder, matrix, v3, v0, red, green, blue, alpha);
+            if (v3 != null) {
+                addLine(builder, matrix, v0, v1, red, green, blue, alpha);
+                addLine(builder, matrix, v1, v2, red, green, blue, alpha);
+                addLine(builder, matrix, v2, v3, red, green, blue, alpha);
+                addLine(builder, matrix, v3, v0, red, green, blue, alpha);
+            } else {
+                drawTriangleLines(builder, matrix, v0, v1, v2, red, green, blue, alpha);
+            }
         }
 
         BufferUploader.drawWithShader(builder.buildOrThrow());
-        RenderSystem.disableCull();
+        RenderSystem.disablePolygonOffset();
+        RenderSystem.enableCull();
+        RenderSystem.enableDepthTest();
+    }
+
+    private static void drawTriangleLines(BufferBuilder builder, Matrix4f matrix, Vec3 v0, Vec3 v1, Vec3 v2, float r, float g, float b, float a) {
+        if (v0.distanceTo(v1) < 0.001 || v1.distanceTo(v2) < 0.001 || v2.distanceTo(v0) < 0.001) return;
+
+        addLine(builder, matrix, v0, v1, r, g, b, a);
+        addLine(builder, matrix, v1, v2, r, g, b, a);
+        addLine(builder, matrix, v2, v0, r, g, b, a);
     }
 
     private static void addLine(BufferBuilder builder, Matrix4f matrix, Vec3 p1, Vec3 p2, float r, float g, float b, float a) {
         float dx = (float) (p2.x - p1.x);
         float dy = (float) (p2.y - p1.y);
         float dz = (float) (p2.z - p1.z);
+        float len = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+        if (len > 0.0001F) {
+            dx /= len; dy /= len; dz /= len;
+        } else {
+            dy = 1.0f;
+        }
 
         builder.addVertex(matrix, (float) p1.x, (float) p1.y, (float) p1.z).setColor(r, g, b, a).setNormal(dx, dy, dz);
-        builder.addVertex(matrix, (float) p2.x, (float) p2.y, (float) p2.z).setColor(r, g, b, a).setNormal(-dx, -dy, -dz);
+        builder.addVertex(matrix, (float) p2.x, (float) p2.y, (float) p2.z).setColor(r, g, b, a).setNormal(dx, dy, dz);
     }
 
     public static class ModelData {

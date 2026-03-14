@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.visual.entities;
 
-import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.manager.Managers;
@@ -19,16 +18,17 @@ import bodevelopment.client.blackout.util.render.WireframeRenderer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.List;
+
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import org.joml.Matrix4f;
 
+// TODO: Сделать пожже: Модели предметов и большинство вообщем-то слепков рендерятся не соблюдая своих граней, допустим предметы выглядят как квадраты, а не аккуратные контуры
 public class ShaderESP extends Module {
     private static ShaderESP INSTANCE;
 
@@ -41,8 +41,6 @@ public class ShaderESP extends Module {
     private final Setting<BlackOutColor> insideColor = this.sgGeneral.colorSetting("Interior Color", new BlackOutColor(255, 0, 0, 50), "The color applied to the entity's model body.");
 
     public static boolean ignore = false;
-    private RenderBuffers storage;
-    private MultiBufferSource.BufferSource vertexConsumerProvider;
 
     public ShaderESP() {
         super("Shader ESP", "Utilizes post-processing framebuffers and GLSL shaders to render glowing silhouettes around entities.", SubCategory.ENTITIES, true);
@@ -58,6 +56,9 @@ public class ShaderESP extends Module {
     ) {
         if (this.texture.get()) {
             instance.render(state, matrices, vertexConsumers, light);
+        }
+        if (this.shouldRenderLabel(entity, state)) {
+            instance.renderNameTag(state, state.nameTag, matrices, vertexConsumers, light);
         }
 
         if (!this.shouldRender(entity)) return;
@@ -83,12 +84,14 @@ public class ShaderESP extends Module {
         buffer.unbind();
     }
 
-    private boolean shouldRenderLabel(Entity entity) {
+    private <S extends EntityRenderState> boolean shouldRenderLabel(Entity entity, S state) {
         if (Nametags.shouldCancelLabel(entity)) {
             return false;
-        } else {
-            return !this.shouldRender(entity) && entity.shouldShowName() && entity.hasCustomName();
         }
+        if (state.nameTag == null) {
+            return false;
+        }
+        return entity.shouldShowName() || entity.hasCustomName();
     }
 
     @Event

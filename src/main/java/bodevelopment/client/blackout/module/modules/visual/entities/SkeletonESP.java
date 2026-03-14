@@ -37,7 +37,6 @@ public class SkeletonESP extends Module {
     public SkeletonESP() {
         super("Skeleton ESP", "Renders a simplified stick-figure representation of other players' skeletal structures by connecting their joint positions.", SubCategory.ENTITIES, true);
     }
-    // TODO: Не реагирует на state сущностей
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
@@ -51,19 +50,24 @@ public class SkeletonESP extends Module {
 
             PoseStack stack = event.stack;
             stack.pushPose();
+
+            double x = net.minecraft.util.Mth.lerp(event.tickDelta, player.xOld, player.getX()) - camPos.x;
+            double y = net.minecraft.util.Mth.lerp(event.tickDelta, player.yOld, player.getY()) - camPos.y;
+            double z = net.minecraft.util.Mth.lerp(event.tickDelta, player.zOld, player.getZ()) - camPos.z;
+
             stack.setIdentity();
             stack.mulPose(new Quaternionf(camera.rotation()).conjugate());
-
-            Vec3 renderPos = player.getPosition(event.tickDelta);
-            stack.translate((float) (renderPos.x - camPos.x), (float) (renderPos.y - camPos.y), (float) (renderPos.z - camPos.z));
+            stack.translate((float) x, (float) y, (float) z);
 
             WireframeRenderer.ModelData data = new WireframeRenderer.ModelData(player, event.tickDelta);
-            PoseStack modelStack = new PoseStack();
-            modelStack.setIdentity();
+
+            PoseStack modelTransformStack = new PoseStack();
+            modelTransformStack.setIdentity();
 
             WireframeRenderer.provider.consumer.start();
             BlackOutColor dummy = new BlackOutColor(0, 0, 0, 0);
-            WireframeRenderer.renderModel(modelStack, player, data, dummy, dummy, RenderShape.Outlines);
+
+            WireframeRenderer.renderModel(modelTransformStack, player, data, dummy, dummy, RenderShape.Outlines);
             WireframeRenderer.provider.consumer.nextPart();
 
             List<List<Vec3>> parts = WireframeRenderer.provider.consumer.parts;
@@ -81,23 +85,18 @@ public class SkeletonESP extends Module {
 
                 Matrix4f matrix = stack.last().pose();
 
-                Vec3 headTop = getExtremum(parts.get(0), true);
-                Vec3 headBottom = getExtremum(parts.get(0), false);
-
+                Vec3 headCenter = getCenter(parts.get(0));
                 Vec3 bodyTop = getExtremum(parts.get(1), true);
                 Vec3 bodyBottom = getExtremum(parts.get(1), false);
 
-                line(matrix, builder, headTop, headBottom, r, g, b, a);
+                Vec3 neckVector = headCenter.subtract(bodyTop);
+                Vec3 extendedHeadPoint = bodyTop.add(neckVector.scale(1.6));
 
-                line(matrix, builder, headBottom, bodyTop, r, g, b, a);
-
-                line(matrix, builder, bodyTop, bodyBottom, r, g, b, a);
-
+                line(matrix, builder, bodyTop, extendedHeadPoint, r, g, b, a);
                 line(matrix, builder, bodyTop, bodyBottom, r, g, b, a);
 
                 renderLimb(matrix, builder, parts.get(2), bodyTop, r, g, b, a);
                 renderLimb(matrix, builder, parts.get(3), bodyTop, r, g, b, a);
-
                 renderLimb(matrix, builder, parts.get(4), bodyBottom, r, g, b, a);
                 renderLimb(matrix, builder, parts.get(5), bodyBottom, r, g, b, a);
 
@@ -110,10 +109,59 @@ public class SkeletonESP extends Module {
     }
 
     private void renderLimb(Matrix4f matrix, BufferBuilder builder, List<Vec3> vertices, Vec3 attach, float r, float g, float b, float a) {
-        Vec3 top = getExtremum(vertices, true);
-        Vec3 bottom = getExtremum(vertices, false);
-        line(matrix, builder, attach, top, r, g, b, a);
-        line(matrix, builder, top, bottom, r, g, b, a);
+        if (vertices.isEmpty()) return;
+        Vec3 joint = getStableJoint(vertices, attach);
+
+        Vec3 endPoint = getExtremumFromPoint(vertices, joint);
+
+        line(matrix, builder, attach, joint, r, g, b, a);
+        line(matrix, builder, joint, endPoint, r, g, b, a);
+    }
+
+    private Vec3 getStableJoint(List<Vec3> vertices, Vec3 attach) {
+        Vec3 closest = vertices.getFirst();
+        double minDist = Double.MAX_VALUE;
+
+        for (Vec3 v : vertices) {
+            double d = v.distanceToSqr(attach);
+            if (d < minDist) {
+                minDist = d;
+                closest = v;
+            }
+        }
+
+        double avgX = 0, avgY = 0, avgZ = 0;
+        int count = 0;
+        for (Vec3 v : vertices) {
+            if (v.distanceToSqr(closest) < 0.25) {
+                avgX += v.x; avgY += v.y; avgZ += v.z;
+                count++;
+            }
+        }
+
+        return count > 0 ? new Vec3(avgX / count, avgY / count, avgZ / count) : closest;
+    }
+
+    private Vec3 getExtremumFromPoint(List<Vec3> vertices, Vec3 joint) {
+        if (vertices.isEmpty()) return Vec3.ZERO;
+
+        double maxDistSqr = 0;
+        for (Vec3 v : vertices) {
+            maxDistSqr = Math.max(maxDistSqr, v.distanceToSqr(joint));
+        }
+
+        double threshold = maxDistSqr * 0.8;
+        double avgX = 0, avgY = 0, avgZ = 0;
+        int count = 0;
+
+        for (Vec3 v : vertices) {
+            if (v.distanceToSqr(joint) >= threshold) {
+                avgX += v.x; avgY += v.y; avgZ += v.z;
+                count++;
+            }
+        }
+
+        return count > 0 ? new Vec3(avgX / count, avgY / count, avgZ / count) : vertices.getFirst();
     }
 
     private Vec3 getExtremum(List<Vec3> vertices, boolean top) {
@@ -127,17 +175,40 @@ public class SkeletonESP extends Module {
         return new Vec3(avgX / vertices.size(), extremum.y, avgZ / vertices.size());
     }
 
+    private Vec3 getCenter(List<Vec3> vertices) {
+        if (vertices.isEmpty()) return Vec3.ZERO;
+        double x = 0, y = 0, z = 0;
+        for (Vec3 v : vertices) {
+            x += v.x;
+            y += v.y;
+            z += v.z;
+        }
+        return new Vec3(x / vertices.size(), y / vertices.size(), z / vertices.size());
+    }
+
     private void line(Matrix4f matrix, BufferBuilder builder, Vec3 pos, Vec3 pos2, float red, float green, float blue, float alpha) {
         float dx = (float) (pos2.x - pos.x);
         float dy = (float) (pos2.y - pos.y);
         float dz = (float) (pos2.z - pos.z);
 
         float len = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
-        if (len > 0) {
-            dx /= len; dy /= len; dz /= len;
+
+        if (len < 0.001F) {
+            dx = 0;
+            dy = 1;
+            dz = 0;
+        } else {
+            dx /= len;
+            dy /= len;
+            dz /= len;
         }
 
-        builder.addVertex(matrix, (float) pos.x, (float) pos.y, (float) pos.z).setColor(red, green, blue, alpha).setNormal(dx, dy, dz);
-        builder.addVertex(matrix, (float) pos2.x, (float) pos2.y, (float) pos2.z).setColor(red, green, blue, alpha).setNormal(dx, dy, dz);
+        builder.addVertex(matrix, (float) pos.x, (float) pos.y, (float) pos.z)
+                .setColor(red, green, blue, alpha)
+                .setNormal(dx, dy, dz);
+
+        builder.addVertex(matrix, (float) pos2.x, (float) pos2.y, (float) pos2.z)
+                .setColor(red, green, blue, alpha)
+                .setNormal(dx, dy, dz);
     }
 }
