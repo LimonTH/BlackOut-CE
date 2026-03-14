@@ -28,7 +28,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import org.joml.Matrix4f;
 
-// TODO: Модели предметов и большинство вообщем-то слепков рендерятся не соблюдая своих граней, допустим предметы выглядят как квадраты, а не аккуратные контуры
 public class ShaderESP extends Module {
     private static ShaderESP INSTANCE;
 

@@ -30,7 +30,13 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.level.block.AnvilBlock;
+import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.CraftingTableBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
 public class Offhand extends Module {
@@ -66,11 +72,13 @@ public class Offhand extends Module {
     private final Setting<Boolean> move = this.sgThreading.booleanSetting("Move", true, "Update offhand when moving.");
     private final Setting<Boolean> crystalSpawn = this.sgThreading.booleanSetting("Crystal Spawn", true, "Instant update when a crystal spawns.");
 
+    private final Predicate<ItemStack> totemPredicate = stack -> stack.is(Items.TOTEM_OF_UNDYING);
+
     private final TimerMap<Integer, BlockPos> mining = new TimerMap<>(true);
     private final List<AABB> prevPositions = new ArrayList<>();
-    private final Predicate<ItemStack> totemPredicate = stack -> stack.is(Items.TOTEM_OF_UNDYING);
     private final TimerMap<Integer, Long> movedFrom = new TimerMap<>(true);
     private long prevSwitch = 0L;
+    boolean lookingAtInteractive = false;
 
     public Offhand() {
         super("Offhand", "Manages totems and items with advanced damage prediction.", SubCategory.DEFENSIVE, true);
@@ -213,7 +221,7 @@ public class Offhand extends Module {
         }
 
         Optional<Slot> optional = possible.stream()
-                .min(Comparator.comparingLong(slotx -> this.movedFrom.containsKey(slotx.index) ? this.movedFrom.get(slotx.index) : 0L));
+                .max(Comparator.comparingLong(slotx -> this.movedFrom.containsKey(slotx.index) ? this.movedFrom.get(slotx.index) : 0L));
         return optional.orElse(null);
     }
 
@@ -231,7 +239,18 @@ public class Offhand extends Module {
     }
 
     private Predicate<ItemStack> getItem() {
+        lookingAtInteractive = false;
+
+        if (BlackOut.mc.hitResult instanceof BlockHitResult bhr) {
+            BlockState state = BlackOut.mc.level.getBlockState(bhr.getBlockPos());
+            Block block = state.getBlock();
+            if (block instanceof BaseEntityBlock || block instanceof CraftingTableBlock || block instanceof AnvilBlock) {
+                lookingAtInteractive = true;
+            }
+        }
+
         boolean shouldSG = this.swordGapple.get()
+                && !lookingAtInteractive
                 && BlackOut.mc.options.keyUse.isDown()
                 && BlackOut.mc.player.getMainHandItem().getItem() instanceof SwordItem;
 
@@ -239,14 +258,11 @@ public class Offhand extends Module {
             boolean allowGapple = true;
             if (this.safeSwordGapple.get()) {
                 double health = BlackOut.mc.player.getHealth() + BlackOut.mc.player.getAbsorptionAmount();
-                if (health < this.swordGappleHealth.get()) {
-                    allowGapple = false;
-                }
-                if (this.isCrystalDangerous(health)) {
+                if (health < this.swordGappleHealth.get() || this.isCrystalDangerous(health)) {
                     allowGapple = false;
                 }
             }
-            if (allowGapple) {
+            if (allowGapple && this.available(ItemMode.Gapple.predicate)) {
                 return ItemMode.Gapple.predicate;
             }
         }

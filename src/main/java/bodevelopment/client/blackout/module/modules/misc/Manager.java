@@ -14,6 +14,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.ItemUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.core.component.DataComponents;
@@ -159,13 +160,15 @@ public class Manager extends Module {
 
     @Event
     public void onKey(KeyEvent event) {
+        if (BlackOut.mc.screen instanceof ChatScreen) return;
         if (event.pressed && this.chestSwap.get().isKey(event.key) && this.currentlyElytra != null) {
             this.doChestSwap();
         }
     }
 
     @Event
-    public void onKey(MouseButtonEvent event) {
+    public void onMouse(MouseButtonEvent event) {
+        if (BlackOut.mc.screen instanceof ChatScreen) return;
         if (event.pressed && this.chestSwap.get().isMouse(event.button) && this.currentlyElytra != null) {
             this.doChestSwap();
         }
