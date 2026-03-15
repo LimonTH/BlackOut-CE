@@ -16,7 +16,10 @@ public class MixinItemBlockRenderTypes {
     private static void onGetChunkRenderType(BlockState blockState, CallbackInfoReturnable<RenderType> cir) {
         XRay xray = XRay.getInstance();
         if (xray == null || !xray.enabled) return;
-        if (!xray.isTarget(blockState.getBlock()) && xray.opacity.get() > 0) {
+        if (xray.isTarget(blockState.getBlock())) return;
+
+        final int opacity = xray.opacity.get();
+        if (opacity > 0 && opacity < 255) {
             cir.setReturnValue(RenderType.translucent());
         }
     }
@@ -25,7 +28,10 @@ public class MixinItemBlockRenderTypes {
     private static void onGetFluidLayer(FluidState fluidState, CallbackInfoReturnable<RenderType> cir) {
         XRay xray = XRay.getInstance();
         if (xray == null || !xray.enabled) return;
-        if (!xray.isTarget(fluidState.createLegacyBlock().getBlock()) && xray.opacity.get() > 0) {
+        if (xray.isTarget(fluidState.createLegacyBlock().getBlock())) return;
+
+        final int opacity = xray.opacity.get();
+        if (opacity > 0 && opacity < 255) {
             cir.setReturnValue(RenderType.translucent());
         }
     }
