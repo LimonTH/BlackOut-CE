@@ -82,6 +82,8 @@
     "mixins.MixinStringDecomposer",
     "mixins.MixinTridentItem",
     "mixins.MixinVec3",
+    "mixins.sodium.MixinSodiumBlockOcclusionCache",
+    "mixins.sodium.MixinSodiumBlockRenderer",
     "mixins.sodium.MixinSodiumDefaultFluidRenderer",
     "mixins.sodium.MixinSodiumOcclusionCuller",
     "mixins.sodium.MixinSodiumVisibilityEncoding"

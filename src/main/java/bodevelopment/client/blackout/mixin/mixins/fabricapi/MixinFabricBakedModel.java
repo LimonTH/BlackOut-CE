@@ -17,14 +17,51 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(FabricBakedModel.class)
 public interface MixinFabricBakedModel {
     @Inject(method = "emitBlockQuads", at = @At("HEAD"), cancellable = true)
-    default void onEmitBlockQuads(BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<RandomSource> randomSupplier, RenderContext context, CallbackInfo ci) {
+    default void onEmitBlockQuadsHead(
+            BlockAndTintGetter blockView,
+            BlockState state,
+            BlockPos pos,
+            Supplier<RandomSource> randomSupplier,
+            RenderContext context,
+            CallbackInfo ci
+    ) {
         XRay xray = XRay.getInstance();
-        if (xray != null && xray.enabled && state != null) {
-            if (!xray.isTarget(state.getBlock())) {
-                if (xray.opacity.get() <= 0) {
-                    ci.cancel();
-                }
-            }
+        if (xray == null || !xray.enabled || state == null) return;
+        if (xray.isTarget(state.getBlock())) return;
+
+        final int opacity = xray.opacity.get();
+        if (opacity <= 0) {
+            ci.cancel();
+            return;
         }
+        if (opacity >= 255) return;
+
+        context.pushTransform(quad -> {
+            for (int v = 0; v < 4; v++) {
+                final int color = quad.color(v);
+                quad.color(v, (color & 0x00FFFFFF) | (opacity << 24));
+                quad.lightmap(v, 15728880);
+            }
+            return true;
+        });
+    }
+
+    @Inject(method = "emitBlockQuads", at = @At("RETURN"))
+    default void onEmitBlockQuadsReturn(
+            BlockAndTintGetter blockView,
+            BlockState state,
+            BlockPos pos,
+            Supplier<RandomSource> randomSupplier,
+            RenderContext context,
+            CallbackInfo ci
+    ) {
+        XRay xray = XRay.getInstance();
+        if (xray == null || !xray.enabled || state == null) return;
+        if (xray.isTarget(state.getBlock())) return;
+
+        final int opacity = xray.opacity.get();
+        if (opacity <= 0 || opacity >= 255) return;
+
+        context.popTransform();
     }
 }
