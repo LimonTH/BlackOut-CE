@@ -21,7 +21,9 @@ public interface MixinFabricBakedModel {
         XRay xray = XRay.getInstance();
         if (xray != null && xray.enabled && state != null) {
             if (!xray.isTarget(state.getBlock())) {
-                ci.cancel();
+                if (xray.opacity.get() <= 0) {
+                    ci.cancel();
+                }
             }
         }
     }
