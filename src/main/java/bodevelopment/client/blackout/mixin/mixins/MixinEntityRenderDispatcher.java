@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.module.modules.visual.entities.ShaderESP;
+import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
 import bodevelopment.client.blackout.module.modules.visual.world.Brightness;
 import bodevelopment.client.blackout.util.render.RenderEntityCapture;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -13,6 +14,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -67,5 +69,17 @@ public class MixinEntityRenderDispatcher {
         } else {
             instance.render(state, matrices, vertexConsumers, light);
         }
+    }
+
+    @ModifyVariable(
+            method = "renderShadow",
+            at = @At("HEAD"),
+            argsOnly = true,
+            ordinal = 0
+    )
+    private static float noShadow(float shadowRadius) {
+        NoRender noRender = NoRender.getInstance();
+        if (noRender != null && noRender.enabled && noRender.shadows.get()) return 0.0f;
+        return shadowRadius;
     }
 }

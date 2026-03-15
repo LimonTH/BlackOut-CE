@@ -11,6 +11,7 @@ import bodevelopment.client.blackout.module.modules.visual.misc.HandESP;
 import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
+import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -40,14 +41,10 @@ public class MixinGui {
         }
 
         HandESP handESP = HandESP.getInstance();
-        if (handESP.enabled) {
-            handESP.renderHud();
-        }
+        if (handESP.enabled) handESP.renderHud();
 
         ShaderESP shaderESP = ShaderESP.getInstance();
-        if (shaderESP.enabled) {
-            shaderESP.onRenderHud();
-        }
+        if (shaderESP.enabled) shaderESP.onRenderHud();
 
         if (Renderer.shouldLoadHUDBlur()) {
             RenderUtils.loadBlur("hudblur", blur.getHUDBlurStrength());
@@ -58,15 +55,17 @@ public class MixinGui {
 
     @Inject(method = "render", at = @At("TAIL"))
     private void postRender(GuiGraphics context, DeltaTracker tickCounter, CallbackInfo ci) {
-        float tickDelta = tickCounter.getGameTimeDeltaPartialTick(true);
-        BlackOut.EVENT_BUS.post(RenderEvent.Hud.Post.get(context, tickDelta));
+        BlackOut.EVENT_BUS.post(RenderEvent.Hud.Post.get(context, tickCounter.getGameTimeDeltaPartialTick(true)));
     }
 
     @Inject(method = "renderEffects", at = @At("HEAD"), cancellable = true)
     private void renderStatusEffectOverlay(GuiGraphics context, DeltaTracker tickCounter, CallbackInfo ci) {
-        if (NoRender.getInstance().enabled && NoRender.getInstance().effectOverlay.get()) {
-            ci.cancel();
-        }
+        if (NoRender.getInstance().enabled && NoRender.getInstance().effectOverlay.get()) ci.cancel();
+    }
+
+    @Inject(method = "renderVignette", at = @At("HEAD"), cancellable = true)
+    private void onRenderVignette(GuiGraphics guiGraphics, Entity entity, CallbackInfo ci) {
+        if (NoRender.getInstance().enabled && NoRender.getInstance().vignette.get()) ci.cancel();
     }
 
     @Inject(
@@ -78,13 +77,9 @@ public class MixinGui {
         CustomScoreboard customScoreboard = CustomScoreboard.getInstance();
         if (customScoreboard.enabled) {
             ci.cancel();
-
             customScoreboard.objectiveName = objective.getDisplayName().getString();
-
             TextColor clr = objective.getDisplayName().getStyle().getColor();
-            int rgbValue = (clr != null) ? clr.getValue() : 0xFFFFFF;
-
-            customScoreboard.objectiveColor = new Color(rgbValue);
+            customScoreboard.objectiveColor = new Color(clr != null ? clr.getValue() : 0xFFFFFF);
         }
     }
 
@@ -93,22 +88,23 @@ public class MixinGui {
             at = @At("HEAD"),
             cancellable = true
     )
-    private void injectPumpkinBlur(GuiGraphics context, ResourceLocation texture, float opacity, CallbackInfo callback) {
-        ResourceLocation pumpkinTexture = ResourceLocation.withDefaultNamespace("textures/misc/pumpkinblur.png");
+    private void injectOverlayFilter(GuiGraphics context, ResourceLocation texture, float opacity, CallbackInfo ci) {
+        NoRender noRender = NoRender.getInstance();
+        if (!noRender.enabled) return;
 
-        if (NoRender.getInstance().enabled && NoRender.getInstance().pumpkin.get() && pumpkinTexture.equals(texture)) {
-            callback.cancel();
+        ResourceLocation pumpkinTex = ResourceLocation.withDefaultNamespace("textures/misc/pumpkinblur.png");
+
+        if (noRender.pumpkin.get()       && pumpkinTex.equals(texture)) { ci.cancel();
         }
     }
 
-    @Inject(
-            method = "renderCrosshair",
-            at = @At("HEAD"),
-            cancellable = true
-    )
+    @Inject(method = "renderPortalOverlay", at = @At("HEAD"), cancellable = true)
+    private void onRenderPortal(GuiGraphics guiGraphics, float f, CallbackInfo ci) {
+        if (NoRender.getInstance().enabled && NoRender.getInstance().portalOverlay.get()) ci.cancel();
+    }
+
+    @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
     private void drawCrosshair(GuiGraphics context, DeltaTracker tickCounter, CallbackInfo ci) {
-        if (Crosshair.getInstance().enabled) {
-            ci.cancel();
-        }
+        if (Crosshair.getInstance().enabled) ci.cancel();
     }
 }
