@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
 import bodevelopment.client.blackout.module.modules.visual.world.Ambience;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import net.minecraft.client.Camera;
@@ -26,7 +27,8 @@ public class MixinFogRenderer {
     @Inject(method = "setupFog", at = @At("HEAD"), cancellable = true)
     private static void onApplyFog(Camera camera, FogRenderer.FogMode fogType, Vector4f color, float viewDistance, boolean thickenFog, float tickDelta, CallbackInfoReturnable<FogParameters> cir) {
         Ambience ambience = Ambience.getInstance();
-        if (ambience != null && ambience.enabled && ambience.modifyFog(fogType == FogRenderer.FogMode.FOG_TERRAIN)) {
+        NoRender noRender = NoRender.getInstance();
+        if ((ambience != null && ambience.enabled && ambience.modifyFog(fogType == FogRenderer.FogMode.FOG_TERRAIN)) || (noRender != null && noRender.enabled && noRender.fog.get())) {
             cir.setReturnValue(FogParameters.NO_FOG);
         }
     }
