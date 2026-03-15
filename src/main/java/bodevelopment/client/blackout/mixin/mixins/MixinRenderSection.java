@@ -11,8 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinRenderSection {
     @Inject(method = "hasAllNeighbors", at = @At("HEAD"), cancellable = true)
     private void onHasAllNeighbors(CallbackInfoReturnable<Boolean> cir) {
-        if (XRay.getInstance().enabled) {
-            cir.setReturnValue(true);
-        }
+        XRay xray = XRay.getInstance();
+        if (xray == null || !xray.enabled) return;
+        cir.setReturnValue(true);
     }
 }

@@ -15,25 +15,24 @@ public class MixinBlockBehaviour {
     @Inject(method = "skipRendering", at = @At("HEAD"), cancellable = true)
     private void onSkipRendering(BlockState state, BlockState adjacentState, Direction direction, CallbackInfoReturnable<Boolean> cir) {
         XRay xray = XRay.getInstance();
-        if (xray != null && xray.enabled) {
-            boolean isTarget = xray.isTarget(state.getBlock());
-            boolean isAdjacentTarget = xray.isTarget(adjacentState.getBlock());
+        if (xray == null || !xray.enabled) return;
 
-            if (isTarget) {
-                cir.setReturnValue(isAdjacentTarget);
-            } else {
-                cir.setReturnValue(true);
-            }
+        boolean isTarget = xray.isTarget(state.getBlock());
+        boolean isAdjacentTarget = xray.isTarget(adjacentState.getBlock());
+
+        if (isTarget) {
+            cir.setReturnValue(isAdjacentTarget);
+        } else {
+            cir.setReturnValue(xray.opacity.get() <= 0);
         }
     }
 
     @Inject(method = "getRenderShape", at = @At("HEAD"), cancellable = true)
     private void onGetRenderType(BlockState state, CallbackInfoReturnable<RenderShape> cir) {
         XRay xray = XRay.getInstance();
-        if (xray != null && xray.enabled) {
-            if (!xray.isTarget(state.getBlock())) {
-                cir.setReturnValue(RenderShape.INVISIBLE);
-            }
+        if (xray == null || !xray.enabled) return;
+        if (!xray.isTarget(state.getBlock()) && xray.opacity.get() <= 0) {
+            cir.setReturnValue(RenderShape.INVISIBLE);
         }
     }
 }
