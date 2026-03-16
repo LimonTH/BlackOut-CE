@@ -8,7 +8,6 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(CreativeModeInventoryScreen.class)
 public abstract class MixinCreativeModeInventoryScreen implements ICreativeModeInventoryScreen {
-
     @Shadow
     private static CreativeModeTab selectedTab;
 

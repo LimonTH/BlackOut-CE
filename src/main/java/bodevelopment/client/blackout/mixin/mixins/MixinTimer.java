@@ -9,7 +9,6 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(DeltaTracker.Timer.class)
 public class MixinTimer implements ITimer {
-
     @Mutable
     @Shadow
     @Final

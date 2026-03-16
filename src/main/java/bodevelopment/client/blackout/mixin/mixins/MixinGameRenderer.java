@@ -11,7 +11,6 @@ import bodevelopment.client.blackout.randomstuff.timers.TimerMap;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.SharedFeatures;
-import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import org.joml.Matrix4f;
 import org.objectweb.asm.Opcodes;
@@ -70,10 +69,11 @@ public abstract class MixinGameRenderer {
             method = "renderLevel",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V"
+                    target = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V"
             )
     )
-    private void onRenderWorldPre(DeltaTracker tickCounter, CallbackInfo ci, @Local PoseStack matrices) {
+    private void onRenderWorldPre(DeltaTracker tickCounter, CallbackInfo ci) {
+        PoseStack matrices = new PoseStack();
         float tickDelta = tickCounter.getGameTimeDeltaPartialTick(true);
 
         TimerList.updating.forEach(TimerList::update);
@@ -86,11 +86,12 @@ public abstract class MixinGameRenderer {
             method = "renderLevel",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V",
+                    target = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V",
                     shift = At.Shift.AFTER
             )
     )
-    private void onRenderWorldPost(DeltaTracker tickCounter, CallbackInfo ci, @Local PoseStack matrices) {
+    private void onRenderWorldPost(DeltaTracker tickCounter, CallbackInfo ci) {
+        PoseStack matrices = new PoseStack();
         BlackOut.EVENT_BUS.post(RenderEvent.World.Post.get(matrices, tickCounter.getGameTimeDeltaPartialTick(true)));
     }
 

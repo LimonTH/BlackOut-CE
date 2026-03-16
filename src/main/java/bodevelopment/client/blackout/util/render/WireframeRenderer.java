@@ -17,7 +17,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.CrossbowItem;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
@@ -125,26 +127,13 @@ public class WireframeRenderer extends WireframeContext {
         state.pose = data.sleeping ? Pose.SLEEPING : (player.isShiftKeyDown() ? Pose.CROUCHING : Pose.STANDING);
 
         state.mainArm = player.getMainArm();
-        state.mainHandState.isEmpty = player.getMainHandItem().isEmpty();
-        state.mainHandState.useAnimation = player.getMainHandItem().getUseAnimation();
-        if (player.getMainHandItem().getItem() instanceof CrossbowItem) {
-            state.mainHandState.holdsChargedCrossbow = CrossbowItem.isCharged(player.getMainHandItem());
-        }
-        state.offhandState.isEmpty = player.getOffhandItem().isEmpty();
-        state.offhandState.useAnimation = player.getOffhandItem().getUseAnimation();
-        if (player.getOffhandItem().getItem() instanceof CrossbowItem) {
-            state.offhandState.holdsChargedCrossbow = CrossbowItem.isCharged(player.getOffhandItem());
-        }
+        state.rightArmPose = getArmPose(player, InteractionHand.MAIN_HAND);
+        state.leftArmPose = getArmPose(player, InteractionHand.OFF_HAND);
         state.isUsingItem = player.isUsingItem();
         state.useItemHand = player.getUsedItemHand();
         state.ticksUsingItem = player.getTicksUsingItem();
-        state.rightHandItem = player.getMainHandItem();
-        state.leftHandItem = player.getOffhandItem();
 
         model.setupAnim(state);
-
-        state.rightHandItemModel = BlackOut.mc.getItemRenderer().getModel(state.rightHandItem, null, null, 0);
-        state.leftHandItemModel = BlackOut.mc.getItemRenderer().getModel(state.leftHandItem, null, null, 0);
 
         state.isPassenger = data.riding;
         state.attackTime = data.swingProgress;
@@ -281,6 +270,27 @@ public class WireframeRenderer extends WireframeContext {
 
         builder.addVertex(matrix, (float) p1.x, (float) p1.y, (float) p1.z).setColor(r, g, b, a).setNormal(dx, dy, dz);
         builder.addVertex(matrix, (float) p2.x, (float) p2.y, (float) p2.z).setColor(r, g, b, a).setNormal(dx, dy, dz);
+    }
+
+    private static HumanoidModel.ArmPose getArmPose(AbstractClientPlayer player, InteractionHand hand) {
+        ItemStack stack = hand == InteractionHand.MAIN_HAND ? player.getMainHandItem() : player.getOffhandItem();
+        if (stack.isEmpty()) return HumanoidModel.ArmPose.EMPTY;
+        if (player.isUsingItem() && player.getUsedItemHand() == hand) {
+            return switch (stack.getUseAnimation()) {
+                case BLOCK -> HumanoidModel.ArmPose.BLOCK;
+                case BOW -> HumanoidModel.ArmPose.BOW_AND_ARROW;
+                case SPEAR -> HumanoidModel.ArmPose.THROW_SPEAR;
+                case CROSSBOW -> HumanoidModel.ArmPose.CROSSBOW_CHARGE;
+                case SPYGLASS -> HumanoidModel.ArmPose.SPYGLASS;
+                case TOOT_HORN -> HumanoidModel.ArmPose.TOOT_HORN;
+                case BRUSH -> HumanoidModel.ArmPose.BRUSH;
+                default -> HumanoidModel.ArmPose.ITEM;
+            };
+        }
+        if (stack.getItem() instanceof CrossbowItem && CrossbowItem.isCharged(stack)) {
+            return HumanoidModel.ArmPose.CROSSBOW_HOLD;
+        }
+        return HumanoidModel.ArmPose.ITEM;
     }
 
     public static class ModelData {

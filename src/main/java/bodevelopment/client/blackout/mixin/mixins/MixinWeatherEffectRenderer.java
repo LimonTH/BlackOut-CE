@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
-import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.WeatherEffectRenderer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -15,7 +15,7 @@ public class MixinWeatherEffectRenderer {
     @Inject(method = "render*", at = @At("HEAD"), cancellable = true)
     private void onRender(
             Level level,
-            LightTexture lightTexture,
+            MultiBufferSource bufferSource,
             int ticks,
             float tickDelta,
             Vec3 cameraPos,

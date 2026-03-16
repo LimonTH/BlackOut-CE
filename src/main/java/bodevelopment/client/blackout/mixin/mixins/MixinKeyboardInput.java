@@ -29,7 +29,7 @@ public abstract class MixinKeyboardInput {
     private boolean grim = false;
 
     @Inject(method = "tick", at = @At("HEAD"))
-    private void onMovement(boolean slowDown, float slowDownFactor, CallbackInfo ci) {
+    private void onMovement(CallbackInfo ci) {
         Managers.ROTATION.updateNext();
         Managers.ROTATION.moveLookYaw = Mth.wrapDegrees(Managers.ROTATION.nextYaw);
         this.grim = SettingUtils.grimMovement();

@@ -25,7 +25,6 @@ import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket;
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
 import net.minecraft.network.protocol.game.ServerboundInteractPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
-import net.minecraft.network.protocol.game.ServerboundPickItemPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
@@ -144,7 +143,7 @@ public class PacketManager extends Manager {
             }
         }
 
-        if (e.packet instanceof ClientboundSetHeldSlotPacket packet && this.ignoreSetSlot.contains(packet.getSlot())) {
+        if (e.packet instanceof ClientboundSetHeldSlotPacket(int slot1) && this.ignoreSetSlot.contains(slot1)) {
             e.setCancelled(true);
         }
 
@@ -243,7 +242,6 @@ public class PacketManager extends Manager {
                 || packet instanceof ServerboundSwingPacket
                 || packet instanceof ServerboundSetCarriedItemPacket
                 || packet instanceof ServerboundContainerClickPacket
-                || packet instanceof ServerboundPickItemPacket
                 || packet instanceof ServerboundPlayerInputPacket;
     }
 
