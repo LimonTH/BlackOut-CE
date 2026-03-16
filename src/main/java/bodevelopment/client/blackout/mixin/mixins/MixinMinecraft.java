@@ -52,8 +52,6 @@ import net.minecraft.world.phys.EntityHitResult;
 @Mixin(value = Minecraft.class, priority = 500)
 public abstract class MixinMinecraft implements IMinecraft {
     @Shadow
-    static Minecraft instance;
-    @Shadow
     @Nullable
     public LocalPlayer player;
     @Shadow
@@ -66,7 +64,6 @@ public abstract class MixinMinecraft implements IMinecraft {
     @Shadow
     @Final
     private DeltaTracker.Timer deltaTracker;
-
 
     @Shadow
     protected abstract void runTick(boolean tick);

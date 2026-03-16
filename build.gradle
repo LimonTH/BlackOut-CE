@@ -44,8 +44,8 @@ dependencies {
 
 	// Compatible Mods
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-	modImplementation "com.github.CaffeineMC.sodium:fabric:${project.sodium}"
-	modImplementation "com.github.cabaletta.baritone:baritone-api:${project.baritone_api}"
+	modImplementation "maven.modrinth:sodium:${project.sodium_version}-fabric"
+	modImplementation "com.github.cabaletta.baritone:baritone-api:${project.baritone_api_version}"
 
 	// Other
 	compileOnly "com.google.errorprone:error_prone_annotations:2.47.0"

@@ -9,7 +9,6 @@ import net.minecraft.client.renderer.entity.state.PlayerRenderState;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.Tuple;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -114,11 +113,6 @@ public class Capes {
                 Capes.loading = false;
                 Capes.startLoad();
             }
-        }
-
-        @Override
-        public void load(ResourceManager manager) {
-            // Пусто, так как загружаем из сети, а не из ассетов
         }
     }
 }

@@ -12,7 +12,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Screen.class)
 public abstract class MixinScreen {
-
     @Inject(method = "render", at = @At("HEAD"))
     private void onRenderHead(GuiGraphics context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (!((Object) this instanceof TitleScreen)) {

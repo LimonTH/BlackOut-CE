@@ -12,7 +12,6 @@ import java.util.function.Predicate;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
-import net.minecraft.network.protocol.game.ServerboundPickItemPacket;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
@@ -189,14 +188,25 @@ public class InvUtils {
     }
 
     private static void sendPick(int slot, boolean instant) {
-        if (instant) {
-            Managers.PACKET.sendInstantly(new ServerboundPickItemPacket(slot));
+        int hbSlot = BlackOut.mc.player.getInventory().getSuitableHotbarSlot();
+
+        if (slot < 9) {
+            BlackOut.mc.player.getInventory().selected = slot;
+            if (instant) {
+                Managers.PACKET.sendInstantly(new ServerboundSetCarriedItemPacket(slot));
+            } else {
+                Managers.PACKET.sendPacket(new ServerboundSetCarriedItemPacket(slot));
+            }
+            Managers.PACKET.slot = slot;
         } else {
-            Managers.PACKET.sendPacket(new ServerboundPickItemPacket(slot));
+            if (instant) {
+                clickSlotInstantly(slot, hbSlot, ClickType.SWAP);
+            } else {
+                clickSlot(slot, hbSlot, ClickType.SWAP);
+            }
         }
 
         if (Simulation.getInstance().pickSwitch()) {
-            int hbSlot = BlackOut.mc.player.getInventory().getSuitableHotbarSlot();
             Managers.PACKET.ignoreSetSlot.replace(hbSlot, 0.3);
             BlackOut.mc.player.getInventory().selected = hbSlot;
             ItemStack stack1 = BlackOut.mc.player.getInventory().getItem(slot);

@@ -172,16 +172,16 @@ public abstract class MixinLocalPlayer {
         }
     }
 
-    @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/ClientInput;tick(ZF)V"))
-    private void tickInput(ClientInput instance, boolean slowDown, float slowDownFactor) {
+    @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/ClientInput;tick()V"))
+    private void tickInput(ClientInput instance) {
         if ((Object) this != BlackOut.mc.player) {
-            instance.tick(slowDown, slowDownFactor);
+            instance.tick();
         } else {
             FreeCam freecam = FreeCam.getInstance();
             if (freecam.enabled) {
                 freecam.resetInput((KeyboardInput) instance);
             } else {
-                instance.tick(slowDown, slowDownFactor);
+                instance.tick();
             }
         }
     }
