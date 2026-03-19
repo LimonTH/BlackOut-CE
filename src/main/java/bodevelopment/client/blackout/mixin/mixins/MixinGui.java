@@ -12,6 +12,7 @@ import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import net.minecraft.world.entity.Entity;
+import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -33,6 +34,12 @@ public class MixinGui {
             ci.cancel();
             return;
         }
+
+        com.mojang.blaze3d.platform.Window window = BlackOut.mc.getWindow();
+        float screenWidth = (float) window.getScreenWidth();
+        float screenHeight = (float) window.getScreenHeight();
+        Renderer.setProjectionMatrix(new Matrix4f().setOrtho(0.0F, screenWidth, screenHeight, 0.0F, -1000.0F, 3000.0F));
+
         float tickDelta = tickCounter.getGameTimeDeltaPartialTick(true);
 
         BlurSettings blur = BlurSettings.getInstance();

@@ -7,14 +7,14 @@ import net.minecraft.client.sounds.SoundEngine;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(SoundEngine.class)
 public class MixinSoundEngine {
-    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At("HEAD"), cancellable = true)
-    private void playSound(SoundInstance sound, CallbackInfo ci) {
-        if (BlackOut.EVENT_BUS.post(PlaySoundEvent.get(sound)).isCancelled()) {
-            ci.cancel();
+    @Inject(method = "play", at = @At("HEAD"), cancellable = true)
+    private void playSound(SoundInstance soundInstance, CallbackInfoReturnable<SoundEngine.PlayResult> cir) {
+        if (BlackOut.EVENT_BUS.post(PlaySoundEvent.get(soundInstance)).isCancelled()) {
+            cir.cancel();
         }
     }
 }

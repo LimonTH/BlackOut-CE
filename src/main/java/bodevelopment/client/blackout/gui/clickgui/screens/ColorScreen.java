@@ -14,14 +14,11 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.client.renderer.CoreShaders;
+import com.mojang.blaze3d.vertex.*;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
@@ -29,6 +26,7 @@ import org.joml.Matrix4f;
 import java.awt.*;
 
 public class ColorScreen extends ClickGuiScreen {
+    private static final MultiBufferSource.BufferSource colorBufSrc = MultiBufferSource.immediate(new ByteBufferBuilder(1024));
     private static final int offset2 = 200;
     private final ColorSetting colorSetting;
     private final float[] colorX = new float[7];
@@ -531,22 +529,20 @@ public class ColorScreen extends ClickGuiScreen {
 
     private void renderQuad(float x, float y, float w, float h, float rl, float gl, float bl, float al, float rr, float gr, float br, float ar) {
         Matrix4f matrix4f = this.stack.last().pose();
-        RenderSystem.enableBlend();
-        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        GlStateManager._enableBlend();
+        VertexConsumer bufferBuilder = colorBufSrc.getBuffer(RenderType.debugQuads());
         bufferBuilder.addVertex(matrix4f, x + w, y, 0.0F).setColor(rr, gr, br, ar);
         bufferBuilder.addVertex(matrix4f, x, y, 0.0F).setColor(rl, gl, bl, al);
         bufferBuilder.addVertex(matrix4f, x, y + h, 0.0F).setColor(rl, gl, bl, al);
         bufferBuilder.addVertex(matrix4f, x + w, y + h, 0.0F).setColor(rr, gr, br, ar);
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
-        RenderSystem.disableBlend();
+        colorBufSrc.endBatch();
+        GlStateManager._disableBlend();
     }
 
     private void renderHueQuad(float x, float y, float w, float h) {
         Matrix4f matrix4f = this.stack.last().pose();
-        RenderSystem.enableBlend();
-        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        GlStateManager._enableBlend();
+        VertexConsumer bufferBuilder = colorBufSrc.getBuffer(RenderType.debugQuads());
         bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 6.0F, y, 0.0F).setColor(1.0F, 0.0F, 0.0F, 1.0F);
         bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 5.0F, y, 0.0F).setColor(1.0F, 0.0F, 1.0F, 1.0F);
         bufferBuilder.addVertex(matrix4f, x + w / 6.0F * 5.0F, y + h, 0.0F).setColor(1.0F, 0.0F, 1.0F, 1.0F);
@@ -571,8 +567,8 @@ public class ColorScreen extends ClickGuiScreen {
         bufferBuilder.addVertex(matrix4f, x, y, 0.0F).setColor(1.0F, 0.0F, 0.0F, 1.0F);
         bufferBuilder.addVertex(matrix4f, x, y + h, 0.0F).setColor(1.0F, 0.0F, 0.0F, 1.0F);
         bufferBuilder.addVertex(matrix4f, x + w / 6.0F, y + h, 0.0F).setColor(1.0F, 1.0F, 0.0F, 1.0F);
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
-        RenderSystem.disableBlend();
+        colorBufSrc.endBatch();
+        GlStateManager._disableBlend();
     }
 
     private void renderPicker() {
@@ -626,17 +622,22 @@ public class ColorScreen extends ClickGuiScreen {
     private void renderPickerQuad(float oy, float w, float h, float red, float green, float blue) {
         Renderer.setMatrices(this.stack);
         Matrix4f matrix4f = Renderer.emptyMatrix;
-        RenderSystem.enableBlend();
+
+        GlStateManager._enableBlend();
+
         BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+
         bufferBuilder.addVertex(matrix4f, w, oy, 0.0F);
         bufferBuilder.addVertex(matrix4f, 0.0F, oy, 0.0F);
         bufferBuilder.addVertex(matrix4f, 0.0F, oy + h, 0.0F);
         bufferBuilder.addVertex(matrix4f, w, oy + h, 0.0F);
+
         Shaders.picker.render(bufferBuilder, new ShaderSetup(setup -> {
             setup.set("pos", 0.0F, oy, w, h);
             setup.set("clr", red, green, blue);
         }));
-        RenderSystem.disableBlend();
+
+        GlStateManager._disableBlend();
     }
 
     private float[] getHSB(boolean unmodified) {

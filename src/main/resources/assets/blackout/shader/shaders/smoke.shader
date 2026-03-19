@@ -59,6 +59,7 @@ frag {
     }
 
     fun void main() {
+        fragColor = vec4(0.0, 1.0, 0.0, 1.0); return;
         vec2 p = (gl_FragCoord.xy * 2.0 - uResolution.xy) / min(uResolution.x, uResolution.y);
         p -= vec2(12.0, 0.0);
 

@@ -7,6 +7,7 @@ import bodevelopment.client.blackout.module.modules.misc.Pause;
 import bodevelopment.client.blackout.module.modules.movement.Blink;
 import bodevelopment.client.blackout.randomstuff.Pair;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
@@ -23,7 +24,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 import net.minecraft.network.Connection;
 import net.minecraft.network.PacketListener;
-import net.minecraft.network.PacketSendListener;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
 
@@ -62,18 +62,18 @@ public abstract class MixinConnection {
     }
 
     @Shadow
-    protected abstract void doSendPacket(Packet<?> packet, @Nullable PacketSendListener callbacks, boolean flush);
+    protected abstract void channelRead0(ChannelHandlerContext context, Packet<?> packet);
 
     @Shadow
-    protected abstract void channelRead0(ChannelHandlerContext context, Packet<?> packet);
+    protected abstract void doSendPacket(Packet<?> packet, @Nullable ChannelFutureListener channelFutureListener, boolean bl);
 
     @Inject(method = "exceptionCaught", at = @At("HEAD"))
     private void onException(ChannelHandlerContext context, Throwable ex, CallbackInfo ci) {
         LOGGER.warn("Crashed on packet event ", ex);
     }
 
-    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketSendListener;)V", at = @At("HEAD"), cancellable = true)
-    private void preSendPacket(Packet<?> packet, PacketSendListener callbacks, CallbackInfo ci) {
+    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;)V", at = @At("HEAD"), cancellable = true)
+    private void preSendPacket(Packet<?> packet, ChannelFutureListener callbacks, CallbackInfo ci) {
         this.cancelled = BlackOut.EVENT_BUS.post(PacketEvent.Send.get(packet)).isCancelled();
         if (this.cancelled) {
             ci.cancel();
@@ -81,12 +81,12 @@ public abstract class MixinConnection {
     }
 
     @Inject(method = "sendPacket", at = @At("HEAD"))
-    public void sendHead(Packet<?> packet, PacketSendListener callbacks, boolean flush, CallbackInfo ci) {
+    public void sendHead(Packet<?> packet, ChannelFutureListener channelFutureListener, boolean flush, CallbackInfo ci) {
         this.currentPacket = packet;
     }
 
     @Inject(method = "sendPacket", at = @At("HEAD"), cancellable = true)
-    private void sendPing(Packet<?> packet, PacketSendListener callbacks, boolean flush, CallbackInfo ci) {
+    private void sendPing(Packet<?> packet, ChannelFutureListener channelFutureListener, boolean flush, CallbackInfo ci) {
         if (this.channel == null || !this.channel.isOpen()) return;
         this.sentPackets++;
 
@@ -94,13 +94,13 @@ public abstract class MixinConnection {
 
         if (this.channel.eventLoop().inEventLoop()) {
             if (shouldDelay) {
-                Managers.PING.addSend(() -> this.doSendPacket(packet, callbacks, flush));
+                Managers.PING.addSend(() -> this.doSendPacket(packet, channelFutureListener, flush));
                 ci.cancel();
             }
         } else {
             if (shouldDelay) {
                 Managers.PING.addSend(() -> this.channel.eventLoop().execute(() ->
-                        this.doSendPacket(packet, callbacks, flush)
+                        this.doSendPacket(packet, channelFutureListener, flush)
                 ));
                 ci.cancel();
             }
@@ -108,7 +108,7 @@ public abstract class MixinConnection {
     }
 
     @Redirect(
-            method = "send(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketSendListener;Z)V",
+            method = "send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;Z)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Connection;isConnected()Z")
     )
     private boolean isOpenSend(Connection instance) {
@@ -143,8 +143,8 @@ public abstract class MixinConnection {
         return blink.enabled && blink.shouldDelay() ? null : this.channel;
     }
 
-    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketSendListener;)V", at = @At("TAIL"))
-    private void postSendPacket(Packet<?> packet, PacketSendListener callbacks, CallbackInfo ci) {
+    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;)V", at = @At("TAIL"))
+    private void postSendPacket(Packet<?> packet, ChannelFutureListener callbacks, CallbackInfo ci) {
         if (!this.cancelled) {
             BlackOut.EVENT_BUS.post(PacketEvent.Sent.get(packet));
         }

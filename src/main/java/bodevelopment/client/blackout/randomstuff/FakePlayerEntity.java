@@ -21,12 +21,13 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.animal.Wolf;
+import net.minecraft.world.entity.animal.wolf.Wolf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
@@ -85,7 +86,7 @@ public class FakePlayerEntity extends AbstractClientPlayer {
             ownInventory.setItem(i, inventory.getItem(i).copy());
         }
 
-        ownInventory.selected = inventory.selected;
+        ownInventory.setSelectedSlot(inventory.getSelectedSlot());
     }
 
     public boolean damage(DamageSource source, float amount) {
@@ -106,11 +107,11 @@ public class FakePlayerEntity extends AbstractClientPlayer {
             this.noActionTime = 0;
             if (!this.isDeadOrDying() && !(amount < 0.0F)) {
                 if (source.scalesWithDifficulty()) {
-                    if (this.getCommandSenderWorld().getDifficulty() == Difficulty.EASY) {
+                    if (this.level().getDifficulty() == Difficulty.EASY) {
                         amount = Math.min(amount / 2.0F + 1.0F, amount);
                     }
 
-                    if (this.getCommandSenderWorld().getDifficulty() == Difficulty.HARD) {
+                    if (this.level().getDifficulty() == Difficulty.HARD) {
                         amount = amount * 3.0F / 2.0F;
                     }
                 }
@@ -126,13 +127,8 @@ public class FakePlayerEntity extends AbstractClientPlayer {
                 } else {
                     this.noActionTime = 0;
                     boolean bl = false;
-                    if (amount > 0.0F && this.isDamageSourceBlocked(source)) {
-                        this.hurtCurrentlyUsedShield(amount);
+                    if (amount > 0.0F && this.isBlocking()) {
                         amount = 0.0F;
-                        if (!source.is(DamageTypeTags.IS_PROJECTILE) && source.getDirectEntity() instanceof LivingEntity livingEntity) {
-                            this.blockUsingShield(livingEntity);
-                        }
-
                         bl = true;
                     }
 
@@ -172,11 +168,12 @@ public class FakePlayerEntity extends AbstractClientPlayer {
                     }
 
                     if (attacker instanceof Player player) {
-                        this.lastHurtByPlayerTime = 100;
-                        this.lastHurtByPlayer = player;
+                        this.lastHurtByPlayerMemoryTime = 100;
+                        this.lastHurtByPlayer = new EntityReference<>(player);
                     } else if (attacker instanceof Wolf wolf && wolf.isTame()) {
-                        this.lastHurtByPlayerTime = 100;
-                        this.lastHurtByPlayer = wolf.getOwner() instanceof Player owner ? owner : null;
+                        this.lastHurtByPlayerMemoryTime = 100;
+                        Entity ownerEntity = wolf.getOwnerReference() != null ? wolf.getOwnerReference().getEntity(this.level(), LivingEntity.class) : null;
+                        this.lastHurtByPlayer = ownerEntity instanceof Player p ? new EntityReference<>(p) : null;
                     }
 
                     if (this.isDeadOrDying()) {
@@ -215,7 +212,7 @@ public class FakePlayerEntity extends AbstractClientPlayer {
                     boolean bl3 = !bl || amount > 0.0F;
                     if (bl3) {
                         this.lastDamageSource = source;
-                        this.lastDamageStamp = this.getCommandSenderWorld().getGameTime();
+                        this.lastDamageStamp = this.level().getGameTime();
                     }
 
                     return bl3;

@@ -25,14 +25,11 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.inventory.ClickType;
-import net.minecraft.world.item.ArmorItem;
-import net.minecraft.world.item.AxeItem;
-import net.minecraft.world.item.DiggerItem;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.PickaxeItem;
-import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -74,7 +71,7 @@ public class Stealer extends Module {
     private final BoxMultiSetting renderSetting = BoxMultiSetting.of(this.sgRender);
 
     private final Predicate<ItemStack> weaponPredicate = stack -> stack != null
-            && (this.swords.get() && stack.getItem() instanceof SwordItem || this.axes.get() && stack.getItem() instanceof AxeItem);
+            && (this.swords.get() && stack.is(ItemTags.SWORDS) || this.axes.get() && stack.is(ItemTags.AXES));
     private final List<Slot> movable = new ArrayList<>();
     private final List<Slot> container = new ArrayList<>();
     private final List<Slot> inventory = new ArrayList<>();
@@ -301,7 +298,7 @@ public class Stealer extends Module {
                     this.movable.add(bestPickaxe);
                 }
 
-                this.dump(slot -> slot != bestPickaxe && slot.stack.getItem() instanceof PickaxeItem);
+                this.dump(slot -> slot != bestPickaxe && slot.stack.is(ItemTags.PICKAXES));
             }
         }
 
@@ -312,7 +309,7 @@ public class Stealer extends Module {
 
                 return isTool
                         && !this.weaponPredicate.test(stack)
-                        && !(stack.getItem() instanceof PickaxeItem);
+                        && !(stack.is(ItemTags.PICKAXES));
             });
         } else {
             this.steal(slot -> {
@@ -321,16 +318,16 @@ public class Stealer extends Module {
 
                 return isTool
                         && !this.weaponPredicate.test(stack)
-                        && !(stack.getItem() instanceof PickaxeItem);
+                        && !(stack.is(ItemTags.PICKAXES));
             });
         }
 
         switch (this.armor.get()) {
             case Never:
-                this.dump(slot -> slot.stack.getItem() instanceof ArmorItem);
+                this.dump(slot -> slot.stack.has(DataComponents.EQUIPPABLE));
                 break;
             case All:
-                this.steal(slot -> slot.stack.getItem() instanceof ArmorItem);
+                this.steal(slot -> slot.stack.has(DataComponents.EQUIPPABLE));
                 break;
             case Best:
                 List<Slot> list = new ArrayList<>();
@@ -360,9 +357,9 @@ public class Stealer extends Module {
         this.dump(slot -> {
             if (slot.stack().isEmpty()) {
                 return false;
-            } else if (!this.bestPickaxe.get() && slot.stack.getItem() instanceof DiggerItem) {
+            } else if (!this.bestPickaxe.get() && slot.stack.has(DataComponents.TOOL)) {
                 return false;
-            } else if (slot.stack.getItem() instanceof ArmorItem) {
+            } else if (slot.stack.has(DataComponents.EQUIPPABLE)) {
                 return false;
             } else {
                 return (!this.bestWeapon.get() || !this.weaponPredicate.test(slot.stack)) && !this.items.get().contains(slot.stack.getItem());
@@ -371,7 +368,7 @@ public class Stealer extends Module {
     }
 
     private Slot getBestArmor(EquipmentSlot equipmentSlot, List<Slot> list) {
-        Slot bestSlot = new Slot(false, -1, BlackOut.mc.player.getInventory().getArmor(equipmentSlot.getIndex()));
+        Slot bestSlot = new Slot(false, -1, BlackOut.mc.player.getInventory().getItem(36 + equipmentSlot.getIndex()));
         double bestValue = ItemUtils.getArmorValue(bestSlot.stack);
 
         for (Slot slot : list.stream()
@@ -424,7 +421,7 @@ public class Stealer extends Module {
         list.addAll(this.inventory);
         list.addAll(this.container);
 
-        for (Slot slot : list.stream().filter(slotx -> slotx.stack.getItem() instanceof PickaxeItem).toList()) {
+        for (Slot slot : list.stream().filter(slotx -> slotx.stack.is(ItemTags.PICKAXES)).toList()) {
             double value = ItemUtils.getPickaxeValue(slot.stack);
             if (!(bestValue >= value)) {
                 bestSlot = slot;

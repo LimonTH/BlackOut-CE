@@ -103,12 +103,12 @@ public class Jesus extends Module {
             ((IVec3) BlackOut.mc.player.getDeltaMovement()).blackout_Client$setY(this.bob.get());
             if (this.toggle.get() && (!BlackOut.mc.player.isInLava() || BlackOut.mc.player.isEyeInFluid(FluidTags.LAVA)) && !this.isSlowed) {
                 double motion = MovementUtils.getSpeed(this.waterSpeed.get());
-                if (BlackOut.mc.player.hasEffect(MobEffects.MOVEMENT_SPEED)) {
-                    motion *= 1.2 + BlackOut.mc.player.getEffect(MobEffects.MOVEMENT_SPEED).getAmplifier() * 0.2;
+                if (BlackOut.mc.player.hasEffect(MobEffects.SPEED)) {
+                    motion *= 1.2 + BlackOut.mc.player.getEffect(MobEffects.SPEED).getAmplifier() * 0.2;
                 }
 
-                if (BlackOut.mc.player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN)) {
-                    motion /= 1.2 + BlackOut.mc.player.getEffect(MobEffects.MOVEMENT_SLOWDOWN).getAmplifier() * 0.2;
+                if (BlackOut.mc.player.hasEffect(MobEffects.SLOWNESS)) {
+                    motion /= 1.2 + BlackOut.mc.player.getEffect(MobEffects.SLOWNESS).getAmplifier() * 0.2;
                 }
 
                 double x = Math.cos(Math.toRadians(Managers.ROTATION.moveYaw + 90.0F));

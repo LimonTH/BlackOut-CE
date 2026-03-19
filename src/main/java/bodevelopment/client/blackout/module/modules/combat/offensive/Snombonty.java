@@ -108,7 +108,7 @@ public class Snombonty extends MoveUpdateModule {
         double z = Mth.lerp(tickDelta, (this.prevBox.minZ + this.prevBox.maxZ) / 2.0, (this.targetBox.minZ + this.targetBox.maxZ) / 2.0) - cameraPos.z;
 
         this.stack.pushPose();
-        Render3DUtils.setRotation(this.stack);
+        Render3DUtils.transformToCameraRotation(this.stack);
 
         BlackOutColor color = this.spreadColor.get();
 

@@ -4,7 +4,7 @@ import bodevelopment.client.blackout.module.modules.visual.misc.XRay;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.DefaultTerrainRenderPasses;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
-import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.*;
@@ -25,7 +25,7 @@ public class MixinSodiumBlockRenderer {
 
     @Inject(method = "renderModel", at = @At("HEAD"), cancellable = true, remap = false, require = 0)
     private void onRenderModelHead(
-            BakedModel model, BlockState state, BlockPos pos, BlockPos origin, CallbackInfo ci
+            BlockStateModel model, BlockState state, BlockPos pos, BlockPos origin, CallbackInfo ci
     ) {
         XRay xray = XRay.getInstance();
         if (xray == null || !xray.enabled) { XRAY_ALPHA.set(-1); return; }

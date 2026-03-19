@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import java.util.List;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -58,9 +58,9 @@ public class NoInteract extends Module {
             } else {
                 switch (this.ignoreMode.get()) {
                     case Sneak: {
-                        this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.PRESS_SHIFT_KEY));
+                        BlackOut.mc.player.setShiftKeyDown(true);
                         InteractionResult actionResult = action.get();
-                        this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.RELEASE_SHIFT_KEY));
+                        BlackOut.mc.player.setShiftKeyDown(false);
                         return actionResult;
                     }
                     case SneakBlocks: {
@@ -68,9 +68,9 @@ public class NoInteract extends Module {
                             return InteractionResult.PASS;
                         }
 
-                        this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.PRESS_SHIFT_KEY));
+                        BlackOut.mc.player.setShiftKeyDown(true);
                         InteractionResult actionResult = action.get();
-                        this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.RELEASE_SHIFT_KEY));
+                        BlackOut.mc.player.setShiftKeyDown(false);
                         return actionResult;
                     }
                     default:

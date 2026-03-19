@@ -14,14 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinCloudRenderer {
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void onRender(
-            int cloudColor,
-            CloudStatus cloudStatus,
-            float cloudHeight,
-            Matrix4f frustumMatrix,
-            Matrix4f projectionMatrix,
-            Vec3 cameraPos,
-            float tickDelta,
-            CallbackInfo ci
+            int i, CloudStatus cloudStatus, float f, Vec3 vec3, float g, CallbackInfo ci
     ) {
         NoRender noRender = NoRender.getInstance();
         if (noRender != null && noRender.enabled && noRender.clouds.get()) ci.cancel();

@@ -14,7 +14,7 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import java.awt.*;
@@ -85,13 +85,13 @@ public class ESP extends Module {
         if (BlackOut.mc.level != null && BlackOut.mc.player != null) {
             Vec3 cameraPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
 
-            RenderSystem.disableDepthTest();
-            RenderSystem.depthMask(false);
+            GlStateManager._disableDepthTest();
+            GlStateManager._depthMask(false);
 
             this.entities.forEach(entity -> this.render2D(event.tickDelta, cameraPos, entity));
 
-            RenderSystem.enableDepthTest();
-            RenderSystem.depthMask(true);
+            GlStateManager._enableDepthTest();
+            GlStateManager._depthMask(true);
         }
     }
 
@@ -115,7 +115,7 @@ public class ESP extends Module {
         float width = this.getWidth(entity.getBoundingBox(), cameraPitch * (1.0 - anglePitch) * yaw);
         float height = this.getHeight(entity.getBoundingBox(), anglePitch);
         this.stack.pushPose();
-        Render3DUtils.setRotation(this.stack);
+        Render3DUtils.transformToCameraRotation(this.stack);
         this.stack.translate(x, y, z);
         this.stack.scale(s, -s, s);
         this.stack.mulPose(Axis.YP.rotation((float) Math.toRadians(-BlackOut.mc.gameRenderer.getMainCamera().getYRot() + 180.0F)));

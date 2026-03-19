@@ -20,7 +20,7 @@ import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.InventoryMenu;
-import net.minecraft.world.item.ArmorItem;
+import net.minecraft.core.component.DataComponents;
 
 public class Suicide extends Module {
     private static Suicide INSTANCE;
@@ -86,8 +86,8 @@ public class Suicide extends Module {
 
     private List<EquipmentSlot> toDrop(int amount) {
         List<EquipmentSlot> list = Arrays.stream(OLEPOSSUtils.equipmentSlots)
-                .filter(slot -> BlackOut.mc.player.getInventory().getArmor(slot.getIndex()).getItem() instanceof ArmorItem)
-                .sorted(Comparator.comparingDouble(slot -> ItemUtils.getArmorValue(BlackOut.mc.player.getInventory().getArmor(slot.getIndex()))))
+                .filter(slot -> BlackOut.mc.player.getInventory().getItem(36 + slot.getIndex()).has(DataComponents.EQUIPPABLE))
+                .sorted(Comparator.comparingDouble(slot -> ItemUtils.getArmorValue(BlackOut.mc.player.getInventory().getItem(36 + slot.getIndex()))))
                 .collect(Collectors.toList());
         return list.subList(Math.max(0, list.size() - amount), list.size());
     }

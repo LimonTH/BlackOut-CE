@@ -13,7 +13,6 @@
     "mixins.MixinBlockRenderDispatcher",
     "mixins.MixinBossHealthOverlay",
     "mixins.MixinBufferBuilder",
-    "mixins.MixinBufferUploader",
     "mixins.MixinCamera",
     "mixins.MixinCapeLayer",
     "mixins.MixinChatComponent",
@@ -62,7 +61,7 @@
     "mixins.MixinTitleScreen",
     "mixins.MixinVisibilitySet",
     "mixins.MixinWeatherEffectRenderer",
-    "mixins.fabricapi.MixinFabricBakedModel"
+    "mixins.fabricapi.MixinFabricBlockStateModel"
   ],
   "injectors": {
     "defaultRequire": 1

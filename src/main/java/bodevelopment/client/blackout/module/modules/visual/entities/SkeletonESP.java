@@ -12,16 +12,15 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import bodevelopment.client.blackout.util.render.WireframeRenderer;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.renderer.CoreShaders;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
@@ -29,6 +28,7 @@ import org.joml.Quaternionf;
 import java.util.List;
 
 public class SkeletonESP extends Module {
+    private static final MultiBufferSource.BufferSource bufSrc = MultiBufferSource.immediate(new ByteBufferBuilder(256));
     private final SettingGroup sgGeneral = this.addGroup("General");
 
     private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Neutral Color", new BlackOutColor(255, 0, 0, 255), "The color applied to the bone structure of standard players.");
@@ -73,12 +73,10 @@ public class SkeletonESP extends Module {
             List<List<Vec3>> parts = WireframeRenderer.provider.consumer.parts;
             if (parts.size() >= 6) {
                 Render3DUtils.start();
-                RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
                 RenderSystem.lineWidth(1.5F);
-                RenderSystem.disableDepthTest();
+                GlStateManager._disableDepthTest();
 
-                Tesselator tessellator = Tesselator.getInstance();
-                BufferBuilder builder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
+                VertexConsumer builder = bufSrc.getBuffer(RenderType.lines());
 
                 BlackOutColor color = (Managers.FRIENDS.isFriend(player) ? this.friendColor : this.lineColor).get();
                 float r = color.red / 255.0F, g = color.green / 255.0F, b = color.blue / 255.0F, a = color.alpha / 255.0F;
@@ -100,15 +98,15 @@ public class SkeletonESP extends Module {
                 renderLimb(matrix, builder, parts.get(4), bodyBottom, r, g, b, a);
                 renderLimb(matrix, builder, parts.get(5), bodyBottom, r, g, b, a);
 
-                BufferUploader.drawWithShader(builder.buildOrThrow());
-                RenderSystem.enableDepthTest();
+                bufSrc.endBatch();
+                GlStateManager._enableDepthTest();
                 Render3DUtils.end();
             }
             stack.popPose();
         }
     }
 
-    private void renderLimb(Matrix4f matrix, BufferBuilder builder, List<Vec3> vertices, Vec3 attach, float r, float g, float b, float a) {
+    private void renderLimb(Matrix4f matrix, VertexConsumer builder, List<Vec3> vertices, Vec3 attach, float r, float g, float b, float a) {
         if (vertices.isEmpty()) return;
         Vec3 joint = getStableJoint(vertices, attach);
 
@@ -186,7 +184,7 @@ public class SkeletonESP extends Module {
         return new Vec3(x / vertices.size(), y / vertices.size(), z / vertices.size());
     }
 
-    private void line(Matrix4f matrix, BufferBuilder builder, Vec3 pos, Vec3 pos2, float red, float green, float blue, float alpha) {
+    private void line(Matrix4f matrix, VertexConsumer builder, Vec3 pos, Vec3 pos2, float red, float green, float blue, float alpha) {
         float dx = (float) (pos2.x - pos.x);
         float dy = (float) (pos2.y - pos.y);
         float dz = (float) (pos2.z - pos.z);

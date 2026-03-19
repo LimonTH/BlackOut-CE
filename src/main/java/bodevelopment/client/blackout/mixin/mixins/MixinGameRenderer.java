@@ -8,6 +8,7 @@ import bodevelopment.client.blackout.module.modules.misc.Reach;
 import bodevelopment.client.blackout.module.modules.visual.misc.*;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.randomstuff.timers.TimerMap;
+import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.SharedFeatures;
@@ -50,7 +51,7 @@ public abstract class MixinGameRenderer {
     public abstract boolean isPanoramicMode();
 
     @Shadow
-    protected abstract void renderItemInHand(Camera camera, float tickDelta, Matrix4f matrix4f);
+    protected abstract void renderItemInHand(float tickDelta, boolean bl, Matrix4f matrix4f);
 
     @Redirect(
             method = "render",
@@ -69,12 +70,17 @@ public abstract class MixinGameRenderer {
             method = "renderLevel",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V"
+                    target = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;Z)V"
             )
     )
     private void onRenderWorldPre(DeltaTracker tickCounter, CallbackInfo ci) {
         PoseStack matrices = new PoseStack();
         float tickDelta = tickCounter.getGameTimeDeltaPartialTick(true);
+
+        // Set perspective projection for 3D rendering
+        net.minecraft.client.Camera camera = BlackOut.mc.gameRenderer.getMainCamera();
+        float fov = (float) BlackOut.mc.gameRenderer.getFov(camera, tickDelta, true);
+        Renderer.setProjectionMatrix(BlackOut.mc.gameRenderer.getProjectionMatrix(fov));
 
         TimerList.updating.forEach(TimerList::update);
         TimerMap.updating.forEach(TimerMap::update);
@@ -86,7 +92,7 @@ public abstract class MixinGameRenderer {
             method = "renderLevel",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V",
+                    target = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;Z)V",
                     shift = At.Shift.AFTER
             )
     )
@@ -97,10 +103,10 @@ public abstract class MixinGameRenderer {
 
     @Redirect(
             method = "renderLevel",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemInHand(Lnet/minecraft/client/Camera;FLorg/joml/Matrix4f;)V")
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemInHand(FZLorg/joml/Matrix4f;)V")
     )
-    private void renderHeldItems(GameRenderer instance, Camera camera, float tickDelta, Matrix4f matrix4f) {
-        HandESP.getInstance().draw(() -> this.renderItemInHand(camera, tickDelta, matrix4f));
+    private void renderHeldItems(GameRenderer instance, float tickDelta, boolean bl, Matrix4f matrix4f) {
+        HandESP.getInstance().draw(() -> this.renderItemInHand(tickDelta, bl, matrix4f));
     }
 
     @Inject(method = "preloadUiShader", at = @At("TAIL"))

@@ -12,8 +12,7 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.ArrayList;
@@ -120,12 +119,10 @@ public class HudElementList {
 
     private void startAlpha() {
         Renderer.setAlpha(1.0F - this.closeProgress);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F - this.closeProgress);
     }
 
     private void endAlpha() {
         Renderer.setAlpha(1.0F);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     private void updateScale() {

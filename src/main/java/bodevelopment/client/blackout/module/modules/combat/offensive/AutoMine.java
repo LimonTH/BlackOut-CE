@@ -36,7 +36,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ThrownExperienceBottle;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.SwordItem;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.level.block.AirBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -256,7 +256,7 @@ public class AutoMine extends Module {
     }
 
     private boolean paused(boolean placing) {
-        return (placing ? this.pauseEatPlacing : this.pauseEat).get() && BlackOut.mc.player.isUsingItem() || this.pauseSword.get() && BlackOut.mc.player.getMainHandItem().getItem() instanceof SwordItem;
+        return (placing ? this.pauseEatPlacing : this.pauseEat).get() && BlackOut.mc.player.isUsingItem() || this.pauseSword.get() && BlackOut.mc.player.getMainHandItem().is(ItemTags.SWORDS);
     }
 
     private boolean shouldRotateStart() {

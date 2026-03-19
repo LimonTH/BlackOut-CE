@@ -32,7 +32,7 @@ import net.minecraft.world.inventory.HopperMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.SwordItem;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Block;
@@ -322,7 +322,7 @@ public class Auto32K extends Module {
     }
 
     private int getSlot() {
-        return this.currentSlot.get() ? BlackOut.mc.player.getInventory().selected : this.swordSlot.get() - 1;
+        return this.currentSlot.get() ? BlackOut.mc.player.getInventory().getSelectedSlot() : this.swordSlot.get() - 1;
     }
 
     private void putBox() {
@@ -351,7 +351,7 @@ public class Auto32K extends Module {
         for (Slot slot : handler.slots) {
             ItemStack stack = slot.getItem();
 
-            if (stack.getItem() instanceof SwordItem) {
+            if (stack.is(ItemTags.SWORDS)) {
                 int sharpnessLevel = 0;
 
                 sharpnessLevel = EnchantmentHelper.getItemEnchantmentLevel(sharpness, stack);
@@ -359,7 +359,7 @@ public class Auto32K extends Module {
                 if (sharpnessLevel >= 10) {
                     int s = this.getSlot();
 
-                    if (s != BlackOut.mc.player.getInventory().selected) {
+                    if (s != BlackOut.mc.player.getInventory().getSelectedSlot()) {
                         InvUtils.swap(s);
                     }
                     BlackOut.mc.gameMode.handleInventoryMouseClick(handler.containerId, slot.index, s, ClickType.SWAP, BlackOut.mc.player);

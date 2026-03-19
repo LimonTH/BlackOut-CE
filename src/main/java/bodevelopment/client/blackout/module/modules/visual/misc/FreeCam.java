@@ -10,6 +10,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import net.minecraft.client.player.KeyboardInput;
 import net.minecraft.world.entity.player.Input;
+import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
 public class FreeCam extends Module {
@@ -44,8 +45,7 @@ public class FreeCam extends Module {
     }
 
     public void resetInput(KeyboardInput input) {
-        input.forwardImpulse = 0.0F;
-        input.leftImpulse = 0.0F;
+        input.moveVector = Vec2.ZERO;
         input.keyPresses = Input.EMPTY;
     }
 

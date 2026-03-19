@@ -164,7 +164,7 @@ public class MainMenu {
         }
 
         if (isGuiOpen) {
-            this.clickGui.render(new GuiGraphics(BlackOut.mc, BlackOut.mc.renderBuffers().bufferSource()), mouseX, mouseY, delta);
+            this.clickGui.render(new GuiGraphics(BlackOut.mc, new net.minecraft.client.gui.render.state.GuiRenderState()), mouseX, mouseY, delta);
         }
     }
 

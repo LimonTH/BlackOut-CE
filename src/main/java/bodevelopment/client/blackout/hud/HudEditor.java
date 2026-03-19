@@ -11,7 +11,7 @@ import bodevelopment.client.blackout.keys.Keys;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.rendering.renderer.ColorRenderer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import java.awt.*;
@@ -97,7 +97,7 @@ public class HudEditor extends Screen {
             Managers.HUD.end(this.stack);
             this.stack.pushPose();
             RenderUtils.unGuiScale(this.stack);
-            RenderSystem.disableDepthTest();
+            GlStateManager._disableDepthTest();
             this.settings.render(this.stack, frameTime, mouseX, mouseY);
             this.elementList.render(this.stack, frameTime, mouseX, mouseY);
 
@@ -108,7 +108,7 @@ public class HudEditor extends Screen {
                 this.stack.popPose();
             }
 
-            RenderSystem.enableDepthTest();
+            GlStateManager._enableDepthTest();
             this.stack.popPose();
         }
     }

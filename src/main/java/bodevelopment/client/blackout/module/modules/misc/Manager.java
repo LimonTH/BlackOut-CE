@@ -24,13 +24,11 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.PickaxeItem;
-import net.minecraft.world.item.SwordItem;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.level.block.AbstractChestBlock;
 import net.minecraft.world.level.block.AnvilBlock;
@@ -200,7 +198,7 @@ public class Manager extends Module {
 
     private void checkChestSwap() {
         if (BlackOut.mc.player != null) {
-            ItemStack stack = BlackOut.mc.player.getInventory().getArmor(EquipmentSlot.CHEST.getIndex());
+            ItemStack stack = BlackOut.mc.player.getInventory().getItem(36 + EquipmentSlot.CHEST.getIndex());
             boolean isElytra = stack.is(Items.ELYTRA);
             if (this.currentlyElytra == null) {
                 this.currentlyElytra = isElytra;
@@ -563,7 +561,7 @@ public class Manager extends Module {
 
             if (this.badSwords.get()) {
                 Slot badSword = this.findBadItem(
-                        slot -> slot.getItem().getItem() instanceof SwordItem, slot -> ItemUtils.getWeaponValue(slot.getItem()), FindArea.Both
+                        slot -> slot.getItem().is(ItemTags.SWORDS), slot -> ItemUtils.getWeaponValue(slot.getItem()), FindArea.Both
                 );
                 if (badSword != null) {
                     return badSword;
@@ -572,7 +570,7 @@ public class Manager extends Module {
 
             if (this.badAxes.get()) {
                 Slot badAxe = this.findBadItem(
-                        slot -> slot.getItem().getItem() instanceof AxeItem, this.axeComparing.get().function, FindArea.Both
+                        slot -> slot.getItem().is(ItemTags.AXES), this.axeComparing.get().function, FindArea.Both
                 );
                 if (badAxe != null) {
                     return badAxe;
@@ -581,7 +579,7 @@ public class Manager extends Module {
 
             if (this.badPickaxes.get()) {
                 Slot badPickaxe = this.findBadItem(
-                        slot -> slot.getItem().getItem() instanceof PickaxeItem, slot -> ItemUtils.getPickaxeValue(slot.getItem()), FindArea.Both
+                        slot -> slot.getItem().is(ItemTags.PICKAXES), slot -> ItemUtils.getPickaxeValue(slot.getItem()), FindArea.Both
                 );
                 if (badPickaxe != null) {
                     return badPickaxe;
@@ -651,12 +649,9 @@ public class Manager extends Module {
     }
 
     public enum WeaponMode {
-        Sword(slot -> slot.getItem().getItem() instanceof SwordItem),
-        Axe(slot -> slot.getItem().getItem() instanceof AxeItem),
-        Both(slot -> {
-            Item item = slot.getItem().getItem();
-            return item instanceof SwordItem || item instanceof AxeItem;
-        });
+        Sword(slot -> slot.getItem().is(ItemTags.SWORDS)),
+        Axe(slot -> slot.getItem().is(ItemTags.AXES)),
+        Both(slot -> slot.getItem().is(ItemTags.SWORDS) || slot.getItem().is(ItemTags.AXES));
 
         private final HotbarSearch search;
 

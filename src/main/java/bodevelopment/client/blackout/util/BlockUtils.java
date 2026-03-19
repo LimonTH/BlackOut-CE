@@ -52,12 +52,12 @@ public class BlockUtils {
             }
         }
 
-        if (effects && BlackOut.mc.player.hasEffect(MobEffects.DIG_SPEED)) {
-            f *= 1.0F + (BlackOut.mc.player.getEffect(MobEffects.DIG_SPEED).getAmplifier() + 1) * 0.2F;
+        if (effects && BlackOut.mc.player.hasEffect(MobEffects.HASTE)) {
+            f *= 1.0F + (BlackOut.mc.player.getEffect(MobEffects.HASTE).getAmplifier() + 1) * 0.2F;
         }
 
-        if (effects && BlackOut.mc.player.hasEffect(MobEffects.DIG_SLOWDOWN)) {
-            float fatigueMul = switch (BlackOut.mc.player.getEffect(MobEffects.DIG_SLOWDOWN).getAmplifier()) {
+        if (effects && BlackOut.mc.player.hasEffect(MobEffects.MINING_FATIGUE)) {
+            float fatigueMul = switch (BlackOut.mc.player.getEffect(MobEffects.MINING_FATIGUE).getAmplifier()) {
                 case 0 -> 0.3F;
                 case 1 -> 0.09F;
                 case 2 -> 0.027F;

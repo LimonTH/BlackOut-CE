@@ -20,7 +20,7 @@ public class MixinItemBlockRenderTypes {
 
         final int opacity = xray.opacity.get();
         if (opacity > 0 && opacity < 255) {
-            cir.setReturnValue(RenderType.translucent());
+            cir.setReturnValue(RenderType.translucentMovingBlock());
         }
     }
 
@@ -32,7 +32,7 @@ public class MixinItemBlockRenderTypes {
 
         final int opacity = xray.opacity.get();
         if (opacity > 0 && opacity < 255) {
-            cir.setReturnValue(RenderType.translucent());
+            cir.setReturnValue(RenderType.translucentMovingBlock());
         }
     }
 }

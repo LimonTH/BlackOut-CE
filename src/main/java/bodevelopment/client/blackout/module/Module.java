@@ -234,12 +234,12 @@ public class Module extends RotationHelper {
     protected void placeBlock(InteractionHand hand, PlaceData data) {
         boolean shouldSneak = data.sneak() && !BlackOut.mc.player.isShiftKeyDown();
         if (shouldSneak) {
-            this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.PRESS_SHIFT_KEY));
+            BlackOut.mc.player.setShiftKeyDown(true);
         }
 
         this.placeBlock(hand, data.pos().getCenter(), data.dir(), data.pos());
         if (shouldSneak) {
-            this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.RELEASE_SHIFT_KEY));
+            BlackOut.mc.player.setShiftKeyDown(false);
         }
     }
 

@@ -75,7 +75,7 @@ public class AutoPot extends Module {
         PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
         if (contents != null) {
             for (MobEffectInstance instance : contents.getAllEffects()) {
-                if (instance.getEffect().equals(MobEffects.HEAL)) {
+                if (instance.getEffect().equals(MobEffects.INSTANT_HEALTH)) {
                     return true;
                 }
             }

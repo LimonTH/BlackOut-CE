@@ -9,7 +9,7 @@ import bodevelopment.client.blackout.randomstuff.ShaderSetup;
 import bodevelopment.client.blackout.rendering.shader.Shader;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.ColorUtils;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -134,7 +134,7 @@ public class CustomFontRenderer {
 
         Matrix4f matrix4f = stack.last().pose();
         y = (float) (y - (this.selectedFont.getFontSize() * 0.4 - this.offset));
-        RenderSystem.enableBlend();
+        GlStateManager._enableBlend();
         GL13C.glActiveTexture(33984);
         GL13C.glBindTexture(3553, this.selectedFont.getId());
         BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
@@ -147,7 +147,7 @@ public class CustomFontRenderer {
         shader.render(bufferBuilder, setup);
         GL13C.glBindTexture(3553, GlStateManager.TEXTURES[0].binding);
         GL13C.glActiveTexture(33984 | GlStateManager.activeTexture);
-        RenderSystem.disableBlend();
+        GlStateManager._disableBlend();
     }
 
     private float renderChar(BufferBuilder bufferBuilder, Matrix4f matrix4f, CharInfo charInfo, float x, float y) {

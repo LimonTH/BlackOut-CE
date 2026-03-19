@@ -89,7 +89,7 @@ public class Capes {
             try {
                 BufferedImage image = ImageIO.read(URI.create("https://raw.githubusercontent.com/LimonTH/Blackout-CE-capes/main/textures/" + name + ".png").toURL());
 
-                RenderSystem.recordRenderCall(() -> {
+                RenderSystem.queueFencedTask(() -> {
                     uploadAndRegister(name, identifier, image);
                 });
             } catch (IOException e) {
@@ -100,7 +100,18 @@ public class Capes {
 
         private void uploadAndRegister(String name, ResourceLocation identifier, BufferedImage image) {
             try {
-                this.id = BOTextures.upload(image, false).id();
+                BOTextures.UploadData data = BOTextures.upload(image, false);
+                int glId = data.id();
+
+                // Wrap raw GL texture into GlTexture/GlTextureView for AbstractTexture
+                com.mojang.blaze3d.opengl.GlTexture glTexture = new com.mojang.blaze3d.opengl.GlTexture(
+                        com.mojang.blaze3d.textures.GpuTexture.USAGE_TEXTURE_BINDING,
+                        "cape/" + name,
+                        com.mojang.blaze3d.textures.TextureFormat.RGBA8,
+                        data.width(), data.height(), 1, 1, glId
+                );
+                this.texture = glTexture;
+                this.textureView = new com.mojang.blaze3d.opengl.GlTextureView(glTexture, 0, 1);
 
                 TextureManager manager = BlackOut.mc.getTextureManager();
                 manager.register(identifier, this);

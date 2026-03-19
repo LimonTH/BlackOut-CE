@@ -1542,7 +1542,7 @@ public class AutoCrystal extends Module {
         } else if (this.target == null) {
             return false;
         } else {
-            for (ItemStack stack : this.target.getArmorSlots()) {
+            for (ItemStack stack : java.util.List.of(this.target.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.HEAD), this.target.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.CHEST), this.target.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.LEGS), this.target.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.FEET))) {
                 if (stack.isDamageableItem() && 1.0 - (double) stack.getDamageValue() / stack.getMaxDamage() <= this.armorFacePlace.get() / 100.0) {
                     return true;
                 }

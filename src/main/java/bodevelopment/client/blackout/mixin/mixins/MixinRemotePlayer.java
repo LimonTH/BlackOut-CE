@@ -7,7 +7,7 @@ import bodevelopment.client.blackout.randomstuff.Pair;
 import bodevelopment.client.blackout.randomstuff.timers.TickTimerList;
 import bodevelopment.client.blackout.util.BoxUtils;
 import net.minecraft.client.player.RemotePlayer;
-import net.minecraft.util.Mth;
+import net.minecraft.world.entity.InterpolationHandler;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,46 +17,48 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(RemotePlayer.class)
 public class MixinRemotePlayer {
-    @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/RemotePlayer;lerpPositionAndRotationStep(IDDDDD)V"))
-    private void updatePos(RemotePlayer instance, int steps, double x, double y, double z, double yaw, double pit) {
+    @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/InterpolationHandler;interpolate()V"))
+    private void updatePos(InterpolationHandler handler) {
+        RemotePlayer instance = (RemotePlayer) (Object) this;
         BackTrack backTrack = BackTrack.getInstance();
-        Vec3 pos = instance.position();
-        double[] realPos = this.realPos(instance, steps, x, y, z, yaw, pit);
+        NoInterpolation noInterpolation = NoInterpolation.getInstance();
+        Vec3 prevPos = instance.position();
+
+        Vec3 targetPos = handler.position();
+        float targetYRot = handler.yRot();
+        float targetXRot = handler.xRot();
+
+        if (noInterpolation.enabled) {
+            handler.cancel();
+        } else {
+            handler.interpolate();
+            targetPos = instance.position();
+            targetYRot = instance.getYRot();
+            targetXRot = instance.getXRot();
+        }
+
         backTrack.realPositions.removeKey(instance);
         if (backTrack.enabled) {
             TickTimerList.TickTimer<Pair<RemotePlayer, AABB>> t = backTrack.spoofed
                     .get(timer -> timer.value.getA().equals(instance) && timer.ticks > 3);
             if (t != null) {
-                backTrack.realPositions.add(instance, new Vec3(realPos[0], realPos[1], realPos[2]), 1.0);
-                this.setPosition(instance, BoxUtils.feet(t.value.getB()), pos);
+                backTrack.realPositions.add(instance, targetPos, 1.0);
+                this.setPosition(instance, BoxUtils.feet(t.value.getB()), prevPos);
                 return;
             }
         }
 
-        this.setPosition(instance, new Vec3(realPos[0], realPos[1], realPos[2]), pos);
-        instance.setYRot((float) realPos[3]);
-        instance.setXRot((float) realPos[4]);
+        if (noInterpolation.enabled) {
+            instance.setPos(targetPos);
+            instance.setYRot(targetYRot);
+            instance.setXRot(targetXRot);
+        }
+        Managers.EXTRAPOLATION.tick(instance, targetPos.subtract(prevPos));
     }
 
     @Unique
     private void setPosition(RemotePlayer instance, Vec3 pos, Vec3 prev) {
         instance.setPos(pos);
         Managers.EXTRAPOLATION.tick(instance, pos.subtract(prev));
-    }
-
-    @Unique
-    private double[] realPos(RemotePlayer instance, int steps, double x, double y, double z, double yaw, double pit) {
-        NoInterpolation noInterpolation = NoInterpolation.getInstance();
-        if (!noInterpolation.enabled) {
-            double d = 1.0 / steps;
-            double e = Mth.lerp(d, instance.getX(), x);
-            double f = Mth.lerp(d, instance.getY(), y);
-            double g = Mth.lerp(d, instance.getZ(), z);
-            float h = (float) Mth.rotLerp(d, instance.getYRot(), yaw);
-            float i = (float) Mth.lerp(d, instance.getXRot(), pit);
-            return new double[]{e, f, g, h, i};
-        } else {
-            return new double[]{x, y, z, yaw, pit};
-        }
     }
 }

@@ -29,7 +29,7 @@ import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.SwordItem;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
@@ -184,7 +184,7 @@ public class Offhand extends Module {
                 case Pick:
                     Slot slot = this.find(predicate);
                     if (slot != null) {
-                        int selectedSlot = BlackOut.mc.player.getInventory().selected;
+                        int selectedSlot = BlackOut.mc.player.getInventory().getSelectedSlot();
                         InvUtils.pickSwap(slot.getContainerSlot());
                         this.sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND, BlockPos.ZERO, Direction.DOWN));
                         InvUtils.swap(selectedSlot);
@@ -252,7 +252,7 @@ public class Offhand extends Module {
         boolean shouldSG = this.swordGapple.get()
                 && !lookingAtInteractive
                 && BlackOut.mc.options.keyUse.isDown()
-                && BlackOut.mc.player.getMainHandItem().getItem() instanceof SwordItem;
+                && BlackOut.mc.player.getMainHandItem().is(ItemTags.SWORDS);
 
         if (shouldSG) {
             boolean allowGapple = true;

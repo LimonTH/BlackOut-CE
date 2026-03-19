@@ -2,7 +2,7 @@ package bodevelopment.client.blackout.rendering.texture;
 
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.util.FileUtils;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import org.apache.commons.lang3.mutable.MutableDouble;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL13C;

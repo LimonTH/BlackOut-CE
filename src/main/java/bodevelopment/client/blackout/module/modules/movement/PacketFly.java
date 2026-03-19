@@ -355,8 +355,8 @@ public class PacketFly extends Module {
     }
 
     private double getYaw() {
-        double f = BlackOut.mc.player.input.forwardImpulse;
-        double s = BlackOut.mc.player.input.leftImpulse;
+        double f = BlackOut.mc.player.input.getMoveVector().y;
+        double s = BlackOut.mc.player.input.getMoveVector().x;
         double yaw = BlackOut.mc.player.getYRot();
         if (f > 0.0) {
             this.moving = true;

@@ -33,12 +33,12 @@ public class MovementUtils {
 
     public static double getEffectMulti() {
         double multiBonus = 0.0;
-        if (BlackOut.mc.player.hasEffect(MobEffects.MOVEMENT_SPEED)) {
-            multiBonus += BlackOut.mc.player.getEffect(MobEffects.MOVEMENT_SPEED).getAmplifier() * 0.2 + 0.2;
+        if (BlackOut.mc.player.hasEffect(MobEffects.SPEED)) {
+            multiBonus += BlackOut.mc.player.getEffect(MobEffects.SPEED).getAmplifier() * 0.2 + 0.2;
         }
 
-        if (BlackOut.mc.player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN)) {
-            multiBonus -= BlackOut.mc.player.getEffect(MobEffects.MOVEMENT_SLOWDOWN).getAmplifier() * 0.2 + 0.2;
+        if (BlackOut.mc.player.hasEffect(MobEffects.SLOWNESS)) {
+            multiBonus -= BlackOut.mc.player.getEffect(MobEffects.SLOWNESS).getAmplifier() * 0.2 + 0.2;
         }
 
         return multiBonus;

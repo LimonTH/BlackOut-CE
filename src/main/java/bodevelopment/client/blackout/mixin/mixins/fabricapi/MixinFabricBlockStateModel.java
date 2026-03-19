@@ -1,11 +1,10 @@
 package bodevelopment.client.blackout.mixin.mixins.fabricapi;
 
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 import bodevelopment.client.blackout.module.modules.visual.misc.XRay;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
-import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel;
+import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockStateModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
@@ -17,15 +16,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(FabricBakedModel.class)
-public interface MixinFabricBakedModel {
-    @Inject(method = "emitBlockQuads", at = @At("HEAD"), cancellable = true)
-    default void onEmitBlockQuadsHead(
+@Mixin(FabricBlockStateModel.class)
+public interface MixinFabricBlockStateModel {
+    @Inject(method = "emitQuads", at = @At("HEAD"), cancellable = true)
+    default void onEmitQuadsHead(
             QuadEmitter emitter,
             BlockAndTintGetter blockView,
-            BlockState state,
             BlockPos pos,
-            Supplier<RandomSource> randomSupplier,
+            BlockState state,
+            RandomSource random,
             Predicate<@Nullable Direction> cullTest,
             CallbackInfo ci
     ) {
@@ -50,13 +49,13 @@ public interface MixinFabricBakedModel {
         });
     }
 
-    @Inject(method = "emitBlockQuads", at = @At("RETURN"))
-    default void onEmitBlockQuadsReturn(
+    @Inject(method = "emitQuads", at = @At("RETURN"))
+    default void onEmitQuadsReturn(
             QuadEmitter emitter,
             BlockAndTintGetter blockView,
-            BlockState state,
             BlockPos pos,
-            Supplier<RandomSource> randomSupplier,
+            BlockState state,
+            RandomSource random,
             Predicate<@Nullable Direction> cullTest,
             CallbackInfo ci
     ) {

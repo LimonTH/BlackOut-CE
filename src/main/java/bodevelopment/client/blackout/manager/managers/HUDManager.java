@@ -16,7 +16,6 @@ import bodevelopment.client.blackout.util.BOLogger;
 import bodevelopment.client.blackout.util.ClassUtils;
 import bodevelopment.client.blackout.util.SharedFeatures;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -80,10 +79,8 @@ public class HUDManager extends Manager {
         if (!(this.progress <= 0.0F) && !(HudEditor.isOpen())) {
             this.start(this.stack);
             Renderer.setAlpha(this.progress);
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.progress);
             this.render(this.stack, (float) event.frameTime);
             Renderer.setAlpha(1.0F);
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             this.end(this.stack);
         }
     }

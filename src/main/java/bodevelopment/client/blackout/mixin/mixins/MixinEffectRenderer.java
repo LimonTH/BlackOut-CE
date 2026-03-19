@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -27,8 +27,7 @@ public class MixinEffectRenderer {
         NoRender noRender = NoRender.getInstance();
         if (noRender.enabled && noRender.waterOverlay.get()) {
             ci.cancel();
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            RenderSystem.disableBlend();
+            GlStateManager._disableBlend();
         }
     }
 
@@ -37,9 +36,9 @@ public class MixinEffectRenderer {
         NoRender noRender = NoRender.getInstance();
         if (noRender.enabled && noRender.fireOverlay.get()) {
             ci.cancel();
-            RenderSystem.disableBlend();
-            RenderSystem.depthMask(true);
-            RenderSystem.depthFunc(515);
+            GlStateManager._disableBlend();
+            GlStateManager._depthMask(true);
+            GlStateManager._depthFunc(515);
         }
     }
 }

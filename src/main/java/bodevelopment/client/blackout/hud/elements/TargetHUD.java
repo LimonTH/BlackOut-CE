@@ -494,17 +494,17 @@ public class TargetHUD extends HudElement {
         if (this.renderSkin != null) {
             if (this.mode.get() == Mode.Old || this.mode.get() == Mode.Exhibition) {
                 TextureRenderer.renderQuad(
-                        stack, x, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, BlackOut.mc.getTextureManager().getTexture(this.renderSkin).getId()
+                        stack, x, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, ((com.mojang.blaze3d.opengl.GlTexture) BlackOut.mc.getTextureManager().getTexture(this.renderSkin).getTexture()).glId()
                 );
             }
 
             if (this.mode.get() != Mode.Tenacity && this.mode.get() != Mode.Tenacity2) {
                 TextureRenderer.renderFitRounded(
-                        stack, x, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, 5.0F, 40, BlackOut.mc.getTextureManager().getTexture(this.renderSkin).getId()
+                        stack, x, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, 5.0F, 40, ((com.mojang.blaze3d.opengl.GlTexture) BlackOut.mc.getTextureManager().getTexture(this.renderSkin).getTexture()).glId()
                 );
             } else {
                 TextureRenderer.renderFitRounded(
-                        stack, x, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, 12.0F, 40, BlackOut.mc.getTextureManager().getTexture(this.renderSkin).getId()
+                        stack, x, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, 12.0F, 40, ((com.mojang.blaze3d.opengl.GlTexture) BlackOut.mc.getTextureManager().getTexture(this.renderSkin).getTexture()).glId()
                 );
             }
         }
@@ -514,7 +514,7 @@ public class TargetHUD extends HudElement {
         switch (this.mode.get()) {
             case ExhibitionNew:
                 for (int ix = 0; ix < 4; ix++) {
-                    ItemStack itemStack = player.getInventory().armor.get(3 - ix);
+                    ItemStack itemStack = player.getInventory().getItem(36 + 3 - ix);
                     RenderUtils.rounded(stack, x + ix * 18, y, 8.0F, 8.0F, 2.0F, 0.0F, new Color(45, 45, 45, 255).getRGB(), 0);
                     RenderUtils.rounded(stack, x + ix * 18 + 1.0F, y + 1.0F, 6.0F, 6.0F, 2.0F, 0.0F, new Color(25, 25, 25, 255).getRGB(), 0);
                     if (!itemStack.isEmpty()) {
@@ -524,7 +524,7 @@ public class TargetHUD extends HudElement {
                 break;
             case BlackoutInfo:
                 for (int i = 0; i < 4; i++) {
-                    ItemStack itemStack = player.getInventory().armor.get(3 - i);
+                    ItemStack itemStack = player.getInventory().getItem(36 + 3 - i);
                     if (!itemStack.isEmpty()) {
                         RenderUtils.renderItem(stack, itemStack, x + i * 20, y - 3.0F, 16.0F, RenderLayer.HUD, true);
                     }
@@ -534,7 +534,7 @@ public class TargetHUD extends HudElement {
 
     private boolean getArmor(Player entity) {
         for (int i = 0; i < 4; i++) {
-            if (!entity.getInventory().getArmor(i).isEmpty()) {
+            if (!entity.getInventory().getItem(36 + i).isEmpty()) {
                 return true;
             }
         }
@@ -549,7 +549,7 @@ public class TargetHUD extends HudElement {
         boolean hasAnyArmor = false;
 
         for (int i = 0; i < 4; i++) {
-            ItemStack itemStack = entity.getInventory().getArmor(i);
+            ItemStack itemStack = entity.getInventory().getItem(36 + i);
 
             if (itemStack.isEmpty()) {
                 if (this.countMode.get() == ArmorCount.Lowest) {

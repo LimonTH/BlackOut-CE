@@ -8,29 +8,16 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
-import java.util.Optional;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.world.inventory.tooltip.TooltipComponent;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
+import net.minecraft.resources.ResourceLocation;
 
 @Mixin(GuiGraphics.class)
 public class MixinGuiGraphics {
-
-    @Inject(method = "renderTooltip(Lnet/minecraft/client/gui/Font;Lnet/minecraft/world/item/ItemStack;II)V", at = @At("HEAD"), cancellable = true)
-    private void onDrawItemTooltip(Font textRenderer, ItemStack stack, int x, int y, CallbackInfo ci) {
-        if (shouldCancel()) ci.cancel();
-    }
-
-    @Inject(method = "renderTooltip(Lnet/minecraft/client/gui/Font;Ljava/util/List;Ljava/util/Optional;II)V", at = @At("HEAD"), cancellable = true)
-    private void onDrawTooltipComponent(Font textRenderer, List<ClientTooltipComponent> components, Optional<TooltipComponent> data, int x, int y, CallbackInfo ci) {
-        if (shouldCancel()) ci.cancel();
-    }
-
-    @Inject(method = "renderComponentTooltip(Lnet/minecraft/client/gui/Font;Ljava/util/List;II)V", at = @At("HEAD"), cancellable = true)
-    private void onDrawTooltipList(Font textRenderer, List<FormattedCharSequence> text, int x, int y, CallbackInfo ci) {
+    @Inject(method = "renderTooltip(Lnet/minecraft/client/gui/Font;Ljava/util/List;IILnet/minecraft/client/gui/screens/inventory/tooltip/ClientTooltipPositioner;Lnet/minecraft/resources/ResourceLocation;)V", at = @At("HEAD"), cancellable = true)
+    private void onRenderTooltip(Font font, List<ClientTooltipComponent> components, int x, int y, ClientTooltipPositioner positioner, ResourceLocation texture, CallbackInfo ci) {
         if (shouldCancel()) ci.cancel();
     }
 

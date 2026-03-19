@@ -20,7 +20,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
@@ -35,16 +34,13 @@ public abstract class MixinEntity {
     public abstract AABB getBoundingBox();
 
     @Shadow
-    public abstract Level getCommandSenderWorld();
+    public abstract Level level();
 
     @Shadow
     public abstract boolean onGround();
 
     @Shadow
     public abstract float maxUpStep();
-
-    @Shadow
-    public abstract void load(CompoundTag nbt);
 
     @Shadow
     public abstract Vec3 calculateViewVector(float pitch, float yaw);
@@ -119,8 +115,8 @@ public abstract class MixinEntity {
 
         Entity entity = (Entity) (Object) this;
         AABB box = this.getBox();
-        List<VoxelShape> list = this.getCommandSenderWorld().getEntityCollisions(entity, box.expandTowards(movement));
-        Vec3 vec3d = movement.lengthSqr() == 0.0 ? movement : Entity.collideBoundingBox(entity, movement, box, this.getCommandSenderWorld(), list);
+        List<VoxelShape> list = this.level().getEntityCollisions(entity, box.expandTowards(movement));
+        Vec3 vec3d = movement.lengthSqr() == 0.0 ? movement : Entity.collideBoundingBox(entity, movement, box, this.level(), list);
         boolean collidedX = movement.x != vec3d.x;
         boolean collidedY = movement.y != vec3d.y;
         boolean collidedZ = movement.z != vec3d.z;
@@ -128,15 +124,15 @@ public abstract class MixinEntity {
         boolean bl4 = this.onGround() || collidedY && movement.y < 0.0;
         double vanillaHeight = step.stepMode.get() == Step.StepMode.Vanilla ? step.height.get() : this.maxUpStep();
         Vec3 stepMovement = Entity.collideBoundingBox(
-                entity, new Vec3(movement.x, vanillaHeight, movement.z), box, this.getCommandSenderWorld(), list
+                entity, new Vec3(movement.x, vanillaHeight, movement.z), box, this.level(), list
         );
         Vec3 stepMovementUp = Entity.collideBoundingBox(
-                entity, new Vec3(0.0, vanillaHeight, 0.0), box.expandTowards(movement.x, 0.0, movement.z), this.getCommandSenderWorld(), list
+                entity, new Vec3(0.0, vanillaHeight, 0.0), box.expandTowards(movement.x, 0.0, movement.z), this.level(), list
         );
         if (vanillaHeight > 0.0 && bl4 && collidedHorizontally && (!step.slow.get() || step.stepProgress < 0)) {
             if (stepMovementUp.y < vanillaHeight) {
                 Vec3 vec3d4 = Entity.collideBoundingBox(
-                                entity, new Vec3(movement.x, 0.0, movement.z), box.move(stepMovementUp), this.getCommandSenderWorld(), list
+                                entity, new Vec3(movement.x, 0.0, movement.z), box.move(stepMovementUp), this.level(), list
                         )
                         .add(stepMovementUp);
                 if (vec3d4.horizontalDistanceSqr() > stepMovement.horizontalDistanceSqr()) {
@@ -147,16 +143,16 @@ public abstract class MixinEntity {
             if (stepMovement.horizontalDistanceSqr() > vec3d.horizontalDistanceSqr()) {
                 return stepMovement.add(
                         Entity.collideBoundingBox(
-                                entity, new Vec3(0.0, -stepMovement.y + movement.y, 0.0), box.move(stepMovement), this.getCommandSenderWorld(), list
+                                entity, new Vec3(0.0, -stepMovement.y + movement.y, 0.0), box.move(stepMovement), this.level(), list
                         )
                 );
             }
         }
 
         double height = step.height.get();
-        stepMovement = Entity.collideBoundingBox(entity, new Vec3(movement.x, height, movement.z), box, this.getCommandSenderWorld(), list);
+        stepMovement = Entity.collideBoundingBox(entity, new Vec3(movement.x, height, movement.z), box, this.level(), list);
         stepMovementUp = Entity.collideBoundingBox(
-                entity, new Vec3(0.0, height, 0.0), box.expandTowards(movement.x, 0.0, movement.z), this.getCommandSenderWorld(), list
+                entity, new Vec3(0.0, height, 0.0), box.expandTowards(movement.x, 0.0, movement.z), this.level(), list
         );
         if (height > 0.0
                 && entity.onGround()
@@ -165,7 +161,7 @@ public abstract class MixinEntity {
                 && step.cooldownCheck()) {
             if (stepMovementUp.y < height) {
                 Vec3 vec3d4 = Entity.collideBoundingBox(
-                                entity, new Vec3(movement.x, 0.0, movement.z), box.move(stepMovementUp), this.getCommandSenderWorld(), list
+                                entity, new Vec3(movement.x, 0.0, movement.z), box.move(stepMovementUp), this.level(), list
                         )
                         .add(stepMovementUp);
                 if (vec3d4.horizontalDistanceSqr() > stepMovement.horizontalDistanceSqr()) {
@@ -176,7 +172,7 @@ public abstract class MixinEntity {
             if (stepMovement.horizontalDistanceSqr() > vec3d.horizontalDistanceSqr()) {
                 Vec3 vec3d3 = stepMovement.add(
                         Entity.collideBoundingBox(
-                                entity, new Vec3(0.0, -stepMovement.y + movement.y, 0.0), box.move(stepMovement), this.getCommandSenderWorld(), list
+                                entity, new Vec3(0.0, -stepMovement.y + movement.y, 0.0), box.move(stepMovement), this.level(), list
                         )
                 );
                 step.start(vec3d3.y);
@@ -214,7 +210,7 @@ public abstract class MixinEntity {
             if (step.stepProgress < step.offsets.length) {
                 h = step.offsets[step.stepProgress];
                 step.stepProgress++;
-                stepMovement = Entity.collideBoundingBox(entity, new Vec3(movement.x, 0.0, movement.z), box, this.getCommandSenderWorld(), list);
+                stepMovement = Entity.collideBoundingBox(entity, new Vec3(movement.x, 0.0, movement.z), box, this.level(), list);
             } else {
                 Vec3 m;
                 if (step.stepMode.get() == Step.StepMode.UpdatedNCP) {
@@ -235,10 +231,10 @@ public abstract class MixinEntity {
                     m = movement.with(Direction.Axis.Y, 0.0);
                 }
 
-                stepMovement = Entity.collideBoundingBox(entity, m, box, this.getCommandSenderWorld(), list);
+                stepMovement = Entity.collideBoundingBox(entity, m, box, this.level(), list);
             }
 
-            return stepMovement.add(Entity.collideBoundingBox(entity, new Vec3(0.0, h, 0.0), box.move(stepMovement), this.getCommandSenderWorld(), list));
+            return stepMovement.add(Entity.collideBoundingBox(entity, new Vec3(0.0, h, 0.0), box.move(stepMovement), this.level(), list));
         } else {
             if (step.shouldResetTimer) {
                 step.stepProgress = -1;

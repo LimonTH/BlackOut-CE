@@ -41,18 +41,26 @@ public class MainMenuSettings extends SettingsModule {
     }
 
     public MainMenuRenderer getRenderer() {
-        return this.mode.get().renderer;
+        return this.mode.get().getRenderer();
     }
 
     public enum MenuMode {
-        Smoke(new SmokeMainMenu()),
-        Color(new ColorMainMenu()),
-        Panorama(new PanoramaMainMenu());
+        Smoke(SmokeMainMenu::new),
+        Color(ColorMainMenu::new),
+        Panorama(PanoramaMainMenu::new);
 
-        private final MainMenuRenderer renderer;
+        private final java.util.function.Supplier<MainMenuRenderer> factory;
+        private MainMenuRenderer renderer;
 
-        MenuMode(MainMenuRenderer renderer) {
-            this.renderer = renderer;
+        MenuMode(java.util.function.Supplier<MainMenuRenderer> factory) {
+            this.factory = factory;
+        }
+
+        public MainMenuRenderer getRenderer() {
+            if (this.renderer == null) {
+                this.renderer = this.factory.get();
+            }
+            return this.renderer;
         }
     }
 }

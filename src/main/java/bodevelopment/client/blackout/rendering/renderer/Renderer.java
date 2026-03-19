@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.rendering.renderer;
 
 import bodevelopment.client.blackout.interfaces.functional.QuadConsumer;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -15,6 +15,7 @@ public class Renderer {
     private static long prev3DBlur = 0L;
     private static float alpha = 1.0F;
     private static PoseStack matrices;
+    private static final Matrix4f projectionMatrix = new Matrix4f();
     protected BufferBuilder renderBuffer;
     protected Matrix4f renderMatrix;
     protected float renderRed;
@@ -52,6 +53,14 @@ public class Renderer {
 
     public static void setMatrices(PoseStack matrices) {
         Renderer.matrices = matrices;
+    }
+
+    public static Matrix4f getProjectionMatrix() {
+        return projectionMatrix;
+    }
+
+    public static void setProjectionMatrix(Matrix4f matrix) {
+        projectionMatrix.set(matrix);
     }
 
     public static void setTexture(int id, int slot) {

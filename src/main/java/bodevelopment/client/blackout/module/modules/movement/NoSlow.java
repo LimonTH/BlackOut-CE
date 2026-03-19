@@ -15,7 +15,7 @@ import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.SwordItem;
+import net.minecraft.tags.ItemTags;
 
 public class NoSlow extends Module {
     private static NoSlow INSTANCE;
@@ -56,7 +56,7 @@ public class NoSlow extends Module {
                         Managers.PACKET.getStack() : 
                         BlackOut.mc.player.getOffhandItem();
 
-                    return activeStack.getItem() instanceof SwordItem ? 
+                    return activeStack.is(ItemTags.SWORDS) ?
                         !getInstance().blocking.get() : 
                         !getInstance().using.get();
                 } else {
@@ -85,7 +85,7 @@ public class NoSlow extends Module {
             if (stack == null) {
                 return false;
             } else {
-                return stack.getItem() instanceof SwordItem ? getInstance().blocking.get() : getInstance().using.get();
+                return stack.is(ItemTags.SWORDS) ? getInstance().blocking.get() : getInstance().using.get();
             }
         } else {
             return false;

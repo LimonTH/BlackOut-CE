@@ -20,13 +20,11 @@ import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.client.renderer.CoreShaders;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.util.Mth;
@@ -57,6 +55,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 public class Trajectories extends Module {
+    private static final MultiBufferSource.BufferSource trajBufSrc = MultiBufferSource.immediate(new ByteBufferBuilder(1024));
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgColor = this.addGroup("Color");
 
@@ -85,7 +84,7 @@ public class Trajectories extends Module {
                 SimulationData data = this.dataMap.get(item);
                 PoseStack stack = Render3DUtils.matrices;
                 stack.pushPose();
-                Render3DUtils.setRotation(stack);
+                Render3DUtils.transformToCameraRotation(stack);
                 Render3DUtils.start();
                 float yaw = Managers.ROTATION.getNextYaw();
                 this.draw(data, this.getVelocity(data.speed.apply(itemStack), yaw, 0.0), itemStack, event.tickDelta, stack);
@@ -142,7 +141,7 @@ public class Trajectories extends Module {
                 Render3DUtils.circle(stack, pos, radius, rgb, 360, orientation);
 
                 int fillCol = (color.getAlpha() / 4 << 24) | (rgb & 0x00FFFFFF);
-                Render3DUtils.fillCircle(stack, pos, radius, fillCol, 360, orientation);
+                Render3DUtils.filledCircle(stack, pos, radius, fillCol, 360, orientation);
 
             } else if (hitResult instanceof EntityHitResult entityHitResult) {
                 Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
@@ -157,9 +156,7 @@ public class Trajectories extends Module {
     private HitResult drawLine(SimulationData data, double[] velocity, ItemStack itemStack, float tickDelta, PoseStack stack) {
         Vec3 pos = data.startPos.apply(itemStack, tickDelta);
         Matrix4f matrix4f = stack.last().pose();
-        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        VertexConsumer bufferBuilder = trajBufSrc.getBuffer(RenderType.debugLineStrip(1.0));
         MutableDouble dist = new MutableDouble(0.0);
         this.vertex(bufferBuilder, matrix4f, pos, pos, dist);
         AABB box = this.getBox(pos, data);
@@ -197,7 +194,7 @@ public class Trajectories extends Module {
 
             if (hitResult != null) {
                 this.vertex(bufferBuilder, matrix4f, hitResult.getLocation(), prevPos, dist);
-                BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+                trajBufSrc.endBatch();
                 return hitResult;
             }
 
@@ -206,11 +203,11 @@ public class Trajectories extends Module {
             this.vertex(bufferBuilder, matrix4f, pos, prevPos, dist);
         }
 
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+        trajBufSrc.endBatch();
         return null;
     }
 
-    private void vertex(BufferBuilder bufferBuilder, Matrix4f matrix4f, Vec3 pos, Vec3 prevPos, MutableDouble dist) {
+    private void vertex(VertexConsumer bufferBuilder, Matrix4f matrix4f, Vec3 pos, Vec3 prevPos, MutableDouble dist) {
         DoubleConsumer<Vec3, Double> consumer = (vec, d) -> {
             Color color = this.withAlpha(this.getColor(), this.getAlpha(d));
             Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();

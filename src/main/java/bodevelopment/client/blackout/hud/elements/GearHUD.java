@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.InvUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import java.util.List;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -58,7 +58,7 @@ public class GearHUD extends HudElement {
             }
 
             BlackOut.mc.renderBuffers().bufferSource().endBatch();
-            RenderSystem.disableDepthTest();
+            GlStateManager._disableDepthTest();
 
             for (Item item : this.items.get()) {
                 int amount = this.getAmount(item);

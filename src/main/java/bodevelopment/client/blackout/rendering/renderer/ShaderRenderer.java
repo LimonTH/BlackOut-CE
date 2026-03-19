@@ -4,8 +4,7 @@ import bodevelopment.client.blackout.randomstuff.ShaderSetup;
 import bodevelopment.client.blackout.rendering.shader.Shader;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
@@ -133,7 +132,8 @@ public class ShaderRenderer extends Renderer {
         this.renderGreen = g;
         this.renderBlue = b;
         this.renderAlpha = a;
-        RenderSystem.enableBlend();
+        GlStateManager._enableBlend();
+        GlStateManager.glBlendFuncSeparate(770, 771, 1, 0);
         this.renderBuffer = Tesselator.getInstance().begin(drawMode, format);
     }
 
@@ -147,9 +147,11 @@ public class ShaderRenderer extends Renderer {
         if (shader != null) {
             shader.render(this.renderBuffer, setup);
         } else {
-            BufferUploader.draw(this.renderBuffer.buildOrThrow());
+            // No shader fallback: build and discard (should not happen in normal usage)
+            var meshData = this.renderBuffer.buildOrThrow();
+            if (meshData != null) meshData.close();
         }
 
-        RenderSystem.disableBlend();
+        GlStateManager._disableBlend();
     }
 }

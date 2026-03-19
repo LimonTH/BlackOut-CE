@@ -3,13 +3,14 @@ package bodevelopment.client.blackout.util.render;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.renderer.CoreShaders;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.PlayerRenderState;
@@ -53,7 +54,6 @@ public class WireframeRenderer extends WireframeContext {
         float alphaMult = 1.0F - progress;
 
         if (shape.sides) {
-            RenderSystem.setShader(CoreShaders.POSITION_COLOR);
             drawEverything(matrix, vertices,
                     sideColor.red / 255.0F,
                     sideColor.green / 255.0F,
@@ -62,7 +62,6 @@ public class WireframeRenderer extends WireframeContext {
         }
 
         if (shape.outlines) {
-            RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
             drawLinesFromList(matrix, vertices,
                     lineColor.red / 255.0F,
                     lineColor.green / 255.0F,
@@ -77,7 +76,7 @@ public class WireframeRenderer extends WireframeContext {
     public static void renderModel(PoseStack stack, AbstractClientPlayer player,
                                    ModelData data, BlackOutColor lineColor,
                                    BlackOutColor sideColor, RenderShape shape) {
-        RenderSystem.enableDepthTest();
+        GlStateManager._enableDepthTest();
 
         provider.consumer.start();
         PoseStack modelStack = new PoseStack();
@@ -90,12 +89,10 @@ public class WireframeRenderer extends WireframeContext {
         Matrix4f matrix = stack.last().pose();
 
         if (shape.sides) {
-            RenderSystem.setShader(CoreShaders.POSITION_COLOR);
             drawEverything(matrix, vertices, sideColor.red / 255.0F, sideColor.green / 255.0F, sideColor.blue / 255.0F, sideColor.alpha / 255.0F);
         }
 
         if (shape.outlines) {
-            RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
             drawLinesFromList(matrix, vertices, lineColor.red / 255.0F, lineColor.green / 255.0F, lineColor.blue / 255.0F, lineColor.alpha / 255.0F);
         }
     }
@@ -181,28 +178,27 @@ public class WireframeRenderer extends WireframeContext {
         stack.popPose();
     }
 
+    private static final MultiBufferSource.BufferSource wireframeBufSrc = MultiBufferSource.immediate(new ByteBufferBuilder(256));
+
     public static void drawEverything(Matrix4f matrix, List<Vec3> vertices, float red, float green, float blue, float alpha) {
         if (vertices == null || vertices.isEmpty() || alpha <= 0) return;
 
-        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableDepthTest();
+        GlStateManager._enableBlend();
+        GlStateManager._blendFuncSeparate(770, 771, 1, 0);
+        GlStateManager._disableDepthTest();
+        GlStateManager._disableCull();
 
-        RenderSystem.disableCull();
-
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder builder = tessellator.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
+        VertexConsumer builder = wireframeBufSrc.getBuffer(RenderType.debugTriangleFan());
 
         for (Vec3 pos : vertices) {
             builder.addVertex(matrix, (float) pos.x, (float) pos.y, (float) pos.z)
                     .setColor(red, green, blue, alpha);
         }
 
-        BufferUploader.drawWithShader(builder.buildOrThrow());
-        RenderSystem.disablePolygonOffset();
-        RenderSystem.enableCull();
-        RenderSystem.enableDepthTest();
+        wireframeBufSrc.endBatch();
+        GlStateManager._disablePolygonOffset();
+        GlStateManager._enableCull();
+        GlStateManager._enableDepthTest();
     }
 
     private static boolean isSame(Vec3 v1, Vec3 v2) {
@@ -212,11 +208,10 @@ public class WireframeRenderer extends WireframeContext {
     public static void drawLinesFromList(Matrix4f matrix, List<Vec3> vertices, float red, float green, float blue, float alpha) {
         if (vertices == null || vertices.size() < 6 || alpha <= 0) return;
 
-        RenderSystem.disableDepthTest();
-        RenderSystem.disableCull();
+        GlStateManager._disableDepthTest();
+        GlStateManager._disableCull();
 
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder builder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
+        VertexConsumer builder = wireframeBufSrc.getBuffer(RenderType.lines());
 
         for (int i = 0; i < vertices.size() - 5; i += 6) {
             Vec3 v0 = vertices.get(i);
@@ -242,13 +237,13 @@ public class WireframeRenderer extends WireframeContext {
             }
         }
 
-        BufferUploader.drawWithShader(builder.buildOrThrow());
-        RenderSystem.disablePolygonOffset();
-        RenderSystem.enableCull();
-        RenderSystem.enableDepthTest();
+        wireframeBufSrc.endBatch();
+        GlStateManager._disablePolygonOffset();
+        GlStateManager._enableCull();
+        GlStateManager._enableDepthTest();
     }
 
-    private static void drawTriangleLines(BufferBuilder builder, Matrix4f matrix, Vec3 v0, Vec3 v1, Vec3 v2, float r, float g, float b, float a) {
+    private static void drawTriangleLines(VertexConsumer builder, Matrix4f matrix, Vec3 v0, Vec3 v1, Vec3 v2, float r, float g, float b, float a) {
         if (v0.distanceTo(v1) < 0.001 || v1.distanceTo(v2) < 0.001 || v2.distanceTo(v0) < 0.001) return;
 
         addLine(builder, matrix, v0, v1, r, g, b, a);
@@ -256,7 +251,7 @@ public class WireframeRenderer extends WireframeContext {
         addLine(builder, matrix, v2, v0, r, g, b, a);
     }
 
-    private static void addLine(BufferBuilder builder, Matrix4f matrix, Vec3 p1, Vec3 p2, float r, float g, float b, float a) {
+    private static void addLine(VertexConsumer builder, Matrix4f matrix, Vec3 p1, Vec3 p2, float r, float g, float b, float a) {
         float dx = (float) (p2.x - p1.x);
         float dy = (float) (p2.y - p1.y);
         float dz = (float) (p2.z - p1.z);

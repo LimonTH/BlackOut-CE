@@ -45,7 +45,7 @@ public abstract class MixinLocalPlayer {
     private float xRotLast;
 
     @Shadow
-    protected abstract boolean hasEnoughFoodToStartSprinting();
+    protected abstract boolean hasEnoughFoodToSprint();
 
     @Inject(method = "swing(Lnet/minecraft/world/InteractionHand;)V", at = @At("HEAD"))
     private void swingHand(InteractionHand hand, CallbackInfo ci) {
@@ -159,7 +159,7 @@ public abstract class MixinLocalPlayer {
                 hasInput = this.input.hasForwardImpulse() || sprint.enabled && sprint.shouldSprint();
             }
 
-            boolean cantSprint = !hasInput || !this.hasEnoughFoodToStartSprinting();
+            boolean cantSprint = !hasInput || !this.hasEnoughFoodToSprint();
             if (value.isSwimming()) {
                 if (!value.onGround() && !this.input.keyPresses.shift() && cantSprint || !value.isInWater()) {
                     value.setSprinting(false);
@@ -186,8 +186,8 @@ public abstract class MixinLocalPlayer {
         }
     }
 
-    @Inject(method = "handleConfusionTransitionEffect", at = @At("HEAD"), cancellable = true)
-    private void onUpdateNausea(CallbackInfo ci) {
+    @Inject(method = "handlePortalTransitionEffect", at = @At("HEAD"), cancellable = true)
+    private void onUpdatePortalEffect(CallbackInfo ci) {
         if (Portals.getInstance().enabled) {
             ci.cancel();
         }

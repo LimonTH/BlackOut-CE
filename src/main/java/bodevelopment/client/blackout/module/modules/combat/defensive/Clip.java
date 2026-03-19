@@ -84,7 +84,7 @@ public class Clip extends Module {
         this.noRotateTime--;
         double currentX = BlackOut.mc.player.getX() - BlackOut.mc.player.getBlockX();
         double currentZ = BlackOut.mc.player.getZ() - BlackOut.mc.player.getBlockZ();
-        if (!this.pauseMove.get() || BlackOut.mc.player.input.forwardImpulse == 0.0F && BlackOut.mc.player.input.leftImpulse == 0.0F) {
+        if (!this.pauseMove.get() || BlackOut.mc.player.input.getMoveVector().y == 0.0F && BlackOut.mc.player.input.getMoveVector().x == 0.0F) {
             if (!this.findCorner(
                     currentX,
                     currentZ,

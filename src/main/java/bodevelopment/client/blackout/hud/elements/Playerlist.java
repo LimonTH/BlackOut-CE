@@ -165,7 +165,7 @@ public class Playerlist extends HudElement {
     private void drawFace(PoseStack stack, float y, ResourceLocation renderSkin) {
         float size = 6.0F;
         if (renderSkin != null) {
-            TextureRenderer.renderQuad(stack, 0.0F, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, BlackOut.mc.getTextureManager().getTexture(renderSkin).getId());
+            TextureRenderer.renderQuad(stack, 0.0F, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, ((com.mojang.blaze3d.opengl.GlTexture) BlackOut.mc.getTextureManager().getTexture(renderSkin).getTexture()).glId());
         }
     }
 

@@ -10,6 +10,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.util.ArrayList;
 import java.util.function.Predicate;
 import net.minecraft.core.NonNullList;
+import net.minecraft.network.HashedStack;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
@@ -132,25 +133,25 @@ public class InvUtils {
         }
 
         screenHandler.clicked(slotId, button, actionType, BlackOut.mc.player);
-        Int2ObjectOpenHashMap<ItemStack> int2ObjectMap = new Int2ObjectOpenHashMap<>();
+        Int2ObjectOpenHashMap<HashedStack> int2ObjectMap = new Int2ObjectOpenHashMap<>();
 
         for (int j = 0; j < i; j++) {
             ItemStack itemStack = list.get(j);
             ItemStack itemStack2 = defaultedList.get(j).getItem();
             if (!ItemStack.matches(itemStack, itemStack2)) {
-                int2ObjectMap.put(j, itemStack2.copy());
+                int2ObjectMap.put(j, HashedStack.EMPTY);
             }
         }
 
         if (instant) {
             Managers.PACKET
                     .sendInstantly(
-                            new ServerboundContainerClickPacket(syncId, screenHandler.getStateId(), slotId, button, actionType, screenHandler.getCarried().copy(), int2ObjectMap)
+                            new ServerboundContainerClickPacket(syncId, screenHandler.getStateId(), (short) slotId, (byte) button, actionType, int2ObjectMap, HashedStack.EMPTY)
                     );
         } else {
             Managers.PACKET
                     .sendPacket(
-                            new ServerboundContainerClickPacket(syncId, screenHandler.getStateId(), slotId, button, actionType, screenHandler.getCarried().copy(), int2ObjectMap)
+                            new ServerboundContainerClickPacket(syncId, screenHandler.getStateId(), (short) slotId, (byte) button, actionType, int2ObjectMap, HashedStack.EMPTY)
                     );
         }
     }
@@ -191,7 +192,7 @@ public class InvUtils {
         int hbSlot = BlackOut.mc.player.getInventory().getSuitableHotbarSlot();
 
         if (slot < 9) {
-            BlackOut.mc.player.getInventory().selected = slot;
+            BlackOut.mc.player.getInventory().setSelectedSlot(slot);
             if (instant) {
                 Managers.PACKET.sendInstantly(new ServerboundSetCarriedItemPacket(slot));
             } else {
@@ -208,7 +209,7 @@ public class InvUtils {
 
         if (Simulation.getInstance().pickSwitch()) {
             Managers.PACKET.ignoreSetSlot.replace(hbSlot, 0.3);
-            BlackOut.mc.player.getInventory().selected = hbSlot;
+            BlackOut.mc.player.getInventory().setSelectedSlot(hbSlot);
             ItemStack stack1 = BlackOut.mc.player.getInventory().getItem(slot);
             ItemStack stack2 = BlackOut.mc.player.getInventory().getItem(hbSlot);
             Managers.PACKET.preApply(new ClientboundContainerSetSlotPacket(-2, 0, hbSlot, stack1));
@@ -220,7 +221,7 @@ public class InvUtils {
 
     public static boolean invSwap(int slot) {
         if (slot < 0 || slot >= 36) return false;
-        int currentSlot = BlackOut.mc.player.getInventory().selected;
+        int currentSlot = BlackOut.mc.player.getInventory().getSelectedSlot();
         clickSlot(slot, currentSlot, ClickType.SWAP);
         slots = new int[]{slot, currentSlot};
         if (Managers.PACKET.slot != currentSlot) {
@@ -231,7 +232,7 @@ public class InvUtils {
 
     public static boolean invSwapInstantly(int slot) {
         if (slot < 0 || slot >= 36) return false;
-        int currentSlot = BlackOut.mc.player.getInventory().selected;
+        int currentSlot = BlackOut.mc.player.getInventory().getSelectedSlot();
         clickSlotInstantly(slot, currentSlot, ClickType.SWAP);
         slots = new int[]{slot, currentSlot};
         if (Managers.PACKET.slot != currentSlot) {
@@ -257,19 +258,19 @@ public class InvUtils {
     }
 
     public static boolean swap(int to) {
-        prevSlot = BlackOut.mc.player.getInventory().selected;
-        BlackOut.mc.player.getInventory().selected = to;
+        prevSlot = BlackOut.mc.player.getInventory().getSelectedSlot();
+        BlackOut.mc.player.getInventory().setSelectedSlot(to);
         return syncSlot(false);
     }
 
     public static boolean swapInstantly(int to) {
-        prevSlot = BlackOut.mc.player.getInventory().selected;
-        BlackOut.mc.player.getInventory().selected = to;
+        prevSlot = BlackOut.mc.player.getInventory().getSelectedSlot();
+        BlackOut.mc.player.getInventory().setSelectedSlot(to);
         return syncSlot(true);
     }
 
     private static boolean syncSlot(boolean instant) {
-        int i = BlackOut.mc.player.getInventory().selected;
+        int i = BlackOut.mc.player.getInventory().getSelectedSlot();
         if (i != Managers.PACKET.slot) {
             if (instant) {
                 Managers.PACKET.sendInstantly(new ServerboundSetCarriedItemPacket(i));

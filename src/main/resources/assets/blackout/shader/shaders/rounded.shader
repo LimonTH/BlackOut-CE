@@ -17,18 +17,7 @@ frag {
     }
 
     fun void main() {
-        float d = sqrt(roundedDist(realPos, pos));
-
-        float offset = d - rad.x;
-        float a1 = clamp(offset, 0.0, 1.0);
-
-        if (a1 > 0.0 && a1 < 1.0) {
-            fragColor = vec4(clr.rgb, clr.a * (1 - a1) * uAlpha);
-        } else if (a1 == 0.0) {
-            fragColor = vec4(clr.rgb, clr.a * uAlpha);
-        }  else if (a1 == 1.0) {
-            discard;
-        }
+        fragColor = vec4(1.0, 0.0, 0.0, 1.0);
     }
 }
 

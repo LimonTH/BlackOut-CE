@@ -44,7 +44,7 @@ public class SmartMend extends Module {
     public void onRender(RenderEvent.World.Pre event) {
         if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
             for (EquipmentSlot equipmentSlot : OLEPOSSUtils.equipmentSlots) {
-                if (BlackOut.mc.player.getInventory().getArmor(equipmentSlot.getIndex()).isEmpty()) {
+                if (BlackOut.mc.player.getInventory().getItem(36 + equipmentSlot.getIndex()).isEmpty()) {
                     this.wornSince.remove(equipmentSlot);
                 } else if (!this.wornSince.containsKey(equipmentSlot)) {
                     this.wornSince.put(equipmentSlot, System.currentTimeMillis());
@@ -129,7 +129,7 @@ public class SmartMend extends Module {
         List<EquipmentSlot> armor = new ArrayList<>();
 
         for (EquipmentSlot equipmentSlot : OLEPOSSUtils.equipmentSlots) {
-            ItemStack stack = BlackOut.mc.player.getInventory().getArmor(equipmentSlot.getIndex());
+            ItemStack stack = BlackOut.mc.player.getInventory().getItem(36 + equipmentSlot.getIndex());
             if (!stack.isEmpty() && stack.isDamageableItem()) {
                 double dur = (double) (stack.getMaxDamage() - stack.getDamageValue()) / stack.getMaxDamage() * 100.0;
                 if (dur >= this.antiWaste.get()) {

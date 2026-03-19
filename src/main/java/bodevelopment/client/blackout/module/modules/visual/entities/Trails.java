@@ -14,13 +14,11 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.client.renderer.CoreShaders;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.Vec3;
@@ -70,7 +68,7 @@ public class Trails extends Module {
             PoseStack stack = Render3DUtils.matrices;
             Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
             stack.pushPose();
-            Render3DUtils.setRotation(stack);
+            Render3DUtils.transformToCameraRotation(stack);
             Render3DUtils.start();
             this.map.forEach((entity, line) -> {
                 Color lineColor = this.getColor();
@@ -129,6 +127,8 @@ public class Trails extends Module {
         }
     }
 
+    private static final MultiBufferSource.BufferSource trailBufSrc = MultiBufferSource.immediate(new ByteBufferBuilder(256));
+
     private static class Line {
         private final List<Pair<Vec3, Long>> positions = new ArrayList<>();
 
@@ -136,11 +136,9 @@ public class Trails extends Module {
             this.positions.removeIf(pairx -> System.currentTimeMillis() - pairx.getB() > (renderTime + fadeTime) * 1000.0);
 
             if (this.positions.size() >= 2) {
-                RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
                 RenderSystem.lineWidth(Trails.getInstance().lineWidth.get().floatValue());
 
-                Tesselator tessellator = Tesselator.getInstance();
-                BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
+                VertexConsumer bufferBuilder = trailBufSrc.getBuffer(RenderType.lines());
 
                 PoseStack.Pose entry = stack.last();
                 Matrix4f matrix4f = entry.pose();
@@ -180,7 +178,7 @@ public class Trails extends Module {
                             .setNormal((float) normal.x, (float) normal.y, (float) normal.z);
                 }
 
-                BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+                trailBufSrc.endBatch();
             }
         }
 

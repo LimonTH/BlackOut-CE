@@ -10,10 +10,11 @@ import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.render.state.GuiRenderState;
 import net.minecraft.client.renderer.CubeMap;
 import net.minecraft.client.renderer.PanoramaRenderer;
 import net.minecraft.resources.ResourceLocation;
@@ -185,18 +186,38 @@ public class PanoramaMainMenu implements MainMenuRenderer {
         BlackOutColor color = mainMenuSettings.shitfuckingmenucolor.get();
         boolean exiting = MainMenu.getInstance().isExiting();
 
-        GuiGraphics context = new GuiGraphics(BlackOut.mc, BlackOut.mc.renderBuffers().bufferSource());
-        RenderSystem.setShaderColor(color.red / 255.0F, color.green / 255.0F, color.blue / 255.0F, color.alpha / 255.0F);
+        GuiGraphics context = new GuiGraphics(BlackOut.mc, new GuiRenderState());
 
         this.backgroundRenderer.render(
                 context,
                 (int) width,
                 (int) height,
-                1.0F,
-                BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)
+                true
         );
 
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        if (color.red != 255 || color.green != 255 || color.blue != 255 || color.alpha != 255) {
+            org.joml.Matrix4f matrix4f = stack.last().pose();
+            float r = color.red / 255.0F;
+            float g = color.green / 255.0F;
+            float b = color.blue / 255.0F;
+            float a = color.alpha / 255.0F;
+
+            GlStateManager._enableBlend();
+            GlStateManager.glBlendFuncSeparate(0, 768, 0, 770);
+
+            var bs = net.minecraft.client.renderer.MultiBufferSource.immediate(
+                    new com.mojang.blaze3d.vertex.ByteBufferBuilder(256)
+            );
+            var vc = bs.getBuffer(net.minecraft.client.renderer.RenderType.debugQuads());
+            vc.addVertex(matrix4f, 0, height, 0).setColor(r, g, b, a);
+            vc.addVertex(matrix4f, width, height, 0).setColor(r, g, b, a);
+            vc.addVertex(matrix4f, width, 0, 0).setColor(r, g, b, a);
+            vc.addVertex(matrix4f, 0, 0, 0).setColor(r, g, b, a);
+            bs.endBatch();
+
+            GlStateManager.glBlendFuncSeparate(770, 771, 1, 0);
+            GlStateManager._disableBlend();
+        }
 
         int blurRadius = (int) (double) mainMenuSettings.blur.get();
         if (blurRadius > 0) {

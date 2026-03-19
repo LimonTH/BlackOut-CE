@@ -13,6 +13,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -103,7 +104,8 @@ public class ExpThrower extends Module {
         float lowest = 500.0F;
         boolean found = false;
 
-        for (ItemStack stack : BlackOut.mc.player.getArmorSlots()) {
+        for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
+            ItemStack stack = BlackOut.mc.player.getItemBySlot(slot);
             if (!stack.isEmpty() && stack.isDamageableItem()) {
                 found = true;
                 float dur = (float) (stack.getMaxDamage() - stack.getDamageValue()) / stack.getMaxDamage() * 100.0F;

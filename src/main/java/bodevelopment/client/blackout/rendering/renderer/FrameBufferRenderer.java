@@ -12,6 +12,6 @@ public class FrameBufferRenderer {
     public static void renderToBuffer(FrameBuffer buffer, Runnable runnable) {
         buffer.bind(true);
         runnable.run();
-        BlackOut.mc.getMainRenderTarget().bindWrite(true);
+        buffer.unbind();
     }
 }

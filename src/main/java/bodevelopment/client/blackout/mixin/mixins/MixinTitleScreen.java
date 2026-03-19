@@ -1,11 +1,14 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.gui.menu.MainMenu;
+import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
+import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -30,6 +33,11 @@ public abstract class MixinTitleScreen extends Screen {
         }
 
         ci.cancel();
+
+        com.mojang.blaze3d.platform.Window window = BlackOut.mc.getWindow();
+        float screenWidth = (float) window.getScreenWidth();
+        float screenHeight = (float) window.getScreenHeight();
+        Renderer.setProjectionMatrix(new Matrix4f().setOrtho(0.0F, screenWidth, screenHeight, 0.0F, -1000.0F, 3000.0F));
 
         MainMenu.getInstance().set((TitleScreen) (Object) this);
         MainMenu.getInstance().render(mouseX, mouseY, delta);

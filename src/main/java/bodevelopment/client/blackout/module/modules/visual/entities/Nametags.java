@@ -20,7 +20,7 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.EnchantmentNames;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import java.awt.*;
@@ -131,8 +131,8 @@ public class Nametags extends Module {
     @Event
     public void onRender(RenderEvent.Hud.Post event) {
         if (BlackOut.mc.level == null || BlackOut.mc.player == null) return;
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthMask(false);
+        GlStateManager._disableDepthTest();
+        GlStateManager._depthMask(false);
 
         this.stack.pushPose();
         RenderUtils.unGuiScale(this.stack);
@@ -141,9 +141,9 @@ public class Nametags extends Module {
         this.entities.forEach(entity -> this.renderNameTag(event.tickDelta, entity));
         this.stack.popPose();
 
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(true);
-        RenderSystem.enableCull();
+        GlStateManager._enableDepthTest();
+        GlStateManager._depthMask(true);
+        GlStateManager._enableCull();
     }
 
     public void renderNameTag(double tickDelta, Entity entity) {
@@ -212,7 +212,7 @@ public class Nametags extends Module {
                 }
                 if (this.armor.get()) {
                     for (int i = 0; i < 4; i++) {
-                        ItemStack is = player.getInventory().getArmor(3 - i);
+                        ItemStack is = player.getInventory().getItem(36 + 3 - i);
                         if (!is.isEmpty()) {
                             RenderUtils.renderItem(this.stack, is, i * (wbg + sep), 0.0F, 16.0F, 0.0F, false);
 
@@ -240,8 +240,8 @@ public class Nametags extends Module {
             Renderer.onHUDBlur();
         }
 
-        RenderSystem.depthMask(false);
-        RenderSystem.disableDepthTest();
+        GlStateManager._depthMask(false);
+        GlStateManager._disableDepthTest();
 
         this.background.render(this.stack, -2.0F, -5.0F, this.length + 4.0F, 10.0F, this.rounded.get() ? 3.0F : 0.0F, this.shadow.get() ? 3.0F : 0.0F);
 
@@ -272,10 +272,10 @@ public class Nametags extends Module {
     }
 
     private void drawItemText(String text, float wbg, float separation, int i) {
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.depthMask(false);
-        RenderSystem.disableDepthTest();
+        GlStateManager._enableBlend();
+        GlStateManager.glBlendFuncSeparate(770, 771, 1, 0);
+        GlStateManager._depthMask(false);
+        GlStateManager._disableDepthTest();
 
         BlackOut.FONT.text(this.stack, text, 0.6F, i * (wbg + separation) + wbg / 2.0F, 16.0F, this.txt.get().getRGB(), true, true);
     }
@@ -286,8 +286,8 @@ public class Nametags extends Module {
         if (!enchantsComponent.isEmpty() && this.drawEnchants.get()) {
             final int[] y = {0};
 
-            RenderSystem.depthMask(false);
-            RenderSystem.disableDepthTest();
+            GlStateManager._depthMask(false);
+            GlStateManager._disableDepthTest();
             for (Object2IntMap.Entry<Holder<Enchantment>> entry : enchantsComponent.entrySet()) {
                 Holder<Enchantment> enchantment = entry.getKey();
                 int level = entry.getIntValue();

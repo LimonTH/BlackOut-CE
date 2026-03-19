@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.rendering.renderer;
 
 import bodevelopment.client.blackout.rendering.shader.Shaders;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
@@ -75,12 +75,12 @@ public class ColorRenderer extends Renderer {
 
     private void startRender(PoseStack stack, VertexFormat.Mode drawMode, VertexFormat format) {
         this.renderMatrix = stack.last().pose();
-        RenderSystem.enableBlend();
+        GlStateManager._enableBlend();
         this.renderBuffer = Tesselator.getInstance().begin(drawMode, format);
     }
 
     public void endRender() {
         Shaders.color.render(this.renderBuffer, null);
-        RenderSystem.disableBlend();
+        GlStateManager._disableBlend();
     }
 }

@@ -163,7 +163,7 @@ public class AutoMend extends Module {
         List<ItemStack> armors = new ArrayList<>();
 
         for (int i = 0; i < 4; i++) {
-            armors.add(BlackOut.mc.player.getInventory().getArmor(i));
+            armors.add(BlackOut.mc.player.getInventory().getItem(36 + i));
         }
 
         float max = -1.0F;

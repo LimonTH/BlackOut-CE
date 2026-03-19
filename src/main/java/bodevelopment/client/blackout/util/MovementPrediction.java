@@ -12,22 +12,22 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 public class MovementPrediction {
     public static Vec3 adjustMovementForCollisions(Entity entity, Vec3 movement) {
         AABB box = entity.getBoundingBox();
-        List<VoxelShape> list = entity.getCommandSenderWorld().getEntityCollisions(entity, box.expandTowards(movement));
-        Vec3 vec3d = movement.lengthSqr() == 0.0 ? movement : Entity.collideBoundingBox(entity, movement, box, entity.getCommandSenderWorld(), list);
+        List<VoxelShape> list = entity.level().getEntityCollisions(entity, box.expandTowards(movement));
+        Vec3 vec3d = movement.lengthSqr() == 0.0 ? movement : Entity.collideBoundingBox(entity, movement, box, entity.level(), list);
         boolean bl = movement.x != vec3d.x;
         boolean bl2 = movement.y != vec3d.y;
         boolean bl3 = movement.z != vec3d.z;
         boolean bl4 = entity.onGround() || bl2 && movement.y < 0.0;
         if (entity.maxUpStep() > 0.0F && bl4 && (bl || bl3)) {
             Vec3 vec3d2 = Entity.collideBoundingBox(
-                    entity, new Vec3(movement.x, entity.maxUpStep(), movement.z), box, entity.getCommandSenderWorld(), list
+                    entity, new Vec3(movement.x, entity.maxUpStep(), movement.z), box, entity.level(), list
             );
             Vec3 vec3d3 = Entity.collideBoundingBox(
-                    entity, new Vec3(0.0, entity.maxUpStep(), 0.0), box.expandTowards(movement.x, 0.0, movement.z), entity.getCommandSenderWorld(), list
+                    entity, new Vec3(0.0, entity.maxUpStep(), 0.0), box.expandTowards(movement.x, 0.0, movement.z), entity.level(), list
             );
             if (vec3d3.y < entity.maxUpStep()) {
                 Vec3 vec3d4 = Entity.collideBoundingBox(
-                                entity, new Vec3(movement.x, 0.0, movement.z), box.move(vec3d3), entity.getCommandSenderWorld(), list
+                                entity, new Vec3(movement.x, 0.0, movement.z), box.move(vec3d3), entity.level(), list
                         )
                         .add(vec3d3);
                 if (vec3d4.horizontalDistanceSqr() > vec3d2.horizontalDistanceSqr()) {
@@ -38,7 +38,7 @@ public class MovementPrediction {
             if (vec3d2.horizontalDistanceSqr() > vec3d.horizontalDistanceSqr()) {
                 return vec3d2.add(
                         Entity.collideBoundingBox(
-                                entity, new Vec3(0.0, -vec3d2.y + movement.y, 0.0), box.move(vec3d2), entity.getCommandSenderWorld(), list
+                                entity, new Vec3(0.0, -vec3d2.y + movement.y, 0.0), box.move(vec3d2), entity.level(), list
                         )
                 );
             }

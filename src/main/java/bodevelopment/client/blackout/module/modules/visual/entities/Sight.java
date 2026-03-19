@@ -16,12 +16,11 @@ import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.client.renderer.CoreShaders;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -29,6 +28,7 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
 public class Sight extends Module {
+    private static final MultiBufferSource.BufferSource sightBufSrc = MultiBufferSource.immediate(new ByteBufferBuilder(256));
     private final SettingGroup sgGeneral = this.addGroup("General");
 
     private final Setting<Double> lineWidth = this.sgGeneral.doubleSetting("Stroke Weight", 1.5, 0.5, 5.0, 0.05, "The thickness of the rendered view vector lines.");
@@ -45,14 +45,12 @@ public class Sight extends Module {
     @Event
     public void onRender(RenderEvent.World.Post event) {
         this.stack.pushPose();
-        Render3DUtils.setRotation(this.stack);
+        Render3DUtils.transformToCameraRotation(this.stack);
         Render3DUtils.start();
 
-        RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
         RenderSystem.lineWidth(this.lineWidth.get().floatValue());
 
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
+        VertexConsumer bufferBuilder = sightBufSrc.getBuffer(RenderType.lines());
 
         PoseStack.Pose entry = this.stack.last();
         Matrix4f matrix4f = entry.pose();
@@ -80,13 +78,13 @@ public class Sight extends Module {
             }
         });
 
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+        sightBufSrc.endBatch();
 
         Render3DUtils.end();
         this.stack.popPose();
     }
 
-    private void render(BufferBuilder bufferBuilder, Matrix4f matrix4f, PoseStack.Pose entry, Vec3 start, Vec3 end) {
+    private void render(VertexConsumer bufferBuilder, Matrix4f matrix4f, PoseStack.Pose entry, Vec3 start, Vec3 end) {
         double l = start.distanceTo(end);
         if (l != 0.0) {
             double lerpDelta = this.fadeIn.get() / l;

@@ -4,7 +4,7 @@ import bodevelopment.client.blackout.randomstuff.ShaderSetup;
 import bodevelopment.client.blackout.rendering.shader.Shader;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
@@ -217,7 +217,7 @@ public class TextureRenderer extends Renderer {
         this.u2 = u2;
         this.v1 = v1;
         this.v2 = v2;
-        RenderSystem.enableBlend();
+        GlStateManager._enableBlend();
         setTexture(this.id, 0);
         this.renderBuffer = Tesselator.getInstance().begin(drawMode, DefaultVertexFormat.POSITION);
     }
@@ -253,6 +253,6 @@ public class TextureRenderer extends Renderer {
         shader.set("clr", this.renderRed, this.renderGreen, this.renderBlue, this.renderAlpha);
         shader.set("uTexture", 0);
         shader.render(this.renderBuffer, setup);
-        RenderSystem.disableBlend();
+        GlStateManager._disableBlend();
     }
 }

@@ -5,9 +5,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
-import com.mojang.blaze3d.shaders.FogShape;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.renderer.FogParameters;
 
 public class Ambience extends Module {
     private static Ambience INSTANCE;
@@ -23,7 +21,7 @@ public class Ambience extends Module {
 
     public final Setting<Boolean> modifyFog = this.sgFog.booleanSetting("Fog Manipulation", true, "Enables custom rendering of the atmospheric fog layer.");
     public final Setting<Boolean> removeFog = this.sgFog.booleanSetting("Suppress Fog", true, "Completely disables the fog shader for maximum visibility.", this.modifyFog::get);
-    private final Setting<FogShape> shape = this.sgFog.enumSetting("Fog Geometry", FogShape.SPHERE, "The mathematical projection used to calculate fog density (Sphere or Cylinder).", () -> this.modifyFog.get() && !this.removeFog.get());
+    private final Setting<String> shape = this.sgFog.stringSetting("Fog Geometry", "SPHERE", "The mathematical projection used to calculate fog density (Sphere or Cylinder).", () -> this.modifyFog.get() && !this.removeFog.get());
     private final Setting<Double> distance = this.sgFog.doubleSetting("Fog Offset", 25.0, 0.0, 100.0, 1.0, "The distance from the camera at which the fog begins to obstruct vision.", () -> this.modifyFog.get() && !this.removeFog.get());
     private final Setting<Double> fading = this.sgFog.doubleSetting("Fog Falloff", 25.0, 0.0, 250.0, 1.0, "The distance over which the fog transitions from transparent to fully opaque.", () -> this.modifyFog.get() && !this.removeFog.get());
     public final Setting<BlackOutColor> color = this.sgFog.colorSetting("Fog Color", new BlackOutColor(255, 0, 0, 255), "The color applied to the atmospheric fog layer.", () -> this.modifyFog.get() && !this.removeFog.get());
@@ -46,26 +44,10 @@ public class Ambience extends Module {
         }
 
         if (this.removeFog.get()) {
-            RenderSystem.setShaderFog(new FogParameters(
-                    Float.MAX_VALUE,
-                    Float.MAX_VALUE,
-                    this.shape.get(),
-                    0.0F, 0.0F, 0.0F, 0.0F
-            ));
+            // TODO: 1.21.6 fog API changed — FogParameters/setShaderFog removed, needs FogData + mixin approach
             return true;
         } else {
-            float start = this.distance.get().floatValue();
-            float end = start + this.fading.get().floatValue();
-
-            RenderSystem.setShaderFog(new FogParameters(
-                    start,
-                    end,
-                    this.shape.get(),
-                    this.color.get().red / 255.0F,
-                    this.color.get().green / 255.0F,
-                    this.color.get().blue / 255.0F,
-                    this.color.get().alpha / 255.0F
-            ));
+            // TODO: 1.21.6 fog API changed — implement via FogRenderer mixin
             return true;
         }
     }

@@ -50,11 +50,10 @@ import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.item.AxeItem;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -94,8 +93,7 @@ public class Aura extends MoveUpdateModule {
                 ItemStack stack = item.getDefaultInstance();
 
                 if (stack.has(DataComponents.TOOL)) return true;
-                return item instanceof SwordItem
-                        || item == Items.TRIDENT
+                return item == Items.TRIDENT
                         || item == Items.MACE;
                     },
             Items.WOODEN_SWORD,
@@ -117,7 +115,7 @@ public class Aura extends MoveUpdateModule {
     private final Setting<Boolean> ignoreNaked = this.sgGeneral.booleanSetting("Ignore Unarmored", false, "Prevents attacking players who are not wearing any armor.");
     private final Setting<Boolean> tpDisable = this.sgGeneral.booleanSetting("TP Safety Disable", false, "Automatically disables the module upon server teleports or dimension changes.");
     private final Setting<RotationMode> rotationMode = this.sgGeneral.enumSetting("Rotation Logic", RotationMode.OnHit, "Defines when the client should look at the target.");
-    private final Setting<List<EntityType<?>>> entities = this.sgGeneral.entityFilterdListSetting("Entity Targets", "List of entity types that the aura is allowed to attack.", type -> type != EntityType.ITEM && type != EntityType.EXPERIENCE_ORB && type != EntityType.AREA_EFFECT_CLOUD && type != EntityType.MARKER && type != EntityType.POTION && type != EntityType.LLAMA_SPIT && type != EntityType.EYE_OF_ENDER && type != EntityType.DRAGON_FIREBALL && type != EntityType.FIREWORK_ROCKET && type != EntityType.ENDER_PEARL && type != EntityType.FISHING_BOBBER && type != EntityType.ARROW && type != EntityType.SPECTRAL_ARROW && type != EntityType.SNOWBALL && type != EntityType.SMALL_FIREBALL && type != EntityType.WITHER_SKULL && type != EntityType.FALLING_BLOCK && type != EntityType.TNT && type != EntityType.EVOKER_FANGS && type != EntityType.LIGHTNING_BOLT && type != EntityType.WIND_CHARGE && type != EntityType.BREEZE_WIND_CHARGE && !type.toString().contains("display"), EntityType.PLAYER);
+    private final Setting<List<EntityType<?>>> entities = this.sgGeneral.entityFilterdListSetting("Entity Targets", "List of entity types that the aura is allowed to attack.", type -> type != EntityType.ITEM && type != EntityType.EXPERIENCE_ORB && type != EntityType.AREA_EFFECT_CLOUD && type != EntityType.MARKER && type != EntityType.SPLASH_POTION && type != EntityType.LINGERING_POTION && type != EntityType.LLAMA_SPIT && type != EntityType.EYE_OF_ENDER && type != EntityType.DRAGON_FIREBALL && type != EntityType.FIREWORK_ROCKET && type != EntityType.ENDER_PEARL && type != EntityType.FISHING_BOBBER && type != EntityType.ARROW && type != EntityType.SPECTRAL_ARROW && type != EntityType.SNOWBALL && type != EntityType.SMALL_FIREBALL && type != EntityType.WITHER_SKULL && type != EntityType.FALLING_BLOCK && type != EntityType.TNT && type != EntityType.EVOKER_FANGS && type != EntityType.LIGHTNING_BOLT && type != EntityType.WIND_CHARGE && type != EntityType.BREEZE_WIND_CHARGE && !type.toString().contains("display"), EntityType.PLAYER);
     private final Setting<Double> hitChance = this.sgGeneral.doubleSetting("Accuracy Chance", 1.0, 0.0, 1.0, 0.01, "Percentage of intended hits that will actually be sent to the server.");
     private final Setting<Double> expand = this.sgGeneral.doubleSetting("Hitbox Expansion", 0.0, 0.0, 1.0, 0.01, "Artificially increases the size of the target's hitbox.");
     private final Setting<Integer> extrapolation = this.sgGeneral.intSetting("Movement Prediction", 1, 0, 3, 1, "The number of ticks to extrapolate the target's current movement.");
@@ -509,7 +507,7 @@ public class Aura extends MoveUpdateModule {
     }
 
     private boolean holdingSword() {
-        return Managers.PACKET.getStack().getItem() instanceof SwordItem;
+        return Managers.PACKET.getStack().is(ItemTags.SWORDS);
     }
 
     private boolean holdingAllowedWeapon() {
@@ -589,8 +587,8 @@ public class Aura extends MoveUpdateModule {
         Item item = stack.getItem();
         
         return switch (preference) {
-            case Sword -> item instanceof SwordItem;
-            case Axe -> item instanceof AxeItem;
+            case Sword -> stack.is(ItemTags.SWORDS);
+            case Axe -> stack.is(ItemTags.AXES);
             case Mace -> item == Items.MACE;
             case Trident -> item == Items.TRIDENT;
             default -> true;
@@ -726,7 +724,7 @@ public class Aura extends MoveUpdateModule {
     }
 
     public boolean blockTransform(PoseStack stack) {
-        if (this.enabled && this.target != null && BlackOut.mc.player.getMainHandItem().getItem() instanceof SwordItem) {
+        if (this.enabled && this.target != null && BlackOut.mc.player.getMainHandItem().is(ItemTags.SWORDS)) {
             if (this.blockRender.get() != BlockRenderMode.Disabled && this.blocking.get()) {
                 stack.pushPose();
                 this.f = this.f + BlackOut.mc.getDeltaTracker().getGameTimeDeltaTicks() / 20.0F * this.speed.get().floatValue() * 5.0F;
@@ -840,7 +838,7 @@ public class Aura extends MoveUpdateModule {
 
     private boolean getArmor(Player entity) {
         for (int i = 0; i < 4; i++) {
-            if (!entity.getInventory().getArmor(i).isEmpty()) {
+            if (!entity.getInventory().getItem(36 + i).isEmpty()) {
                 return true;
             }
         }

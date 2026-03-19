@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.module.setting.multisettings.TextColorMulti
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import net.minecraft.world.item.ItemStack;
@@ -42,7 +42,7 @@ public class ArmorHUD extends HudElement {
 
         int armorCount = 0;
         for (int i = 0; i < 4; i++) {
-            if (!BlackOut.mc.player.getInventory().armor.get(i).isEmpty()) armorCount++;
+            if (!BlackOut.mc.player.getInventory().getItem(36 + i).isEmpty()) armorCount++;
         }
 
         if (armorCount == 0) return;
@@ -70,15 +70,15 @@ public class ArmorHUD extends HudElement {
         }
 
         BlackOut.mc.renderBuffers().bufferSource().endBatch();
-        RenderSystem.enableDepthTest();
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager._enableDepthTest();
+        GlStateManager._enableBlend();
+        GlStateManager.glBlendFuncSeparate(770, 771, 1, 0);
+
         BlackOut.mc.gameRenderer.lightTexture().turnOffLightLayer();
 
         int renderedIdx = 0;
         for (int i = 0; i < 4; i++) {
-            ItemStack itemStack = BlackOut.mc.player.getInventory().armor.get(this.reversed.get() ? i : 3 - i);
+            ItemStack itemStack = BlackOut.mc.player.getInventory().getItem(36 + (this.reversed.get() ? i : 3 - i));
             float xOffset = 2 + (22 * renderedIdx);
 
             if (itemStack.isEmpty()) continue;
@@ -110,7 +110,7 @@ public class ArmorHUD extends HudElement {
 
     private boolean armorFound() {
         for (int i = 0; i < 4; i++) {
-            if (!BlackOut.mc.player.getInventory().armor.get(i).isEmpty()) return true;
+            if (!BlackOut.mc.player.getInventory().getItem(36 + i).isEmpty()) return true;
         }
         return false;
     }

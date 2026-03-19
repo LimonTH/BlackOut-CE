@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BlockBehaviour.BlockStateBase.class)
 public class MixinBlockStateBase {
-
     @Inject(method = "isSolidRender", at = @At("HEAD"), cancellable = true)
     private void onIsSolidRender(CallbackInfoReturnable<Boolean> cir) {
         XRay xray = XRay.getInstance();

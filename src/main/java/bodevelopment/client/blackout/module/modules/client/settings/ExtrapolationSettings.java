@@ -11,14 +11,11 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.randomstuff.ExtrapolationMap;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.client.renderer.CoreShaders;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -30,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ExtrapolationSettings extends SettingsModule {
+    private static final MultiBufferSource.BufferSource extrapBufSrc = MultiBufferSource.immediate(new ByteBufferBuilder(256));
     private static ExtrapolationSettings INSTANCE;
 
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -88,7 +86,7 @@ public class ExtrapolationSettings extends SettingsModule {
                 }
             });
             this.stack.pushPose();
-            Render3DUtils.setRotation(this.stack);
+            Render3DUtils.transformToCameraRotation(this.stack);
             Render3DUtils.start();
             feet.values().forEach(this::renderList);
             Render3DUtils.end();
@@ -97,22 +95,35 @@ public class ExtrapolationSettings extends SettingsModule {
     }
 
     private void renderList(List<Vec3> list) {
-        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.begin(this.dashedLine.get() ? VertexFormat.Mode.DEBUG_LINES : VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
         Matrix4f matrix4f = this.stack.last().pose();
         Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
         float red = this.lineColor.get().red / 255.0F;
         float green = this.lineColor.get().green / 255.0F;
         float blue = this.lineColor.get().blue / 255.0F;
         float alpha = this.lineColor.get().alpha / 255.0F;
-        list.forEach(
-                vec -> bufferBuilder.addVertex(
-                                matrix4f, (float) (vec.x - camPos.x), (float) (vec.y - camPos.y), (float) (vec.z - camPos.z)
-                        )
-                        .setColor(red, green, blue, alpha)
-                        
-        );
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+
+        if (this.dashedLine.get()) {
+            VertexConsumer bufferBuilder = extrapBufSrc.getBuffer(RenderType.lines());
+            for (int i = 0; i < list.size() - 1; i += 2) {
+                Vec3 from = list.get(i);
+                Vec3 to = list.get(i + 1);
+                Vec3 diff = to.subtract(from).normalize();
+                float nx = (float) diff.x, ny = (float) diff.y, nz = (float) diff.z;
+                bufferBuilder.addVertex(matrix4f, (float) (from.x - camPos.x), (float) (from.y - camPos.y), (float) (from.z - camPos.z))
+                        .setColor(red, green, blue, alpha).setNormal(nx, ny, nz);
+                bufferBuilder.addVertex(matrix4f, (float) (to.x - camPos.x), (float) (to.y - camPos.y), (float) (to.z - camPos.z))
+                        .setColor(red, green, blue, alpha).setNormal(nx, ny, nz);
+            }
+        } else {
+            VertexConsumer bufferBuilder = extrapBufSrc.getBuffer(RenderType.debugLineStrip(1.0));
+            list.forEach(
+                    vec -> bufferBuilder.addVertex(
+                                    matrix4f, (float) (vec.x - camPos.x), (float) (vec.y - camPos.y), (float) (vec.z - camPos.z)
+                            )
+                            .setColor(red, green, blue, alpha)
+            );
+        }
+
+        extrapBufSrc.endBatch();
     }
 }

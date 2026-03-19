@@ -74,7 +74,7 @@ public class MixinLiquidBlockRenderer {
             BlockState neighborState
     ) {
         if (XRAY_TARGET_FLUID.get()) return false;
-        return net.minecraft.world.phys.shapes.Shapes.blockOccudes(
+        return net.minecraft.world.phys.shapes.Shapes.blockOccludes(
                 net.minecraft.world.phys.shapes.Shapes.box(0, 0, 0, 1, height, 1),
                 neighborState.getFaceOcclusionShape(direction.getOpposite()),
                 direction

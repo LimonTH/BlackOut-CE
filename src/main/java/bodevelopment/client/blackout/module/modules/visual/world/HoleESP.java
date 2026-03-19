@@ -13,14 +13,11 @@ import bodevelopment.client.blackout.randomstuff.Hole;
 import bodevelopment.client.blackout.util.HoleUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.client.renderer.CoreShaders;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
@@ -31,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HoleESP extends Module {
+    private static final MultiBufferSource.BufferSource holeBufSrc = MultiBufferSource.immediate(new ByteBufferBuilder(1024));
     public final SettingGroup sgGeneral = this.addGroup("General");
 
     private final Setting<Double> range = this.sgGeneral.doubleSetting("Detection Radius", 8.0, 0.0, 10.0, 0.1, "The maximum distance from the player to scan for defensive holes.");
@@ -83,7 +81,7 @@ public class HoleESP extends Module {
         }
 
         Render3DUtils.matrices.pushPose();
-        Render3DUtils.setRotation(Render3DUtils.matrices);
+        Render3DUtils.transformToCameraRotation(Render3DUtils.matrices);
         Render3DUtils.start();
         if (this.bottomSide.get() || this.fadeSides.get()) {
             this.drawSides();
@@ -98,9 +96,7 @@ public class HoleESP extends Module {
     }
 
     private void drawSides() {
-        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        VertexConsumer bufferBuilder = holeBufSrc.getBuffer(RenderType.debugQuads());
         double x = BlackOut.mc.gameRenderer.getMainCamera().getPosition().x;
         double y = BlackOut.mc.gameRenderer.getMainCamera().getPosition().y;
         double z = BlackOut.mc.gameRenderer.getMainCamera().getPosition().z;
@@ -139,7 +135,7 @@ public class HoleESP extends Module {
                             }
                         }
                 );
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+        holeBufSrc.endBatch();
     }
 
     private float getHeight(BlockPos pos) {
@@ -150,11 +146,9 @@ public class HoleESP extends Module {
     }
 
     private void drawLines() {
-        RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
         RenderSystem.lineWidth(1.5F);
 
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
+        VertexConsumer bufferBuilder = holeBufSrc.getBuffer(RenderType.lines());
 
         Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
         double x = camPos.x;
@@ -202,7 +196,7 @@ public class HoleESP extends Module {
             }
         });
 
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+        holeBufSrc.endBatch();
     }
 
     private void hline(

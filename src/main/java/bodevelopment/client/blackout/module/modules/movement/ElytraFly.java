@@ -95,7 +95,7 @@ public class ElytraFly extends Module {
         if (BlackOut.mc.player == null) return;
 
         if (autoStop.get()) {
-            ItemStack chest = BlackOut.mc.player.getInventory().getArmor(2);
+            ItemStack chest = BlackOut.mc.player.getInventory().getItem(36 + 2);
             if (chest.getItem() == Items.ELYTRA && (chest.getMaxDamage() - chest.getDamageValue()) < minDurability.get()) {
                 this.disable();
                 return;
@@ -253,8 +253,8 @@ public class ElytraFly extends Module {
     }
 
     private Vec3 getNamiControlDir() {
-        float f = BlackOut.mc.player.input.forwardImpulse;
-        float s = BlackOut.mc.player.input.leftImpulse;
+        float f = BlackOut.mc.player.input.getMoveVector().y;
+        float s = BlackOut.mc.player.input.getMoveVector().x;
         if (f == 0 && s == 0 && !BlackOut.mc.options.keyJump.isDown() && !BlackOut.mc.options.keyShift.isDown()) return null;
         if (BlackOut.mc.options.keyJump.isDown()) return new Vec3(0, 1, 0);
         if (BlackOut.mc.options.keyShift.isDown()) return new Vec3(0, -1, 0);
@@ -284,8 +284,8 @@ public class ElytraFly extends Module {
     }
 
     private void updateControlMovement() {
-        float f = BlackOut.mc.player.input.forwardImpulse;
-        float s = BlackOut.mc.player.input.leftImpulse;
+        float f = BlackOut.mc.player.input.getMoveVector().y;
+        float s = BlackOut.mc.player.input.getMoveVector().x;
         float y = BlackOut.mc.player.getYRot();
         if (f > 0) { moving = true; y += s > 0 ? -45 : (s < 0 ? 45 : 0); }
         else if (f < 0) { moving = true; y += s > 0 ? -135 : (s < 0 ? 135 : 180); }

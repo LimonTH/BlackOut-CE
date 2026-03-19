@@ -51,8 +51,8 @@ public class NoFall extends Module {
                 this.fallDist = 0.0F;
             }
 
-            this.fallDist = this.fallDist + (BlackOut.mc.player.fallDistance - this.lastFallDist);
-            this.lastFallDist = BlackOut.mc.player.fallDistance;
+            this.fallDist = this.fallDist + ((float) BlackOut.mc.player.fallDistance - this.lastFallDist);
+            this.lastFallDist = (float) BlackOut.mc.player.fallDistance;
             switch (this.mode.get()) {
                 case Packet:
                     if (this.fallDist > 2.0F) {

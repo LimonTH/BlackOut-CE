@@ -5,13 +5,11 @@ import bodevelopment.client.blackout.helpers.ScrollHelper;
 import bodevelopment.client.blackout.helpers.SmoothScrollHelper;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.rendering.framebuffer.GuiAlphaFrameBuffer;
-import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import net.minecraft.util.Mth;
@@ -105,11 +103,6 @@ public class ClickGuiScreen {
             return Math.min(ClickGui.popUpDelta * 1.5F, 1.0F);
         }
         return 1.0F;
-    }
-
-    private void endAlpha() {
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        Renderer.setAlpha(1.0F);
     }
 
     protected float getLength() {

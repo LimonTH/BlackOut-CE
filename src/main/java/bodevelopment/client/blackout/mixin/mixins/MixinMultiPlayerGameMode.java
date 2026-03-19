@@ -57,7 +57,7 @@ public abstract class MixinMultiPlayerGameMode {
     public abstract InteractionResult useItemOn(LocalPlayer player, InteractionHand hand, BlockHitResult hitResult);
 
     @Shadow
-    protected abstract void startPrediction(ClientLevel world, PredictiveAction packetCreator);
+    public abstract void startPrediction(ClientLevel world, PredictiveAction packetCreator);
 
     @Shadow
     public abstract boolean destroyBlock(BlockPos pos);
@@ -90,7 +90,7 @@ public abstract class MixinMultiPlayerGameMode {
                 boolean bl = !blockState.isAir();
                 boolean canInstant = bl
                         && handMine.getDelta(
-                        this.position, blockState.getDestroyProgress(this.minecraft.player, this.minecraft.player.getCommandSenderWorld(), this.position)
+                        this.position, blockState.getDestroyProgress(this.minecraft.player, this.minecraft.player.level(), this.position)
                 )
                         >= 1.0F;
                 Runnable runnable = () -> this.startPrediction(world, sequence -> {
@@ -124,7 +124,7 @@ public abstract class MixinMultiPlayerGameMode {
                 blockState.attack(this.minecraft.level, this.position, this.minecraft.player);
             }
 
-            if (bl && blockState.getDestroyProgress(this.minecraft.player, this.minecraft.player.getCommandSenderWorld(), this.position) >= 1.0F) {
+            if (bl && blockState.getDestroyProgress(this.minecraft.player, this.minecraft.player.level(), this.position) >= 1.0F) {
                 this.destroyBlock(this.position);
             } else {
                 this.isDestroying = true;

@@ -42,7 +42,7 @@ public class AltManagerScreen extends Screen {
 
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float deltaTick) {
-        PoseStack stack = context.pose();
+        PoseStack stack = new PoseStack();
         this.updateWindowData(mouseX, mouseY);
 
         float frameDuration = Math.min(BlackOut.mc.getDeltaTracker().getGameTimeDeltaTicks(), 0.016F);

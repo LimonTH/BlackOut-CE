@@ -117,13 +117,13 @@ public class DamageUtils {
     }
 
     public static double applyResistance(LivingEntity entity, double damage) {
-        int amplifier = entity.hasEffect(MobEffects.DAMAGE_RESISTANCE) ? entity.getEffect(MobEffects.DAMAGE_RESISTANCE).getAmplifier() : 0;
+        int amplifier = entity.hasEffect(MobEffects.RESISTANCE) ? entity.getEffect(MobEffects.RESISTANCE).getAmplifier() : 0;
         int j = 25 - (amplifier + 1) * 5;
         return Math.max(damage * j / 25.0, 0.0);
     }
 
     public static double applyProtection(LivingEntity entity, double damage, boolean explosions) {
-        int i = getProtectionAmount(entity.getArmorSlots(), explosions);
+        int i = getProtectionAmount(java.util.List.of(entity.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.HEAD), entity.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.CHEST), entity.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.LEGS), entity.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.FEET)), explosions);
         if (i > 0) {
             damage *= 1.0F - Mth.clamp(i, 0.0F, 20.0F) / 25.0F;
         }

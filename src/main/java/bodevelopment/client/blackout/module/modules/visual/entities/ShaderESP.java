@@ -15,12 +15,11 @@ import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import bodevelopment.client.blackout.util.render.WireframeRenderer;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.List;
 
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
@@ -68,10 +67,8 @@ public class ShaderESP extends Module {
         FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("shaderESP");
         buffer.bind(true);
 
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(true);
-
-        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
+        GlStateManager._enableDepthTest();
+        GlStateManager._depthMask(true);
 
         Matrix4f identity = new Matrix4f();
         WireframeRenderer.drawEverything(

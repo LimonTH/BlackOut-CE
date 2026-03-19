@@ -2,7 +2,6 @@ package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.renderer.FogParameters;
 import net.minecraft.client.renderer.MultiBufferSource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,7 +17,7 @@ public class MixinSkyRenderer {
     }
 
     @Inject(method = "renderSunMoonAndStars", at = @At("HEAD"), cancellable = true)
-    private void onRenderSunMoonAndStars(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, float f, int i, float g, float h, FogParameters fogParameters, CallbackInfo ci) {
+    private void onRenderSunMoonAndStars(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, float f, int i, float g, float h, CallbackInfo ci) {
         NoRender noRender = NoRender.getInstance();
         if (noRender != null && noRender.enabled && noRender.skybox.get()) ci.cancel();
     }

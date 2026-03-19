@@ -277,7 +277,7 @@ public class Scaffold extends MoveUpdateModule {
             switch (this.tower.get()) {
                 case NCP:
                     if (BlackOut.mc.options.keyJump.isDown()
-                            && (this.towerMoving.get() || BlackOut.mc.player.input.forwardImpulse == 0.0F && BlackOut.mc.player.input.leftImpulse == 0.0F)) {
+                            && (this.towerMoving.get() || BlackOut.mc.player.input.getMoveVector().y == 0.0F && BlackOut.mc.player.input.getMoveVector().x == 0.0F)) {
                         this.towerRotate = true;
                         if (BlackOut.mc.player.onGround() || this.jumpProgress == 3) {
                             this.jumpProgress = 0;
@@ -299,7 +299,7 @@ public class Scaffold extends MoveUpdateModule {
                     break;
                 case SlowNCP:
                     if (BlackOut.mc.options.keyJump.isDown()
-                            && (this.towerMoving.get() || BlackOut.mc.player.input.forwardImpulse == 0.0F && BlackOut.mc.player.input.leftImpulse == 0.0F)) {
+                            && (this.towerMoving.get() || BlackOut.mc.player.input.getMoveVector().y == 0.0F && BlackOut.mc.player.input.getMoveVector().x == 0.0F)) {
                         this.towerRotate = true;
                         if (BlackOut.mc.player.onGround() || this.jumpProgress == 4) {
                             this.jumpProgress = 0;
@@ -321,7 +321,7 @@ public class Scaffold extends MoveUpdateModule {
                     break;
                 case TP:
                     if (BlackOut.mc.options.keyJump.isDown()
-                            && (this.towerMoving.get() || BlackOut.mc.player.input.forwardImpulse == 0.0F && BlackOut.mc.player.input.leftImpulse == 0.0F)) {
+                            && (this.towerMoving.get() || BlackOut.mc.player.input.getMoveVector().y == 0.0F && BlackOut.mc.player.input.getMoveVector().x == 0.0F)) {
                         this.towerRotate = true;
                         if (BlackOut.mc.player.onGround() || this.jumpProgress == 1) {
                             this.jumpProgress = 0;
@@ -343,7 +343,7 @@ public class Scaffold extends MoveUpdateModule {
                     break;
                 case Disabled:
                     if (BlackOut.mc.options.keyJump.isDown()
-                            && (this.towerMoving.get() || BlackOut.mc.player.input.forwardImpulse == 0.0F && BlackOut.mc.player.input.leftImpulse == 0.0F)) {
+                            && (this.towerMoving.get() || BlackOut.mc.player.input.getMoveVector().y == 0.0F && BlackOut.mc.player.input.getMoveVector().x == 0.0F)) {
                         this.towerRotate = true;
                         if (BlackOut.mc.player.onGround() || this.jumpProgress == 1) {
                             this.jumpProgress = 0;

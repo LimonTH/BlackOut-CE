@@ -24,7 +24,7 @@ public class MixinEntityRenderDispatcher {
     private boolean shouldRenderShadow;
 
     @Inject(
-            method = "render*",
+            method = "render(Lnet/minecraft/world/entity/Entity;DDDFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V",
             at = @At("HEAD")
     )
     private <E extends Entity> void captureEntity(E entity, double x, double y, double z, float yaw, PoseStack matrices, MultiBufferSource vertexConsumers, int light, CallbackInfo ci) {
@@ -32,7 +32,7 @@ public class MixinEntityRenderDispatcher {
     }
 
     @Inject(
-            method = "render*",
+            method = "render(Lnet/minecraft/world/entity/Entity;DDDFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V",
             at = @At("RETURN")
     )
     private <E extends Entity> void releaseEntity(E entity, double x, double y, double z, float yaw, PoseStack matrices, MultiBufferSource vertexConsumers, int light, CallbackInfo ci) {
@@ -40,7 +40,7 @@ public class MixinEntityRenderDispatcher {
     }
 
     @Redirect(
-            method = "render(Lnet/minecraft/world/entity/Entity;DDDFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/renderer/entity/EntityRenderer;)V",
+            method = "render(Lnet/minecraft/client/renderer/entity/state/EntityRenderState;DDDLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/renderer/entity/EntityRenderer;)V",
             at = @At(
                     value = "FIELD",
                     target = "Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;shouldRenderShadow:Z",
@@ -52,20 +52,20 @@ public class MixinEntityRenderDispatcher {
     }
 
     @Redirect(
-            method = "render(Lnet/minecraft/world/entity/Entity;DDDFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/renderer/entity/EntityRenderer;)V",
+            method = "render(Lnet/minecraft/client/renderer/entity/state/EntityRenderState;DDDLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/renderer/entity/EntityRenderer;)V",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/client/renderer/entity/EntityRenderer;render(Lnet/minecraft/client/renderer/entity/state/EntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V"
             )
     )
-    private <E extends Entity, S extends EntityRenderState> void onRender(
-            EntityRenderer<? super E, S> instance, S state, PoseStack matrices, MultiBufferSource vertexConsumers, int light,
-            E entity, double x, double y, double z, float tickDelta
+    private <S extends EntityRenderState> void onRender(
+            EntityRenderer<?, S> instance, S state, PoseStack matrices, MultiBufferSource vertexConsumers, int light
     ) {
+        Entity entity = RenderEntityCapture.CAPTURED_ENTITY.get();
         ShaderESP esp = ShaderESP.getInstance();
 
-        if (esp.enabled && esp.shouldRender(entity)) {
-            esp.onRender(instance, entity, state, matrices, vertexConsumers, light);
+        if (entity != null && esp.enabled && esp.shouldRender(entity)) {
+            esp.onRender((EntityRenderer) instance, entity, state, matrices, vertexConsumers, light);
         } else {
             instance.render(state, matrices, vertexConsumers, light);
         }

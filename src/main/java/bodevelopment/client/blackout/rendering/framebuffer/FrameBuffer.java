@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.rendering.framebuffer;
 
 import bodevelopment.client.blackout.BlackOut;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.lwjgl.opengl.GL30C;
 
@@ -12,6 +12,8 @@ public class FrameBuffer {
     private int width;
     private int height;
     private boolean viewportChanged = false;
+    private int prevFbo = 0;
+    private int[] prevViewport;
 
     public FrameBuffer() {
         this.load();
@@ -72,7 +74,12 @@ public class FrameBuffer {
     }
 
     public void bind(boolean viewPort) {
-        RenderSystem.assertOnRenderThreadOrInit();
+        RenderSystem.assertOnRenderThread();
+        this.prevFbo = getCurrent();
+        if (viewPort) {
+            this.prevViewport = new int[4];
+            GL30C.glGetIntegerv(GL30C.GL_VIEWPORT, this.prevViewport);
+        }
         GlStateManager._glBindFramebuffer(36160, this.id);
 
         if (viewPort) {
@@ -83,25 +90,25 @@ public class FrameBuffer {
 
     public void unbind() {
         if (!RenderSystem.isOnRenderThread()) {
-            RenderSystem.recordRenderCall(this::bindPrev);
+            RenderSystem.queueFencedTask(this::bindPrev);
         } else {
             this.bindPrev();
         }
     }
 
     private void bindPrev() {
-        RenderSystem.assertOnRenderThreadOrInit();
-        if (BlackOut.mc.getMainRenderTarget() != null) {
-            BlackOut.mc.getMainRenderTarget().bindWrite(true);
-        } else {
-            GlStateManager._glBindFramebuffer(36160, 0);
+        RenderSystem.assertOnRenderThread();
+        GlStateManager._glBindFramebuffer(36160, this.prevFbo);
+        if (this.viewportChanged && this.prevViewport != null) {
+            GL30C.glViewport(this.prevViewport[0], this.prevViewport[1], this.prevViewport[2], this.prevViewport[3]);
         }
         this.viewportChanged = false;
+        this.prevViewport = null;
     }
 
     private void safe(Runnable runnable) {
         if (!RenderSystem.isOnRenderThread()) {
-            RenderSystem.recordRenderCall(runnable::run);
+            RenderSystem.queueFencedTask(runnable::run);
         } else {
             runnable.run();
         }

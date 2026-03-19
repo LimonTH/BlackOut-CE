@@ -13,8 +13,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(LevelChunk.class)
 public class MixinLevelChunk {
     @Inject(method = "setBlockState", at = @At("TAIL"), cancellable = true)
-    private void onBlockState(BlockPos pos, BlockState state, boolean moved, CallbackInfoReturnable<BlockState> cir) {
-        BlockStateEvent event = BlockStateEvent.get(pos, state, cir.getReturnValue());
+    private void onBlockState(BlockPos blockPos, BlockState blockState, int i, CallbackInfoReturnable<BlockState> cir) {
+        BlockStateEvent event = BlockStateEvent.get(blockPos, blockState, cir.getReturnValue());
         if (BlackOut.EVENT_BUS.post(event).isCancelled()) {
             cir.cancel();
         }

@@ -11,7 +11,7 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import net.minecraft.client.gui.GuiGraphics;
@@ -57,7 +57,6 @@ public class ShulkerViewer extends Module {
     }
 
     private void renderGui(GuiGraphics context, int mouseX, int mouseY, NonNullList<ItemStack> items, String name) {
-        context.flush();
 
         float s = scale.get().floatValue();
         float width = (162 + 10) * s;
@@ -71,10 +70,10 @@ public class ShulkerViewer extends Module {
         if (posY + height > BlackOut.mc.getWindow().getGuiScaledHeight()) posY = BlackOut.mc.getWindow().getGuiScaledHeight() - height - 5;
         if (posY < 5) posY = 5;
 
-        PoseStack stack = context.pose();
+        PoseStack stack = new PoseStack();
 
-        RenderSystem.enableBlend();
-        RenderSystem.disableDepthTest();
+        GlStateManager._enableBlend();
+        GlStateManager._disableDepthTest();
 
         stack.pushPose();
         stack.translate(0, 0, RenderLayer.GUI);
@@ -101,8 +100,7 @@ public class ShulkerViewer extends Module {
 
         stack.popPose();
 
-        RenderSystem.enableDepthTest();
-        context.flush();
+        GlStateManager._enableDepthTest();
     }
 
     private ItemStack getHoveredStack(Screen screen) {

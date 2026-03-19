@@ -236,9 +236,9 @@ public class Velocity extends Module {
         if (BlackOut.mc.player == null) return;
 
         Managers.PACKET.sendInstantly(new ServerboundContainerClickPacket(
-                0, 0, -1, 0, ClickType.PICKUP,
-                BlackOut.mc.player.getInventory().getSelected(),
-                new Int2ObjectOpenHashMap<>()
+                0, 0, (short) -1, (byte) 0, ClickType.PICKUP,
+                new it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap<>(),
+                net.minecraft.network.HashedStack.EMPTY
         ));
     }
 

@@ -10,10 +10,11 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.authlib.GameProfile;
-import com.mojang.blaze3d.systems.RenderSystem;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.mojang.blaze3d.opengl.GlTexture;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.resources.ResourceLocation;
 
@@ -105,11 +106,10 @@ public class FriendsScreen extends ClickGuiScreen {
             }
         }
 
-        int glId = BlackOut.mc.getTextureManager().getTexture(skin).getId();
+        var gpuTexture = (GlTexture) BlackOut.mc.getTextureManager().getTexture(skin).getTexture();
+        int glId = gpuTexture.glId();
 
-        RenderSystem.setShaderTexture(0, skin);
-        RenderSystem.texParameter(3553, 10241, 9728);
-        RenderSystem.texParameter(3553, 10240, 9728);
+        gpuTexture.setTextureFilter(com.mojang.blaze3d.textures.FilterMode.NEAREST, false);
 
         float x = 18.0f;
         float y = 15.0f;

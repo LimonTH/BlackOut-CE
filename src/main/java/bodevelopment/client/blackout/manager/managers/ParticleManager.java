@@ -9,7 +9,7 @@ import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
@@ -43,7 +43,7 @@ public class ParticleManager extends Manager {
         Vec3 cameraPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
         PoseStack stack = Render3DUtils.matrices;
         stack.pushPose();
-        Render3DUtils.setRotation(stack);
+        Render3DUtils.transformToCameraRotation(stack);
         GlStateManager._disableDepthTest();
         GlStateManager._enableBlend();
         GlStateManager._disableCull();

@@ -16,6 +16,7 @@ public class MixinBeaconRenderer {
             PoseStack matrices,
             MultiBufferSource vertexConsumers,
             float tickDelta,
+            float g,
             long time,
             int yOffset,
             int height,

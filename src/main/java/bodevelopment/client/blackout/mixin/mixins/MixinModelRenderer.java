@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.*;
 @Mixin(ModelBlockRenderer.class)
 public class MixinModelRenderer {
     @ModifyVariable(method = "renderModel", at = @At("HEAD"), ordinal = 0, argsOnly = true)
-    private int boostLight(int light) {
+    private static int boostLight(int light) {
         if (Brightness.getInstance().enabled) {
             if (Brightness.getInstance().mode.get() == Brightness.Mode.Gamma) {
                 return 15728880;

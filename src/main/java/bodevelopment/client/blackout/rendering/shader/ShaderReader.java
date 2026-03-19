@@ -60,7 +60,15 @@ public class ShaderReader {
         int id = GL20C.glCreateProgram();
         GL20C.glAttachShader(id, fragId);
         GL20C.glAttachShader(id, vertId);
+
+        // Bind attribute locations to match VertexFormatElement IDs
+        GL20C.glBindAttribLocation(id, 0, "Position");  // POSITION id=0
+        GL20C.glBindAttribLocation(id, 1, "Color");     // COLOR id=1
+        GL20C.glBindAttribLocation(id, 2, "UV0");       // UV0 id=2
+        GL20C.glBindAttribLocation(id, 5, "Normal");    // NORMAL id=5
+
         GL20C.glLinkProgram(id);
+        checkProgramLinking(id, name);
         GL20C.glDetachShader(id, vertId);
         GL20C.glDetachShader(id, fragId);
         GL20C.glDeleteShader(vertId);
@@ -73,6 +81,13 @@ public class ShaderReader {
         if (GL20C.glGetShaderi(shaderId, GL20C.GL_COMPILE_STATUS) == 0) {
             String log = GL20C.glGetShaderInfoLog(shaderId);
             System.err.println("Shader compilation error in " + type + " shader '" + name + "': " + log);
+        }
+    }
+
+    private static void checkProgramLinking(int programId, String name) {
+        if (GL20C.glGetProgrami(programId, GL20C.GL_LINK_STATUS) == 0) {
+            String log = GL20C.glGetProgramInfoLog(programId);
+            System.err.println("Shader program link error '" + name + "': " + log);
         }
     }
 

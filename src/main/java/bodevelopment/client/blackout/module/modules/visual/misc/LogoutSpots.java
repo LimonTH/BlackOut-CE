@@ -20,8 +20,8 @@ import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import bodevelopment.client.blackout.util.render.WireframeRenderer;
 import com.mojang.authlib.GameProfile;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.opengl.GlStateManager;
+import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import org.joml.Quaternionf;
 
@@ -123,7 +123,7 @@ public class LogoutSpots extends Module {
                     }
 
                     for (int i = 0; i < 4; i++) {
-                        stacks[i + 1] = player.getInventory().getArmor(3 - i);
+                        stacks[i + 1] = player.getInventory().getItem(36 + 3 - i);
                     }
 
                     stacks[0] = player.getMainHandItem();
@@ -225,7 +225,7 @@ public class LogoutSpots extends Module {
 
     private boolean itemsEmpty(AbstractClientPlayer player) {
         for (int i = 0; i < 4; i++) {
-            ItemStack armorStack = player.getInventory().getArmor(3 - i);
+            ItemStack armorStack = player.getInventory().getItem(36 + 3 - i);
             if (!armorStack.isEmpty()) {
                 return false;
             }
@@ -337,9 +337,9 @@ public class LogoutSpots extends Module {
         for (ItemComponent item : toRender) {
             ItemStack stack = item.itemStack();
 
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alphaMulti);
+            Renderer.setAlpha(this.alphaMulti);
             RenderUtils.renderItem(this.matrixStack, stack, 0.0F, 0.0F, 16.0F, RenderLayer.WORLD, false);
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            Renderer.setAlpha(1.0F);
 
             if (item.armor()) {
                 boolean isUnbreakable = stack.get(DataComponents.UNBREAKABLE) != null;

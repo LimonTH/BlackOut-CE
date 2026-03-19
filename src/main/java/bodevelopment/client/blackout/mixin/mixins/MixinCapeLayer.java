@@ -17,7 +17,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(CapeLayer.class)
 public class MixinCapeLayer {
-
     @Inject(method = "render*", at = @At("HEAD"))
     private void onRenderHead(PoseStack matrixStack, MultiBufferSource vertexConsumerProvider, int i, PlayerRenderState state, float f, float g, CallbackInfo ci) {
         if (state.id == BlackOut.mc.player.getId()) {
