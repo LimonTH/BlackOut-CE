@@ -12,6 +12,7 @@ import bodevelopment.client.blackout.module.modules.movement.TickShift;
 import bodevelopment.client.blackout.module.modules.movement.Velocity;
 import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
 import bodevelopment.client.blackout.module.modules.visual.misc.SwingModifier;
+import bodevelopment.client.blackout.util.CompatUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -72,7 +73,8 @@ public abstract class MixinLocalPlayer {
 
     @Inject(method = "sendPosition", at = @At("TAIL"))
     private void sendPacketsTail(CallbackInfo ci) {
-        if (!sent
+        if (!CompatUtils.isBaritonePathing()
+                && !sent
                 && Managers.ROTATION.rotated()
                 && (Managers.ROTATION.rotatingYaw != RotationManager.RotatePhase.Inactive || Managers.ROTATION.rotatingPitch != RotationManager.RotatePhase.Inactive)) {
             BlackOut.mc.getConnection().send(new ServerboundMovePlayerPacket.Rot(Managers.ROTATION.nextYaw, Managers.ROTATION.nextPitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
@@ -115,7 +117,7 @@ public abstract class MixinLocalPlayer {
 
     @Redirect(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;onGround()Z"))
     private boolean isOnGround(LocalPlayer instance) {
-        if (instance == BlackOut.mc.player) {
+        if (instance == BlackOut.mc.player && !CompatUtils.isBaritonePathing()) {
             AntiHunger antiHunger = AntiHunger.getInstance();
             if (antiHunger.enabled && antiHunger.moving.get()) {
                 return false;
@@ -126,7 +128,7 @@ public abstract class MixinLocalPlayer {
 
     @Redirect(method = "sendIsSprintingIfNeeded", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isSprinting()Z"))
     private boolean sprinting(LocalPlayer instance) {
-        if (instance == BlackOut.mc.player) {
+        if (instance == BlackOut.mc.player && !CompatUtils.isBaritonePathing()) {
             AntiHunger antiHunger = AntiHunger.getInstance();
             if (antiHunger.enabled && antiHunger.sprint.get()) {
                 return false;
@@ -148,7 +150,7 @@ public abstract class MixinLocalPlayer {
 
     @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isSprinting()Z"))
     private boolean forwardMovement(LocalPlayer value) {
-        if ((Object) this != BlackOut.mc.player) {
+        if ((Object) this != BlackOut.mc.player || CompatUtils.isBaritonePathing()) {
             return value.isSprinting();
         } else {
             Sprint sprint = Sprint.getInstance();

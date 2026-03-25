@@ -58,6 +58,10 @@ public class Keys {
         names.put(282, "NUM LCK");
         names.put(343, "LWIN");
         names.put(347, "RWIN");
+
+        for (int i = 0; i <= 24; i++) {
+            names.put(290 + i, "F" + (i + 1));
+        }
     }
 
     public static String getKeyName(int key) {
@@ -70,11 +74,12 @@ public class Keys {
     }
 
     public static boolean get(int key) {
+        if (key < 0 || key >= state.length) return false;
         return state[key];
     }
 
     public static void set(int key, boolean s) {
-        if (key >= 0) {
+        if (key >= 0 && key < state.length) {
             if (state[key] != s) {
                 BlackOut.EVENT_BUS.post(KeyEvent.get(key, s, state[key]));
             }

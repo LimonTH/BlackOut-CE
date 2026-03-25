@@ -5,7 +5,7 @@ import net.minecraft.client.renderer.CoreShaders;
 
 /**
  * AutoCloseable GL state management. Automatically restores state on close.
- *
+ * <p>
  * Usage:
  *   try (RenderState state = RenderState.blend2D()) {
  *       // draw calls

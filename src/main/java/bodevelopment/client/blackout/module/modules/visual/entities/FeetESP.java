@@ -10,6 +10,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
+import bodevelopment.client.blackout.util.render.RenderState;
 import java.util.List;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.AABB;
@@ -31,25 +32,23 @@ public class FeetESP extends Module {
     public void onRender(RenderEvent.World.Post event) {
         if (BlackOut.mc.level == null || BlackOut.mc.player == null) return;
 
-        Render3DUtils.start();
+        try (RenderState state = Render3DUtils.begin()) {
+            BlackOut.mc.level.entitiesForRendering().forEach(entity -> {
+                if (this.entities.get().contains(entity.getType())) {
+                    Vec3 pos = new Vec3(entity.xo, entity.yo, entity.zo)
+                            .lerp(entity.position(), BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true));
 
-        BlackOut.mc.level.entitiesForRendering().forEach(entity -> {
-            if (this.entities.get().contains(entity.getType())) {
-                Vec3 pos = new Vec3(entity.xo, entity.yo, entity.zo)
-                        .lerp(entity.position(), BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true));
+                    double halfWidth = entity.getBoundingBox().getXsize() / 2.0;
+                    double halfDepth = entity.getBoundingBox().getZsize() / 2.0;
 
-                double halfWidth = entity.getBoundingBox().getXsize() / 2.0;
-                double halfDepth = entity.getBoundingBox().getZsize() / 2.0;
+                    AABB feetBox = new AABB(
+                            pos.x - halfWidth, pos.y, pos.z - halfDepth,
+                            pos.x + halfWidth, pos.y + 0.01, pos.z + halfDepth
+                    );
 
-                AABB feetBox = new AABB(
-                        pos.x - halfWidth, pos.y, pos.z - halfDepth,
-                        pos.x + halfWidth, pos.y + 0.01, pos.z + halfDepth
-                );
-
-                Render3DUtils.box(feetBox, fill.get(), line.get(), renderShape.get());
-            }
-        });
-
-        Render3DUtils.end();
+                    Render3DUtils.box(feetBox, fill.get(), line.get(), renderShape.get());
+                }
+            });
+        }
     }
 }

@@ -4,6 +4,7 @@ import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.util.FileUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import org.apache.commons.lang3.mutable.MutableDouble;
+import net.minecraft.util.ARGB;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL13C;
 
@@ -89,7 +90,7 @@ public class BOTextures {
         ByteBuffer buffer = BufferUtils.createByteBuffer(size * 4);
 
         for (int pixel : image.getRGB(0, 0, image.getWidth(), image.getHeight(), new int[size], 0, image.getWidth())) {
-            buffer.put((byte) (pixel >> 16 & 0xFF)).put((byte) (pixel >> 8 & 0xFF)).put((byte) (pixel & 0xFF)).put((byte) (pixel >> 24 & 0xFF));
+            buffer.put((byte) ARGB.red(pixel)).put((byte) ARGB.green(pixel)).put((byte) ARGB.blue(pixel)).put((byte) ARGB.alpha(pixel));
         }
 
         return buffer.flip();

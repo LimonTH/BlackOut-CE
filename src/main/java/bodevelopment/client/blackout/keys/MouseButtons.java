@@ -22,11 +22,12 @@ public class MouseButtons {
     }
 
     public static boolean get(int key) {
+        if (key < 0 || key >= state.length) return false;
         return state[key];
     }
 
     public static void set(int key, boolean s) {
-        if (key >= 0) {
+        if (key >= 0 && key < state.length) {
             state[key] = s;
         }
     }

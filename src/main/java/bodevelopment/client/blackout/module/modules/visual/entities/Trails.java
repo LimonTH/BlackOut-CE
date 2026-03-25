@@ -12,8 +12,10 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.randomstuff.Pair;
 import bodevelopment.client.blackout.util.ColorUtils;
+import net.minecraft.util.ARGB;
 import bodevelopment.client.blackout.util.EntityUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
+import bodevelopment.client.blackout.util.render.RenderState;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -72,12 +74,12 @@ public class Trails extends Module {
             Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
             stack.pushPose();
             Render3DUtils.setRotation(stack);
-            Render3DUtils.start();
-            this.map.forEach((entity, line) -> {
-                Color lineColor = this.getColor();
-                line.render(stack, camPos, lineColor, this.renderTime.get(), this.fadeTime.get());
-            });
-            Render3DUtils.end();
+            try (RenderState state = Render3DUtils.begin()) {
+                this.map.forEach((entity, line) -> {
+                    Color lineColor = this.getColor();
+                    line.render(stack, camPos, lineColor, this.renderTime.get(), this.fadeTime.get());
+                });
+            }
             stack.popPose();
         }
     }
@@ -106,7 +108,7 @@ public class Trails extends Module {
             case Custom -> this.clr.get().getColor();
             case Rainbow -> {
                 int rainbowColor = ColorUtils.getRainbow(4.0F, this.saturation.get().floatValue(), 1.0F, 150L);
-                yield new Color(rainbowColor >> 16 & 0xFF, rainbowColor >> 8 & 0xFF, rainbowColor & 0xFF, this.clr.get().alpha);
+                yield new Color(ARGB.red(rainbowColor), ARGB.green(rainbowColor), ARGB.blue(rainbowColor), this.clr.get().alpha);
             }
             case Wave ->
                     ColorUtils.getWave(this.clr.get().getColor(), this.clr1.get().getColor(), this.speed.get(), 1.0, 1);

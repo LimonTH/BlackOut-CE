@@ -11,6 +11,7 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.randomstuff.ExtrapolationMap;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
+import bodevelopment.client.blackout.util.render.RenderState;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -89,9 +90,9 @@ public class ExtrapolationSettings extends SettingsModule {
             });
             this.stack.pushPose();
             Render3DUtils.setRotation(this.stack);
-            Render3DUtils.start();
-            feet.values().forEach(this::renderList);
-            Render3DUtils.end();
+            try (RenderState state = Render3DUtils.begin()) {
+                feet.values().forEach(this::renderList);
+            }
             this.stack.popPose();
         }
     }

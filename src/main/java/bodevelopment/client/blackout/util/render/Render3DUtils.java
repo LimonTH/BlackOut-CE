@@ -267,6 +267,16 @@ public class Render3DUtils {
         vertexConsumer.addVertex(matrix4f, x4, y4, z4).setColor(r, g, b, a).setNormal(0.0F, 0.0F, 0.0F);
     }
 
+    /**
+     * Returns an AutoCloseable RenderState for 3D blend rendering.
+     * Use with try-with-resources: {@code try (RenderState state = Render3DUtils.begin()) { ... }}
+     */
+    public static RenderState begin() {
+        return RenderState.blend3D();
+    }
+
+    /** @deprecated Use {@link #begin()} with try-with-resources instead. */
+    @Deprecated
     public static void start() {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
@@ -278,6 +288,8 @@ public class Render3DUtils {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
+    /** @deprecated Use {@link #begin()} with try-with-resources instead. */
+    @Deprecated
     public static void end() {
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);

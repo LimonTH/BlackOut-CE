@@ -172,11 +172,10 @@ public abstract class MixinGameRenderer {
     }
 
     @Inject(method = "getFov", at = @At("HEAD"), cancellable = true)
-    private void getFov(Camera camera, float tickDelta, boolean changingFov, CallbackInfoReturnable<Double> cir) {
+    private void getFov(Camera camera, float tickDelta, boolean changingFov, CallbackInfoReturnable<Float> cir) {
         FovModifier modifier = FovModifier.getInstance();
         if (modifier.enabled) {
-            cir.setReturnValue(this.getFOV(changingFov, modifier));
-            cir.cancel();
+            cir.setReturnValue((float) this.getFOV(changingFov, modifier));
         }
     }
 

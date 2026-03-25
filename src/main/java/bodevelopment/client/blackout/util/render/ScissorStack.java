@@ -101,6 +101,11 @@ public class ScissorStack {
         GlStateManager._scissorBox(top[0], top[1], top[2], top[3]);
     }
 
+    public static void clear() {
+        stack.clear();
+        GlStateManager._disableScissorTest();
+    }
+
     public static boolean isEmpty() {
         return stack.isEmpty();
     }

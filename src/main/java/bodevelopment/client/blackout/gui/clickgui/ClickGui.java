@@ -31,7 +31,6 @@ import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import bodevelopment.client.blackout.util.render.ScissorStack;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import org.lwjgl.glfw.GLFW;
@@ -186,7 +185,7 @@ public class ClickGui extends Screen {
         this.updateScroll();
 
         RenderUtils.startClickGui(this.stack, unscaled, scale, width, height, x, y);
-        GlStateManager._disableScissorTest();
+        ScissorStack.clear();
 
         if (BlackOut.mc.level != null) {
             this.renderBlur();

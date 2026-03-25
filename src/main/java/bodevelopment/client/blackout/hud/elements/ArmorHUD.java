@@ -28,6 +28,7 @@ public class ArmorHUD extends HudElement {
     private final Setting<Boolean> bar = this.sgGeneral.booleanSetting("Durability Bar", false, "Visualizes remaining durability as a bar.");
     private final Setting<Boolean> text = this.sgGeneral.booleanSetting("Percentage Text", true, "Displays durability as percentage.");
     private final Setting<Boolean> centerText = this.sgGeneral.booleanSetting("Align Center", true, "Centers the durability text.");
+    private static final int BAR_BG = new Color(0, 0, 0, 120).getRGB();
     private final RoundedColorMultiSetting armorBar = RoundedColorMultiSetting.of(this.sgGeneral, "Bar Color");
     private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Text Color");
 
@@ -96,9 +97,8 @@ public class ArmorHUD extends HudElement {
                 }
 
                 if (this.bar.get()) {
-                    Color bgColor = new Color(0, 0, 0, 120);
                     float barY = 18.5F;
-                    RenderUtils.rounded(stack, xOffset, barY, 16.0F, 1.5F, 1.0F, 0.0F, bgColor.getRGB(), bgColor.getRGB());
+                    RenderUtils.rounded(stack, xOffset, barY, 16.0F, 1.5F, 1.0F, 0.0F, BAR_BG, BAR_BG);
 
                     float barWidth = Math.max(0.5F, 16.0F * durabilityValue);
                     this.armorBar.render(stack, xOffset, barY, barWidth, 1.5F, 1.0F, 0.0F);

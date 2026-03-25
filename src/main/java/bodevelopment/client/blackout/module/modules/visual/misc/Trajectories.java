@@ -16,12 +16,14 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.ColorUtils;
+import net.minecraft.util.ARGB;
 import bodevelopment.client.blackout.util.DamageUtils;
 import bodevelopment.client.blackout.util.BlockUtils;
 import bodevelopment.client.blackout.util.EntityUtils;
 import bodevelopment.client.blackout.util.MathUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
+import bodevelopment.client.blackout.util.render.RenderState;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -89,15 +91,14 @@ public class Trajectories extends Module {
                 PoseStack stack = Render3DUtils.matrices;
                 stack.pushPose();
                 Render3DUtils.setRotation(stack);
-                Render3DUtils.start();
-                float yaw = Managers.ROTATION.getNextYaw();
-                this.draw(data, this.getVelocity(data.speed.apply(itemStack), yaw, 0.0), itemStack, event.tickDelta, stack);
-                if (this.hasMulti(itemStack)) {
-                    this.draw(data, this.getVelocity(data.speed.apply(itemStack), yaw, -10.0), itemStack, event.tickDelta, stack);
-                    this.draw(data, this.getVelocity(data.speed.apply(itemStack), yaw, 10.0), itemStack, event.tickDelta, stack);
+                try (RenderState state = Render3DUtils.begin()) {
+                    float yaw = Managers.ROTATION.getNextYaw();
+                    this.draw(data, this.getVelocity(data.speed.apply(itemStack), yaw, 0.0), itemStack, event.tickDelta, stack);
+                    if (this.hasMulti(itemStack)) {
+                        this.draw(data, this.getVelocity(data.speed.apply(itemStack), yaw, -10.0), itemStack, event.tickDelta, stack);
+                        this.draw(data, this.getVelocity(data.speed.apply(itemStack), yaw, 10.0), itemStack, event.tickDelta, stack);
+                    }
                 }
-
-                Render3DUtils.end();
                 stack.popPose();
             }
         }
@@ -264,7 +265,7 @@ public class Trajectories extends Module {
             case Custom -> this.clr.get().getColor();
             case Rainbow -> {
                 int rainbowColor = ColorUtils.getRainbow(4.0F, this.saturation.get().floatValue(), 1.0F, 150L);
-                yield new Color(rainbowColor >> 16 & 0xFF, rainbowColor >> 8 & 0xFF, rainbowColor & 0xFF, this.clr.get().alpha);
+                yield new Color(ARGB.red(rainbowColor), ARGB.green(rainbowColor), ARGB.blue(rainbowColor), this.clr.get().alpha);
             }
             case Wave -> ColorUtils.getWave(this.clr.get().getColor(), this.clr1.get().getColor(), 1.0, 1.0, 1);
         };

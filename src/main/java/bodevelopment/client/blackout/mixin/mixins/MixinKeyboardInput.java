@@ -3,6 +3,7 @@ package bodevelopment.client.blackout.mixin.mixins;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.movement.ElytraFly;
+import bodevelopment.client.blackout.util.CompatUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 import net.minecraft.client.Options;
 import net.minecraft.client.player.KeyboardInput;
@@ -30,6 +31,11 @@ public abstract class MixinKeyboardInput {
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void onMovement(CallbackInfo ci) {
+        if (CompatUtils.isBaritonePathing()) {
+            this.grim = false;
+            this.move = false;
+            return;
+        }
         Managers.ROTATION.updateNext();
         Managers.ROTATION.moveLookYaw = Mth.wrapDegrees(Managers.ROTATION.nextYaw);
         this.grim = SettingUtils.grimMovement();

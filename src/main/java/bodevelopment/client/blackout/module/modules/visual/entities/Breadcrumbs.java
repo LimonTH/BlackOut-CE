@@ -15,6 +15,7 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec2;
@@ -101,9 +102,9 @@ public class Breadcrumbs extends Module {
                 break;
             case Rainbow:
                 int rainbowColor = ColorUtils.getRainbow(4.0F, this.saturation.get().floatValue(), 1.0F, 150L);
-                colors[0] = new Color(rainbowColor >> 16 & 0xFF, rainbowColor >> 8 & 0xFF, rainbowColor & 0xFF, this.iAlpha.get());
+                colors[0] = new Color(ARGB.red(rainbowColor), ARGB.green(rainbowColor), ARGB.blue(rainbowColor), this.iAlpha.get());
                 rainbowColor = ColorUtils.getRainbow(4.0F, this.saturation.get().floatValue(), 1.0F, 300L);
-                colors[1] = new Color(rainbowColor >> 16 & 0xFF, rainbowColor >> 8 & 0xFF, rainbowColor & 0xFF, this.oAlpha.get());
+                colors[1] = new Color(ARGB.red(rainbowColor), ARGB.green(rainbowColor), ARGB.blue(rainbowColor), this.oAlpha.get());
                 break;
             case Wave:
                 colors[0] = ColorUtils.getWave(this.clr.get().getColor(), this.clr1.get().getColor(), 1.0, 1.0, 1);

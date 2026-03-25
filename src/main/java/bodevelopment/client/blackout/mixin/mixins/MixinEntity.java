@@ -8,6 +8,7 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.legit.HitCrystal;
 import bodevelopment.client.blackout.module.modules.misc.Timer;
 import bodevelopment.client.blackout.module.modules.movement.*;
+import bodevelopment.client.blackout.util.CompatUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -253,7 +254,7 @@ public abstract class MixinEntity {
 
     @Inject(method = "getLookAngle()Lnet/minecraft/world/phys/Vec3;", at = @At("HEAD"), cancellable = true)
     private void onGetRotationVector(CallbackInfoReturnable<Vec3> cir) {
-        if ((Object) this == BlackOut.mc.player) {
+        if ((Object) this == BlackOut.mc.player && !CompatUtils.isBaritonePathing()) {
             if (SettingUtils.grimMovement()) {
                 cir.setReturnValue(this.calculateViewVector(Managers.ROTATION.nextPitch, Managers.ROTATION.nextYaw));
                 return;

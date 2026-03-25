@@ -1,8 +1,9 @@
 package bodevelopment.client.blackout.util;
 
 
-import java.awt.*;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
+import java.awt.*;
 
 public class ColorUtils {
     public static Color SHADOW100 = new Color(0, 0, 0, 100);
@@ -69,7 +70,7 @@ public class ColorUtils {
     }
 
     public static int alphaMulti(int color, double alpha) {
-        return withAlpha(color, (int) ((color >>> 24 & 0xFF) * alpha));
+        return withAlpha(color, (int) (ARGB.alpha(color) * alpha));
     }
 
     private static int lerp(double delta, int min, int max) {
