@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.visual.entities;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.event.Event;
@@ -40,7 +41,7 @@ public class SkeletonESP extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player == null || BlackOut.mc.level == null) return;
+        if (!PlayerUtils.isInGame()) return;
 
         Camera camera = BlackOut.mc.gameRenderer.getMainCamera();
         Vec3 camPos = camera.getPosition();

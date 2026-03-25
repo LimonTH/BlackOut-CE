@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
@@ -27,7 +28,7 @@ public class Sprint extends Module {
 
     @Override
     public void onDisable() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             BlackOut.mc.player.setSprinting(false);
         }
     }
@@ -39,7 +40,7 @@ public class Sprint extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && !LongJump.getInstance().enabled) {
+        if (PlayerUtils.isInGame() && !LongJump.getInstance().enabled) {
             if (this.hungerCheck.get() && BlackOut.mc.player.getFoodData().getFoodLevel() < 6) {
                 BlackOut.mc.player.setSprinting(false);
             } else {

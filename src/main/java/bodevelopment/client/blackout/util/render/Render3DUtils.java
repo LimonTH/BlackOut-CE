@@ -51,13 +51,16 @@ public class Render3DUtils {
 
     public static void drawBoxRaw(PoseStack stack, AABB box, int sideColor, int lineColor, RenderShape shape, boolean manageState) {
         if (manageState) {
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            RenderSystem.disableCull();
-            RenderSystem.setShader(CoreShaders.POSITION_COLOR);
-            RenderSystem.disableDepthTest();
+            try (RenderState state = RenderState.blend3D()) {
+                RenderSystem.setShader(CoreShaders.POSITION_COLOR);
+                drawBoxInner(stack, box, sideColor, lineColor, shape);
+            }
+        } else {
+            drawBoxInner(stack, box, sideColor, lineColor, shape);
         }
+    }
 
+    private static void drawBoxInner(PoseStack stack, AABB box, int sideColor, int lineColor, RenderShape shape) {
         stack.pushPose();
 
         if (shape.sides) {
@@ -68,12 +71,6 @@ public class Render3DUtils {
         }
 
         stack.popPose();
-
-        if (manageState) {
-            RenderSystem.enableCull();
-            RenderSystem.disableBlend();
-            RenderSystem.enableDepthTest();
-        }
     }
 
     public static void boxEntity(PoseStack stack, AABB box, BlackOutColor sideColor, BlackOutColor lineColor, RenderShape shape) {
@@ -86,81 +83,68 @@ public class Render3DUtils {
     }
 
     public static void renderEntityOutlines(PoseStack stack, AABB box, int color) {
-        start();
-        RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
-        RenderSystem.lineWidth(1.5F);
+        try (RenderState state = RenderState.lines3D(1.5F)) {
+            Tesselator tessellator = Tesselator.getInstance();
+            BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
 
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
-
-        float r = ARGB.red(color) / 255.0F;
-        float g = ARGB.green(color) / 255.0F;
-        float b = ARGB.blue(color) / 255.0F;
-        float a = ARGB.alpha(color) / 255.0F;
+            float r = ARGB.red(color) / 255.0F;
+            float g = ARGB.green(color) / 255.0F;
+            float b = ARGB.blue(color) / 255.0F;
+            float a = ARGB.alpha(color) / 255.0F;
 
         drawOutlines(stack, bufferBuilder,
                 (float) box.minX, (float) box.minY, (float) box.minZ,
                 (float) box.maxX, (float) box.maxY, (float) box.maxZ,
                 r, g, b, a);
 
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
-        end();
+            BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+        }
     }
 
     public static void renderEntitySides(PoseStack stack, AABB box, int color) {
-        start();
-        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
+        try (RenderState state = RenderState.blend3D()) {
+            RenderSystem.setShader(CoreShaders.POSITION_COLOR);
 
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            Tesselator tessellator = Tesselator.getInstance();
+            BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
-        float r = ARGB.red(color) / 255.0F;
-        float g = ARGB.green(color) / 255.0F;
-        float b = ARGB.blue(color) / 255.0F;
-        float a = ARGB.alpha(color) / 255.0F;
+            float r = ARGB.red(color) / 255.0F;
+            float g = ARGB.green(color) / 255.0F;
+            float b = ARGB.blue(color) / 255.0F;
+            float a = ARGB.alpha(color) / 255.0F;
 
-        drawSides(stack, bufferBuilder,
-                (float) box.minX, (float) box.minY, (float) box.minZ,
-                (float) box.maxX, (float) box.maxY, (float) box.maxZ,
-                r, g, b, a);
+            drawSides(stack, bufferBuilder,
+                    (float) box.minX, (float) box.minY, (float) box.minZ,
+                    (float) box.maxX, (float) box.maxY, (float) box.maxZ,
+                    r, g, b, a);
 
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
-        end();
+            BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+        }
     }
 
     public static void renderOutlines(PoseStack stack, AABB box, int color) {
         Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
 
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableCull();
-        RenderSystem.disableDepthTest();
+        try (RenderState state = RenderState.lines3D(1.5F)) {
+            Tesselator tessellator = Tesselator.getInstance();
+            BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
 
-        RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
-        RenderSystem.lineWidth(1.5F);
+            float minX = (float) (box.minX - camPos.x);
+            float minY = (float) (box.minY - camPos.y);
+            float minZ = (float) (box.minZ - camPos.z);
+            float maxX = (float) (box.maxX - camPos.x);
+            float maxY = (float) (box.maxY - camPos.y);
+            float maxZ = (float) (box.maxZ - camPos.z);
 
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
+            float r = ARGB.red(color) / 255.0F;
+            float g = ARGB.green(color) / 255.0F;
+            float b = ARGB.blue(color) / 255.0F;
+            float a = ARGB.alpha(color) / 255.0F;
 
-        float minX = (float) (box.minX - camPos.x);
-        float minY = (float) (box.minY - camPos.y);
-        float minZ = (float) (box.minZ - camPos.z);
-        float maxX = (float) (box.maxX - camPos.x);
-        float maxY = (float) (box.maxY - camPos.y);
-        float maxZ = (float) (box.maxZ - camPos.z);
+            drawOutlines(stack, bufferBuilder, minX, minY, minZ, maxX, maxY, maxZ, r, g, b, a);
 
-        float r = ARGB.red(color) / 255.0F;
-        float g = ARGB.green(color) / 255.0F;
-        float b = ARGB.blue(color) / 255.0F;
-        float a = ARGB.alpha(color) / 255.0F;
-
-        drawOutlines(stack, bufferBuilder, minX, minY, minZ, maxX, maxY, maxZ, r, g, b, a);
-
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
-
-        RenderSystem.enableDepthTest();
-        RenderSystem.enableCull();
-        RenderSystem.disableBlend();
+            BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+        }
     }
 
     public static void drawOutlines(PoseStack stack, VertexConsumer vertexConsumer, float minX, float minY, float minZ, float maxX, float maxY, float maxZ, float r, float g, float b, float a) {
@@ -199,32 +183,28 @@ public class Render3DUtils {
     public static void renderSides(PoseStack stack, AABB box, int color) {
         Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
 
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableCull();
-        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
+        try (RenderState state = RenderState.blend3D()) {
+            RenderSystem.setShader(CoreShaders.POSITION_COLOR);
 
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            Tesselator tessellator = Tesselator.getInstance();
+            BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
-        float minX = (float) (box.minX - camPos.x);
-        float minY = (float) (box.minY - camPos.y);
-        float minZ = (float) (box.minZ - camPos.z);
-        float maxX = (float) (box.maxX - camPos.x);
-        float maxY = (float) (box.maxY - camPos.y);
-        float maxZ = (float) (box.maxZ - camPos.z);
+            float minX = (float) (box.minX - camPos.x);
+            float minY = (float) (box.minY - camPos.y);
+            float minZ = (float) (box.minZ - camPos.z);
+            float maxX = (float) (box.maxX - camPos.x);
+            float maxY = (float) (box.maxY - camPos.y);
+            float maxZ = (float) (box.maxZ - camPos.z);
 
-        float r = ARGB.red(color) / 255.0F;
-        float g = ARGB.green(color) / 255.0F;
-        float b = ARGB.blue(color) / 255.0F;
-        float a = ARGB.alpha(color) / 255.0F;
+            float r = ARGB.red(color) / 255.0F;
+            float g = ARGB.green(color) / 255.0F;
+            float b = ARGB.blue(color) / 255.0F;
+            float a = ARGB.alpha(color) / 255.0F;
 
-        drawSides(stack, bufferBuilder, minX, minY, minZ, maxX, maxY, maxZ, r, g, b, a);
+            drawSides(stack, bufferBuilder, minX, minY, minZ, maxX, maxY, maxZ, r, g, b, a);
 
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
-
-        RenderSystem.enableCull();
-        RenderSystem.disableBlend();
+            BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+        }
     }
 
     public static void drawSides(PoseStack stack, VertexConsumer vertexConsumer, float minX, float minY, float minZ, float maxX, float maxY, float maxZ, float r, float g, float b, float a) {
@@ -307,79 +287,79 @@ public class Render3DUtils {
     }
 
     public static void circle(PoseStack stack, Vec3 pos, double radius, int color, int angle, Orientation orientation) {
-        float a = (float) (color >> 24 & 255) / 255.0F;
-        float r = (float) (color >> 16 & 255) / 255.0F;
-        float g = (float) (color >> 8 & 255) / 255.0F;
-        float b = (float) (color & 255) / 255.0F;
+        float a = ARGB.alpha(color) / 255.0F;
+        float r = ARGB.red(color) / 255.0F;
+        float g = ARGB.green(color) / 255.0F;
+        float b = ARGB.blue(color) / 255.0F;
 
         if (a <= 0.0F) return;
 
         Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
 
-        start();
-        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
+        try (RenderState state = RenderState.blend3D()) {
+            RenderSystem.setShader(CoreShaders.POSITION_COLOR);
 
-        Matrix4f matrix = stack.last().pose();
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+            Matrix4f matrix = stack.last().pose();
+            Tesselator tessellator = Tesselator.getInstance();
+            BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
 
-        float x = (float) (pos.x - camPos.x);
-        float y = (float) (pos.y - camPos.y);
-        float z = (float) (pos.z - camPos.z);
+            float x = (float) (pos.x - camPos.x);
+            float y = (float) (pos.y - camPos.y);
+            float z = (float) (pos.z - camPos.z);
 
-        for (int i = 0; i <= angle; i++) {
-            float rad = (float) Math.toRadians(i);
-            float cos = (float) Math.cos(rad) * (float) radius;
-            float sin = (float) Math.sin(rad) * (float) radius;
+            for (int i = 0; i <= angle; i++) {
+                float rad = (float) Math.toRadians(i);
+                float cos = (float) Math.cos(rad) * (float) radius;
+                float sin = (float) Math.sin(rad) * (float) radius;
 
-            switch (orientation) {
-                case XY -> bufferBuilder.addVertex(matrix, x + cos, y + sin, z).setColor(r, g, b, a);
-                case XZ -> bufferBuilder.addVertex(matrix, x + cos, y, z + sin).setColor(r, g, b, a);
-                case YZ -> bufferBuilder.addVertex(matrix, x, y + cos, z + sin).setColor(r, g, b, a);
+                switch (orientation) {
+                    case XY -> bufferBuilder.addVertex(matrix, x + cos, y + sin, z).setColor(r, g, b, a);
+                    case XZ -> bufferBuilder.addVertex(matrix, x + cos, y, z + sin).setColor(r, g, b, a);
+                    case YZ -> bufferBuilder.addVertex(matrix, x, y + cos, z + sin).setColor(r, g, b, a);
+                }
             }
-        }
 
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
-        end();
+            BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+        }
     }
 
     public static void fillCircle(PoseStack stack, Vec3 pos, double radius, int color, int angle, Orientation orientation) {
-        float a = (float) (color >> 24 & 255) / 255.0F;
-        float r = (float) (color >> 16 & 255) / 255.0F;
-        float g = (float) (color >> 8 & 255) / 255.0F;
-        float b = (float) (color & 255) / 255.0F;
+        float a = ARGB.alpha(color) / 255.0F;
+        float r = ARGB.red(color) / 255.0F;
+        float g = ARGB.green(color) / 255.0F;
+        float b = ARGB.blue(color) / 255.0F;
 
         if (a <= 0.0F) return;
 
         Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
 
-        start();
-        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
+        try (RenderState state = RenderState.blend3D()) {
+            RenderSystem.setShader(CoreShaders.POSITION_COLOR);
 
-        Matrix4f matrix = stack.last().pose();
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
+            Matrix4f matrix = stack.last().pose();
+            Tesselator tessellator = Tesselator.getInstance();
+            BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
 
-        float x = (float) (pos.x - camPos.x);
-        float y = (float) (pos.y - camPos.y);
-        float z = (float) (pos.z - camPos.z);
+            float x = (float) (pos.x - camPos.x);
+            float y = (float) (pos.y - camPos.y);
+            float z = (float) (pos.z - camPos.z);
 
-        bufferBuilder.addVertex(matrix, x, y, z).setColor(r, g, b, a);
+            bufferBuilder.addVertex(matrix, x, y, z).setColor(r, g, b, a);
 
-        for (int i = 0; i <= angle; i += 10) {
-            float rad = (float) Math.toRadians(i);
-            float cos = (float) Math.cos(rad) * (float) radius;
-            float sin = (float) Math.sin(rad) * (float) radius;
+            for (int i = 0; i <= angle; i += 10) {
+                float rad = (float) Math.toRadians(i);
+                float cos = (float) Math.cos(rad) * (float) radius;
+                float sin = (float) Math.sin(rad) * (float) radius;
 
-            switch (orientation) {
-                case XY -> bufferBuilder.addVertex(matrix, x + cos, y + sin, z).setColor(r, g, b, a);
-                case XZ -> bufferBuilder.addVertex(matrix, x + cos, y, z + sin).setColor(r, g, b, a);
-                case YZ -> bufferBuilder.addVertex(matrix, x, y + cos, z + sin).setColor(r, g, b, a);
+                switch (orientation) {
+                    case XY -> bufferBuilder.addVertex(matrix, x + cos, y + sin, z).setColor(r, g, b, a);
+                    case XZ -> bufferBuilder.addVertex(matrix, x + cos, y, z + sin).setColor(r, g, b, a);
+                    case YZ -> bufferBuilder.addVertex(matrix, x, y + cos, z + sin).setColor(r, g, b, a);
+                }
             }
-        }
 
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
-        end();
+            BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+        }
     }
 
     public enum Orientation {
@@ -415,15 +395,9 @@ public class Render3DUtils {
 
         stack.scale(-scale * 0.25F, -scale * 0.25F, scale * 0.25F);
 
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableDepthTest();
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-
-        BlackOut.FONT.text(stack, string, 1.0F, 0.0F, 0.0F, color, true, true);
-
-        RenderSystem.enableDepthTest();
-        RenderSystem.disableBlend();
+        try (RenderState state = RenderState.blend3D()) {
+            BlackOut.FONT.text(stack, string, 1.0F, 0.0F, 0.0F, color, true, true);
+        }
         stack.popPose();
     }
 }

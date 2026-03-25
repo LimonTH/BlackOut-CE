@@ -5,6 +5,7 @@ import bodevelopment.client.blackout.gui.TextField;
 import bodevelopment.client.blackout.gui.clickgui.ClickGui;
 import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
 import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.module.AbstractModule;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.modules.client.GuiSettings;
 import bodevelopment.client.blackout.util.ColorUtils;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 
 public class SearchScreen extends ClickGuiScreen {
     private final TextField textField = new TextField();
-    private List<Module> results = new ArrayList<>();
+    private List<AbstractModule> results = new ArrayList<>();
 
     private final float RADIUS = 6.0F;
     private final float SHADOW = 2.0F;
@@ -45,7 +46,7 @@ public class SearchScreen extends ClickGuiScreen {
         float startY = 20.0F + fieldHeight;
         float yPos = startY + moduleGap - this.scroll.get();
 
-        for (Module module : results) {
+        for (AbstractModule module : results) {
             if (yPos > this.height) break;
 
             if (yPos + entryHeight > 0) {
@@ -54,7 +55,8 @@ public class SearchScreen extends ClickGuiScreen {
 
                 RenderUtils.rounded(this.stack, 20.0F, yPos, this.width - 40.0F, entryHeight, RADIUS, SHADOW, bgColor, ColorUtils.SHADOW100I);
 
-                int textColor = module.enabled ? GuiRenderUtils.getGuiColors(1.0F).getRGB() : Color.LIGHT_GRAY.getRGB();
+                boolean isEnabled = module instanceof Module m && m.enabled;
+                int textColor = isEnabled ? GuiRenderUtils.getGuiColors(1.0F).getRGB() : Color.LIGHT_GRAY.getRGB();
                 BlackOut.FONT.text(this.stack, module.getDisplayName(), 1.8F * fs, 35.0F, yPos + (entryHeight / 2.0F), textColor, false, true);
 
                 String category = module.category.name();
@@ -96,10 +98,10 @@ public class SearchScreen extends ClickGuiScreen {
 
             float yPos = (20.0F + 45.0F * fs) + ((SHADER_PADDING * 2) + 4.0F * fs) - this.scroll.get();
 
-            for (Module module : results) {
+            for (AbstractModule module : results) {
                 if (this.mx > 20.0F && this.mx < this.width - 20.0F && this.my > yPos && this.my < yPos + entryHeight) {
-                    if (button == 0) {
-                        module.toggle();
+                    if (button == 0 && module instanceof Module toggleable) {
+                        toggleable.toggle();
                         Managers.CONFIG.saveModule(module);
                     } else if (button == 1) {
                         ClickGui gui = Managers.CLICK_GUI.CLICK_GUI;

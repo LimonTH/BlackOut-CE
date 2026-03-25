@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
@@ -28,7 +29,7 @@ public class ServerSpoof extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && BlackOut.mc.player.tickCount >= 20 && this.time >= 0L) {
+        if (PlayerUtils.isInGame() && BlackOut.mc.player.tickCount >= 20 && this.time >= 0L) {
             if (System.currentTimeMillis() > this.time + this.delay.get() * 1000.0) {
                 this.sendPacket(new ServerboundResourcePackPacket(this.id, this.statuses[this.progress]));
                 if (this.progress > 1) {

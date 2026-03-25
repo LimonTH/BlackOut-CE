@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.combat.offensive.Aura;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.InvUtils;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 import net.minecraft.world.InteractionHand;
@@ -81,7 +81,7 @@ public class NoSlow extends Module {
         } else if (Aura.getInstance().isBlocking) {
             return getInstance().blocking.get();
         } else if (BlackOut.mc.player.isUsingItem()) {
-            ItemStack stack = OLEPOSSUtils.getItem(hand);
+            ItemStack stack = InvUtils.getHandItem(hand);
             if (stack == null) {
                 return false;
             } else {

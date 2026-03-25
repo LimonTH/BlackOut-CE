@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.visual.entities;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
@@ -11,7 +12,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.randomstuff.Pair;
 import bodevelopment.client.blackout.util.ColorUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.EntityUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -65,7 +66,7 @@ public class Trails extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.addPositions(event.tickDelta);
             PoseStack stack = Render3DUtils.matrices;
             Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
@@ -119,8 +120,8 @@ public class Trails extends Module {
     }
 
     public enum HeightMode {
-        Feet(OLEPOSSUtils::getLerpedPos),
-        Middle((entity, tickDelta) -> OLEPOSSUtils.getLerpedPos(entity, tickDelta).add(0.0, entity.getBoundingBox().getYsize() / 2.0, 0.0));
+        Feet(EntityUtils::getLerpedPos),
+        Middle((entity, tickDelta) -> EntityUtils.getLerpedPos(entity, tickDelta).add(0.0, entity.getBoundingBox().getYsize() / 2.0, 0.0));
 
         private final DoubleFunction<Entity, Double, Vec3> function;
 

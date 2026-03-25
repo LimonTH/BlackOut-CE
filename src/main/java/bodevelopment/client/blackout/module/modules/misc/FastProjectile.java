@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.movement.Blink;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.InvUtils;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
@@ -56,7 +56,7 @@ public class FastProjectile extends Module {
         }
 
         if (event.packet instanceof ServerboundUseItemPacket packet) {
-            if (this.throwIgnore || !OLEPOSSUtils.getItem(packet.getHand()).is(Items.ENDER_PEARL)) {
+            if (this.throwIgnore || !InvUtils.getHandItem(packet.getHand()).is(Items.ENDER_PEARL)) {
                 return;
             }
 

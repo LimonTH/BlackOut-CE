@@ -8,8 +8,9 @@ import bodevelopment.client.blackout.event.events.MouseButtonEvent;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.hud.elements.Arraylist;
 import bodevelopment.client.blackout.manager.Manager;
+import bodevelopment.client.blackout.module.AbstractModule;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.module.OnlyDev;
+import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.util.*;
 
 import java.util.ArrayList;
@@ -17,15 +18,15 @@ import java.util.Comparator;
 import java.util.List;
 
 public class ModuleManager extends Manager {
-    private final List<Module> modules = new ArrayList<>();
+    private final List<AbstractModule> modules = new ArrayList<>();
 
     @Override
     public void init() {
-        long time = OLEPOSSUtils.testTime(() -> {
-            String internalPath = Module.class.getCanonicalName().replace(Module.class.getSimpleName(), "modules");
+        long time = TimeUtils.measure(() -> {
+            String internalPath = AbstractModule.class.getCanonicalName().replace(AbstractModule.class.getSimpleName(), "modules");
 
-            List<Module> internalModules = new ArrayList<>();
-            this.addModuleObjects(internalPath, internalModules, Module.class.getClassLoader());
+            List<AbstractModule> internalModules = new ArrayList<>();
+            this.addModuleObjects(internalPath, internalModules, AbstractModule.class.getClassLoader());
 
             internalModules.stream()
                     .sorted(Comparator.comparing(o -> o.name))
@@ -41,8 +42,11 @@ public class ModuleManager extends Manager {
     @Event
     public void onKey(KeyEvent event) {
         this.modules.forEach(m -> {
-            if (m.bindMode.get() == BindMode.Toggle && m.bind.get().isKey(event.key) && event.pressed) {
-                m.toggle();
+            if (m instanceof Module module
+                    && module.bindMode.get() == BindMode.Toggle
+                    && module.bind.get().isKey(event.key)
+                    && event.pressed) {
+                module.toggle();
             }
         });
     }
@@ -50,8 +54,11 @@ public class ModuleManager extends Manager {
     @Event
     public void onMouse(MouseButtonEvent event) {
         this.modules.forEach(m -> {
-            if (m.bindMode.get() == BindMode.Toggle && m.bind.get().isMouse(event.button) && event.pressed) {
-                m.toggle();
+            if (m instanceof Module module
+                    && module.bindMode.get() == BindMode.Toggle
+                    && module.bind.get().isMouse(event.button)
+                    && event.pressed) {
+                module.toggle();
             }
         });
     }
@@ -59,17 +66,17 @@ public class ModuleManager extends Manager {
     @Event
     public void onRender(RenderEvent.World.Pre event) {
         this.modules.forEach(m -> {
-            if (m.bindMode.get() == BindMode.Pressed) {
-                if (m.bind.get().value != null && m.bind.get().isPressed()) {
-                    m.enable();
+            if (m instanceof Module module && module.bindMode.get() == BindMode.Pressed) {
+                if (module.bind.get().value != null && module.bind.get().isPressed()) {
+                    module.enable();
                 } else {
-                    m.disable();
+                    module.disable();
                 }
             }
         });
     }
 
-    public void add(Module module) {
+    public void add(AbstractModule module) {
         if (module == null) return;
 
         boolean alreadyExists = this.modules.stream()
@@ -77,18 +84,20 @@ public class ModuleManager extends Manager {
 
         if (!alreadyExists) {
             this.modules.add(module);
-            Arraylist.deltaMap.put(module, new org.apache.commons.lang3.mutable.MutableFloat(0.0F));
+            if (module instanceof Module toggleable) {
+                Arraylist.deltaMap.put(toggleable, new org.apache.commons.lang3.mutable.MutableFloat(0.0F));
+            }
         }
     }
 
-    private void addModuleObjects(String path, List<Module> list, ClassLoader loader) {
+    private void addModuleObjects(String path, List<AbstractModule> list, ClassLoader loader) {
         if (path == null) return;
         ClassUtils.forEachClass(clazz -> {
-            if (Module.class.isAssignableFrom(clazz)
+            if (AbstractModule.class.isAssignableFrom(clazz)
                     && !clazz.isInterface()
                     && !java.lang.reflect.Modifier.isAbstract(clazz.getModifiers())) {
 
-                Class<? extends Module> moduleClass = clazz.asSubclass(Module.class);
+                Class<? extends AbstractModule> moduleClass = clazz.asSubclass(AbstractModule.class);
 
                 if (BlackOut.TYPE.isDevBuild() || !moduleClass.isAnnotationPresent(OnlyDev.class)) {
                     list.add(ClassUtils.instance(moduleClass));
@@ -97,7 +106,17 @@ public class ModuleManager extends Manager {
         }, path, loader);
     }
 
-    public final List<Module> getModules() {
+    public final List<AbstractModule> getModules() {
         return this.modules;
+    }
+
+    /**
+     * Returns only the toggleable modules (excludes SettingsModules).
+     */
+    public final List<Module> getToggleableModules() {
+        return this.modules.stream()
+                .filter(Module.class::isInstance)
+                .map(Module.class::cast)
+                .toList();
     }
 }

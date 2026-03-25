@@ -30,8 +30,8 @@ public class Simulator {
     }
 
     private static void handleMotion(SimulationContext ctx) {
-        ctx.inWater = OLEPOSSUtils.inWater(ctx.box);
-        ctx.inLava = OLEPOSSUtils.inLava(ctx.box);
+        ctx.inWater = BlockUtils.inWater(ctx.box);
+        ctx.inLava = BlockUtils.inLava(ctx.box);
         if (ctx.inFluid()) {
             ctx.jump = false;
         }
@@ -125,10 +125,10 @@ public class Simulator {
                 && ctx.prevOnGround
                 && !ctx.onGround
                 && ctx.motionY <= 0.0
-                && OLEPOSSUtils.inside(ctx.entity, ctx.box.expandTowards(0.0, -ctx.reverseStep, 0.0));
+                && BlockUtils.hasEntityCollision(ctx.entity, ctx.box.expandTowards(0.0, -ctx.reverseStep, 0.0));
     }
 
     public static boolean isOnGround(Entity entity, AABB box) {
-        return OLEPOSSUtils.inside(entity, box.expandTowards(0.0, -0.02, 0.0));
+        return BlockUtils.hasEntityCollision(entity, box.expandTowards(0.0, -0.02, 0.0));
     }
 }

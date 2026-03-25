@@ -11,7 +11,7 @@ import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.keys.KeyBind;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.module.OnlyDev;
+import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.combat.misc.Suicide;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -137,7 +137,7 @@ public class CreeperAura extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.calc(1.0F);
             this.updatePos();
         }
@@ -145,7 +145,7 @@ public class CreeperAura extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.updateFacePlacing();
             this.calc(event.tickDelta);
             this.updateRender();
@@ -185,7 +185,7 @@ public class CreeperAura extends Module {
     }
 
     private void updatePlace() {
-        if (OLEPOSSUtils.replaceable(this.placePos)) {
+        if (BlockUtils.replaceable(this.placePos)) {
             if (this.placeDelayCheck()) {
                 this.place();
             }
@@ -230,11 +230,11 @@ public class CreeperAura extends Module {
     private void place() {
         PlaceData data = SettingUtils.getPlaceData(this.placePos);
         if (data.valid()) {
-            InteractionHand hand = OLEPOSSUtils.getHand(Items.CREEPER_SPAWN_EGG);
+            InteractionHand hand = InvUtils.getHand(Items.CREEPER_SPAWN_EGG);
             FindResult result = this.switchMode.get().find(Items.CREEPER_SPAWN_EGG);
             if (hand != null || result.wasFound()) {
                 if (!SettingUtils.shouldRotate(RotationType.Interact)
-                        || this.rotateBlock(data, data.pos().getCenter().relative(data.dir(), 0.5), RotationType.BlockPlace, "placing")) {
+                        || this.rotation.rotateBlock(data, data.pos().getCenter().relative(data.dir(), 0.5), RotationType.BlockPlace, "placing")) {
                     boolean switched = false;
                     if (hand != null || (switched = this.switchMode.get().swap(result.slot()))) {
                         this.interactBlock(hand, data.pos().getCenter(), data.dir(), data.pos());
@@ -243,7 +243,7 @@ public class CreeperAura extends Module {
                             this.clientSwing(this.placeHand.get(), hand);
                         }
 
-                        this.end("placing");
+                        this.rotation.end("placing");
                         if (switched) {
                             this.switchMode.get().swapBack();
                         }
@@ -328,7 +328,7 @@ public class CreeperAura extends Module {
     private void startCalc() {
         this.selfHealth = this.getHealth(BlackOut.mc.player);
         this.calcBest = null;
-        this.calcValue = -42069.0;
+        this.calcValue = Double.NEGATIVE_INFINITY;
         this.progress = 0;
         this.calcR = (int) Math.ceil(SettingUtils.maxInteractRange());
         this.calcMiddle = BlockPos.containing(BlackOut.mc.player.getEyePosition());

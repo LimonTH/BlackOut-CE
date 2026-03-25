@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
@@ -201,7 +202,7 @@ public class Velocity extends Module {
 
     @Event
     public void onTickPre(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (this.entityPush.get() == PushMode.Accelerate) {
                 if (Managers.ROTATION.move) {
                     BlackOut.mc

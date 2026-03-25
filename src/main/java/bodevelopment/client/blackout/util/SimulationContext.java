@@ -44,8 +44,8 @@ public class SimulationContext {
         this.ticks = ticks;
         this.jumpHeight = jumpHeight;
         this.originalMotion = originalMotion;
-        this.originalWater = OLEPOSSUtils.inWater(this.box);
-        this.originalLava = OLEPOSSUtils.inLava(this.box);
+        this.originalWater = BlockUtils.inWater(this.box);
+        this.originalLava = BlockUtils.inLava(this.box);
         this.consumer = consumer;
         this.onTick = onTick;
         this.motionX = originalMotion.x;

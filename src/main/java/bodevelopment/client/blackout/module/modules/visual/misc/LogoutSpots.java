@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.visual.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.event.Event;
@@ -137,7 +138,7 @@ public class LogoutSpots extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player == null || BlackOut.mc.level == null) return;
+        if (!PlayerUtils.isInGame()) return;
 
         Camera camera = BlackOut.mc.gameRenderer.getMainCamera();
         Vec3 camPos = camera.getPosition();
@@ -202,7 +203,7 @@ public class LogoutSpots extends Module {
 
     @Event
     public void onRender2D(RenderEvent.Hud.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             GlStateManager._disableDepthTest();
             GlStateManager._enableBlend();
             GlStateManager._disableCull();

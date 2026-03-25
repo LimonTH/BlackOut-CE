@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
@@ -11,7 +12,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.MovementUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.BlockUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -106,7 +107,7 @@ public class PacketFly extends Module {
 
     @Override
     public void onDisable() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && this.resync.get()) {
+        if (PlayerUtils.isInGame() && this.resync.get()) {
             Vec3 pos = Managers.PACKET.pos;
             this.sendPacket(
                     new ServerboundMovePlayerPacket.PosRot(pos.x, pos.y + 1.0, pos.z, Managers.ROTATION.prevYaw + 5.0F, Managers.ROTATION.prevPitch, false, BlackOut.mc.player.horizontalCollision)
@@ -116,7 +117,7 @@ public class PacketFly extends Module {
 
     @Event
     public void onMove(MoveEvent.Pre e) {
-        if (this.enabled && BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (this.enabled && PlayerUtils.isInGame()) {
             boolean phasing = this.isPhasing();
             boolean semiPhasing = this.isSemiPhase();
             if (this.noClip.get()) {
@@ -239,7 +240,7 @@ public class PacketFly extends Module {
     }
 
     private boolean in(AABB box) {
-        return OLEPOSSUtils.inside(BlackOut.mc.player, box);
+        return BlockUtils.hasEntityCollision(BlackOut.mc.player, box);
     }
 
     private void startSneak() {
@@ -261,7 +262,7 @@ public class PacketFly extends Module {
     private boolean onGround() {
         return BlackOut.mc.player.onGround()
                 || BlackOut.mc.player.getBlockY() - BlackOut.mc.player.getY() == 0.0
-                && OLEPOSSUtils.collidable(BlackOut.mc.player.blockPosition().below());
+                && BlockUtils.collidable(BlackOut.mc.player.blockPosition().below());
     }
 
     private double packets(boolean semiPhasing) {
@@ -303,11 +304,11 @@ public class PacketFly extends Module {
     }
 
     private boolean isPhasing() {
-        return OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().deflate(0.0625, 0.0, 0.0625));
+        return BlockUtils.hasEntityCollision(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().deflate(0.0625, 0.0, 0.0625));
     }
 
     private boolean isSemiPhase() {
-        return OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().inflate(0.01, 0.0, 0.01));
+        return BlockUtils.hasEntityCollision(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().inflate(0.01, 0.0, 0.01));
     }
 
     private boolean jumping() {

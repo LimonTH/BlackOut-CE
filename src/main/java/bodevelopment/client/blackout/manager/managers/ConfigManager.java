@@ -9,6 +9,7 @@ import bodevelopment.client.blackout.hud.HudEditor;
 import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.module.AbstractModule;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.util.ClassUtils;
@@ -126,8 +127,8 @@ public class ConfigManager extends Manager {
 
         if (object.has("binds")) {
             JsonObject bindObject = object.getAsJsonObject("binds");
-            Managers.MODULES.getModules().forEach(module -> {
-                if (bindObject.has(module.getFileName())) {
+            Managers.MODULES.getModules().forEach(m -> {
+                if (m instanceof Module module && bindObject.has(module.getFileName())) {
                     module.bind.read(bindObject.getAsJsonObject(module.getFileName()));
                 }
             });
@@ -158,11 +159,13 @@ public class ConfigManager extends Manager {
             case Legit:
             case Client:
                 if (object.get(type.name()) instanceof JsonObject moduleObject) {
-                    Managers.MODULES.getModules().stream().filter(type.predicate).forEach(module -> this.readModule(module, moduleObject));
+                    Managers.MODULES.getModules().stream().filter(type.predicate).forEach(m -> this.readModule(m, moduleObject));
                 } else {
-                    Managers.MODULES.getModules().stream().filter(type.predicate).forEach(module -> {
-                        module.settingGroups.forEach(group -> group.settings.forEach(Setting::reset));
-                        module.enabled = false;
+                    Managers.MODULES.getModules().stream().filter(type.predicate).forEach(m -> {
+                        m.settingGroups.forEach(group -> group.settings.forEach(Setting::reset));
+                        if (m instanceof Module module) {
+                            module.enabled = false;
+                        }
                     });
                 }
                 break;
@@ -178,19 +181,23 @@ public class ConfigManager extends Manager {
         });
     }
 
-    private void readModule(Module module, JsonObject jsonObject) {
-        if (jsonObject.get(module.getFileName()) instanceof JsonObject object) {
-            if (object.has("enabled")) {
-                module.enabled = object.get("enabled").getAsBoolean();
-            } else {
-                module.enabled = false;
+    private void readModule(AbstractModule m, JsonObject jsonObject) {
+        if (jsonObject.get(m.getFileName()) instanceof JsonObject object) {
+            if (m instanceof Module module) {
+                if (object.has("enabled")) {
+                    module.enabled = object.get("enabled").getAsBoolean();
+                } else {
+                    module.enabled = false;
+                }
             }
 
-            module.readSettings(object);
+            m.readSettings(object);
         } else {
-            module.settingGroups.forEach(group -> group.settings.forEach(Setting::reset));
-            module.enabled = false;
-            this.writeModule(module, jsonObject);
+            m.settingGroups.forEach(group -> group.settings.forEach(Setting::reset));
+            if (m instanceof Module module) {
+                module.enabled = false;
+            }
+            this.writeModule(m, jsonObject);
         }
     }
 
@@ -242,10 +249,10 @@ public class ConfigManager extends Manager {
                 JsonObject categoryObject = new JsonObject();
                 Managers.MODULES.getModules().stream()
                         .filter(configType.predicate)
-                        .forEach(module -> {
+                        .forEach(m -> {
                             JsonObject moduleJson = new JsonObject();
-                            this.writeSettings(module, moduleJson);
-                            categoryObject.add(module.getFileName(), moduleJson);
+                            this.writeSettings(m, moduleJson);
+                            categoryObject.add(m.getFileName(), moduleJson);
                         });
                 configObject.add(configType.name(), categoryObject);
             }
@@ -258,10 +265,12 @@ public class ConfigManager extends Manager {
         configObject.add("hud", hudObject);
 
         JsonObject bindsObject = new JsonObject();
-        Managers.MODULES.getModules().forEach(module -> {
-            JsonObject bJson = new JsonObject();
-            module.bind.write(bJson);
-            bindsObject.add(module.getFileName(), bJson);
+        Managers.MODULES.getModules().forEach(m -> {
+            if (m instanceof Module module) {
+                JsonObject bJson = new JsonObject();
+                module.bind.write(bJson);
+                bindsObject.add(module.getFileName(), bJson);
+            }
         });
         configObject.add("binds", bindsObject);
 
@@ -290,20 +299,22 @@ public class ConfigManager extends Manager {
         jsonObject.add(key, object);
     }
 
-    private void writeModule(Module module, JsonObject jsonObject) {
-        String fileName = module.getFileName();
+    private void writeModule(AbstractModule m, JsonObject jsonObject) {
+        String fileName = m.getFileName();
         JsonObject object = new JsonObject();
         jsonObject.add(fileName, object);
-        this.writeSettings(module, object);
+        this.writeSettings(m, object);
     }
 
     public void writeSettings(HudElement element, JsonObject jsonObject) {
         element.writeSettings(jsonObject);
     }
 
-    public void writeSettings(Module module, JsonObject jsonObject) {
-        jsonObject.addProperty("enabled", module.enabled);
-        module.writeSettings(jsonObject);
+    public void writeSettings(AbstractModule m, JsonObject jsonObject) {
+        if (m instanceof Module module) {
+            jsonObject.addProperty("enabled", module.enabled);
+        }
+        m.writeSettings(jsonObject);
     }
 
     public void save(ConfigType type) {
@@ -314,10 +325,10 @@ public class ConfigManager extends Manager {
         Arrays.fill(this.toSave, true);
     }
 
-    public void saveModule(Module module) {
+    public void saveModule(AbstractModule m) {
         for (ConfigType configType : ConfigType.values()) {
-            Predicate<Module> predicate = configType.predicate;
-            if (predicate != null && predicate.test(module)) {
+            Predicate<AbstractModule> predicate = configType.predicate;
+            if (predicate != null && predicate.test(m)) {
                 this.save(configType);
             }
         }

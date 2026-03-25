@@ -3,6 +3,7 @@ package bodevelopment.client.blackout.module.modules.combat.offensive;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.enums.RotationType;
+import bodevelopment.client.blackout.module.modules.client.settings.RotationSettings;
 import bodevelopment.client.blackout.enums.SwingHand;
 import bodevelopment.client.blackout.enums.SwitchMode;
 import bodevelopment.client.blackout.event.Event;
@@ -10,7 +11,7 @@ import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.module.OnlyDev;
+import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -44,7 +45,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 // TODO: NEED PATCHES
-// TODO: убрать неиспользуемое поле target или интегрировать его в расчёт приоритетов.
 // TODO: оптимизировать calc() чтобы не переборить куб полностью каждый тик (budget/time-slice).
 // TODO: добавить явный reset состояния при смене измерения/disable (placePos/explodePos/flags).
 // TODO: синхронизировать friend/enemy damage проверки с актуальным hp (cache invalidation).
@@ -101,13 +101,11 @@ public class AnchorAura extends Module {
     private final Setting<BlackOutColor> lineColor = this.sgRender.colorSetting("Outline Color", new BlackOutColor(255, 0, 0, 255), "The color of the box outlines.");
     private final Setting<BlackOutColor> sideColor = this.sgRender.colorSetting("Side Color", new BlackOutColor(255, 0, 0, 50), "The color of the box faces.");
 
-    // TODO: target не используется
     private final ExtrapolationMap extMap = new ExtrapolationMap();
     private final ExtrapolationMap hitboxMap = new ExtrapolationMap();
     private final List<Player> enemies = new ArrayList<>();
     private BlockPos placePos = null;
     private BlockPos explodePos = null;
-    private LivingEntity target = null;
     private double selfHealth = 0.0;
     private double enemyHealth = 0.0;
     private double friendHealth = 0.0;
@@ -134,7 +132,7 @@ public class AnchorAura extends Module {
     }
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.calc(1.0F);
             this.updatePos();
         }
@@ -142,7 +140,7 @@ public class AnchorAura extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.calc(event.tickDelta);
             if (this.explodePos != null) {
                 this.updateInteract();
@@ -204,7 +202,7 @@ public class AnchorAura extends Module {
     }
 
     private void calcPos(BlockPos pos) {
-        if (OLEPOSSUtils.replaceable(pos) || BlackOut.mc.level.getBlockState(pos).getBlock() == Blocks.RESPAWN_ANCHOR) {
+        if (BlockUtils.replaceable(pos) || BlackOut.mc.level.getBlockState(pos).getBlock() == Blocks.RESPAWN_ANCHOR) {
             PlaceData data = SettingUtils.getPlaceData(pos);
             if (this.inRangeToEnemies(pos)) {
                 if (data.valid()) {
@@ -242,7 +240,7 @@ public class AnchorAura extends Module {
     }
 
     private void updatePlace() {
-        if (OLEPOSSUtils.replaceable(this.placePos)) {
+        if (BlockUtils.replaceable(this.placePos)) {
             if (!(System.currentTimeMillis() - this.lastPlace < 1000.0 / this.placeSpeed.get())) {
                 this.place();
             }
@@ -271,12 +269,12 @@ public class AnchorAura extends Module {
         Direction dir = SettingUtils.getPlaceOnDirection(pos);
         if (dir != null) {
             Predicate<ItemStack> predicate = stack -> stack.getItem() != Items.GLOWSTONE;
-            InteractionHand hand = OLEPOSSUtils.getHand(predicate);
+            InteractionHand hand = InvUtils.getHand(predicate);
             this.result = this.switchMode.get().find(predicate);
             if (hand != null || this.result.wasFound()) {
                 PlaceData data = SettingUtils.getPlaceData(pos);
                 Vec3 placeVec = data != null && data.valid() ? data.pos().getCenter().relative(data.dir(), 0.5) : null;
-                if (!SettingUtils.shouldRotate(RotationType.Interact) || this.rotateBlock(pos, dir, placeVec, RotationType.Interact, 0.1, "explode")) {
+                if (!SettingUtils.shouldRotate(RotationType.Interact) || this.rotation.rotateBlock(pos, dir, placeVec, RotationType.Interact, 0.1, "explode")) {
                     boolean switched = false;
                     if (hand != null || (switched = this.switchMode.get().swap(this.result.slot()))) {
                         this.interactBlock(hand, pos.getCenter(), dir, pos);
@@ -287,7 +285,7 @@ public class AnchorAura extends Module {
                             this.clientSwing(this.placeHand.get(), hand);
                         }
 
-                        this.end("explode");
+                        this.rotation.end("explode");
                         if (switched) {
                             this.switchMode.get().swapBack();
                         }
@@ -300,12 +298,12 @@ public class AnchorAura extends Module {
     private void interact(BlockPos pos) {
         Direction dir = SettingUtils.getPlaceOnDirection(pos);
         if (dir != null) {
-            InteractionHand hand = OLEPOSSUtils.getHand(Items.GLOWSTONE);
+            InteractionHand hand = InvUtils.getHand(Items.GLOWSTONE);
             this.result = this.switchMode.get().find(Items.GLOWSTONE);
             if (hand != null || this.result.wasFound()) {
                 PlaceData data = SettingUtils.getPlaceData(pos);
                 Vec3 placeVec = data != null && data.valid() ? data.pos().getCenter().relative(data.dir(), 0.5) : null;
-                if (!SettingUtils.shouldRotate(RotationType.Interact) || this.rotateBlock(pos, dir, placeVec, RotationType.Interact, 0.05, "interact")) {
+                if (!SettingUtils.shouldRotate(RotationType.Interact) || this.rotation.rotateBlock(pos, dir, placeVec, RotationType.Interact, 0.05, "interact")) {
                     boolean switched = false;
                     if (hand != null || (switched = this.switchMode.get().swap(this.result.slot()))) {
                         this.interactBlock(hand, pos.getCenter(), dir, pos);
@@ -316,7 +314,7 @@ public class AnchorAura extends Module {
                             this.clientSwing(this.placeHand.get(), hand);
                         }
 
-                        this.end("interact");
+                        this.rotation.end("interact");
                         if (switched) {
                             this.switchMode.get().swapBack();
                         }
@@ -329,11 +327,11 @@ public class AnchorAura extends Module {
     private void place() {
         PlaceData data = SettingUtils.getPlaceData(this.placePos);
         if (data.valid()) {
-            InteractionHand hand = OLEPOSSUtils.getHand(Items.RESPAWN_ANCHOR);
+            InteractionHand hand = InvUtils.getHand(Items.RESPAWN_ANCHOR);
             this.result = this.switchMode.get().find(Items.RESPAWN_ANCHOR);
             if (hand != null || this.result.wasFound()) {
                 if (!SettingUtils.shouldRotate(RotationType.BlockPlace)
-                        || this.rotateBlock(data, data.pos().getCenter().relative(data.dir(), 0.5), RotationType.BlockPlace, "placing")) {
+                        || this.rotation.rotateBlock(data, data.pos().getCenter().relative(data.dir(), 0.5), RotationType.BlockPlace, "placing")) {
                     boolean switched = false;
                     if (hand != null || (switched = this.switchMode.get().swap(this.result.slot()))) {
                         this.placeBlock(hand, data.pos().getCenter(), data.dir(), data.pos());
@@ -343,7 +341,7 @@ public class AnchorAura extends Module {
                             this.clientSwing(this.placeHand.get(), hand);
                         }
 
-                        this.end("placing");
+                        this.rotation.end("placing");
                         if (switched) {
                             this.switchMode.get().swapBack();
                         }
@@ -358,7 +356,7 @@ public class AnchorAura extends Module {
         if (hand == null) {
             item = BlackOut.mc.player.getInventory().getItem(this.result.slot()).getItem();
         } else {
-            item = OLEPOSSUtils.getItem(hand).getItem();
+            item = InvUtils.getHandItem(hand).getItem();
         }
 
         if (item instanceof BlockItem block) {
@@ -407,12 +405,12 @@ public class AnchorAura extends Module {
     private void startCalc() {
         this.selfHealth = this.getHealth(BlackOut.mc.player);
         this.calcBest = null;
-        this.calcValue = -42069.0;
+        this.calcValue = Double.NEGATIVE_INFINITY;
         this.progress = 0;
         this.calcR = (int) Math.ceil(SettingUtils.maxPlaceRange());
         this.calcMiddle = BlockPos.containing(BlackOut.mc.player.getEyePosition());
         this.targetCalcBest = null;
-        this.targetCalcValue = -42069.0;
+        this.targetCalcValue = Double.NEGATIVE_INFINITY;
         this.bestIsLoaded = false;
         this.targetCalcR = (int) Math.ceil(SettingUtils.maxInteractRange());
         this.targetProgress = 0;
@@ -422,7 +420,7 @@ public class AnchorAura extends Module {
         double value = 0.0;
         if (SettingUtils.shouldRotate(RotationType.Interact)) {
             double yaw = Math.abs(RotationUtils.yawAngle(Managers.ROTATION.prevYaw, RotationUtils.getYaw(pos)));
-            double per = Math.max(SettingUtils.yawStep(RotationType.Interact), 45.0);
+            double per = Math.max(RotationSettings.getInstance().yawStep(RotationType.Interact), 45.0);
             int steps = (int) Math.ceil(yaw / per);
             value += 180.0 / per - steps;
         }
@@ -434,7 +432,7 @@ public class AnchorAura extends Module {
         double value = 0.0;
         if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
             double yaw = Math.abs(RotationUtils.yawAngle(Managers.ROTATION.prevYaw, RotationUtils.getYaw(pos)));
-            double per = Math.max(SettingUtils.yawStep(RotationType.BlockPlace), 45.0);
+            double per = Math.max(RotationSettings.getInstance().yawStep(RotationType.BlockPlace), 45.0);
             int steps = (int) Math.ceil(yaw / per);
             value += 180.0 / per - steps;
         }
@@ -500,7 +498,6 @@ public class AnchorAura extends Module {
 
     private void calcDamage(BlockPos pos) {
         Vec3 vec = pos.getCenter();
-        this.target = null;
         this.selfDamage = DamageUtils.anchorDamage(BlackOut.mc.player, this.extMap.get(BlackOut.mc.player), vec, pos);
         this.enemyDamage = 0.0;
         this.friendDamage = 0.0;
@@ -519,7 +516,6 @@ public class AnchorAura extends Module {
                 } else if (dmg > this.enemyDamage) {
                     this.enemyDamage = dmg;
                     this.enemyHealth = health;
-                    this.target = player;
                 }
             }
         });

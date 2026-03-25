@@ -4,7 +4,7 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.manager.Manager;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -29,7 +29,7 @@ public class TPSManager extends Manager {
             double sus = tickDelta / ((System.currentTimeMillis() - this.prevTime) / 1000.0);
             synchronized (this.list) {
                 this.list.addFirst(sus);
-                OLEPOSSUtils.limitList(this.list, 10);
+                CollectionUtils.limitSize(this.list, 10);
                 this.calcTps();
             }
 

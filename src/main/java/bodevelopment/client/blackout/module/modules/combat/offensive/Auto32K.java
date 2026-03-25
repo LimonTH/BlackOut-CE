@@ -101,7 +101,7 @@ public class Auto32K extends Module {
     }
 
     public boolean isSilenting() {
-        if (BlackOut.mc.player == null || BlackOut.mc.level == null) {
+        if (!PlayerUtils.isInGame()) {
             return false;
         } else {
             return this.silent.get() && (BlackOut.mc.player.containerMenu instanceof DispenserMenu || BlackOut.mc.player.containerMenu instanceof HopperMenu);
@@ -115,7 +115,7 @@ public class Auto32K extends Module {
 
     @Event
     public void onMove(MoveEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (this.shouldCalc()) {
                 this.calc(1.0F);
                 this.endCalc();
@@ -130,14 +130,14 @@ public class Auto32K extends Module {
     @Event
     public void onTickPre(TickEvent.Pre event) {
         this.placed = false;
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && SettingUtils.grimPackets()) {
+        if (PlayerUtils.isInGame() && SettingUtils.grimPackets()) {
             this.update(false);
         }
     }
 
     @Event
     public void onTickPost(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.update(true);
             if (this.shouldCalc()) {
                 this.startCalc();
@@ -147,7 +147,7 @@ public class Auto32K extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (this.shouldCalc()) {
                 this.calc(event.tickDelta);
             }
@@ -156,7 +156,7 @@ public class Auto32K extends Module {
 
     @Event
     public void onRenderPost(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (this.hopperPos != null) {
                 this.renderBox(this.hopperPos, this.renderShapeHopper, this.sideColorHopper, this.lineColorHopper);
             }
@@ -229,7 +229,7 @@ public class Auto32K extends Module {
         this.calcRedstonePos = null;
         this.calcSupportPos = null;
         this.calcDispenserDir = null;
-        this.calcValue = -42069.0;
+        this.calcValue = Double.NEGATIVE_INFINITY;
         this.found = false;
         this.calcValid = false;
         this.progress = 0;
@@ -329,7 +329,7 @@ public class Auto32K extends Module {
         AbstractContainerMenu handler = BlackOut.mc.player.containerMenu;
         if (handler instanceof DispenserMenu) {
             for (Slot slot : handler.slots) {
-                if (OLEPOSSUtils.isShulker(slot.getItem())) {
+                if (ItemUtils.isShulker(slot.getItem())) {
                     this.boxInside = this.dispenserPos;
                     BlackOut.mc.gameMode.handleInventoryMouseClick(handler.containerId, slot.index, 0, ClickType.QUICK_MOVE, BlackOut.mc.player);
                     BlackOut.mc.player.clientSideCloseContainer();
@@ -376,9 +376,9 @@ public class Auto32K extends Module {
         if (BlackOut.mc.level.getBlockState(pos).getBlock() instanceof ShulkerBoxBlock) {
             return true;
         } else {
-            InteractionHand hand = OLEPOSSUtils.getHand(OLEPOSSUtils::isShulker);
+            InteractionHand hand = InvUtils.getHand(ItemUtils::isShulker);
             FindResult findResult = null;
-            if (hand == null && !(findResult = this.switchMode.get().find(OLEPOSSUtils::isShulker)).wasFound()) {
+            if (hand == null && !(findResult = this.switchMode.get().find(ItemUtils::isShulker)).wasFound()) {
                 return false;
             } else {
                 PlaceData data = SettingUtils.getPlaceData(pos, false);
@@ -386,7 +386,7 @@ public class Auto32K extends Module {
                     return false;
                 } else if (!SettingUtils.inInteractRange(data.pos())) {
                     return false;
-                } else if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !this.rotateBlock(data, RotationType.BlockPlace, "placing")) {
+                } else if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !this.rotation.rotateBlock(data, RotationType.BlockPlace, "placing")) {
                     return false;
                 } else if (place && !this.placed) {
                     if (hand == null && !this.switchMode.get().swap(findResult.slot())) {
@@ -416,23 +416,23 @@ public class Auto32K extends Module {
         if (pos != null) {
             if (block.asItem() instanceof BlockItem blockItem) {
                 if (BlackOut.mc.level.getBlockState(pos).getBlock() != block) {
-                    InteractionHand hand = OLEPOSSUtils.getHand(blockItem);
+                    InteractionHand hand = InvUtils.getHand(blockItem);
                     FindResult findResult = null;
                     if (hand != null || (findResult = this.switchMode.get().find(blockItem)).wasFound()) {
                         PlaceData data = SettingUtils.getPlaceData(pos, false);
                         if (data.valid()) {
                             if (SettingUtils.inPlaceRange(data.pos())) {
-                                if (!SettingUtils.shouldRotate(RotationType.BlockPlace) || this.rotateBlock(data, RotationType.BlockPlace, "placing")) {
+                                if (!SettingUtils.shouldRotate(RotationType.BlockPlace) || this.rotation.rotateBlock(data, RotationType.BlockPlace, "placing")) {
                                     if (place && !this.placed) {
                                         if (block == Blocks.DISPENSER) {
                                             switch (this.rotationMode.get()) {
                                                 case Instant:
-                                                    if (!this.rotate(this.dispenserDir.toYRot(), 0.0F, 0.0, 45.0, RotationType.InstantOther, "facing")) {
+                                                    if (!this.rotation.rotate(this.dispenserDir.toYRot(), 0.0F, 0.0, 45.0, RotationType.InstantOther, "facing")) {
                                                         return;
                                                     }
                                                     break;
                                                 case Normal:
-                                                    if (!this.rotate(this.dispenserDir.toYRot(), 0.0F, 0.0, 45.0, RotationType.Other, "facing")) {
+                                                    if (!this.rotation.rotate(this.dispenserDir.toYRot(), 0.0F, 0.0, 45.0, RotationType.Other, "facing")) {
                                                         return;
                                                     }
                                             }
@@ -482,7 +482,7 @@ public class Auto32K extends Module {
         if (!(value < this.calcValue)) {
             BlockState state = this.get(hopper);
             if (state.getBlock() != Blocks.HOPPER) {
-                if (!OLEPOSSUtils.replaceable(hopper)) {
+                if (!BlockUtils.replaceable(hopper)) {
                     return;
                 }
 
@@ -497,7 +497,7 @@ public class Auto32K extends Module {
             }
 
             if (SettingUtils.inInteractRange(hopper) && SettingUtils.getPlaceOnDirection(hopper) != null) {
-                if (OLEPOSSUtils.replaceable(hopper.above()) || this.get(hopper.above()).getBlock() instanceof ShulkerBoxBlock) {
+                if (BlockUtils.replaceable(hopper.above()) || this.get(hopper.above()).getBlock() instanceof ShulkerBoxBlock) {
                     this.calcHopperPos = hopper;
                     this.calcValid = true;
                     this.calcValue = value;
@@ -511,7 +511,7 @@ public class Auto32K extends Module {
         if (!(value < this.calcValue)) {
             BlockState state = this.get(hopper);
             if (state.getBlock() != Blocks.HOPPER) {
-                if (!OLEPOSSUtils.replaceable(hopper)) {
+                if (!BlockUtils.replaceable(hopper)) {
                     return;
                 }
 
@@ -526,7 +526,7 @@ public class Auto32K extends Module {
             }
 
             if (SettingUtils.inInteractRange(hopper) && SettingUtils.getPlaceOnDirection(hopper) != null) {
-                if (OLEPOSSUtils.replaceable(hopper.above()) || this.get(hopper.above()).getBlock() instanceof ShulkerBoxBlock) {
+                if (BlockUtils.replaceable(hopper.above()) || this.get(hopper.above()).getBlock() instanceof ShulkerBoxBlock) {
                     for (Direction dir : Direction.Plane.HORIZONTAL) {
                         BlockPos pos = hopper.relative(dir).above();
                         if (this.validDispenser(pos, dir)) {
@@ -536,7 +536,7 @@ public class Auto32K extends Module {
                                     break;
                                 }
 
-                                if (OLEPOSSUtils.replaceable(pos2) && direction != Direction.DOWN && direction != dir.getOpposite()) {
+                                if (BlockUtils.replaceable(pos2) && direction != Direction.DOWN && direction != dir.getOpposite()) {
                                     PlaceData datax = SettingUtils.getPlaceData(pos2, false);
                                     if (datax.valid() && SettingUtils.inPlaceRange(datax.pos())) {
                                         this.calcDispenserDir = dir;
@@ -593,7 +593,7 @@ public class Auto32K extends Module {
             return false;
         } else if (state.getBlock() == Blocks.DISPENSER) {
             return state.getValue(DispenserBlock.FACING) == direction.getOpposite();
-        } else if (!OLEPOSSUtils.replaceable(pos)) {
+        } else if (!BlockUtils.replaceable(pos)) {
             return false;
         } else if (!this.directionCheck(pos, direction)) {
             return false;

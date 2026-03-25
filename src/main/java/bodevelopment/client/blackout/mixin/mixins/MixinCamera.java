@@ -4,7 +4,7 @@ import bodevelopment.client.blackout.interfaces.mixin.IVec3;
 import bodevelopment.client.blackout.module.modules.visual.misc.CameraModifier;
 import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
 import bodevelopment.client.blackout.module.modules.visual.misc.Spectate;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.EntityUtils;
 import net.minecraft.client.Camera;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
@@ -127,7 +127,7 @@ public abstract class MixinCamera {
 
         if (spectateEntity != null) {
             this.setPosition(
-                    OLEPOSSUtils.getLerpedPos(spectateEntity, tickDelta).add(0.0, spectateEntity.getEyeHeight(spectateEntity.getPose()), 0.0)
+                    EntityUtils.getLerpedPos(spectateEntity, tickDelta).add(0.0, spectateEntity.getEyeHeight(spectateEntity.getPose()), 0.0)
             );
             this.setRotation(spectateEntity.getViewYRot(tickDelta), spectateEntity.getViewXRot(tickDelta));
         } else if (freecam.enabled) {

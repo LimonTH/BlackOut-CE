@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.SwitchMode;
 import bodevelopment.client.blackout.event.Event;
@@ -9,7 +10,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.InvUtils;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.component.DataComponents;
@@ -45,13 +46,13 @@ public class ElytraBoost extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.player == null || BlackOut.mc.level == null) return;
+        if (!PlayerUtils.isInGame()) return;
 
         spawnedFireworks.removeIf(Entity::isRemoved);
 
         if (BlackOut.mc.player.isFallFlying() && BlackOut.mc.options.keyUse.isDown()) {
 
-            InteractionHand hand = OLEPOSSUtils.getHand(stack -> stack.getItem() instanceof FireworkRocketItem);
+            InteractionHand hand = InvUtils.getHand(stack -> stack.getItem() instanceof FireworkRocketItem);
             FindResult result = this.switchMode.get().find(stack -> stack.getItem() instanceof FireworkRocketItem);
 
             if (hand != null || result.wasFound()) {

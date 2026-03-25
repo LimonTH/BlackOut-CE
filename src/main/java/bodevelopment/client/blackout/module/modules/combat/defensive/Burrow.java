@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.combat.defensive;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.enums.SwingHand;
@@ -16,7 +17,7 @@ import bodevelopment.client.blackout.module.modules.movement.Scaffold;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.InvUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 import java.util.List;
 import java.util.function.Predicate;
@@ -93,8 +94,8 @@ public class Burrow extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && !this.success) {
-            InteractionHand hand = OLEPOSSUtils.getHand(this.predicate);
+        if (PlayerUtils.isInGame() && !this.success) {
+            InteractionHand hand = InvUtils.getHand(this.predicate);
             boolean blocksPresent = hand != null;
             FindResult result = this.switchMode.get().find(this.predicate);
             if (!blocksPresent) {
@@ -104,7 +105,7 @@ public class Burrow extends Module {
             if (blocksPresent) {
                 boolean rotated = this.instaRot.get()
                         || !SettingUtils.shouldRotate(RotationType.BlockPlace)
-                        || this.rotatePitch(90.0F, RotationType.BlockPlace, "placing");
+                        || this.rotation.rotatePitch(90.0F, RotationType.BlockPlace, "placing");
                 if (rotated) {
                     boolean switched = hand != null;
                     if (!switched) {
@@ -140,7 +141,7 @@ public class Burrow extends Module {
                         }
 
                         if (!this.instaRot.get() && SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-                            this.end("placing");
+                            this.rotation.end("placing");
                         }
 
                         this.lagBack(y);

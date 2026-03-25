@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.setting.multisettings;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.event.Event;
@@ -69,7 +70,7 @@ public class BoxMultiSetting {
                 "The color of the glow/bloom aura surrounding the box.",
                 () -> this.mode.get() == BoxRenderMode.Shader && visible.get());
 
-        BlackOut.EVENT_BUS.subscribe(this, () -> BlackOut.mc.player == null || BlackOut.mc.level == null);
+        BlackOut.EVENT_BUS.subscribe(this, () -> !PlayerUtils.isInGame());
     }
 
     public static BoxMultiSetting of(SettingGroup sg) {

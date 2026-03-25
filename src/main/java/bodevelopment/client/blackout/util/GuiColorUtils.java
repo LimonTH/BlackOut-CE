@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.util;
 
+import bodevelopment.client.blackout.module.AbstractModule;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.hud.HudElement;
@@ -33,9 +34,14 @@ public class GuiColorUtils {
     public static long toggleTime;
     public static boolean isEnabled;
 
-    public static void set(Module module) {
-        toggleTime = module.toggleTime;
-        isEnabled = module.enabled;
+    public static void set(AbstractModule module) {
+        if (module instanceof Module m) {
+            toggleTime = m.toggleTime;
+            isEnabled = m.enabled;
+        } else {
+            toggleTime = 0L;
+            isEnabled = false;
+        }
     }
 
     public static void set(HudElement element) {

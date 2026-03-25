@@ -1,8 +1,9 @@
 package bodevelopment.client.blackout.command;
 
 import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.module.AbstractModule;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.StringUtils;
 import net.minecraft.ChatFormatting;
 
 public class ToggleCommand extends Command {
@@ -20,16 +21,16 @@ public class ToggleCommand extends Command {
         if (args.length > 0) {
             String built = String.join(" ", args);
             String idkRurAmogus = this.doStuff(built);
-            Module module = this.getModule(idkRurAmogus);
+            AbstractModule found = this.getModule(idkRurAmogus);
 
-            if (module == null) {
-                Module similar = this.similar(idkRurAmogus);
+            if (found == null) {
+                AbstractModule similar = this.similar(idkRurAmogus);
                 return similar != null
                         ? ChatFormatting.RED.toString() + String.format("couldn't find %s from modules, did you mean %s", built, this.moduleNameString(similar))
                         : ChatFormatting.RED.toString() + String.format("couldn't find %s from modules", built);
             }
 
-            if (module.toggleable()) {
+            if (found instanceof Module module) {
                 if (this.lowerCase.equals("enable")) {
                     if (module.enabled) {
                         return ChatFormatting.YELLOW.toString() + this.moduleNameString(module) + " is already enabled!";
@@ -46,25 +47,25 @@ public class ToggleCommand extends Command {
 
                 return this.color + this.lowerCase + "d " + ChatFormatting.WHITE.toString() + this.moduleNameString(module);
             } else {
-                return String.format("%s%s%s is not toggleable", ChatFormatting.GRAY.toString(), this.moduleNameString(module), ChatFormatting.RED.toString());
+                return String.format("%s%s%s is not toggleable", ChatFormatting.GRAY.toString(), this.moduleNameString(found), ChatFormatting.RED.toString());
             }
         } else {
             return this.format;
         }
     }
 
-    private String moduleNameString(Module module) {
+    private String moduleNameString(AbstractModule module) {
         return module.name.equals(module.getDisplayName()) ? module.name : String.format("%s (%s)", module.getDisplayName(), module.name);
     }
 
-    private Module similar(String input) {
-        Module best = null;
+    private AbstractModule similar(String input) {
+        AbstractModule best = null;
         double highest = 0.0;
 
-        for (Module module : Managers.MODULES.getModules()) {
+        for (AbstractModule module : Managers.MODULES.getModules()) {
             double similarity = Math.max(
-                    OLEPOSSUtils.similarity(input, this.doStuff(module.name)),
-                    OLEPOSSUtils.similarity(input, this.doStuff(module.getDisplayName()))
+                    StringUtils.similarity(input, this.doStuff(module.name)),
+                    StringUtils.similarity(input, this.doStuff(module.getDisplayName()))
             );
             if (similarity > highest) {
                 best = module;
@@ -74,9 +75,9 @@ public class ToggleCommand extends Command {
         return best;
     }
 
-    private Module getModule(String name) {
-        Module display = null;
-        for (Module module : Managers.MODULES.getModules()) {
+    private AbstractModule getModule(String name) {
+        AbstractModule display = null;
+        for (AbstractModule module : Managers.MODULES.getModules()) {
             if (name.equals(this.doStuff(module.name))) return module;
             if (name.equals(this.doStuff(module.getDisplayName()))) display = module;
         }

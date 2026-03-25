@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.manager.managers;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.EntityAddEvent;
@@ -178,7 +179,7 @@ public class PacketManager extends Manager {
     }
 
     public void sendPackets() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.sendList(this.grimQueue);
             this.sendList(this.postGrimQueue);
         }

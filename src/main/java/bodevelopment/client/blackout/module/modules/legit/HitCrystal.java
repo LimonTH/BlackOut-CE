@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.legit;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.SwingHand;
 import bodevelopment.client.blackout.enums.SwitchMode;
@@ -62,7 +63,7 @@ public class HitCrystal extends Module {
     }
 
     public void onTick() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.places = this.places + this.speed.get() / 20.0;
             this.attacks = this.attacks + this.attackSpeed.get() / 20.0;
             if (this.timer >= 0) {

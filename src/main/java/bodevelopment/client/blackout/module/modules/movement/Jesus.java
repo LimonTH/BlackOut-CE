@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
@@ -11,7 +12,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.MovementUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.BlockUtils;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.effect.MobEffects;
@@ -51,7 +52,7 @@ public class Jesus extends Module {
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (BlackOut.mc.level.getBlockState(BlackOut.mc.player.blockPosition().below()).getBlock() != Blocks.WATER
                     && BlackOut.mc.level.getBlockState(BlackOut.mc.player.blockPosition()).getBlock() != Blocks.WATER) {
                 this.inWater = false;
@@ -81,7 +82,7 @@ public class Jesus extends Module {
     }
 
     private void tickNCP(MoveEvent.Pre event) {
-        double height = OLEPOSSUtils.fluidHeight(BlackOut.mc.player.getBoundingBox(), FluidTags.WATER);
+        double height = BlockUtils.fluidHeight(BlackOut.mc.player.getBoundingBox(), FluidTags.WATER);
         if (!(height <= 0.0)) {
             if (BlackOut.mc.player.horizontalCollision) {
                 event.setY(this, 0.1);
@@ -123,7 +124,7 @@ public class Jesus extends Module {
     }
 
     private void tickMatrix(MoveEvent.Pre event) {
-        double height = OLEPOSSUtils.fluidHeight(BlackOut.mc.player.getBoundingBox(), FluidTags.WATER);
+        double height = BlockUtils.fluidHeight(BlackOut.mc.player.getBoundingBox(), FluidTags.WATER);
         if (height > 0.0 && height <= 1.0) {
             event.setY(this, 0.13);
         }

@@ -142,13 +142,13 @@ public class AutoCrystalBase extends ObsidianModule {
     }
 
     private boolean isValidForBase(BlockPos pos, AutoCrystal ac) {
-        if (this.blockPlacements.contains(pos) || !SettingUtils.inPlaceRange(pos) || !OLEPOSSUtils.replaceable(pos)) {
+        if (this.blockPlacements.contains(pos) || !SettingUtils.inPlaceRange(pos) || !BlockUtils.replaceable(pos)) {
             return false;
         }
 
         BlockPos crystalPos = pos.above();
 
-        if (!BlackOut.mc.level.getBlockState(crystalPos).isAir() && !OLEPOSSUtils.replaceable(crystalPos)) {
+        if (!BlackOut.mc.level.getBlockState(crystalPos).isAir() && !BlockUtils.replaceable(crystalPos)) {
             return false;
         }
         if (SettingUtils.oldCrystals() && !BlackOut.mc.level.getBlockState(crystalPos.above()).isAir()) {

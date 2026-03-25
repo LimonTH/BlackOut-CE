@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.combat.defensive;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.enums.SwitchMode;
@@ -8,7 +9,7 @@ import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.module.OnlyDev;
+import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.Notifications;
 import bodevelopment.client.blackout.module.modules.misc.Timer;
@@ -18,7 +19,8 @@ import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.randomstuff.PlaceData;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.EntityUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.InvUtils;
+import bodevelopment.client.blackout.util.BlockUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 import java.util.List;
 import java.util.function.Predicate;
@@ -98,13 +100,13 @@ public class BurrowRewrite extends Module {
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (BlackOut.mc.player == null || BlackOut.mc.level == null) {
+        if (!PlayerUtils.isInGame()) {
             return;
         }
 
         long now = System.currentTimeMillis();
         boolean ready = now - this.prevFinish >= (long) (this.cooldown.get() * 1000.0);
-        boolean outside = !OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().expandTowards(0.0, this.calcY(), 0.0));
+        boolean outside = !BlockUtils.hasEntityCollision(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().expandTowards(0.0, this.calcY(), 0.0));
         if (outside && ready && !this.notFound()) {
             BlockPos pos = BlockPos.containing(BlackOut.mc.player.position());
             if (!this.canAttempt(pos)) {
@@ -164,7 +166,7 @@ public class BurrowRewrite extends Module {
     }
 
     private boolean notFound() {
-        if (OLEPOSSUtils.getHand(this.predicate) == null && !this.switchMode.get().find(this.predicate).wasFound()) {
+        if (InvUtils.getHand(this.predicate) == null && !this.switchMode.get().find(this.predicate).wasFound()) {
             this.resetTimer();
             this.disable("no blocks found");
             return true;
@@ -234,7 +236,7 @@ public class BurrowRewrite extends Module {
     }
 
     private void place(PlaceData data) {
-        InteractionHand hand = OLEPOSSUtils.getHand(this.predicate);
+        InteractionHand hand = InvUtils.getHand(this.predicate);
         if (hand == null) {
             FindResult result = this.switchMode.get().find(this.predicate);
             if (!result.wasFound() || !this.switchMode.get().swap(result.slot())) {
@@ -298,7 +300,7 @@ public class BurrowRewrite extends Module {
     private BlockPos findBestBurrowPos(Vec3 playerPos) {
         BlockPos basePos = BlockPos.containing(playerPos);
 
-        if (OLEPOSSUtils.replaceable(basePos) && this.canAttempt(basePos)) {
+        if (BlockUtils.replaceable(basePos) && this.canAttempt(basePos)) {
             return basePos;
         }
 
@@ -306,7 +308,7 @@ public class BurrowRewrite extends Module {
             if (dir == Direction.DOWN) continue;
 
             BlockPos sidePos = basePos.relative(dir);
-            if (OLEPOSSUtils.replaceable(sidePos) && this.canAttempt(sidePos)) {
+            if (BlockUtils.replaceable(sidePos) && this.canAttempt(sidePos)) {
                 AABB playerBox = BlackOut.mc.player.getBoundingBox();
                 AABB blockBox = BoxUtils.get(sidePos);
                 if (playerBox.intersects(blockBox)) {
@@ -316,7 +318,7 @@ public class BurrowRewrite extends Module {
         }
 
         BlockPos upPos = basePos.above();
-        if (OLEPOSSUtils.replaceable(upPos) && this.canAttempt(upPos)) {
+        if (BlockUtils.replaceable(upPos) && this.canAttempt(upPos)) {
             return upPos;
         }
 
@@ -341,11 +343,11 @@ public class BurrowRewrite extends Module {
 
         if (!shouldRotate) return true;
 
-        return this.rotateBlock(data, type, label);
+        return this.rotation.rotateBlock(data, type, label);
     }
 
     private boolean canAttempt(BlockPos pos) {
-        if (!OLEPOSSUtils.replaceable(pos)) {
+        if (!BlockUtils.replaceable(pos)) {
             this.notifyFailure("position blocked");
             return false;
         }
@@ -378,7 +380,7 @@ public class BurrowRewrite extends Module {
             return;
         }
 
-        AABB crystalBox = OLEPOSSUtils.getCrystalBox(pos);
+        AABB crystalBox = BoxUtils.crystalBox(pos);
         List<Entity> crystals = EntityUtils.getEntities(crystalBox, entity -> entity instanceof EndCrystal);
         if (crystals.isEmpty()) {
             return;

@@ -7,7 +7,7 @@ import net.minecraft.world.phys.Vec3;
 
 public class HorizontalExtrapolation {
     public static MotionData getMotion(ExtrapolationManager.ExtrapolationData data) {
-        List<Vec3> motions = OLEPOSSUtils.reverse(data.motions);
+        List<Vec3> motions = CollectionUtils.reversed(data.motions);
         if (motions.size() < 5) {
             return MotionData.of(motions.isEmpty() ? new Vec3(0.0, 0.0, 0.0) : motions.getFirst());
         } else {

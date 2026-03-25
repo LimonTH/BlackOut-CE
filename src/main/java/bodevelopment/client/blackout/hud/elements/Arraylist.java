@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.hud.elements;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.FilterMode;
 import bodevelopment.client.blackout.hud.HudElement;
@@ -30,7 +31,7 @@ public class Arraylist extends HudElement {
 
     public final Setting<BracketMode> brackets = this.sgGeneral.enumSetting("Metadata Brackets", BracketMode.None, "The character set used to enclose module-specific information (e.g., [Speed] vs (Speed)).");
     private final Setting<FilterMode> filterMode = this.sgGeneral.enumSetting("Visibility Logic", FilterMode.Blacklist, "Determines whether the module list acts as an inclusion or exclusion filter.");
-    private final Setting<List<Module>> moduleList = this.sgGeneral.listSetting("Module Filter", "The specific modules to be prioritized or ignored based on the visibility logic.", Managers.MODULES.getModules(), module -> module.name);
+    private final Setting<List<Module>> moduleList = this.sgGeneral.listSetting("Module Filter", "The specific modules to be prioritized or ignored based on the visibility logic.", Managers.MODULES.getToggleableModules(), module -> module.name);
     private final Setting<Boolean> drawInfo = this.sgGeneral.booleanSetting("Display Metadata", true, "Renders additional state information next to the module name (e.g., the current Aura mode).");
     private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Dynamic Rounding", true, "Applies modern rounded-rect aesthetics to each module background.");
     private final Setting<Boolean> sideBar = this.sgGeneral.booleanSetting("Accent Strip", true, "Renders a thin vertical line on the edge of the list for structural definition.", () -> !this.rounded.get());
@@ -60,12 +61,12 @@ public class Arraylist extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             Comparator<Module> comparator = Comparator.comparingDouble(
                     m -> BlackOut.FONT.getWidth(m.getDisplayName() + (m.getInfo() == null ? "" : this.getInfo(m.getInfo())))
             );
             List<Module> modules = Managers.MODULES
-                    .getModules()
+                    .getToggleableModules()
                     .stream()
                     .filter(module -> this.filterMode.get().shouldAccept(module, this.moduleList.get()) && module.category.parent() != ParentCategory.CLIENT)
                     .sorted(comparator.reversed())

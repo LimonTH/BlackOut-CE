@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.hud.elements;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -37,7 +38,7 @@ public class Watermark extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             String formattedTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
             String formattedTime2 = new SimpleDateFormat("hh:mm a").format(new Date());
             this.stack.pushPose();

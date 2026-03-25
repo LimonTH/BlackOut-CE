@@ -1,18 +1,18 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.*;
 import bodevelopment.client.blackout.interfaces.functional.DoubleConsumer;
 import bodevelopment.client.blackout.keys.KeyBind;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.module.OnlyDev;
+import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.Notifications;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.ItemUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -209,7 +209,7 @@ public class Manager extends Module {
     }
 
     private boolean canUpdate() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (BlackOut.mc.player.hurtTime > 0) {
                 this.prevDamage = System.currentTimeMillis();
             }
@@ -497,7 +497,7 @@ public class Manager extends Module {
     }
 
     private Action findAutoArmor() {
-        for (EquipmentSlot equipmentSlot : OLEPOSSUtils.equipmentSlots) {
+        for (EquipmentSlot equipmentSlot : ItemUtils.ARMOR_SLOTS) {
             int toSlot = 8 - equipmentSlot.getIndex();
             Slot bestArmor = this.findBestArmor(equipmentSlot);
             if (bestArmor != null && bestArmor.index != toSlot) {
@@ -545,7 +545,7 @@ public class Manager extends Module {
             return basicCleaner;
         } else {
             if (this.badArmor.get()) {
-                for (EquipmentSlot equipmentSlot : OLEPOSSUtils.equipmentSlots) {
+                for (EquipmentSlot equipmentSlot : ItemUtils.ARMOR_SLOTS) {
                     Slot badArmor = this.findBadItem(
                             slot -> {
                                 ItemStack stack = slot.getItem();

@@ -1,0 +1,30 @@
+Фаза 1: Утилиты и базовые классы
+
+1. [DONE] Разбить OLEPOSSUtils на EnchantmentUtils, TimeUtils, GeometryUtils + перенести методы в существующие BlockUtils/BoxUtils
+2. [DONE] Унифицировать получение энчантов (одна реализация)
+3. [DONE] Исправить именование в HoleUtils (s,d,q -> single,double,quad)
+4. [DONE] Создать PlayerUtils для null-чеков и частых проверок игрока
+
+Фаза 2: Архитектура модулей
+
+5. [DONE] Отвязать Module от RotationHelper (композиция вместо наследования)
+6. [DONE] Извлечь state-машины из god-модулей (PistonPush, PistonCrystal; Snombonty не требует - уже чистый)
+7. [DONE] Переработать SettingsModule (отдельный базовый класс или интерфейс)
+
+Фаза 3: Менеджеры и DI
+
+8. [DONE] Добавить интерфейсы для менеджеров (Persistable, Manager -> abstract)
+9. [DONE] Рефакторинг SettingUtils (удалено 19 бессмысленных делегаций из 53)
+
+Фаза 4: Чистка
+
+10. [DONE] Убрать мёртвый код, magic numbers → именованные константы
+
+Фаза 5: Рендер рефакторинг
+
+11. [DONE] RenderState - обёртка push/pop для GL стейта, заменить ручные enable/disable
+12. [DONE] ScissorStack - вложенные scissor регионы с автоматическим cleanup
+13. [DONE] Унифицировать Render3DUtils - все методы через RenderState
+14. [DONE] Вынести магические числа (SHADER_QUAD_PADDING, цвета skeet)
+15. [DONE] Унифицировать парсинг цвета - ARGB утилиты вместо битовых сдвигов
+16. [DONE] Консолидация 2D рендера - убрать мёртвый код (angledCircle, texturedQuad, drawTexture, drawTexturedQuad, drawFontQuad, inQuadShadow, quad2), ARGB унификация в Renderer hierarchy

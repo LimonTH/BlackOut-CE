@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.legit;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.SwingHand;
 import bodevelopment.client.blackout.enums.SwitchMode;
@@ -108,7 +109,7 @@ public class AnchorCharge extends Module {
     @Event
     public void onTick(TickEvent.Pre event) {
         this.own.update();
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (Managers.PACKET.getStack().getItem() == Items.RESPAWN_ANCHOR) {
                 this.prevAnchor = Managers.PACKET.slot;
             }

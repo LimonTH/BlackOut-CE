@@ -1,4 +1,4 @@
-package bodevelopment.client.blackout.util;
+package bodevelopment.client.blackout.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -6,6 +6,7 @@ import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.gui.menu.Account;
 import bodevelopment.client.blackout.interfaces.mixin.IMinecraft;
 import bodevelopment.client.blackout.manager.Manager;
+import bodevelopment.client.blackout.manager.Persistable;
 import bodevelopment.client.blackout.util.FileUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -14,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.User;
 
-public class AltManager extends Manager {
+public class AltManager extends Manager implements Persistable {
     private final List<Account> accounts = new ArrayList<>();
     public Account selected;
     public Account currentSession;
@@ -118,6 +119,7 @@ public class AltManager extends Manager {
         }
     }
 
+    @Override
     public void save() {
         this.shouldSave = true;
     }

@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.hud.elements;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
@@ -10,7 +11,7 @@ import bodevelopment.client.blackout.module.setting.multisettings.BackgroundMult
 import bodevelopment.client.blackout.module.setting.multisettings.TextColorMultiSetting;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.TimeUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import java.awt.*;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
@@ -42,8 +43,8 @@ public class SessionInfo extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
-            String timeString = OLEPOSSUtils.getTimeString(System.currentTimeMillis() - startTime);
+        if (PlayerUtils.isInGame()) {
+            String timeString = TimeUtils.formatMillis(System.currentTimeMillis() - startTime);
             this.ip = !BlackOut.mc.hasSingleplayerServer() && BlackOut.mc.getConnection() != null && BlackOut.mc.getConnection().getServerData() != null
                     ? BlackOut.mc.getConnection().getServerData().ip
                     : "Singleplayer";
@@ -110,7 +111,7 @@ public class SessionInfo extends HudElement {
 
     @Event
     public void onReceive(PacketEvent.Receive.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (this.mode.get() == Mode.Chat) {
                 if (event.packet instanceof ClientboundSystemChatPacket packet) {
                     String unformattedText = packet.content().getString();

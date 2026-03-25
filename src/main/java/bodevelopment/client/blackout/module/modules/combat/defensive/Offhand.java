@@ -116,7 +116,7 @@ public class Offhand extends Module {
     @Event
     public void onMove(MoveEvent.Pre event) {
         this.prevPositions.add(BlackOut.mc.player.getBoundingBox());
-        OLEPOSSUtils.limitList(this.prevPositions, this.latency.get());
+        CollectionUtils.limitSize(this.prevPositions, this.latency.get());
         if (this.move.get()) {
             this.update();
         }
@@ -130,7 +130,7 @@ public class Offhand extends Module {
     }
 
     private void update() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && BlackOut.mc.player.containerMenu instanceof InventoryMenu) {
+        if (PlayerUtils.isInGame() && BlackOut.mc.player.containerMenu instanceof InventoryMenu) {
             if (!this.onlyInInventory.get() || BlackOut.mc.screen instanceof InventoryScreen) {
                 Predicate<ItemStack> predicate = this.getItem();
                 if (predicate != null) {
@@ -390,8 +390,8 @@ public class Offhand extends Module {
         Nothing(null),
         Crystal(stack -> stack.is(Items.END_CRYSTAL)),
         Exp(stack -> stack.is(Items.EXPERIENCE_BOTTLE)),
-        Gapple(OLEPOSSUtils::isGapple),
-        Bed(OLEPOSSUtils::isBed),
+        Gapple(ItemUtils::isGapple),
+        Bed(ItemUtils::isBed),
         Obsidian(stack -> stack.is(Items.OBSIDIAN));
 
         private final Predicate<ItemStack> predicate;

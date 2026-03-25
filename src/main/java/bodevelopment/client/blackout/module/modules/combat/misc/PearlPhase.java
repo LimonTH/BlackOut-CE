@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.combat.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.enums.SwingHand;
@@ -13,7 +14,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.InvUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 import net.minecraft.core.BlockPos;
@@ -49,9 +50,9 @@ public class PearlPhase extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Pre event) {
-        if (BlackOut.mc.player == null || BlackOut.mc.level == null) return;
+        if (!PlayerUtils.isInGame()) return;
 
-        InteractionHand hand = OLEPOSSUtils.getHand(Items.ENDER_PEARL);
+        InteractionHand hand = InvUtils.getHand(Items.ENDER_PEARL);
         FindResult pearlResult = this.switchMode.get().find(Items.ENDER_PEARL);
 
         if (hand == null && !pearlResult.wasFound()) return;
@@ -71,7 +72,7 @@ public class PearlPhase extends Module {
             if (this.swing.get()) {
                 this.clientSwing(this.swingHand.get(), hand == null ? InteractionHand.MAIN_HAND : hand);
             }
-            this.end("look");
+            this.rotation.end("look");
             if (isInvSwitch) this.switchMode.get().swapBack();
             this.disable("success");
         }
@@ -94,13 +95,13 @@ public class PearlPhase extends Module {
                     "placing")) return false;
         }
 
-        InteractionHand blockHand = OLEPOSSUtils.getHand(stack -> stack.getItem() instanceof BlockItem);
+        InteractionHand blockHand = InvUtils.getHand(stack -> stack.getItem() instanceof BlockItem);
         boolean isInvSwitch = blockHand == null;
 
         if (!isInvSwitch || this.ccSwitchMode.get().swap(blockResult.slot())) {
             this.placeBlock(blockHand == null ? InteractionHand.MAIN_HAND : blockHand, pos.getCenter(), Direction.UP, pos);
 
-            if (SettingUtils.shouldRotate(RotationType.BlockPlace)) this.end("placing");
+            if (SettingUtils.shouldRotate(RotationType.BlockPlace)) this.rotation.end("placing");
 
             if (isInvSwitch) this.ccSwitchMode.get().swapBack();
             this.placed = true;
@@ -115,8 +116,8 @@ public class PearlPhase extends Module {
         RotationType instantType = name.equals("placing") ? RotationType.InstantBlockPlace : RotationType.InstantOther;
 
         return switch (this.rotationMode.get()) {
-            case Normal -> this.rotate(yaw, pitch, type, name);
-            case Instant -> this.rotate(yaw, pitch, instantType, name);
+            case Normal -> this.rotation.rotate(yaw, pitch, type, name);
+            case Instant -> this.rotation.rotate(yaw, pitch, instantType, name);
             case Packet -> true;
         };
     }

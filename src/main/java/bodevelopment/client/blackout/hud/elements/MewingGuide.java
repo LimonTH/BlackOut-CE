@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.hud.elements;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -12,16 +13,12 @@ public class MewingGuide extends HudElement {
     public MewingGuide() {
         super("Mewing Guide", "Displays a graphical reference for facial posture techniques to optimize your player character's aesthetic presence.");
         TextureRenderer t = BOTextures.getMewingIconRenderer();
-        if (t != null) {
-            this.setSize(t.getWidth() / 4.0F, t.getHeight() / 4.0F);
-        } else {
-            this.setSize(120.0F, 175.0F);
-        }
+        this.setSize(t.getWidth() / 4.0F, t.getHeight() / 4.0F);
     }
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             TextureRenderer t = BOTextures.getMewingIconRenderer();
             float width = t.getWidth() / 4.0F;
             float height = t.getHeight() / 4.0F;

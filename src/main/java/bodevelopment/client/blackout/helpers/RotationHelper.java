@@ -46,114 +46,115 @@ public class RotationHelper {
         priorities.add(AutoPot.class);
     }
 
-    private int priority;
-    private String name;
+    private final int priority;
+    private final String name;
+    private java.util.function.DoubleSupplier rotationTimeSupplier = () -> 0.3;
 
-    protected void set(Module module) {
-        this.priority = this.getPriority(module);
+    public RotationHelper(Module module) {
+        this.priority = priorities.contains(module.getClass()) ? priorities.indexOf(module.getClass()) : 0;
         this.name = module.name;
     }
 
-    private int getPriority(Module m) {
-        return priorities.contains(m.getClass()) ? priorities.indexOf(m.getClass()) : 0;
+    public void setRotationTime(java.util.function.DoubleSupplier supplier) {
+        this.rotationTimeSupplier = supplier;
     }
 
-    protected double getRotationTime() {
-        return 0.3;
+    public double getRotationTime() {
+        return this.rotationTimeSupplier.getAsDouble();
     }
 
-    protected boolean rotate(float yaw, float pitch, RotationType type, String key) {
+    public boolean rotate(float yaw, float pitch, RotationType type, String key) {
         return this.rotate(yaw, pitch, 0.0, type, key);
     }
 
-    protected boolean rotate(float yaw, float pitch, double priority, RotationType type, String key) {
+    public boolean rotate(float yaw, float pitch, double priority, RotationType type, String key) {
         return this.rotate(yaw, pitch, priority, 2.0, type, key);
     }
 
-    protected boolean rotate(float yaw, float pitch, double priority, double precision, RotationType type, String key) {
+    public boolean rotate(float yaw, float pitch, double priority, double precision, RotationType type, String key) {
         return this.rotate(
                 yaw, pitch, true, true, priority, type, (y, p) -> Math.abs(RotationUtils.yawAngle(yaw, y)) < precision && Math.abs(pitch - p) < precision, key
         );
     }
 
-    protected boolean rotateYaw(float yaw, RotationType type, String key) {
+    public boolean rotateYaw(float yaw, RotationType type, String key) {
         return this.rotateYaw(yaw, 0.0, type, key);
     }
 
-    protected boolean rotateYaw(float yaw, double priority, RotationType type, String key) {
+    public boolean rotateYaw(float yaw, double priority, RotationType type, String key) {
         return this.rotateYaw(yaw, priority, 2.0, type, key);
     }
 
-    protected boolean rotateYaw(float yaw, double priority, double precision, RotationType type, String key) {
+    public boolean rotateYaw(float yaw, double priority, double precision, RotationType type, String key) {
         return this.rotate(yaw, 0.0F, true, false, priority, type, (y, p) -> Math.abs(RotationUtils.yawAngle(yaw, y)) <= precision, key);
     }
 
-    protected boolean rotatePitch(float pitch, RotationType type, String key) {
+    public boolean rotatePitch(float pitch, RotationType type, String key) {
         return this.rotatePitch(pitch, 0.0, type, key);
     }
 
-    protected boolean rotatePitch(float pitch, double priority, RotationType type, String key) {
+    public boolean rotatePitch(float pitch, double priority, RotationType type, String key) {
         return this.rotatePitch(pitch, priority, 2.0, type, key);
     }
 
-    protected boolean rotatePitch(float pitch, double priority, double precision, RotationType type, String key) {
+    public boolean rotatePitch(float pitch, double priority, double precision, RotationType type, String key) {
         return this.rotate(0.0F, pitch, false, true, priority, type, (y, p) -> Math.abs(p - pitch) <= precision, key);
     }
 
-    protected boolean rotateBlock(PlaceData data, Vec3 vec, RotationType type, String key) {
+    public boolean rotateBlock(PlaceData data, Vec3 vec, RotationType type, String key) {
         return this.rotateBlock(data, vec, type, 0.0, key);
     }
 
-    protected boolean rotateBlock(PlaceData data, Vec3 vec, RotationType type, double priority, String key) {
+    public boolean rotateBlock(PlaceData data, Vec3 vec, RotationType type, double priority, String key) {
         return this.rotateBlock(data.pos(), data.dir(), vec, type, priority, key);
     }
 
-    protected boolean rotateBlock(BlockPos pos, Direction dir, Vec3 vec, RotationType type, String key) {
+    public boolean rotateBlock(BlockPos pos, Direction dir, Vec3 vec, RotationType type, String key) {
         return this.rotateBlock(pos, dir, vec, type, 0.0, key);
     }
 
-    protected boolean rotateBlock(BlockPos pos, Direction dir, Vec3 vec, RotationType type, double priority, String key) {
+    public boolean rotateBlock(BlockPos pos, Direction dir, Vec3 vec, RotationType type, double priority, String key) {
         Rotation rotation = SettingUtils.getRotation(pos, dir, vec, type);
         return this.rotate(rotation.yaw(), rotation.pitch(), true, true, priority, type, (y, p) -> SettingUtils.blockRotationCheck(pos, dir, y, p, type), key);
     }
 
-    protected boolean rotateBlock(PlaceData data, RotationType type, String key) {
+    public boolean rotateBlock(PlaceData data, RotationType type, String key) {
         return this.rotateBlock(data, type, 0.0, key);
     }
 
-    protected boolean rotateBlock(PlaceData data, RotationType type, double priority, String key) {
+    public boolean rotateBlock(PlaceData data, RotationType type, double priority, String key) {
         return this.rotateBlock(data.pos(), data.dir(), type, priority, key);
     }
 
-    protected boolean rotateBlock(BlockPos pos, Direction dir, RotationType type, String key) {
+    public boolean rotateBlock(BlockPos pos, Direction dir, RotationType type, String key) {
         return this.rotateBlock(pos, dir, type, 0.0, key);
     }
 
-    protected boolean rotateBlock(BlockPos pos, Direction dir, RotationType type, double priority, String key) {
+    public boolean rotateBlock(BlockPos pos, Direction dir, RotationType type, double priority, String key) {
         Rotation rotation = SettingUtils.getRotation(pos, dir, pos.getCenter(), type);
         return this.rotate(rotation.yaw(), rotation.pitch(), true, true, priority, type, (y, p) -> SettingUtils.blockRotationCheck(pos, dir, y, p, type), key);
     }
 
-    protected boolean attackRotate(AABB box, String key) {
+    public boolean attackRotate(AABB box, String key) {
         return this.attackRotate(box, BoxUtils.middle(box), key);
     }
 
-    protected boolean attackRotate(AABB box, double priority, String key) {
+    public boolean attackRotate(AABB box, double priority, String key) {
         return this.attackRotate(box, BoxUtils.middle(box), priority, key);
     }
 
-    protected boolean attackRotate(AABB box, Vec3 vec, String key) {
+    public boolean attackRotate(AABB box, Vec3 vec, String key) {
         return this.attackRotate(box, vec, 0.0, key);
     }
 
-    protected boolean attackRotate(AABB box, Vec3 vec, double priority, String key) {
+    public boolean attackRotate(AABB box, Vec3 vec, double priority, String key) {
         Rotation rotation = SettingUtils.getAttackRotation(box, vec);
         return this.rotate(
                 rotation.yaw(), rotation.pitch(), true, true, priority, RotationType.Attacking, (y, p) -> SettingUtils.attackRotationCheck(box, y, p), key
         );
     }
 
-    protected boolean rotate(
+    public boolean rotate(
             float yaw, float pitch, boolean rotateYaw, boolean rotatePitch, double priority, RotationType type, RotationCheck rotationCheck, String key
     ) {
         boolean canYaw = rotateYaw
@@ -169,7 +170,7 @@ public class RotationHelper {
                         || System.currentTimeMillis() >= Managers.ROTATION.timePitch
         );
         boolean rotated = this.rotationCheck(rotationCheck);
-        Rotation rotation = SettingUtils.applyStep(
+        Rotation rotation = RotationSettings.getInstance().applyStep(
                 new Rotation(rotateYaw ? yaw : Managers.ROTATION.nextYaw, rotatePitch ? pitch : Managers.ROTATION.nextPitch), type, rotated
         );
         if (canYaw) {
@@ -201,14 +202,15 @@ public class RotationHelper {
         return (type != RotationType.Attacking || this.checkAttackLimit()) && rotated;
     }
 
-    protected boolean checkAttackLimit() {
-        if (!SettingUtils.attackLimit()) {
+    public boolean checkAttackLimit() {
+        RotationSettings rotSettings = RotationSettings.getInstance();
+        if (!rotSettings.attackLimit.get()) {
             return true;
         } else {
-            for (int i = 0; i < Math.min(Managers.ROTATION.rotationHistory.size(), SettingUtils.attackTicks()); i++) {
+            for (int i = 0; i < Math.min(Managers.ROTATION.rotationHistory.size(), rotSettings.attackTicks.get()); i++) {
                 FloatFloatPair pair = Managers.ROTATION.rotationHistory.get(i);
                 double f = Math.sqrt(pair.firstFloat() * pair.firstFloat() + pair.secondFloat() * pair.secondFloat());
-                if (f > SettingUtils.attackSpeed()) {
+                if (f > rotSettings.attackMaxSpeed.get()) {
                     return false;
                 }
             }
@@ -217,25 +219,25 @@ public class RotationHelper {
         }
     }
 
-    protected void setPitch(float pitch, double priority, String key) {
+    public void setPitch(float pitch, double priority, String key) {
         Managers.ROTATION.nextPitch = pitch;
         Managers.ROTATION.timePitch = (long) (System.currentTimeMillis() + this.getRotationTime() * 1000.0);
         Managers.ROTATION.keyPitch = this.getKey(key);
         Managers.ROTATION.priorityPitch = priority + this.priority;
     }
 
-    protected void setYaw(float yaw, double priority, String key) {
+    public void setYaw(float yaw, double priority, String key) {
         Managers.ROTATION.nextYaw = yaw;
         Managers.ROTATION.timeYaw = (long) (System.currentTimeMillis() + this.getRotationTime() * 1000.0);
         Managers.ROTATION.keyYaw = this.getKey(key);
         Managers.ROTATION.priorityYaw = priority + this.priority;
     }
 
-    protected String getKey(String key) {
+    public String getKey(String key) {
         return this.name + key;
     }
 
-    protected void end(String key) {
+    public void end(String key) {
         if (Objects.equals(Managers.ROTATION.keyYaw, this.getKey(key))) {
             Managers.ROTATION.priorityYaw = -1.0;
         }
@@ -245,7 +247,7 @@ public class RotationHelper {
         }
     }
 
-    protected boolean rotationCheck(RotationCheck check) {
+    public boolean rotationCheck(RotationCheck check) {
         return check.test(Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch);
     }
 }

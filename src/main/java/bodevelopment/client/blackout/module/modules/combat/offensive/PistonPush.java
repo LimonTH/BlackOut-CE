@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.module.OnlyDev;
+import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -80,13 +80,9 @@ public class PistonPush extends Module {
     private final Setting<BlackOutColor> rsColor = this.sgRender.colorSetting("Redstone Fill Color", new BlackOutColor(255, 0, 0, 50), "The color of the redstone highlight faces.");
     private final Setting<BlackOutColor> rlColor = this.sgRender.colorSetting("Redstone Outline Color", new BlackOutColor(255, 0, 0, 255), "The color of the redstone highlight edges.");
 
-    private long pistonTime = 0L;
-    private long redstoneTime = 0L;
-    private long mineTime = 0L;
+    private Phase phase = Phase.PLACE_PISTON;
+    private long phaseTime = 0L;
     private boolean minedThisTick = false;
-    private boolean pistonPlaced = false;
-    private boolean redstonePlaced = false;
-    private boolean mined = false;
     private BlockPos pistonPos = null;
     private BlockPos redstonePos = null;
     private Direction pistonDir = null;
@@ -108,9 +104,7 @@ public class PistonPush extends Module {
         this.lastRedstone = null;
         this.lastDirection = null;
         this.startPos = null;
-        this.redstonePlaced = false;
-        this.pistonPlaced = false;
-        this.mined = false;
+        this.phase = Phase.PLACE_PISTON;
     }
 
     @Event
@@ -120,7 +114,7 @@ public class PistonPush extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (this.startPos != null && this.toggleMove.get() && !this.startPos.equals(this.currentPos)) {
                 this.disable("moved");
             } else {
@@ -132,13 +126,13 @@ public class PistonPush extends Module {
                 } else {
                     Render3DUtils.box(this.getBox(this.pistonPos), this.psColor.get(), this.plColor.get(), this.pistonShape.get());
                     Render3DUtils.box(this.getBox(this.redstonePos), this.rsColor.get(), this.rlColor.get(), this.redstoneShape.get());
-                    if (System.currentTimeMillis() - this.mineTime > this.mpDelay.get() * 1000.0 && this.redstonePlaced && this.pistonPlaced && this.mined
-                            || !this.pistonPos.equals(this.lastPiston)
+                    boolean cycleComplete = this.phase == Phase.CYCLE_COMPLETE
+                            && System.currentTimeMillis() - this.phaseTime > this.mpDelay.get() * 1000.0;
+                    boolean posChanged = !this.pistonPos.equals(this.lastPiston)
                             || !this.redstonePos.equals(this.lastRedstone)
-                            || !this.pistonDir.equals(this.lastDirection)) {
-                        this.redstonePlaced = false;
-                        this.pistonPlaced = false;
-                        this.mined = false;
+                            || !this.pistonDir.equals(this.lastDirection);
+                    if (cycleComplete || posChanged) {
+                        this.phase = Phase.PLACE_PISTON;
                     }
 
                     this.lastPiston = this.pistonPos;
@@ -155,43 +149,43 @@ public class PistonPush extends Module {
     }
 
     private void placePiston() {
-        if (!this.pistonPlaced) {
-            InteractionHand hand = OLEPOSSUtils.getHand(Items.PISTON);
-            FindResult result = this.pistonSwitch.get().find(Items.PISTON);
+        if (this.phase != Phase.PLACE_PISTON) return;
 
-            if (hand != null || result.wasFound()) {
-                if (BlackOut.mc.player.onGround()) {
-                    if (!EntityUtils.intersects(BoxUtils.get(this.pistonPos), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity))) {
-                        float yaw = this.pistonDir.toYRot();
-                        float pitch = 0.0f;
+        InteractionHand hand = InvUtils.getHand(Items.PISTON);
+        FindResult result = this.pistonSwitch.get().find(Items.PISTON);
 
-                        if (!SettingUtils.shouldRotate(RotationType.BlockPlace) || this.rotateBlock(this.pistonData, RotationType.BlockPlace, "piston")) {
+        if (hand != null || result.wasFound()) {
+            if (BlackOut.mc.player.onGround()) {
+                if (!EntityUtils.intersects(BoxUtils.get(this.pistonPos), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity))) {
+                    float yaw = this.pistonDir.toYRot();
+                    float pitch = 0.0f;
 
-                            this.sendPacket(new ServerboundMovePlayerPacket.Rot(yaw, pitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
-                            boolean switched = false;
-                            if (hand == null) {
-                                switched = this.pistonSwitch.get().swap(result.slot());
+                    if (!SettingUtils.shouldRotate(RotationType.BlockPlace) || this.rotation.rotateBlock(this.pistonData, RotationType.BlockPlace, "piston")) {
+
+                        this.sendPacket(new ServerboundMovePlayerPacket.Rot(yaw, pitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
+                        boolean switched = false;
+                        if (hand == null) {
+                            switched = this.pistonSwitch.get().swap(result.slot());
+                        }
+
+                        if (hand != null || switched) {
+                            hand = (hand == null) ? InteractionHand.MAIN_HAND : hand;
+
+                            this.placeBlock(hand, this.pistonData.pos().getCenter(), this.pistonData.dir(), this.pistonData.pos());
+
+                            if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
+                                this.rotation.end("piston");
                             }
 
-                            if (hand != null || switched) {
-                                hand = (hand == null) ? InteractionHand.MAIN_HAND : hand;
+                            this.phase = Phase.PLACE_REDSTONE;
+                            this.phaseTime = System.currentTimeMillis();
 
-                                this.placeBlock(hand, this.pistonData.pos().getCenter(), this.pistonData.dir(), this.pistonData.pos());
+                            if (this.pistonSwing.get()) {
+                                this.clientSwing(this.pistonHand.get(), hand);
+                            }
 
-                                if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-                                    this.end("piston");
-                                }
-
-                                this.pistonTime = System.currentTimeMillis();
-                                this.pistonPlaced = true;
-
-                                if (this.pistonSwing.get()) {
-                                    this.clientSwing(this.pistonHand.get(), hand);
-                                }
-
-                                if (switched) {
-                                    this.pistonSwitch.get().swapBack();
-                                }
+                            if (switched) {
+                                this.pistonSwitch.get().swapBack();
                             }
                         }
                     }
@@ -201,39 +195,39 @@ public class PistonPush extends Module {
     }
 
     private void placeRedstone() {
-        if (this.pistonPlaced && !this.redstonePlaced) {
-            if (!(System.currentTimeMillis() - this.pistonTime < this.prDelay.get() * 1000.0)) {
-                InteractionHand hand = OLEPOSSUtils.getHand(this.redstone.get().i);
-                FindResult result = this.redstoneSwitch.get().find(this.redstone.get().i);
-                boolean available = hand != null;
-                if (!available) {
-                    available = result.wasFound();
+        if (this.phase != Phase.PLACE_REDSTONE) return;
+        if (System.currentTimeMillis() - this.phaseTime < this.prDelay.get() * 1000.0) return;
+
+        InteractionHand hand = InvUtils.getHand(this.redstone.get().i);
+        FindResult result = this.redstoneSwitch.get().find(this.redstone.get().i);
+        boolean available = hand != null;
+        if (!available) {
+            available = result.wasFound();
+        }
+
+        if (available) {
+            if (!SettingUtils.shouldRotate(RotationType.BlockPlace) || this.rotation.rotateBlock(this.redstoneData, RotationType.BlockPlace, "redstone")) {
+                boolean switched = false;
+                if (hand == null) {
+                    switched = this.redstoneSwitch.get().swap(result.slot());
                 }
 
-                if (available) {
-                    if (!SettingUtils.shouldRotate(RotationType.BlockPlace) || this.rotateBlock(this.redstoneData, RotationType.BlockPlace, "redstone")) {
-                        boolean switched = false;
-                        if (hand == null) {
-                            switched = this.redstoneSwitch.get().swap(result.slot());
-                        }
+                if (hand != null || switched) {
+                    hand = hand == null ? InteractionHand.MAIN_HAND : hand;
+                    this.placeBlock(hand, this.redstoneData.pos().getCenter(), this.redstoneData.dir(), this.redstoneData.pos());
+                    if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
+                        this.rotation.end("redstone");
+                    }
 
-                        if (hand != null || switched) {
-                            hand = hand == null ? InteractionHand.MAIN_HAND : hand;
-                            this.placeBlock(hand, this.redstoneData.pos().getCenter(), this.redstoneData.dir(), this.redstoneData.pos());
-                            if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-                                this.end("redstone");
-                            }
+                    this.phase = Phase.MINE;
+                    this.phaseTime = System.currentTimeMillis();
 
-                            this.redstonePlaced = true;
-                            this.redstoneTime = System.currentTimeMillis();
-                            if (this.redstoneSwing.get()) {
-                                this.clientSwing(this.redstoneHand.get(), hand);
-                            }
+                    if (this.redstoneSwing.get()) {
+                        this.clientSwing(this.redstoneHand.get(), hand);
+                    }
 
-                            if (switched) {
-                                this.redstoneSwitch.get().swapBack();
-                            }
-                        }
+                    if (switched) {
+                        this.redstoneSwitch.get().swapBack();
                     }
                 }
             }
@@ -245,39 +239,33 @@ public class PistonPush extends Module {
     }
 
     private void mineUpdate() {
-        if (this.pistonPlaced && this.redstonePlaced) {
-            if (!this.minedThisTick) {
-                if (!(System.currentTimeMillis() - this.redstoneTime < this.rmDelay.get() * 1000.0)) {
-                    if (this.redstonePos != null) {
-                        if (this.redstone.get() != Redstone.Torch
-                                || BlackOut.mc.level.getBlockState(this.redstonePos).getBlock() instanceof RedstoneTorchBlock) {
-                            if (this.redstone.get() != Redstone.Block
-                                    || BlackOut.mc.level.getBlockState(this.redstonePos).getBlock() == Blocks.REDSTONE_BLOCK) {
-                                AutoMine autoMine = AutoMine.getInstance();
-                                if (!autoMine.enabled || !this.redstonePos.equals(autoMine.minePos)) {
-                                    if (autoMine.enabled) {
-                                        if (this.redstonePos.equals(autoMine.minePos)) {
-                                            return;
-                                        }
+        if (this.phase != Phase.MINE && this.phase != Phase.CYCLE_COMPLETE) return;
+        if (this.minedThisTick) return;
+        if (System.currentTimeMillis() - this.phaseTime < this.rmDelay.get() * 1000.0) return;
 
-                                        autoMine.onStart(this.redstonePos);
-                                    } else {
-                                        Direction mineDir = SettingUtils.getPlaceOnDirection(this.redstonePos);
-                                        if (mineDir != null) {
-                                            this.sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, this.redstonePos, mineDir));
-                                            this.sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, this.redstonePos, mineDir));
-                                        }
-                                    }
-
-                                    if (!this.mined) {
-                                        this.mineTime = System.currentTimeMillis();
-                                    }
-
-                                    this.mined = true;
-                                    this.minedThisTick = true;
-                                }
+        if (this.redstonePos != null) {
+            if (this.redstone.get() != Redstone.Torch
+                    || BlackOut.mc.level.getBlockState(this.redstonePos).getBlock() instanceof RedstoneTorchBlock) {
+                if (this.redstone.get() != Redstone.Block
+                        || BlackOut.mc.level.getBlockState(this.redstonePos).getBlock() == Blocks.REDSTONE_BLOCK) {
+                    AutoMine autoMine = AutoMine.getInstance();
+                    if (!autoMine.enabled || !this.redstonePos.equals(autoMine.minePos)) {
+                        if (autoMine.enabled) {
+                            autoMine.onStart(this.redstonePos);
+                        } else {
+                            Direction mineDir = SettingUtils.getPlaceOnDirection(this.redstonePos);
+                            if (mineDir != null) {
+                                this.sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, this.redstonePos, mineDir));
+                                this.sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, this.redstonePos, mineDir));
                             }
                         }
+
+                        if (this.phase == Phase.MINE) {
+                            this.phase = Phase.CYCLE_COMPLETE;
+                            this.phaseTime = System.currentTimeMillis();
+                        }
+
+                        this.minedThisTick = true;
                     }
                 }
             }
@@ -293,7 +281,7 @@ public class PistonPush extends Module {
                     && !(BlackOut.mc.player.distanceTo(player) > 10.0F)
                     && !(player.getHealth() <= 0.0F)
                     && !player.isSpectator()
-                    && (OLEPOSSUtils.solid2(player.blockPosition()) || !this.onlyHole.get() || HoleUtils.inHole(player.blockPosition()))) {
+                    && (BlockUtils.hasCollision(player.blockPosition()) || !this.onlyHole.get() || HoleUtils.inHole(player.blockPosition()))) {
                 this.updatePos(player);
                 if (this.pistonPos != null) {
                     return;
@@ -304,7 +292,7 @@ public class PistonPush extends Module {
 
     private void updatePos(Player player) {
         BlockPos eyePos = BlockPos.containing(player.getEyePosition());
-        if (!OLEPOSSUtils.solid2(eyePos.above())) {
+        if (!BlockUtils.hasCollision(eyePos.above())) {
             for (Direction dir : Direction.Plane.HORIZONTAL
                     .stream()
                     .sorted(Comparator.comparingDouble(d -> eyePos.relative(d).getCenter().distanceTo(BlackOut.mc.player.getEyePosition())))
@@ -313,13 +301,13 @@ public class PistonPush extends Module {
                 BlockPos pos = eyePos.relative(dir);
                 if (this.upCheck(pos)
                         && (
-                        OLEPOSSUtils.replaceable(pos)
+                        BlockUtils.replaceable(pos)
                                 || BlackOut.mc.level.getBlockState(pos).getBlock() instanceof PistonBaseBlock
                                 || BlackOut.mc.level.getBlockState(pos).getBlock() == Blocks.MOVING_PISTON
                 )
-                        && !OLEPOSSUtils.solid2(eyePos.relative(dir.getOpposite()))
-                        && !OLEPOSSUtils.solid2(eyePos.relative(dir.getOpposite()).above())
-                        && OLEPOSSUtils.solid2(eyePos.relative(dir.getOpposite()).below())) {
+                        && !BlockUtils.hasCollision(eyePos.relative(dir.getOpposite()))
+                        && !BlockUtils.hasCollision(eyePos.relative(dir.getOpposite()).above())
+                        && BlockUtils.hasCollision(eyePos.relative(dir.getOpposite()).below())) {
                     PlaceData data = SettingUtils.getPlaceData(pos);
                     if (data != null && data.valid()) {
                         this.pistonData = data;
@@ -347,12 +335,12 @@ public class PistonPush extends Module {
                     .toList()) {
                 if (direction != this.pistonDir.getOpposite() && direction != Direction.DOWN && direction != Direction.UP) {
                     BlockPos position = pos.relative(direction);
-                    if (OLEPOSSUtils.replaceable(position) || BlackOut.mc.level.getBlockState(position).getBlock() instanceof RedstoneTorchBlock) {
+                    if (BlockUtils.replaceable(position) || BlackOut.mc.level.getBlockState(position).getBlock() instanceof RedstoneTorchBlock) {
                         this.redstoneData = SettingUtils.getPlaceData(
                                 position,
                                 null,
                                 (p, d) -> {
-                                    if (d == Direction.UP && !OLEPOSSUtils.solid(position.below())) {
+                                    if (d == Direction.UP && !BlockUtils.isFaceSturdy(position.below())) {
                                         return false;
                                     } else if (direction == d.getOpposite()) {
                                         return false;
@@ -379,7 +367,7 @@ public class PistonPush extends Module {
                     .toList()) {
                 if (directionx != this.pistonDir.getOpposite() && directionx != Direction.DOWN) {
                     BlockPos position = pos.relative(directionx);
-                    if ((OLEPOSSUtils.replaceable(position) || BlackOut.mc.level.getBlockState(position).getBlock() == Blocks.REDSTONE_BLOCK)
+                    if ((BlockUtils.replaceable(position) || BlackOut.mc.level.getBlockState(position).getBlock() == Blocks.REDSTONE_BLOCK)
                             && !EntityUtils.intersects(BoxUtils.get(position), entity -> !entity.isSpectator() && entity instanceof Player)) {
                         this.redstoneData = SettingUtils.getPlaceData(position, (p, d) -> pos.equals(p), null);
                         if (this.redstoneData.valid()) {
@@ -406,6 +394,13 @@ public class PistonPush extends Module {
         this.pistonDir = null;
         this.pistonData = null;
         this.redstoneData = null;
+    }
+
+    enum Phase {
+        PLACE_PISTON,
+        PLACE_REDSTONE,
+        MINE,
+        CYCLE_COMPLETE
     }
 
     public enum Redstone {

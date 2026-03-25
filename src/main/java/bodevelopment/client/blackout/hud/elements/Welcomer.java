@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.hud.elements;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.hud.TextElement;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -16,7 +17,7 @@ public class Welcomer extends TextElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.stack.pushPose();
             LocalTime currentTime = LocalTime.now();
             String timetxt;

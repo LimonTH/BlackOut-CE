@@ -1,5 +1,8 @@
 package bodevelopment.client.blackout.module.modules.combat.offensive;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
+import bodevelopment.client.blackout.util.InvUtils;
+
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.enums.RotationType;
@@ -17,7 +20,7 @@ import bodevelopment.client.blackout.randomstuff.ExtrapolationMap;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.randomstuff.Rotation;
 import bodevelopment.client.blackout.util.BoxUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.MathUtils;
 import bodevelopment.client.blackout.util.ProjectileUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -59,10 +62,10 @@ public class Snombonty extends MoveUpdateModule {
     private final ExtrapolationMap extMap = new ExtrapolationMap();
     private final Predicate<ItemStack> predicate = stack -> stack.is(Items.SNOWBALL) || stack.is(Items.EGG);
     private final Consumer<double[]> snowballVelocity = vel -> {
-        vel[0] *= 0.99;
-        vel[1] *= 0.99;
-        vel[2] *= 0.99;
-        vel[1] -= 0.03;
+        vel[0] *= MathUtils.PROJECTILE_AIR_DRAG;
+        vel[1] *= MathUtils.PROJECTILE_AIR_DRAG;
+        vel[2] *= MathUtils.PROJECTILE_AIR_DRAG;
+        vel[1] -= MathUtils.THROWABLE_GRAVITY;
     };
     private Entity target = null;
     private AABB targetBox = null;
@@ -92,7 +95,7 @@ public class Snombonty extends MoveUpdateModule {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && this.target != null) {
+        if (PlayerUtils.isInGame() && this.target != null) {
             Render3DUtils.box(this.lerpBox(event.tickDelta, this.prevBox, this.targetBox), this.sideColor.get(), this.lineColor.get(), this.renderShape.get());
             if (this.renderSpread.get()) {
                 this.renderSpread(event.tickDelta);
@@ -120,19 +123,12 @@ public class Snombonty extends MoveUpdateModule {
     }
 
     private AABB lerpBox(float tickDelta, AABB prev, AABB current) {
-        return new AABB(
-                Mth.lerp(tickDelta, prev.minX, current.minX),
-                Mth.lerp(tickDelta, prev.minY, current.minY),
-                Mth.lerp(tickDelta, prev.minZ, current.minZ),
-                Mth.lerp(tickDelta, prev.maxX, current.maxX),
-                Mth.lerp(tickDelta, prev.maxY, current.maxY),
-                Mth.lerp(tickDelta, prev.maxZ, current.maxZ)
-        );
+        return BoxUtils.territoryBox(tickDelta, prev, current);
     }
 
     @Override
     protected void update(boolean allowAction, boolean fakePos) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (this.extrapolation.get()) {
                 this.extMap
                         .update(
@@ -160,7 +156,7 @@ public class Snombonty extends MoveUpdateModule {
     }
 
     private void update(boolean allowAction) {
-        if (BlackOut.mc.player == null || BlackOut.mc.level == null) {
+        if (!PlayerUtils.isInGame()) {
             this.target = null;
             this.targetBox = null;
             return;
@@ -174,9 +170,9 @@ public class Snombonty extends MoveUpdateModule {
     private void throwUpdate(boolean allowAction) {
         if (!BlackOut.mc.player.isAlive()) return;
 
-        InteractionHand hand = OLEPOSSUtils.getHand(this.predicate);
+        InteractionHand hand = InvUtils.getHand(this.predicate);
         if (hand != null || (this.result != null && this.result.wasFound())) {
-            if (this.rotate((float) this.yaw, (float) this.pitch, 0.0, 10.0, RotationType.Other.withInstant(this.instantRotate.get()), "throwing")) {
+            if (this.rotation.rotate((float) this.yaw, (float) this.pitch, 0.0, 10.0, RotationType.Other.withInstant(this.instantRotate.get()), "throwing")) {
                 if (allowAction) {
 
                     if (hand != null) {

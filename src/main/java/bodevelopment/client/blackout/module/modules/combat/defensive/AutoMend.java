@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.combat.defensive;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.enums.SwingHand;
@@ -15,7 +16,7 @@ import bodevelopment.client.blackout.module.modules.combat.offensive.AutoCrystal
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.InvUtils;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -76,7 +77,7 @@ public class AutoMend extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (AutoCrystal.getInstance().placing) {
                 this.acTimer = this.autoCrystalPause.get();
             }
@@ -98,7 +99,7 @@ public class AutoMend extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && !Suicide.getInstance().enabled) {
+        if (PlayerUtils.isInGame() && !Suicide.getInstance().enabled) {
             this.throwsLeft = this.throwsLeft + this.throwSpeed.get() / 20.0;
             this.updateTimers();
             this.update();
@@ -107,7 +108,7 @@ public class AutoMend extends Module {
     }
 
     private void update() {
-        InteractionHand hand = OLEPOSSUtils.getHand(Items.EXPERIENCE_BOTTLE);
+        InteractionHand hand = InvUtils.getHand(Items.EXPERIENCE_BOTTLE);
         FindResult result = null;
         boolean switched = false;
         int bottlesLeft = 0;
@@ -124,7 +125,7 @@ public class AutoMend extends Module {
         bottlesLeft = Math.min(bottlesLeft, this.bottles.get());
         if (this.shouldThrow() && bottlesLeft >= 1) {
             this.throwing = true;
-            if (this.rotate(Managers.ROTATION.nextYaw, 90.0F, RotationType.Other.withInstant(this.instantRotate.get()), "throwing")) {
+            if (this.rotation.rotate(Managers.ROTATION.nextYaw, 90.0F, RotationType.Other.withInstant(this.instantRotate.get()), "throwing")) {
                 if (hand == null) {
                     switched = this.switchMode.get().swap(result.slot());
                 }
@@ -143,7 +144,7 @@ public class AutoMend extends Module {
             }
         } else {
             this.throwing = false;
-            this.end("throwing");
+            this.rotation.end("throwing");
         }
     }
 

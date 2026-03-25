@@ -1,18 +1,19 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.module.OnlyDev;
+import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.misc.Timer;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.MovementUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.MathUtils;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
@@ -108,7 +109,7 @@ public class Speed extends Module {
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && this.enabled && !this.isPaused() && this.mode.get() != SpeedMode.Vanilla) {
+        if (PlayerUtils.isInGame() && this.enabled && !this.isPaused() && this.mode.get() != SpeedMode.Vanilla) {
             if (this.mode.get() != SpeedMode.Vulcan || BlackOut.mc.player.onGround()) {
                 this.yaw = Managers.ROTATION.moveYaw + 90.0F;
             }
@@ -179,7 +180,7 @@ public class Speed extends Module {
                 // Используем strict friction для обхода NCP
                 yield this.prevVelocity() * (this.strict.get() ? 0.91 : 0.98);
             }
-            case Instant -> OLEPOSSUtils.approach(
+            case Instant -> MathUtils.approach(
                     this.prevMovement.horizontalDistance(),
                     baseSpeed,
                     baseSpeed / Math.max(1, this.accelerationTicks.get())

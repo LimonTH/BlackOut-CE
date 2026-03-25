@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.combat.offensive;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.*;
 import bodevelopment.client.blackout.event.Event;
@@ -10,7 +11,7 @@ import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.interfaces.mixin.IClipContext;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.MoveUpdateModule;
-import bodevelopment.client.blackout.module.OnlyDev;
+import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.Notifications;
 import bodevelopment.client.blackout.module.modules.combat.misc.AntiBot;
@@ -22,7 +23,7 @@ import bodevelopment.client.blackout.randomstuff.ExtrapolationMap;
 import bodevelopment.client.blackout.randomstuff.Pair;
 import bodevelopment.client.blackout.randomstuff.timers.RenderList;
 import bodevelopment.client.blackout.util.DamageUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.BlockUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -191,7 +192,7 @@ public class Aura extends MoveUpdateModule {
 
     @Override
     public void onEnable() {
-        this.end("attacking");
+        this.rotation.end("attacking");
     }
 
     @Override
@@ -227,7 +228,7 @@ public class Aura extends MoveUpdateModule {
 
     @Override
     public void onTickPre(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (BlackOut.mc.player.onGround()) {
                 this.timeOG++;
             } else {
@@ -282,7 +283,7 @@ public class Aura extends MoveUpdateModule {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.renderBoxes.update((box, delta, time) -> this.rendering.render(box, (float) (1.0 - delta), 1.0F));
             if (!this.enabled) {
                 this.renderSingle(false, event.frameTime);
@@ -330,7 +331,7 @@ public class Aura extends MoveUpdateModule {
         }
 
         this.shouldRender = false;
-        if (this.target != null && BlackOut.mc.player != null && BlackOut.mc.level != null && this.enabled) {
+        if (this.target != null && PlayerUtils.isInGame() && this.enabled) {
             int slot = this.bestSlot(this.switchMode.get().inventory);
             boolean holding = !this.onlyWeapon.get() || isAllowedWeapon(BlackOut.mc.player.getMainHandItem());
             if (slot >= 0) {
@@ -339,11 +340,11 @@ public class Aura extends MoveUpdateModule {
                         this.shouldRender = true;
                         boolean rotated = this.rotationMode.get() != RotationMode.Constant
                                 || !SettingUtils.shouldRotate(RotationType.Attacking)
-                                || this.attackRotate(this.getBox(this.target), this.getRotationVec(), "attacking");
+                                || this.rotation.attackRotate(this.getBox(this.target), this.getRotationVec(), "attacking");
                         if (rotated && this.delayCheck()) {
                             if (this.rotationMode.get() != RotationMode.OnHit
                                     || !SettingUtils.shouldRotate(RotationType.Attacking)
-                                    || this.attackRotate(this.getBox(this.target), this.getRotationVec(), "attacking")) {
+                                    || this.rotation.attackRotate(this.getBox(this.target), this.getRotationVec(), "attacking")) {
                                 if (this.inRange(this.target)) {
                                     if (allowAction) {
                                         boolean switched = false;
@@ -355,7 +356,7 @@ public class Aura extends MoveUpdateModule {
                                             }
 
                                             if (this.rotationMode.get() == RotationMode.OnHit) {
-                                                this.end("attacking");
+                                                this.rotation.end("attacking");
                                             }
                                         }
                                     }
@@ -722,7 +723,7 @@ public class Aura extends MoveUpdateModule {
 
     private AABB expand(Entity entity, AABB box, double x, double y, double z) {
         AABB newBox = box.expandTowards(x * this.expand.get(), y * this.expand.get(), z * this.expand.get());
-        return OLEPOSSUtils.inside(entity, newBox) ? box : newBox;
+        return BlockUtils.hasEntityCollision(entity, newBox) ? box : newBox;
     }
 
     public boolean blockTransform(PoseStack stack) {

@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.legit;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.SwingHand;
 import bodevelopment.client.blackout.event.Event;
@@ -39,7 +40,7 @@ public class TriggerBot extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (!this.shouldWait()) {
                 this.critTime = System.currentTimeMillis();
                 HitResult result = BlackOut.mc.hitResult;

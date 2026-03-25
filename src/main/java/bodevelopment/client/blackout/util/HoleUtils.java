@@ -19,33 +19,25 @@ public class HoleUtils {
         return getHole(pos, true, true, true, depth, floor);
     }
 
-    public static Hole getHole(BlockPos pos, boolean s, boolean d, boolean q, int depth, boolean floor) {
+    public static Hole getHole(BlockPos pos, boolean single, boolean doubles, boolean quad, int depth, boolean floor) {
         if (!isAir(pos, depth, floor)) {
             return new Hole(pos, HoleType.NotHole);
         }
 
         if (isBlock(pos.west()) && isBlock(pos.north())) {
+            boolean xOpen = isAir(pos.east(), depth, floor) && isBlock(pos.east().north()) && isBlock(pos.east(2));
+            boolean zOpen = isAir(pos.south(), depth, floor) && isBlock(pos.south().west()) && isBlock(pos.south(2));
 
-            boolean x = isAir(pos.east(), depth, floor) && isBlock(pos.east().north()) && isBlock(pos.east(2));
-            boolean z = isAir(pos.south(), depth, floor) && isBlock(pos.south().west()) && isBlock(pos.south(2));
-
-            // 1x1
-            if (s && !x && !z && isBlock(pos.east()) && isBlock(pos.south())) {
+            if (single && !xOpen && !zOpen && isBlock(pos.east()) && isBlock(pos.south())) {
                 return new Hole(pos, HoleType.Single);
-            }
-            // 2x2
-            else if (q && x && z
+            } else if (quad && xOpen && zOpen
                     && isAir(pos.south().east(), depth, floor)
                     && isBlock(pos.east().east().south())
                     && isBlock(pos.south().south().east())) {
                 return new Hole(pos, HoleType.Quad);
-            }
-            // 2x1 (X)
-            else if (d && x && !z && isBlock(pos.south()) && isBlock(pos.south().east())) {
+            } else if (doubles && xOpen && !zOpen && isBlock(pos.south()) && isBlock(pos.south().east())) {
                 return new Hole(pos, HoleType.DoubleX);
-            }
-            // 1x2 (Z)
-            else if (d && z && !x && isBlock(pos.east()) && isBlock(pos.south().east())) {
+            } else if (doubles && zOpen && !xOpen && isBlock(pos.east()) && isBlock(pos.south().east())) {
                 return new Hole(pos, HoleType.DoubleZ);
             }
         }
@@ -53,11 +45,9 @@ public class HoleUtils {
         return new Hole(pos, HoleType.NotHole);
     }
 
-
-
     static boolean isBlock(BlockPos pos) {
         if (BlackOut.mc.level == null) return false;
-        return OLEPOSSUtils.collidable(pos) && OLEPOSSUtils.solid2(pos) && OLEPOSSUtils.isSafe(pos);
+        return BlockUtils.collidable(pos) && BlockUtils.hasCollision(pos) && BlockUtils.isSafe(pos);
     }
 
     static boolean isAir(BlockPos pos, int depth, boolean floor) {
@@ -67,7 +57,7 @@ public class HoleUtils {
 
         for (int i = 0; i < depth; i++) {
             BlockState state = BlackOut.mc.level.getBlockState(pos.above(i));
-            if (!state.isAir() && !state.canBeReplaced() && !OLEPOSSUtils.replaceable(pos.above(i))) {
+            if (!state.isAir() && !state.canBeReplaced() && !BlockUtils.replaceable(pos.above(i))) {
                 return false;
             }
         }

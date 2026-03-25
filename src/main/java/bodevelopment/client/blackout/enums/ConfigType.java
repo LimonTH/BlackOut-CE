@@ -1,6 +1,6 @@
 package bodevelopment.client.blackout.enums;
 
-import bodevelopment.client.blackout.module.Module;
+import bodevelopment.client.blackout.module.AbstractModule;
 import bodevelopment.client.blackout.module.ParentCategory;
 
 import java.util.function.Predicate;
@@ -15,9 +15,9 @@ public enum ConfigType {
     HUD(null),
     Binds(null);
 
-    public final Predicate<Module> predicate;
+    public final Predicate<AbstractModule> predicate;
 
-    ConfigType(Predicate<Module> predicate) {
+    ConfigType(Predicate<AbstractModule> predicate) {
         this.predicate = predicate;
     }
 }

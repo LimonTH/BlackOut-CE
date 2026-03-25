@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.enums.RotationType;
@@ -110,7 +111,7 @@ public class Nuker extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.startedThisTick = false;
             if (this.shouldUpdatePos()) {
                 this.minePos = this.findPos();
@@ -251,7 +252,7 @@ public class Nuker extends Module {
 
             if (!this.started && !this.paused()) {
                 Direction dir = SettingUtils.getPlaceOnDirection(pos);
-                if (!SettingUtils.startMineRot() || this.rotateBlock(pos, dir, pos.getCenter(), RotationType.Mining, "mining")) {
+                if (!SettingUtils.startMineRot() || this.rotation.rotateBlock(pos, dir, pos.getCenter(), RotationType.Mining, "mining")) {
                     this.start(pos);
                 }
             }
@@ -301,12 +302,12 @@ public class Nuker extends Module {
             }
 
             this.sendSequenced(s -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, dir, s));
-            SettingUtils.mineSwing(SwingSettings.MiningSwingState.Start);
+            SwingSettings.getInstance().mineSwing(SwingSettings.MiningSwingState.Start);
             if (canInstant && !holding) {
                 this.pickaxeSwitch.get().swapBack();
             }
 
-            this.end("mining");
+            this.rotation.end("mining");
             if (this.mineStartSwing.get()) {
                 this.clientSwing(this.mineHand.get(), InteractionHand.MAIN_HAND);
             }
@@ -346,12 +347,12 @@ public class Nuker extends Module {
         if (!(this.getBlock(this.minePos) instanceof AirBlock)) {
             Direction dir = SettingUtils.getPlaceOnDirection(this.minePos);
             if (dir != null) {
-                if (!SettingUtils.endMineRot() || this.rotateBlock(this.minePos, dir, this.minePos.getCenter(), RotationType.Mining, "mining")) {
+                if (!SettingUtils.endMineRot() || this.rotation.rotateBlock(this.minePos, dir, this.minePos.getCenter(), RotationType.Mining, "mining")) {
                     boolean switched = false;
                     if (holding || (switched = this.pickaxeSwitch.get().swap(slot))) {
                         this.ended = this.minePos;
                         this.sendSequenced(s -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, this.minePos, dir, s));
-                        SettingUtils.mineSwing(SwingSettings.MiningSwingState.End);
+                        SwingSettings.getInstance().mineSwing(SwingSettings.MiningSwingState.End);
                         if (this.mineEndSwing.get()) {
                             this.clientSwing(this.mineHand.get(), InteractionHand.MAIN_HAND);
                         }
@@ -364,7 +365,7 @@ public class Nuker extends Module {
                         Managers.ENTITY.addSpawning(this.minePos);
                         this.started = false;
                         this.minePos = null;
-                        this.end("mining");
+                        this.rotation.end("mining");
                         if (switched) {
                             this.pickaxeSwitch.get().swapBack();
                         }
@@ -379,7 +380,7 @@ public class Nuker extends Module {
             if (SettingUtils.inMineRange(this.minePos)) {
                 Direction dir = SettingUtils.getPlaceOnDirection(this.minePos);
                 if (dir != null) {
-                    this.rotateBlock(this.minePos, dir, this.minePos.getCenter(), RotationType.Mining, "mining");
+                    this.rotation.rotateBlock(this.minePos, dir, this.minePos.getCenter(), RotationType.Mining, "mining");
                 }
             }
         }

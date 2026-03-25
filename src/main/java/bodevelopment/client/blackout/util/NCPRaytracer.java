@@ -9,7 +9,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-public class NCPRaytracer {
+public class
+NCPRaytracer {
     public static boolean raytrace(Vec3 from, Vec3 to, AABB box) {
         int lx = 0;
         int ly = 0;

@@ -6,7 +6,7 @@ import bodevelopment.client.blackout.module.ObsidianModule;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.BlockUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.BlockPos;
@@ -153,7 +153,7 @@ public class Surround extends ObsidianModule {
         if (!this.centered
                 && this.center.get()
                 && BlackOut.mc.player.onGround()
-                && (!this.phaseCenter.get() || !OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().deflate(0.01, 0.01, 0.01)))) {
+                && (!this.phaseCenter.get() || !BlockUtils.hasEntityCollision(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().deflate(0.01, 0.01, 0.01)))) {
             double targetX;
             double targetZ;
             if (this.smartCenter.get()) {
@@ -229,7 +229,7 @@ public class Surround extends ObsidianModule {
         boolean alreadyFound = false;
 
         for (BlockPos pos : this.blockPlacements) {
-            if (OLEPOSSUtils.replaceable(pos)) {
+            if (BlockUtils.replaceable(pos)) {
                 if (alreadyFound) {
                     return false;
                 }

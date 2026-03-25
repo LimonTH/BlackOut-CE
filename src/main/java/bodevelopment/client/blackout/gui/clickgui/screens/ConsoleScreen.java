@@ -6,7 +6,7 @@ import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.CollectionUtils;
 import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import java.awt.*;
@@ -145,7 +145,7 @@ public class ConsoleScreen extends ClickGuiScreen {
         }
 
         this.lines.addFirst(line);
-        OLEPOSSUtils.limitList(this.lines, 30);
+        CollectionUtils.limitSize(this.lines, 30);
     }
 
     private String currentTime() {

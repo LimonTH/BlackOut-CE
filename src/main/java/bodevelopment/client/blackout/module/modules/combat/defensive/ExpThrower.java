@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.combat.defensive;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.enums.SwingHand;
@@ -12,7 +13,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.InvUtils;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -56,7 +57,7 @@ public class ExpThrower extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.throwsLeft = this.throwsLeft + this.throwSpeed.get() / 20.0;
             this.update();
             this.throwsLeft = Math.min(1.0, this.throwsLeft);
@@ -64,7 +65,7 @@ public class ExpThrower extends Module {
     }
 
     private void update() {
-        InteractionHand hand = OLEPOSSUtils.getHand(Items.EXPERIENCE_BOTTLE);
+        InteractionHand hand = InvUtils.getHand(Items.EXPERIENCE_BOTTLE);
         FindResult result = null;
         boolean switched = false;
         int bottlesLeft = 0;
@@ -80,7 +81,7 @@ public class ExpThrower extends Module {
 
         bottlesLeft = Math.min(bottlesLeft, this.bottles.get());
         if (this.shouldMend() && bottlesLeft >= 1) {
-            if (!this.rotate.get() || this.rotate(Managers.ROTATION.nextYaw, 90.0F, RotationType.Other.withInstant(this.instantRotate.get()), "throwing")) {
+            if (!this.rotate.get() || this.rotation.rotate(Managers.ROTATION.nextYaw, 90.0F, RotationType.Other.withInstant(this.instantRotate.get()), "throwing")) {
                 if (hand != null || (switched = this.switchMode.get().swap(result.slot()))) {
                     while (bottlesLeft > 0) {
                         this.throwBottle(hand);
@@ -94,7 +95,7 @@ public class ExpThrower extends Module {
                 }
             }
         } else {
-            this.end("throwing");
+            this.rotation.end("throwing");
         }
     }
 

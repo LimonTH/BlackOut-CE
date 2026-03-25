@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
@@ -77,7 +78,7 @@ public class LongJump extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (this.timer.get() != 1.0 && this.enabled) {
                 Timer.set(this.timer.get().floatValue());
                 this.changedTimer = true;
@@ -153,7 +154,7 @@ public class LongJump extends Module {
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (this.enabled && BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (this.enabled && PlayerUtils.isInGame()) {
             if (this.phase == 0 && BlackOut.mc.player.onGround()) {
                 this.phase = 1;
                 this.ticks = this.chargeTicks.get();

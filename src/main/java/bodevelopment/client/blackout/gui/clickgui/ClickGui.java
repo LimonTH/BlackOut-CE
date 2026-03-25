@@ -12,7 +12,7 @@ import bodevelopment.client.blackout.gui.clickgui.screens.SearchScreen;
 import bodevelopment.client.blackout.helpers.ScrollHelper;
 import bodevelopment.client.blackout.helpers.SmoothScrollHelper;
 import bodevelopment.client.blackout.manager.Managers;
-import bodevelopment.client.blackout.module.Module;
+import bodevelopment.client.blackout.module.AbstractModule;
 import bodevelopment.client.blackout.module.ParentCategory;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.GuiSettings;
@@ -30,6 +30,7 @@ import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.ScissorStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
@@ -503,12 +504,11 @@ public class ClickGui extends Screen {
         ParentCategory prevParent = null;
         float currentY = 110.0F - this.categoryScroll.get();
 
-        GlStateManager._enableScissorTest();
         float sx = BlackOut.mc.getWindow().getScreenWidth() / 2.0F - width / 2.0F * unscaled + x;
         float y1 = BlackOut.mc.getWindow().getScreenHeight() / 2.0F - (height / 2.0F + 10.0F) * unscaled - y;
         float y2 = BlackOut.mc.getWindow().getScreenHeight() / 2.0F + (height / 2.0F - 100.0F) * unscaled - y;
         float scissorHeight = Math.abs(y1 - y2);
-        GlStateManager._scissorBox((int) sx, (int) y1, (int) (210.0F * unscaled), (int) scissorHeight);
+        ScissorStack.pushRaw((int) sx, (int) y1, (int) (210.0F * unscaled), (int) scissorHeight);
 
         float totalHeightCounter = 0.0F;
 
@@ -544,7 +544,7 @@ public class ClickGui extends Screen {
 
         RenderUtils.bottomFade(this.stack, 0.0F, 100.0F, 200.0F, 20.0F, GuiColorUtils.bg2.getRGB());
         RenderUtils.topFade(this.stack, 0.0F, height - 10.0F, 200.0F, 20.0F, GuiColorUtils.bg2.getRGB());
-        GlStateManager._disableScissorTest();
+        ScissorStack.pop();
     }
 
     private void renderParentCategory(ParentCategory parent, float yPos) {
@@ -620,7 +620,7 @@ public class ClickGui extends Screen {
         }
     }
 
-    public void scrollToModule(Module module) {
+    public void scrollToModule(AbstractModule module) {
         int columns = this.getColumns();
         float[] lengths = new float[columns];
         int current = 0;

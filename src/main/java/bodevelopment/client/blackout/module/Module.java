@@ -11,15 +11,12 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.client.Notifications;
 import bodevelopment.client.blackout.module.modules.visual.misc.SwingModifier;
 import bodevelopment.client.blackout.module.setting.Setting;
-import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.Settings;
-import bodevelopment.client.blackout.module.setting.WarningSettingGroup;
 import bodevelopment.client.blackout.module.setting.settings.KeyBindSetting;
 import bodevelopment.client.blackout.randomstuff.PlaceData;
 import bodevelopment.client.blackout.util.ChatUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 import bodevelopment.client.blackout.util.SoundUtils;
-import com.google.gson.JsonObject;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.multiplayer.prediction.BlockStatePredictionHandler;
 import net.minecraft.client.multiplayer.prediction.PredictiveAction;
@@ -42,19 +39,12 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
-public class Module extends RotationHelper {
-    public final String name;
-    public final String description;
-    public final SubCategory category;
-    public final List<SettingGroup> settingGroups = new ArrayList<>();
-    public final SettingGroup sgModule = this.addGroup("Module");
+public class Module extends AbstractModule {
     public final KeyBindSetting bind;
     public final Setting<BindMode> bindMode;
-    private final Setting<String> displayName;
+    protected final RotationHelper rotation;
     public boolean enabled = false;
     public long toggleTime = 0L;
 
@@ -65,11 +55,8 @@ public class Module extends RotationHelper {
      * @param subscribe   If true, the module is registered to the EventBus automatically.
      */
     public Module(String name, String description, SubCategory category, boolean subscribe) {
-        this.name = name;
-        this.description = description;
-        this.category = category;
-        this.set(this);
-        this.displayName = this.sgModule.stringSetting("Name", name, "The internal name used for this module in the interface.");
+        super(name, description, category);
+        this.rotation = new RotationHelper(this);
         this.bind = (KeyBindSetting) Settings.keySetting("Bind", "The keyboard key assigned to toggle this module.", null);
         this.bindMode = this.sgModule.enumSetting("Bind Mode", BindMode.Toggle, "Determines if the module toggles on press or stays active only while holding the key.");
 
@@ -78,17 +65,9 @@ public class Module extends RotationHelper {
         }
     }
 
+    @Override
     public boolean toggleable() {
         return true;
-    }
-
-    public String getFileName() {
-        return this.name.replaceAll(" ", "");
-    }
-
-    public String getDisplayName() {
-        String dn = this.displayName.get();
-        return dn.isEmpty() ? this.name : dn;
     }
 
     public void toggle() {
@@ -186,10 +165,6 @@ public class Module extends RotationHelper {
     }
 
     public void onDisable() {
-    }
-
-    public String getInfo() {
-        return null;
     }
 
     protected void sendMessage(String message) {
@@ -382,26 +357,7 @@ public class Module extends RotationHelper {
                 );
     }
 
-    protected SettingGroup addGroup(String name) {
-        SettingGroup group = new SettingGroup(name);
-        this.settingGroups.add(group);
-        return group;
-    }
-
-    protected SettingGroup addGroup(String name, String warning) {
-        SettingGroup group = new WarningSettingGroup(name, warning);
-        this.settingGroups.add(group);
-        return group;
-    }
-
-    public void readSettings(JsonObject jsonObject) {
-        this.settingGroups.forEach(group -> group.settings.forEach(s -> s.read(jsonObject)));
-    }
-
-    public void writeSettings(JsonObject jsonObject) {
-        this.settingGroups.forEach(group -> group.settings.forEach(s -> s.write(jsonObject)));
-    }
-
+    @Override
     public boolean shouldSkipListeners() {
         return !this.enabled;
     }
@@ -409,15 +365,4 @@ public class Module extends RotationHelper {
     protected void closeInventory() {
         this.sendPacket(new ServerboundContainerClosePacket(BlackOut.mc.player.containerMenu.containerId));
     }
-
-    @Override
-    public boolean equals(Object object) {
-        return this == object || object instanceof Module module && module.name.equals(this.name);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(this.name);
-    }
-
 }

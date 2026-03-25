@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.hud;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.ConfigType;
 import bodevelopment.client.blackout.event.Event;
@@ -67,7 +68,7 @@ public class HudEditor extends Screen {
         this.my *= scale;
         float deltaX = this.mx - prevMx;
         float deltaY = this.my - prevMy;
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (this.holding && this.moved() && this.still) {
                 this.still = false;
                 HudElement holding = this.holdElement();

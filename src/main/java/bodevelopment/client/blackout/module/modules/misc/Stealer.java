@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.event.Event;
@@ -119,7 +120,7 @@ public class Stealer extends Module {
     public boolean isSilenting() {
         if (!this.enabled) {
             return false;
-        } else if (BlackOut.mc.player == null || BlackOut.mc.level == null) {
+        } else if (!PlayerUtils.isInGame()) {
             return false;
         } else if (!this.silent.get()) {
             return false;
@@ -155,7 +156,7 @@ public class Stealer extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (!(BlackOut.mc.player.containerMenu instanceof ChestMenu handler && BlackOut.mc.screen instanceof ContainerScreen screen)) {
                 this.setOpen(false);
                 if (this.autoOpen.get()) {
@@ -238,7 +239,7 @@ public class Stealer extends Module {
         if (!(System.currentTimeMillis() - this.prevOpen < this.openCooldown.get() * 1000.0)) {
             if (!(System.currentTimeMillis() - this.openStateChange < this.closeDelay.get() * 1000.0)) {
                 if (this.bestChest != null) {
-                    if (!SettingUtils.shouldRotate(RotationType.Interact) || this.rotateBlock(this.bestChest, this.bestDir, RotationType.Interact, "open")) {
+                    if (!SettingUtils.shouldRotate(RotationType.Interact) || this.rotation.rotateBlock(this.bestChest, this.bestDir, RotationType.Interact, "open")) {
                         this.interactBlock(InteractionHand.MAIN_HAND, this.bestChest.getCenter(), this.bestDir, this.bestChest);
                         this.retryTimers.add(this.bestChest, this.retryTime.get());
                         this.prevOpened = this.bestChest;

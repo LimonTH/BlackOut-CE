@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.combat.offensive.Aura;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.BlockUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
@@ -104,7 +104,7 @@ public class TargetStrafe extends Module {
                             vec.y() + height,
                             vec.z() + width
                     );
-                    if (!OLEPOSSUtils.inLava(box) && !this.wouldFall(box, this.target.getY())) {
+                    if (!BlockUtils.inLava(box) && !this.wouldFall(box, this.target.getY())) {
                         this.closest = diff;
                         this.bestYaw = yaw;
                     }
@@ -121,7 +121,7 @@ public class TargetStrafe extends Module {
 
     private boolean wouldFall(AABB box, double y) {
         double diff = Math.min(BlackOut.mc.player.getY() - y, 0.0);
-        return !OLEPOSSUtils.inside(BlackOut.mc.player, box.expandTowards(0.0, diff - 2.5, 0.0));
+        return !BlockUtils.hasEntityCollision(BlackOut.mc.player, box.expandTowards(0.0, diff - 2.5, 0.0));
     }
 
     private Player getTarget() {

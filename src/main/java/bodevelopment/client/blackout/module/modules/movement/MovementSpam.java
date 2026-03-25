@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
@@ -35,7 +36,7 @@ public class MovementSpam extends Module {
 
     @Event
     public void onTickPost(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && this.enabled) {
+        if (PlayerUtils.isInGame() && this.enabled) {
             Vec3 pos = Managers.PACKET.pos;
 
             for (int i = 0; i < this.packets.get(); i++) {
