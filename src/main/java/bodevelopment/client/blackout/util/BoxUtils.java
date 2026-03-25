@@ -37,6 +37,10 @@ public class BoxUtils {
     }
 
     public static AABB lerp(float delta, AABB start, AABB end) {
+        return territoryBox(delta, start, end);
+    }
+
+    public static AABB territoryBox(float delta, AABB start, AABB end) {
         return new AABB(
                 Mth.lerp(delta, start.minX, end.minX),
                 Mth.lerp(delta, start.minY, end.minY),
@@ -47,10 +51,41 @@ public class BoxUtils {
         );
     }
 
-    public static AABB expand(AABB box, double amount) {
+    public static AABB expandBox(AABB box, double amount) {
         return new AABB(
                 box.minX - amount, box.minY - amount, box.minZ - amount,
                 box.maxX + amount, box.maxY + amount, box.maxZ + amount
+        );
+    }
+
+    public static Vec3 getClosest(Vec3 from, Vec3 feetPos, double width, double height) {
+        double halfWidth = width / 2.0;
+        return getClosest(from,
+                feetPos.x() - halfWidth, feetPos.x() + halfWidth,
+                feetPos.y(), feetPos.y() + height,
+                feetPos.z() - halfWidth, feetPos.z() + halfWidth
+        );
+    }
+
+    public static Vec3 getClosest(Vec3 from, AABB box) {
+        return getClosest(from, box.minX, box.maxX, box.minY, box.maxY, box.minZ, box.maxZ);
+    }
+
+    public static Vec3 getClosest(Vec3 from, double minX, double maxX, double minY, double maxY, double minZ, double maxZ) {
+        return new Vec3(
+                Mth.clamp(from.x(), minX, maxX),
+                Mth.clamp(from.y(), minY, maxY),
+                Mth.clamp(from.z(), minZ, maxZ)
+        );
+    }
+
+    public static AABB crystalBox(BlockPos pos) {
+        return new AABB(pos.getX(), pos.getY() + 1, pos.getZ(), pos.getX() + 1, pos.getY() + 3, pos.getZ() + 1);
+    }
+
+    public static AABB crystalBox(Vec3 pos) {
+        return new AABB(
+                pos.x() - 1.0, pos.y(), pos.z() - 1.0, pos.x() + 1.0, pos.y() + 2.0, pos.z() + 1.0
         );
     }
 }

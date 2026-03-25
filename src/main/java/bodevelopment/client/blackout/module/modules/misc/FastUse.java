@@ -12,6 +12,8 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import java.util.List;
+
+import bodevelopment.client.blackout.util.PlayerUtils;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -75,9 +77,9 @@ public class FastUse extends Module {
                     BlackOut.mc.player.setXRot(90.0F);
                     return Math.abs(Managers.ROTATION.prevPitch - 90.0F) > 1.0F;
                 case Normal:
-                    return !this.rotatePitch(90.0F, RotationType.Other, "exp");
+                    return !this.rotation.rotatePitch(90.0F, RotationType.Other, "exp");
                 case Instant:
-                    return !this.rotatePitch(90.0F, RotationType.InstantOther, "exp");
+                    return !this.rotation.rotatePitch(90.0F, RotationType.InstantOther, "exp");
             }
         }
 
@@ -89,12 +91,11 @@ public class FastUse extends Module {
     }
 
     public ItemStack getStack() {
-        if (BlackOut.mc.player != null
-                && BlackOut.mc.level != null
+        if (PlayerUtils.isInGame()
                 && !BlackOut.mc.player.isUsingItem()
                 && BlackOut.mc.options.keyUse.isDown()) {
             ItemStack stack = BlackOut.mc.player.getMainHandItem();
-            return stack != null && !stack.isEmpty() ? stack : null;
+            return !stack.isEmpty() ? stack : null;
         } else {
             return null;
         }

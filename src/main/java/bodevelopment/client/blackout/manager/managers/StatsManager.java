@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.manager.managers;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.EntityAddEvent;
@@ -8,7 +9,7 @@ import bodevelopment.client.blackout.event.events.PopEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.util.HoleUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.BlockUtils;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.util.Comparator;
 import java.util.Map;
@@ -30,7 +31,7 @@ public class StatsManager extends Manager {
 
     @Override
     public void init() {
-        BlackOut.EVENT_BUS.subscribe(this, () -> BlackOut.mc.player == null || BlackOut.mc.level == null);
+        BlackOut.EVENT_BUS.subscribe(this, () -> !PlayerUtils.isInGame());
     }
 
     @Event
@@ -166,7 +167,7 @@ public class StatsManager extends Manager {
                 this.inHoleFor++;
             }
 
-            if (OLEPOSSUtils.inside(player, player.getBoundingBox().deflate(0.04, 0.06, 0.04))) {
+            if (BlockUtils.hasEntityCollision(player, player.getBoundingBox().deflate(0.04, 0.06, 0.04))) {
                 this.phasedFor++;
             }
 

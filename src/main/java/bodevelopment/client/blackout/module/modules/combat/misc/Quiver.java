@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.combat.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.event.Event;
@@ -67,7 +68,7 @@ public class Quiver extends Module {
         this.timer++;
         this.movesLeft = this.movesLeft + this.moveSpeed.get() / 20.0;
         this.shot.update();
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && BlackOut.mc.player.getMainHandItem().getItem() == Items.BOW) {
+        if (PlayerUtils.isInGame() && BlackOut.mc.player.getMainHandItem().getItem() == Items.BOW) {
             this.update();
         } else {
             charging = false;
@@ -83,13 +84,13 @@ public class Quiver extends Module {
 
     private void updateShooting() {
         ItemStack stack = BlackOut.mc.player.getMainHandItem();
-        if (stack != null && stack.getItem() instanceof BowItem) {
+        if (stack.getItem() instanceof BowItem) {
             if (!this.updateMoving()) {
                 if (this.charged) {
                     this.charged = false;
                     BlackOut.mc.gameMode.releaseUsingItem(BlackOut.mc.player);
                 }
-            } else if (this.rotatePitch(-90.0F, RotationType.Other.withInstant(this.instantRotate.get()), "bow")) {
+            } else if (this.rotation.rotatePitch(-90.0F, RotationType.Other.withInstant(this.instantRotate.get()), "bow")) {
                 if (!BlackOut.mc.player.isUsingItem() && this.timer > this.delay.get()) {
                     BlackOut.mc.gameMode.useItem(BlackOut.mc.player, InteractionHand.MAIN_HAND);
                     charging = true;

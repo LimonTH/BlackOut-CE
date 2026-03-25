@@ -96,7 +96,7 @@ public class HoleFill extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             BlockPos pos = new BlockPos(
                     BlackOut.mc.player.getBlockX(), (int) Math.round(BlackOut.mc.player.getY()), BlackOut.mc.player.getBlockZ()
             );
@@ -112,7 +112,7 @@ public class HoleFill extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.render.update((pos, time, d) -> {
                 double progress = 1.0 - Math.max(time - this.renderTime.get(), 0.0) / this.fadeTime.get();
                 Render3DUtils.box(BoxUtils.get(pos), this.sideColor.get().alphaMulti(progress), this.lineColor.get().alphaMulti(progress), this.renderShape.get());
@@ -131,7 +131,7 @@ public class HoleFill extends Module {
 
     private void updatePlacing() {
         this.blocksLeft = Math.min(this.placesLeft, this.result.amount());
-        this.hand = OLEPOSSUtils.getHand(this::valid);
+        this.hand = InvUtils.getHand(this::valid);
         this.switched = false;
         if (!BlackOut.mc.player.isUsingItem() || !this.pauseEat.get()) {
             this.holes
@@ -183,7 +183,7 @@ public class HoleFill extends Module {
     private boolean validPos(BlockPos pos) {
         if (this.timers.contains(pos)) {
             return false;
-        } else if (!OLEPOSSUtils.replaceable(pos)) {
+        } else if (!BlockUtils.replaceable(pos)) {
             return false;
         } else {
             PlaceData data = SettingUtils.getPlaceData(pos);
@@ -220,13 +220,13 @@ public class HoleFill extends Module {
     }
 
     private boolean selfNearCheck(Hole hole) {
-        if (System.currentTimeMillis() - this.holeTime < 500L && OLEPOSSUtils.contains(hole.positions, this.prevHole)) {
+        if (System.currentTimeMillis() - this.holeTime < 500L && CollectionUtils.contains(hole.positions, this.prevHole)) {
             return false;
         } else {
             BlockPos pos = new BlockPos(
                     BlackOut.mc.player.getBlockX(), (int) Math.round(BlackOut.mc.player.getY()), BlackOut.mc.player.getBlockZ()
             );
-            if (!this.ignoreSelfHole.get() || !HoleUtils.inHole(BlackOut.mc.player.blockPosition()) && !OLEPOSSUtils.collidable(pos)) {
+            if (!this.ignoreSelfHole.get() || !HoleUtils.inHole(BlackOut.mc.player.blockPosition()) && !BlockUtils.collidable(pos)) {
                 if (this.selfAbove.get() && BlackOut.mc.player.getY() <= hole.middle.y) {
                     this.shouldIgnoreSelf = true;
                     return false;
@@ -251,7 +251,7 @@ public class HoleFill extends Module {
         } else {
             double eDist = (this.nearPosition.contains(player) ? this.feet(this.nearPosition.get(player)) : player.position())
                     .distanceTo(hole.middle.add(0.0, 1.0, 0.0));
-            return !(eDist > this.nearDistance.get()) && (System.currentTimeMillis() - this.holeTime < 500L && OLEPOSSUtils.contains(hole.positions, this.prevHole)
+            return !(eDist > this.nearDistance.get()) && (System.currentTimeMillis() - this.holeTime < 500L && CollectionUtils.contains(hole.positions, this.prevHole)
                     || this.shouldIgnoreSelf
                     || !this.efficient.get()
                     || !(pDist <= eDist));
@@ -260,7 +260,7 @@ public class HoleFill extends Module {
 
     private boolean inHole(Vec3 vec) {
         BlockPos pos = new BlockPos((int) Math.floor(vec.x()), (int) Math.round(vec.y()), (int) Math.floor(vec.z()));
-        return HoleUtils.inHole(pos) || OLEPOSSUtils.collidable(pos);
+        return HoleUtils.inHole(pos) || BlockUtils.collidable(pos);
     }
 
     private void updatePlaces() {
@@ -284,7 +284,7 @@ public class HoleFill extends Module {
             PlaceData data = SettingUtils.getPlaceData(pos);
             if (data != null && data.valid()) {
                 placing = true;
-                if (!SettingUtils.shouldRotate(RotationType.BlockPlace) || this.rotateBlock(data, RotationType.BlockPlace, "placing")) {
+                if (!SettingUtils.shouldRotate(RotationType.BlockPlace) || this.rotation.rotateBlock(data, RotationType.BlockPlace, "placing")) {
                     if (this.switched || this.hand != null || (this.switched = this.switchMode.get().swap(this.result.slot()))) {
                         this.render.add(pos, this.renderTime.get() + this.fadeTime.get());
                         this.timers.add(pos, this.cooldown.get());
@@ -296,7 +296,7 @@ public class HoleFill extends Module {
                         this.blocksLeft--;
                         this.placesLeft--;
                         if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-                            this.end("placing");
+                            this.rotation.end("placing");
                         }
                     }
                 }

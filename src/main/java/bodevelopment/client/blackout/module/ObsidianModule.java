@@ -36,8 +36,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 
 public class ObsidianModule extends Module {
-
-    // --- Группы настроек ---
     public final SettingGroup sgGeneral = this.addGroup("General");
     public final SettingGroup sgBlocks = this.addGroup("Blocks");
     public final SettingGroup sgSpeed = this.addGroup("Speed");
@@ -104,7 +102,7 @@ public class ObsidianModule extends Module {
 
     @Override
     public void onDisable() {
-        this.blockPlacements.stream().filter(OLEPOSSUtils::replaceable).forEach(pos -> this.render.add(pos, 0.5));
+        this.blockPlacements.stream().filter(BlockUtils::replaceable).forEach(pos -> this.render.add(pos, 0.5));
         this.supportPositions.forEach(pos -> this.supportRender.add(pos, 0.5));
     }
 
@@ -115,8 +113,8 @@ public class ObsidianModule extends Module {
 
     @Event
     public void onBlock(BlockStateEvent event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && this.enabled) {
-            if (event.previousState.getBlock() != event.state.getBlock() && !OLEPOSSUtils.replaceable(event.pos)) {
+        if (PlayerUtils.isInGame() && this.enabled) {
+            if (event.previousState.getBlock() != event.state.getBlock() && !BlockUtils.replaceable(event.pos)) {
                 if (this.blockPlacements.contains(event.pos)) {
                     this.render.add(event.pos, 0.5);
                 }
@@ -135,7 +133,7 @@ public class ObsidianModule extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player == null || BlackOut.mc.level == null) return;
+        if (!PlayerUtils.isInGame()) return;
 
         if (!this.enabled) {
             this.render.update((pos, time, delta) ->
@@ -151,7 +149,7 @@ public class ObsidianModule extends Module {
                 this.updateSupport();
 
                 this.blockPlacements.stream()
-                        .filter(OLEPOSSUtils::replaceable)
+                        .filter(BlockUtils::replaceable)
                         .forEach(block -> {
                             this.normalRendering.render(BoxUtils.get(block));
                             if (this.firstCalc) {
@@ -197,12 +195,12 @@ public class ObsidianModule extends Module {
             if (!(System.currentTimeMillis() - this.lastAttack < 1000.0 / this.attackSpeed.get())) {
                 Entity blocking = this.getBlocking();
                 if (blocking != null) {
-                    if (!SettingUtils.shouldRotate(RotationType.Attacking) || this.attackRotate(blocking.getBoundingBox(), -0.1, "attacking")) {
+                    if (!SettingUtils.shouldRotate(RotationType.Attacking) || this.rotation.attackRotate(blocking.getBoundingBox(), -0.1, "attacking")) {
                         SettingUtils.swing(SwingState.Pre, SwingType.Attacking, InteractionHand.MAIN_HAND);
                         this.sendPacket(ServerboundInteractPacket.createAttackPacket(blocking, BlackOut.mc.player.isShiftKeyDown()));
                         SettingUtils.swing(SwingState.Post, SwingType.Attacking, InteractionHand.MAIN_HAND);
                         if (SettingUtils.shouldRotate(RotationType.Attacking)) {
-                            this.end("attacking");
+                            this.rotation.end("attacking");
                         }
 
                         if (this.attackSwing.get()) {
@@ -261,7 +259,7 @@ public class ObsidianModule extends Module {
         this.updatePlaces();
         if ((this.result = this.switchMode.get().find(this::valid)).wasFound()) {
             this.blocksLeft = Math.min(this.placesLeft, this.result.amount());
-            this.hand = OLEPOSSUtils.getHand(this::valid);
+            this.hand = InvUtils.getHand(this::valid);
             this.switched = false;
             this.valids
                     .stream()
@@ -291,7 +289,7 @@ public class ObsidianModule extends Module {
     }
 
     private boolean validBlock(BlockPos pos) {
-        if (!OLEPOSSUtils.replaceable(pos)) {
+        if (!BlockUtils.replaceable(pos)) {
             return false;
         } else {
             PlaceData data = SettingUtils.getPlaceData(pos, (p, d) -> this.placed.contains(p), null, !this.allowSneak.get());
@@ -311,12 +309,12 @@ public class ObsidianModule extends Module {
                 if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
                     switch (this.rotationMode.get()) {
                         case Normal:
-                            if (!this.rotateBlock(data, RotationType.BlockPlace, "placing")) {
+                            if (!this.rotation.rotateBlock(data, RotationType.BlockPlace, "placing")) {
                                 return;
                             }
                             break;
                         case Instant:
-                            if (!this.rotateBlock(data, RotationType.InstantBlockPlace, "placing")) {
+                            if (!this.rotation.rotateBlock(data, RotationType.InstantBlockPlace, "placing")) {
                                 return;
                             }
                     }
@@ -346,7 +344,7 @@ public class ObsidianModule extends Module {
                         this.blocksLeft--;
                         this.placesLeft--;
                         if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-                            this.end("placing");
+                            this.rotation.end("placing");
                         }
                     }
                 }
@@ -403,7 +401,7 @@ public class ObsidianModule extends Module {
     }
 
     protected BlockPos findSupport(BlockPos pos) {
-        if (!OLEPOSSUtils.replaceable(pos)) {
+        if (!BlockUtils.replaceable(pos)) {
             return null;
         } else if (this.hasSupport(pos, true)) {
             return null;

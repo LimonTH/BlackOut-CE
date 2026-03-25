@@ -10,6 +10,7 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.ScissorStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -81,15 +82,12 @@ public class ClickGuiScreen {
         double cutLineBottom = cutLineTop - contentHeightPx;
 
         if (this.unscaled > 0.05F) {
-            GlStateManager._enableScissorTest();
-
             int glY = (int) Math.round(cutLineBottom);
             int glH = (int) Math.round(cutLineTop - cutLineBottom);
 
-            GlStateManager._scissorBox(0, Math.max(0, glY), (int) sw, Math.max(0, glH));
-            this.render();
-
-            RenderUtils.endScissor();
+            try (ScissorStack.Region region = ScissorStack.pushRaw(0, Math.max(0, glY), (int) sw, Math.max(0, glH))) {
+                this.render();
+            }
         } else {
             this.render();
         }

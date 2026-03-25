@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.SwitchMode;
 import bodevelopment.client.blackout.event.Event;
@@ -11,7 +12,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.InvUtils;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 import net.minecraft.world.InteractionHand;
@@ -35,7 +36,7 @@ public class Disabler extends Module {
 
     @Event
     public void onMove(MoveEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (this.vulcanOmni.get() && !BlackOut.mc.options.keyUp.isDown() && BlackOut.mc.player.isSprinting()) {
                 this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.START_SPRINTING));
                 this.sendPacket(new ServerboundPlayerCommandPacket(BlackOut.mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
@@ -45,13 +46,13 @@ public class Disabler extends Module {
 
     @Event
     public void onTickPre(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (this.grimMovement.get()) {
                 if (System.currentTimeMillis() - this.prevRiptide < this.tridentDelay.get() * 1000.0) {
                     return;
                 }
 
-                InteractionHand hand = OLEPOSSUtils.getHand(Items.TRIDENT);
+                InteractionHand hand = InvUtils.getHand(Items.TRIDENT);
                 if (hand == null) {
                     FindResult result = this.tridentSwitch.get().find(Items.TRIDENT);
                     if (!result.wasFound() || !this.tridentSwitch.get().swap(result.slot())) {

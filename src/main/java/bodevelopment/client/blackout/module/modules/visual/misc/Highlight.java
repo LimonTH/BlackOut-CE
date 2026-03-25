@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.visual.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.event.Event;
@@ -57,7 +58,7 @@ public class Highlight extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             BlockPos pos = this.getCurrentPos();
             switch (this.mode.get()) {
                 case Move:

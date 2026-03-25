@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
@@ -20,7 +21,7 @@ public class AutoTool extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (BlackOut.mc.gameMode.isDestroying()) {
                 BlockPos pos = BlackOut.mc.gameMode.destroyBlockPos;
                 if (pos != null) {

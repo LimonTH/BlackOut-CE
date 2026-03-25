@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
@@ -15,7 +16,7 @@ public class AutoGG extends Module {
 
     @Event
     public void onReceive(PacketEvent.Receive.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (event.packet instanceof ClientboundSystemChatPacket packet) {
                 String unformattedText = packet.content().getString();
                 String[] look = new String[]{

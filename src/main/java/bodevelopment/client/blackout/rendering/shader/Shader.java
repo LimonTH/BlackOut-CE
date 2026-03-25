@@ -2,6 +2,7 @@ package bodevelopment.client.blackout.rendering.shader;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
+import net.minecraft.util.ARGB;
 import bodevelopment.client.blackout.randomstuff.ShaderSetup;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -125,7 +126,7 @@ public class Shader {
     }
 
     public void color(String uniform, int color) {
-        this.set(uniform, (color >> 16 & 0xFF) / 255.0F, (color >> 8 & 0xFF) / 255.0F, (color & 0xFF) / 255.0F, (color >>> 24) / 255.0F);
+        this.set(uniform, ARGB.red(color) / 255.0F, ARGB.green(color) / 255.0F, ARGB.blue(color) / 255.0F, ARGB.alpha(color) / 255.0F);
     }
 
     public void color(String uniform, BlackOutColor color) {
@@ -181,7 +182,7 @@ public class Shader {
     }
 
     public void colorIf(String uniform, int color) {
-        this.setIf(uniform, (color >> 16 & 0xFF) / 255.0F, (color >> 8 & 0xFF) / 255.0F, (color & 0xFF) / 255.0F, (color >>> 24) / 255.0F);
+        this.setIf(uniform, ARGB.red(color) / 255.0F, ARGB.green(color) / 255.0F, ARGB.blue(color) / 255.0F, ARGB.alpha(color) / 255.0F);
     }
 
     public void colorIf(String uniform, BlackOutColor color) {

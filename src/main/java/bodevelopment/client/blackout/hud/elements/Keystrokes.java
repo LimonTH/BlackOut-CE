@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.hud.elements;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -29,7 +30,7 @@ public class Keystrokes extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.stack.pushPose();
             this.setSize(44.0F, 48.0F);
             this.renderKey(18, 0, "W", BlackOut.mc.options.keyUp);

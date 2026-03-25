@@ -4,7 +4,7 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.MathUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 
 public class CameraModifier extends Module {
@@ -43,6 +43,6 @@ public class CameraModifier extends Module {
     }
 
     public double getCameraDistance() {
-        return AnimUtils.easeOutCubic(OLEPOSSUtils.safeDivide(this.distProgress, this.smoothTime.get())) * this.cameraDist.get();
+        return AnimUtils.easeOutCubic(MathUtils.safeDivide(this.distProgress, this.smoothTime.get())) * this.cameraDist.get();
     }
 }

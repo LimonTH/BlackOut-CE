@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
@@ -46,7 +47,7 @@ public class NoFall extends Module {
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (BlackOut.mc.player.fallDistance == 0.0F) {
                 this.fallDist = 0.0F;
             }

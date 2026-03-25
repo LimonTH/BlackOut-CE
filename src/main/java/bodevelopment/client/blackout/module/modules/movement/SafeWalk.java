@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
@@ -33,7 +34,7 @@ public class SafeWalk extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && this.sneak.get()) {
+        if (PlayerUtils.isInGame() && this.sneak.get()) {
             Vec3 movement = BlackOut.mc.player.getDeltaMovement();
             Vec3 newMovement = BlackOut.mc.player.maybeBackOffFromEdge(movement, MoverType.SELF);
             if (!movement.equals(newMovement)) {

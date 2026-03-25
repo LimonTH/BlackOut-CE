@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.event.Event;
@@ -74,7 +75,7 @@ public class Blink extends Module {
     @Event
     public void onTick(TickEvent.Pre event) {
         this.time++;
-        if (BlackOut.mc.player == null || BlackOut.mc.level == null || this.ticks.get() > 0 && this.time > this.ticks.get()) {
+        if (!PlayerUtils.isInGame() || this.ticks.get() > 0 && this.time > this.ticks.get()) {
             this.disable();
         }
     }
@@ -110,7 +111,7 @@ public class Blink extends Module {
     }
 
     public boolean shouldDelay() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             return switch (this.blinkMode.get()) {
                 case Damage ->
                         BlackOut.mc.player.hurtTime > 0 && (this.packets.get() == 0 || BlackOut.mc.player.hurtTime < this.packets.get());

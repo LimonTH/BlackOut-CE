@@ -13,7 +13,7 @@ import bodevelopment.client.blackout.interfaces.functional.EpicInterface;
 import bodevelopment.client.blackout.keys.KeyBind;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.module.OnlyDev;
+import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.settings.SwingSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -190,7 +190,7 @@ public class AutoMine extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.crystals.update();
             this.enemies.clear();
             BlackOut.mc.level.players().forEach(player -> {
@@ -246,7 +246,7 @@ public class AutoMine extends Module {
 
             if (!this.started && !this.paused(false)) {
                 Direction dir = SettingUtils.getPlaceOnDirection(this.minePos);
-                if (!this.shouldRotateStart() || this.rotateBlock(this.minePos, dir, this.getMineStartRotationVec(dir), RotationType.Mining, "mining")) {
+                if (!this.shouldRotateStart() || this.rotation.rotateBlock(this.minePos, dir, this.getMineStartRotationVec(dir), RotationType.Mining, "mining")) {
                     this.start(this.minePos, false);
                 }
             }
@@ -515,7 +515,7 @@ public class AutoMine extends Module {
                         && this.crystalBlock(crystal.below(), false)
                         && SettingUtils.inMineRange(pos)
                         && SettingUtils.inInteractRange(crystal.below())
-                        && SettingUtils.inAttackRange(OLEPOSSUtils.getCrystalBox(crystal))) {
+                        && SettingUtils.inAttackRange(BoxUtils.crystalBox(crystal))) {
                     if (this.isInstant(pos)) {
                         return new  Target(pos, crystal,  MineType.AutoCity, this.autoCityPriority.get().priority, player);
                     }
@@ -578,7 +578,7 @@ public class AutoMine extends Module {
             return true;
         } else if (!SettingUtils.inMineRange(pos)
                 || !SettingUtils.inInteractRange(pos)
-                || !SettingUtils.inAttackRange(OLEPOSSUtils.getCrystalBox(pos.above()))) {
+                || !SettingUtils.inAttackRange(BoxUtils.crystalBox(pos.above()))) {
             return true;
         } else if (this.isInstant(pos)) {
             return false;
@@ -641,7 +641,7 @@ public class AutoMine extends Module {
                     }
 
                     this.attackEntity(target);
-                    this.end("attacking");
+                    this.rotation.end("attacking");
                     this.lastAttack = System.currentTimeMillis();
                 }
             }
@@ -653,14 +653,14 @@ public class AutoMine extends Module {
             return true;
         } else {
             return SettingUtils.shouldIgnoreRotations(target)
-                    ? this.checkAttackLimit()
-                    : this.attackRotate(target.getBoundingBox(), this.getAttackRotationVec(target), -0.1, "attacking");
+                    ? this.rotation.checkAttackLimit()
+                    : this.rotation.attackRotate(target.getBoundingBox(), this.getAttackRotationVec(target), -0.1, "attacking");
         }
     }
 
     private EndCrystal getTargetCrystal() {
         EndCrystal closestCrystal = null;
-        double closestDistance = 69420.0;
+        double closestDistance = Double.MAX_VALUE;
 
         for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
             if (entity instanceof EndCrystal crystal
@@ -790,7 +790,7 @@ public class AutoMine extends Module {
                 if (SettingUtils.inMineRange(this.minePos)) {
                     Direction dir = SettingUtils.getPlaceOnDirection(this.minePos);
                     if (dir != null && this.shouldRotateEnd()) {
-                        this.rotateBlock(this.minePos, dir, this.getMineEndRotationVec(), RotationType.Mining, "mining");
+                        this.rotation.rotateBlock(this.minePos, dir, this.getMineEndRotationVec(), RotationType.Mining, "mining");
                     }
                 }
             }
@@ -802,11 +802,11 @@ public class AutoMine extends Module {
             if (SettingUtils.inMineRange(this.minePos)) {
                 Direction dir = SettingUtils.getPlaceOnDirection(this.minePos);
                 if (dir != null) {
-                    if (!this.shouldRotateEnd() || this.rotateBlock(this.minePos, dir, this.getMineEndRotationVec(), RotationType.Mining, "mining")) {
+                    if (!this.shouldRotateEnd() || this.rotation.rotateBlock(this.minePos, dir, this.getMineEndRotationVec(), RotationType.Mining, "mining")) {
                         boolean switched = false;
                         if (holding || (switched = this.pickaxeSwitch.get().swap(slot))) {
                             this.sendSequenced(s -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, this.minePos, dir, s));
-                            SettingUtils.mineSwing(SwingSettings.MiningSwingState.End);
+                            SwingSettings.getInstance().mineSwing(SwingSettings.MiningSwingState.End);
                             if (this.mineEndSwing.get()) {
                                 this.clientSwing(this.mineHand.get(), InteractionHand.MAIN_HAND);
                             }
@@ -829,7 +829,7 @@ public class AutoMine extends Module {
                                 this.started = false;
                             }
 
-                            this.end("mining");
+                            this.rotation.end("mining");
                             if (this.crystalPos != null && this.shouldAttack()) {
                                 this.crystals.add(this.crystalPos, this.attackTime.get());
                             }
@@ -914,13 +914,13 @@ public class AutoMine extends Module {
             if (placeDir == null) {
                 return false;
             } else {
-                InteractionHand hand = OLEPOSSUtils.getHand(Items.END_CRYSTAL);
+                InteractionHand hand = InvUtils.getHand(Items.END_CRYSTAL);
                 boolean switched = false;
                 FindResult result = this.crystalSwitch.get().find(Items.END_CRYSTAL);
                 if (hand == null && !result.wasFound()) {
                     return false;
                 } else if (SettingUtils.shouldRotate(RotationType.Interact)
-                        && !this.rotateBlock(pos, placeDir, this.getPlaceRotationVec(pos), RotationType.Interact, 0.1, "crystal")) {
+                        && !this.rotation.rotateBlock(pos, placeDir, this.getPlaceRotationVec(pos), RotationType.Interact, 0.1, "crystal")) {
                     return false;
                 } else if (hand == null && !(switched = this.crystalSwitch.get().swap(result.slot()))) {
                     return false;
@@ -931,7 +931,7 @@ public class AutoMine extends Module {
 
                     this.interactBlock(hand, pos.getCenter(), placeDir, pos);
                     this.lastPlace = System.currentTimeMillis();
-                    this.end("crystal");
+                    this.rotation.end("crystal");
                     if (switched) {
                         this.crystalSwitch.get().swapBack();
                     }
@@ -968,8 +968,8 @@ public class AutoMine extends Module {
                 }
 
                 this.sendSequenced(s -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, dir, s));
-                SettingUtils.mineSwing(SwingSettings.MiningSwingState.Start);
-                this.end("mining");
+                SwingSettings.getInstance().mineSwing(SwingSettings.MiningSwingState.Start);
+                this.rotation.end("mining");
                 if (!isRemine && this.preSwitch.get()) {
                     this.pickaxeSwitch.get().swapBack();
                 }

@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.client.settings.RotationSettings;
 import bodevelopment.client.blackout.module.modules.movement.ElytraFly;
 import bodevelopment.client.blackout.module.modules.movement.PacketFly;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.CollectionUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 import bodevelopment.client.blackout.util.SharedFeatures;
@@ -61,17 +61,17 @@ public class RotationManager extends Manager {
         this.packetsLeft = this.packetsLeft + RotationSettings.getInstance().packetRotations.get();
         synchronized (this.tickRotationHistory) {
             this.tickRotationHistory.addFirst(new FloatFloatImmutablePair(this.prevYaw, this.prevPitch));
-            OLEPOSSUtils.limitList(this.tickRotationHistory, 20);
+            CollectionUtils.limitSize(this.tickRotationHistory, 20);
         }
     }
 
     @Event
     public void onRender(RenderEvent.World.Pre event) {
-        if (this.rotatingYaw == RotatePhase.Rotating && SettingUtils.shouldVanillaRotate()) {
+        if (this.rotatingYaw == RotatePhase.Rotating && RotationSettings.getInstance().vanillaRotation.get()) {
             BlackOut.mc.player.setYRot(Mth.lerp(event.tickDelta, this.prevRenderYaw, this.renderYaw));
         }
 
-        if (this.rotatingPitch == RotatePhase.Rotating && SettingUtils.shouldVanillaRotate()) {
+        if (this.rotatingPitch == RotatePhase.Rotating && RotationSettings.getInstance().vanillaRotation.get()) {
             BlackOut.mc.player.setXRot(Mth.lerp(event.tickDelta, this.prevRenderPitch, this.renderPitch));
         }
     }
@@ -95,7 +95,7 @@ public class RotationManager extends Manager {
     private void setPrev(float yaw, float pitch) {
         synchronized (this.rotationHistory) {
             this.rotationHistory.addFirst(new FloatFloatImmutablePair(Math.abs(yaw - this.prevYaw), Math.abs(pitch - this.prevPitch)));
-            OLEPOSSUtils.limitList(this.rotationHistory, 20);
+            CollectionUtils.limitSize(this.rotationHistory, 20);
         }
 
         this.prevYaw = yaw;
@@ -155,10 +155,10 @@ public class RotationManager extends Manager {
         }
 
         if (this.rotatingYaw == RotatePhase.Returning) {
-            if (Math.abs(RotationUtils.yawAngle(this.nextYaw, yaw)) < SettingUtils.returnSpeed()) {
+            if (Math.abs(RotationUtils.yawAngle(this.nextYaw, yaw)) < RotationSettings.getInstance().returnSpeed.get()) {
                 this.rotatingYaw = RotatePhase.Inactive;
             } else {
-                this.nextYaw = RotationUtils.nextYaw(this.prevYaw, yaw, SettingUtils.returnSpeed());
+                this.nextYaw = RotationUtils.nextYaw(this.prevYaw, yaw, RotationSettings.getInstance().returnSpeed.get());
             }
         }
 
@@ -172,7 +172,7 @@ public class RotationManager extends Manager {
         if (elytraFly.enabled && elytraFly.isBouncing()) {
             this.rotatingPitch = RotatePhase.Rotating;
             this.timePitch = System.currentTimeMillis() + 500L;
-            this.priorityPitch = 69420.0;
+            this.priorityPitch = Double.MAX_VALUE;
             this.nextPitch = elytraFly.getPitch();
         } else {
             float pitch = BlackOut.mc.player.getXRot();
@@ -185,10 +185,10 @@ public class RotationManager extends Manager {
             }
 
             if (this.rotatingPitch == RotatePhase.Returning) {
-                if (Math.abs(this.nextPitch - pitch) < SettingUtils.returnSpeed()) {
+                if (Math.abs(this.nextPitch - pitch) < RotationSettings.getInstance().returnSpeed.get()) {
                     this.rotatingPitch = RotatePhase.Inactive;
                 } else {
-                    this.nextPitch = RotationUtils.nextPitch(this.prevPitch, pitch, SettingUtils.returnSpeed());
+                    this.nextPitch = RotationUtils.nextPitch(this.prevPitch, pitch, RotationSettings.getInstance().returnSpeed.get());
                 }
             }
 

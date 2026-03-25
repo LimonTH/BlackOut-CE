@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.combat.defensive;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
@@ -9,7 +10,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.util.InvUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.ItemUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,8 +43,8 @@ public class SmartMend extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
-            for (EquipmentSlot equipmentSlot : OLEPOSSUtils.equipmentSlots) {
+        if (PlayerUtils.isInGame()) {
+            for (EquipmentSlot equipmentSlot : ItemUtils.ARMOR_SLOTS) {
                 if (BlackOut.mc.player.getInventory().getArmor(equipmentSlot.getIndex()).isEmpty()) {
                     this.wornSince.remove(equipmentSlot);
                 } else if (!this.wornSince.containsKey(equipmentSlot)) {
@@ -128,7 +129,7 @@ public class SmartMend extends Module {
     private List<EquipmentSlot> getMended() {
         List<EquipmentSlot> armor = new ArrayList<>();
 
-        for (EquipmentSlot equipmentSlot : OLEPOSSUtils.equipmentSlots) {
+        for (EquipmentSlot equipmentSlot : ItemUtils.ARMOR_SLOTS) {
             ItemStack stack = BlackOut.mc.player.getInventory().getArmor(equipmentSlot.getIndex());
             if (!stack.isEmpty() && stack.isDamageableItem()) {
                 double dur = (double) (stack.getMaxDamage() - stack.getDamageValue()) / stack.getMaxDamage() * 100.0;

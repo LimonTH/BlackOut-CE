@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.addon;
 
 import bodevelopment.client.blackout.hud.HudElement;
-import bodevelopment.client.blackout.module.Module;
+import bodevelopment.client.blackout.module.AbstractModule;
 import bodevelopment.client.blackout.command.Command;
 import java.util.List;
 import java.util.ArrayList;
@@ -12,7 +12,7 @@ public abstract class BlackoutAddon {
     public final String commandPath;
     public final String hudPath;
 
-    public final List<Module> modules = new ArrayList<>();
+    public final List<AbstractModule> modules = new ArrayList<>();
     public final List<Command> commands = new ArrayList<>();
     public final List<HudElement> hudElements = new ArrayList<>();
 

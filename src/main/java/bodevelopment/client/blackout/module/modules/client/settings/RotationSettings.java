@@ -626,11 +626,11 @@ public class RotationSettings extends SettingsModule {
     }
 
     public double yawStep(RotationType type) {
-        return type.instant ? 42069.0 : this.yawStep.get() + (ThreadLocalRandom.current().nextDouble() - 0.5) * 2.0 * this.yawRandom.get();
+        return type.instant ? Double.MAX_VALUE : this.yawStep.get() + (ThreadLocalRandom.current().nextDouble() - 0.5) * 2.0 * this.yawRandom.get();
     }
 
     public double pitchStep(RotationType type) {
-        return type.instant ? 42069.0 : this.pitchStep.get() + (ThreadLocalRandom.current().nextDouble() - 0.5) * 2.0 * this.pitchRandom.get();
+        return type.instant ? Double.MAX_VALUE : this.pitchStep.get() + (ThreadLocalRandom.current().nextDouble() - 0.5) * 2.0 * this.pitchRandom.get();
     }
 
     public boolean angleCheck(double y, double p, AABB box, RotationType type) {
@@ -644,7 +644,7 @@ public class RotationSettings extends SettingsModule {
     }
 
     public boolean raytraceCheck(Vec3 pos, double y, double p, AABB box) {
-        double range = pos.distanceTo(OLEPOSSUtils.getMiddle(box)) + 3.0;
+        double range = pos.distanceTo(BoxUtils.middle(box)) + 3.0;
         Vec3 end = RotationUtils.rotationVec(y, p, pos, range);
 
         for (float i = 0.0F; i < 1.0F; i = (float) (i + 0.01)) {

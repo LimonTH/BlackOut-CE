@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
@@ -91,7 +92,7 @@ public class Flight extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (jumped) {
                 ticks++;
             }
@@ -118,7 +119,7 @@ public class Flight extends Module {
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             i++;
             double y = 0.0;
             switch (this.mode.get()) {

@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.InvUtils;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -53,7 +53,7 @@ public class InstantEat extends Module {
     }
 
     private String doStuff() {
-        InteractionHand hand = OLEPOSSUtils.getHand(this.predicate);
+        InteractionHand hand = InvUtils.getHand(this.predicate);
         if (hand == null) {
             FindResult result = this.switchMode.get().find(this.predicate);
             if (!result.wasFound() || !this.switchMode.get().swapInstantly(result.slot())) {

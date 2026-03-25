@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.combat.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
@@ -304,7 +305,7 @@ public class Insults extends Module {
     @Event
     public void onTick(TickEvent.Pre event) {
         this.timer++;
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (!this.anyDead(this.range.get()) || !this.kill.get()) {
                 this.lastState = false;
             } else if (!this.lastState) {

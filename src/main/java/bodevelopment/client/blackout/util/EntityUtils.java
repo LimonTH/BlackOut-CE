@@ -7,10 +7,35 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class EntityUtils {
+    public static BlockPos roundedPos() {
+        return roundedPos(BlackOut.mc.player);
+    }
+
+    public static BlockPos roundedPos(Entity entity) {
+        return new BlockPos(entity.getBlockX(), (int) Math.round(entity.getY()), entity.getBlockZ());
+    }
+
+    public static Vec3 getLerpedPos(Entity entity, double tickDelta) {
+        double x = Mth.lerp(tickDelta, entity.xo, entity.getX());
+        double y = Mth.lerp(tickDelta, entity.yo, entity.getY());
+        double z = Mth.lerp(tickDelta, entity.zo, entity.getZ());
+        return new Vec3(x, y, z);
+    }
+
+    public static AABB getLerpedBox(Entity entity, double tickDelta) {
+        double x = Mth.lerp(tickDelta, entity.xo, entity.getX());
+        double y = Mth.lerp(tickDelta, entity.yo, entity.getY());
+        double z = Mth.lerp(tickDelta, entity.zo, entity.getZ());
+        double halfX = entity.getBoundingBox().getXsize() / 2.0;
+        double halfZ = entity.getBoundingBox().getZsize() / 2.0;
+        return new AABB(x - halfX, y, z - halfZ, x + halfX, y + entity.getBoundingBox().getYsize(), z + halfZ);
+    }
 
     public static boolean intersects(AABB box, Predicate<Entity> predicate) {
         return intersects(box, predicate, null);

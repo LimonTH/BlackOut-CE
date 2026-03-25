@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.combat.offensive;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
@@ -35,7 +36,7 @@ public class BowSpam extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (BlackOut.mc.player.getMainHandItem().is(Items.BOW)
                     && BlackOut.mc.player.getTicksUsingItem() >= this.charge.get()
                     && BlackOut.mc.options.keyUse.isDown()) {

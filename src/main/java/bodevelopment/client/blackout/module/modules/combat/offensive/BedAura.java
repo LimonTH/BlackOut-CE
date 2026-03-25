@@ -12,7 +12,7 @@ import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.keys.KeyBind;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.module.OnlyDev;
+import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.combat.misc.Suicide;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -220,7 +220,7 @@ public class BedAura extends Module {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.calc(1.0F);
             this.updatePos();
         }
@@ -228,7 +228,7 @@ public class BedAura extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.updateFacePlacing();
             this.calc(event.tickDelta);
             targetedPlayer = null;
@@ -254,7 +254,7 @@ public class BedAura extends Module {
     }
 
     private boolean validBlock(BlockState state) {
-        return OLEPOSSUtils.replaceable(state);
+        return BlockUtils.replaceable(state);
     }
 
     private void updateRender() {
@@ -356,7 +356,7 @@ public class BedAura extends Module {
     }
 
     private void updatePlace() {
-        if (OLEPOSSUtils.replaceable(this.placePos)) {
+        if (BlockUtils.replaceable(this.placePos)) {
             if (this.placeDelayCheck()) {
                 this.place();
             }
@@ -405,18 +405,18 @@ public class BedAura extends Module {
                 (p, d) -> (!this.floor.get() || d == Direction.DOWN) && !(BlackOut.mc.level.getBlockState(p).getBlock() instanceof BedBlock)
         );
         if (data.valid()) {
-            InteractionHand hand = OLEPOSSUtils.getHand(OLEPOSSUtils::isBed);
-            FindResult result = this.switchMode.get().find(OLEPOSSUtils::isBed);
+            InteractionHand hand = InvUtils.getHand(ItemUtils::isBed);
+            FindResult result = this.switchMode.get().find(ItemUtils::isBed);
             if (hand != null || result.wasFound()) {
                 if (!SettingUtils.shouldRotate(RotationType.BlockPlace)
-                        || this.rotateBlock(data, data.pos().getCenter().relative(data.dir(), 0.5), RotationType.BlockPlace, "placing")) {
+                        || this.rotation.rotateBlock(data, data.pos().getCenter().relative(data.dir(), 0.5), RotationType.BlockPlace, "placing")) {
                     if (!this.pauseOffGround.get() || BlackOut.mc.player.onGround()) {
                         switch (this.rotationMode.get()) {
                             case Instant:
                                 this.sendPacket(new ServerboundMovePlayerPacket.Rot(this.placeDir.toYRot(), Managers.ROTATION.nextPitch, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));
                                 break;
                             case Manager:
-                                if (!this.rotateYaw(this.placeDir.toYRot(), RotationType.Other, "placing")) {
+                                if (!this.rotation.rotateYaw(this.placeDir.toYRot(), RotationType.Other, "placing")) {
                                     return;
                                 }
                         }
@@ -445,7 +445,7 @@ public class BedAura extends Module {
                                 this.clientSwing(this.placeHand.get(), hand);
                             }
 
-                            this.end("placing");
+                            this.rotation.end("placing");
                             if (switched) {
                                 this.switchMode.get().swapBack();
                             }
@@ -483,8 +483,8 @@ public class BedAura extends Module {
         Direction dir = SettingUtils.getPlaceOnDirection(pos);
         if (dir != null) {
             Vec3 placeVec = new Vec3(pos.getX() + 0.5, pos.getY() + this.rotationHeight.get(), pos.getZ() + 0.5);
-            this.end("placing");
-            if (!SettingUtils.shouldRotate(RotationType.Interact) || this.rotateBlock(pos, dir, placeVec, RotationType.Interact, 0.1, "explode")) {
+            this.rotation.end("placing");
+            if (!SettingUtils.shouldRotate(RotationType.Interact) || this.rotation.rotateBlock(pos, dir, placeVec, RotationType.Interact, 0.1, "explode")) {
                 BlockState state = BlackOut.mc.level.getBlockState(pos);
                 Direction direction = state.getValue(HorizontalDirectionalBlock.FACING);
                 BlockPos headPos;
@@ -510,7 +510,7 @@ public class BedAura extends Module {
                     this.clientSwing(this.explodeHand.get(), InteractionHand.MAIN_HAND);
                 }
 
-                this.end("explode");
+                this.rotation.end("explode");
             }
         }
     }
@@ -663,7 +663,7 @@ public class BedAura extends Module {
     }
 
     private boolean validFloor(BlockPos pos) {
-        return !(BlackOut.mc.level.getBlockState(pos).getBlock() instanceof BedBlock) && OLEPOSSUtils.solid2(pos);
+        return !(BlackOut.mc.level.getBlockState(pos).getBlock() instanceof BedBlock) && BlockUtils.hasCollision(pos);
     }
 
     private boolean validBlock(BlockPos pos) {
@@ -686,12 +686,12 @@ public class BedAura extends Module {
     private void startCalc() {
         this.selfHealth = this.getHealth(BlackOut.mc.player);
         this.calcBest = null;
-        this.calcValue = -42069.0;
+        this.calcValue = Double.NEGATIVE_INFINITY;
         this.progress = 0;
         this.calcR = (int) Math.ceil(SettingUtils.maxPlaceRange());
         this.calcMiddle = BlockPos.containing(BlackOut.mc.player.getEyePosition());
         this.targetCalcBest = null;
-        this.targetCalcValue = -42069.0;
+        this.targetCalcValue = Double.NEGATIVE_INFINITY;
         this.targetCalcR = (int) Math.ceil(SettingUtils.maxInteractRange());
         this.targetProgress = 0;
         this.damageCache.clear();

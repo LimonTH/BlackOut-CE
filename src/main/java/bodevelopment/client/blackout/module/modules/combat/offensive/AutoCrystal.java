@@ -11,7 +11,7 @@ import bodevelopment.client.blackout.keys.KeyBind;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.mixin.accessors.AccessorServerboundInteractPacket;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.module.OnlyDev;
+import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.combat.misc.Suicide;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -406,12 +406,12 @@ public class AutoCrystal extends Module {
 
     @Event
     public void onTickPre(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && this.enabled) {
+        if (PlayerUtils.isInGame() && this.enabled) {
             this.raytraceLeft--;
             if (this.shouldRaytraceBypass(this.placePos) && ++this.bypassTimer > this.raytraceDelay.get()) {
                 Rotation rotation = this.raytraceRotation(this.placePos, true);
                 if (rotation != null) {
-                    this.rotate(rotation.yaw(), rotation.pitch(), 1.0, RotationType.Other, "raytrace");
+                    this.rotation.rotate(rotation.yaw(), rotation.pitch(), 1.0, RotationType.Other, "raytrace");
                     this.bypassTimer = 0;
                     this.raytraceLeft = this.raytraceTime.get();
                 }
@@ -425,8 +425,8 @@ public class AutoCrystal extends Module {
 
     @Event
     public void onTickPost(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && this.enabled) {
-            this.end("raytrace");
+        if (PlayerUtils.isInGame() && this.enabled) {
+            this.rotation.end("raytrace");
             this.movement = BlackOut.mc
                     .player
                     .position()
@@ -457,7 +457,7 @@ public class AutoCrystal extends Module {
             }
 
             this.cps = this.cps / (this.cpsTime.get() - 0.5);
-            if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+            if (PlayerUtils.isInGame()) {
                 this.update(true);
                 this.updateRender(event.frameTime, false);
             }
@@ -744,7 +744,7 @@ public class AutoCrystal extends Module {
     private void update(boolean canPlace) {
         this.placing = false;
         if (this.updateAttacking()) {
-            this.end("attacking");
+            this.rotation.end("attacking");
         }
 
         this.updatePlacing(canPlace);
@@ -767,7 +767,7 @@ public class AutoCrystal extends Module {
         } else if (this.placePos == null) {
             return false;
         } else {
-            this.crystalHand = OLEPOSSUtils.getHand(stack -> stack.getItem() == Items.END_CRYSTAL);
+            this.crystalHand = InvUtils.getHand(stack -> stack.getItem() == Items.END_CRYSTAL);
             if (this.crystalHand == null && !this.crystalResult.wasFound()) {
                 return false;
             } else if (this.pauseEatPlace.get() && BlackOut.mc.player.isUsingItem()) {
@@ -901,8 +901,8 @@ public class AutoCrystal extends Module {
             return true;
         } else {
             return SettingUtils.shouldIgnoreRotations(this.targetCrystal)
-                    ? this.checkAttackLimit()
-                    : this.attackRotate(
+                    ? this.rotation.checkAttackLimit()
+                    : this.rotation.attackRotate(
                     this.targetCrystal.getBoundingBox(), this.getAttackVec(this.targetCrystal.position()), this.lastWasAttack ? -0.1 : 0.1, "attacking"
             );
         }
@@ -958,7 +958,7 @@ public class AutoCrystal extends Module {
             this.existedTicksList.remove(timer -> timer.value.equals(pos));
             this.existedList.remove(timer -> timer.value.equals(pos));
             this.spawning.clear();
-            this.end("attacking");
+            this.rotation.end("attacking");
             if (this.debugAttack.get()) {
                 this.debug("attacked after", System.currentTimeMillis() - ((IEndCrystal) this.targetCrystal).blackout_Client$getSpawnTime() + "ms");
             }
@@ -1061,7 +1061,7 @@ public class AutoCrystal extends Module {
         if (this.canPlace()) {
             this.placing = true;
             if (!SettingUtils.shouldRotate(RotationType.Interact)
-                    || this.rotateBlock(this.placePos.below(), this.crystalDir, this.getPlaceVec(this.placePos), RotationType.Interact, "placing")
+                    || this.rotation.rotateBlock(this.placePos.below(), this.crystalDir, this.getPlaceVec(this.placePos), RotationType.Interact, "placing")
                     || this.shouldRaytraceBypass(this.placePos) && this.raytraceLeft >= 0
                     || !this.requireRotation.get()) {
                 if (canPlace) {
@@ -1115,7 +1115,7 @@ public class AutoCrystal extends Module {
     }
 
     private boolean gappleSwitch(boolean canPlace) {
-        FindResult gapResult = this.switchMode.get().find(OLEPOSSUtils::isGapple);
+        FindResult gapResult = this.switchMode.get().find(ItemUtils::isGapple);
         Item mainHandItem = BlackOut.mc.player.getMainHandItem().getItem();
         Item offHandItem = BlackOut.mc.player.getOffhandItem().getItem();
         boolean holdingGapples = mainHandItem == Items.GOLDEN_APPLE || mainHandItem == Items.ENCHANTED_GOLDEN_APPLE;
@@ -1198,7 +1198,7 @@ public class AutoCrystal extends Module {
     private void place(BlockPos pos, Direction dir, InteractionHand hand) {
         this.shouldCalc = true;
         this.lastPlace = System.currentTimeMillis();
-        this.spawning.add(OLEPOSSUtils.getCrystalBox(pos.above()), 0.5);
+        this.spawning.add(BoxUtils.crystalBox(pos.above()), 0.5);
         this.earthRender.add(pos, this.fadeTime.get() + this.renderTime.get());
         this.renderProgress = this.fadeTime.get() + this.renderTime.get();
         this.lastWasAttack = false;
@@ -1229,7 +1229,7 @@ public class AutoCrystal extends Module {
             this.renderPos = pos;
         }
 
-        this.end("placing");
+        this.rotation.end("placing");
     }
 
     private void updatePos() {
@@ -1286,7 +1286,7 @@ public class AutoCrystal extends Module {
             Direction dir = SettingUtils.getPlaceOnDirection(this.placePos.below());
             if (dir == null) {
                 return true;
-            } else if (!this.inPlaceRange(this.placePos.below()) || !SettingUtils.inAttackRange(OLEPOSSUtils.getCrystalBox(this.placePos))) {
+            } else if (!this.inPlaceRange(this.placePos.below()) || !SettingUtils.inAttackRange(BoxUtils.crystalBox(this.placePos))) {
                 return true;
             } else if (this.intersects(this.placePos)) {
                 return true;
@@ -1350,16 +1350,16 @@ public class AutoCrystal extends Module {
     protected boolean inAttackRangePlacing(BlockPos pos) {
         switch (this.rangeExtMode.get()) {
             case Semi:
-                if (this.inAttackRangePlacing(OLEPOSSUtils.getCrystalBox(pos), null)) {
+                if (this.inAttackRangePlacing(BoxUtils.crystalBox(pos), null)) {
                     return true;
                 }
 
-                if (this.rangeExt.get() > 0 && this.inAttackRangePlacing(OLEPOSSUtils.getCrystalBox(pos), this.rangePos)) {
+                if (this.rangeExt.get() > 0 && this.inAttackRangePlacing(BoxUtils.crystalBox(pos), this.rangePos)) {
                     return true;
                 }
                 break;
             case Full:
-                if (this.inAttackRangePlacing(OLEPOSSUtils.getCrystalBox(pos), this.rangePos)) {
+                if (this.inAttackRangePlacing(BoxUtils.crystalBox(pos), this.rangePos)) {
                     return true;
                 }
         }
@@ -1670,7 +1670,7 @@ public class AutoCrystal extends Module {
                 && this.autoMineAttack.get()
                 && !(autoMine.getCurrentProgress() < this.autoMineAttackProgress.get())
                 && autoMine.minePos != null
-                && OLEPOSSUtils.solid2(autoMine.minePos)) {
+                && BlockUtils.hasCollision(autoMine.minePos)) {
             return switch (autoMine.mineType) {
                 case Cev, TrapCev, SurroundCev ->
                         BlockPos.containing(entity.position().add(0.0, -0.3, 0.0)).equals(autoMine.minePos);
@@ -1770,7 +1770,7 @@ public class AutoCrystal extends Module {
             Rotation rotation = SettingUtils.getRotation(vec);
             double minDist = BlackOut.mc.player.getEyePosition().distanceToSqr(vec);
             ((IClipContext) DamageUtils.raycastContext).blackout_Client$set(ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
-            float bestDist = 69420.0F;
+            float bestDist = Float.MAX_VALUE;
             float bestPitch = -420.0F;
             boolean prevWas = false;
 

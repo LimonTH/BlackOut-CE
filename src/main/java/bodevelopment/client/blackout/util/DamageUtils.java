@@ -7,7 +7,6 @@ import bodevelopment.client.blackout.manager.Managers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.util.Mth;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.effect.MobEffects;
@@ -15,7 +14,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ClipContext;
@@ -82,17 +80,13 @@ public class DamageUtils {
 
     public static int getProtectionAmount(Iterable<ItemStack> equipment, boolean explosion) {
         int total = 0;
-        var registry = BlackOut.mc.level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
-
         for (ItemStack stack : equipment) {
             if (stack.isEmpty()) continue;
 
-            int protLevel = EnchantmentHelper.getItemEnchantmentLevel(registry.getOrThrow(Enchantments.PROTECTION), stack);
-            total += protLevel;
+            total += EnchantmentUtils.getLevel(Enchantments.PROTECTION, stack);
 
             if (explosion) {
-                int blastLevel = EnchantmentHelper.getItemEnchantmentLevel(registry.getOrThrow(Enchantments.BLAST_PROTECTION), stack);
-                total += blastLevel * 2;
+                total += EnchantmentUtils.getLevel(Enchantments.BLAST_PROTECTION, stack) * 2;
             }
         }
         return total;
@@ -233,19 +227,9 @@ public class DamageUtils {
             }
         }
 
-        if (BlackOut.mc.level != null) {
-            var registry = BlackOut.mc.level.registryAccess()
-                    .lookupOrThrow(Registries.ENCHANTMENT);
-
-            int sharpnessLevel = EnchantmentHelper.getItemEnchantmentLevel(
-                    registry.getOrThrow(Enchantments.SHARPNESS),
-                    stack
-            );
-
-            if (sharpnessLevel > 0) {
-                // 0.5 * level + 0.5
-                damage += (sharpnessLevel * 0.5f + 0.5f);
-            }
+        int sharpnessLevel = EnchantmentUtils.getLevel(Enchantments.SHARPNESS, stack);
+        if (sharpnessLevel > 0) {
+            damage += (sharpnessLevel * 0.5f + 0.5f);
         }
 
         return damage;

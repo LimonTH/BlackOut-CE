@@ -1,6 +1,6 @@
 package bodevelopment.client.blackout.manager;
 
-public class Manager {
+public abstract class Manager {
     public void init() {
     }
 

@@ -3,7 +3,7 @@ package bodevelopment.client.blackout.addon;
 import bodevelopment.client.blackout.command.Command;
 import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.manager.Managers;
-import bodevelopment.client.blackout.module.Module;
+import bodevelopment.client.blackout.module.AbstractModule;
 import bodevelopment.client.blackout.util.BOLogger;
 import bodevelopment.client.blackout.util.ClassUtils;
 import net.fabricmc.loader.api.FabricLoader;
@@ -28,7 +28,7 @@ public class AddonLoader {
                         BOLogger.info(String.format("Found addon: %s (version %s)", addon.getName(), addon.getVersion()));
 
                         if (addon.modulePath != null) {
-                            scan(addonLoader, addon.modulePath, Module.class, instance -> {
+                            scan(addonLoader, addon.modulePath, AbstractModule.class, instance -> {
                                 Managers.MODULES.add(instance);
                                 addon.modules.add(instance);
                             });

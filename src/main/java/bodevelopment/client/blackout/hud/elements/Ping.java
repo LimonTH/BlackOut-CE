@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.hud.elements;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.hud.TextElement;
 import net.minecraft.client.multiplayer.PlayerInfo;
@@ -13,7 +14,7 @@ public class Ping extends TextElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             String ping = this.getPing();
             this.drawElement(this.stack, "Ping:", ping);
         }

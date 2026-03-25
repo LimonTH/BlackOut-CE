@@ -10,7 +10,6 @@ import bodevelopment.client.blackout.module.SettingsModule;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.BoxUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 import net.minecraft.core.BlockPos;
@@ -149,9 +148,9 @@ public class RangeSettings extends SettingsModule {
         return switch (this.interactRangeMode.get()) {
             case NCP -> from.distanceTo(bottom.add(0.0, 0.5, 0.0));
             case Height -> from.distanceTo(bottom.add(0.0, this.interactHeight.get(), 0.0));
-            case Vanilla -> from.distanceTo(OLEPOSSUtils.getClosest(BlackOut.mc.player.getEyePosition(), bottom, 1.0, 1.0));
+            case Vanilla -> from.distanceTo(BoxUtils.getClosest(BlackOut.mc.player.getEyePosition(), bottom, 1.0, 1.0));
             case CustomBox -> from.distanceTo(
-                    OLEPOSSUtils.getClosest(BlackOut.mc.player.getEyePosition(), bottom, this.interactBlockWidth.get(), this.interactBlockHeight.get())
+                    BoxUtils.getClosest(BlackOut.mc.player.getEyePosition(), bottom, this.interactBlockWidth.get(), this.interactBlockHeight.get())
             );
         };
     }
@@ -178,9 +177,9 @@ public class RangeSettings extends SettingsModule {
         return switch (this.placeRangeMode.get()) {
             case NCP -> from.distanceTo(feet.add(0.0, 0.5, 0.0));
             case Height -> from.distanceTo(feet.add(0.0, this.placeHeight.get(), 0.0));
-            case Vanilla -> from.distanceTo(OLEPOSSUtils.getClosest(BlackOut.mc.player.getEyePosition(), feet, 1.0, 1.0));
+            case Vanilla -> from.distanceTo(BoxUtils.getClosest(BlackOut.mc.player.getEyePosition(), feet, 1.0, 1.0));
             case CustomBox ->
-                    from.distanceTo(OLEPOSSUtils.getClosest(BlackOut.mc.player.getEyePosition(), feet, this.blockWidth.get(), this.blockHeight.get()));
+                    from.distanceTo(BoxUtils.getClosest(BlackOut.mc.player.getEyePosition(), feet, this.blockWidth.get(), this.blockHeight.get()));
         };
     }
 
@@ -220,7 +219,7 @@ public class RangeSettings extends SettingsModule {
                 yield from.distanceTo(new Vec3(feet.x, Math.min(Math.max(from.y(), bb.minY), bb.maxY), feet.z));
             }
             case Vanilla -> from.distanceTo(
-                    OLEPOSSUtils.getClosest(
+                    BoxUtils.getClosest(
                             BlackOut.mc.player.getEyePosition(), BoxUtils.feet(bb), Math.abs(bb.minX - bb.maxX), Math.abs(bb.minY - bb.maxY)
                     )
             );
@@ -228,7 +227,7 @@ public class RangeSettings extends SettingsModule {
                     new Vec3((bb.minX + bb.maxX) / 2.0, (bb.minY + bb.maxY) / 2.0, (bb.minZ + bb.maxZ) / 2.0)
             );
             case CustomBox -> from.distanceTo(
-                    OLEPOSSUtils.getClosest(
+                    BoxUtils.getClosest(
                             BlackOut.mc.player.getEyePosition(),
                             BoxUtils.feet(bb),
                             Math.abs(bb.minX - bb.maxX) * this.closestWallAttackWidth.get(),
@@ -292,9 +291,9 @@ public class RangeSettings extends SettingsModule {
         return switch (this.mineRangeMode.get()) {
             case NCP -> from.distanceTo(feet.add(0.0, 0.5, 0.0));
             case Height -> from.distanceTo(feet.add(0.0, this.miningHeight.get(), 0.0));
-            case Vanilla -> from.distanceTo(OLEPOSSUtils.getClosest(BlackOut.mc.player.getEyePosition(), feet, 1.0, 1.0));
+            case Vanilla -> from.distanceTo(BoxUtils.getClosest(BlackOut.mc.player.getEyePosition(), feet, 1.0, 1.0));
             case CustomBox -> from.distanceTo(
-                    OLEPOSSUtils.getClosest(BlackOut.mc.player.getEyePosition(), feet, this.closestMiningWidth.get(), this.closestMiningHeight.get())
+                    BoxUtils.getClosest(BlackOut.mc.player.getEyePosition(), feet, this.closestMiningWidth.get(), this.closestMiningHeight.get())
             );
         };
     }

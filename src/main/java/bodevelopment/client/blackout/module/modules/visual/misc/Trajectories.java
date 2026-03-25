@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.visual.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
@@ -16,7 +17,9 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.DamageUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.BlockUtils;
+import bodevelopment.client.blackout.util.EntityUtils;
+import bodevelopment.client.blackout.util.MathUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -78,7 +81,7 @@ public class Trajectories extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             ItemStack itemStack = BlackOut.mc.player.getMainHandItem();
             Item item = itemStack.getItem();
             if (this.dataMap.containsKey(item)) {
@@ -146,7 +149,7 @@ public class Trajectories extends Module {
 
             } else if (hitResult instanceof EntityHitResult entityHitResult) {
                 Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
-                AABB box = OLEPOSSUtils.getLerpedBox(entityHitResult.getEntity(), tickDelta)
+                AABB box = EntityUtils.getLerpedBox(entityHitResult.getEntity(), tickDelta)
                         .move(-camPos.x, -camPos.y, -camPos.z);
 
                 Render3DUtils.renderOutlines(stack, box, rgb);
@@ -298,15 +301,15 @@ public class Trajectories extends Module {
         this.put(
                 0.25,
                 0.25,
-                (stack, tickDelta) -> OLEPOSSUtils.getLerpedPos(BlackOut.mc.player, tickDelta)
+                (stack, tickDelta) -> EntityUtils.getLerpedPos(BlackOut.mc.player, tickDelta)
                         .add(0.0, BlackOut.mc.player.getEyeHeight(BlackOut.mc.player.getPose()) - 0.1, 0.0),
                 stack -> snowball,
                 (box, vel) -> {
-                    double f = OLEPOSSUtils.inWater(box) ? 0.8 : 0.99;
+                    double f = BlockUtils.inWater(box) ? MathUtils.PROJECTILE_WATER_DRAG_FAST : MathUtils.PROJECTILE_AIR_DRAG;
                     vel[0] *= f;
                     vel[1] *= f;
                     vel[2] *= f;
-                    vel[1] -= 0.03;
+                    vel[1] -= MathUtils.THROWABLE_GRAVITY;
                 },
                 Items.SNOWBALL,
                 Items.EGG
@@ -314,7 +317,7 @@ public class Trajectories extends Module {
         this.put(
                 0.5,
                 0.5,
-                (stack, tickDelta) -> OLEPOSSUtils.getLerpedPos(BlackOut.mc.player, tickDelta)
+                (stack, tickDelta) -> EntityUtils.getLerpedPos(BlackOut.mc.player, tickDelta)
                         .add(0.0, BlackOut.mc.player.getEyeHeight(BlackOut.mc.player.getPose()) - 0.1, 0.0),
                 stack -> {
                     BowSpam bowSpam = BowSpam.getInstance();
@@ -329,18 +332,18 @@ public class Trajectories extends Module {
                     return new double[]{f * 3.0, 0.0};
                 },
                 (box, vel) -> {
-                    double f = OLEPOSSUtils.inWater(box) ? 0.6 : 0.99;
+                    double f = BlockUtils.inWater(box) ? MathUtils.PROJECTILE_WATER_DRAG_SLOW : MathUtils.PROJECTILE_AIR_DRAG;
                     vel[0] *= f;
                     vel[1] *= f;
                     vel[2] *= f;
-                    vel[1] -= 0.05;
+                    vel[1] -= MathUtils.ARROW_GRAVITY;
                 },
                 Items.BOW
         );
         this.put(
                 0.5,
                 0.5,
-                (stack, tickDelta) -> OLEPOSSUtils.getLerpedPos(BlackOut.mc.player, tickDelta)
+                (stack, tickDelta) -> EntityUtils.getLerpedPos(BlackOut.mc.player, tickDelta)
                         .add(
                                 0.0,
                                 BlackOut.mc.player.getEyeHeight(BlackOut.mc.player.getPose()) - (isChargedWith(stack, Items.FIREWORK_ROCKET) ? 0.15 : 0.1),
@@ -349,11 +352,11 @@ public class Trajectories extends Module {
                 stack -> new double[]{isChargedWith(stack, Items.FIREWORK_ROCKET) ? 1.6 : 3.15, 0.0},
                 (box, vel) -> {
                     if (!isChargedWith(BlackOut.mc.player.getMainHandItem(), Items.FIREWORK_ROCKET)) {
-                        double f = OLEPOSSUtils.inWater(box) ? 0.6 : 0.99;
+                        double f = BlockUtils.inWater(box) ? MathUtils.PROJECTILE_WATER_DRAG_SLOW : MathUtils.PROJECTILE_AIR_DRAG;
                         vel[0] *= f;
                         vel[1] *= f;
                         vel[2] *= f;
-                        vel[1] -= 0.05;
+                        vel[1] -= MathUtils.ARROW_GRAVITY;
                     }
                 },
                 Items.CROSSBOW
@@ -361,30 +364,30 @@ public class Trajectories extends Module {
         this.put(
                 0.25,
                 0.25,
-                (stack, tickDelta) -> OLEPOSSUtils.getLerpedPos(BlackOut.mc.player, tickDelta)
+                (stack, tickDelta) -> EntityUtils.getLerpedPos(BlackOut.mc.player, tickDelta)
                         .add(0.0, BlackOut.mc.player.getEyeHeight(BlackOut.mc.player.getPose()) - 0.1, 0.0),
                 stack -> exp,
                 (box, vel) -> {
-                    double f = OLEPOSSUtils.inWater(box) ? 0.8 : 0.99;
+                    double f = BlockUtils.inWater(box) ? MathUtils.PROJECTILE_WATER_DRAG_FAST : MathUtils.PROJECTILE_AIR_DRAG;
                     vel[0] *= f;
                     vel[1] *= f;
                     vel[2] *= f;
-                    vel[1] -= 0.07;
+                    vel[1] -= MathUtils.EXP_BOTTLE_GRAVITY;
                 },
                 Items.EXPERIENCE_BOTTLE
         );
         this.put(
                 0.25,
                 0.25,
-                (stack, tickDelta) -> OLEPOSSUtils.getLerpedPos(BlackOut.mc.player, tickDelta)
+                (stack, tickDelta) -> EntityUtils.getLerpedPos(BlackOut.mc.player, tickDelta)
                         .add(0.0, BlackOut.mc.player.getEyeHeight(BlackOut.mc.player.getPose()) - 0.1, 0.0),
                 stack -> snowball,
                 (box, vel) -> {
-                    double f = OLEPOSSUtils.inWater(box) ? 0.8 : 0.99;
+                    double f = BlockUtils.inWater(box) ? MathUtils.PROJECTILE_WATER_DRAG_FAST : MathUtils.PROJECTILE_AIR_DRAG;
                     vel[0] *= f;
                     vel[1] *= f;
                     vel[2] *= f;
-                    vel[1] -= 0.03;
+                    vel[1] -= MathUtils.THROWABLE_GRAVITY;
                 },
                 Items.ENDER_PEARL
         );

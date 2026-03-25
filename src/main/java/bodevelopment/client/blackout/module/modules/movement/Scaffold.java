@@ -117,6 +117,7 @@ public class Scaffold extends MoveUpdateModule {
     public Scaffold() {
         super("Scaffold", "Constructs a walking surface beneath the player in real-time to facilitate rapid travel and bridging.", SubCategory.MOVEMENT);
         INSTANCE = this;
+        this.rotation.setRotationTime(this.rotationTime::get);
     }
 
     public static Scaffold getInstance() {
@@ -126,7 +127,7 @@ public class Scaffold extends MoveUpdateModule {
     @Override
     public void onEnable() {
         if (!this.constantRotate.get()) {
-            this.end("placing");
+            this.rotation.end("placing");
         }
 
         this.startY = BlackOut.mc.player.getY();
@@ -141,11 +142,6 @@ public class Scaffold extends MoveUpdateModule {
             Timer.reset();
             this.changedTimer = false;
         }
-    }
-
-    @Override
-    protected double getRotationTime() {
-        return this.rotationTime.get();
     }
 
     @Event
@@ -169,9 +165,9 @@ public class Scaffold extends MoveUpdateModule {
 
     @Event
     public void onRenderHud(RenderEvent.Hud.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.updateResult();
-            InteractionHand hand = OLEPOSSUtils.getHand(this::valid);
+            InteractionHand hand = InvUtils.getHand(this::valid);
             ItemStack itemStack;
             if (hand != null) {
                 itemStack = Managers.PACKET.stackInHand(hand);
@@ -228,7 +224,7 @@ public class Scaffold extends MoveUpdateModule {
 
     @Override
     public void preTick() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.placeTickTimer++;
             if (this.useTimer.get()) {
                 Timer.set(this.timer.get().floatValue());
@@ -241,14 +237,14 @@ public class Scaffold extends MoveUpdateModule {
 
     @Override
     public void postMove() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             super.postMove();
         }
     }
 
     @Override
     public void postTick() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (BlackOut.mc.player.onGround()) {
                 this.startY = BlackOut.mc.player.getY();
             }
@@ -256,7 +252,7 @@ public class Scaffold extends MoveUpdateModule {
             if (this.canTower() && this.towerRotate && SettingUtils.shouldRotate(RotationType.BlockPlace)) {
                 PlaceData data = SettingUtils.getPlaceData(BlackOut.mc.player.blockPosition(), null, null);
                 if (data.valid()) {
-                    this.rotateBlock(data, RotationType.BlockPlace, -0.1, "tower");
+                    this.rotation.rotateBlock(data, RotationType.BlockPlace, -0.1, "tower");
                 }
             }
 
@@ -266,7 +262,7 @@ public class Scaffold extends MoveUpdateModule {
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.movement = event.movement;
             this.updateTower(event);
         }
@@ -370,7 +366,7 @@ public class Scaffold extends MoveUpdateModule {
     }
 
     private boolean canTower() {
-        return (!this.shouldKeepY() || !(BlackOut.mc.player.getY() >= this.startY)) && (OLEPOSSUtils.getHand(this::valid) != null || this.updateResult().wasFound());
+        return (!this.shouldKeepY() || !(BlackOut.mc.player.getY() >= this.startY)) && (InvUtils.getHand(this::valid) != null || this.updateResult().wasFound());
     }
 
     private void placeBlocks(boolean allowAction) {
@@ -453,12 +449,12 @@ public class Scaffold extends MoveUpdateModule {
     }
 
     private boolean inside(AABB box) {
-        return OLEPOSSUtils.inside(BlackOut.mc.player, box);
+        return BlockUtils.hasEntityCollision(BlackOut.mc.player, box);
     }
 
     private boolean addBlocks2(AABB box, Direction[] directions, int b) {
         BlockPos feetPos = BlockPos.containing(BoxUtils.feet(box).add(0.0, -0.5, 0.0));
-        if (OLEPOSSUtils.replaceable(feetPos) && !this.positions.contains(feetPos) && !this.intersects(feetPos)) {
+        if (BlockUtils.replaceable(feetPos) && !this.positions.contains(feetPos) && !this.intersects(feetPos)) {
             if (b < 1 && this.validSupport(feetPos, true)) {
                 this.positions.add(feetPos);
                 return true;
@@ -493,7 +489,7 @@ public class Scaffold extends MoveUpdateModule {
     }
 
     private void addPos(BlockPos pos) {
-        if (OLEPOSSUtils.replaceable(pos) && !this.positions.contains(pos)) {
+        if (BlockUtils.replaceable(pos) && !this.positions.contains(pos)) {
             this.positions.addFirst(pos);
         }
     }
@@ -514,7 +510,7 @@ public class Scaffold extends MoveUpdateModule {
             }
         }
 
-        return !this.positions.contains(pos) && OLEPOSSUtils.replaceable(pos) && !this.intersects(pos) && SettingUtils.getPlaceData(pos, (p, d) -> this.placed.contains(p) || this.positions.contains(p), null).valid();
+        return !this.positions.contains(pos) && BlockUtils.replaceable(pos) && !this.intersects(pos) && SettingUtils.getPlaceData(pos, (p, d) -> this.placed.contains(p) || this.positions.contains(p), null).valid();
     }
 
     private boolean intersects(BlockPos pos) {
@@ -536,7 +532,7 @@ public class Scaffold extends MoveUpdateModule {
     }
 
     private boolean validBlock(BlockPos pos) {
-        if (!OLEPOSSUtils.replaceable(pos)) {
+        if (!BlockUtils.replaceable(pos)) {
             return false;
         } else {
             PlaceData data = SettingUtils.getPlaceData(pos, (p, d) -> this.placed.contains(p), null);
@@ -553,11 +549,11 @@ public class Scaffold extends MoveUpdateModule {
             if (!(System.currentTimeMillis() - this.lastAttack < 1000.0 / this.attackSpeed.get())) {
                 Entity blocking = this.getBlocking();
                 if (blocking != null) {
-                    if (!SettingUtils.shouldRotate(RotationType.Attacking) || this.attackRotate(blocking.getBoundingBox(), -0.1, "attacking")) {
+                    if (!SettingUtils.shouldRotate(RotationType.Attacking) || this.rotation.attackRotate(blocking.getBoundingBox(), -0.1, "attacking")) {
                         if (allowAction) {
                             this.attackEntity(blocking);
                             if (SettingUtils.shouldRotate(RotationType.Attacking) && this.constantRotate.get()) {
-                                this.end("attacking");
+                                this.rotation.end("attacking");
                             }
 
                             if (this.attackSwing.get()) {
@@ -581,10 +577,10 @@ public class Scaffold extends MoveUpdateModule {
                         Rotation rotation = SettingUtils.getRotation(data.pos(), data.dir(), data.pos().getCenter(), RotationType.BlockPlace);
                         Vec3 vec = this.getRotationVec(data.pos(), rotation.pitch());
                         if (vec != null) {
-                            if (!this.rotateBlock(data.pos(), data.dir(), vec, RotationType.BlockPlace.withInstant(this.instantRotate.get()), "placing")) {
+                            if (!this.rotation.rotateBlock(data.pos(), data.dir(), vec, RotationType.BlockPlace.withInstant(this.instantRotate.get()), "placing")) {
                                 return;
                             }
-                        } else if (!this.rotateBlock(data, RotationType.BlockPlace.withInstant(this.instantRotate.get()), "placing")) {
+                        } else if (!this.rotation.rotateBlock(data, RotationType.BlockPlace.withInstant(this.instantRotate.get()), "placing")) {
                             return;
                         }
                     }
@@ -602,7 +598,7 @@ public class Scaffold extends MoveUpdateModule {
                             this.blocksLeft--;
                             this.placesLeft--;
                             if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !this.constantRotate.get()) {
-                                this.end("placing");
+                                this.rotation.end("placing");
                             }
                         }
                     }

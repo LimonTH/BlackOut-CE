@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
@@ -49,7 +50,7 @@ public class HitEffects extends Module {
 
     @Event
     public void onSend(PacketEvent.Sent event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (event.packet instanceof AccessorServerboundInteractPacket packet && packet.getType().getType() == ServerboundInteractPacket.ActionType.ATTACK) {
                 Entity target = BlackOut.mc.level.getEntity(packet.getId());
                 if (target == null) {
@@ -71,7 +72,7 @@ public class HitEffects extends Module {
 
     @Event
     public void onRender(RenderEvent.Hud.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.drawHitMarker();
         }
     }

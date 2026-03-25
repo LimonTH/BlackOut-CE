@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.legit;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
@@ -14,7 +15,7 @@ public class JumpReset extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && BlackOut.mc.player.hurtTime > 1 && BlackOut.mc.player.onGround()) {
+        if (PlayerUtils.isInGame() && BlackOut.mc.player.hurtTime > 1 && BlackOut.mc.player.onGround()) {
             BlackOut.mc.player.jumpFromGround();
         }
     }

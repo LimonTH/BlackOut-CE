@@ -7,7 +7,7 @@ import bodevelopment.client.blackout.module.SettingsModule;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.PlaceData;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.BlockUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -55,7 +55,7 @@ public class FacingSettings extends SettingsModule {
             boolean sneak = this.ignoreBlock(this.state(pos));
             if (!this.outOfBuildHeightCheck(pos)
                     && (!sneak || !ignoreContainers)
-                    && (!this.strictDir.get() || OLEPOSSUtils.strictDir(pos, dir.getOpposite(), this.ncpDirection.get()))
+                    && (!this.strictDir.get() || BlockUtils.strictDirection(pos, dir.getOpposite(), this.ncpDirection.get()))
                     && (predicateOR != null && predicateOR.test(pos, dir) || this.solid(pos) && (predicateAND == null || predicateAND.test(pos, dir)))) {
                 double dist = SettingUtils.placeRangeTo(pos.relative(dir));
                 if (direction == null || dist < closestDist) {
@@ -92,7 +92,7 @@ public class FacingSettings extends SettingsModule {
             BlockPos pos = position.relative(dir);
             if (!this.outOfBuildHeightCheck(pos)
                     && (!this.unblocked.get() || !this.solid(pos))
-                    && (!this.strictDir.get() || OLEPOSSUtils.strictDir(position, dir, this.ncpDirection.get()))) {
+                    && (!this.strictDir.get() || BlockUtils.strictDirection(position, dir, this.ncpDirection.get()))) {
                 double dist = this.dist(position, dir);
                 if (direction == null || dist < closestDist) {
                     closestDist = dist;

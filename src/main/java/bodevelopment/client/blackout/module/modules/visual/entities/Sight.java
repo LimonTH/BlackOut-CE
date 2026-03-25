@@ -11,7 +11,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.DamageUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.EntityUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -62,7 +62,7 @@ public class Sight extends Module {
             if (player != BlackOut.mc.player) {
                 float tickDelta = BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
-                Vec3 eyePos = OLEPOSSUtils.getLerpedPos(player, tickDelta).add(0.0, player.getEyeHeight(player.getPose()), 0.0);
+                Vec3 eyePos = EntityUtils.getLerpedPos(player, tickDelta).add(0.0, player.getEyeHeight(player.getPose()), 0.0);
 
                 Vec3 lookPos = RotationUtils.rotationVec(
                         Mth.lerp(tickDelta, player.yRotO, player.getYRot()),

@@ -4,7 +4,7 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.StringUtils;
 
 public class AntiSpam extends Module {
     private static AntiSpam INSTANCE;
@@ -22,6 +22,6 @@ public class AntiSpam extends Module {
     }
 
     public boolean isSimilar(String string1, String string2) {
-        return OLEPOSSUtils.similarity(string1, string2) >= this.similarity.get();
+        return StringUtils.similarity(string1, string2) >= this.similarity.get();
     }
 }

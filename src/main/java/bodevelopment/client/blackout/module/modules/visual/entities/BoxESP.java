@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.module.modules.combat.misc.AntiBot;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.BoxMultiSetting;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.EntityUtils;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -58,7 +58,7 @@ public class BoxESP extends Module {
     }
 
     private void renderBox(Entity entity, double tickDelta) {
-        Vec3 pos = OLEPOSSUtils.getLerpedPos(entity, tickDelta);
+        Vec3 pos = EntityUtils.getLerpedPos(entity, tickDelta);
         this.rendering
                 .render(
                         new AABB(

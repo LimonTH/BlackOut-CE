@@ -115,7 +115,7 @@ public class AntiAim extends Module {
             default -> pitch;
         };
 
-        this.rotate((float) yaw, (float) pitch, RotationType.InstantOther, "");
+        this.rotation.rotate((float) yaw, (float) pitch, RotationType.InstantOther, "");
     }
 
     private AbstractClientPlayer getEnemy(double r) {

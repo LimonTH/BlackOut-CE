@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.rendering.renderer;
 
 import bodevelopment.client.blackout.randomstuff.ShaderSetup;
+import net.minecraft.util.ARGB;
 import bodevelopment.client.blackout.rendering.shader.Shader;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import com.google.common.collect.ImmutableList;
@@ -79,7 +80,7 @@ public class ShaderRenderer extends Renderer {
     }
 
     public void quad(PoseStack stack, float x, float y, float w, float h, int color, Shader shader, ShaderSetup setup, VertexFormat format) {
-        this.quad(stack, x, y, w, h, color >> 16 & 0xFF, color >> 8 & 0xFF, color & 0xFF, color >> 24 & 0xFF, shader, setup, format);
+        this.quad(stack, x, y, w, h, ARGB.red(color), ARGB.green(color), ARGB.blue(color), ARGB.alpha(color), shader, setup, format);
     }
 
     public void quad(
@@ -93,7 +94,7 @@ public class ShaderRenderer extends Renderer {
     }
 
     public void quad(PoseStack stack, float x, float y, float z, float w, float h, int color, Shader shader, ShaderSetup setup, VertexFormat format) {
-        this.quad(stack, x, y, z, w, h, color >> 16 & 0xFF, color >> 8 & 0xFF, color & 0xFF, color >> 24 & 0xFF, shader, setup, format);
+        this.quad(stack, x, y, z, w, h, ARGB.red(color), ARGB.green(color), ARGB.blue(color), ARGB.alpha(color), shader, setup, format);
     }
 
     public void quad(

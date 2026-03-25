@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.combat.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
@@ -29,7 +30,7 @@ public class AutoLog extends Module {
     }
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             int tots = InvUtils.count(true, true, stack -> stack.is(Items.TOTEM_OF_UNDYING));
             if (BlackOut.mc.player.getHealth() + BlackOut.mc.player.getAbsorptionAmount() <= this.health.get()) {
                 if (this.totems.get() && tots > this.totemAmount.get()) {

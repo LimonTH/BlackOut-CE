@@ -22,7 +22,6 @@ public class SettingUtils {
     private static RotationSettings rotation;
     private static ServerSettings server;
     private static SwingSettings swing;
-    private static ExtrapolationSettings extrapolation;
 
     public static void init() {
         facing = FacingSettings.getInstance();
@@ -31,20 +30,23 @@ public class SettingUtils {
         rotation = RotationSettings.getInstance();
         server = ServerSettings.getInstance();
         swing = SwingSettings.getInstance();
-        extrapolation = ExtrapolationSettings.getInstance();
     }
 
+    // --- Range: meaningful logic (max of two ranges) ---
+
     public static double maxInteractRange() {
-        return Math.max(getInteractRange(), getInteractWallsRange());
+        return Math.max(range.interactRange.get(), range.interactRangeWalls.get());
     }
 
     public static double maxPlaceRange() {
-        return Math.max(getPlaceRange(), getPlaceWallsRange());
+        return Math.max(range.placeRange.get(), range.placeRangeWalls.get());
     }
 
     public static double maxMineRange() {
-        return Math.max(getMineRange(), getMineWallsRange());
+        return Math.max(range.mineRange.get(), range.mineRangeWalls.get());
     }
+
+    // --- Range: convenience overloads with null defaults ---
 
     public static double getInteractRange() {
         return range.interactRange.get();
@@ -150,9 +152,7 @@ public class SettingUtils {
         return range.inMineRange(pos);
     }
 
-    public static boolean inMineRangeNoTrace(BlockPos pos) {
-        return range.inMineRangeNoTrace(pos);
-    }
+    // --- Rotation: high-usage delegations ---
 
     public static boolean startMineRot() {
         return rotation.startMineRot();
@@ -160,10 +160,6 @@ public class SettingUtils {
 
     public static boolean endMineRot() {
         return rotation.endMineRot();
-    }
-
-    public static boolean shouldVanillaRotate() {
-        return rotation.vanillaRotation.get();
     }
 
     public static boolean shouldRotate(RotationType type) {
@@ -176,14 +172,6 @@ public class SettingUtils {
 
     public static boolean attackRotationCheck(AABB box, float yaw, float pitch) {
         return rotation.attackRotationCheck(box, yaw, pitch);
-    }
-
-    public static double yawStep(RotationType type) {
-        return rotation.yawStep(type);
-    }
-
-    public static double pitchStep(RotationType type) {
-        return rotation.pitchStep(type);
     }
 
     public static Rotation getRotation(BlockPos pos, Direction dir, Vec3 vec, RotationType type) {
@@ -202,25 +190,7 @@ public class SettingUtils {
         return rotation.getAttackRotation(box, vec);
     }
 
-    public static double returnSpeed() {
-        return rotation.returnSpeed.get();
-    }
-
-    public static Rotation applyStep(Rotation rot, RotationType type, boolean rotated) {
-        return rotation.applyStep(rot, type, rotated);
-    }
-
-    public static boolean attackLimit() {
-        return rotation.attackLimit.get();
-    }
-
-    public static double attackSpeed() {
-        return rotation.attackMaxSpeed.get();
-    }
-
-    public static int attackTicks() {
-        return rotation.attackTicks.get();
-    }
+    // --- Rotation: meaningful logic ---
 
     public static boolean rotationIgnoreEnabled() {
         return rotation.noOwnTime.get() > 0.0 || rotation.noOtherTime.get() > 0.0;
@@ -232,13 +202,13 @@ public class SettingUtils {
         return since < (iEntity.blackout_Client$isOwn() ? rotation.noOwnTime : rotation.noOtherTime).get() * 1000.0;
     }
 
+    // --- Swing ---
+
     public static void swing(SwingState state, SwingType type, InteractionHand hand) {
         swing.swing(state, type, hand);
     }
 
-    public static void mineSwing(SwingSettings.MiningSwingState state) {
-        swing.mineSwing(state);
-    }
+    // --- Facing ---
 
     public static PlaceData getPlaceData(BlockPos pos) {
         return facing.getPlaceData(pos, null, null, true);
@@ -264,21 +234,7 @@ public class SettingUtils {
         return facing.getPlaceOnDirection(pos);
     }
 
-    public static boolean shouldInteractTrace() {
-        return raytrace.interactTrace.get();
-    }
-
-    public static boolean shouldPlaceTrace() {
-        return raytrace.placeTrace.get();
-    }
-
-    public static boolean shouldAttackTrace() {
-        return raytrace.attackTrace.get();
-    }
-
-    public static boolean shouldMineTrace() {
-        return raytrace.mineTrace.get();
-    }
+    // --- Raytrace ---
 
     public static boolean interactTrace(BlockPos pos) {
         return raytrace.interactTrace(pos);
@@ -295,6 +251,8 @@ public class SettingUtils {
     public static boolean mineTrace(BlockPos pos) {
         return raytrace.mineTrace(pos);
     }
+
+    // --- Server settings ---
 
     public static boolean oldCrystals() {
         return server.oldCrystals.get();
@@ -318,25 +276,5 @@ public class SettingUtils {
 
     public static boolean strictSprint() {
         return server.strictSprint.get();
-    }
-
-    public static boolean stepPredict() {
-        return extrapolation.stepPredict.get();
-    }
-
-    public static int reverseStepTicks() {
-        return extrapolation.reverseStepTicks.get();
-    }
-
-    public static boolean reverseStepPredict() {
-        return extrapolation.reverseStepPredict.get();
-    }
-
-    public static int stepTicks() {
-        return extrapolation.stepTicks.get();
-    }
-
-    public static boolean jumpPredict() {
-        return extrapolation.jumpPredict.get();
     }
 }

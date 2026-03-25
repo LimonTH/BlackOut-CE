@@ -11,7 +11,6 @@ import bodevelopment.client.blackout.module.modules.combat.offensive.CreeperAura
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.ItemUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -85,7 +84,7 @@ public class Suicide extends Module {
     }
 
     private List<EquipmentSlot> toDrop(int amount) {
-        List<EquipmentSlot> list = Arrays.stream(OLEPOSSUtils.equipmentSlots)
+        List<EquipmentSlot> list = Arrays.stream(ItemUtils.ARMOR_SLOTS)
                 .filter(slot -> BlackOut.mc.player.getInventory().getArmor(slot.getIndex()).getItem() instanceof ArmorItem)
                 .sorted(Comparator.comparingDouble(slot -> ItemUtils.getArmorValue(BlackOut.mc.player.getInventory().getArmor(slot.getIndex()))))
                 .collect(Collectors.toList());

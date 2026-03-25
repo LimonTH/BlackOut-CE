@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
@@ -11,7 +12,7 @@ import bodevelopment.client.blackout.module.modules.misc.Timer;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.MovementPrediction;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.BlockUtils;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.world.phys.Vec3;
@@ -63,7 +64,7 @@ public class PhaseWalk extends Module {
             Timer.reset();
         }
 
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && this.prevActive && this.resync.get()) {
+        if (PlayerUtils.isInGame() && this.prevActive && this.resync.get()) {
             this.timerLeft = 0;
             this.sincePhase = 0;
             Vec3 pos = Managers.PACKET.pos;
@@ -103,7 +104,7 @@ public class PhaseWalk extends Module {
         this.sinceRotation++;
         if (!PacketFly.getInstance().enabled) {
             this.waitingForPhase = false;
-            boolean phasing = OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().deflate(0.0625));
+            boolean phasing = BlockUtils.hasEntityCollision(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().deflate(0.0625));
             if (!phasing) {
                 if (this.prevActive && this.rubberbanded && this.resync.get()) {
                     this.timerLeft = 0;
@@ -231,7 +232,7 @@ public class PhaseWalk extends Module {
     }
 
     private boolean phased() {
-        return OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().deflate(0.07, 0.1, 0.07));
+        return BlockUtils.hasEntityCollision(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().deflate(0.07, 0.1, 0.07));
     }
 
     private boolean isOnGround() {

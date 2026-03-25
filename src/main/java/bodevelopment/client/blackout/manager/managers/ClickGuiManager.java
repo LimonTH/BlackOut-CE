@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.manager.managers;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.KeyEvent;
@@ -20,7 +21,7 @@ public class ClickGuiManager extends Manager {
 
     @Event
     public void onKey(KeyEvent event) {
-        if (!event.pressed || BlackOut.mc.player == null || BlackOut.mc.level == null) return;
+        if (!event.pressed || !PlayerUtils.isInGame()) return;
 
         if (event.key == 344) {
             if (BlackOut.mc.screen == null || Managers.CLICK_GUI.CLICK_GUI.isOpen()) {

@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.combat.offensive;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
@@ -7,7 +8,7 @@ import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.mixin.accessors.AccessorServerboundInteractPacket;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.module.OnlyDev;
+import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -58,7 +59,7 @@ public class Criticals extends Module {
 
     @Event
     public void onSend(PacketEvent.Send event) {
-        if (BlackOut.mc.player == null || BlackOut.mc.level == null) return;
+        if (!PlayerUtils.isInGame()) return;
         if (Aura.getInstance().enabled && Aura.getInstance().isAttacking) return;
 
         if (event.packet instanceof AccessorServerboundInteractPacket packet

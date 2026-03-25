@@ -98,7 +98,7 @@ public class SwingSettings extends SettingsModule {
 
     private void swing(boolean shouldSwing, InteractionHand hand) {
         if (shouldSwing) {
-            this.sendPacket(new ServerboundSwingPacket(hand));
+            bodevelopment.client.blackout.manager.Managers.PACKET.sendPacket(new ServerboundSwingPacket(hand));
         }
     }
 

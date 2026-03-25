@@ -1,21 +1,19 @@
 package bodevelopment.client.blackout.module;
 
-public class SettingsModule extends Module {
+import bodevelopment.client.blackout.BlackOut;
+
+/**
+ * Non-toggleable module that serves as a global settings panel.
+ * Unlike {@link Module}, it has no keybind, no enabled/disabled state,
+ * and its event listeners are always active.
+ */
+public class SettingsModule extends AbstractModule {
     public SettingsModule(String name, boolean client, boolean subscribe) {
-        super(name, "Global " + name.toLowerCase() + " settings for all BlackOut modules.", client ? SubCategory.CLIENT : SubCategory.SETTINGS, subscribe);
-    }
+        super(name, "Global " + name.toLowerCase() + " settings for all BlackOut modules.", client ? SubCategory.CLIENT : SubCategory.SETTINGS);
 
-    @Override
-    public boolean toggleable() {
-        return false;
-    }
-
-    @Override
-    public void enable(String msg) {
-    }
-
-    @Override
-    public void disable(String message) {
+        if (subscribe) {
+            BlackOut.EVENT_BUS.subscribe(this, this::shouldSkipListeners);
+        }
     }
 
     @Override

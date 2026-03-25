@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.combat.defensive;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.enums.SwingHand;
@@ -15,7 +16,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.util.DamageUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.InvUtils;
 import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
@@ -99,7 +100,7 @@ public class AutoPot extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (AutoCrystal.getInstance().placing) {
                 this.acTimer = this.autoCrystalPause.get();
             }
@@ -121,7 +122,7 @@ public class AutoPot extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.throwsLeft = this.throwsLeft + this.throwSpeed.get() / 20.0;
             this.updateTimers();
             this.update();
@@ -130,7 +131,7 @@ public class AutoPot extends Module {
     }
 
     private void update() {
-        InteractionHand hand = OLEPOSSUtils.getHand(this.healthPred);
+        InteractionHand hand = InvUtils.getHand(this.healthPred);
         this.result = null;
         int bottlesLeft = 0;
         if (hand == null) {
@@ -147,10 +148,10 @@ public class AutoPot extends Module {
         }
 
         if (this.throwTimer <= 0) {
-            this.end("throwing");
+            this.rotation.end("throwing");
         } else {
             this.switched = false;
-            if (this.rotatePitch(90.0F, RotationType.Other.withInstant(this.instantRotate.get()), "throwing")) {
+            if (this.rotation.rotatePitch(90.0F, RotationType.Other.withInstant(this.instantRotate.get()), "throwing")) {
                 while (bottlesLeft > 0) {
                     this.throwBottle(hand);
                     bottlesLeft--;

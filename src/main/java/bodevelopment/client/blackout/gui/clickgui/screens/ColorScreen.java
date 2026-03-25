@@ -14,6 +14,7 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.ScissorStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -73,33 +74,30 @@ public class ColorScreen extends ClickGuiScreen {
 
         int invertedY = screenHeight - (scY + scH);
 
-        GlStateManager._enableScissorTest();
-        GlStateManager._scissorBox(Math.max(0, scX), Math.max(0, invertedY), Math.max(0, scW), Math.max(0, scH));
+        try (ScissorStack.Region region = ScissorStack.pushRaw(Math.max(0, scX), Math.max(0, invertedY), Math.max(0, scW), Math.max(0, scH))) {
+            this.stack.pushPose();
+            this.stack.translate(200.0F, 0.0F, 0.0F);
 
-        this.stack.pushPose();
-        this.stack.translate(200.0F, 0.0F, 0.0F);
-
-        double rawMx = this.mx;
-        this.mx -= 200.0F;
-        if (this.selecting > 0) {
-            if (this.colorSetting.theme > 0) {
-                this.handleThemeSliders();
-            } else {
-                this.handleSliders();
+            double rawMx = this.mx;
+            this.mx -= 200.0F;
+            if (this.selecting > 0) {
+                if (this.colorSetting.theme > 0) {
+                    this.handleThemeSliders();
+                } else {
+                    this.handleSliders();
+                }
             }
+
+            this.renderPicker();
+            if (this.colorSetting.theme > 0) {
+                this.renderThemeBars();
+            } else {
+                this.renderBars();
+            }
+
+            this.mx = rawMx;
+            this.stack.popPose();
         }
-
-        this.renderPicker();
-        if (this.colorSetting.theme > 0) {
-            this.renderThemeBars();
-        } else {
-            this.renderBars();
-        }
-
-        this.mx = rawMx;
-        this.stack.popPose();
-
-        GlStateManager._disableScissorTest();
 
         this.updateFieldsFocus();
     }

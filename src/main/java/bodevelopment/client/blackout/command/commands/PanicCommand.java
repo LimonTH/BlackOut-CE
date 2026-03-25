@@ -28,7 +28,7 @@ public class PanicCommand extends Command {
                     }
 
                     this.states.clear();
-                    Managers.MODULES.getModules().forEach(m -> {
+                    Managers.MODULES.getToggleableModules().forEach(m -> {
                         this.states.put(m, m.enabled);
                         if (m.enabled) {
                             m.disable();

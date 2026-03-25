@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.hud.elements;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.hud.TextElement;
 
@@ -11,7 +12,7 @@ public class FPS extends TextElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.drawElement(this.stack, "FPS:", String.valueOf(BlackOut.mc.getFps()));
         }
     }

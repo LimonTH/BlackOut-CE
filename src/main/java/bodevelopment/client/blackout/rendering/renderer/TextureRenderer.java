@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.rendering.renderer;
 
 import bodevelopment.client.blackout.randomstuff.ShaderSetup;
+import net.minecraft.util.ARGB;
 import bodevelopment.client.blackout.rendering.shader.Shader;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
@@ -108,7 +109,7 @@ public class TextureRenderer extends Renderer {
     }
 
     public void quad(PoseStack stack, float x, float y, float w, float h, float blur, int color) {
-        this.quad(stack, x, y, w, h, blur, (color >> 16 & 0xFF) / 255.0F, (color >> 8 & 0xFF) / 255.0F, (color & 0xFF) / 255.0F, (color >>> 24) / 255.0F);
+        this.quad(stack, x, y, w, h, blur, ARGB.red(color) / 255.0F, ARGB.green(color) / 255.0F, ARGB.blue(color) / 255.0F, ARGB.alpha(color) / 255.0F);
     }
 
     public void quad(PoseStack stack, float x, float y, float w, float h, float blur, float r, float g, float b, float a) {
@@ -125,7 +126,7 @@ public class TextureRenderer extends Renderer {
 
     public void quadUV(PoseStack stack, float x, float y, float w, float h, float u1, float v1, float u2, float v2, float blur, int color) {
         this.quadUV(
-                stack, x, y, w, h, u1, v1, u2, v2, blur, (color >> 16 & 0xFF) / 255.0F, (color >> 8 & 0xFF) / 255.0F, (color & 0xFF) / 255.0F, (color >>> 24) / 255.0F
+                stack, x, y, w, h, u1, v1, u2, v2, blur, ARGB.red(color) / 255.0F, ARGB.green(color) / 255.0F, ARGB.blue(color) / 255.0F, ARGB.alpha(color) / 255.0F
         );
     }
 

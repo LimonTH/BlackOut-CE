@@ -6,7 +6,7 @@ import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.BlockUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -103,15 +103,15 @@ public class ParticleManager extends Manager {
         public void tick() {
             this.prev = this.pos;
             AABB box = AABB.ofSize(this.pos, 0.05, 0.05, 0.05);
-            if (OLEPOSSUtils.inside(BlackOut.mc.player, box.expandTowards(this.motionX, 0.0, 0.0))) {
+            if (BlockUtils.hasEntityCollision(BlackOut.mc.player, box.expandTowards(this.motionX, 0.0, 0.0))) {
                 this.motionX = this.doTheBounciness(this.motionX);
             }
 
-            if (OLEPOSSUtils.inside(BlackOut.mc.player, box.expandTowards(0.0, this.motionY, 0.0))) {
+            if (BlockUtils.hasEntityCollision(BlackOut.mc.player, box.expandTowards(0.0, this.motionY, 0.0))) {
                 this.motionY = this.doTheBounciness(this.motionY);
             }
 
-            if (OLEPOSSUtils.inside(BlackOut.mc.player, box.expandTowards(0.0, 0.0, this.motionZ))) {
+            if (BlockUtils.hasEntityCollision(BlackOut.mc.player, box.expandTowards(0.0, 0.0, this.motionZ))) {
                 this.motionZ = this.doTheBounciness(this.motionZ);
             }
 

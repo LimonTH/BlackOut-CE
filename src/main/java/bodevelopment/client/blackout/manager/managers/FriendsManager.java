@@ -1,10 +1,12 @@
 package bodevelopment.client.blackout.manager.managers;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.manager.Persistable;
 import bodevelopment.client.blackout.util.BOLogger;
 import bodevelopment.client.blackout.util.FileUtils;
 import com.google.gson.JsonObject;
@@ -18,14 +20,14 @@ import java.util.*;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.world.entity.player.Player;
 
-public class FriendsManager extends Manager {
+public class FriendsManager extends Manager implements Persistable {
     private final List<Friend> friends = new ArrayList<>();
     private boolean shouldSave = false;
     private long prevSave = 0L;
 
     @Override
     public void init() {
-        BlackOut.EVENT_BUS.subscribe(this, () -> BlackOut.mc.player == null || BlackOut.mc.level == null);
+        BlackOut.EVENT_BUS.subscribe(this, () -> !PlayerUtils.isInGame());
     }
 
     @Event
@@ -152,6 +154,7 @@ public class FriendsManager extends Manager {
         }
     }
 
+    @Override
     public void save() {
         this.shouldSave = true;
     }

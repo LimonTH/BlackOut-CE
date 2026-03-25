@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.hud.elements;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -33,7 +34,7 @@ public class Clock extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             String time = switch (this.mode.get()) {
                 case Normal -> LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
                 case American -> new SimpleDateFormat("hh:mm a").format(new Date());

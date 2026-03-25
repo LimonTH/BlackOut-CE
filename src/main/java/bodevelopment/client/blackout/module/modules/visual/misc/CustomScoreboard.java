@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.visual.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
@@ -50,7 +51,7 @@ public class CustomScoreboard extends Module {
 
     @Event
     public void onRender(RenderEvent.Hud.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (this.objectiveName != null && this.texts != null && !this.remove.get()) {
                 float width = Math.max(this.getLongest(this.texts) * 2.0F + 20.0F, BlackOut.FONT.getWidth(this.objectiveName) * 2.0F + 40.0F);
                 float length = (this.texts.size() + 2) * BlackOut.FONT.getHeight() * 2.0F + 6.0F;

@@ -59,8 +59,8 @@ public class MovementUtils {
 
     private static void y(Vec3 movement, double x, double z, int step, int rev) {
         if (BlackOut.mc.player.onGround()
-                && !OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox())
-                && OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(x, 0.0, z))) {
+                && !BlockUtils.hasEntityCollision(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox())
+                && BlockUtils.hasEntityCollision(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(x, 0.0, z))) {
             double s = getStep(BlackOut.mc.player.getBoundingBox().move(x, 0.0, z), step);
             if (s > 0.0) {
                 ((IVec3) movement).blackout_Client$setY(s);
@@ -68,7 +68,7 @@ public class MovementUtils {
             }
         } else {
             if (BlackOut.mc.player.onGround()
-                    && !OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(x, -0.04, z))) {
+                    && !BlockUtils.hasEntityCollision(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(x, -0.04, z))) {
                 double s = getReverse(BlackOut.mc.player.getBoundingBox(), rev);
                 if (s > 0.0) {
                     ((IVec3) movement).blackout_Client$setY(-s);
@@ -80,7 +80,7 @@ public class MovementUtils {
 
     private static double getStep(AABB box, int step) {
         for (double i = 0.0; i <= step + 0.125; i += 0.125) {
-            if (!OLEPOSSUtils.inside(BlackOut.mc.player, box.move(0.0, i, 0.0))) {
+            if (!BlockUtils.hasEntityCollision(BlackOut.mc.player, box.move(0.0, i, 0.0))) {
                 return i;
             }
         }
@@ -90,7 +90,7 @@ public class MovementUtils {
 
     private static double getReverse(AABB box, int reverse) {
         for (double i = 0.0; i <= reverse; i += 0.125) {
-            if (OLEPOSSUtils.inside(BlackOut.mc.player, box.move(0.0, -i - 0.125, 0.0))) {
+            if (BlockUtils.hasEntityCollision(BlackOut.mc.player, box.move(0.0, -i - 0.125, 0.0))) {
                 return i;
             }
         }

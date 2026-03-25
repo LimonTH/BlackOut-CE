@@ -5,6 +5,7 @@ out/
 
 # IDEs
 .idea/
+TODO
 *.iml
 *.ipr
 *.iws

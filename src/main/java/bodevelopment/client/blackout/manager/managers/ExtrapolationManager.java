@@ -43,7 +43,7 @@ public class ExtrapolationManager extends Manager {
 
     @Event
     public void onTick(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             Map<Player, ExtrapolationData> newMap = new ConcurrentHashMap<>();
 
             for (Player player : BlackOut.mc.level.players()) {
@@ -154,7 +154,7 @@ public class ExtrapolationManager extends Manager {
             this.prevYaw = this.entity.getYRot();
             this.prevPitch = this.entity.getXRot();
             this.onGrounds.addFirst(Simulator.isOnGround(this.getEntity(), this.getEntity().getBoundingBox()));
-            OLEPOSSUtils.limitList(this.onGrounds, 3);
+            CollectionUtils.limitSize(this.onGrounds, 3);
             boolean offGround = this.isOffGround();
             if (offGround && !this.prevOffGround) {
                 this.movedDown = this.motions.getFirst().y > 0.0;
@@ -227,15 +227,17 @@ public class ExtrapolationManager extends Manager {
                 return true;
             } else {
                 if (motion.y >= 0.45 && motion.y <= 4.0 && Simulator.isOnGround(entity, entity.getBoundingBox())) {
-                    if (SettingUtils.stepPredict()) {
-                        this.step.add(motion.y, SettingUtils.stepTicks());
+                    ExtrapolationSettings extSettings = ExtrapolationSettings.getInstance();
+                    if (extSettings.stepPredict.get()) {
+                        this.step.add(motion.y, extSettings.stepTicks.get());
                         this.motions.clear();
                         this.addMotion(new Vec3(motion.x, 0.0, motion.z));
                         return true;
                     }
                 } else if (motion.y <= -0.45 && motion.y >= -6.0 && Simulator.isOnGround(entity, entity.getBoundingBox())) {
-                    if (SettingUtils.reverseStepPredict()) {
-                        this.reverseStep.add(-motion.y, SettingUtils.reverseStepTicks());
+                    ExtrapolationSettings extSettings = ExtrapolationSettings.getInstance();
+                    if (extSettings.reverseStepPredict.get()) {
+                        this.reverseStep.add(-motion.y, extSettings.reverseStepTicks.get());
                         this.motions.clear();
                         this.addMotion(new Vec3(motion.x, 0.0, motion.z));
                         return true;
@@ -296,7 +298,7 @@ public class ExtrapolationManager extends Manager {
             }
 
             this.motions.addFirst(motion);
-            OLEPOSSUtils.limitList(this.motions, 5);
+            CollectionUtils.limitSize(this.motions, 5);
         }
 
         private boolean collided() {

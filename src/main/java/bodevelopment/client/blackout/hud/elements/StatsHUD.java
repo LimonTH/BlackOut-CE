@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.BackgroundMultiSetting;
 import bodevelopment.client.blackout.module.setting.multisettings.TextColorMultiSetting;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.TimeUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import java.util.function.Predicate;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -81,8 +81,8 @@ public class StatsHUD extends HudElement {
 
     private String getStat(Stats stat, StatsManager.TrackerData data) {
         return switch (stat) {
-            case Hole -> "In Hole: " + OLEPOSSUtils.getTimeString(data.inHoleFor * 50L);
-            case Phased -> "Phased: " + OLEPOSSUtils.getTimeString(data.phasedFor * 50L);
+            case Hole -> "In Hole: " + TimeUtils.formatMillis(data.inHoleFor * 50L);
+            case Phased -> "Phased: " + TimeUtils.formatMillis(data.phasedFor * 50L);
             case Pops -> "Pops: " + data.pops;
             case Eaten -> "Eaten: " + data.eaten;
             case Bottles -> "Bottles: " + data.bottles;

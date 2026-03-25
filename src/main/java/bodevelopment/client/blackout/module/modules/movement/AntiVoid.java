@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
@@ -9,7 +10,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.Notifications;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.BlockUtils;
 
 public class AntiVoid extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -31,7 +32,7 @@ public class AntiVoid extends Module {
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (BlackOut.mc.player.onGround()) {
                 this.prevOG = BlackOut.mc.player.getY();
             }
@@ -60,7 +61,7 @@ public class AntiVoid extends Module {
 
     public boolean aboveVoid() {
         for (int i = 1; i < 30.0 - Math.ceil(this.prevOG) + BlackOut.mc.player.getBlockY(); i++) {
-            if (OLEPOSSUtils.collidable(BlackOut.mc.player.blockPosition().below(i))) {
+            if (BlockUtils.collidable(BlackOut.mc.player.blockPosition().below(i))) {
                 return false;
             }
         }

@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
@@ -70,7 +71,7 @@ public class StaffCheck extends Module {
 
     @Event
     public void onSend(PacketEvent.Receive.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (this.nameCheck.get()) {
                 if (event.packet instanceof ClientboundPlayerInfoUpdatePacket packet) {
                     List<ClientboundPlayerInfoUpdatePacket.Entry> entries = packet.newEntries();

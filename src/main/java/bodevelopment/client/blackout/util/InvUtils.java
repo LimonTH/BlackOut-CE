@@ -13,6 +13,7 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
@@ -20,6 +21,23 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 public class InvUtils {
+    public static InteractionHand getHand(Item item) {
+        return getHand(stack -> stack.getItem() == item);
+    }
+
+    public static InteractionHand getHand(Predicate<ItemStack> predicate) {
+        if (predicate.test(Managers.PACKET.getStack())) {
+            return InteractionHand.MAIN_HAND;
+        } else {
+            return predicate.test(BlackOut.mc.player.getOffhandItem()) ? InteractionHand.OFF_HAND : null;
+        }
+    }
+
+    public static ItemStack getHandItem(InteractionHand hand) {
+        return hand == InteractionHand.MAIN_HAND ? Managers.PACKET.getStack()
+                : (hand == InteractionHand.OFF_HAND ? BlackOut.mc.player.getOffhandItem() : null);
+    }
+
     public static int pickSlot = -1;
     public static int prevSlot = -1;
     private static int[] slots;
@@ -29,7 +47,7 @@ public class InvUtils {
 
         for (int i = hotbar ? 0 : 9; i < (inventory ? BlackOut.mc.player.getInventory().getContainerSize() : 9); i++) {
             ItemStack stack = BlackOut.mc.player.getInventory().getItem(i);
-            if (stack != null && predicate.test(stack)) {
+            if (!stack.isEmpty() && predicate.test(stack)) {
                 count += stack.getCount();
             }
         }
@@ -45,7 +63,7 @@ public class InvUtils {
         if (BlackOut.mc.player != null) {
             for (int i = hotbar ? 0 : 9; i < (inventory ? BlackOut.mc.player.getInventory().getContainerSize() : 9); i++) {
                 ItemStack stack = BlackOut.mc.player.getInventory().getItem(i);
-                if (stack != null && predicate.test(stack)) {
+                if (!stack.isEmpty() && predicate.test(stack)) {
                     return new FindResult(i, stack.getCount(), stack);
                 }
             }

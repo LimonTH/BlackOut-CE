@@ -1,115 +1,48 @@
-[English](README.md) | [Русский](#blackout-ce-1211--rus)
+<div align="center">
 
-# Blackout-CE (1.21.2) 🌑
+# Blackout-CE 🌑
+**High-performance utility client for Minecraft (Fabric)**
 
-> **Template for addon:** [LimonTH/Blackout-CE-addon-template](https://github.com/LimonTH/Blackout-CE-addon-template)  
+[![Version](https://img.shields.io/badge/Version-%201.21.4-blueviolet?style=flat-square)](https://github.com/LimonTH/Blackout-CE)
+[![License](https://img.shields.io/badge/License-GNU%20GPL%20v3-red?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
+[![Java](https://img.shields.io/badge/Language-Java-orange?style=flat-square)](https://www.oracle.com/java/)
 
-A highly customizable and optimized Minecraft utility client, modernized and maintained for the latest versions of the game.
+[English](#-about) • [Русский](#-о-проекте) • [Addon Template](https://github.com/LimonTH/Blackout-CE-addon-template)
 
-> **Note:** This project is a continuation of the original Blackout Client by **luhpossu** and **KassuK**.
-> As a solo developer, I (**Limon_TH**) have taken up this idea, and I'm not going to give it up just yet.
-> 
-> Please, use baritone-api mod if you need baritone.
-
----
-
-## 🛠 Current TASKS (TODO)
-
-- `Create localization settings(RUS/ENG)`
-- `@OnlyDev need fixes`
+</div>
 
 ---
 
-## 💻 Tech Stack
+## 🛰 About
+A modernized continuation of the original **Blackout Client** by *luhpossu* & *KassuK*.
+This project was born from a deep reconstruction of a leaked 2024 dev-build, manually deobfuscated and ported to the latest Fabric environment.
 
-* **Version:** 1.21.1 (Fabric)
-* **Language:** Java
-* **Maintained by:** Limon_TH
-* **Original Credits:** luhpossu, KassuK
-
----
-
-## 📜 License
-
-This project is licensed under the **GNU GPL v3**.  
-This ensures that the code remains open-source and free for the community. If you use parts of this code, you must keep your project open-source under the same license.
-
-### 📜 Story of this project
-This build is based on a leaked development JAR from 2 years ago.
-I took that build, manually deobfuscated the code, and spent a lot of time
-fixing broken logic and porting it to the modern 1.21.1 Fabric environment.
-It’s been a long journey from a "dead leak" to a fully working client.
+### 💻 Technical Stack
+* **Loader:** Fabric
+* **Versions:** 1.21.4
+* **Developer:** [Limon_TH](https://github.com/LimonTH)
+* **Compatibility:** [Baritone API](https://github.com/cabaletta/baritone/releases/download/v1.13.1/baritone-api-fabric-1.13.1.jar), [Sodium](https://github.com/CaffeineMC/sodium/releases/tag/mc1.21.4-0.6.13)
 
 ---
 
-## 🤝 Support & Contribution
+## 🇷🇺 О проекте
+Вторая жизнь оригинального **Blackout**. Весь код был вручную деобфусцирован, исправлен и адаптирован под современные реалии игры.
 
-Since I am developing this project solo, any feedback or bug reports are highly appreciated!
+### 📊 Спецификации
+* **Ядро:** Fabric 1.21.4
+* **База:** Оригинальный Blackout (luhpossu, KassuK)
+* **Статус:** Активная разработка (Limon_TH)
 
+---
+
+## 🤝 Contribution
 1. **Fork** the project.
-2. Create your **Feature Branch** (`git checkout -b feature/AmazingFeature`).
-3. **Commit** your changes (`git commit -m 'Add some AmazingFeature'`).
-4. **Push** to the branch (`git push origin feature/AmazingFeature`).
-5. Open a **Pull Request**.
+2. **Commit** changes (`git commit -m 'Add Feature'`).
+3. **Push** to the branch (`git push origin feature`).
+4. Open a **Pull Request**.
 
----
-*Created with ❤️ by Limon_TH*
+<div align="center">
 
+*Developed with ❤️ by Limon_TH*
 
----
-
-
-# Blackout-CE (1.21.2) 🌑 [RUS]
-
-> **Шаблон для аддона:** [LimonTH/Blackout-CE-addon-template](https://github.com/LimonTH/Blackout-CE-addon-template)
-
-Высокопроизводительный и настраиваемый чит-клиент для Minecraft, обновленный и адаптированный под актуальные версии игры.
-
-> **Примечание:** Данный проект является продолжением оригинального Blackout Client от **luhpossu** и **KassuK**.
-> Как соло-разработчик (**Limon_TH**), я занялся этой идеей, и пока не собираюсь её бросать.
-
-> Пожалуйста, используйте мод baritone-api если вам нужен baritone.
-
----
-
-## 🛠 Текущие ЗАДАЧИ (TODO)
-
-- `Создать настройки локализации (RUS/ENG)`
-- `@OnlyDev нужны фиксы`
-- `TODO в Nametags`
-
----
-
-## 💻 Техническая информация
-
-* **Версия игры:** 1.21.1 (Fabric)
-* **Язык программирования:** Java
-* **Разработчик:** Limon_TH
-* **Оригинальные авторы:** luhpossu, KassuK
-
----
-
-## 📜 Лицензия
-
-Проект распространяется под лицензией **GNU GPL v3**.  
-Это гарантирует, что код останется открытым и бесплатным для сообщества. Если вы используете части этого кода, вы обязаны оставить свой проект открытым под той же лицензией.
-
-### 📜 История проекта
-Этот билд основан на утекшем (leak) JAR-файле ранней разработки двухлетней давности.
-Я взял этот файл, вручную деобфусцировал код и потратил огромное количество времени на восстановление сломанной логики и портирование всего проекта на современную среду Fabric.
-Это был долгий путь от «мертвого лика» до полностью рабочего и актуального клиента.
-
----
-
-## 🤝 Поддержка и вклад в разработку
-
-Так как я занимаюсь этим проектом в одиночку, любая обратная связь или отчеты об ошибках очень важны!
-
-1. Сделайте **Fork** проекта.
-2. Создайте свою ветку (`git checkout -b feature/AmazingFeature`).
-3. Зафиксируйте изменения (`git commit -m 'Add some AmazingFeature'`).
-4. Отправьте ветку в репозиторий (`git push origin feature/AmazingFeature`).
-5. Создайте **Pull Request**.
-
----
-*Сделано с ❤️ разработчиком Limon_TH*
+</div>

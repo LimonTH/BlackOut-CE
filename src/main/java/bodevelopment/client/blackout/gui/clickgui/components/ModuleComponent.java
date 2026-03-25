@@ -4,6 +4,7 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.gui.clickgui.ClickGui;
 import bodevelopment.client.blackout.gui.clickgui.Component;
 import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.module.AbstractModule;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.modules.client.GuiSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -15,6 +16,7 @@ import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.ScissorStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
@@ -23,7 +25,7 @@ import net.minecraft.util.Mth;
 
 public class ModuleComponent extends Component {
     private static final Color disabledColor = new Color(150, 150, 150, 255);
-    public final Module module;
+    public final AbstractModule module;
     public float length;
     public float l;
     public float maxLength = -1.0F;
@@ -32,7 +34,7 @@ public class ModuleComponent extends Component {
     private double toggleProgress = 0.0;
     private long prevTime = 0L;
 
-    public ModuleComponent(PoseStack stack, Module module) {
+    public ModuleComponent(PoseStack stack, AbstractModule module) {
         super(stack);
         this.module = module;
     }
@@ -88,7 +90,8 @@ public class ModuleComponent extends Component {
 
             double delta = (System.currentTimeMillis() - this.prevTime) / 1000.0;
             this.prevTime = System.currentTimeMillis();
-            if (this.module.enabled) {
+            boolean isEnabled = this.module instanceof Module m && m.enabled;
+            if (isEnabled) {
                 this.toggleProgress = Math.min(this.toggleProgress + delta, 1.0);
             } else {
                 this.toggleProgress = Math.max(this.toggleProgress - delta, 0.0);
@@ -97,7 +100,8 @@ public class ModuleComponent extends Component {
             this.renderModule(AnimUtils.easeInOutCubic(this.toggleProgress), currentMx, currentMy);
             this.renderSettings(currentMx, currentMy);
 
-            GlStateManager._disableScissorTest();
+            ScissorStack.pop();
+            ScissorStack.pop();
             return Math.min(this.l, this.maxLength);
         } else {
             return Math.min(this.l, this.maxLength);
@@ -287,9 +291,9 @@ public class ModuleComponent extends Component {
             }
         }
 
-        if (this.module.toggleable()) {
+        if (this.module instanceof Module toggleable && toggleable.toggleable()) {
             if (this.y + moduleNameOffset > -50.0F && nameY < ClickGui.height + 50.0F) {
-                this.module.bind.get().render(this.stack, this.x + this.width - 30.0F, nameY, this.x + this.width, currentMx, currentMy);
+                toggleable.bind.get().render(this.stack, this.x + this.width - 30.0F, nameY, this.x + this.width, currentMx, currentMy);
             }
         }
     }
@@ -302,15 +306,15 @@ public class ModuleComponent extends Component {
     public boolean onMouse(int button, boolean pressed) {
         if (Managers.CLICK_GUI.CLICK_GUI.openedScreen != null) return false;
 
-        if (this.module.toggleable() && this.module.bind.get().onMouse(button, pressed)) {
+        if (this.module instanceof Module toggleable && toggleable.bind.get().onMouse(button, pressed)) {
             return true;
         }
 
         if (this.mx > this.x && this.mx < this.x + this.width && pressed && this.my > this.y && this.my < this.y + this.getHeight()) {
             if (button == 1) {
                 this.opened = !this.opened;
-            } else if (button == 0) {
-                this.module.toggle();
+            } else if (button == 0 && this.module instanceof Module toggleable) {
+                toggleable.toggle();
                 Managers.CONFIG.saveModule(this.module);
             }
             return true;
@@ -354,8 +358,7 @@ public class ModuleComponent extends Component {
         float sx = BlackOut.mc.getWindow().getScreenWidth() / 2.0F - ClickGui.width / 2.0F * ClickGui.unscaled + ClickGui.x;
         float y1 = BlackOut.mc.getWindow().getScreenHeight() / 2.0F - (ClickGui.height / 2.0F + 10.0F) * ClickGui.unscaled - ClickGui.y;
         float y2 = BlackOut.mc.getWindow().getScreenHeight() / 2.0F + (ClickGui.height / 2.0F + 10.0F) * ClickGui.unscaled - ClickGui.y;
-        GlStateManager._enableScissorTest();
-        GlStateManager._scissorBox((int) sx, (int) y1, (int) (ClickGui.width * ClickGui.unscaled), (int) Math.abs(y1 - y2));
+        ScissorStack.pushRaw((int) sx, (int) y1, (int) (ClickGui.width * ClickGui.unscaled), (int) Math.abs(y1 - y2));
     }
 
     private void scissor() {
@@ -364,7 +367,7 @@ public class ModuleComponent extends Component {
         float sx = BlackOut.mc.getWindow().getScreenWidth() / 2.0F - (ClickGui.width / 2.0F - this.x + 5.0F) * ClickGui.unscaled + ClickGui.x;
         float y1 = BlackOut.mc.getWindow().getScreenHeight() / 2.0F - (ClickGui.height / 2.0F - (ClickGui.height - maxY) + 5.0F) * ClickGui.unscaled - ClickGui.y;
         float y2 = BlackOut.mc.getWindow().getScreenHeight() / 2.0F + (ClickGui.height / 2.0F - minY + 10.0F) * ClickGui.unscaled - ClickGui.y;
-        GlStateManager._scissorBox(
+        ScissorStack.pushRaw(
                 (int) sx, (int) Math.ceil(y1), (int) ((this.width + 10.0F) * ClickGui.unscaled), (int) Math.ceil(y1 > y2 ? 0.0 : Math.abs(y1 - y2))
         );
     }
@@ -420,7 +423,7 @@ public class ModuleComponent extends Component {
 
         if (SelectedComponent.isSelected()) return true;
 
-        if (this.module.bind != null && this.module.bind.get().isInside()) return true;
+        if (this.module instanceof Module toggleable && toggleable.bind.get().isInside()) return true;
 
         if (this.opened) {
             for (SettingGroup sg : this.module.settingGroups) {
@@ -440,7 +443,9 @@ public class ModuleComponent extends Component {
     public void onKey(int key, boolean state) {
         if (Managers.CLICK_GUI.CLICK_GUI.openedScreen != null) return;
 
-        this.module.bind.get().onKey(key, state);
+        if (this.module instanceof Module toggleable) {
+            toggleable.bind.get().onKey(key, state);
+        }
         this.module.settingGroups.forEach(group -> group.settings.forEach(setting -> {
             if (setting.isVisible()) {
                 setting.onKey(key, state);

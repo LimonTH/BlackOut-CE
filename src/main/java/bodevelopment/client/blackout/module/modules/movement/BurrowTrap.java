@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.enums.SwitchMode;
@@ -16,7 +17,7 @@ import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.randomstuff.PlaceData;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.EntityUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.InvUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -82,11 +83,11 @@ public class BurrowTrap extends Module {
 
     @Event
     public void onRender(TickEvent.Post event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && this.pos != null) {
+        if (PlayerUtils.isInGame() && this.pos != null) {
             if (!EntityUtils.intersects(BoxUtils.get(this.pos), entity -> !(entity instanceof ItemEntity) && entity != BlackOut.mc.player)) {
                 PlaceData data = SettingUtils.getPlaceData(this.pos);
                 if (data.valid()) {
-                    InteractionHand hand = OLEPOSSUtils.getHand(this::valid);
+                    InteractionHand hand = InvUtils.getHand(this::valid);
                     boolean switched = false;
                     FindResult result = this.switchMode.get().find(this::valid);
                     if (hand != null || result.wasFound()) {
@@ -100,7 +101,7 @@ public class BurrowTrap extends Module {
 
                         if (!this.placed) {
                             if (!SettingUtils.shouldRotate(RotationType.BlockPlace)
-                                    || this.rotateBlock(data, RotationType.BlockPlace.withInstant(this.instantRotation.get()), "placing")) {
+                                    || this.rotation.rotateBlock(data, RotationType.BlockPlace.withInstant(this.instantRotation.get()), "placing")) {
                                 if (!EntityUtils.intersects(BoxUtils.get(this.pos), entity -> entity == BlackOut.mc.player)) {
                                     if (hand != null || (switched = this.switchMode.get().swap(result.slot()))) {
                                         this.placeBlock(hand, data.pos().getCenter(), data.dir(), data.pos());

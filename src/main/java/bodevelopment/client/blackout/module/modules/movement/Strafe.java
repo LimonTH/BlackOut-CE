@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
@@ -15,7 +16,8 @@ import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.util.ChatUtils;
 import bodevelopment.client.blackout.util.FileUtils;
 import bodevelopment.client.blackout.util.MovementUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.CollectionUtils;
+import bodevelopment.client.blackout.util.MathUtils;
 import org.apache.commons.lang3.mutable.MutableDouble;
 
 import java.io.File;
@@ -148,7 +150,7 @@ public class Strafe extends Module {
                     .position()
                     .subtract(BlackOut.mc.player.xo, BlackOut.mc.player.yo, BlackOut.mc.player.zo);
             this.velocities.addFirst(this.prevMovement);
-            OLEPOSSUtils.limitList(this.velocities, 10);
+            CollectionUtils.limitSize(this.velocities, 10);
             if (this.strictCollisions.get()) {
                 this.velocity = this.prevMovement.horizontalDistance() - this.boostAmount;
             }
@@ -157,7 +159,7 @@ public class Strafe extends Module {
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && this.enabled && !this.isPaused()) {
+        if (PlayerUtils.isInGame() && this.enabled && !this.isPaused()) {
             if (this.strictCollisions.get() && BlackOut.mc.player.horizontalCollision) {
                 this.boosts.clear();
             }
@@ -402,7 +404,7 @@ public class Strafe extends Module {
         if (this.vanillaFriction.get()) {
             return this.getVanillaFriction();
         } else {
-            double l = OLEPOSSUtils.safeDivide(this.og - this.startProgress.get(), this.endProgress.get() - this.startProgress.get());
+            double l = MathUtils.safeDivide(this.og - this.startProgress.get(), this.endProgress.get() - this.startProgress.get());
             return Mth.clampedLerp(this.startFriction.get(), this.endFriction.get(), l);
         }
     }

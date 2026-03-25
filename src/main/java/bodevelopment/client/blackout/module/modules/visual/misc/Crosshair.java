@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.visual.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
@@ -36,7 +37,7 @@ public class Crosshair extends Module {
 
     @Event
     public void onRender(RenderEvent.Hud.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             if (!this.remove.get()) {
                 this.stack.pushPose();
                 RenderUtils.unGuiScale(this.stack);

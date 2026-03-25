@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.rendering.renderer;
 
 import bodevelopment.client.blackout.rendering.shader.Shaders;
+import net.minecraft.util.ARGB;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -33,7 +34,7 @@ public class ColorRenderer extends Renderer {
     }
 
     public void quad(PoseStack stack, float x, float y, float w, float h, int color) {
-        this.quad(stack, x, y, w, h, color >> 16 & 0xFF, color >> 8 & 0xFF, color & 0xFF, color >> 24 & 0xFF);
+        this.quad(stack, x, y, w, h, ARGB.red(color), ARGB.green(color), ARGB.blue(color), ARGB.alpha(color));
     }
 
     public void quad(PoseStack stack, float x, float y, float w, float h, float r, float g, float b, float a) {
@@ -45,7 +46,7 @@ public class ColorRenderer extends Renderer {
     }
 
     public void quad(PoseStack stack, float x, float y, float z, float w, float h, int color) {
-        this.quad(stack, x, y, z, w, h, color >> 16 & 0xFF, color >> 8 & 0xFF, color & 0xFF, color >> 24 & 0xFF);
+        this.quad(stack, x, y, z, w, h, ARGB.red(color), ARGB.green(color), ARGB.blue(color), ARGB.alpha(color));
     }
 
     public void quad(PoseStack stack, float x, float y, float z, float w, float h, float r, float g, float b, float a) {

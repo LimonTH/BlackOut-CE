@@ -13,7 +13,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ColorUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.BlockUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -126,7 +126,7 @@ public class PhaseESP extends Module {
             AntiBot antiBot = AntiBot.getInstance();
             if (antiBot.enabled && antiBot.mode.get() == AntiBot.HandlingMode.Ignore && entity instanceof AbstractClientPlayer && antiBot.getBots().contains(entity)) {
                 return false;
-            } else if (!OLEPOSSUtils.inside(entity, entity.getBoundingBox().deflate(0.04, 0.06, 0.04))) {
+            } else if (!BlockUtils.hasEntityCollision(entity, entity.getBoundingBox().deflate(0.04, 0.06, 0.04))) {
                 return false;
             } else {
                 return entity != BlackOut.mc.player || FreeCam.getInstance().enabled;

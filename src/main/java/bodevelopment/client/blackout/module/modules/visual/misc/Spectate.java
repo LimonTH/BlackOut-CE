@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.visual.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.KeyEvent;
@@ -45,7 +46,7 @@ public class Spectate extends Module {
 
     @Event
     public void onRender(RenderEvent.Hud.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.stack.pushPose();
             RenderUtils.unGuiScale(this.stack);
             if (this.target instanceof AbstractClientPlayer) {

@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.manager.managers;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.KeyEvent;
@@ -111,7 +112,7 @@ public class HUDManager extends Manager {
 
     @Event
     public void onKey(KeyEvent event) {
-        if (event.key == 345 && event.pressed && BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (event.key == 345 && event.pressed && PlayerUtils.isInGame()) {
             if (BlackOut.mc.screen == null || HudEditor.isOpen()) {
                 this.toggle();
             }
@@ -120,7 +121,7 @@ public class HUDManager extends Manager {
 
     private float getProgress(float delta) {
         Screen screen = BlackOut.mc.screen;
-        if (BlackOut.mc.player == null || BlackOut.mc.level == null) {
+        if (!PlayerUtils.isInGame()) {
             return 0.0F;
         } else if (screen instanceof HudEditor) {
             return 1.0F;

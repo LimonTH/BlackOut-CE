@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.hud.elements;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.KeyEvent;
@@ -50,7 +51,7 @@ public class TabGui extends HudElement {
 
     public TabGui() {
         super("Tab GUI", "An arrow-key navigated hierarchical menu for rapidly toggling client modules without opening a full ClickGUI.");
-        for (Module module : Managers.MODULES.getModules()) {
+        for (Module module : Managers.MODULES.getToggleableModules()) {
             this.moduleMap.put(module, new MutableDouble(module.enabled ? 1.0 : 0.0));
         }
         this.setSize(75.0F, (BlackOut.FONT.getHeight() + 10.0F) * ParentCategory.categories.size());
@@ -59,7 +60,7 @@ public class TabGui extends HudElement {
 
     @Override
     public void render() {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.stack.pushPose();
             this.selectedParent = ParentCategory.categories.get(this.selectedParentId);
             this.selectedChild = this.getChild(this.selectedChildId);

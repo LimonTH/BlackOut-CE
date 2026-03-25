@@ -17,11 +17,13 @@ import java.io.File;
 public final class BlackOut extends bodevelopment.client.blackout.BlackOutInfo implements ClientModInitializer {
     public static final String NAME = bodevelopment.client.blackout.BlackOutInfo.NAME;
     public static final String VERSION = bodevelopment.client.blackout.BlackOutInfo.VERSION;
+
     public static final Type TYPE = Type.Dev;
     public static final Color TYPECOLOR = TYPE.getColor();
     public static final Minecraft mc = Minecraft.getInstance();
     public static final File RUN_DIRECTORY = mc.gameDirectory;
     public static final EventBus EVENT_BUS = new EventBus();
+
     public static final CustomFontRenderer FONT = new CustomFontRenderer("ubuntu");
     public static final CustomFontRenderer BOLD_FONT = new CustomFontRenderer("ubuntu-bold");
 

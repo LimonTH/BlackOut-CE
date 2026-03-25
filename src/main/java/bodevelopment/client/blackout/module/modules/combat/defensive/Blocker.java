@@ -133,7 +133,7 @@ public class Blocker extends Module {
 
     @Event
     public void onBlock(BlockStateEvent event) {
-        if (event.previousState.getBlock() != event.state.getBlock() && !OLEPOSSUtils.replaceable(event.pos) && this.placePositions.contains(event.pos)) {
+        if (event.previousState.getBlock() != event.state.getBlock() && !BlockUtils.replaceable(event.pos) && this.placePositions.contains(event.pos)) {
             this.render.add(new Render(event.pos, System.currentTimeMillis()));
         }
     }
@@ -146,7 +146,7 @@ public class Blocker extends Module {
     @Event
     public void onRender(RenderEvent.World.Post event) {
         this.placed.update();
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
+        if (PlayerUtils.isInGame()) {
             this.timer = this.timer + (System.currentTimeMillis() - this.lastTime) / 1000.0;
             this.lastTime = System.currentTimeMillis();
             this.updateBlocks();
@@ -183,7 +183,7 @@ public class Blocker extends Module {
             this.updateResult();
             this.updatePlaces();
             this.blocksLeft = Math.min(this.placesLeft, this.result.amount());
-            this.hand = OLEPOSSUtils.getHand(this::valid);
+            this.hand = InvUtils.getHand(this::valid);
             this.switched = false;
             this.placePositions.clear();
             this.toProtect.stream().filter(this::shouldProtect).forEach(this::addPlacePositions);
@@ -213,7 +213,7 @@ public class Blocker extends Module {
                             && (this.surroundFloor.get() || !dir.getAxis().isHorizontal())
                             && (this.surroundFloorBottom.get() || dir != Direction.DOWN)) {
                         BlockPos posx = p.pos.relative(dir);
-                        if (OLEPOSSUtils.replaceable(posx)) {
+                        if (BlockUtils.replaceable(posx)) {
                             PlaceData datax = SettingUtils.getPlaceData(posx);
                             if (datax.valid() && SettingUtils.inPlaceRange(datax.pos()) && !EntityUtils.intersects(BoxUtils.get(posx), this::validForIntersects)) {
                                 this.placePositions.add(posx);
@@ -225,7 +225,7 @@ public class Blocker extends Module {
             case 2:
             case 3:
                 BlockPos pos = p.pos.above();
-                if (!OLEPOSSUtils.replaceable(pos)) {
+                if (!BlockUtils.replaceable(pos)) {
                     return;
                 }
 
@@ -251,10 +251,10 @@ public class Blocker extends Module {
             if (!(System.currentTimeMillis() - this.lastAttack < 1000.0 / this.attackSpeed.get())) {
                 Entity blocking = this.getBlocking();
                 if (blocking != null) {
-                    if (!SettingUtils.shouldRotate(RotationType.Attacking) || this.attackRotate(blocking.getBoundingBox(), 0.1, "attacking")) {
+                    if (!SettingUtils.shouldRotate(RotationType.Attacking) || this.rotation.attackRotate(blocking.getBoundingBox(), 0.1, "attacking")) {
                         this.attackEntity(blocking);
                         if (SettingUtils.shouldRotate(RotationType.Attacking)) {
-                            this.end("attacking");
+                            this.rotation.end("attacking");
                         }
 
                         if (this.attackSwing.get()) {
@@ -317,7 +317,7 @@ public class Blocker extends Module {
         if (this.blocksLeft > 0) {
             PlaceData data = SettingUtils.getPlaceData(pos, (p, d) -> this.placed.contains(p), null);
             if (data != null && data.valid()) {
-                if (!SettingUtils.shouldRotate(RotationType.BlockPlace) || this.rotateBlock(data, RotationType.BlockPlace, "placing")) {
+                if (!SettingUtils.shouldRotate(RotationType.BlockPlace) || this.rotation.rotateBlock(data, RotationType.BlockPlace, "placing")) {
                     if (!this.switched && this.hand == null) {
                         this.switched = this.switchMode.get().swap(this.result.slot());
                     }
@@ -336,7 +336,7 @@ public class Blocker extends Module {
                         this.blocksLeft--;
                         this.placesLeft--;
                         if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-                            this.end("placing");
+                            this.rotation.end("placing");
                         }
                     }
                 }
@@ -362,7 +362,7 @@ public class Blocker extends Module {
         BlockPos pos = p.pos;
         switch (p.type) {
             case 1:
-                if (!OLEPOSSUtils.solid2(pos) || BlackOut.mc.level.getBlockState(pos).getBlock() == Blocks.BEDROCK) {
+                if (!BlockUtils.hasCollision(pos) || BlackOut.mc.level.getBlockState(pos).getBlock() == Blocks.BEDROCK) {
                     return false;
                 }
                 break;

@@ -12,6 +12,7 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.ScissorStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -168,24 +169,24 @@ public class HudElementList {
         float listY = BlackOut.mc.getWindow().getScreenHeight() - this.height;
 
         float y = 60.0F - this.scroll.get();
-        this.scissor();
-        this.stack.pushPose();
+        try (ScissorStack.Region region = this.scissor()) {
+            this.stack.pushPose();
 
-        for (HudListEntry entry : this.entries) {
-            boolean isHovered = this.insideBounds(listX + 7.5F, y + listY, this.width - 15.0F, 35.0F);
-            entry.updateProgress(this.frameTime * 10.0F, isHovered);
+            for (HudListEntry entry : this.entries) {
+                boolean isHovered = this.insideBounds(listX + 7.5F, y + listY, this.width - 15.0F, 35.0F);
+                entry.updateProgress(this.frameTime * 10.0F, isHovered);
 
-            RenderUtils.rounded(this.stack, 7.5F, y, this.width - 15.0F, 35.0F, 5.0F, 8.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
+                RenderUtils.rounded(this.stack, 7.5F, y, this.width - 15.0F, 35.0F, 5.0F, 8.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
 
-            BlackOut.FONT.text(this.stack, entry.displayName, 2.0F, this.width / 2.0F, y + 17.5F, this.getTextColor(entry), true, true);
-            y += 60.0F;
+                BlackOut.FONT.text(this.stack, entry.displayName, 2.0F, this.width / 2.0F, y + 17.5F, this.getTextColor(entry), true, true);
+                y += 60.0F;
+            }
+
+            this.stack.popPose();
         }
-
-        this.stack.popPose();
-        this.endScissor();
     }
 
-    private void scissor() {
+    private ScissorStack.Region scissor() {
         var window = BlackOut.mc.getWindow();
         double sw = window.getScreenWidth();
         double sh = window.getScreenHeight();
@@ -195,18 +196,12 @@ public class HudElementList {
         double contentHeightPx = (this.height - 40.0F);
         double cutLineBottom = cutLineTop - contentHeightPx;
 
-        GlStateManager._enableScissorTest();
-
         int glX = (int) ((sw - this.width) / 2.0);
         int glY = (int) Math.max(0, cutLineBottom);
         int glW = (int) this.width;
         int glH = (int) Math.max(0, cutLineTop - cutLineBottom);
 
-        GlStateManager._scissorBox(glX, glY, glW, glH);
-    }
-
-    private void endScissor() {
-        RenderUtils.endScissor();
+        return ScissorStack.pushRaw(glX, glY, glW, glH);
     }
 
     private Color getTextColor(HudListEntry entry) {

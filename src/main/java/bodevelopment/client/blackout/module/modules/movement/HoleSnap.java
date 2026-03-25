@@ -1,5 +1,8 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
+import bodevelopment.client.blackout.util.EntityUtils;
+
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.HoleType;
 import bodevelopment.client.blackout.event.Event;
@@ -14,7 +17,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.Hole;
 import bodevelopment.client.blackout.util.HoleUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.BlockUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
@@ -88,7 +91,7 @@ public class HoleSnap extends Module {
 
     @Event
     public void onMove(MoveEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null && event.xzValue <= 9) {
+        if (PlayerUtils.isInGame() && event.xzValue <= 9) {
             Hole hole = this.singleTarget.get() ? this.singleHole : this.findHole();
             if (hole != null && !this.singleBlocked()) {
                 Timer.set(this.timer.get().floatValue());
@@ -99,7 +102,7 @@ public class HoleSnap extends Module {
                     double dX = hole.middle.x - BlackOut.mc.player.getX();
                     double z = this.getSpeed() * pit;
                     double dZ = hole.middle.z - BlackOut.mc.player.getZ();
-                    if (OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(x, 0.0, z))) {
+                    if (BlockUtils.hasEntityCollision(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(x, 0.0, z))) {
                         this.collisions++;
                         if (this.collisions >= this.maxCollisions.get() && this.maxCollisions.get() > 0) {
                             this.disable(this.getDisplayName() + " disabled, collided " + this.collisions + " times", 2, Notifications.Type.Alert);
@@ -110,7 +113,7 @@ public class HoleSnap extends Module {
 
                     if (this.ticks > 0) {
                         this.ticks--;
-                    } else if (OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(0.0, -0.05, 0.0)) && this.jump.get()) {
+                    } else if (BlockUtils.hasEntityCollision(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(0.0, -0.05, 0.0)) && this.jump.get()) {
                         this.ticks = this.jumpCooldown.get();
                         event.setY(this, 0.42);
                     }
@@ -120,7 +123,7 @@ public class HoleSnap extends Module {
                 } else if (BlackOut.mc.player.getY() <= hole.middle.y) {
                     this.disable(this.getDisplayName() + " disabled, in hole");
                     ((IVec3) event.movement).blackout_Client$setXZ(0.0, 0.0);
-                } else if (OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(0.0, -0.05, 0.0))) {
+                } else if (BlockUtils.hasEntityCollision(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(0.0, -0.05, 0.0))) {
                     this.disable(this.getDisplayName() + " hole unreachable, disabling", 2, Notifications.Type.Alert);
                 } else {
                     event.setXZ(this, 0.0, 0.0);
@@ -136,7 +139,7 @@ public class HoleSnap extends Module {
             return false;
         } else {
             for (BlockPos pos : this.singleHole.positions) {
-                if (OLEPOSSUtils.collidable(pos)) {
+                if (BlockUtils.collidable(pos)) {
                     return true;
                 }
             }
@@ -152,7 +155,7 @@ public class HoleSnap extends Module {
         for (int x = -r; x <= r; x++) {
             for (int y = (int) (-Math.ceil(this.downRange.get())); y < 1; y++) {
                 for (int z = -r; z <= r; z++) {
-                    BlockPos pos = OLEPOSSUtils.roundedPos().offset(x, y, z);
+                    BlockPos pos = EntityUtils.roundedPos().offset(x, y, z);
                     Hole hole = HoleUtils.getHole(pos, this.singleHoles.get(), this.doubleHoles.get(), this.quadHoles.get(), this.depth.get(), true);
                     if (hole.type != HoleType.NotHole) {
                         if (y == 0 && this.inHole(hole)) {

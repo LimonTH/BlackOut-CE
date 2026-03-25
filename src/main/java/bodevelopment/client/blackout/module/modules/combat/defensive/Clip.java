@@ -12,7 +12,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.Pair;
 import bodevelopment.client.blackout.util.MovementUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.BlockUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -203,10 +203,10 @@ public class Clip extends Module {
     }
 
     private boolean findCorner(double x, double z, BlockPos pos) {
-        boolean minX = !OLEPOSSUtils.replaceable(pos.relative(Direction.WEST));
-        boolean minZ = !OLEPOSSUtils.replaceable(pos.relative(Direction.NORTH));
-        boolean maxX = !OLEPOSSUtils.replaceable(pos.relative(Direction.EAST));
-        boolean maxZ = !OLEPOSSUtils.replaceable(pos.relative(Direction.SOUTH));
+        boolean minX = !BlockUtils.replaceable(pos.relative(Direction.WEST));
+        boolean minZ = !BlockUtils.replaceable(pos.relative(Direction.NORTH));
+        boolean maxX = !BlockUtils.replaceable(pos.relative(Direction.EAST));
+        boolean maxZ = !BlockUtils.replaceable(pos.relative(Direction.SOUTH));
         List<Pair<Double, Double>> corners = new ArrayList<>();
         if (minX) {
             if (minZ) {

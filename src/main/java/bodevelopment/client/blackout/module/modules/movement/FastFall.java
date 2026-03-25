@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.HoleUtils;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.BlockUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import org.joml.Vector2i;
@@ -44,10 +44,10 @@ public class FastFall extends Module {
             this.jumpPos.set(BlackOut.mc.player.getBlockX(), BlackOut.mc.player.getBlockZ());
         } else {
             if (event.movement.y < 0.0) {
-                this.jumpPos = new Vector2i(-69420, -69420);
+                this.jumpPos = new Vector2i(Integer.MIN_VALUE, Integer.MIN_VALUE);
             }
 
-            boolean onGround = OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(0.0, -0.04, 0.0));
+            boolean onGround = BlockUtils.hasEntityCollision(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(0.0, -0.04, 0.0));
             if (onGround) {
                 if (this.rbTime <= 0L) {
                     this.rbTime = System.currentTimeMillis();
@@ -65,7 +65,7 @@ public class FastFall extends Module {
                     if (!this.onlyHole.get() || holeCheck) {
                         if (!this.jumping || holeCheck && this.jumpHole.get()) {
                             if (!onGround) {
-                                if (!OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(0.0, -0.6, 0.0))) {
+                                if (!BlockUtils.hasEntityCollision(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(0.0, -0.6, 0.0))) {
                                     this.fall(event, holeCheck);
                                 }
                             }
@@ -99,7 +99,7 @@ public class FastFall extends Module {
 
     private boolean aboveHole() {
         for (double offset = 0.0; offset < 7.0; offset += 0.1) {
-            if (OLEPOSSUtils.inside(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(0.0, -offset, 0.0))) {
+            if (BlockUtils.hasEntityCollision(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(0.0, -offset, 0.0))) {
                 return HoleUtils.inHole(BlockPos.containing(BlackOut.mc.player.position().add(0.0, -offset + 0.12, 0.0)));
             }
         }

@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.combat.misc;
 
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.GameJoinEvent;
@@ -10,7 +11,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.Notifications;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import bodevelopment.client.blackout.util.OLEPOSSUtils;
+import bodevelopment.client.blackout.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -64,8 +65,8 @@ public class AntiBot extends Module {
 
     @Event
     public void onTick(TickEvent.Pre event) {
-        if (BlackOut.mc.player != null && BlackOut.mc.level != null) {
-            OLEPOSSUtils.limitList(this.bots, 100);
+        if (PlayerUtils.isInGame()) {
+            CollectionUtils.limitSize(this.bots, 100);
             BlackOut.mc
                     .level
                     .players()
