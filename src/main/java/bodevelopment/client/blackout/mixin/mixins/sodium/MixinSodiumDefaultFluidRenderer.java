@@ -76,14 +76,12 @@ public class MixinSodiumDefaultFluidRenderer {
         XRay xray = XRay.getInstance();
         if (xray == null || !xray.enabled) return;
 
-        // Максимальная яркость для target-блоков рядом с жидкостью (оригинальная логика)
         Arrays.fill(this.brightness, 1.0f);
         for (int i = 0; i < 4; i++) {
             this.quadLightData.lm[i] = 0xF000F0;
             this.quadLightData.br[i] = 1.0f;
         }
 
-        // Применяем alpha для non-target жидкостей
         final int alpha = XRAY_FLUID_ALPHA.get();
         if (alpha < 0) return;
 

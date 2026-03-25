@@ -5,6 +5,7 @@ import bodevelopment.client.blackout.module.modules.client.GuiSettings;
 import bodevelopment.client.blackout.randomstuff.ShaderSetup;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.util.ARGB;
 import java.awt.*;
 
 public class GuiRenderUtils {
@@ -52,11 +53,11 @@ public class GuiRenderUtils {
     }
 
     public static int withBrightness(int color, double brightness) {
-        int a = color >> 24 & 0xFF;
-        int r = (int) ((color >> 16 & 0xFF) * brightness);
-        int g = (int) ((color >> 8 & 0xFF) * brightness);
-        int b = (int) ((color & 0xFF) * brightness);
+        int a = ARGB.alpha(color);
+        int r = (int) (ARGB.red(color) * brightness);
+        int g = (int) (ARGB.green(color) * brightness);
+        int b = (int) (ARGB.blue(color) * brightness);
 
-        return (a << 24) | (Math.min(255, r) << 16) | (Math.min(255, g) << 8) | Math.min(255, b);
+        return ARGB.color(a, Math.min(255, r), Math.min(255, g), Math.min(255, b));
     }
 }

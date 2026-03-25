@@ -32,8 +32,6 @@ public class SettingUtils {
         swing = SwingSettings.getInstance();
     }
 
-    // --- Range: meaningful logic (max of two ranges) ---
-
     public static double maxInteractRange() {
         return Math.max(range.interactRange.get(), range.interactRangeWalls.get());
     }
@@ -45,8 +43,6 @@ public class SettingUtils {
     public static double maxMineRange() {
         return Math.max(range.mineRange.get(), range.mineRangeWalls.get());
     }
-
-    // --- Range: convenience overloads with null defaults ---
 
     public static double getInteractRange() {
         return range.interactRange.get();
@@ -152,7 +148,7 @@ public class SettingUtils {
         return range.inMineRange(pos);
     }
 
-    // --- Rotation: high-usage delegations ---
+
 
     public static boolean startMineRot() {
         return rotation.startMineRot();
@@ -190,8 +186,6 @@ public class SettingUtils {
         return rotation.getAttackRotation(box, vec);
     }
 
-    // --- Rotation: meaningful logic ---
-
     public static boolean rotationIgnoreEnabled() {
         return rotation.noOwnTime.get() > 0.0 || rotation.noOtherTime.get() > 0.0;
     }
@@ -202,13 +196,13 @@ public class SettingUtils {
         return since < (iEntity.blackout_Client$isOwn() ? rotation.noOwnTime : rotation.noOtherTime).get() * 1000.0;
     }
 
-    // --- Swing ---
+
 
     public static void swing(SwingState state, SwingType type, InteractionHand hand) {
         swing.swing(state, type, hand);
     }
 
-    // --- Facing ---
+
 
     public static PlaceData getPlaceData(BlockPos pos) {
         return facing.getPlaceData(pos, null, null, true);
@@ -234,7 +228,7 @@ public class SettingUtils {
         return facing.getPlaceOnDirection(pos);
     }
 
-    // --- Raytrace ---
+
 
     public static boolean interactTrace(BlockPos pos) {
         return raytrace.interactTrace(pos);
@@ -252,7 +246,7 @@ public class SettingUtils {
         return raytrace.mineTrace(pos);
     }
 
-    // --- Server settings ---
+
 
     public static boolean oldCrystals() {
         return server.oldCrystals.get();

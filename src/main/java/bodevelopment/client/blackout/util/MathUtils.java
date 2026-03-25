@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.util;
 
 public class MathUtils {
-    // Projectile physics constants (Minecraft tick-based simulation)
+    // Projectile physics constants
     public static final double THROWABLE_GRAVITY = 0.03;
     public static final double ARROW_GRAVITY = 0.05;
     public static final double EXP_BOTTLE_GRAVITY = 0.07;

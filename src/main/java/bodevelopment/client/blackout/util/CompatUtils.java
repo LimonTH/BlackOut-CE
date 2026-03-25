@@ -1,21 +1,21 @@
 package bodevelopment.client.blackout.util;
 
 public class CompatUtils {
+    private static final boolean BARITONE_PRESENT;
 
-    public static boolean isBaritonePathing() {
-        if (!isBaritonePresent()) {
-            return false;
-        }
-        return BaritoneLazyLoader.isPathing();
-    }
-
-    private static boolean isBaritonePresent() {
+    static {
+        boolean present;
         try {
             Class.forName("baritone.api.BaritoneAPI", false, CompatUtils.class.getClassLoader());
-            return true;
+            present = true;
         } catch (ClassNotFoundException e) {
-            return false;
+            present = false;
         }
+        BARITONE_PRESENT = present;
+    }
+
+    public static boolean isBaritonePathing() {
+        return BARITONE_PRESENT && BaritoneLazyLoader.isPathing();
     }
 
     private static class BaritoneLazyLoader {

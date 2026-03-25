@@ -12,6 +12,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
+import bodevelopment.client.blackout.util.render.RenderState;
 import bodevelopment.client.blackout.util.render.WireframeRenderer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -73,37 +74,35 @@ public class SkeletonESP extends Module {
 
             List<List<Vec3>> parts = WireframeRenderer.provider.consumer.parts;
             if (parts.size() >= 6) {
-                Render3DUtils.start();
-                RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
-                RenderSystem.lineWidth(1.5F);
-                RenderSystem.disableDepthTest();
+                try (RenderState state = Render3DUtils.begin()) {
+                    RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
+                    RenderSystem.lineWidth(1.5F);
 
-                Tesselator tessellator = Tesselator.getInstance();
-                BufferBuilder builder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
+                    Tesselator tessellator = Tesselator.getInstance();
+                    BufferBuilder builder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
 
-                BlackOutColor color = (Managers.FRIENDS.isFriend(player) ? this.friendColor : this.lineColor).get();
-                float r = color.red / 255.0F, g = color.green / 255.0F, b = color.blue / 255.0F, a = color.alpha / 255.0F;
+                    BlackOutColor color = (Managers.FRIENDS.isFriend(player) ? this.friendColor : this.lineColor).get();
+                    float r = color.red / 255.0F, g = color.green / 255.0F, b = color.blue / 255.0F, a = color.alpha / 255.0F;
 
-                Matrix4f matrix = stack.last().pose();
+                    Matrix4f matrix = stack.last().pose();
 
-                Vec3 headCenter = getCenter(parts.get(0));
-                Vec3 bodyTop = getExtremum(parts.get(1), true);
-                Vec3 bodyBottom = getExtremum(parts.get(1), false);
+                    Vec3 headCenter = getCenter(parts.get(0));
+                    Vec3 bodyTop = getExtremum(parts.get(1), true);
+                    Vec3 bodyBottom = getExtremum(parts.get(1), false);
 
-                Vec3 neckVector = headCenter.subtract(bodyTop);
-                Vec3 extendedHeadPoint = bodyTop.add(neckVector.scale(1.6));
+                    Vec3 neckVector = headCenter.subtract(bodyTop);
+                    Vec3 extendedHeadPoint = bodyTop.add(neckVector.scale(1.6));
 
-                line(matrix, builder, bodyTop, extendedHeadPoint, r, g, b, a);
-                line(matrix, builder, bodyTop, bodyBottom, r, g, b, a);
+                    line(matrix, builder, bodyTop, extendedHeadPoint, r, g, b, a);
+                    line(matrix, builder, bodyTop, bodyBottom, r, g, b, a);
 
-                renderLimb(matrix, builder, parts.get(2), bodyTop, r, g, b, a);
-                renderLimb(matrix, builder, parts.get(3), bodyTop, r, g, b, a);
-                renderLimb(matrix, builder, parts.get(4), bodyBottom, r, g, b, a);
-                renderLimb(matrix, builder, parts.get(5), bodyBottom, r, g, b, a);
+                    renderLimb(matrix, builder, parts.get(2), bodyTop, r, g, b, a);
+                    renderLimb(matrix, builder, parts.get(3), bodyTop, r, g, b, a);
+                    renderLimb(matrix, builder, parts.get(4), bodyBottom, r, g, b, a);
+                    renderLimb(matrix, builder, parts.get(5), bodyBottom, r, g, b, a);
 
-                BufferUploader.drawWithShader(builder.buildOrThrow());
-                RenderSystem.enableDepthTest();
-                Render3DUtils.end();
+                    BufferUploader.drawWithShader(builder.buildOrThrow());
+                }
             }
             stack.popPose();
         }

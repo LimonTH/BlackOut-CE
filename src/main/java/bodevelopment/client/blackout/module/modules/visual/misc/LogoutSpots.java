@@ -17,6 +17,7 @@ import bodevelopment.client.blackout.randomstuff.timers.TimerMap;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
+import bodevelopment.client.blackout.util.render.RenderState;
 import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 import bodevelopment.client.blackout.util.render.WireframeRenderer;
@@ -173,24 +174,24 @@ public class LogoutSpots extends Module {
                         1f
                 );
             } else {
-                Render3DUtils.start();
-                AABB rawBox = spot.player.getBoundingBox();
-                AABB absoluteBox = new AABB(
-                        spot.x - (rawBox.getXsize() / 2.0),
-                        spot.y,
-                        spot.z - (rawBox.getZsize() / 2.0),
-                        spot.x + (rawBox.getXsize() / 2.0),
-                        spot.y + rawBox.getYsize(),
-                        spot.z + (rawBox.getZsize() / 2.0)
-                );
+                try (RenderState state = Render3DUtils.begin()) {
+                    AABB rawBox = spot.player.getBoundingBox();
+                    AABB absoluteBox = new AABB(
+                            spot.x - (rawBox.getXsize() / 2.0),
+                            spot.y,
+                            spot.z - (rawBox.getZsize() / 2.0),
+                            spot.x + (rawBox.getXsize() / 2.0),
+                            spot.y + rawBox.getYsize(),
+                            spot.z + (rawBox.getZsize() / 2.0)
+                    );
 
-                Render3DUtils.box(
-                        absoluteBox,
-                        this.sideColor.get().alphaMulti(this.alphaMulti),
-                        this.lineColor.get().alphaMulti(this.alphaMulti),
-                        this.renderShape.get()
-                );
-                Render3DUtils.end();
+                    Render3DUtils.box(
+                            absoluteBox,
+                            this.sideColor.get().alphaMulti(this.alphaMulti),
+                            this.lineColor.get().alphaMulti(this.alphaMulti),
+                            this.renderShape.get()
+                    );
+                }
             }
             event.stack.popPose();
 

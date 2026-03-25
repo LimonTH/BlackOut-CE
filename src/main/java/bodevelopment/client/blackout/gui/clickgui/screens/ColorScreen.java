@@ -31,12 +31,17 @@ import java.awt.*;
 
 public class ColorScreen extends ClickGuiScreen {
     private static final int offset2 = 200;
+    private static final int SHADOW_100 = new Color(0, 0, 0, 100).getRGB();
+    private static final int FADE_80 = new Color(0, 0, 0, 80).getRGB();
+    private static final int BG_15 = new Color(15, 15, 15, 255).getRGB();
+    private static final int BG_40 = new Color(40, 40, 40).getRGB();
+    private static final Color TRANSPARENT = new Color(0, 0, 0, 0);
+    private static final Color WHITE_TRANSPARENT = new Color(255, 255, 255, 0);
     private final ColorSetting colorSetting;
     private final float[] colorX = new float[7];
     private final float[] themeX = new float[3];
     private final ColorField[] themeFields = new ColorField[3];
     private final ColorField[] textFields = new ColorField[6];
-    private final Color transparent = new Color(0, 0, 0, 0);
     private int selecting = 0;
     private float prevCircleX = 0.0F;
     private float prevCircleY = 0.0F;
@@ -103,14 +108,14 @@ public class ColorScreen extends ClickGuiScreen {
     }
 
     private void renderSidebarContent() {
-        RenderUtils.leftFade(this.stack, 175.0F, 0.0F, 10.0F, height, new Color(0, 0, 0, 80).getRGB());
+        RenderUtils.leftFade(this.stack, 175.0F, 0.0F, 10.0F, height, FADE_80);
 
-        int bgClr = new Color(15, 15, 15, 255).getRGB();
+        int bgClr = BG_15;
         String[] labels = {"Custom", "Global 1", "Global 2"};
 
         for (int i = 0; i < 3; i++) {
             float yPos = 20.0F + (i * 40.0F);
-            int currentBg = (this.colorSetting.theme == i) ? new Color(40, 40, 40).getRGB() : bgClr;
+            int currentBg = (this.colorSetting.theme == i) ? BG_40 : bgClr;
 
             RenderUtils.rounded(this.stack, 10, yPos, 155, 30, 4, 0, currentBg, 0);
             BlackOut.FONT.text(this.stack, labels[i], 1.8F, 20, yPos + 15, Color.WHITE, false, true);
@@ -361,7 +366,7 @@ public class ColorScreen extends ClickGuiScreen {
 
     private void renderHueBar(float x, float y, float w, float h) {
         float hue = this.getHSB(false)[0];
-        RenderUtils.roundedShadow(this.stack, x, y, w, h, 0.0F, 10.0F, new Color(0, 0, 0, 100).getRGB());
+        RenderUtils.roundedShadow(this.stack, x, y, w, h, 0.0F, 10.0F, SHADOW_100);
         this.renderHueQuad(x, y, w, h);
         float hueX;
         if (this.selecting == 2) {
@@ -371,7 +376,7 @@ public class ColorScreen extends ClickGuiScreen {
         }
 
         this.prevHueX = Mth.clampedLerp(this.prevHueX, hueX, this.frameTime * 20.0F);
-        RenderUtils.roundedShadow(this.stack, this.prevHueX, y, 0.0F, h, 0.0F, 10.0F, new Color(0, 0, 0, 100).getRGB());
+        RenderUtils.roundedShadow(this.stack, this.prevHueX, y, 0.0F, h, 0.0F, 10.0F, SHADOW_100);
         RenderUtils.quad(
                 this.stack, this.prevHueX - 3.0F, y - 2.0F, 6.0F, h + 4.0F, Color.HSBtoRGB(Mth.inverseLerp(this.prevHueX, 0.0F, 500.0F), 1.0F, 1.0F)
         );
@@ -402,7 +407,7 @@ public class ColorScreen extends ClickGuiScreen {
                 yield Color.WHITE;
             }
             case 2 -> {
-                left = new Color(255, 255, 255, 0);
+                left = WHITE_TRANSPARENT;
                 yield Color.WHITE;
             }
             default -> {
@@ -436,7 +441,7 @@ public class ColorScreen extends ClickGuiScreen {
             this.setValue(field, id + 6);
         }
 
-        field.textField.render(this.stack, 1.5F, this.mx, this.my, x + 210.0F, y - 12.0F, 22.0F, 3.0F, 5.0F, 3.0F, Color.WHITE, this.transparent);
+        field.textField.render(this.stack, 1.5F, this.mx, this.my, x + 210.0F, y - 12.0F, 22.0F, 3.0F, 5.0F, 3.0F, Color.WHITE, TRANSPARENT);
     }
 
     private void renderBar(float x, float y, float w, int id, float p, String name) {
@@ -499,7 +504,7 @@ public class ColorScreen extends ClickGuiScreen {
             }
         }
 
-        RenderUtils.roundedShadow(this.stack, x, y, w, 13.0F, 0.0F, 10.0F, new Color(0, 0, 0, 100).getRGB());
+        RenderUtils.roundedShadow(this.stack, x, y, w, 13.0F, 0.0F, 10.0F, SHADOW_100);
         this.renderQuad(
                 x,
                 y,
@@ -514,7 +519,7 @@ public class ColorScreen extends ClickGuiScreen {
                 right.blue / 255.0F,
                 right.alpha / 255.0F
         );
-        RenderUtils.roundedShadow(this.stack, x + w * this.colorX[id], y - 2.0F, 0.0F, 17.0F, 0.0F, 10.0F, new Color(0, 0, 0, 100).getRGB());
+        RenderUtils.roundedShadow(this.stack, x + w * this.colorX[id], y - 2.0F, 0.0F, 17.0F, 0.0F, 10.0F, SHADOW_100);
         RenderUtils.quad(this.stack, x - 3.0F + w * this.colorX[id], y - 2.0F, 6.0F, 17.0F, left.lerp(this.colorX[id], right).getColor().getRGB());
         BlackOut.FONT.text(this.stack, name, 1.5F, x, y - 10.0F, Color.WHITE, false, true);
         ColorField field = this.textFields[id];
@@ -524,7 +529,7 @@ public class ColorScreen extends ClickGuiScreen {
             this.setValue(field, id);
         }
 
-        field.textField.render(this.stack, 1.5F, this.mx, this.my, x + 210.0F, y - 12.0F, 22.0F, 3.0F, 5.0F, 3.0F, Color.WHITE, this.transparent);
+        field.textField.render(this.stack, 1.5F, this.mx, this.my, x + 210.0F, y - 12.0F, 22.0F, 3.0F, 5.0F, 3.0F, Color.WHITE, TRANSPARENT);
     }
 
     private void renderQuad(float x, float y, float w, float h, float rl, float gl, float bl, float al, float rr, float gr, float br, float ar) {

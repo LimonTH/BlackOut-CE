@@ -22,8 +22,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 
 public class ConfigManager extends Manager {
@@ -103,42 +102,46 @@ public class ConfigManager extends Manager {
 
         this.set();
 
-        String mainConfigName = this.getConfigs()[0];
-
         for (ConfigType type : ConfigType.values()) {
             this.readConfig(this.getConfigs()[type.ordinal()], type);
         }
 
-        this.readExtra(mainConfigName);
+        String hudConfigName = this.getConfigs()[ConfigType.HUD.ordinal()];
+        String bindsConfigName = this.getConfigs()[ConfigType.Binds.ordinal()];
+        this.readExtra(hudConfigName, bindsConfigName);
     }
 
-    private void readExtra(String config) {
-        JsonObject object = FileUtils.readElement("configs", config + ".json") instanceof JsonObject jsonObject ? jsonObject : null;
+    private void readExtra(String hudConfig, String bindsConfig) {
+        // Read HUD from its own config file
+        JsonObject hudObject = FileUtils.readElement("configs", hudConfig + ".json") instanceof JsonObject jsonObject ? jsonObject : null;
         Managers.HUD.clear();
 
-        if (object == null) {
-            object = new JsonObject();
-            object.add("hud", new JsonObject());
+        if (hudObject == null) {
+            hudObject = new JsonObject();
+            hudObject.add("hud", new JsonObject());
         }
 
-        if (object.has("hud")) {
-            this.readHudElements(object.getAsJsonObject("hud"));
+        if (hudObject.has("hud")) {
+            this.readHudElements(hudObject.getAsJsonObject("hud"));
         }
 
-        if (object.has("binds")) {
-            JsonObject bindObject = object.getAsJsonObject("binds");
+        // Load ClickGUI state from HUD config
+        if (hudObject.has("clickGuiState")) {
+            JsonObject clickGuiStateObject = hudObject.getAsJsonObject("clickGuiState");
+            ClickGuiState state = ClickGuiState.fromJson(clickGuiStateObject);
+            state.applyToCurrent();
+        }
+
+        // Read binds from its own config file
+        JsonObject bindsObject = FileUtils.readElement("configs", bindsConfig + ".json") instanceof JsonObject jsonObject2 ? jsonObject2 : null;
+
+        if (bindsObject != null && bindsObject.has("binds")) {
+            JsonObject bindObject = bindsObject.getAsJsonObject("binds");
             Managers.MODULES.getModules().forEach(m -> {
                 if (m instanceof Module module && bindObject.has(module.getFileName())) {
                     module.bind.read(bindObject.getAsJsonObject(module.getFileName()));
                 }
             });
-        }
-
-        // Load ClickGUI state
-        if (object.has("clickGuiState")) {
-            JsonObject clickGuiStateObject = object.getAsJsonObject("clickGuiState");
-            ClickGuiState state = ClickGuiState.fromJson(clickGuiStateObject);
-            state.applyToCurrent();
         }
     }
 
@@ -226,13 +229,29 @@ public class ConfigManager extends Manager {
     }
 
     public void writeCurrent() {
-        for (ConfigType configType : ConfigType.values()) {
-            this.writeConfig(this.getConfigs()[configType.ordinal()], configType);
+        // Group ConfigTypes by their file name to avoid cross-contamination
+        Map<String, EnumSet<ConfigType>> fileTypes = new LinkedHashMap<>();
+        for (ConfigType type : ConfigType.values()) {
+            fileTypes.computeIfAbsent(this.configs[type.ordinal()], k -> EnumSet.noneOf(ConfigType.class)).add(type);
         }
+
+        for (var entry : fileTypes.entrySet()) {
+            this.writeConfigFile(entry.getKey(), entry.getValue());
+        }
+
+        this.previousSave = System.currentTimeMillis();
+        Arrays.fill(this.toSave, false);
     }
 
-    public void writeConfig(String name, ConfigType type) {
-        JsonObject configObject = new JsonObject();
+    private void writeConfigFile(String name, EnumSet<ConfigType> types) {
+        // Read existing file to preserve sections owned by other configs
+        JsonObject configObject;
+        if (FileUtils.readElement("configs", name + ".json") instanceof JsonObject existing) {
+            configObject = existing;
+        } else {
+            configObject = new JsonObject();
+        }
+
         configObject.addProperty("description", "BlackOut Config");
 
         LocalDateTime time = LocalDateTime.now(ZoneOffset.UTC);
@@ -244,7 +263,8 @@ public class ConfigManager extends Manager {
         timeObject.addProperty("minute", time.getMinute());
         configObject.add("lastSave", timeObject);
 
-        for (ConfigType configType : ConfigType.values()) {
+        // Only write module categories that belong to this file
+        for (ConfigType configType : types) {
             if (configType.predicate != null) {
                 JsonObject categoryObject = new JsonObject();
                 Managers.MODULES.getModules().stream()
@@ -258,30 +278,32 @@ public class ConfigManager extends Manager {
             }
         }
 
-        JsonObject hudObject = new JsonObject();
-        Managers.HUD.forEachElement((id, element) -> {
-            this.writeHudElement(element, id, hudObject);
-        });
-        configObject.add("hud", hudObject);
+        // Only write HUD if this file owns the HUD config
+        if (types.contains(ConfigType.HUD)) {
+            JsonObject hudObject = new JsonObject();
+            Managers.HUD.forEachElement((id, element) -> {
+                this.writeHudElement(element, id, hudObject);
+            });
+            configObject.add("hud", hudObject);
 
-        JsonObject bindsObject = new JsonObject();
-        Managers.MODULES.getModules().forEach(m -> {
-            if (m instanceof Module module) {
-                JsonObject bJson = new JsonObject();
-                module.bind.write(bJson);
-                bindsObject.add(module.getFileName(), bJson);
-            }
-        });
-        configObject.add("binds", bindsObject);
+            JsonObject clickGuiStateObject = ClickGuiState.captureCurrent().toJson();
+            configObject.add("clickGuiState", clickGuiStateObject);
+        }
 
-        // Save ClickGUI state
-        JsonObject clickGuiStateObject = ClickGuiState.captureCurrent().toJson();
-        configObject.add("clickGuiState", clickGuiStateObject);
+        // Only write binds if this file owns the Binds config
+        if (types.contains(ConfigType.Binds)) {
+            JsonObject bindsObject = new JsonObject();
+            Managers.MODULES.getModules().forEach(m -> {
+                if (m instanceof Module module) {
+                    JsonObject bJson = new JsonObject();
+                    module.bind.write(bJson);
+                    bindsObject.add(module.getFileName(), bJson);
+                }
+            });
+            configObject.add("binds", bindsObject);
+        }
 
         FileUtils.write(FileUtils.getFile("configs", name + ".json"), configObject);
-
-        this.previousSave = System.currentTimeMillis();
-        Arrays.fill(this.toSave, false);
     }
 
     private void writeHudElement(HudElement element, int id, JsonObject jsonObject) {

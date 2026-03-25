@@ -14,6 +14,7 @@ import bodevelopment.client.blackout.util.DamageUtils;
 import bodevelopment.client.blackout.util.EntityUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
+import bodevelopment.client.blackout.util.render.RenderState;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -46,43 +47,41 @@ public class Sight extends Module {
     public void onRender(RenderEvent.World.Post event) {
         this.stack.pushPose();
         Render3DUtils.setRotation(this.stack);
-        Render3DUtils.start();
+        try (RenderState state = Render3DUtils.begin()) {
+            RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
+            RenderSystem.lineWidth(this.lineWidth.get().floatValue());
 
-        RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
-        RenderSystem.lineWidth(this.lineWidth.get().floatValue());
+            Tesselator tessellator = Tesselator.getInstance();
+            BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
 
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
+            PoseStack.Pose entry = this.stack.last();
+            Matrix4f matrix4f = entry.pose();
+            Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
 
-        PoseStack.Pose entry = this.stack.last();
-        Matrix4f matrix4f = entry.pose();
-        Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
+            BlackOut.mc.level.players().forEach(player -> {
+                if (player != BlackOut.mc.player) {
+                    float tickDelta = BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
-        BlackOut.mc.level.players().forEach(player -> {
-            if (player != BlackOut.mc.player) {
-                float tickDelta = BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+                    Vec3 eyePos = EntityUtils.getLerpedPos(player, tickDelta).add(0.0, player.getEyeHeight(player.getPose()), 0.0);
 
-                Vec3 eyePos = EntityUtils.getLerpedPos(player, tickDelta).add(0.0, player.getEyeHeight(player.getPose()), 0.0);
+                    Vec3 lookPos = RotationUtils.rotationVec(
+                            Mth.lerp(tickDelta, player.yRotO, player.getYRot()),
+                            Mth.lerp(tickDelta, player.xRotO, player.getXRot()),
+                            eyePos,
+                            this.fadeIn.get() + this.length.get()
+                    );
 
-                Vec3 lookPos = RotationUtils.rotationVec(
-                        Mth.lerp(tickDelta, player.yRotO, player.getYRot()),
-                        Mth.lerp(tickDelta, player.xRotO, player.getXRot()),
-                        eyePos,
-                        this.fadeIn.get() + this.length.get()
-                );
+                    ((IClipContext) DamageUtils.raycastContext).blackout_Client$set(eyePos, lookPos);
+                    BlockHitResult hitResult = DamageUtils.raycast(DamageUtils.raycastContext, false);
 
-                ((IClipContext) DamageUtils.raycastContext).blackout_Client$set(eyePos, lookPos);
-                BlockHitResult hitResult = DamageUtils.raycast(DamageUtils.raycastContext, false);
+                    Vec3 hitPos = (hitResult.getType() == HitResult.Type.MISS) ? lookPos : hitResult.getLocation();
 
-                Vec3 hitPos = (hitResult.getType() == HitResult.Type.MISS) ? lookPos : hitResult.getLocation();
+                    this.render(bufferBuilder, matrix4f, entry, eyePos.subtract(camPos), hitPos.subtract(camPos));
+                }
+            });
 
-                this.render(bufferBuilder, matrix4f, entry, eyePos.subtract(camPos), hitPos.subtract(camPos));
-            }
-        });
-
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
-
-        Render3DUtils.end();
+            BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+        }
         this.stack.popPose();
     }
 

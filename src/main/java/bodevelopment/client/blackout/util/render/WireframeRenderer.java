@@ -35,43 +35,43 @@ public class WireframeRenderer extends WireframeContext {
                                           BlackOutColor sideColor, RenderShape shape,
                                           float progress, double yOffset, float maxScale) {
 
-        Render3DUtils.start();
-        provider.consumer.start();
+        try (RenderState state = Render3DUtils.begin()) {
+            provider.consumer.start();
 
-        PoseStack modelStack = new PoseStack();
-        modelStack.setIdentity();
+            PoseStack modelStack = new PoseStack();
+            modelStack.setIdentity();
 
-        data.scale = Mth.lerp(progress, 1.0F, maxScale);
+            data.scale = Mth.lerp(progress, 1.0F, maxScale);
 
-        drawStaticPlayerModel(modelStack, player, data);
-        provider.consumer.fixRemaining();
-        List<Vec3> vertices = provider.consumer.vertices;
+            drawStaticPlayerModel(modelStack, player, data);
+            provider.consumer.fixRemaining();
+            List<Vec3> vertices = provider.consumer.vertices;
 
-        stack.pushPose();
-        stack.translate(0, yOffset * progress, 0);
-        Matrix4f matrix = stack.last().pose();
-        float alphaMult = 1.0F - progress;
+            stack.pushPose();
+            stack.translate(0, yOffset * progress, 0);
+            Matrix4f matrix = stack.last().pose();
+            float alphaMult = 1.0F - progress;
 
-        if (shape.sides) {
-            RenderSystem.setShader(CoreShaders.POSITION_COLOR);
-            drawEverything(matrix, vertices,
-                    sideColor.red / 255.0F,
-                    sideColor.green / 255.0F,
-                    sideColor.blue / 255.0F,
-                    (sideColor.alpha / 255.0F) * alphaMult);
+            if (shape.sides) {
+                RenderSystem.setShader(CoreShaders.POSITION_COLOR);
+                drawEverything(matrix, vertices,
+                        sideColor.red / 255.0F,
+                        sideColor.green / 255.0F,
+                        sideColor.blue / 255.0F,
+                        (sideColor.alpha / 255.0F) * alphaMult);
+            }
+
+            if (shape.outlines) {
+                RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
+                drawLinesFromList(matrix, vertices,
+                        lineColor.red / 255.0F,
+                        lineColor.green / 255.0F,
+                        lineColor.blue / 255.0F,
+                        (lineColor.alpha / 255.0F) * alphaMult);
+            }
+
+            stack.popPose();
         }
-
-        if (shape.outlines) {
-            RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
-            drawLinesFromList(matrix, vertices,
-                    lineColor.red / 255.0F,
-                    lineColor.green / 255.0F,
-                    lineColor.blue / 255.0F,
-                    (lineColor.alpha / 255.0F) * alphaMult);
-        }
-
-        stack.popPose();
-        Render3DUtils.end();
     }
 
     public static void renderModel(PoseStack stack, AbstractClientPlayer player,

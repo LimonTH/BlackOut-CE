@@ -12,6 +12,7 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.randomstuff.Hole;
 import bodevelopment.client.blackout.util.HoleUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
+import bodevelopment.client.blackout.util.render.RenderState;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -84,16 +85,15 @@ public class HoleESP extends Module {
 
         Render3DUtils.matrices.pushPose();
         Render3DUtils.setRotation(Render3DUtils.matrices);
-        Render3DUtils.start();
-        if (this.bottomSide.get() || this.fadeSides.get()) {
-            this.drawSides();
-        }
+        try (RenderState state = Render3DUtils.begin()) {
+            if (this.bottomSide.get() || this.fadeSides.get()) {
+                this.drawSides();
+            }
 
-        if (this.bottomLines.get() || this.fadeLines.get()) {
-            this.drawLines();
+            if (this.bottomLines.get() || this.fadeLines.get()) {
+                this.drawLines();
+            }
         }
-
-        Render3DUtils.end();
         Render3DUtils.matrices.popPose();
     }
 
