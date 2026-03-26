@@ -159,8 +159,9 @@ public class PanoramaMainMenu implements MainMenuRenderer {
 
     @Override
     public int onClick(float mx, float my) {
+        int buttonCount = MainMenu.getInstance().buttonNames.length;
         float y = -100.0F;
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < buttonCount; i++) {
             if (RenderUtils.insideRounded(mx, my, -180.0, y, 360.0, 10.0, 25.0)) return i;
             y += 85.0F;
         }

@@ -141,7 +141,7 @@ public class SearchScreen extends ClickGuiScreen {
         }
 
         this.results = Managers.MODULES.getModules().stream()
-                .filter(m -> m.getDisplayName().toLowerCase().contains(query) || m.category.name().toLowerCase().contains(query))
+                .filter(m -> m.getDisplayName().toLowerCase().contains(query) || (m.category != null && m.category.name().toLowerCase().contains(query)))
                 .sorted((m1, m2) -> {
                     boolean m1Exact = m1.getDisplayName().toLowerCase().startsWith(query);
                     boolean m2Exact = m2.getDisplayName().toLowerCase().startsWith(query);

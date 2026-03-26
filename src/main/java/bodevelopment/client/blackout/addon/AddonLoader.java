@@ -8,10 +8,18 @@ import bodevelopment.client.blackout.module.AbstractModule;
 import bodevelopment.client.blackout.util.BOLogger;
 import bodevelopment.client.blackout.util.ClassUtils;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+import net.fabricmc.loader.api.metadata.ModMetadata;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.InputStream;
 import java.lang.reflect.Modifier;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class AddonLoader {
     public static final List<BlackoutAddon> addons = new ArrayList<>();
@@ -35,6 +43,8 @@ public class AddonLoader {
                             return;
                         }
 
+                        addon.onInitialize();
+
                         if (addon.modulePath != null) {
                             scan(addonLoader, addon.modulePath, AbstractModule.class, instance -> {
                                 Managers.MODULES.add(instance);
@@ -57,9 +67,9 @@ public class AddonLoader {
                                 }
                             });
                         }
-
-                        addon.onInitialize();
                         addon.onEnable();
+
+                        loadAddonIcon(addon, container.getProvider());
 
                         addons.add(addon);
                     } catch (Exception e) {
@@ -86,6 +96,25 @@ public class AddonLoader {
         } catch (NumberFormatException e) {
             BOLogger.error("Invalid version format: min=" + minVersion + " current=" + currentVersion);
             return true;
+        }
+    }
+
+    private static void loadAddonIcon(BlackoutAddon addon, ModContainer modContainer) {
+        try {
+            ModMetadata metadata = modContainer.getMetadata();
+            Optional<String> iconPath = metadata.getIconPath(64);
+            if (iconPath.isEmpty()) iconPath = metadata.getIconPath(0);
+            if (iconPath.isEmpty()) return;
+
+            Optional<Path> resolved = modContainer.findPath(iconPath.get());
+            if (resolved.isEmpty()) return;
+
+            try (InputStream is = Files.newInputStream(resolved.get())) {
+                BufferedImage image = ImageIO.read(is);
+                addon.loadIconFromMod(image);
+            }
+        } catch (Exception e) {
+            BOLogger.error("Failed to load icon for addon: " + addon.getName(), e);
         }
     }
 

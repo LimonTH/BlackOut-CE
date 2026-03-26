@@ -178,8 +178,9 @@ public class ColorMainMenu implements MainMenuRenderer { // (ThemeMainMenu)
 
     @Override
     public int onClick(float mx, float my) {
+        int buttonCount = MainMenu.getInstance().buttonNames.length;
         float yCenter = -100.0F;
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < buttonCount; i++) {
             if (RenderUtils.insideRounded(mx, my, -180.0, yCenter, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS))
                 return i;
             yCenter += 85.0F;
