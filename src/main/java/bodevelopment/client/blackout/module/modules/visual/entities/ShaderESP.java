@@ -13,20 +13,18 @@ import bodevelopment.client.blackout.randomstuff.ShaderSetup;
 import bodevelopment.client.blackout.rendering.framebuffer.FrameBuffer;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
+import bodevelopment.client.blackout.util.render.FramebufferMultiBufferSource;
 import bodevelopment.client.blackout.util.render.RenderUtils;
-import bodevelopment.client.blackout.util.render.WireframeRenderer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.List;
 
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import org.joml.Matrix4f;
 
 public class ShaderESP extends Module {
     private static ShaderESP INSTANCE;
@@ -62,25 +60,14 @@ public class ShaderESP extends Module {
 
         if (!this.shouldRender(entity)) return;
 
-        WireframeRenderer.provider.consumer.start();
-        instance.render(state, matrices, WireframeRenderer.provider, light);
-
         FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("shaderESP");
-        buffer.bind(true);
 
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);
 
-        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
-
-        Matrix4f identity = new Matrix4f();
-        WireframeRenderer.drawEverything(
-                identity,
-                WireframeRenderer.provider.consumer.vertices,
-                1.0f, 1.0f, 1.0f, 1.0f
-        );
-
-        buffer.unbind();
+        FramebufferMultiBufferSource fboSource = new FramebufferMultiBufferSource();
+        instance.render(state, matrices, fboSource, light);
+        fboSource.drawToFramebuffer(buffer);
     }
 
     private <S extends EntityRenderState> boolean shouldRenderLabel(Entity entity, S state) {

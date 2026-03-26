@@ -13,7 +13,8 @@ public class EventBus {
     public void subscribe(Object object, ISkip skip) {
         for (Listener listener : this.getListeners(new ArrayList<>(), object.getClass(), object, skip)) {
             Class<?> clazz = listener.method.getParameters()[0].getType();
-            this.listeners.computeIfAbsent(clazz, k -> new ArrayList<>()).add(listener);
+            List<Listener> list = this.listeners.computeIfAbsent(clazz, k -> new ArrayList<>());
+            list.add(this.getIndex(list, listener.priority()), listener);
         }
     }
 
