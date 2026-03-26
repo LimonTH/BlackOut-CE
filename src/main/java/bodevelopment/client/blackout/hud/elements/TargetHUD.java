@@ -150,8 +150,6 @@ public class TargetHUD extends HudElement {
         float nameScale = this.renderTarget.getName().getString().length() >= 12 ? 0.7F : 0.9F;
         float renderHealth = this.renderTarget.getHealth() + this.renderTarget.getAbsorptionAmount();
         float renderScale = (float) AnimUtils.easeOutQuart(this.delta);
-        // TODO: color integration
-        // float colorHealth = Math.min((this.renderTarget.getHealth() + this.renderTarget.getAbsorptionAmount()) / this.renderTarget.getMaxHealth(), 1.0F);
         float targetProgress = Math.min(health / 20.0F, 1.0F);
         float progressDelta = this.frameTime + this.frameTime * Math.abs(targetProgress - this.progress);
         if (targetProgress > this.progress) {
@@ -596,14 +594,6 @@ public class TargetHUD extends HudElement {
     public enum ArmorCount {
         Average,
         Lowest
-    }
-
-    // TODO: ColorMode нигде не используется
-    public enum ColorMode {
-        Dynamic,
-        Rainbow,
-        Custom,
-        Wave
     }
 
     public enum Mode {

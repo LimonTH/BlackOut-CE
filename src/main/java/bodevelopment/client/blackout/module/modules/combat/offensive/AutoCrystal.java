@@ -11,7 +11,6 @@ import bodevelopment.client.blackout.keys.KeyBind;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.mixin.accessors.AccessorServerboundInteractPacket;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.combat.misc.Suicide;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -63,7 +62,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
-@OnlyDev
 public class AutoCrystal extends Module {
     private static AutoCrystal INSTANCE;
 
@@ -317,10 +315,6 @@ public class AutoCrystal extends Module {
     public void onEnable() {
         this.placePos = null;
         this.shouldCalc = true;
-    }
-
-    @Override
-    public void onDisable() {
     }
 
     @Override

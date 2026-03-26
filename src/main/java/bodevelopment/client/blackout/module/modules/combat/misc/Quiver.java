@@ -31,7 +31,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.PotionContents;
 
 public class Quiver extends Module {
-    public static boolean charging = false;
     private final SettingGroup sgGeneral = this.addGroup("General");
 
     public final Setting<Integer> charge = this.sgGeneral.intSetting("Charge Ticks", 5, 0, 20, 1,
@@ -51,6 +50,7 @@ public class Quiver extends Module {
     private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotate", true,
             "Forces the pitch to -90 instantly for the shot.");
 
+    public static boolean charging = false;
     private final List<Pair<MobEffectInstance, Integer>> arrows = new ArrayList<>();
     private final List<Integer> actions = new ArrayList<>();
     private final TickTimerList<MobEffect> shot = new TickTimerList<>(false);

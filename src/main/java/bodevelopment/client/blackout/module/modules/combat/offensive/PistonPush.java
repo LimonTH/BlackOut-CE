@@ -10,7 +10,6 @@ import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -39,18 +38,6 @@ import net.minecraft.world.phys.AABB;
 import java.util.Arrays;
 import java.util.Comparator;
 
-// TODO: NEED PATCHES
-// TODO: добавить проверку наличия поршней/редстоуна/места установки до начала цикла.
-// TODO: гарантировать reset состояния при disable/teleport, чтобы не застрять в mined=true.
-// TODO: улучшить подбор направления поршня с учётом блоков-заменителей и античитов.
-// TODO: добавить проверку target validity (distance/line-of-sight) каждую фазу.
-// TODO: обеспечить корректный fallback, если rotateBlock возвращает false (retry/skip).
-// TODO: интегрировать паузу при уроне/лаге, чтобы не спамить пакеты.
-// TODO: пересмотреть логику mineUpdate: избегать конфликтов с AutoMine и синхронизировать minePos.
-// TODO: добавить cooldown на повторное постановление после сбоя.
-// TODO: обновить визуализацию для null-позиций (не рисовать только redstone без piston).
-// TODO: логика onlyHole: учитывать 2x1/long hole и проверку solid2 корректности.
-@OnlyDev
 public class PistonPush extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgDelay = this.addGroup("Delay");

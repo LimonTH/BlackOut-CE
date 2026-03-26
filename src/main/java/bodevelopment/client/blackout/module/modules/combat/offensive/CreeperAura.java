@@ -11,7 +11,6 @@ import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.keys.KeyBind;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.combat.misc.Suicide;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -37,18 +36,6 @@ import net.minecraft.world.level.block.AirBlock;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-// TODO: NEED PATCHES
-// TODO: добавить проверку наличия spawn egg до расчётов/рендера.
-// TODO: ограничить частоту calc() и размер области перебора (tick budget).
-// TODO: добавить cooldown на повторное place при отказе rotateBlock.
-// TODO: пересмотреть placeDamageCheck и учёт friend/self pop для edge cases.
-// TODO: добавить контроль античита: рандомизация delay и лимит пакетов.
-// TODO: синхронизировать target selection с extrapolationMap (избегать stale target).
-// TODO: добавить защиту от багов при смерти цели/выходе из мира.
-// TODO: интегрировать Suicide/anti-self logic так, чтобы не терять татем по ошибке.
-// TODO: улучшить render fade/reset при потере placePos.
-// TODO: обработать случаи, когда creeper spawn заблокирован регионом/правилами сервера.
-@OnlyDev
 public class CreeperAura extends Module {
     private static CreeperAura INSTANCE;
 

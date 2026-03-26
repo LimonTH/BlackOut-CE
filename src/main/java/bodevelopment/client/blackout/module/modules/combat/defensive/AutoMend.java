@@ -26,7 +26,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 public class AutoMend extends Module {
-
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgPause = this.addGroup("Pause");
     private final SettingGroup sgRender = this.addGroup("Render");

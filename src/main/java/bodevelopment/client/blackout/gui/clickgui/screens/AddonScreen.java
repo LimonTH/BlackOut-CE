@@ -72,14 +72,36 @@ public class AddonScreen extends ClickGuiScreen {
             RenderUtils.line(this.stack, -10.0F, 0.0F, this.width + 10.0F, 0.0F, LINE_COLOR);
         }
 
-        BlackOut.FONT.text(this.stack, addon.getName(), 2.5F, 15.0F, 25.0F, Color.WHITE, false, true);
+        float textOffsetX = 15.0F;
+
+        TextureRenderer icon = addon.getIcon();
+        if (icon != null && icon.getWidth() > 0) {
+            float iconSize = 36.0F;
+            float iconX = 15.0F;
+            float iconY = (70.0F - iconSize) / 2.0F;
+            icon.quad(this.stack, iconX, iconY, iconSize, iconSize, Color.WHITE.getRGB());
+            textOffsetX = 60.0F;
+        }
+
+        BlackOut.FONT.text(this.stack, addon.getName(), 2.5F, textOffsetX, 25.0F, Color.WHITE, false, true);
 
         String info = "v" + addon.getVersion() + " by " + addon.getAuthor();
-        BlackOut.FONT.text(this.stack, info, 1.8F, 15.0F, 45.0F, Color.GRAY, false, true);
+        BlackOut.FONT.text(this.stack, info, 1.8F, textOffsetX, 45.0F, Color.GRAY, false, true);
+
+        float rightOffset = 20.0F;
+
+        if (addon.getUrl() != null) {
+            TextureRenderer linkIcon = BOTextures.getGithubIconRenderer();
+            float linkSize = 20.0F;
+            float linkX = width - linkSize - rightOffset;
+            float linkY = (70.0F - linkSize) / 2.0F;
+            linkIcon.quad(this.stack, linkX, linkY, linkSize, linkSize, Color.LIGHT_GRAY.getRGB());
+            rightOffset += 30.0F;
+        }
 
         String modulesCount = (addon.modules != null ? addon.modules.size() : 0) + " Modules";
         float tw = BlackOut.FONT.getWidth(modulesCount) * 1.8F;
-        BlackOut.FONT.text(this.stack, modulesCount, 1.8F, width - tw - 20.0F, 25.0F, GuiColorUtils.parentCategory, false, true);
+        BlackOut.FONT.text(this.stack, modulesCount, 1.8F, width - tw - rightOffset, 25.0F, GuiColorUtils.parentCategory, false, true);
     }
 
     private void renderButtons() {
@@ -117,6 +139,22 @@ public class AddonScreen extends ClickGuiScreen {
                     FileUtils.openDirectory(new File(BlackOut.RUN_DIRECTORY, "mods"));
                 } else if (Math.abs(mx - (width / 2.0F + 60.0F)) < 40) {
                     FileUtils.openLink("https://github.com/LimonTH/Blackout-CE-addon-template");
+                }
+            }
+
+            float scrolledMy = (float) (my + scroll.get() - 15.0);
+            for (int i = 0; i < AddonLoader.addons.size(); i++) {
+                BlackoutAddon addon = AddonLoader.addons.get(i);
+                if (addon.getUrl() == null) continue;
+
+                float yPos = i * 70.0F;
+                float linkSize = 20.0F;
+                float linkX = width - linkSize - 20.0F;
+                float linkY = yPos + (70.0F - linkSize) / 2.0F;
+
+                if (mx >= linkX && mx <= linkX + linkSize && scrolledMy >= linkY && scrolledMy <= linkY + linkSize) {
+                    FileUtils.openLink(addon.getUrl());
+                    break;
                 }
             }
         }
