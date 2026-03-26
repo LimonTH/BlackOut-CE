@@ -37,25 +37,19 @@ public class GuiSettings extends SettingsModule {
     public final Setting<Integer> blur = this.sgStyle.intSetting("Blur", 0, 0, 20, 1,
             "Applies a Gaussian blur effect behind the GUI panels to enhance focus on the interface.");
 
-    // TODO: moduleY не используется
     public final Setting<Boolean> centerX = this.sgOpen.booleanSetting("Module Center X", true,
             "Automatically snaps the GUI to the horizontal center of the screen when opened.");
     public final Setting<Double> moduleX = this.sgOpen.doubleSetting("Module X", 0.5, 0.0, 1.0, 0.01,
             "The horizontal screen coordinate for the GUI when not centered.", () -> !this.centerX.get());
-    public final Setting<Double> moduleY = this.sgOpen.doubleSetting("Module Y", 0.5, 0.0, 1.0, 0.01,
-            "The vertical screen coordinate for the GUI when it is fully opened.");
     public final Setting<Double> moduleScale = this.sgOpen.doubleSetting("Module Scale", 2.0, 0.1, 4.0, 0.1,
             "The overall size of the GUI panels when the menu is active.");
     public final Setting<Double> moduleHeight = this.sgOpen.doubleSetting("Module height", 40.0, 25.0, 100.0, 1.0,
             "The default height for each individual module entry in the list.");
 
-    // TODO: moduleYClosed не используется
     public final Setting<Boolean> centerXClosed = this.sgClosed.booleanSetting("Closed Module Center X", true,
             "Whether the GUI should animate towards the horizontal center of the screen when closing.");
     public final Setting<Double> moduleXClosed = this.sgClosed.doubleSetting("Closed Module X", 0.5, 0.0, 1.0, 0.01,
             "The target X-coordinate for the closing animation when not centered.", () -> !this.centerXClosed.get());
-    public final Setting<Double> moduleYClosed = this.sgClosed.doubleSetting("Closed Module Y", 0.5, 0.0, 1.0, 0.01,
-            "The target Y-coordinate the GUI moves towards as it fades out.");
     public final Setting<Double> moduleScaleClosed = this.sgClosed.doubleSetting("Closed Module Scale", 2.0, 0.1, 4.0, 0.1,
             "The target scale for the modules when the GUI is closed. Can be used to create a 'shrink' or 'expand' effect.");
     public final Setting<Double> moduleHeightClosed = this.sgClosed.doubleSetting("Closed Module height", 40.0, 25.0, 100.0, 1.0,

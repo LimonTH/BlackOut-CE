@@ -191,12 +191,6 @@ public class RotationSettings extends SettingsModule {
                 "Enables automatic rotations while " + verb + " to ensure the action is correctly validated by the server.");
     }
 
-    // TODO: modeSetting не используется
-    private Setting<RotationCheckMode> modeSetting(String type, SettingGroup sg) {
-        return sg.enumSetting(type + " Mode", RotationCheckMode.Raytrace,
-                "The mathematical method used to verify if you are looking at the target entity.");
-    }
-
     private Setting<BlockRotationCheckMode> blockModeSetting(String type, SettingGroup sg) {
         return sg.enumSetting(type + " Mode", BlockRotationCheckMode.Raytrace,
                 "The mathematical method used to verify if you are looking at the target block.");

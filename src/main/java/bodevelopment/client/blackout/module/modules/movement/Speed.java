@@ -7,7 +7,6 @@ import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.misc.Timer;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -18,18 +17,6 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
-// TODO: NEED PATCHES
-// TODO: исправить условие в onTick: должно быть && для player/world (сейчас ||).
-// TODO: добавить reset таймера при pause/teleport и при смене режима.
-// TODO: привести useTimer к единому флоу: не оставлять setTimer=true без reset.
-// TODO: добавить защиту от движения в блоках/вебах (anti-cheat safety).
-// TODO: добавить учёт статуса Slowness/Speed, чтобы корректно масштабировать baseSpeed.
-// TODO: пересмотреть boost logic (stepBoost) чтобы не накопить слишком высокий velocity.
-// TODO: добавить проверку collision/ceiling в NCPOld при setY.
-// TODO: добавить cooldown на повторную активацию после остановки (anti-flag).
-// TODO: учесть elytra/flight transitions, чтобы не оставлять Timer изменённым.
-// TODO: добавить debug/telemetry для измерения реальной скорости.
-@OnlyDev
 public class Speed extends Module {
     private static Speed INSTANCE;
 

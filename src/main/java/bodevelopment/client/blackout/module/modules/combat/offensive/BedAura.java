@@ -47,19 +47,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-// TODO: Need Patches
-// TODO: задействовать existed/existedTicks/waitExt либо удалить их (сейчас не используются).
-// TODO: привести rotate/serverDir/rotationMode к единому флоу, исключить двойные ротации.
-// TODO: добавить строгую проверку replaceable + collision при noHitbox=false.
-// TODO: добавить защиту от установки в блоках, где beds запрещены (overworld, end).
-// TODO: оптимизировать calc() чтобы не сканировать куб целиком каждый тик.
-// TODO: синхронизировать damageWait и extrapolation, чтобы избежать stale damage.
-// TODO: добавить настройку ограничения спама packets при explodeSpeed=0.
-// TODO: пересмотреть renderDamage и анимации (animMoveSpeed/exponent) — сейчас не влияют.
-// TODO: добавить fallback при провале rotateBlock (retry/skip with cooldown).
-// TODO: учесть AntiBot/Teams при выборе targets.
-// TODO: добавить reset render boxes при потере цели/смене мира.
-@OnlyDev
 public class BedAura extends Module {
     private static BedAura INSTANCE;
 
@@ -74,7 +61,6 @@ public class BedAura extends Module {
     private final SettingGroup sgExplodeRender = this.addGroup("Explode Render");
     private final SettingGroup sgCalculation = this.addGroup("Calculations");
 
-    // TODO: existed, existedTicks, waitExt, animMoveSpeed, animMoveExponent и renderDamage не используются
     private final Setting<Boolean> place = this.sgPlace.booleanSetting("Placement", true, "Enables the automatic placement of bed blocks near targets.");
     private final Setting<Boolean> pauseEatPlace = this.sgPlace.booleanSetting("Pause on Consume", false, "Suspends bed placement while the player is eating or drinking.");
     private final Setting<Double> placeSpeed = this.sgPlace.doubleSetting("Placement Speed", 20.0, 0.0, 20.0, 0.1, "The maximum number of beds to place per second.");
@@ -125,7 +111,6 @@ public class BedAura extends Module {
     private final Setting<Integer> selfExt = this.sgExtrapolation.intSetting("Self Prediction", 0, 0, 20, 1, "Predicts player movement in ticks for self-damage calculation.");
     private final Setting<Integer> hitboxExt = this.sgExtrapolation.intSetting("Hitbox Prediction", 0, 0, 20, 1, "Predicts entity hitbox positions to prevent placement obstruction.");
     private final Setting<Boolean> damageWait = this.sgExtrapolation.booleanSetting("Latent Calculation", false, "Wait for client-server sync before final damage check.");
-    private final Setting<Integer> waitExt = this.sgExtrapolation.intSetting("Latent Multiplier", 0, 0, 20, 1, "Extra ticks to predict when Latent Calculation is active.", this.damageWait::get);
     private final Setting<Boolean> placeSwing = this.sgRender.booleanSetting("Placement Animation", false, "Visualizes the arm swing during bed placement.");
     private final Setting<SwingHand> placeHand = this.sgRender.enumSetting("Placement Arm", SwingHand.RealHand, "The arm used for placement animations.");
     private final Setting<Boolean> explodeSwing = this.sgRender.booleanSetting("Detonation Animation", false, "Visualizes the arm swing during bed detonation.");

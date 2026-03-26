@@ -8,7 +8,6 @@ import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.mixin.accessors.AccessorServerboundInteractPacket;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -21,17 +20,6 @@ import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.phys.Vec3;
 
-// TODO: NEED PATCHES
-// TODO: добавить общий cooldown на crit packets, чтобы не флагаться на burst-атаках.
-// TODO: учитывать задержку сервера и reset shouldSpoof при teleport/correction пакете.
-// TODO: добавить проверки окружения (slime, honey, web) где крит не должен отправляться.
-// TODO: расширить проверку hasSpace (2.1) с учётом collidable blocks и bounding box.
-// TODO: синхронизировать режимы с Aura/AutoCrystal, чтобы не конфликтовать.
-// TODO: добавить fallback, если player не на земле, но event приходит из packet spoof.
-// TODO: добавить оптимизацию для Grim/Matrix с более безопасными микросдвигами.
-// TODO: обновить Strict режим: ограничить spoofTime при движении и reset при input.
-// TODO: добавить опцию исключать certain entity types (armor stands, ender crystals).
-@OnlyDev
 public class Criticals extends Module {
     private static Criticals INSTANCE;
 

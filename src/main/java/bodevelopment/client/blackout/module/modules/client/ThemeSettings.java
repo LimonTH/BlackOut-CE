@@ -57,13 +57,4 @@ public class ThemeSettings extends SettingsModule {
         return this.alpha.get();
     }
 
-    // TODO: нет использований lowAlpha
-    public int lowAlpha() {
-        return this.lowAlpha.get();
-    }
-
-    // TODO: нет использований getThemeAlpha
-    public int getThemeAlpha() {
-        return this.alpha.get();
-    }
 }

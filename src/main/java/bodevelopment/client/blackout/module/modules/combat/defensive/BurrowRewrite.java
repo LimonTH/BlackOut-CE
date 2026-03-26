@@ -39,7 +39,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-@OnlyDev
 public class BurrowRewrite extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRubberband = this.addGroup("Rubberband");
