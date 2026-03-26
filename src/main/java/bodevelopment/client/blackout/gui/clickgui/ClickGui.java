@@ -94,7 +94,9 @@ public class ClickGui extends Screen {
         this.moduleComponents.clear();
         Managers.MODULES.getModules().forEach(m -> this.moduleComponents.add(new ModuleComponent(this.stack, m)));
         this.categoryComponents.clear();
-        SubCategory.categories.forEach(c -> this.categoryComponents.add(new CategoryComponent(this.stack, c)));
+        List<SubCategory> sorted = new java.util.ArrayList<>(SubCategory.categories);
+        sorted.sort(java.util.Comparator.comparingInt(c -> ParentCategory.categories.indexOf(c.parent())));
+        sorted.forEach(c -> this.categoryComponents.add(new CategoryComponent(this.stack, c)));
     }
 
     public boolean isOpen() {
@@ -514,7 +516,7 @@ public class ClickGui extends Screen {
         for (CategoryComponent c : this.categoryComponents) {
             ParentCategory p = c.category.parent();
 
-            if (prevParent != p) {
+            if (prevParent == null || !prevParent.name().equals(p.name())) {
                 float headerSpacing = (prevParent != null) ? 15.0F : 20.0F;
                 currentY += headerSpacing;
                 totalHeightCounter += headerSpacing;

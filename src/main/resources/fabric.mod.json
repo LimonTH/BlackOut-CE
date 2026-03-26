@@ -14,6 +14,7 @@
     "repo": "https://github.com/LimonTH/Blackout-CE",
     "discord": "https://discordapp.com/users/866910380097929217"
   },
+  "icon": "assets/blackout/textures/balkoot2.png",
   "environment": "client",
   "entrypoints": {
     "client": [

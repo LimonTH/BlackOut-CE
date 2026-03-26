@@ -16,4 +16,11 @@ public record ParentCategory(String name) implements Category {
     public ParentCategory {
         categories.add(this);
     }
+
+    public static ParentCategory of(String name) {
+        return categories.stream()
+                .filter(c -> c.name().equalsIgnoreCase(name))
+                .findFirst()
+                .orElseGet(() -> new ParentCategory(name));
+    }
 }

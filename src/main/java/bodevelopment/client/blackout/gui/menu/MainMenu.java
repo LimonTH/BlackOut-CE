@@ -21,11 +21,13 @@ import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
+import net.fabricmc.loader.api.FabricLoader;
 
 public class MainMenu {
     public static final int EMPTY_COLOR = new Color(0, 0, 0, 0).getRGB();
+    private static final boolean MOD_MENU_LOADED = FabricLoader.getInstance().isModLoaded("modmenu");
     private static final MainMenu INSTANCE = new MainMenu();
-    public final String[] buttonNames = new String[]{"Singleplayer", "Multiplayer", "AltManager", "Options", "Quit"};
+    public final String[] buttonNames;
     private final PoseStack stack = new PoseStack();
     private final ClickGui clickGui = Managers.CLICK_GUI.CLICK_GUI;
     private TitleScreen titleScreen;
@@ -65,19 +67,46 @@ public class MainMenu {
             "Better than your average cheat"
     };
 
-    private final Runnable[] runnables = new Runnable[]{
-            () -> {
-                Managers.ALT.switchToOriginal();
-                this.startExit(new SelectWorldScreen(this.titleScreen));
-            },
-            () -> {
-                Managers.ALT.switchToSelected();
-                this.startExit(new JoinMultiplayerScreen(this.titleScreen));
-            },
-            () -> this.startExit(new AltManagerScreen(this.titleScreen)),
-            () -> this.startExit(new OptionsScreen(this.titleScreen, BlackOut.mc.options)),
-            BlackOut.mc::stop
-    };
+    private final Runnable[] runnables;
+
+    {
+        java.util.List<String> names = new java.util.ArrayList<>(java.util.List.of(
+                "Singleplayer", "Multiplayer", "AltManager", "Options"
+        ));
+        java.util.List<Runnable> actions = new java.util.ArrayList<>(java.util.List.of(
+                (Runnable) () -> {
+                    Managers.ALT.switchToOriginal();
+                    this.startExit(new SelectWorldScreen(this.titleScreen));
+                },
+                () -> {
+                    Managers.ALT.switchToSelected();
+                    this.startExit(new JoinMultiplayerScreen(this.titleScreen));
+                },
+                () -> this.startExit(new AltManagerScreen(this.titleScreen)),
+                () -> this.startExit(new OptionsScreen(this.titleScreen, BlackOut.mc.options))
+        ));
+
+        if (MOD_MENU_LOADED) {
+            names.add("Mods");
+            actions.add(() -> {
+                try {
+                    Class<?> modsScreenClass = Class.forName("com.terraformersmc.modmenu.gui.ModsScreen");
+                    Screen modsScreen = (Screen) modsScreenClass
+                            .getConstructor(Screen.class)
+                            .newInstance(this.titleScreen);
+                    this.startExit(modsScreen);
+                } catch (Exception e) {
+                    bodevelopment.client.blackout.util.BOLogger.error("Failed to open Mod Menu screen", e);
+                }
+            });
+        }
+
+        names.add("Quit");
+        actions.add(BlackOut.mc::stop);
+
+        this.buttonNames = names.toArray(new String[0]);
+        this.runnables = actions.toArray(new Runnable[0]);
+    }
 
     private void startExit(Screen screen) {
         screenToSet = screen;

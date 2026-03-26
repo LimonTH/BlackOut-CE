@@ -24,6 +24,7 @@ public abstract class BlackoutAddon {
     public final List<HudElement> hudElements = new ArrayList<>();
 
     private TextureRenderer iconRenderer;
+    private BufferedImage pendingIcon;
 
     protected BlackoutAddon(String name, String modulePath, String commandPath, String hudPath) {
         this.name = name;
@@ -44,14 +45,16 @@ public abstract class BlackoutAddon {
     public String getVersion() { return BlackOut.VERSION; }
     public String getUrl() { return null; }
     public String getMinClientVersion() { return null; }
-    public BufferedImage getIconImage() { return null; }
+
+    void loadIconFromMod(BufferedImage image) {
+        this.pendingIcon = image;
+    }
+
     public TextureRenderer getIcon() {
-        if (iconRenderer == null) {
-            BufferedImage image = getIconImage();
-            if (image != null) {
-                iconRenderer = new TextureRenderer(name + "-icon");
-                iconRenderer.load(BOTextures.upload(image));
-            }
+        if (iconRenderer == null && pendingIcon != null) {
+            iconRenderer = new TextureRenderer(name + "-icon");
+            iconRenderer.load(BOTextures.upload(pendingIcon));
+            pendingIcon = null;
         }
         return iconRenderer;
     }

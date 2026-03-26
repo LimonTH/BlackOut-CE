@@ -6,12 +6,12 @@ import bodevelopment.client.blackout.module.ParentCategory;
 import java.util.function.Predicate;
 
 public enum ConfigType {
-    Combat(module -> module.category.parent() == ParentCategory.COMBAT),
-    Movement(module -> module.category.parent() == ParentCategory.MOVEMENT),
-    Visual(module -> module.category.parent() == ParentCategory.VISUAL),
-    Misc(module -> module.category.parent() == ParentCategory.MISC),
-    Legit(module -> module.category.parent() == ParentCategory.LEGIT),
-    Client(module -> module.category.parent() == ParentCategory.CLIENT),
+    Combat(module -> module.category != null && module.category.parent() == ParentCategory.COMBAT),
+    Movement(module -> module.category != null && module.category.parent() == ParentCategory.MOVEMENT),
+    Visual(module -> module.category != null && module.category.parent() == ParentCategory.VISUAL),
+    Misc(module -> module.category != null && module.category.parent() == ParentCategory.MISC),
+    Legit(module -> module.category != null && module.category.parent() == ParentCategory.LEGIT),
+    Client(module -> module.category != null && module.category.parent() == ParentCategory.CLIENT),
     HUD(null),
     Binds(null);
 
