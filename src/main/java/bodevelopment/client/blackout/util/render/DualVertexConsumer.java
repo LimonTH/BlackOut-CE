@@ -2,12 +2,20 @@ package bodevelopment.client.blackout.util.render;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Matrix4f;
 
 public record DualVertexConsumer(VertexConsumer first, VertexConsumer second) implements VertexConsumer {
     @Override
     public @NotNull VertexConsumer addVertex(float x, float y, float z) {
         first.addVertex(x, y, z);
         second.addVertex(x, y, z);
+        return this;
+    }
+
+    @Override
+    public @NotNull VertexConsumer addVertex(Matrix4f matrix, float x, float y, float z) {
+        first.addVertex(matrix, x, y, z);
+        second.addVertex(matrix, x, y, z);
         return this;
     }
 

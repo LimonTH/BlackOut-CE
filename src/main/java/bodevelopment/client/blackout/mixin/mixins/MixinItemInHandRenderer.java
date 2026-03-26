@@ -8,12 +8,11 @@ import bodevelopment.client.blackout.module.modules.visual.misc.SwingModifier;
 import bodevelopment.client.blackout.module.modules.visual.misc.ViewModel;
 import bodevelopment.client.blackout.rendering.framebuffer.FrameBuffer;
 import bodevelopment.client.blackout.util.render.DualVertexConsumer;
-import bodevelopment.client.blackout.util.render.WireframeRenderer;
+import bodevelopment.client.blackout.util.render.FramebufferMultiBufferSource;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.InteractionHand;
@@ -35,7 +34,7 @@ public abstract class MixinItemInHandRenderer {
     private void preRender(float f, PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, LocalPlayer localPlayer, int i, CallbackInfo ci) {
         if (HandESP.getInstance().enabled) {
             HandESP.rendering = true;
-            WireframeRenderer.provider.consumer.start();
+            HandESP.fboSource = new FramebufferMultiBufferSource();
         }
     }
 
@@ -49,10 +48,15 @@ public abstract class MixinItemInHandRenderer {
             args.set(4, swingMod.getSwing(hand));
         }
 
-        if (HandESP.rendering) {
-            MultiBufferSource original = args.get(8);
-            args.set(8, (MultiBufferSource) renderType ->
-                    new DualVertexConsumer(original.getBuffer(renderType), WireframeRenderer.provider.getBuffer(renderType)));
+        if (HandESP.rendering && HandESP.fboSource != null) {
+            FramebufferMultiBufferSource fboSource = HandESP.fboSource;
+            if (HandESP.getInstance().texture.get()) {
+                MultiBufferSource original = args.get(8);
+                args.set(8, (MultiBufferSource) renderType ->
+                        new DualVertexConsumer(original.getBuffer(renderType), fboSource.getBuffer(renderType)));
+            } else {
+                args.set(8, (MultiBufferSource) fboSource::getBuffer);
+            }
         }
     }
 
@@ -108,19 +112,15 @@ public abstract class MixinItemInHandRenderer {
 
     @Inject(method = "renderHandsWithItems", at = @At("RETURN"))
     private void postRender(float f, PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, LocalPlayer localPlayer, int i, CallbackInfo ci) {
-        if (HandESP.rendering) {
-            WireframeRenderer.provider.consumer.fixRemaining();
-            FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("handESP");
+        if (HandESP.rendering && HandESP.fboSource != null) {
+            HandESP.rendering = false;
 
-            buffer.bind(true);
             RenderSystem.enableDepthTest();
             RenderSystem.depthMask(true);
-            RenderSystem.setShader(CoreShaders.POSITION_COLOR);
-            WireframeRenderer.drawEverything(new org.joml.Matrix4f(), WireframeRenderer.provider.consumer.vertices, 1f, 1f, 1f, 1f);
-            buffer.unbind();
 
-            WireframeRenderer.provider.consumer.vertices.clear();
-            HandESP.rendering = false;
+            FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("handESP");
+            HandESP.fboSource.drawToFramebuffer(buffer);
+            HandESP.fboSource = null;
         }
     }
 }

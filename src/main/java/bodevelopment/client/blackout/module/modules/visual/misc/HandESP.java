@@ -11,6 +11,7 @@ import bodevelopment.client.blackout.rendering.framebuffer.FrameBuffer;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.ColorUtils;
+import bodevelopment.client.blackout.util.render.FramebufferMultiBufferSource;
 import bodevelopment.client.blackout.util.render.RenderUtils;
 
 import java.awt.*;
@@ -26,7 +27,7 @@ public class HandESP extends Module {
     private final Setting<Double> waveLength = this.sgGeneral.doubleSetting("Oscillation Scale", 2.0, 0.0, 5.0, 0.1, "The spatial frequency of the color wave.", () -> this.colormode.get() == ColorMode.Wave);
     private final Setting<BlackOutColor> waveColor = this.sgGeneral.colorSetting("Wave Secondary", new BlackOutColor(125, 125, 125, 255), "The secondary color used for wave interpolation.", () -> this.colormode.get() == ColorMode.Wave);
     private final Setting<Integer> dist = this.sgGeneral.intSetting("Bloom Radius", 5, 1, 10, 1, "The pixel width and intensity of the outer glow effect.");
-    private final Setting<Boolean> texture = this.sgGeneral.booleanSetting("Overlay Texture", false, "Whether to blend the original hand texture with the interior shader color.");
+    public final Setting<Boolean> texture = this.sgGeneral.booleanSetting("Overlay Texture", false, "Whether to blend the original hand texture with the interior shader color.");
     private final Setting<BlackOutColor> outsideColor = this.sgGeneral.colorSetting("Outline Color", new BlackOutColor(255, 0, 0, 255), "The color of the glowing silhouette.");
     private final Setting<BlackOutColor> insideColor = this.sgGeneral.colorSetting("Interior Color", new BlackOutColor(255, 0, 0, 50), "The color applied to the hand model itself.");
 
@@ -40,6 +41,7 @@ public class HandESP extends Module {
     }
 
     public static boolean rendering = false;
+    public static FramebufferMultiBufferSource fboSource = null;
 
     public void draw(Runnable runnable) {
         runnable.run();
