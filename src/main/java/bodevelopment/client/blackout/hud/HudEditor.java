@@ -212,7 +212,9 @@ public class HudEditor extends Screen {
     @Event
     public void onScroll(MouseScrollEvent event) {
         if (this.openedScreen == null || !this.openedScreen.handleScroll(event.horizontal, event.vertical)) {
-            this.elementList.onScroll(event.vertical);
+            if (!this.settings.onScroll(event.vertical)) {
+                this.elementList.onScroll(event.vertical);
+            }
         }
     }
 

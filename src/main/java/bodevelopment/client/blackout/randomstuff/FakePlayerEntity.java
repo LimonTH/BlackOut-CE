@@ -270,7 +270,6 @@ public class FakePlayerEntity extends AbstractClientPlayer {
         this.sinceEat++;
         FakeplayerSettings fakeplayerSettings = FakeplayerSettings.getInstance();
 
-        // Логика тотемов (остается без изменений, если методы swapToOffhand на месте)
         if (!this.getOffhandItem().is(Items.TOTEM_OF_UNDYING)) {
             if (fakeplayerSettings.swapDelay.get() == 0) {
                 if (this.popped < fakeplayerSettings.totems.get() || fakeplayerSettings.unlimitedTotems.get()) {
@@ -286,7 +285,6 @@ public class FakePlayerEntity extends AbstractClientPlayer {
             this.sinceSwap = 0;
         }
 
-        // Логика поедания
         if (fakeplayerSettings.eating.get()) {
             ItemStack handStack = this.getMainHandItem();
             if (!handStack.is(Items.ENCHANTED_GOLDEN_APPLE)) {

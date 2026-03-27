@@ -164,7 +164,6 @@ public class Speed extends Module {
                 if (BlackOut.mc.player.onGround()) {
                     yield baseSpeed * this.speedMulti.get();
                 }
-                // Используем strict friction для обхода NCP
                 yield this.prevVelocity() * (this.strict.get() ? 0.91 : 0.98);
             }
             case Instant -> MathUtils.approach(
@@ -173,7 +172,7 @@ public class Speed extends Module {
                     baseSpeed / Math.max(1, this.accelerationTicks.get())
             );
             case Vanilla -> baseSpeed * vanillaSpeed.get();
-            case Verus -> BlackOut.mc.player.onGround() ? 0.612 : 0.355; // Verus чуть быстрее
+            case Verus -> BlackOut.mc.player.onGround() ? 0.612 : 0.355;
             case Vulcan -> BlackOut.mc.player.onGround() ? 0.485 : 0.325;
         };
     }

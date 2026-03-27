@@ -142,6 +142,8 @@ public class AutoCrystalBase extends ObsidianModule {
     }
 
     private boolean isValidForBase(BlockPos pos, AutoCrystal ac) {
+        if (BlackOut.mc.level == null || BlackOut.mc.level.isOutsideBuildHeight(pos.getY())) return false;
+
         if (this.blockPlacements.contains(pos) || !SettingUtils.inPlaceRange(pos) || !BlockUtils.replaceable(pos)) {
             return false;
         }
@@ -157,11 +159,7 @@ public class AutoCrystalBase extends ObsidianModule {
         if (ac.intersects(crystalPos)) {
             return false;
         }
-        if (!ac.inAttackRangePlacing(crystalPos)) {
-            return false;
-        }
-
-        return true;
+        return ac.inAttackRangePlacing(crystalPos);
     }
 
     private double getSimulatedDmg(Player p, BlockPos pos) {

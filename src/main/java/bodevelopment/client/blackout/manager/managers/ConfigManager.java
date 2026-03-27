@@ -4,7 +4,6 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.ConfigType;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
-import bodevelopment.client.blackout.gui.clickgui.ClickGui;
 import bodevelopment.client.blackout.hud.HudEditor;
 import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.manager.Manager;
@@ -112,7 +111,6 @@ public class ConfigManager extends Manager {
     }
 
     private void readExtra(String hudConfig, String bindsConfig) {
-        // Read HUD from its own config file
         JsonObject hudObject = FileUtils.readElement("configs", hudConfig + ".json") instanceof JsonObject jsonObject ? jsonObject : null;
         Managers.HUD.clear();
 
@@ -125,14 +123,12 @@ public class ConfigManager extends Manager {
             this.readHudElements(hudObject.getAsJsonObject("hud"));
         }
 
-        // Load ClickGUI state from HUD config
         if (hudObject.has("clickGuiState")) {
             JsonObject clickGuiStateObject = hudObject.getAsJsonObject("clickGuiState");
             ClickGuiState state = ClickGuiState.fromJson(clickGuiStateObject);
             state.applyToCurrent();
         }
 
-        // Read binds from its own config file
         JsonObject bindsObject = FileUtils.readElement("configs", bindsConfig + ".json") instanceof JsonObject jsonObject2 ? jsonObject2 : null;
 
         if (bindsObject != null && bindsObject.has("binds")) {
@@ -229,7 +225,6 @@ public class ConfigManager extends Manager {
     }
 
     public void writeCurrent() {
-        // Group ConfigTypes by their file name to avoid cross-contamination
         Map<String, EnumSet<ConfigType>> fileTypes = new LinkedHashMap<>();
         for (ConfigType type : ConfigType.values()) {
             fileTypes.computeIfAbsent(this.configs[type.ordinal()], k -> EnumSet.noneOf(ConfigType.class)).add(type);
@@ -244,7 +239,6 @@ public class ConfigManager extends Manager {
     }
 
     private void writeConfigFile(String name, EnumSet<ConfigType> types) {
-        // Read existing file to preserve sections owned by other configs
         JsonObject configObject;
         if (FileUtils.readElement("configs", name + ".json") instanceof JsonObject existing) {
             configObject = existing;
@@ -263,7 +257,6 @@ public class ConfigManager extends Manager {
         timeObject.addProperty("minute", time.getMinute());
         configObject.add("lastSave", timeObject);
 
-        // Only write module categories that belong to this file
         for (ConfigType configType : types) {
             if (configType.predicate != null) {
                 JsonObject categoryObject = new JsonObject();
@@ -278,7 +271,6 @@ public class ConfigManager extends Manager {
             }
         }
 
-        // Only write HUD if this file owns the HUD config
         if (types.contains(ConfigType.HUD)) {
             JsonObject hudObject = new JsonObject();
             Managers.HUD.forEachElement((id, element) -> {
@@ -290,7 +282,6 @@ public class ConfigManager extends Manager {
             configObject.add("clickGuiState", clickGuiStateObject);
         }
 
-        // Only write binds if this file owns the Binds config
         if (types.contains(ConfigType.Binds)) {
             JsonObject bindsObject = new JsonObject();
             Managers.MODULES.getModules().forEach(m -> {

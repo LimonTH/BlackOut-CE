@@ -84,7 +84,7 @@ public class StatsManager extends Manager {
             if (BlackOut.mc.level.getEntity(packet.getEntity()) instanceof AbstractClientPlayer player) {
                 packet.getSlots().forEach(pair -> {
                     EquipmentSlot slot = pair.getFirst();
-                    if (!slot.isArmor()) return; // Нас интересует только броня
+                    if (!slot.isArmor()) return;
 
                     ItemStack newStack = pair.getSecond();
                     ItemStack oldStack = player.getItemBySlot(slot);
@@ -123,7 +123,7 @@ public class StatsManager extends Manager {
     }
 
     public TrackerData getStats(AbstractClientPlayer player) {
-        if (player == null || player.getGameProfile() == null) {
+        if (player == null) {
             return null;
         }
 

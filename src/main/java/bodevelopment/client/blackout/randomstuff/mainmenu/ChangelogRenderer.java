@@ -91,7 +91,7 @@ public class ChangelogRenderer {
                     "• " + changelog.get(j),
                     fontScale,
                     18.0F,
-                    rowY - textYOffset, // Применяем оффсет
+                    rowY - textYOffset,
                     new Color(225, 225, 225).getRGB(),
                     false, false
             );

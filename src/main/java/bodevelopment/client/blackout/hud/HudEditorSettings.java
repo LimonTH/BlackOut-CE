@@ -11,6 +11,7 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.ScissorStack;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.List;
@@ -32,6 +33,9 @@ public class HudEditorSettings {
     private float length;
     private boolean moving;
     private float animDelta = 0.0F;
+
+    private float scrollOffset = 0.0F;
+    private float maxVisibleHeight = 0.0F;
 
     private String lastDescription = null;
     private long hoverTime = 0L;
@@ -63,8 +67,16 @@ public class HudEditorSettings {
             stack.pushPose();
             stack.translate(0, 0, RenderLayer.GUI);
 
-            this.length = ModuleComponent.getLength(this.openedElement.settingGroups) + 30.0F;
-            RenderUtils.rounded(this.stack, this.x, this.y, 275.0F, this.length - 5.0F, 5.0F, 30.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
+            float fullLength = ModuleComponent.getLength(this.openedElement.settingGroups) + 30.0F;
+            var window = net.minecraft.client.Minecraft.getInstance().getWindow();
+            float screenH = (float) window.getScreenHeight();
+            this.maxVisibleHeight = Math.min(fullLength, screenH - this.y - 10.0F);
+            this.length = fullLength;
+
+            float maxScroll = Math.max(0, fullLength - this.maxVisibleHeight);
+            this.scrollOffset = Mth.clamp(this.scrollOffset, 0, maxScroll);
+
+            RenderUtils.rounded(this.stack, this.x, this.y, 275.0F, this.maxVisibleHeight - 5.0F, 5.0F, 30.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
 
             if (this.mx >= this.x && this.mx <= this.x + width && this.my >= this.y && this.my <= this.y + 30.0F) {
                 ClickGui.hoveredDescription = this.openedElement.description;
@@ -72,7 +84,14 @@ public class HudEditorSettings {
 
             BlackOut.FONT.text(stack, this.openedElement.name, 2.0F, this.x + 137.5F, this.y + 15.0F, GuiColorUtils.enabled, true, true);
 
-            this.renderSettings();
+            try (ScissorStack.Region ignored = ScissorStack.pushRaw(
+                    (int) this.x, (int) (screenH - this.y - this.maxVisibleHeight + 5.0F),
+                    (int) (275.0F + 30.0F), (int) (this.maxVisibleHeight - 30.0F))) {
+                stack.pushPose();
+                stack.translate(0, -this.scrollOffset, 0);
+                this.renderSettings();
+                stack.popPose();
+            }
             stack.popPose();
 
             boolean isOverDropdown = false;
@@ -192,6 +211,16 @@ public class HudEditorSettings {
         }
     }
 
+    public boolean onScroll(double amount) {
+        if (this.openedElement == null) return false;
+        if (this.mx < this.x || this.mx > this.x + 275.0F || this.my < this.y || this.my > this.y + this.maxVisibleHeight) {
+            return false;
+        }
+        float maxScroll = Math.max(0, this.length - this.maxVisibleHeight);
+        this.scrollOffset = Mth.clamp(this.scrollOffset - (float) amount * 20.0F, 0, maxScroll);
+        return true;
+    }
+
     public void onKey(int key, boolean pressed) {
         if (this.openedElement != null) {
             this.openedElement.settingGroups.forEach(group -> group.settings.forEach(setting -> {
@@ -243,6 +272,7 @@ public class HudEditorSettings {
         }
         this.openTime = System.currentTimeMillis();
         this.openedElement = hudElement;
+        this.scrollOffset = 0.0F;
 
         var window = net.minecraft.client.Minecraft.getInstance().getWindow();
         float screenW = (float) window.getScreenWidth();

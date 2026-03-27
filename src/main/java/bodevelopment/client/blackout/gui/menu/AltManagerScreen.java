@@ -53,6 +53,10 @@ public class AltManagerScreen extends Screen {
         if (this.isExiting) {
             MainMenu.globalFade = Math.max(0.0F, MainMenu.globalFade - this.delta * 3.0F);
             if (MainMenu.globalFade <= 0.0F) {
+                MainMenu.globalFade = 0.0F;
+                if (!(this.parent instanceof net.minecraft.client.gui.screens.TitleScreen)) {
+                    MainMenu.globalFade = 1.0F;
+                }
                 BlackOut.mc.setScreen(this.parent);
                 return;
             }

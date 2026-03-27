@@ -12,7 +12,7 @@ import net.minecraft.util.Mth;
 
 public class AltHelpRenderer {
     private final List<String> helpLines = new ArrayList<>();
-    private float helpX = -900.0F; // Начальная позиция слева
+    private float helpX = -900.0F;
     private float helpY = -300.0F;
     private float targetX = -900.0F;
     private float targetY = -300.0F;
