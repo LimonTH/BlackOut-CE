@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.command.Command;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
-
+import com.mojang.blaze3d.systems.RenderSystem;
 import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.ArrayList;
@@ -50,12 +50,16 @@ public abstract class BlackoutAddon {
         this.pendingIcon = image;
     }
 
-    public TextureRenderer getIcon() {
+    public void uploadIcon() {
         if (iconRenderer == null && pendingIcon != null) {
+            RenderSystem.assertOnRenderThread();
             iconRenderer = new TextureRenderer(name + "-icon");
             iconRenderer.load(BOTextures.upload(pendingIcon));
             pendingIcon = null;
         }
+    }
+
+    public TextureRenderer getIcon() {
         return iconRenderer;
     }
 

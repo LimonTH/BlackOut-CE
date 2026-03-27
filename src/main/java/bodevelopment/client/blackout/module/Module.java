@@ -6,6 +6,7 @@ import bodevelopment.client.blackout.enums.SwingHand;
 import bodevelopment.client.blackout.enums.SwingState;
 import bodevelopment.client.blackout.enums.SwingType;
 import bodevelopment.client.blackout.event.events.ModuleEvent;
+import bodevelopment.client.blackout.gui.clickgui.ConsoleLog;
 import bodevelopment.client.blackout.helpers.RotationHelper;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.client.Notifications;
@@ -96,6 +97,7 @@ public class Module extends AbstractModule {
             this.onEnable();
             this.enabled = true;
             this.toggleTime = System.currentTimeMillis();
+            ConsoleLog.toggle(this.getDisplayName(), true);
             if (sendNotification) {
                 this.sendNotification(
                         message == null ? this.getDisplayName() + ChatFormatting.GREEN.toString() + " Enabled" : " " + message,
@@ -137,6 +139,7 @@ public class Module extends AbstractModule {
             this.onDisable();
             this.enabled = false;
             this.toggleTime = System.currentTimeMillis();
+            ConsoleLog.toggle(this.getDisplayName(), false);
             if (sendNotification) {
                 this.sendNotification(
                         message == null ? this.getDisplayName() + ChatFormatting.RED.toString() + " OFF" : " " + message,

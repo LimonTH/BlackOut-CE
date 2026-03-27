@@ -94,6 +94,10 @@ public class TextureRenderer extends Renderer {
         return this.name;
     }
 
+    public int getId() {
+        return this.id;
+    }
+
     public void load(BOTextures.UploadData data) {
         this.id = data.id();
         this.width = data.width();

@@ -67,16 +67,21 @@ public class FriendCommand extends Command {
     @Override
     public List<String> getSuggestions(String[] args) {
         if (args.length == 1) {
-            return List.of(
-                    "add",
-                    "remove",
-                    "list"
-            );
+            return List.of("add", "remove", "list");
         }
         if (args.length == 2) {
-            return List.of(
-                    "<name>"
-            );
+            String action = args[0].toLowerCase();
+            if (action.equals("add")) {
+                if (BlackOut.mc.getConnection() == null) return Collections.emptyList();
+                return BlackOut.mc.getConnection().getOnlinePlayers().stream()
+                        .map(p -> p.getProfile().getName())
+                        .toList();
+            }
+            if (action.equals("remove")) {
+                return Managers.FRIENDS.getFriends().stream()
+                        .map(FriendsManager.Friend::getName)
+                        .toList();
+            }
         }
         return Collections.emptyList();
     }

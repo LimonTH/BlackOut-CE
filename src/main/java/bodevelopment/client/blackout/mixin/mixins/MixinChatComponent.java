@@ -17,11 +17,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GuiMessage;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.network.chat.Component;
 
 @Mixin(ChatComponent.class)
 public abstract class MixinChatComponent implements IChatComponent {
+    @Shadow @Final private Minecraft minecraft;
     @Shadow @Final private List<GuiMessage> allMessages;
     @Shadow @Final private List<GuiMessage.Line> trimmedMessages;
     @Shadow public abstract void addMessage(Component text);
@@ -84,6 +86,13 @@ public abstract class MixinChatComponent implements IChatComponent {
         chatLine.blackout_Client$setMessage(this.originalContent != null ? this.originalContent : line.content());
         chatLine.blackout_Client$setId(this.addedId);
         chatLine.blackout_Client$setSpam(this.lastSpamCount);
+    }
+
+    @Inject(method = "addRecentChat", at = @At("TAIL"))
+    private void onAddRecentChat(String string, CallbackInfo ci) {
+        if (string.startsWith("-")) {
+            this.minecraft.commandHistory().addCommand(string);
+        }
     }
 
     @Inject(method = "addMessageToDisplayQueue(Lnet/minecraft/client/GuiMessage;)V", at = @At("TAIL"))
