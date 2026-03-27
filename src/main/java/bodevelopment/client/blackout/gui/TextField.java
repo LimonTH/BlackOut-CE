@@ -51,6 +51,7 @@ public class TextField {
     private float scale;
     private float radius;
     private boolean capsLock = false;
+    private float scrollOffset = 0.0F;
 
     public void render(
             PoseStack stack,
@@ -78,8 +79,42 @@ public class TextField {
         float centerY = y + height / 2.0F;
         float manualY = centerY - (textHeight / 2.0F) - (scale);
 
-        BlackOut.FONT.text(stack, this.content, scale, x, manualY, textColor, false, false);
-        float offset = this.getOffset();
+        float cursorOffset = this.getOffset();
+        float padding = 4.0F;
+
+        // Scroll so cursor is always visible within the field
+        if (cursorOffset - this.scrollOffset > width - padding) {
+            this.scrollOffset = cursorOffset - width + padding;
+        }
+        if (cursorOffset - this.scrollOffset < 0) {
+            this.scrollOffset = cursorOffset;
+        }
+        if (this.scrollOffset < 0) this.scrollOffset = 0;
+
+        // Compute visible substring to avoid overflow outside field
+        String visibleText = this.content;
+        float visibleX = x;
+        if (this.scrollOffset > 0 && !this.content.isEmpty()) {
+            float accum = 0;
+            int startIdx = 0;
+            for (int ci = 0; ci < this.content.length(); ci++) {
+                float cw = BlackOut.FONT.getWidth(String.valueOf(this.content.charAt(ci))) * scale;
+                if (accum + cw > this.scrollOffset) {
+                    startIdx = ci;
+                    visibleX = x - (this.scrollOffset - accum);
+                    break;
+                }
+                accum += cw;
+                startIdx = ci + 1;
+            }
+            if (startIdx < this.content.length()) {
+                visibleText = this.content.substring(startIdx);
+            } else {
+                visibleText = "";
+            }
+        }
+
+        BlackOut.FONT.text(stack, visibleText, scale, visibleX, manualY, textColor, false, false);
         if (!Keys.get(this.heldKey)) {
             this.heldKey = 0;
         }
@@ -93,16 +128,19 @@ public class TextField {
             float fontHeight = BlackOut.FONT.getHeight() * scale;
             float cursorHeight = fontHeight - 2.0F;
 
-            float cursorY = centerY - (cursorHeight / 2.0F);
+            float cursorY2 = centerY - (cursorHeight / 2.0F);
+            float cursorX = x + cursorOffset - this.scrollOffset;
 
-            RenderUtils.quad(
-                    stack,
-                    x + offset,
-                    cursorY,
-                    scale,
-                    cursorHeight,
-                    textColor.getRGB()
-            );
+            if (cursorX >= x && cursorX <= x + width) {
+                RenderUtils.quad(
+                        stack,
+                        cursorX,
+                        cursorY2,
+                        scale,
+                        cursorHeight,
+                        textColor.getRGB()
+                );
+            }
         }
     }
 
@@ -112,6 +150,7 @@ public class TextField {
 
     public void setContent(String content) {
         this.content = content;
+        this.typingIndex = content.length();
     }
 
     private float getOffset() {
@@ -180,7 +219,7 @@ public class TextField {
 
             if (key == GLFW.GLFW_KEY_V && ctrl) {
                 String cb = BlackOut.mc.keyboardHandler.getClipboard();
-                if (cb != null) for (char c : cb.toCharArray()) this.addChar(String.valueOf(c));
+                for (char c : cb.toCharArray()) this.addChar(String.valueOf(c));
                 return;
             }
 
@@ -199,6 +238,21 @@ public class TextField {
                         } else {
                             this.content = this.content.substring(0, this.typingIndex - 1) + this.content.substring(this.typingIndex);
                             this.typingIndex--;
+                        }
+                        this.lastType = System.currentTimeMillis();
+                    }
+                    return;
+                case GLFW.GLFW_KEY_DELETE:
+                    if (this.typingIndex < this.content.length()) {
+                        if (ctrl) {
+                            int nextSpace = this.content.indexOf(" ", this.typingIndex);
+                            if (nextSpace == -1) {
+                                this.content = this.content.substring(0, this.typingIndex);
+                            } else {
+                                this.content = this.content.substring(0, this.typingIndex) + this.content.substring(nextSpace + 1);
+                            }
+                        } else {
+                            this.content = this.content.substring(0, this.typingIndex) + this.content.substring(this.typingIndex + 1);
                         }
                         this.lastType = System.currentTimeMillis();
                     }
@@ -269,6 +323,7 @@ public class TextField {
     public void clear() {
         this.content = "";
         this.typingIndex = 0;
+        this.scrollOffset = 0.0F;
     }
 
     public boolean isActive() {

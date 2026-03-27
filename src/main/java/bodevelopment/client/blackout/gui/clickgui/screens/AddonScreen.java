@@ -4,13 +4,24 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.addon.AddonLoader;
 import bodevelopment.client.blackout.addon.BlackoutAddon;
 import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
+import bodevelopment.client.blackout.randomstuff.ShaderSetup;
+import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
+import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.FileUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.RenderUtils;
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import org.apache.commons.lang3.mutable.MutableDouble;
+import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL13C;
+import org.lwjgl.opengl.GL14;
 
 import java.awt.*;
 import java.io.File;
@@ -23,7 +34,12 @@ public class AddonScreen extends ClickGuiScreen {
 
     public AddonScreen() {
         super("Addons", 800.0F, 500.0F, true);
-        AddonLoader.addons.forEach(a -> hoverAnims.put(a, new MutableDouble(0)));
+        AddonLoader.addons.forEach(a -> {
+            hoverAnims.put(a, new MutableDouble(0));
+            if (a.getIcon() == null) {
+                RenderSystem.recordRenderCall(a::uploadIcon);
+            }
+        });
     }
 
     @Override
@@ -75,11 +91,11 @@ public class AddonScreen extends ClickGuiScreen {
         float textOffsetX = 15.0F;
 
         TextureRenderer icon = addon.getIcon();
-        if (icon != null && icon.getWidth() > 0) {
+        if (icon != null && icon.getWidth() > 0 && this.unscaled >= 1.0F) {
             float iconSize = 36.0F;
             float iconX = 15.0F;
             float iconY = (70.0F - iconSize) / 2.0F;
-            icon.quad(this.stack, iconX, iconY, iconSize, iconSize, Color.WHITE.getRGB());
+            renderIcon(icon, iconX, iconY, iconSize, iconSize);
             textOffsetX = 60.0F;
         }
 
@@ -102,6 +118,29 @@ public class AddonScreen extends ClickGuiScreen {
         String modulesCount = (addon.modules != null ? addon.modules.size() : 0) + " Modules";
         float tw = BlackOut.FONT.getWidth(modulesCount) * 1.8F;
         BlackOut.FONT.text(this.stack, modulesCount, 1.8F, width - tw - rightOffset, 25.0F, GuiColorUtils.parentCategory, false, true);
+    }
+
+    private void renderIcon(TextureRenderer icon, float x, float y, float w, float h) {
+        Matrix4f matrix = this.stack.last().pose();
+
+        Renderer.setMatrices(this.stack);
+        RenderSystem.enableBlend();
+        GL13C.glActiveTexture(33984);
+        GL13C.glBindTexture(GL13C.GL_TEXTURE_2D, icon.getId());
+
+        var buf = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        buf.addVertex(matrix, x, y, 0).setUv(0, 0);
+        buf.addVertex(matrix, x, y + h, 0).setUv(0, 1);
+        buf.addVertex(matrix, x + w, y + h, 0).setUv(1, 1);
+        buf.addVertex(matrix, x + w, y, 0).setUv(1, 0);
+
+        Shaders.texture.set("clr", 1.0f, 1.0f, 1.0f, 1.0f);
+        Shaders.texture.set("uTexture", 0);
+        Shaders.texture.render(buf, new ShaderSetup());
+
+        GL13C.glBindTexture(GL13C.GL_TEXTURE_2D, GlStateManager.TEXTURES[0].binding);
+        GL13C.glActiveTexture(33984 | GlStateManager.activeTexture);
+        GL14.glBlendFuncSeparate(770, 771, 1, 1);
     }
 
     private void renderButtons() {

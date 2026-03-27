@@ -32,6 +32,10 @@ public class CommandManager extends Manager {
         }, internalPath, Command.class.getClassLoader());
     }
 
+    public Collection<Command> getCommands() {
+        return commands.values();
+    }
+
     public void add(Command command) {
         if (command == null) return;
         this.commands.putIfAbsent(command.name.toLowerCase(), command);
