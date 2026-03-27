@@ -1,10 +1,19 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.visual.entities.ShaderESP;
+import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
+import bodevelopment.client.blackout.module.modules.visual.misc.HandESP;
 import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
 import bodevelopment.client.blackout.module.modules.visual.world.Brightness;
+import bodevelopment.client.blackout.rendering.framebuffer.FrameBuffer;
+import bodevelopment.client.blackout.util.render.DualVertexConsumer;
+import bodevelopment.client.blackout.util.render.FramebufferMultiBufferSource;
 import bodevelopment.client.blackout.util.render.RenderEntityCapture;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.CameraType;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -66,9 +75,32 @@ public class MixinEntityRenderDispatcher {
 
         if (esp.enabled && esp.shouldRender(entity)) {
             esp.onRender(instance, entity, state, matrices, vertexConsumers, light);
-        } else {
-            instance.render(state, matrices, vertexConsumers, light);
+            return;
         }
+
+        // HandESP compat for FirstPersonModel mod
+        HandESP handESP = HandESP.getInstance();
+        if (handESP.enabled && entity == BlackOut.mc.player
+                && BlackOut.mc.options.getCameraType() == CameraType.FIRST_PERSON && !FreeCam.getInstance().enabled) {
+            FramebufferMultiBufferSource fboSource = new FramebufferMultiBufferSource();
+
+            if (handESP.texture.get()) {
+                MultiBufferSource dual = renderType ->
+                        new DualVertexConsumer(vertexConsumers.getBuffer(renderType), fboSource.getBuffer(renderType));
+                instance.render(state, matrices, dual, light);
+            } else {
+                instance.render(state, matrices, vertexConsumers, light);
+                instance.render(state, matrices, fboSource, light);
+            }
+
+            RenderSystem.enableDepthTest();
+            RenderSystem.depthMask(true);
+            FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("handESP");
+            fboSource.drawToFramebuffer(buffer);
+            return;
+        }
+
+        instance.render(state, matrices, vertexConsumers, light);
     }
 
     @ModifyVariable(

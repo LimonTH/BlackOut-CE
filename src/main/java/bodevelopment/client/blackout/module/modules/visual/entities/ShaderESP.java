@@ -1,11 +1,13 @@
 package bodevelopment.client.blackout.module.modules.visual.entities;
 
+import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.combat.misc.AntiBot;
+import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
@@ -118,6 +120,8 @@ public class ShaderESP extends Module {
     }
 
     public boolean shouldRender(Entity entity) {
+        if (entity == BlackOut.mc.player && !FreeCam.getInstance().enabled) return false;
+
         AntiBot antiBot = AntiBot.getInstance();
         return (!antiBot.enabled || antiBot.mode.get() != AntiBot.HandlingMode.Ignore || !(entity instanceof AbstractClientPlayer player) || !antiBot.getBots().contains(player)) && this.entities.get().contains(entity.getType());
     }

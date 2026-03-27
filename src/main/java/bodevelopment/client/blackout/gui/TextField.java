@@ -82,7 +82,6 @@ public class TextField {
         float cursorOffset = this.getOffset();
         float padding = 4.0F;
 
-        // Scroll so cursor is always visible within the field
         if (cursorOffset - this.scrollOffset > width - padding) {
             this.scrollOffset = cursorOffset - width + padding;
         }
@@ -91,7 +90,6 @@ public class TextField {
         }
         if (this.scrollOffset < 0) this.scrollOffset = 0;
 
-        // Compute visible substring to avoid overflow outside field
         String visibleText = this.content;
         float visibleX = x;
         if (this.scrollOffset > 0 && !this.content.isEmpty()) {
