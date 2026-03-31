@@ -68,6 +68,8 @@ public class RotationManager extends Manager {
 
     @Event
     public void onRender(RenderEvent.World.Pre event) {
+        if (CompatUtils.shouldBypassRotations()) return;
+
         if (this.rotatingYaw == RotatePhase.Rotating && RotationSettings.getInstance().vanillaRotation.get()) {
             BlackOut.mc.player.setYRot(Mth.lerp(event.tickDelta, this.prevRenderYaw, this.renderYaw));
         }

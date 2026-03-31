@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
+import bodevelopment.client.blackout.util.CompatUtils;
 import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;

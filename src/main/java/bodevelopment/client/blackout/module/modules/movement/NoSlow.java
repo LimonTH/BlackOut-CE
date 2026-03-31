@@ -5,6 +5,7 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.util.CompatUtils;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.combat.offensive.Aura;

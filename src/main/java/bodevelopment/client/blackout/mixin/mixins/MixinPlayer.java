@@ -15,13 +15,15 @@ public abstract class MixinPlayer {
     @Shadow
     protected abstract boolean canPlayerFitWithinBlocksAndEntitiesWhen(Pose pose);
 
+    @Shadow
+    public abstract boolean isStayingOnGroundSurface();
+
     @Redirect(method = "maybeBackOffFromEdge", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;isStayingOnGroundSurface()Z"))
     private boolean sneakingThing(Player instance) {
-        if (instance.isShiftKeyDown()) return true;
-        if ((Object) this == BlackOut.mc.player) {
-            SafeWalk.shouldSafeWalk();
+        if ((Object) this == BlackOut.mc.player && SafeWalk.shouldSafeWalk()) {
+            return true;
         }
-        return false;
+        return this.isStayingOnGroundSurface();
     }
 
     @Redirect(

@@ -7,6 +7,7 @@ import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import net.minecraft.network.protocol.game.ClientboundBundlePacket;
@@ -14,16 +15,15 @@ import net.minecraft.network.protocol.game.ClientboundSetTimePacket;
 
 public class TPSManager extends Manager {
     private static final int MAX_SAMPLES = 10;
-    private static final long REGION_TICK_THRESHOLD_MS = 40;
-    private static final long REGION_STALE_MS = 5000;
+    private static final long TICK_GAP_MS = 10;
+    private static final long WINDOW_MS = 1000;
 
     private final List<Double> list = Collections.synchronizedList(new ArrayList<>());
-    private final List<Double> regionList = Collections.synchronizedList(new ArrayList<>());
+    private final List<Long> tickTimestamps = new ArrayList<>();
 
     private long prevWorldTime = 0L;
     private long prevTime = 0L;
     private long lastBundleTime = 0L;
-    private long lastTickBoundary = 0L;
 
     public double regionTps = 20.0;
     public double tps = 20.0;
@@ -51,27 +51,19 @@ public class TPSManager extends Manager {
         if (event.packet instanceof ClientboundBundlePacket) {
             long now = System.currentTimeMillis();
 
-            if (now - this.lastBundleTime > REGION_STALE_MS) {
-                this.lastTickBoundary = now;
-                this.lastBundleTime = now;
-                synchronized (this.regionList) {
-                    this.regionList.clear();
-                }
-                return;
-            }
+            if (now - this.lastBundleTime > TICK_GAP_MS) {
+                synchronized (this.tickTimestamps) {
+                    this.tickTimestamps.add(now);
 
-            if (now - this.lastBundleTime > REGION_TICK_THRESHOLD_MS) {
-                if (this.lastTickBoundary != 0) {
-                    long tickInterval = now - this.lastTickBoundary;
-                    double tickTps = 1000.0 / tickInterval;
-
-                    synchronized (this.regionList) {
-                        this.regionList.addFirst(Math.min(20.0, tickTps));
-                        CollectionUtils.limitSize(this.regionList, MAX_SAMPLES);
-                        this.regionTps = calcTrimmedMean(this.regionList);
+                    long cutoff = now - WINDOW_MS;
+                    Iterator<Long> it = this.tickTimestamps.iterator();
+                    while (it.hasNext()) {
+                        if (it.next() < cutoff) it.remove();
+                        else break;
                     }
+
+                    this.regionTps = Math.min(20.0, this.tickTimestamps.size());
                 }
-                this.lastTickBoundary = now;
             }
 
             this.lastBundleTime = now;

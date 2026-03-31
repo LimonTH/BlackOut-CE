@@ -102,17 +102,26 @@ public abstract class MixinLocalPlayer {
 
     @Redirect(method = "sendPosition", at = @At(value = "FIELD", target = "Lnet/minecraft/client/player/LocalPlayer;yRotLast:F", opcode = 180))
     private float prevYaw(LocalPlayer instance) {
-        return instance == BlackOut.mc.player ? Managers.ROTATION.prevYaw : this.yRotLast;
+        if (instance == BlackOut.mc.player && !CompatUtils.shouldBypassRotations()) {
+            return Managers.ROTATION.prevYaw;
+        }
+        return this.yRotLast;
     }
 
     @Redirect(method = "sendPosition", at = @At(value = "FIELD", target = "Lnet/minecraft/client/player/LocalPlayer;xRotLast:F", opcode = 180))
     private float prevPitch(LocalPlayer instance) {
-        return instance == BlackOut.mc.player ? Managers.ROTATION.prevPitch : this.xRotLast;
+        if (instance == BlackOut.mc.player && !CompatUtils.shouldBypassRotations()) {
+            return Managers.ROTATION.prevPitch;
+        }
+        return this.xRotLast;
     }
 
     @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z"))
     private boolean usingItem(LocalPlayer instance) {
-        return instance == BlackOut.mc.player ? NoSlow.shouldSlow() : instance.isUsingItem();
+        if (instance == BlackOut.mc.player && NoSlow.getInstance().enabled) {
+            return NoSlow.shouldSlow();
+        }
+        return instance.isUsingItem();
     }
 
     @Redirect(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;onGround()Z"))
@@ -152,26 +161,30 @@ public abstract class MixinLocalPlayer {
     private boolean forwardMovement(LocalPlayer value) {
         if ((Object) this != BlackOut.mc.player || CompatUtils.isBaritonePathing()) {
             return value.isSprinting();
-        } else {
-            Sprint sprint = Sprint.getInstance();
-            boolean hasInput;
-            if (!SettingUtils.grimMovement() && SettingUtils.strictSprint()) {
-                hasInput = Managers.ROTATION.move && Math.abs(RotationUtils.yawAngle(Managers.ROTATION.moveYaw, Managers.ROTATION.nextYaw)) <= 45.0;
-            } else {
-                hasInput = this.input.hasForwardImpulse() || sprint.enabled && sprint.shouldSprint();
-            }
+        }
 
-            boolean cantSprint = !hasInput || !this.hasEnoughFoodToStartSprinting();
-            if (value.isSwimming()) {
-                if (!value.onGround() && !this.input.keyPresses.shift() && cantSprint || !value.isInWater()) {
-                    value.setSprinting(false);
-                }
-            } else if (cantSprint || value.horizontalCollision && !value.minorHorizontalCollision || value.isInWater() && !value.isUnderWater()) {
+        Sprint sprint = Sprint.getInstance();
+        if (!sprint.enabled && !SettingUtils.grimMovement() && !SettingUtils.strictSprint()) {
+            return value.isSprinting();
+        }
+
+        boolean hasInput;
+        if (!SettingUtils.grimMovement() && SettingUtils.strictSprint()) {
+            hasInput = Managers.ROTATION.move && Math.abs(RotationUtils.yawAngle(Managers.ROTATION.moveYaw, Managers.ROTATION.nextYaw)) <= 45.0;
+        } else {
+            hasInput = this.input.hasForwardImpulse() || sprint.enabled && sprint.shouldSprint();
+        }
+
+        boolean cantSprint = !hasInput || !this.hasEnoughFoodToStartSprinting();
+        if (value.isSwimming()) {
+            if (!value.onGround() && !this.input.keyPresses.shift() && cantSprint || !value.isInWater()) {
                 value.setSprinting(false);
             }
-
-            return false;
+        } else if (cantSprint || value.horizontalCollision && !value.minorHorizontalCollision || value.isInWater() && !value.isUnderWater()) {
+            value.setSprinting(false);
         }
+
+        return false;
     }
 
     @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/ClientInput;tick()V"))
