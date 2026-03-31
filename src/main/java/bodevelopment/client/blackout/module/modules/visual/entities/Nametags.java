@@ -18,7 +18,7 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.EnchantmentNames;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -134,7 +134,7 @@ public class Nametags extends Module {
         RenderSystem.depthMask(false);
 
         this.stack.pushPose();
-        RenderUtils.unGuiScale(this.stack);
+        Render2DUtils.unGuiScale(this.stack);
         this.stack.translate(0, 0, RenderLayer.NAMETAGS);
 
         this.entities.forEach(entity -> this.renderNameTag(event.tickDelta, entity));
@@ -150,7 +150,7 @@ public class Nametags extends Module {
         double y = Mth.lerp(tickDelta, entity.yo, entity.getY());
         double z = Mth.lerp(tickDelta, entity.zo, entity.getZ());
 
-        Vec2 coords = RenderUtils.getCoords(x, y + entity.getBoundingBox().getYsize() + this.yOffset.get(), z, true);
+        Vec2 coords = Render2DUtils.getCoords(x, y + entity.getBoundingBox().getYsize() + this.yOffset.get(), z, true);
         if (coords == null) return;
 
         float distance = (float) BlackOut.mc.gameRenderer.getMainCamera().getPosition().subtract(x, y, z).length();
@@ -196,7 +196,7 @@ public class Nametags extends Module {
         if (this.armor.get() || this.hand.get()) {
             this.stack.pushPose();
 
-            this.stack.translate(0, 0, RenderLayer.OFFSET_MICRO * 2);
+            this.stack.translate(0, 0, RenderLayer.OFFSET_SMALL);
             this.stack.translate(0.0, -16.0 * this.itemOffset.get() - 6.0, 0.0);
 
             float wbg = 16.0F;
@@ -213,10 +213,10 @@ public class Nametags extends Module {
                     for (int i = 0; i < 4; i++) {
                         ItemStack is = player.getInventory().getArmor(3 - i);
                         if (!is.isEmpty()) {
-                            RenderUtils.renderItem(this.stack, is, i * (wbg + sep), 0.0F, 16.0F, 0.0F, false);
+                            Render2DUtils.renderItem(this.stack, is, i * (wbg + sep), 0.0F, 16.0F, 0.0F, false);
 
                             this.stack.pushPose();
-                            this.stack.translate(0, 0, RenderLayer.OFFSET_MICRO);
+                            this.stack.translate(0, 0, RenderLayer.OFFSET_SMALL);
                             if (is.isDamageableItem() && is.get(DataComponents.UNBREAKABLE) == null) {
                                 int dur = Math.round((is.getMaxDamage() - is.getDamageValue()) * 100.0F / is.getMaxDamage());
                                 this.drawItemText(dur + "%", wbg, sep, i);
@@ -234,7 +234,7 @@ public class Nametags extends Module {
         this.stack.translate(-this.length / 2.0F, -9.0F, 0.0F);
 
         if (this.blur.get()) {
-            RenderUtils.drawLoadedBlur("hudblur", this.stack, r ->
+            Render2DUtils.drawLoadedBlur("hudblur", this.stack, r ->
                     r.rounded(-2.0F, -5.0F, this.length + 4.0F, 10.0F, this.rounded.get() ? 3.0F : 0.0F, 10));
             Renderer.onHUDBlur();
         }
@@ -245,7 +245,7 @@ public class Nametags extends Module {
         this.background.render(this.stack, -2.0F, -5.0F, this.length + 4.0F, 10.0F, this.rounded.get() ? 3.0F : 0.0F, this.shadow.get() ? 3.0F : 0.0F);
 
         this.stack.pushPose();
-        this.stack.translate(0, 0, RenderLayer.OFFSET_MICRO);
+        this.stack.translate(0, 0, RenderLayer.OFFSET_SMALL);
         this.offset = 0.0F;
         for (Component component : this.components) {
             BlackOut.FONT.text(this.stack, component.text, 1.0F, this.offset, 0.0F, component.color, false, true);
@@ -259,7 +259,7 @@ public class Nametags extends Module {
 
     private void renderHandItem(ItemStack stack, float wbg, float sep, int i) {
         if (stack.isEmpty()) return;
-        RenderUtils.renderItem(this.stack, stack, i * (wbg + sep), 0.0F, 16.0F, 0.0F, false);
+        Render2DUtils.renderItem(this.stack, stack, i * (wbg + sep), 0.0F, 16.0F, 0.0F, false);
 
         this.stack.pushPose();
         this.stack.translate(0, 0, RenderLayer.OFFSET_SMALL);

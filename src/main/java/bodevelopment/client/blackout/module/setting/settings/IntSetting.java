@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.SelectedComponent;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.awt.*;
@@ -82,8 +82,8 @@ public class IntSetting extends Setting<Integer> {
 
         float barWidth = this.width - 20.0F;
 
-        RenderUtils.rounded(this.stack, this.x + 10, this.y + 25, barWidth, 0.0F, 6.0F, 2.0F, new Color(0, 0, 0, 50).getRGB(), ColorUtils.SHADOW100I);
-        RenderUtils.rounded(
+        Render2DUtils.rounded(this.stack, this.x + 10, this.y + 25, barWidth, 0.0F, 6.0F, 2.0F, new Color(0, 0, 0, 50).getRGB(), ColorUtils.SHADOW100I);
+        Render2DUtils.rounded(
                 this.stack,
                 this.x + 10,
                 this.y + 25,

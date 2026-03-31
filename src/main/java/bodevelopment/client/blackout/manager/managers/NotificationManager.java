@@ -5,7 +5,7 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.module.modules.client.Notifications;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,7 +26,7 @@ public class NotificationManager extends Manager {
         if (BlackOut.mc.screen == null && BlackOut.mc.level != null && BlackOut.mc.player != null) {
             this.y = 100.0F;
             this.stack.pushPose();
-            RenderUtils.unGuiScale(this.stack);
+            Render2DUtils.unGuiScale(this.stack);
             synchronized (this.notifications) {
                 this.notifications.removeIf(notification -> {
                     if (System.currentTimeMillis() > notification.startTime + notification.time) {

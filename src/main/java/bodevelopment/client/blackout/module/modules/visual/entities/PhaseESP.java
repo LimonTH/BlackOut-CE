@@ -15,7 +15,7 @@ import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.BlockUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
@@ -79,7 +79,7 @@ public class PhaseESP extends Module {
         float d = (float) BlackOut.mc.gameRenderer.getMainCamera().getPosition().subtract(x, y, z).length();
         float s = this.getScale(d);
         this.stack.pushPose();
-        Vec2 f = RenderUtils.getCoords(x, y - this.yOffset.get(), z, true);
+        Vec2 f = Render2DUtils.getCoords(x, y - this.yOffset.get(), z, true);
         if (f == null) {
             this.stack.popPose();
         } else {
@@ -94,13 +94,13 @@ public class PhaseESP extends Module {
             Color shadowColor = ColorUtils.lerpColor(easedValue, this.shdwClose.get().getColor(), this.shdwFar.get().getColor());
             if (this.bg.get()) {
                 if (this.blur.get()) {
-                    RenderUtils.drawLoadedBlur(
+                    Render2DUtils.drawLoadedBlur(
                             "hudblur", this.stack, renderer -> renderer.rounded(-2.0F, -5.0F, length + 4.0F, 10.0F, this.rounded.get() ? 3.0F : 0.0F, 10)
                     );
                     Renderer.onHUDBlur();
                 }
 
-                RenderUtils.rounded(
+                Render2DUtils.rounded(
                         this.stack,
                         -2.0F,
                         -5.0F,
@@ -141,7 +141,7 @@ public class PhaseESP extends Module {
             GlStateManager._enableBlend();
             GlStateManager._disableCull();
             this.stack.pushPose();
-            RenderUtils.unGuiScale(this.stack);
+            Render2DUtils.unGuiScale(this.stack);
             this.players.forEach(entity -> this.renderNameTag(event.tickDelta, entity));
             this.stack.popPose();
         }

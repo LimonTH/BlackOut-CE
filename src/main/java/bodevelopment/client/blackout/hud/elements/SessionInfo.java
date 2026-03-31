@@ -12,7 +12,7 @@ import bodevelopment.client.blackout.module.setting.multisettings.TextColorMulti
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.TimeUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import java.awt.*;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 
@@ -64,7 +64,7 @@ public class SessionInfo extends HudElement {
                     this.width = BlackOut.FONT.getWidth("Session Info") * 1.5F + 14.0F;
                     this.setSize(this.width, this.height);
                     if (this.blur.get()) {
-                        RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, this.width, this.height, 3.0F, 10));
+                        Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, this.width, this.height, 3.0F, 10));
                         Renderer.onHUDBlur();
                     }
 
@@ -74,7 +74,7 @@ public class SessionInfo extends HudElement {
 
                     this.textColor.render(this.stack, "Session Info", 1.5F, this.width / 2.0F, 0.0F, true, false);
                     if (this.bar.get()) {
-                        RenderUtils.rounded(
+                        Render2DUtils.rounded(
                                 this.stack,
                                 2.0F,
                                 BlackOut.FONT.getHeight() * 1.5F,
@@ -98,7 +98,7 @@ public class SessionInfo extends HudElement {
                     this.height = BlackOut.FONT.getHeight() * 3.0F + 6.0F;
                     this.stack.translate(-2.0F, -2.0F, 0.0F);
                     this.setSize(this.width + 6.0F, this.height + 4.0F);
-                    RenderUtils.drawSkeetBox(this.stack, 0.0F, 0.0F, this.width + 10.0F, this.height + 8.0F, true);
+                    Render2DUtils.drawSkeetBox(this.stack, 0.0F, 0.0F, this.width + 10.0F, this.height + 8.0F, true);
                     this.textColor.render(this.stack, this.ip, 1.0F, 4.0F, 4.0F, false, false);
                     this.textColor.render(this.stack, "Kills: " + this.kills, 1.0F, 4.0F, 4.0F + num, false, false);
                     this.textColor.render(this.stack, "Deaths: " + this.deaths, 1.0F, 4.0F, 4.0F + num * 2.0F, false, false);

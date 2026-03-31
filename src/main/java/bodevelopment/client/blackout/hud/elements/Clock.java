@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.BackgroundMultiSetting;
 import bodevelopment.client.blackout.module.setting.multisettings.TextColorMultiSetting;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalTime;
@@ -43,7 +43,7 @@ public class Clock extends HudElement {
             this.setSize(this.textWidth, BlackOut.FONT.getHeight());
             this.stack.pushPose();
             if (this.blur.get()) {
-                RenderUtils.drawLoadedBlur(
+                Render2DUtils.drawLoadedBlur(
                         "hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, this.textWidth, BlackOut.FONT.getHeight(), this.rounded.get() ? 3.0F : 0.0F, 10)
                 );
                 Renderer.onHUDBlur();

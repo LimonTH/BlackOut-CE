@@ -11,7 +11,7 @@ import bodevelopment.client.blackout.module.modules.client.MainMenuSettings;
 import bodevelopment.client.blackout.util.FileUtils;
 import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.SoundUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.Random;
@@ -169,12 +169,12 @@ public class MainMenu {
             float bigW = 2000.0F;
             float bigH = this.windowHeight;
 
-            RenderUtils.loadBlur("gui_blur", (int) (guiAlpha * 10.0F));
-            RenderUtils.drawLoadedBlur("gui_blur", this.stack, renderer ->
+            Render2DUtils.loadBlur("gui_blur", (int) (guiAlpha * 10.0F));
+            Render2DUtils.drawLoadedBlur("gui_blur", this.stack, renderer ->
                     renderer.quadShape(-bigW, -bigH, bigW * 2.0F, bigH * 2.0F, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F)
             );
 
-            RenderUtils.quad(this.stack, -bigW, -bigH, bigW * 2.0F, bigH * 2.0F, new Color(0, 0, 0, (int) (guiAlpha * 130)).getRGB());
+            Render2DUtils.quad(this.stack, -bigW, -bigH, bigW * 2.0F, bigH * 2.0F, new Color(0, 0, 0, (int) (guiAlpha * 130)).getRGB());
             this.stack.popPose();
         }
 
@@ -187,8 +187,8 @@ public class MainMenu {
             float screenH = (float) BlackOut.mc.getWindow().getScreenHeight();
 
             stack.pushPose();
-            RenderUtils.unGuiScale(stack);
-            RenderUtils.quad(stack, 0, 0, screenW, screenH, blackColor);
+            Render2DUtils.unGuiScale(stack);
+            Render2DUtils.quad(stack, 0, 0, screenW, screenH, blackColor);
             stack.popPose();
         }
 
@@ -268,7 +268,7 @@ public class MainMenu {
 
     private void startRender(float scale) {
         this.stack.pushPose();
-        RenderUtils.unGuiScale(this.stack);
+        Render2DUtils.unGuiScale(this.stack);
 
         int screenW = BlackOut.mc.getWindow().getScreenWidth();
         int screenH = BlackOut.mc.getWindow().getScreenHeight();

@@ -7,7 +7,7 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.*;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import org.apache.commons.lang3.mutable.MutableDouble;
 
 import java.awt.*;
@@ -66,7 +66,7 @@ public class ConfigScreen extends ClickGuiScreen {
         }
 
         this.updateDelete();
-        RenderUtils.rounded(this.stack, 0, 0, width, height - 40.0F, 10, 10, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
+        Render2DUtils.rounded(this.stack, 0, 0, width, height - 40.0F, 10, 10, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
 
         this.renderConfigs();
         this.renderText();
@@ -287,18 +287,18 @@ public class ConfigScreen extends ClickGuiScreen {
     private void renderAdd() {
         this.stack.pushPose();
         this.stack.translate(this.width / 2.0F, 30.0F, 0.0F);
-        RenderUtils.roundedLeft(this.stack, -50.0F, 0.0F, 50.0F, 0.0F, 20.0F, 15.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
-        RenderUtils.roundedRight(this.stack, 0.0F, 0.0F, 50.0F, 0.0F, 20.0F, 15.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
+        Render2DUtils.rounded(this.stack, -50.0F, 0.0F, 50.0F, 0.0F, 20.0F, 15.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I, Render2DUtils.RoundedSide.LEFT);
+        Render2DUtils.rounded(this.stack, 0.0F, 0.0F, 50.0F, 0.0F, 20.0F, 15.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I, Render2DUtils.RoundedSide.RIGHT);
         BOTextures.getCloudIconRenderer().quad(this.stack, 15.0F, -20.0F, 40.0F, 40.0F);
         BOTextures.getPlusIconRenderer().quad(this.stack, -55.0F, -20.0F, 40.0F, 40.0F);
-        RenderUtils.line(this.stack, 0.0F, -20.0F, 0.0F, 20.0F, lineColor);
+        Render2DUtils.line(this.stack, 0.0F, -20.0F, 0.0F, 20.0F, lineColor);
         this.stack.popPose();
     }
 
     private void renderBottomBG() {
-        RenderUtils.roundedBottom(this.stack, 0.0F, this.height - 105.0F, this.width, 65.0F, 10.0F, 0.0F, GuiColorUtils.bg2.getRGB(), 0);
-        RenderUtils.topFade(this.stack, -10.0F, this.height - 125.0F, this.width + 20.0F, 20.0F, GuiColorUtils.bg2.getRGB());
-        RenderUtils.line(this.stack, -10.0F, this.height - 105.0F, this.width + 10.0F, this.height - 105.0F, lineColor);
+        Render2DUtils.rounded(this.stack, 0.0F, this.height - 105.0F, this.width, 65.0F, 10.0F, 0.0F, GuiColorUtils.bg2.getRGB(), 0, Render2DUtils.RoundedSide.BOTTOM);
+        Render2DUtils.fade(this.stack, -10.0F, this.height - 125.0F, this.width + 20.0F, 20.0F, GuiColorUtils.bg2.getRGB(), Render2DUtils.FadeSide.TOP);
+        Render2DUtils.line(this.stack, -10.0F, this.height - 105.0F, this.width + 10.0F, this.height - 105.0F, lineColor);
     }
 
     private void renderBottom() {
@@ -316,7 +316,7 @@ public class ConfigScreen extends ClickGuiScreen {
     }
 
     private void renderCloudConfig(CloudConfig config) {
-        if (!this.first) RenderUtils.line(this.stack, -10.0F, 0.0F, this.width + 10.0F, 0.0F, lineColor);
+        if (!this.first) Render2DUtils.line(this.stack, -10.0F, 0.0F, this.width + 10.0F, 0.0F, lineColor);
         this.first = false;
 
         int color = (config.content().isDone() ? Color.WHITE : Color.GRAY).getRGB();
@@ -327,7 +327,7 @@ public class ConfigScreen extends ClickGuiScreen {
     }
 
     private void renderConfig(String name, MutableDouble mutableDouble, int index) {
-        if (!this.first) RenderUtils.line(this.stack, -10.0F, 0.0F, this.width + 10.0F, 0.0F, lineColor);
+        if (!this.first) Render2DUtils.line(this.stack, -10.0F, 0.0F, this.width + 10.0F, 0.0F, lineColor);
         this.first = false;
 
         this.stack.pushPose();
@@ -351,15 +351,15 @@ public class ConfigScreen extends ClickGuiScreen {
             anim.setValue(Mth.lerp(this.frameTime * 10.0F, (float)anim.getValue().doubleValue(), isHovered ? 1.0F : 0.0F));
             float animVal = anim.getValue().floatValue();
 
-            RenderUtils.roundedShadow(this.stack, -4.0F, -4.0F, 8.0F, 8.0F, 10.0F, 10.0F, ColorUtils.SHADOW100I);
+            Render2DUtils.roundedShadow(this.stack, -4.0F, -4.0F, 8.0F, 8.0F, 10.0F, 10.0F, ColorUtils.SHADOW100I);
 
             if (isSelected) {
                 float size = 4.0F;
-                RenderUtils.rounded(this.stack, -size, -size, size * 2, size * 2, size, 0, Color.WHITE.getRGB(), Color.WHITE.getRGB());
-                RenderUtils.roundedShadow(this.stack, -size, -size, size * 2, size * 2, 8.0F, 8.0F, ColorUtils.withAlpha(Color.WHITE.getRGB(), 60));
+                Render2DUtils.rounded(this.stack, -size, -size, size * 2, size * 2, size, 0, Color.WHITE.getRGB(), Color.WHITE.getRGB());
+                Render2DUtils.roundedShadow(this.stack, -size, -size, size * 2, size * 2, 8.0F, 8.0F, ColorUtils.withAlpha(Color.WHITE.getRGB(), 60));
             } else if (animVal > 0.01F) {
                 float size = animVal * 4.0F;
-                RenderUtils.rounded(this.stack, -size, -size, size * 2, size * 2, size, 0, ColorUtils.withAlpha(Color.WHITE.getRGB(), (int) (animVal * 120)), 0);
+                Render2DUtils.rounded(this.stack, -size, -size, size * 2, size * 2, size, 0, ColorUtils.withAlpha(Color.WHITE.getRGB(), (int) (animVal * 120)), 0);
             }
         }
         this.stack.popPose();

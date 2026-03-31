@@ -15,7 +15,7 @@ import java.util.Arrays;
 public class BOTextures {
     private static final TextureRenderer logoRenderer = new TextureRenderer("logo");
     private static final TextureRenderer catRenderer = new TextureRenderer("catgirl");
-    private static final TextureRenderer cat2Renderer = new TextureRenderer("catgirl2clear");
+    private static final TextureRenderer cat2Renderer = new TextureRenderer("catgirl2");
     private static final TextureRenderer bakrongRenderer = new TextureRenderer("bakrong");
     private static final TextureRenderer arrowRenderer = new TextureRenderer("arrow");
     private static final TextureRenderer closeRenderer = new TextureRenderer("close");

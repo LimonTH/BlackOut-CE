@@ -10,6 +10,16 @@ import java.util.concurrent.ConcurrentHashMap;
 public class EventBus {
     public final Map<Class<?>, List<Listener>> listeners = new ConcurrentHashMap<>();
 
+    /**
+     * Subscribes all listener methods found in the provided object.
+     * <p>
+     * This method scans the object's class for methods annotated as listeners,
+     * identifies the event type by the first parameter of the method,
+     * and inserts them into the listener registry based on their priority.
+     *
+     * @param object The instance containing listener methods to be registered.
+     * @param skip   The filter logic used to skip specific classes or methods.
+     */
     public void subscribe(Object object, ISkip skip) {
         for (Listener listener : this.getListeners(new ArrayList<>(), object.getClass(), object, skip)) {
             Class<?> clazz = listener.method.getParameters()[0].getType();

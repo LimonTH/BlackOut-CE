@@ -15,7 +15,7 @@ import bodevelopment.client.blackout.rendering.framebuffer.FrameBuffer;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import net.minecraft.world.phys.AABB;
 
 public class BoxMultiSetting {
@@ -95,30 +95,30 @@ public class BoxMultiSetting {
                 Renderer.setAlpha(this.shaderAlpha);
                 Renderer.on3DBlur();
                 Renderer.setTexture(Managers.FRAME_BUFFER.getBuffer("3dblur").getTexture(), 1);
-                RenderUtils.renderBufferWith(insideBuffer, Shaders.screentexoverlay, new ShaderSetup(setup -> {
+                Render2DUtils.renderBufferWith(insideBuffer, Shaders.screentexoverlay, new ShaderSetup(setup -> {
                     setup.set("uTexture0", 0);
                     setup.set("uTexture1", 1);
                 }));
                 Renderer.setAlpha(prevAlpha);
             }
 
-            RenderUtils.renderBufferWith(
+            Render2DUtils.renderBufferWith(
                     insideBuffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.insideColor.get().alphaMulti(this.shaderAlpha).getRGB()))
             );
             if (this.bloom.get() > 0) {
                 bloomBuffer.clear(0.0F, 0.0F, 0.0F, 1.0F);
                 bloomBuffer.bind(true);
-                RenderUtils.renderBufferWith(insideBuffer, Shaders.screentex, new ShaderSetup(setup -> setup.set("alpha", 1.0F)));
+                Render2DUtils.renderBufferWith(insideBuffer, Shaders.screentex, new ShaderSetup(setup -> setup.set("alpha", 1.0F)));
                 bloomBuffer.unbind();
-                RenderUtils.blurBufferBW(this.bloomBufferName, this.bloom.get() + 1);
+                Render2DUtils.blurBufferBW(this.bloomBufferName, this.bloom.get() + 1);
                 bloomBuffer.bind(true);
                 Renderer.setTexture(insideBuffer.getTexture(), 1);
-                RenderUtils.renderBufferWith(bloomBuffer, Shaders.subtract, new ShaderSetup(setup -> {
+                Render2DUtils.renderBufferWith(bloomBuffer, Shaders.subtract, new ShaderSetup(setup -> {
                     setup.set("uTexture0", 0);
                     setup.set("uTexture1", 1);
                 }));
                 bloomBuffer.unbind();
-                RenderUtils.renderBufferWith(
+                Render2DUtils.renderBufferWith(
                         bloomBuffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.bloomColor.get().alphaMulti(this.shaderAlpha).getRGB()))
                 );
             }

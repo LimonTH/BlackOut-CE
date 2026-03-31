@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
+import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -33,6 +34,11 @@ public class PingSpoof extends Module {
     }
 
     @Override
+    public void onDisable() {
+        Managers.PING.clear();
+    }
+
+    @Override
     public String getInfo() {
         return this.mode.get().name() + " " + this.extra.get() + " " + this.ji;
     }
@@ -46,7 +52,7 @@ public class PingSpoof extends Module {
     }
 
     public boolean shouldDelay(Packet<?> packet) {
-        return this.mode.get() == SpoofMode.Real || packet instanceof ServerboundPongPacket || packet instanceof ServerboundKeepAlivePacket;
+        return packet instanceof ServerboundPongPacket || packet instanceof ServerboundKeepAlivePacket;
     }
 
     public int getPing() {

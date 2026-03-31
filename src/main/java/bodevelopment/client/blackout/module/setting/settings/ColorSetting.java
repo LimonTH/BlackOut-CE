@@ -9,7 +9,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.awt.*;
@@ -47,7 +47,7 @@ public class ColorSetting extends Setting<BlackOutColor> {
 
         int color = this.get().withAlpha(255).getRGB();
 
-        RenderUtils.rounded(
+        Render2DUtils.rounded(
                 this.stack,
                 rectX,
                 rectRenderY,

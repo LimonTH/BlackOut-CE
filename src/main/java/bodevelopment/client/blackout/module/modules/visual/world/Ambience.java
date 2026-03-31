@@ -21,12 +21,11 @@ public class Ambience extends Module {
     public final Setting<Boolean> modifyTime = this.sgGeneral.booleanSetting("Temporal Control", true, "Overrides the server-side world time with a static client-side value.");
     public final Setting<Integer> time = this.sgGeneral.intSetting("World Time", 2000, 0, 24000, 50, "The fixed time of day in ticks (0 = Dawn, 6000 = Midday, 18000 = Midnight).", this.modifyTime::get);
 
-    public final Setting<Boolean> modifyFog = this.sgFog.booleanSetting("Fog Manipulation", true, "Enables custom rendering of the atmospheric fog layer.");
-    public final Setting<Boolean> removeFog = this.sgFog.booleanSetting("Suppress Fog", true, "Completely disables the fog shader for maximum visibility.", this.modifyFog::get);
-    private final Setting<FogShape> shape = this.sgFog.enumSetting("Fog Geometry", FogShape.SPHERE, "The mathematical projection used to calculate fog density (Sphere or Cylinder).", () -> this.modifyFog.get() && !this.removeFog.get());
-    private final Setting<Double> distance = this.sgFog.doubleSetting("Fog Offset", 25.0, 0.0, 100.0, 1.0, "The distance from the camera at which the fog begins to obstruct vision.", () -> this.modifyFog.get() && !this.removeFog.get());
-    private final Setting<Double> fading = this.sgFog.doubleSetting("Fog Falloff", 25.0, 0.0, 250.0, 1.0, "The distance over which the fog transitions from transparent to fully opaque.", () -> this.modifyFog.get() && !this.removeFog.get());
-    public final Setting<BlackOutColor> color = this.sgFog.colorSetting("Fog Color", new BlackOutColor(255, 0, 0, 255), "The color applied to the atmospheric fog layer.", () -> this.modifyFog.get() && !this.removeFog.get());
+    public final Setting<Boolean> modifyFog = this.sgFog.booleanSetting("Fog Manipulation", false, "Enables custom rendering of the atmospheric fog layer. Use NoRender to remove fog entirely.");
+    private final Setting<FogShape> shape = this.sgFog.enumSetting("Fog Geometry", FogShape.SPHERE, "The mathematical projection used to calculate fog density (Sphere or Cylinder).", this.modifyFog::get);
+    private final Setting<Double> distance = this.sgFog.doubleSetting("Fog Offset", 25.0, 0.0, 100.0, 1.0, "The distance from the camera at which the fog begins to obstruct vision.", this.modifyFog::get);
+    private final Setting<Double> fading = this.sgFog.doubleSetting("Fog Falloff", 25.0, 0.0, 250.0, 1.0, "The distance over which the fog transitions from transparent to fully opaque.", this.modifyFog::get);
+    public final Setting<BlackOutColor> color = this.sgFog.colorSetting("Fog Color", new BlackOutColor(255, 0, 0, 255), "The color applied to the atmospheric fog layer.", this.modifyFog::get);
     public final Setting<Boolean> thickFog = this.sgFog.booleanSetting("High Density", true, "Forces fog rendering even in conditions where it would normally be minimal.", this.modifyFog::get);
 
     public Ambience() {
@@ -45,28 +44,18 @@ public class Ambience extends Module {
             return false;
         }
 
-        if (this.removeFog.get()) {
-            RenderSystem.setShaderFog(new FogParameters(
-                    Float.MAX_VALUE,
-                    Float.MAX_VALUE,
-                    this.shape.get(),
-                    0.0F, 0.0F, 0.0F, 0.0F
-            ));
-            return true;
-        } else {
-            float start = this.distance.get().floatValue();
-            float end = start + this.fading.get().floatValue();
+        float start = this.distance.get().floatValue();
+        float end = start + this.fading.get().floatValue();
 
-            RenderSystem.setShaderFog(new FogParameters(
-                    start,
-                    end,
-                    this.shape.get(),
-                    this.color.get().red / 255.0F,
-                    this.color.get().green / 255.0F,
-                    this.color.get().blue / 255.0F,
-                    this.color.get().alpha / 255.0F
-            ));
-            return true;
-        }
+        RenderSystem.setShaderFog(new FogParameters(
+                start,
+                end,
+                this.shape.get(),
+                this.color.get().red / 255.0F,
+                this.color.get().green / 255.0F,
+                this.color.get().blue / 255.0F,
+                this.color.get().alpha / 255.0F
+        ));
+        return true;
     }
 }

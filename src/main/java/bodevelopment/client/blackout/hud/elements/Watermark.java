@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.module.setting.multisettings.TextColorMulti
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ColorUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 
 import java.awt.*;
 import java.text.SimpleDateFormat;
@@ -58,7 +58,7 @@ public class Watermark extends HudElement {
                     String text = "Virtue 6";
                     float width = BlackOut.FONT.getWidth(text);
                     this.setSize(width + 16.0F, BlackOut.FONT.getHeight() * 3.0F + 6.0F);
-                    RenderUtils.quad(this.stack, 0.0F, 0.0F, width + 16.0F, BlackOut.FONT.getHeight() * 3.0F + 6.0F, new Color(125, 125, 125, 100).getRGB());
+                    Render2DUtils.quad(this.stack, 0.0F, 0.0F, width + 16.0F, BlackOut.FONT.getHeight() * 3.0F + 6.0F, new Color(125, 125, 125, 100).getRGB());
                     BlackOut.FONT.text(this.stack, text, 1.0F, 8.0F, 2.0F, new Color(212, 212, 255, 255), false, false);
                     BlackOut.FONT
                             .text(this.stack, formattedTime2, 1.0F, 8.0F + width / 2.0F, 3.0F + BlackOut.FONT.getHeight(), new Color(230, 230, 230, 255), true, false);
@@ -73,10 +73,10 @@ public class Watermark extends HudElement {
                                     true,
                                     false
                             );
-                    RenderUtils.quad(this.stack, 0.0F, 0.0F, width + 16.0F, 1.0F, Color.BLACK.getRGB());
-                    RenderUtils.quad(this.stack, 0.0F, BlackOut.FONT.getHeight() * 3.0F + 6.0F, width + 16.0F, 1.0F, Color.BLACK.getRGB());
-                    RenderUtils.quad(this.stack, 0.0F, 0.0F, 1.0F, BlackOut.FONT.getHeight() * 3.0F + 6.0F, Color.BLACK.getRGB());
-                    RenderUtils.quad(this.stack, width + 16.0F, 0.0F, 1.0F, BlackOut.FONT.getHeight() * 3.0F + 7.0F, Color.BLACK.getRGB());
+                    Render2DUtils.quad(this.stack, 0.0F, 0.0F, width + 16.0F, 1.0F, Color.BLACK.getRGB());
+                    Render2DUtils.quad(this.stack, 0.0F, BlackOut.FONT.getHeight() * 3.0F + 6.0F, width + 16.0F, 1.0F, Color.BLACK.getRGB());
+                    Render2DUtils.quad(this.stack, 0.0F, 0.0F, 1.0F, BlackOut.FONT.getHeight() * 3.0F + 6.0F, Color.BLACK.getRGB());
+                    Render2DUtils.quad(this.stack, width + 16.0F, 0.0F, 1.0F, BlackOut.FONT.getHeight() * 3.0F + 7.0F, Color.BLACK.getRGB());
                     break;
                 }
                 case Clean: {
@@ -95,7 +95,7 @@ public class Watermark extends HudElement {
                     float width = BlackOut.FONT.getWidth(text) + 4.0F;
                     this.setSize(width, BlackOut.FONT.getHeight());
                     if (this.blur.get()) {
-                        RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, width, BlackOut.FONT.getHeight() + 2.0F, 3.0F, 10));
+                        Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, width, BlackOut.FONT.getHeight() + 2.0F, 3.0F, 10));
                         Renderer.onHUDBlur();
                     }
 
@@ -120,7 +120,7 @@ public class Watermark extends HudElement {
                             + formattedTime;
                     float width = BlackOut.FONT.getWidth(BlackOut.NAME + text);
                     this.setSize(width + 10.0F, BlackOut.FONT.getHeight() + 8.0F);
-                    RenderUtils.drawSkeetBox(this.stack, 0.0F, 0.0F, width + 10.0F, BlackOut.FONT.getHeight() + 8.0F, true);
+                    Render2DUtils.drawSkeetBox(this.stack, 0.0F, 0.0F, width + 10.0F, BlackOut.FONT.getHeight() + 8.0F, true);
                     BlackOut.FONT.text(this.stack, "Black", 1.0F, 4.0F, 5.0F, new Color(255, 255, 255, 255), false, false);
                     BlackOut.FONT.text(this.stack, "out", 1.0F, 4.0F + BlackOut.FONT.getWidth("Black"), 5.0F, new Color(50, 125, 50, 255), false, false);
                     BlackOut.FONT.text(this.stack, text, 1.0F, BlackOut.FONT.getWidth("Blackout ") + 4.0F, 5.0F, new Color(255, 255, 255, 255), false, false);
@@ -159,7 +159,7 @@ public class Watermark extends HudElement {
                     Color color = this.getWave(1, this.textColor.getTextColor().getColor(), this.textColor.getWaveColor().getColor());
                     Color color2 = this.getWave(2, this.textColor.getTextColor().getColor(), this.textColor.getWaveColor().getColor());
                     if (this.blur.get()) {
-                        RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(-3.0F, 1.0F, width, height, 3.0F, 10));
+                        Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(-3.0F, 1.0F, width, height, 3.0F, 10));
                         Renderer.onHUDBlur();
                     }
 
@@ -167,8 +167,8 @@ public class Watermark extends HudElement {
                         this.background.render(this.stack, -3.0F, 1.0F, width, height, 3.0F, 3.0F);
                     }
 
-                    RenderUtils.rounded(this.stack, -2.0F, 1.0F, 0.1F, height, 0.5F, 0.5F, color.getRGB(), color.getRGB());
-                    RenderUtils.rounded(this.stack, width - 4.1F, 1.0F, 0.1F, height, 0.5F, 0.5F, color2.getRGB(), color2.getRGB());
+                    Render2DUtils.rounded(this.stack, -2.0F, 1.0F, 0.1F, height, 0.5F, 0.5F, color.getRGB(), color.getRGB());
+                    Render2DUtils.rounded(this.stack, width - 4.1F, 1.0F, 0.1F, height, 0.5F, 0.5F, color2.getRGB(), color2.getRGB());
                     this.textColor.render(this.stack, BlackOut.NAME, 1.0F, 1.0F, BlackOut.FONT.getHeight() / 2.0F + 0.5F, false, true);
                 }
             }

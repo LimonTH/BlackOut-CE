@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 
 public class BOLogger {
     private static final Logger LOGGER = LogManager.getLogger(BlackOut.NAME);
+
     public static void info(String message) {
         LOGGER.info(message);
     }

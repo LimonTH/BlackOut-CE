@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.CollectionUtils;
 import bodevelopment.client.blackout.util.SelectedComponent;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,7 +66,7 @@ public class ConsoleScreen extends ClickGuiScreen {
 
     @Override
     public void render() {
-        RenderUtils.rounded(this.stack, 0, 0, width, height - 40.0F, 10, 10, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
+        Render2DUtils.rounded(this.stack, 0, 0, width, height - 40.0F, 10, 10, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
 
         this.renderFilterBar();
 
@@ -104,12 +104,12 @@ public class ConsoleScreen extends ClickGuiScreen {
         int count = Math.min(this.suggestions.size(), 8);
         float totalH = lineH * count + 6.0F;
 
-        RenderUtils.rounded(this.stack, sugX, sugY - totalH, this.width - 40.0F, totalH, 5, 3, SUGGESTION_BG, 0);
+        Render2DUtils.rounded(this.stack, sugX, sugY - totalH, this.width - 40.0F, totalH, 5, 3, SUGGESTION_BG, 0);
 
         for (int i = 0; i < count; i++) {
             float y = sugY - totalH + 3.0F + i * lineH;
             if (i == this.suggestionIndex) {
-                RenderUtils.quad(this.stack, sugX + 2, y, this.width - 44.0F, lineH, SUGGESTION_HIGHLIGHT);
+                Render2DUtils.quad(this.stack, sugX + 2, y, this.width - 44.0F, lineH, SUGGESTION_HIGHLIGHT);
             }
             int clr = i == this.suggestionIndex ? Color.WHITE.getRGB() : Color.GRAY.getRGB();
             BlackOut.FONT.text(this.stack, this.suggestions.get(i), 2.0F, sugX + 8.0F, y + 1.0F, clr, false, false);
@@ -345,8 +345,8 @@ public class ConsoleScreen extends ClickGuiScreen {
     }
 
     private void renderBottomBG() {
-        RenderUtils.roundedBottom(this.stack, 0.0F, this.height - 100.0F, this.width, 60.0F, 10.0F, 0.0F, GuiColorUtils.bg2.getRGB(), 0);
-        RenderUtils.line(this.stack, 15.0F, this.height - 100.0F, this.width - 15.0F, this.height - 100.0F, LINE_COLOR);
+        Render2DUtils.rounded(this.stack, 0.0F, this.height - 100.0F, this.width, 60.0F, 10.0F, 0.0F, GuiColorUtils.bg2.getRGB(), 0, Render2DUtils.RoundedSide.BOTTOM);
+        Render2DUtils.line(this.stack, 15.0F, this.height - 100.0F, this.width - 15.0F, this.height - 100.0F, LINE_COLOR);
     }
 
     private void renderBottom() {

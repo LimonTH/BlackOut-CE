@@ -254,7 +254,7 @@ public abstract class MixinEntity {
 
     @Inject(method = "getLookAngle()Lnet/minecraft/world/phys/Vec3;", at = @At("HEAD"), cancellable = true)
     private void onGetRotationVector(CallbackInfoReturnable<Vec3> cir) {
-        if ((Object) this == BlackOut.mc.player && !CompatUtils.isBaritonePathing()) {
+        if ((Object) this == BlackOut.mc.player && !CompatUtils.shouldBypassRotations()) {
             if (SettingUtils.grimMovement()) {
                 cir.setReturnValue(this.calculateViewVector(Managers.ROTATION.nextPitch, Managers.ROTATION.nextYaw));
                 return;

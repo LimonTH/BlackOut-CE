@@ -6,7 +6,7 @@ import bodevelopment.client.blackout.event.events.GameJoinEvent;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.util.DamageUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.Vec3;
 
@@ -18,7 +18,7 @@ public class UtilsManager extends Manager {
 
     @Event
     public void onRenderWorld(RenderEvent.World.Post event) {
-        RenderUtils.onRender();
+        Render2DUtils.onRender();
     }
 
     @Event

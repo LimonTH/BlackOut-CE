@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.module.setting.settings.EnumSetting;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import bodevelopment.client.blackout.util.render.ScissorStack;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
@@ -54,8 +54,8 @@ public class HudEditorSettings {
         float prevMx = this.mx;
         float prevMy = this.my;
 
-        this.mx = mouseX * RenderUtils.getScale();
-        this.my = mouseY * RenderUtils.getScale();
+        this.mx = mouseX * Render2DUtils.getScale();
+        this.my = mouseY * Render2DUtils.getScale();
 
         ClickGui.hoveredDescription = null;
 
@@ -76,7 +76,7 @@ public class HudEditorSettings {
             float maxScroll = Math.max(0, fullLength - this.maxVisibleHeight);
             this.scrollOffset = Mth.clamp(this.scrollOffset, 0, maxScroll);
 
-            RenderUtils.rounded(this.stack, this.x, this.y, 275.0F, this.maxVisibleHeight - 5.0F, 5.0F, 30.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
+            Render2DUtils.rounded(this.stack, this.x, this.y, 275.0F, this.maxVisibleHeight - 5.0F, 5.0F, 30.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
 
             if (this.mx >= this.x && this.mx <= this.x + width && this.my >= this.y && this.my <= this.y + 30.0F) {
                 ClickGui.hoveredDescription = this.openedElement.description;
@@ -155,23 +155,23 @@ public class HudEditorSettings {
 
         switch (GuiSettings.getInstance().settingGroup.get()) {
             case Line:
-                RenderUtils.fadeLine(this.stack, this.x, groupY + 30, this.x + 275.0F, groupY + 30, GuiColorUtils.getSettingCategory(groupY + 30).getRGB());
+                Render2DUtils.fadeLine(this.stack, this.x, groupY + 30, this.x + 275.0F, groupY + 30, GuiColorUtils.getSettingCategory(groupY + 30).getRGB());
                 BlackOut.FONT.text(this.stack, group.name, 1.8F, this.x + 137.5F, groupY + 20, GuiColorUtils.getSettingCategory(groupY + 30), true, true);
                 this.openedY += 40;
                 break;
             case Shadow: {
                 int shadowColor = new Color(0, 0, 0, 80).getRGB();
                 if (!last) {
-                    RenderUtils.topFade(this.stack, this.x - 5.0F, groupY + categoryLength - 10.0F, 285.0F, 20.0F, shadowColor);
+                    Render2DUtils.fade(this.stack, this.x - 5.0F, groupY + categoryLength - 10.0F, 285.0F, 20.0F, shadowColor, Render2DUtils.FadeSide.TOP);
                 }
-                RenderUtils.bottomFade(this.stack, this.x - 5.0F, groupY + 30, 285.0F, 20.0F, shadowColor);
+                Render2DUtils.fade(this.stack, this.x - 5.0F, groupY + 30, 285.0F, 20.0F, shadowColor, Render2DUtils.FadeSide.BOTTOM);
                 BlackOut.FONT.text(this.stack, group.name, 1.8F, this.x + 137.5F, groupY + 15, GuiColorUtils.getSettingCategory(groupY + 30), true, true);
                 this.openedY += 45;
                 break;
             }
             case Quad: {
                 int shadowColor = new Color(0, 0, 0, 80).getRGB();
-                RenderUtils.rounded(this.stack, this.x + 3.0F, groupY + 12, 269.0F, categoryLength, 2.0F, 7.0F, GuiColorUtils.bg2.getRGB(), shadowColor);
+                Render2DUtils.rounded(this.stack, this.x + 3.0F, groupY + 12, 269.0F, categoryLength, 2.0F, 7.0F, GuiColorUtils.bg2.getRGB(), shadowColor);
                 BlackOut.FONT.text(this.stack, group.name, 1.8F, this.x + 137.5F, groupY + 25, GuiColorUtils.getSettingCategory(groupY + 30), true, true);
                 this.openedY += 50;
                 break;
@@ -285,7 +285,7 @@ public class HudEditorSettings {
     }
 
     private void renderBG() {
-        RenderUtils.rounded(this.stack, this.x, this.y, 275.0F, this.length - 5.0F, 5.0F, 30.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
+        Render2DUtils.rounded(this.stack, this.x, this.y, 275.0F, this.length - 5.0F, 5.0F, 30.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
     }
 
     private void renderSettings() {
@@ -395,14 +395,14 @@ public class HudEditorSettings {
         }
 
         this.stack.pushPose();
-        this.stack.translate(0, 0, RenderLayer.GUI);
+        this.stack.translate(0, 0, RenderLayer.GUI_POPUP);
 
         float smoothAlpha = descAlpha * descAlpha;
         int alphaInt = (int) (smoothAlpha * 255);
         int bgColor = ColorUtils.withAlpha(GuiColorUtils.bg2.getRGB(), (int) (smoothAlpha * 235));
         int textColor = ColorUtils.withAlpha(Color.WHITE.getRGB(), alphaInt);
 
-        RenderUtils.rounded(this.stack, rectX, rectY, finalWidth + 12, finalHeight + 10, 5.0F, 5.0F, bgColor, ColorUtils.SHADOW100I);
+        Render2DUtils.rounded(this.stack, rectX, rectY, finalWidth + 12, finalHeight + 10, 5.0F, 5.0F, bgColor, ColorUtils.SHADOW100I);
 
         float currentY = rectY + 3.0F;
         for (String line : lines) {

@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.BackgroundMultiSetting;
 import bodevelopment.client.blackout.module.setting.multisettings.TextColorMultiSetting;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.resources.ResourceKey;
@@ -64,7 +64,7 @@ public class Coordinates extends HudElement {
 
             this.setSize(width, BlackOut.FONT.getHeight());
             if (this.blur.get()) {
-                RenderUtils.drawLoadedBlur(
+                Render2DUtils.drawLoadedBlur(
                         "hudblur",
                         this.stack,
                         renderer -> renderer.rounded(0.0F, this.drawingOther ? -BlackOut.FONT.getHeight() : 0.0F, width, height, this.rounded.get() ? 3.0F : 0.0F, 10)

@@ -12,7 +12,7 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -44,19 +44,19 @@ public class Radar extends HudElement {
         switch (this.style.get()) {
             case Exhibition:
                 this.setSize(42.0F, 42.0F);
-                RenderUtils.drawSkeetBox(this.stack, -2.0F, -2.0F, 46.0F, 46.0F, true);
+                Render2DUtils.drawSkeetBox(this.stack, -2.0F, -2.0F, 46.0F, 46.0F, true);
                 if (this.fadeLines.get()) {
-                    RenderUtils.fadeLine(this.stack, 0.0F, 21.0F, 42.0F, 21.0F, this.lineColor.get().getRGB());
-                    RenderUtils.fadeLine(this.stack, 21.0F, 0.0F, 21.0F, 42.0F, this.lineColor.get().getRGB());
+                    Render2DUtils.fadeLine(this.stack, 0.0F, 21.0F, 42.0F, 21.0F, this.lineColor.get().getRGB());
+                    Render2DUtils.fadeLine(this.stack, 21.0F, 0.0F, 21.0F, 42.0F, this.lineColor.get().getRGB());
                 } else {
-                    RenderUtils.line(this.stack, 1.0F, 21.0F, 41.0F, 21.0F, this.lineColor.get().getRGB());
-                    RenderUtils.line(this.stack, 21.0F, 1.0F, 21.0F, 41.0F, this.lineColor.get().getRGB());
+                    Render2DUtils.line(this.stack, 1.0F, 21.0F, 41.0F, 21.0F, this.lineColor.get().getRGB());
+                    Render2DUtils.line(this.stack, 21.0F, 1.0F, 21.0F, 41.0F, this.lineColor.get().getRGB());
                 }
                 break;
             case Blackout:
                 this.setSize(40.0F, 40.0F);
                 if (this.blur.get()) {
-                    RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 40.0F, 40.0F, 4.0F, 10));
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 40.0F, 40.0F, 4.0F, 10));
                     Renderer.onHUDBlur();
                 }
 
@@ -65,11 +65,11 @@ public class Radar extends HudElement {
                 }
 
                 if (this.fadeLines.get()) {
-                    RenderUtils.fadeLine(this.stack, 0.0F, 20.0F, 40.0F, 20.0F, this.lineColor.get().getRGB());
-                    RenderUtils.fadeLine(this.stack, 20.0F, 0.0F, 20.0F, 40.0F, this.lineColor.get().getRGB());
+                    Render2DUtils.fadeLine(this.stack, 0.0F, 20.0F, 40.0F, 20.0F, this.lineColor.get().getRGB());
+                    Render2DUtils.fadeLine(this.stack, 20.0F, 0.0F, 20.0F, 40.0F, this.lineColor.get().getRGB());
                 } else {
-                    RenderUtils.line(this.stack, 0.0F, 20.0F, 40.0F, 20.0F, this.lineColor.get().getRGB());
-                    RenderUtils.line(this.stack, 20.0F, 0.0F, 20.0F, 40.0F, this.lineColor.get().getRGB());
+                    Render2DUtils.line(this.stack, 0.0F, 20.0F, 40.0F, 20.0F, this.lineColor.get().getRGB());
+                    Render2DUtils.line(this.stack, 20.0F, 0.0F, 20.0F, 40.0F, this.lineColor.get().getRGB());
                 }
         }
 
@@ -100,10 +100,10 @@ public class Radar extends HudElement {
 
     public void renderEnemy(PoseStack stack, float x, float y, boolean friend) {
         if (this.style.get() == Style.Exhibition) {
-            RenderUtils.quad(stack, x - 1.0F, y - 1.0F, 3.0F, 3.0F, Color.BLACK.getRGB());
-            RenderUtils.quad(stack, x, y, 1.0F, 1.0F, friend ? Color.YELLOW.getRGB() : Color.RED.getRGB());
+            Render2DUtils.quad(stack, x - 1.0F, y - 1.0F, 3.0F, 3.0F, Color.BLACK.getRGB());
+            Render2DUtils.quad(stack, x, y, 1.0F, 1.0F, friend ? Color.YELLOW.getRGB() : Color.RED.getRGB());
         } else {
-            RenderUtils.rounded(
+            Render2DUtils.rounded(
                     stack, x, y, 0.0F, 0.0F, 1.0F, 0.0F, friend ? this.friendColor.get().getRGB() : this.enemyColor.get().getRGB(), ColorUtils.SHADOW100I
             );
         }

@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.module.modules.visual.misc.CustomScoreboard
 import bodevelopment.client.blackout.module.modules.visual.misc.HandESP;
 import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -37,7 +37,7 @@ public class MixinGui {
 
         BlurSettings blur = BlurSettings.getInstance();
         if (Renderer.shouldLoad3DBlur()) {
-            RenderUtils.loadBlur("3dblur", blur.get3DBlurStrength());
+            Render2DUtils.loadBlur("3dblur", blur.get3DBlurStrength());
         }
 
         HandESP handESP = HandESP.getInstance();
@@ -47,7 +47,7 @@ public class MixinGui {
         if (shaderESP.enabled) shaderESP.onRenderHud();
 
         if (Renderer.shouldLoadHUDBlur()) {
-            RenderUtils.loadBlur("hudblur", blur.getHUDBlurStrength());
+            Render2DUtils.loadBlur("hudblur", blur.getHUDBlurStrength());
         }
 
         BlackOut.EVENT_BUS.post(RenderEvent.Hud.Pre.get(context, tickDelta));

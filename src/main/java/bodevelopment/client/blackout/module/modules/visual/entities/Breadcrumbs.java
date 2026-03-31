@@ -12,7 +12,7 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.randomstuff.timers.RenderList;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ColorUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import net.minecraft.util.ARGB;
@@ -59,7 +59,7 @@ public class Breadcrumbs extends Module {
             }
 
             this.stack.pushPose();
-            RenderUtils.unGuiScale(this.stack);
+            Render2DUtils.unGuiScale(this.stack);
             this.list.update((pos, time, d) -> this.drawDot(this.stack, pos, d));
             this.stack.popPose();
         }
@@ -78,7 +78,7 @@ public class Breadcrumbs extends Module {
     }
 
     private void drawDot(PoseStack stack, Vec3 vec, double delta) {
-        Vec2 f = RenderUtils.getCoords(vec.x, vec.y, vec.z, true);
+        Vec2 f = Render2DUtils.getCoords(vec.x, vec.y, vec.z, true);
         if (f != null) {
             Color[] colors = this.getColors();
             Color color1 = colors[0];
@@ -87,8 +87,8 @@ public class Breadcrumbs extends Module {
             float prevAlpha = Renderer.getAlpha();
             Renderer.setAlpha(alpha);
             float s = this.size.get().floatValue();
-            RenderUtils.rounded(stack, f.x, f.y, 0.0F, 0.0F, s * 2.0F, s * 2.0F, color2.getRGB(), color2.getRGB());
-            RenderUtils.rounded(stack, f.x, f.y, 0.0F, 0.0F, s, s, color1.getRGB(), color1.getRGB());
+            Render2DUtils.rounded(stack, f.x, f.y, 0.0F, 0.0F, s * 2.0F, s * 2.0F, color2.getRGB(), color2.getRGB());
+            Render2DUtils.rounded(stack, f.x, f.y, 0.0F, 0.0F, s, s, color1.getRGB(), color1.getRGB());
             Renderer.setAlpha(prevAlpha);
         }
     }

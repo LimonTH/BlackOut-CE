@@ -24,6 +24,14 @@ public class RenderState implements AutoCloseable {
     }
 
     /**
+     * Creates a RenderState from an arbitrary cleanup action.
+     * Used by renderers to wrap startRender/endRender in try-with-resources.
+     */
+    public static RenderState of(Runnable cleanup) {
+        return new RenderState(cleanup);
+    }
+
+    /**
      * 2D blended color rendering (HUD quads, lines, circles).
      * Enables: blend, defaultBlendFunc, POSITION_COLOR shader.
      */
@@ -31,7 +39,7 @@ public class RenderState implements AutoCloseable {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(CoreShaders.POSITION_COLOR);
-        return new RenderState(() -> RenderSystem.disableBlend());
+        return new RenderState(RenderSystem::disableBlend);
     }
 
     /**

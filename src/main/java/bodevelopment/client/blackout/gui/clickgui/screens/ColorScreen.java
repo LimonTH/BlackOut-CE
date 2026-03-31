@@ -13,9 +13,8 @@ import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.SelectedComponent;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import bodevelopment.client.blackout.util.render.ScissorStack;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -62,7 +61,7 @@ public class ColorScreen extends ClickGuiScreen {
 
     @Override
     public void render() {
-        RenderUtils.rounded(this.stack, 0, 0, width, height, 10, 10, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
+        Render2DUtils.rounded(this.stack, 0, 0, width, height, 10, 10, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
 
         this.renderSidebarContent();
 
@@ -108,7 +107,7 @@ public class ColorScreen extends ClickGuiScreen {
     }
 
     private void renderSidebarContent() {
-        RenderUtils.leftFade(this.stack, 175.0F, 0.0F, 10.0F, height, FADE_80);
+        Render2DUtils.fade(this.stack, 175.0F, 0.0F, 10.0F, height, FADE_80, Render2DUtils.FadeSide.LEFT);
 
         int bgClr = BG_15;
         String[] labels = {"Custom", "Global 1", "Global 2"};
@@ -117,12 +116,12 @@ public class ColorScreen extends ClickGuiScreen {
             float yPos = 20.0F + (i * 40.0F);
             int currentBg = (this.colorSetting.theme == i) ? BG_40 : bgClr;
 
-            RenderUtils.rounded(this.stack, 10, yPos, 155, 30, 4, 0, currentBg, 0);
+            Render2DUtils.rounded(this.stack, 10, yPos, 155, 30, 4, 0, currentBg, 0);
             BlackOut.FONT.text(this.stack, labels[i], 1.8F, 20, yPos + 15, Color.WHITE, false, true);
 
             int preview = (i == 0) ? colorSetting.actual.getRGB() :
                     (i == 1 ? ThemeSettings.getInstance().getMain() : ThemeSettings.getInstance().getSecond());
-            RenderUtils.rounded(this.stack, 130, yPos + 8, 25, 14, 3, 0, preview, 0);
+            Render2DUtils.rounded(this.stack, 130, yPos + 8, 25, 14, 3, 0, preview, 0);
         }
     }
 
@@ -366,7 +365,7 @@ public class ColorScreen extends ClickGuiScreen {
 
     private void renderHueBar(float x, float y, float w, float h) {
         float hue = this.getHSB(false)[0];
-        RenderUtils.roundedShadow(this.stack, x, y, w, h, 0.0F, 10.0F, SHADOW_100);
+        Render2DUtils.roundedShadow(this.stack, x, y, w, h, 0.0F, 10.0F, SHADOW_100);
         this.renderHueQuad(x, y, w, h);
         float hueX;
         if (this.selecting == 2) {
@@ -376,8 +375,8 @@ public class ColorScreen extends ClickGuiScreen {
         }
 
         this.prevHueX = Mth.clampedLerp(this.prevHueX, hueX, this.frameTime * 20.0F);
-        RenderUtils.roundedShadow(this.stack, this.prevHueX, y, 0.0F, h, 0.0F, 10.0F, SHADOW_100);
-        RenderUtils.quad(
+        Render2DUtils.roundedShadow(this.stack, this.prevHueX, y, 0.0F, h, 0.0F, 10.0F, SHADOW_100);
+        Render2DUtils.quad(
                 this.stack, this.prevHueX - 3.0F, y - 2.0F, 6.0F, h + 4.0F, Color.HSBtoRGB(Mth.inverseLerp(this.prevHueX, 0.0F, 500.0F), 1.0F, 1.0F)
         );
     }
@@ -416,7 +415,7 @@ public class ColorScreen extends ClickGuiScreen {
             }
         };
 
-        RenderUtils.roundedShadow(this.stack, x, y, w, 13.0F, 0.0F, 10.0F, ColorUtils.SHADOW100I);
+        Render2DUtils.roundedShadow(this.stack, x, y, w, 13.0F, 0.0F, 10.0F, ColorUtils.SHADOW100I);
         this.renderQuad(
                 x,
                 y,
@@ -431,8 +430,8 @@ public class ColorScreen extends ClickGuiScreen {
                 right.getBlue() / 255.0F,
                 right.getAlpha() / 255.0F
         );
-        RenderUtils.roundedShadow(this.stack, x + w * this.themeX[id], y - 2.0F, 0.0F, 17.0F, 0.0F, 10.0F, ColorUtils.SHADOW100I);
-        RenderUtils.quad(this.stack, x - 3.0F + w * this.themeX[id], y - 2.0F, 6.0F, 17.0F, ColorUtils.lerpColor(this.themeX[id], left, right).getRGB());
+        Render2DUtils.roundedShadow(this.stack, x + w * this.themeX[id], y - 2.0F, 0.0F, 17.0F, 0.0F, 10.0F, ColorUtils.SHADOW100I);
+        Render2DUtils.quad(this.stack, x - 3.0F + w * this.themeX[id], y - 2.0F, 6.0F, 17.0F, ColorUtils.lerpColor(this.themeX[id], left, right).getRGB());
         BlackOut.FONT.text(this.stack, name, 1.5F, x, y - 10.0F, Color.WHITE, false, true);
         ColorField field = this.themeFields[id];
         if (!SelectedComponent.is(field.selectedId)) {
@@ -504,7 +503,7 @@ public class ColorScreen extends ClickGuiScreen {
             }
         }
 
-        RenderUtils.roundedShadow(this.stack, x, y, w, 13.0F, 0.0F, 10.0F, SHADOW_100);
+        Render2DUtils.roundedShadow(this.stack, x, y, w, 13.0F, 0.0F, 10.0F, SHADOW_100);
         this.renderQuad(
                 x,
                 y,
@@ -519,8 +518,8 @@ public class ColorScreen extends ClickGuiScreen {
                 right.blue / 255.0F,
                 right.alpha / 255.0F
         );
-        RenderUtils.roundedShadow(this.stack, x + w * this.colorX[id], y - 2.0F, 0.0F, 17.0F, 0.0F, 10.0F, SHADOW_100);
-        RenderUtils.quad(this.stack, x - 3.0F + w * this.colorX[id], y - 2.0F, 6.0F, 17.0F, left.lerp(this.colorX[id], right).getColor().getRGB());
+        Render2DUtils.roundedShadow(this.stack, x + w * this.colorX[id], y - 2.0F, 0.0F, 17.0F, 0.0F, 10.0F, SHADOW_100);
+        Render2DUtils.quad(this.stack, x - 3.0F + w * this.colorX[id], y - 2.0F, 6.0F, 17.0F, left.lerp(this.colorX[id], right).getColor().getRGB());
         BlackOut.FONT.text(this.stack, name, 1.5F, x, y - 10.0F, Color.WHITE, false, true);
         ColorField field = this.textFields[id];
         if (!SelectedComponent.is(field.selectedId)) {
@@ -621,7 +620,7 @@ public class ColorScreen extends ClickGuiScreen {
 
         int displayColor = ColorUtils.withAlpha(this.colorSetting.get().getRGB(), 255);
 
-        RenderUtils.rounded(
+        Render2DUtils.rounded(
                 this.stack, this.prevCircleX, this.prevCircleY, 0.0F, 0.0F, 10.0F, 4.0F, displayColor, ColorUtils.SHADOW100I
         );
     }

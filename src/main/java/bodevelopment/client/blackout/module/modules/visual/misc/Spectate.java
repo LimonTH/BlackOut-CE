@@ -12,7 +12,7 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.ArrayList;
@@ -48,7 +48,7 @@ public class Spectate extends Module {
     public void onRender(RenderEvent.Hud.Pre event) {
         if (PlayerUtils.isInGame()) {
             this.stack.pushPose();
-            RenderUtils.unGuiScale(this.stack);
+            Render2DUtils.unGuiScale(this.stack);
             if (this.target instanceof AbstractClientPlayer) {
                 BlackOut.FONT
                         .text(

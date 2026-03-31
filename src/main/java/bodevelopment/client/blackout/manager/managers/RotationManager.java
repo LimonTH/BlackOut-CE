@@ -132,12 +132,12 @@ public class RotationManager extends Manager {
     }
 
     public float getNextYaw() {
-        if (CompatUtils.isBaritonePathing()) return BlackOut.mc.player.getYRot();
+        if (CompatUtils.shouldBypassRotations()) return BlackOut.mc.player.getYRot();
         return this.rotated() ? this.nextYaw : this.prevYaw;
     }
 
     public float getNextPitch() {
-        if (CompatUtils.isBaritonePathing()) return BlackOut.mc.player.getXRot();
+        if (CompatUtils.shouldBypassRotations()) return BlackOut.mc.player.getXRot();
         return this.rotated() ? this.nextPitch : this.prevPitch;
     }
 
@@ -202,17 +202,17 @@ public class RotationManager extends Manager {
     }
 
     public boolean rotated() {
-        if (CompatUtils.isBaritonePathing()) return false;
+        if (CompatUtils.shouldBypassRotations()) return false;
         return !SharedFeatures.shouldPauseRotations() && (this.nextYaw != this.prevYaw || this.nextPitch != this.prevPitch);
     }
 
     public boolean yawActive() {
-        if (CompatUtils.isBaritonePathing()) return false;
+        if (CompatUtils.shouldBypassRotations()) return false;
         return Managers.ROTATION.rotatingYaw != RotatePhase.Inactive || SharedFeatures.shouldPauseRotations() || PacketFly.getInstance().enabled;
     }
 
     public boolean pitchActive() {
-        if (CompatUtils.isBaritonePathing()) return false;
+        if (CompatUtils.shouldBypassRotations()) return false;
         return Managers.ROTATION.rotatingPitch != RotatePhase.Inactive
                 || SharedFeatures.shouldPauseRotations()
                 || PacketFly.getInstance().enabled;

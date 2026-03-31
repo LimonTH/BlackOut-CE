@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.rendering.renderer;
 
 import bodevelopment.client.blackout.rendering.shader.Shaders;
+import bodevelopment.client.blackout.util.render.RenderState;
 import net.minecraft.util.ARGB;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -16,21 +17,21 @@ public class ColorRenderer extends Renderer {
     }
 
     public static void renderRounded(PoseStack stack, float x, float y, float width, float height, float rad, int steps, float r, float g, float b, float a) {
-        INSTANCE.startRender(stack, VertexFormat.Mode.TRIANGLE_FAN);
-        INSTANCE.rounded(x, y, width, height, rad, steps, r, g, b, a);
-        INSTANCE.endRender();
+        try (RenderState state = INSTANCE.begin(stack, VertexFormat.Mode.TRIANGLE_FAN)) {
+            INSTANCE.rounded(x, y, width, height, rad, steps, r, g, b, a);
+        }
     }
 
     public static void renderFitRounded(PoseStack stack, float x, float y, float width, float height, float rad, int steps, float r, float g, float b, float a) {
-        INSTANCE.startRender(stack, VertexFormat.Mode.TRIANGLE_FAN);
-        INSTANCE.fitRounded(x, y, width, height, rad, steps, r, g, b, a);
-        INSTANCE.endRender();
+        try (RenderState state = INSTANCE.begin(stack, VertexFormat.Mode.TRIANGLE_FAN)) {
+            INSTANCE.fitRounded(x, y, width, height, rad, steps, r, g, b, a);
+        }
     }
 
     public static void renderCircle(PoseStack stack, float x, float y, float rad, int steps, float r, float g, float b, float a) {
-        INSTANCE.startRender(stack, VertexFormat.Mode.TRIANGLE_FAN);
-        INSTANCE.circle(x, y, 0.0F, r, g, b, a, rad, steps);
-        INSTANCE.endRender();
+        try (RenderState state = INSTANCE.begin(stack, VertexFormat.Mode.TRIANGLE_FAN)) {
+            INSTANCE.circle(x, y, 0.0F, r, g, b, a, rad, steps);
+        }
     }
 
     public void quad(PoseStack stack, float x, float y, float w, float h, int color) {
@@ -50,12 +51,12 @@ public class ColorRenderer extends Renderer {
     }
 
     public void quad(PoseStack stack, float x, float y, float z, float w, float h, float r, float g, float b, float a) {
-        this.startRender(stack, VertexFormat.Mode.QUADS);
-        this.vertex(x, y, z, r, g, b, a);
-        this.vertex(x, y + h, z, r, g, b, a);
-        this.vertex(x + w, y + h, z, r, g, b, a);
-        this.vertex(x + w, y, z, r, g, b, a);
-        this.endRender();
+        try (RenderState state = this.begin(stack, VertexFormat.Mode.QUADS)) {
+            this.vertex(x, y, z, r, g, b, a);
+            this.vertex(x, y + h, z, r, g, b, a);
+            this.vertex(x + w, y + h, z, r, g, b, a);
+            this.vertex(x + w, y, z, r, g, b, a);
+        }
     }
 
     public void quadOutlineShape(float x, float y, float z, float w, float h, float r, float g, float b, float a) {
@@ -66,22 +67,21 @@ public class ColorRenderer extends Renderer {
         this.vertex(x, y, z, r, g, b, a);
     }
 
-    public void startRender(PoseStack stack, VertexFormat.Mode drawMode) {
-        this.startRender(stack, drawMode, DefaultVertexFormat.POSITION_COLOR);
+    public RenderState begin(PoseStack stack, VertexFormat.Mode drawMode) {
+        return this.begin(stack, drawMode, DefaultVertexFormat.POSITION_COLOR);
     }
 
-    public void startLines(PoseStack stack) {
-        this.startRender(stack, VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
+    public RenderState beginLines(PoseStack stack) {
+        return this.begin(stack, VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
     }
 
-    private void startRender(PoseStack stack, VertexFormat.Mode drawMode, VertexFormat format) {
+    private RenderState begin(PoseStack stack, VertexFormat.Mode drawMode, VertexFormat format) {
         this.renderMatrix = stack.last().pose();
         RenderSystem.enableBlend();
         this.renderBuffer = Tesselator.getInstance().begin(drawMode, format);
-    }
-
-    public void endRender() {
-        Shaders.color.render(this.renderBuffer, null);
-        RenderSystem.disableBlend();
+        return RenderState.of(() -> {
+            Shaders.color.render(this.renderBuffer, null);
+            RenderSystem.disableBlend();
+        });
     }
 }

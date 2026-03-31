@@ -16,7 +16,7 @@ import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.BOLogger;
 import bodevelopment.client.blackout.util.ClassUtils;
 import bodevelopment.client.blackout.util.SharedFeatures;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.*;
@@ -135,7 +135,7 @@ public class HUDManager extends Manager {
     public void start(PoseStack stack) {
         stack.pushPose();
         float s = 1000.0F / BlackOut.mc.getMainRenderTarget().viewWidth;
-        RenderUtils.unGuiScale(stack);
+        Render2DUtils.unGuiScale(stack);
         s = 1.0F / s;
         stack.scale(s, s, s);
     }

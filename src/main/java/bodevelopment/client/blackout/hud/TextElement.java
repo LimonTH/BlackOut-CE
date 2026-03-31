@@ -6,7 +6,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.BackgroundMultiSetting;
 import bodevelopment.client.blackout.module.setting.multisettings.TextColorMultiSetting;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 public class TextElement extends HudElement {
@@ -30,7 +30,7 @@ public class TextElement extends HudElement {
         float width = BlackOut.FONT.getWidth(text + " " + info);
         this.setSize(width, BlackOut.FONT.getHeight());
         if (this.blur.get()) {
-            RenderUtils.drawLoadedBlur(
+            Render2DUtils.drawLoadedBlur(
                     "hudblur", stack, renderer -> renderer.rounded(0.0F, 0.0F, width, BlackOut.FONT.getHeight(), this.rounded.get() ? 3.0F : 0.0F, 10)
             );
             Renderer.onHUDBlur();

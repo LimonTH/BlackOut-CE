@@ -37,8 +37,6 @@ public abstract class MixinConnection {
     private PacketFlow receiving;
     @Shadow
     private Channel channel;
-    @Shadow
-    private int sentPackets;
     @Unique
     private volatile Packet<?> currentPacket = null;
     @Unique
@@ -88,22 +86,12 @@ public abstract class MixinConnection {
     @Inject(method = "sendPacket", at = @At("HEAD"), cancellable = true)
     private void sendPing(Packet<?> packet, PacketSendListener callbacks, boolean flush, CallbackInfo ci) {
         if (this.channel == null || !this.channel.isOpen()) return;
-        this.sentPackets++;
 
-        boolean shouldDelay = Managers.PING.shouldDelay(packet);
-
-        if (this.channel.eventLoop().inEventLoop()) {
-            if (shouldDelay) {
-                Managers.PING.addSend(() -> this.doSendPacket(packet, callbacks, flush));
-                ci.cancel();
-            }
-        } else {
-            if (shouldDelay) {
-                Managers.PING.addSend(() -> this.channel.eventLoop().execute(() ->
-                        this.doSendPacket(packet, callbacks, flush)
-                ));
-                ci.cancel();
-            }
+        if (Managers.PING.shouldDelay(packet)) {
+            Managers.PING.addSend(() -> this.channel.eventLoop().execute(() ->
+                    this.doSendPacket(packet, callbacks, flush)
+            ));
+            ci.cancel();
         }
     }
 

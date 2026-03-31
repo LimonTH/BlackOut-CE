@@ -24,7 +24,7 @@ public class MixinLevelRenderer {
             CallbackInfo ci
     ) {
         Ambience ambience = Ambience.getInstance();
-        if (ambience.enabled && ambience.thickFog.get() && !ambience.removeFog.get()) {
+        if (ambience.enabled && ambience.modifyFog.get() && ambience.thickFog.get()) {
             ci.cancel();
         }
     }

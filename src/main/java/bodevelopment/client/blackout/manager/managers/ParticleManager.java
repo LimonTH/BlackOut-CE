@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.util.BlockUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.util.ARGB;
@@ -135,7 +135,7 @@ public class ParticleManager extends Manager {
             stack.scale(0.02F, 0.02F, 0.02F);
             stack.mulPose(BlackOut.mc.gameRenderer.getMainCamera().rotation());
             stack.pushPose();
-            RenderUtils.rounded(
+            Render2DUtils.rounded(
                     stack, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 5.0F, ParticleManager.alphaMulti(this.color, alpha), ParticleManager.alphaMulti(this.shadowColor, alpha)
             );
             stack.popPose();
@@ -177,7 +177,7 @@ public class ParticleManager extends Manager {
             stack.scale(0.02F, 0.02F, 0.02F);
             stack.mulPose(BlackOut.mc.gameRenderer.getMainCamera().rotation());
             stack.pushPose();
-            RenderUtils.rounded(
+            Render2DUtils.rounded(
                     stack, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 5.0F, ParticleManager.alphaMulti(this.color, alpha), ParticleManager.alphaMulti(this.shadowColor, alpha)
             );
             stack.popPose();

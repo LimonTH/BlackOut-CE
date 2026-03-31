@@ -16,7 +16,7 @@ import bodevelopment.client.blackout.rendering.framebuffer.FrameBuffer;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.render.AnimUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import org.apache.commons.lang3.mutable.MutableFloat;
 
 import java.awt.*;
@@ -83,7 +83,7 @@ public class Arraylist extends HudElement {
                             this.info = this.getInfo(module.getInfo());
                             float width = BlackOut.FONT.getWidth(text + this.info);
                             if (this.rounded.get()) {
-                                RenderUtils.rounded(
+                                Render2DUtils.rounded(
                                         this.stack,
                                         -BlackOut.FONT.getWidth(text) - 2.0F - BlackOut.FONT.getWidth(this.info),
                                         1.5F,
@@ -95,7 +95,7 @@ public class Arraylist extends HudElement {
                                         Color.WHITE.getRGB()
                                 );
                             } else {
-                                RenderUtils.quad(
+                                Render2DUtils.quad(
                                         this.stack,
                                         -BlackOut.FONT.getWidth(text) - 4.0F - BlackOut.FONT.getWidth(this.info),
                                         0.0F,
@@ -109,14 +109,14 @@ public class Arraylist extends HudElement {
                 buffer.unbind();
                 bloomBuffer.clear(0.0F, 0.0F, 0.0F, 1.0F);
                 bloomBuffer.bind(true);
-                RenderUtils.renderBufferWith(buffer, Shaders.screentex, new ShaderSetup(setup -> setup.set("alpha", 1.0F)));
+                Render2DUtils.renderBufferWith(buffer, Shaders.screentex, new ShaderSetup(setup -> setup.set("alpha", 1.0F)));
                 bloomBuffer.unbind();
-                RenderUtils.blurBufferBW("arraylist-bloom", this.bloomIntensity.get() + 1);
+                Render2DUtils.blurBufferBW("arraylist-bloom", this.bloomIntensity.get() + 1);
                 bloomBuffer.bind(true);
                 Renderer.setTexture(buffer.getTexture(), 1);
-                RenderUtils.renderBufferWith(bloomBuffer, Shaders.subtract, new ShaderSetup(setup -> setup.set("uTexture1", 1)));
+                Render2DUtils.renderBufferWith(bloomBuffer, Shaders.subtract, new ShaderSetup(setup -> setup.set("uTexture1", 1)));
                 bloomBuffer.unbind();
-                RenderUtils.renderBufferWith(bloomBuffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.bloomColor.get().getRGB())));
+                Render2DUtils.renderBufferWith(bloomBuffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.bloomColor.get().getRGB())));
             }
 
             if (this.rounded.get()) {
@@ -129,7 +129,7 @@ public class Arraylist extends HudElement {
                             String text = module.getDisplayName();
                             this.info = this.getInfo(module.getInfo());
                             float width = BlackOut.FONT.getWidth(text + this.info) - 2.0F;
-                            RenderUtils.rounded(
+                            Render2DUtils.rounded(
                                     this.stack,
                                     -BlackOut.FONT.getWidth(text) - 2.0F - BlackOut.FONT.getWidth(this.info),
                                     1.5F,
@@ -144,12 +144,12 @@ public class Arraylist extends HudElement {
                 );
                 buffer.unbind();
                 if (this.useBlur.get()) {
-                    RenderUtils.renderBufferOverlay(buffer, Managers.FRAME_BUFFER.getBuffer("hudblur").getTexture());
+                    Render2DUtils.renderBufferOverlay(buffer, Managers.FRAME_BUFFER.getBuffer("hudblur").getTexture());
                     Renderer.onHUDBlur();
                 }
 
                 if (this.bg.get()) {
-                    RenderUtils.renderBufferWith(buffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.bgColor.get().getRGB())));
+                    Render2DUtils.renderBufferWith(buffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.bgColor.get().getRGB())));
                 }
             }
 
@@ -166,11 +166,11 @@ public class Arraylist extends HudElement {
                     this.info = this.getInfo(module.getInfo());
                     float width = BlackOut.FONT.getWidth(text + this.info) + 2.0F;
                     if (this.sideBar.get() && !this.rounded.get()) {
-                        RenderUtils.quad(this.stack, -2.0F, 0.0F, 1.0F, BlackOut.FONT.getHeight() + 2.0F, this.textColor.getTextColor().getRGB());
+                        Render2DUtils.quad(this.stack, -2.0F, 0.0F, 1.0F, BlackOut.FONT.getHeight() + 2.0F, this.textColor.getTextColor().getRGB());
                     }
 
                     if (this.useBlur.get() && !this.rounded.get()) {
-                        RenderUtils.drawLoadedBlur(
+                        Render2DUtils.drawLoadedBlur(
                                 "hudblur",
                                 this.stack,
                                 renderer -> renderer.rounded(
@@ -181,7 +181,7 @@ public class Arraylist extends HudElement {
                     }
 
                     if (this.bg.get() && !this.rounded.get()) {
-                        RenderUtils.quad(
+                        Render2DUtils.quad(
                                 this.stack,
                                 -BlackOut.FONT.getWidth(text) - (4.0F + BlackOut.FONT.getWidth(this.info)),
                                 0.0F,

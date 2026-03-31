@@ -5,7 +5,7 @@ import bodevelopment.client.blackout.interfaces.functional.SingleOut;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 public class RoundedColorMultiSetting {
@@ -97,10 +97,10 @@ public class RoundedColorMultiSetting {
     public void render(PoseStack stack, float x, float y, float w, float h, float r, float sr) {
         switch (this.mode.get()) {
             case Static:
-                RenderUtils.rounded(stack, x, y, w, h, r, sr, this.roundedColor.get().getRGB(), this.shadowColor.get().getRGB());
+                Render2DUtils.rounded(stack, x, y, w, h, r, sr, this.roundedColor.get().getRGB(), this.shadowColor.get().getRGB());
                 break;
             case Wave:
-                RenderUtils.fadeRounded(
+                Render2DUtils.fadeRounded(
                         stack,
                         x,
                         y,
@@ -115,7 +115,7 @@ public class RoundedColorMultiSetting {
                 );
                 break;
             case Rainbow:
-                RenderUtils.rainbowRounded(
+                Render2DUtils.rainbowRounded(
                         stack, x, y, w, h, r, sr, this.saturation.get().floatValue(), this.frequency.get().floatValue() / 5.0F, this.speed.get().floatValue() / 10.0F
                 );
         }

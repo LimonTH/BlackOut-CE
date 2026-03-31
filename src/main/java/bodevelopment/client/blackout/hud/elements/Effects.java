@@ -9,7 +9,7 @@ import bodevelopment.client.blackout.module.setting.multisettings.BackgroundMult
 import bodevelopment.client.blackout.module.setting.multisettings.TextColorMultiSetting;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -81,7 +81,7 @@ public class Effects extends HudElement {
                 float height = BlackOut.FONT.getHeight() * 2.0F + 1.0F;
                 float rad = 3.0F;
                 if (this.blur.get()) {
-                    RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(this.side.get().getSide(width), 0.0F, width, height, rad, 10));
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(this.side.get().getSide(width), 0.0F, width, height, rad, 10));
                     Renderer.onHUDBlur();
                 }
 

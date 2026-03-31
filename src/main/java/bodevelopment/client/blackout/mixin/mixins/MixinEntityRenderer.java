@@ -4,7 +4,7 @@ import bodevelopment.client.blackout.module.modules.visual.entities.Nametags;
 import bodevelopment.client.blackout.module.modules.visual.entities.ShaderESP;
 import bodevelopment.client.blackout.module.modules.visual.misc.XRay;
 import bodevelopment.client.blackout.module.modules.visual.world.Brightness;
-import bodevelopment.client.blackout.util.render.RenderEntityCapture;
+import bodevelopment.client.blackout.util.render.misc.RenderEntityCapture;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderer;

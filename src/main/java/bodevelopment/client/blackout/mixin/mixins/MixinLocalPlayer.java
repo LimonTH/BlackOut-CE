@@ -73,7 +73,7 @@ public abstract class MixinLocalPlayer {
 
     @Inject(method = "sendPosition", at = @At("TAIL"))
     private void sendPacketsTail(CallbackInfo ci) {
-        if (!CompatUtils.isBaritonePathing()
+        if (!CompatUtils.shouldBypassRotations()
                 && !sent
                 && Managers.ROTATION.rotated()
                 && (Managers.ROTATION.rotatingYaw != RotationManager.RotatePhase.Inactive || Managers.ROTATION.rotatingPitch != RotationManager.RotatePhase.Inactive)) {

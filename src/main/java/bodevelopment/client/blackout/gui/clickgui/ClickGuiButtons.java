@@ -12,7 +12,7 @@ import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import org.lwjgl.glfw.GLFW;
 
@@ -39,9 +39,9 @@ public class ClickGuiButtons {
     }
 
     public void render(int mouseX, int mouseY, long openTime, float closeDelta) {
-        PoseStack stack = RenderUtils.emptyStack;
+        PoseStack stack = Render2DUtils.emptyStack;
         stack.pushPose();
-        RenderUtils.unGuiScale(stack);
+        Render2DUtils.unGuiScale(stack);
 
         double screenWidth = BlackOut.mc.getWindow().getScreenWidth();
         double screenHeight = BlackOut.mc.getWindow().getScreenHeight();
@@ -102,7 +102,7 @@ public class ClickGuiButtons {
         float offset = anim * -50.0F + 50.0F;
         float half = 35.0F;
 
-        RenderUtils.rounded(stack, half, half + offset, 0.0F, 0.0F, half, 15.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
+        Render2DUtils.rounded(stack, half, half + offset, 0.0F, 0.0F, half, 15.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
 
         float ratio = icon.getWidth() / 36.0F;
         float width = icon.getWidth() / ratio;

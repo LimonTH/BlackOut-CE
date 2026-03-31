@@ -11,9 +11,8 @@ import bodevelopment.client.blackout.util.ClassUtils;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import bodevelopment.client.blackout.util.render.ScissorStack;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
@@ -55,8 +54,8 @@ public class HudElementList {
 
     public void render(PoseStack stack, float frameTime, float mouseX, float mouseY) {
         this.frameTime = frameTime;
-        this.mx = mouseX * RenderUtils.getScale();
-        this.my = mouseY * RenderUtils.getScale();
+        this.mx = mouseX * Render2DUtils.getScale();
+        this.my = mouseY * Render2DUtils.getScale();
         this.stack = stack;
         this.scroll.update(frameTime);
         this.updateProgress();
@@ -139,10 +138,10 @@ public class HudElementList {
         float width = this.getWidth();
         float height = this.getHeight();
         this.stack.translate((BlackOut.mc.getWindow().getScreenWidth() - width) / 2.0F, BlackOut.mc.getWindow().getScreenHeight() - height, 0.0F);
-        RenderUtils.rounded(this.stack, 0.0F, 0.0F, width, height, 10.0F, 30.0F, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
-        RenderUtils.roundedTop(this.stack, 0.0F, 0.0F, width, 40.0F, 10.0F, 0.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
+        Render2DUtils.rounded(this.stack, 0.0F, 0.0F, width, height, 10.0F, 30.0F, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
+        Render2DUtils.rounded(this.stack, 0.0F, 0.0F, width, 40.0F, 10.0F, 0.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I, Render2DUtils.RoundedSide.TOP);
         this.renderListContent();
-        RenderUtils.bottomFade(this.stack, -10.0F, 40.0F, width + 20.0F, 10.0F, ColorUtils.SHADOW100I);
+        Render2DUtils.fade(this.stack, -10.0F, 40.0F, width + 20.0F, 10.0F, ColorUtils.SHADOW100I, Render2DUtils.FadeSide.BOTTOM);
         this.stack.popPose();
     }
 
@@ -176,7 +175,7 @@ public class HudElementList {
                 boolean isHovered = this.insideBounds(listX + 7.5F, y + listY, this.width - 15.0F, 35.0F);
                 entry.updateProgress(this.frameTime * 10.0F, isHovered);
 
-                RenderUtils.rounded(this.stack, 7.5F, y, this.width - 15.0F, 35.0F, 5.0F, 8.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
+                Render2DUtils.rounded(this.stack, 7.5F, y, this.width - 15.0F, 35.0F, 5.0F, 8.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
 
                 BlackOut.FONT.text(this.stack, entry.displayName, 2.0F, this.width / 2.0F, y + 17.5F, this.getTextColor(entry), true, true);
                 y += 60.0F;

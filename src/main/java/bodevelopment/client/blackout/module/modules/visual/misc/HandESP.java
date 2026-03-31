@@ -11,8 +11,8 @@ import bodevelopment.client.blackout.rendering.framebuffer.FrameBuffer;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.ColorUtils;
-import bodevelopment.client.blackout.util.render.FramebufferMultiBufferSource;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.misc.FramebufferMultiBufferSource;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 
 import java.awt.*;
 
@@ -54,29 +54,29 @@ public class HandESP extends Module {
 
         convertBuffer.clear(0.0F, 0.0F, 0.0F, 0.0F);
         convertBuffer.bind(true);
-        RenderUtils.renderBufferWith(buffer, Shaders.convert, new ShaderSetup());
+        Render2DUtils.renderBufferWith(buffer, Shaders.convert, new ShaderSetup());
         convertBuffer.unbind();
 
-        RenderUtils.renderBufferWith(convertBuffer, Shaders.shaderbloom,
+        Render2DUtils.renderBufferWith(convertBuffer, Shaders.shaderbloom,
                 new ShaderSetup(setup -> setup.color("clr", this.getColor(true))));
 
         if (this.dist.get() > 0) {
             bloomBuffer.clear(0.0F, 0.0F, 0.0F, 1.0F);
             bloomBuffer.bind(true);
-            RenderUtils.renderBufferWith(convertBuffer, Shaders.screentex, new ShaderSetup(setup -> setup.set("alpha", 1.0F)));
+            Render2DUtils.renderBufferWith(convertBuffer, Shaders.screentex, new ShaderSetup(setup -> setup.set("alpha", 1.0F)));
             bloomBuffer.unbind();
 
-            RenderUtils.blurBufferBW("handESP-bloom", this.dist.get() + 1);
+            Render2DUtils.blurBufferBW("handESP-bloom", this.dist.get() + 1);
 
             bloomBuffer.bind(true);
             Renderer.setTexture(convertBuffer.getTexture(), 1);
-            RenderUtils.renderBufferWith(bloomBuffer, Shaders.subtract, new ShaderSetup(setup -> {
+            Render2DUtils.renderBufferWith(bloomBuffer, Shaders.subtract, new ShaderSetup(setup -> {
                 setup.set("uTexture0", 0);
                 setup.set("uTexture1", 1);
             }));
             bloomBuffer.unbind();
 
-            RenderUtils.renderBufferWith(bloomBuffer, Shaders.shaderbloom,
+            Render2DUtils.renderBufferWith(bloomBuffer, Shaders.shaderbloom,
                     new ShaderSetup(setup -> setup.color("clr", this.getColor(false))));
         }
         buffer.clear(0, 0, 0, 0);

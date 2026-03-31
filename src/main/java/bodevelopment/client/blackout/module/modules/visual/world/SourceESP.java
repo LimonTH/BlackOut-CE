@@ -17,7 +17,7 @@ import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -56,21 +56,21 @@ public class SourceESP extends Module {
     public void onRenderHud(RenderEvent.Hud.Pre event) {
         FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("sourceESP");
         FrameBuffer bloomBuffer = Managers.FRAME_BUFFER.getBuffer("sourceESP-bloom");
-        RenderUtils.renderBufferWith(buffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.fillColor.get().getRGB())));
+        Render2DUtils.renderBufferWith(buffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.fillColor.get().getRGB())));
         if (this.bloom.get() > 0) {
             bloomBuffer.clear(0.0F, 0.0F, 0.0F, 1.0F);
             bloomBuffer.bind(true);
-            RenderUtils.renderBufferWith(buffer, Shaders.screentex, new ShaderSetup(setup -> setup.set("alpha", 1.0F)));
+            Render2DUtils.renderBufferWith(buffer, Shaders.screentex, new ShaderSetup(setup -> setup.set("alpha", 1.0F)));
             bloomBuffer.unbind();
-            RenderUtils.blurBufferBW("sourceESP-bloom", this.bloom.get() + 1);
+            Render2DUtils.blurBufferBW("sourceESP-bloom", this.bloom.get() + 1);
             bloomBuffer.bind(true);
             Renderer.setTexture(buffer.getTexture(), 1);
-            RenderUtils.renderBufferWith(bloomBuffer, Shaders.subtract, new ShaderSetup(setup -> {
+            Render2DUtils.renderBufferWith(bloomBuffer, Shaders.subtract, new ShaderSetup(setup -> {
                 setup.set("uTexture0", 0);
                 setup.set("uTexture1", 1);
             }));
             bloomBuffer.unbind();
-            RenderUtils.renderBufferWith(bloomBuffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.bloomColor.get().getRGB())));
+            Render2DUtils.renderBufferWith(bloomBuffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.bloomColor.get().getRGB())));
         }
     }
 

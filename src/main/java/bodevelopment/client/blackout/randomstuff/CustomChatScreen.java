@@ -3,7 +3,7 @@ package bodevelopment.client.blackout.randomstuff;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.module.modules.visual.misc.CustomChat;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.ChatScreen;
@@ -35,10 +35,10 @@ public class CustomChatScreen extends ChatScreen {
         float width = textWidth > 250.0F ? textWidth + 10.0F : 250.0F;
 
         this.stack.pushPose();
-        RenderUtils.unGuiScale(this.stack);
+        Render2DUtils.unGuiScale(this.stack);
 
         if (customChat.blur.get()) {
-            RenderUtils.drawLoadedBlur(
+            Render2DUtils.drawLoadedBlur(
                     "hudblur",
                     this.stack,
                     renderer -> renderer.rounded(10.0F, BlackOut.mc.getWindow().getScreenHeight() - (fontHeight + 16.0F), width, fontHeight + 4.0F, 6.0F, 10)
@@ -47,7 +47,7 @@ public class CustomChatScreen extends ChatScreen {
         }
 
         if (customChat.background.get()) {
-            RenderUtils.rounded(
+            Render2DUtils.rounded(
                     this.stack,
                     10.0F,
                     BlackOut.mc.getWindow().getScreenHeight() - (fontHeight + 16.0F),

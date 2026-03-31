@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.gui.clickgui;
 
 import bodevelopment.client.blackout.BlackOut;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 
@@ -40,7 +40,7 @@ public class Component {
     }
 
     public void rounded(float x, float y, float width, float height, float radius, float shadowRad, Color color, Color shadow) {
-        RenderUtils.rounded(this.stack, x, y, width, height, radius, shadowRad, color.getRGB(), shadow.getRGB());
+        Render2DUtils.rounded(this.stack, x, y, width, height, radius, shadowRad, color.getRGB(), shadow.getRGB());
     }
 
     public void text(String string, float scale, float x, float y, boolean xCenter, boolean yCenter, Color color) {
@@ -48,14 +48,14 @@ public class Component {
     }
 
     public void line(float x1, float y1, float x2, float y2, Color color) {
-        RenderUtils.line(this.stack, x1, y1, x2, y2, color.getRGB());
+        Render2DUtils.line(this.stack, x1, y1, x2, y2, color.getRGB());
     }
 
     public void quad(float x, float y, float w, float h, Color color) {
-        RenderUtils.quad(this.stack, x, y, w, h, color.getRGB());
+        Render2DUtils.quad(this.stack, x, y, w, h, color.getRGB());
     }
 
     public void fadeLine(float x1, float y1, float x2, float y2, Color color) {
-        RenderUtils.fadeLine(this.stack, x1, y1, x2, y2, color.getRGB());
+        Render2DUtils.fadeLine(this.stack, x1, y1, x2, y2, color.getRGB());
     }
 }

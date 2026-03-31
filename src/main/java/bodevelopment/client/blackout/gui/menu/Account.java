@@ -3,7 +3,7 @@ package bodevelopment.client.blackout.gui.menu;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.interfaces.mixin.IMinecraft;
 import bodevelopment.client.blackout.manager.Managers;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
@@ -119,21 +119,21 @@ public class Account {
         String displayName = (this.name == null) ? "Unknown" : this.name;
         Color nameColor = this.equals(Managers.ALT.selected) ? new Color(130, 255, 130) : Color.WHITE;
 
-        RenderUtils.drawLoadedBlur("title", stack, renderer ->
+        Render2DUtils.drawLoadedBlur("title", stack, renderer ->
                 renderer.rounded(0.0F, 0.0F, WIDTH, HEIGHT, 25.0F, 10, 1.0F, 1.0F, 1.0F, 1.0F));
 
         if (this.progress > 0.0F) {
             int alpha = (int) (this.progress * 180);
-            RenderUtils.rounded(stack, -1.0F, -1.0F, WIDTH + 2.0F, HEIGHT + 2.0F, 26.0F, 2.0F,
+            Render2DUtils.rounded(stack, -1.0F, -1.0F, WIDTH + 2.0F, HEIGHT + 2.0F, 26.0F, 2.0F,
                     new Color(100, 255, 100, alpha).getRGB(), new Color(100, 255, 100, 0).getRGB());
         }
 
-        RenderUtils.rounded(stack, 0.0F, 0.0F, WIDTH, HEIGHT, 25.0F, 10.0F,
+        Render2DUtils.rounded(stack, 0.0F, 0.0F, WIDTH, HEIGHT, 25.0F, 10.0F,
                 new Color(20, 20, 20, 160).getRGB(), new Color(10, 10, 10, 225).getRGB());
 
         if (this.pulse > 0.0F) {
             int pulseAlpha = (int) (this.pulse * 100);
-            RenderUtils.rounded(stack, 0.0F, 0.0F, WIDTH, HEIGHT, 25.0F, 5.0F,
+            Render2DUtils.rounded(stack, 0.0F, 0.0F, WIDTH, HEIGHT, 25.0F, 5.0F,
                     new Color(255, 255, 255, pulseAlpha).getRGB(),
                     new Color(255, 255, 255, 0).getRGB());
         }

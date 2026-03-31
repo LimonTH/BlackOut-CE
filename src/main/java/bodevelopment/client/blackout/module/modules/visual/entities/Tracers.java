@@ -12,7 +12,7 @@ import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.ArrayList;
@@ -56,7 +56,7 @@ public class Tracers extends Module {
     public void onRender(RenderEvent.Hud.Post event) {
         if (BlackOut.mc.level != null && BlackOut.mc.player != null) {
             this.stack.pushPose();
-            RenderUtils.unGuiScale(this.stack);
+            Render2DUtils.unGuiScale(this.stack);
             this.entities.forEach(entity -> this.renderTracer(event.tickDelta, entity));
             this.stack.popPose();
         }
@@ -74,11 +74,11 @@ public class Tracers extends Module {
             color = this.line.get().getColor();
         }
 
-        Vec2 f = RenderUtils.getCoords(x, y + entity.getBoundingBox().getYsize() / 2.0, z, false);
+        Vec2 f = Render2DUtils.getCoords(x, y + entity.getBoundingBox().getYsize() / 2.0, z, false);
         if (f == null) {
             this.stack.popPose();
         } else {
-            RenderUtils.line(
+            Render2DUtils.line(
                     this.stack,
                     BlackOut.mc.getWindow().getScreenWidth() / 2.0F,
                     BlackOut.mc.getWindow().getScreenHeight() / 2.0F,

@@ -25,7 +25,7 @@ import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -191,7 +191,7 @@ public class Scaffold extends MoveUpdateModule {
 
             if (this.drawBlocks.get()) {
                 this.stack.pushPose();
-                RenderUtils.unGuiScale(this.stack);
+                Render2DUtils.unGuiScale(this.stack);
                 float anim = (float) AnimUtils.easeOutQuart(this.delta);
                 this.stack
                         .translate(
@@ -203,17 +203,17 @@ public class Scaffold extends MoveUpdateModule {
                 this.stack.pushPose();
                 this.stack.translate(width / -2.0F + width / 2.0F, (height + 2.0F) / -2.0F + height / 2.0F, 0.0F);
                 if (this.blur.get()) {
-                    RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, width, height, 6.0F, 10));
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, width, height, 6.0F, 10));
                     Renderer.onHUDBlur();
                 }
 
                 if (this.bg.get()) {
-                    RenderUtils.rounded(
+                    Render2DUtils.rounded(
                             this.stack, 0.0F, 0.0F, width, height, 6.0F, this.shadow.get() ? 6.0F : 0.0F, this.bgColor.get().getRGB(), this.shadowColor.get().getRGB()
                     );
                 }
 
-                RenderUtils.renderItem(this.stack, itemStack, 3.0F, 3.0F, 24.0F, RenderLayer.HUD, false);
+                Render2DUtils.renderItem(this.stack, itemStack, 3.0F, 3.0F, 24.0F, RenderLayer.HUD, false);
                 BlackOut.FONT.text(this.stack, text, textScale, 26.0F, 1.0F, this.customColor.get().getColor(), false, false);
                 Renderer.setAlpha(prevAlpha);
                 this.stack.popPose();

@@ -13,7 +13,7 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
@@ -152,18 +152,18 @@ public class ESP extends Module {
         }
 
         if (this.box.get()) {
-            RenderUtils.line(this.stack, -width / 2.0F, -height / 2.0F, -width / 2.0F, height / 2.0F, this.lineColor.get().getRGB(), this.fadeColor.get().getRGB());
-            RenderUtils.line(this.stack, width / 2.0F, -height / 2.0F, width / 2.0F, height / 2.0F, this.lineColor.get().getRGB(), this.fadeColor.get().getRGB());
-            RenderUtils.line(this.stack, -width / 2.0F, -height / 2.0F, width / 2.0F, -height / 2.0F, this.lineColor.get().getRGB());
-            RenderUtils.line(this.stack, -width / 2.0F, height / 2.0F, width / 2.0F, height / 2.0F, this.fadeColor.get().getRGB());
+            Render2DUtils.line(this.stack, -width / 2.0F, -height / 2.0F, -width / 2.0F, height / 2.0F, this.lineColor.get().getRGB(), this.fadeColor.get().getRGB());
+            Render2DUtils.line(this.stack, width / 2.0F, -height / 2.0F, width / 2.0F, height / 2.0F, this.lineColor.get().getRGB(), this.fadeColor.get().getRGB());
+            Render2DUtils.line(this.stack, -width / 2.0F, -height / 2.0F, width / 2.0F, -height / 2.0F, this.lineColor.get().getRGB());
+            Render2DUtils.line(this.stack, -width / 2.0F, height / 2.0F, width / 2.0F, height / 2.0F, this.fadeColor.get().getRGB());
         }
 
         if (this.fill.get() && !this.fadeFill.get()) {
-            RenderUtils.quad(this.stack, -width / 2.0F, -height / 2.0F, width, height, this.fillColor.get().getRGB());
+            Render2DUtils.quad(this.stack, -width / 2.0F, -height / 2.0F, width, height, this.fillColor.get().getRGB());
         }
 
         if (this.fill.get() && this.fadeFill.get()) {
-            RenderUtils.topFade(this.stack, -width / 2.0F, -height / 2.0F, width, height, this.fillColor.get().getRGB());
+            Render2DUtils.fade(this.stack, -width / 2.0F, -height / 2.0F, width, height, this.fillColor.get().getRGB(), Render2DUtils.FadeSide.TOP);
         }
 
         if (entity instanceof LivingEntity livingEntity) {
@@ -177,7 +177,7 @@ public class ESP extends Module {
             }
 
             if (this.hp.get()) {
-                RenderUtils.quad(this.stack, -width / 2.0F - 0.05F, height / 2.0F, 0.03F, height * -this.progress, this.getColor(this.progress).getRGB());
+                Render2DUtils.quad(this.stack, -width / 2.0F - 0.05F, height / 2.0F, 0.03F, height * -this.progress, this.getColor(this.progress).getRGB());
             }
         }
 

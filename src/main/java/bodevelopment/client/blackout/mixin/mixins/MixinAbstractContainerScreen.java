@@ -23,11 +23,12 @@ public abstract class MixinAbstractContainerScreen implements IAbstractContainer
         return this.hoveredSlot;
     }
 
-    @Inject(method = "renderTooltip", at = @At("TAIL"))
-    private void onDrawTooltipPost(GuiGraphics context, int mouseX, int mouseY, CallbackInfo ci) {
+    @Inject(method = "renderTooltip", at = @At("HEAD"), cancellable = true)
+    private void onDrawTooltipPre(GuiGraphics context, int mouseX, int mouseY, CallbackInfo ci) {
         ShulkerViewer module = ShulkerViewer.getInstance();
-        if (module != null && module.enabled) {
+        if (module != null && module.enabled && module.isHoveringShulker()) {
             module.renderOnTop(context, mouseX, mouseY);
+            ci.cancel();
         }
     }
 }
