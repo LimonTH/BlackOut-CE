@@ -1,4 +1,4 @@
-package bodevelopment.client.blackout.util.render;
+package bodevelopment.client.blackout.util.render.misc;
 
 import net.minecraft.world.entity.Entity;
 

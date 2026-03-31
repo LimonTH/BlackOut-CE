@@ -6,7 +6,7 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 
@@ -61,7 +61,7 @@ public class KeyBind {
         Color shadowColor = ColorUtils.lerpColor(this.pulse, ColorUtils.SHADOW100, Color.WHITE);
         Color insideColor = ColorUtils.lerpColor(progress, GuiColorUtils.bindBG, Color.WHITE);
         this.pulse = Math.max(this.pulse - frameTime, 0.0);
-        RenderUtils.rounded(stack, this.x - this.width / 2.0F, this.y - 9.0F, this.width, 17.0F, 4.0F, rad, insideColor.getRGB(), shadowColor.getRGB());
+        Render2DUtils.rounded(stack, this.x - this.width / 2.0F, this.y - 9.0F, this.width, 17.0F, 4.0F, rad, insideColor.getRGB(), shadowColor.getRGB());
         BlackOut.FONT.text(stack, name, 1.5F, this.x, this.y, GuiColorUtils.bindText.getRGB(), true, true);
     }
 

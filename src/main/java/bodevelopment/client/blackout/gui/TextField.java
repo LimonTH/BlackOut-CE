@@ -2,7 +2,7 @@ package bodevelopment.client.blackout.gui;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.keys.Keys;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import org.lwjgl.glfw.GLFW;
 
@@ -74,7 +74,7 @@ public class TextField {
         this.scale = scale;
         this.radius = radius;
         this.limitIndex();
-        RenderUtils.rounded(stack, x, y, width, height, radius, shadow, bgColor.getRGB(), new Color(0, 0, 0, (int) Math.floor(bgColor.getAlpha() * 0.6)).getRGB());
+        Render2DUtils.rounded(stack, x, y, width, height, radius, shadow, bgColor.getRGB(), new Color(0, 0, 0, (int) Math.floor(bgColor.getAlpha() * 0.6)).getRGB());
         float textHeight = BlackOut.FONT.getHeight() * scale;
         float centerY = y + height / 2.0F;
         float manualY = centerY - (textHeight / 2.0F) - (scale);
@@ -130,7 +130,7 @@ public class TextField {
             float cursorX = x + cursorOffset - this.scrollOffset;
 
             if (cursorX >= x && cursorX <= x + width) {
-                RenderUtils.quad(
+                Render2DUtils.quad(
                         stack,
                         cursorX,
                         cursorY2,

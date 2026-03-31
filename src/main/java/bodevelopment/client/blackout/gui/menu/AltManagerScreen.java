@@ -7,7 +7,7 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.client.MainMenuSettings;
 import bodevelopment.client.blackout.randomstuff.mainmenu.AltHelpRenderer;
 import bodevelopment.client.blackout.util.SoundUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.ArrayList;
@@ -65,7 +65,7 @@ public class AltManagerScreen extends Screen {
         }
 
         stack.pushPose();
-        RenderUtils.unGuiScale(stack);
+        Render2DUtils.unGuiScale(stack);
 
         int screenW = BlackOut.mc.getWindow().getScreenWidth();
         int screenH = BlackOut.mc.getWindow().getScreenHeight();
@@ -89,8 +89,8 @@ public class AltManagerScreen extends Screen {
             int blackColor = (alpha << 24);
 
             stack.pushPose();
-            RenderUtils.unGuiScale(stack);
-            RenderUtils.quad(stack, 0, 0, screenW, screenH, blackColor);
+            Render2DUtils.unGuiScale(stack);
+            Render2DUtils.quad(stack, 0, 0, screenW, screenH, blackColor);
             stack.popPose();
         }
     }

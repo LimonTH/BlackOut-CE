@@ -11,7 +11,8 @@ import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
 import bodevelopment.client.blackout.keys.Keys;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.rendering.renderer.ColorRenderer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
+import bodevelopment.client.blackout.util.render.RenderState;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
@@ -58,8 +59,8 @@ public class HudEditor extends Screen {
         isOpen = true;
         float prevMx = this.mx;
         float prevMy = this.my;
-        this.mx = (float) mouseX * RenderUtils.getScale();
-        this.my = (float) mouseY * RenderUtils.getScale();
+        this.mx = (float) mouseX * Render2DUtils.getScale();
+        this.my = (float) mouseY * Render2DUtils.getScale();
         float frameTime = delta / 20.0F;
         float scale = 1000.0F / BlackOut.mc.getMainRenderTarget().viewWidth;
         this.screenHeight = BlackOut.mc.getMainRenderTarget().viewHeight * scale;
@@ -97,7 +98,7 @@ public class HudEditor extends Screen {
             this.renderSelecting();
             Managers.HUD.end(this.stack);
             this.stack.pushPose();
-            RenderUtils.unGuiScale(this.stack);
+            Render2DUtils.unGuiScale(this.stack);
             RenderSystem.disableDepthTest();
             this.settings.render(this.stack, frameTime, mouseX, mouseY);
             this.elementList.render(this.stack, frameTime, mouseX, mouseY);
@@ -115,9 +116,9 @@ public class HudEditor extends Screen {
     }
 
     private void renderBG() {
-        RenderUtils.quad(this.stack, 0.0F, 0.0F, 1000.0F, this.screenHeight, this.bgColor);
-        RenderUtils.fadeLine(this.stack, 0.0F, this.screenHeight / 2.0F, this.screenWidth, this.screenHeight / 2.0F, this.lineColor);
-        RenderUtils.fadeLine(this.stack, this.screenWidth / 2.0F, 0.0F, this.screenWidth / 2.0F, this.screenHeight, this.lineColor);
+        Render2DUtils.quad(this.stack, 0.0F, 0.0F, 1000.0F, this.screenHeight, this.bgColor);
+        Render2DUtils.fadeLine(this.stack, 0.0F, this.screenHeight / 2.0F, this.screenWidth, this.screenHeight / 2.0F, this.lineColor);
+        Render2DUtils.fadeLine(this.stack, this.screenWidth / 2.0F, 0.0F, this.screenWidth / 2.0F, this.screenHeight, this.lineColor);
     }
 
     private boolean moved() {
@@ -263,12 +264,12 @@ public class HudEditor extends Screen {
             float y = Math.min(this.holdY, this.my);
             float w = Math.max(this.holdX, this.mx) - x;
             float h = Math.max(this.holdY, this.my) - y;
-            renderer.startRender(this.stack, VertexFormat.Mode.QUADS);
-            renderer.quadShape(x, y, w, h, 0.0F, 1.0F, 0.0F, 0.0F, 0.15F);
-            renderer.endRender();
-            renderer.startRender(this.stack, VertexFormat.Mode.DEBUG_LINE_STRIP);
-            renderer.quadOutlineShape(x, y, 0.0F, w, h, 1.0F, 0.0F, 0.0F, 0.5F);
-            renderer.endRender();
+            try (RenderState state = renderer.begin(this.stack, VertexFormat.Mode.QUADS)) {
+                renderer.quadShape(x, y, w, h, 0.0F, 1.0F, 0.0F, 0.0F, 0.15F);
+            }
+            try (RenderState state = renderer.begin(this.stack, VertexFormat.Mode.DEBUG_LINE_STRIP)) {
+                renderer.quadOutlineShape(x, y, 0.0F, w, h, 1.0F, 0.0F, 0.0F, 0.5F);
+            }
         }
     }
 
@@ -319,10 +320,14 @@ public class HudEditor extends Screen {
     }
 
     @Override
-    public void onClose() {
+    public void removed() {
         isOpen = false;
         Managers.CONFIG.save(ConfigType.HUD);
         Managers.CONFIG.save(ConfigType.Binds);
+    }
+
+    @Override
+    public void onClose() {
         super.onClose();
     }
 

@@ -7,7 +7,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -57,8 +57,8 @@ public class EnumSetting<T extends Enum<?>> extends Setting<T> {
         this.stack.pushPose();
         this.stack.translate(0, 0, RenderLayer.GUI_ELEMENT);
 
-        RenderUtils.rounded(this.stack, listX, listY, listWidth, listHeight, 4.0F, 8.0F, new Color(0, 0, 0, 200).getRGB(), ColorUtils.SHADOW100I);
-        RenderUtils.rounded(this.stack, listX, listY, listWidth, listHeight, 4.0F, 0.0F, new Color(20, 20, 20, 255).getRGB(), ColorUtils.SHADOW100I);
+        Render2DUtils.rounded(this.stack, listX, listY, listWidth, listHeight, 4.0F, 8.0F, new Color(0, 0, 0, 200).getRGB(), ColorUtils.SHADOW100I);
+        Render2DUtils.rounded(this.stack, listX, listY, listWidth, listHeight, 4.0F, 0.0F, new Color(20, 20, 20, 255).getRGB(), ColorUtils.SHADOW100I);
 
         int index = 0;
         for (T t : this.values) {
@@ -69,7 +69,7 @@ public class EnumSetting<T extends Enum<?>> extends Setting<T> {
             boolean hovered = this.mx > listX && this.mx < listX + listWidth && this.my > currentItemY && this.my < currentItemY + entryHeight;
 
             if (hovered) {
-                RenderUtils.rounded(this.stack, listX + 1, currentItemY, listWidth - 2, entryHeight, 2.0F, 0.0F, new Color(255, 255, 255, 15).getRGB(), ColorUtils.SHADOW100I);
+                Render2DUtils.rounded(this.stack, listX + 1, currentItemY, listWidth - 2, entryHeight, 2.0F, 0.0F, new Color(255, 255, 255, 15).getRGB(), ColorUtils.SHADOW100I);
             }
 
             float itemScale = 1.6F;

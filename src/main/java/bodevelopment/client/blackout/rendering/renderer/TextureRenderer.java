@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.rendering.renderer;
 
 import bodevelopment.client.blackout.randomstuff.ShaderSetup;
+import bodevelopment.client.blackout.util.render.RenderState;
 import net.minecraft.util.ARGB;
 import bodevelopment.client.blackout.rendering.shader.Shader;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
@@ -44,11 +45,11 @@ public class TextureRenderer extends Renderer {
             PoseStack stack, float x, float y, float width, float height, float u1, float v1, float u2, float v2, float rad, int steps, BOTextures.Texture texture
     ) {
         INSTANCE.setTexture(texture.getId());
-        INSTANCE.startRender(
+        try (RenderState state = INSTANCE.begin(
                 stack, x - rad, y - rad, width + rad * 2.0F, height + rad * 2.0F, u1, v1, u2, v2, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.TRIANGLE_FAN
-        );
-        INSTANCE.rounded(x, y, width, height, rad, steps);
-        INSTANCE.endRender();
+        )) {
+            INSTANCE.rounded(x, y, width, height, rad, steps);
+        }
     }
 
     public static void renderFitRounded(
@@ -61,9 +62,9 @@ public class TextureRenderer extends Renderer {
             PoseStack stack, float x, float y, float width, float height, float u1, float v1, float u2, float v2, float rad, int steps, int id
     ) {
         INSTANCE.setTexture(id);
-        INSTANCE.startRender(stack, x, y, width, height, u1, v1, u2, v2, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.TRIANGLE_FAN);
-        INSTANCE.fitRounded(x, y, width, height, rad, steps);
-        INSTANCE.endRender();
+        try (RenderState state = INSTANCE.begin(stack, x, y, width, height, u1, v1, u2, v2, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.TRIANGLE_FAN)) {
+            INSTANCE.fitRounded(x, y, width, height, rad, steps);
+        }
     }
 
     public static void renderCircle(PoseStack stack, float x, float y, float u1, float v1, float u2, float v2, float rad, int steps, BOTextures.Texture texture) {
@@ -72,9 +73,11 @@ public class TextureRenderer extends Renderer {
 
     public static void renderCircle(PoseStack stack, float x, float y, float u1, float v1, float u2, float v2, float rad, int steps, int id) {
         INSTANCE.setTexture(id);
-        INSTANCE.startRender(stack, x - rad, y - rad, rad * 2.0F, rad * 2.0F, u1, v1, u2, v2, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.TRIANGLE_FAN);
-        INSTANCE.circle(x, y, rad, steps);
-        INSTANCE.endRender();
+        try (RenderState state = INSTANCE.begin(
+                stack, x - rad, y - rad, rad * 2.0F, rad * 2.0F, u1, v1, u2, v2, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.TRIANGLE_FAN
+        )) {
+            INSTANCE.circle(x, y, rad, steps);
+        }
     }
 
     public static void renderQuad(PoseStack stack, float x, float y, float width, float height, float u1, float v1, float u2, float v2, int id) {
@@ -137,38 +140,24 @@ public class TextureRenderer extends Renderer {
     public void quadUV(
             PoseStack stack, float x, float y, float w, float h, float u1, float v1, float u2, float v2, float blur, float r, float g, float b, float a
     ) {
-        this.startRender(stack, x, y, w, h, u1, v1, u2, v2, blur, r, g, b, a, VertexFormat.Mode.QUADS);
-        this.vertex(x, y);
-        this.vertex(x, y + h);
-        this.vertex(x + w, y + h);
-        this.vertex(x + w, y);
-        this.endRender();
+        try (RenderState state = this.begin(stack, x, y, w, h, u1, v1, u2, v2, blur, r, g, b, a, VertexFormat.Mode.QUADS)) {
+            this.vertex(x, y);
+            this.vertex(x, y + h);
+            this.vertex(x + w, y + h);
+            this.vertex(x + w, y);
+        }
     }
 
     public void quadUV(
-            PoseStack stack,
-            float x,
-            float y,
-            float w,
-            float h,
-            float u1,
-            float v1,
-            float u2,
-            float v2,
-            float blur,
-            float r,
-            float g,
-            float b,
-            float a,
-            Shader shader,
-            ShaderSetup setup
+            PoseStack stack, float x, float y, float w, float h, float u1, float v1, float u2, float v2,
+            float blur, float r, float g, float b, float a, Shader shader, ShaderSetup setup
     ) {
-        this.startRender(stack, x, y, w, h, u1, v1, u2, v2, blur, r, g, b, a, VertexFormat.Mode.QUADS);
-        this.vertex(x, y);
-        this.vertex(x, y + h);
-        this.vertex(x + w, y + h);
-        this.vertex(x + w, y);
-        this.endRender(shader, setup);
+        try (RenderState state = this.begin(stack, x, y, w, h, u1, v1, u2, v2, blur, r, g, b, a, VertexFormat.Mode.QUADS, shader, setup)) {
+            this.vertex(x, y);
+            this.vertex(x, y + h);
+            this.vertex(x + w, y + h);
+            this.vertex(x + w, y);
+        }
     }
 
     public void setTexture(int id) {
@@ -187,26 +176,42 @@ public class TextureRenderer extends Renderer {
         this.u2 = u;
     }
 
-    public void startRender(PoseStack stack, float x, float y, float w, float h, float blur, float r, float g, float b, float a, VertexFormat.Mode drawMode) {
-        this.startRender(stack, x, y, w, h, 0.0F, 0.0F, 1.0F, 1.0F, blur, r, g, b, a, drawMode);
+    public RenderState begin(PoseStack stack, float x, float y, float w, float h, float blur, float r, float g, float b, float a, VertexFormat.Mode drawMode) {
+        return this.begin(stack, x, y, w, h, 0.0F, 0.0F, 1.0F, 1.0F, blur, r, g, b, a, drawMode);
     }
 
-    public void startRender(
-            PoseStack stack,
-            float x,
-            float y,
-            float w,
-            float h,
-            float u1,
-            float v1,
-            float u2,
-            float v2,
-            float blur,
-            float r,
-            float g,
-            float b,
-            float a,
-            VertexFormat.Mode drawMode
+    public RenderState begin(
+            PoseStack stack, float x, float y, float w, float h,
+            float u1, float v1, float u2, float v2,
+            float blur, float r, float g, float b, float a, VertexFormat.Mode drawMode
+    ) {
+        this.initRenderState(stack, x, y, w, h, u1, v1, u2, v2, blur, r, g, b, a, drawMode);
+        return RenderState.of(() -> {
+            setMatrices(this.renderMatrix);
+            this.endRenderInternal(this.renderBlur > 0.0F ? Shaders.blurUV : Shaders.textureUV, new ShaderSetup(setup -> {
+                if (this.renderBlur > 0.0F) {
+                    setup.set("blur", this.renderBlur);
+                }
+                setup.set("pos", this.renderX, this.renderY, this.renderX + this.renderW, this.renderY + this.renderH);
+                setup.set("uv", this.u1, this.v1, this.u2, this.v2);
+            }));
+        });
+    }
+
+    public RenderState begin(
+            PoseStack stack, float x, float y, float w, float h,
+            float u1, float v1, float u2, float v2,
+            float blur, float r, float g, float b, float a, VertexFormat.Mode drawMode,
+            Shader shader, ShaderSetup setup
+    ) {
+        this.initRenderState(stack, x, y, w, h, u1, v1, u2, v2, blur, r, g, b, a, drawMode);
+        return RenderState.of(() -> this.endRenderInternal(shader, setup));
+    }
+
+    private void initRenderState(
+            PoseStack stack, float x, float y, float w, float h,
+            float u1, float v1, float u2, float v2,
+            float blur, float r, float g, float b, float a, VertexFormat.Mode drawMode
     ) {
         this.renderMatrix = stack;
         this.renderX = x;
@@ -242,19 +247,7 @@ public class TextureRenderer extends Renderer {
         this.renderBuffer.addVertex(x, y, z).setColor(r, g, b, a);
     }
 
-    public void endRender() {
-        setMatrices(this.renderMatrix);
-        this.endRender(this.renderBlur > 0.0F ? Shaders.blurUV : Shaders.textureUV, new ShaderSetup(setup -> {
-            if (this.renderBlur > 0.0F) {
-                setup.set("blur", this.renderBlur);
-            }
-
-            setup.set("pos", this.renderX, this.renderY, this.renderX + this.renderW, this.renderY + this.renderH);
-            setup.set("uv", this.u1, this.v1, this.u2, this.v2);
-        }));
-    }
-
-    public void endRender(Shader shader, ShaderSetup setup) {
+    private void endRenderInternal(Shader shader, ShaderSetup setup) {
         shader.set("clr", this.renderRed, this.renderGreen, this.renderBlue, this.renderAlpha);
         shader.set("uTexture", 0);
         shader.render(this.renderBuffer, setup);

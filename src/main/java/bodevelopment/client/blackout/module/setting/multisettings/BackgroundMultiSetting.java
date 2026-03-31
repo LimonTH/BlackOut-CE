@@ -6,7 +6,7 @@ import bodevelopment.client.blackout.module.modules.client.ThemeSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 public class BackgroundMultiSetting {
@@ -78,10 +78,10 @@ public class BackgroundMultiSetting {
         ThemeSettings themeSettings = ThemeSettings.getInstance();
         switch (this.mode.get()) {
             case Static:
-                RenderUtils.rounded(stack, x, y, w, h, r, this.shadow.get() ? sr : 0.0F, this.roundedColor.get().getRGB(), this.shadowColor.get().getRGB());
+                Render2DUtils.rounded(stack, x, y, w, h, r, this.shadow.get() ? sr : 0.0F, this.roundedColor.get().getRGB(), this.shadowColor.get().getRGB());
                 break;
             case Animated:
-                RenderUtils.tenaRounded(
+                Render2DUtils.tenaRounded(
                         stack,
                         x,
                         y,

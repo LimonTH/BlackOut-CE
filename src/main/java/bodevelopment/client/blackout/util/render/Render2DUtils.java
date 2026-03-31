@@ -30,7 +30,7 @@ import org.joml.Vector4f;
 import java.awt.*;
 import java.util.function.Consumer;
 
-public class RenderUtils {
+public class Render2DUtils {
     public static final long initTime = System.currentTimeMillis();
     public static final PoseStack emptyStack = new PoseStack();
 
@@ -39,6 +39,10 @@ public class RenderUtils {
     private static final Matrix4f lastProjMat = new Matrix4f();
     private static final Matrix4f lastModelViewMat = new Matrix4f();
     private static Vec3 lastCamPos = Vec3.ZERO;
+
+    private static final int SKEET_LIGHT = new Color(30, 30, 30, 255).getRGB();
+    private static final int SKEET_MID = new Color(20, 20, 20, 255).getRGB();
+    private static final int SKEET_BG = new Color(10, 10, 10, 255).getRGB();
 
     public static boolean insideRounded(double mx, double my, double x, double y, double width, double height, double rad) {
         double offsetX = mx - x;
@@ -159,13 +163,12 @@ public class RenderUtils {
         ShaderRenderer renderer = ShaderRenderer.getInstance();
         Renderer.setTexture(buffer.getTexture(), 0);
 
-        renderer.startRender(stack, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-        consumer.accept(renderer);
-
-        renderer.endRender(Shaders.screentex, new ShaderSetup(setup -> {
+        try (RenderState state = renderer.begin(stack, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION, Shaders.screentex, new ShaderSetup(setup -> {
             setup.set("uTexture", 0);
             setup.set("alpha", 1.0F);
-        }));
+        }))) {
+            consumer.accept(renderer);
+        }
     }
 
     public static void renderBufferWith(String frameBuffer, Shader shader, ShaderSetup setup) {
@@ -180,9 +183,9 @@ public class RenderUtils {
         Renderer.setMatrices(emptyStack);
         float alpha = Renderer.getAlpha();
         Renderer.setAlpha(1.0F);
-        renderer.startRender(emptyStack, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION);
-        renderer.quadShape(0.0F, 0.0F, BlackOut.mc.getWindow().getScreenWidth(), BlackOut.mc.getWindow().getScreenHeight());
-        renderer.endRender(shader, setup);
+        try (RenderState state = renderer.begin(emptyStack, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION, shader, setup)) {
+            renderer.quadShape(0.0F, 0.0F, BlackOut.mc.getWindow().getScreenWidth(), BlackOut.mc.getWindow().getScreenHeight());
+        }
         Renderer.setAlpha(alpha);
         emptyStack.popPose();
     }
@@ -199,20 +202,18 @@ public class RenderUtils {
         float alpha = Renderer.getAlpha();
         Renderer.setAlpha(1.0F);
 
-        renderer.startRender(emptyStack, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-
         float w = (float) BlackOut.mc.getWindow().getScreenWidth();
         float h = (float) BlackOut.mc.getWindow().getScreenHeight();
 
-        renderer.vertex2D(0, h);
-        renderer.vertex2D(w, h);
-        renderer.vertex2D(w, 0);
-        renderer.vertex2D(0, 0);
-
-        renderer.endRender(Shaders.screentexoverlay, new ShaderSetup(setup -> {
+        try (RenderState state = renderer.begin(emptyStack, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION, Shaders.screentexoverlay, new ShaderSetup(setup -> {
             setup.set("uTexture0", 0);
             setup.set("uTexture1", 1);
-        }));
+        }))) {
+            renderer.vertex2D(0, h);
+            renderer.vertex2D(w, h);
+            renderer.vertex2D(w, 0);
+            renderer.vertex2D(0, 0);
+        }
 
         emptyStack.popPose();
     }
@@ -267,336 +268,117 @@ public class RenderUtils {
         return 1.0F + Math.max(0.0F, i - 1.5F) * 2.0F;
     }
 
-    public static void roundedRight(PoseStack stack, float x, float y, float w, float h, float radius, float shadowRadius, int color, int shadowColor) {
-        float maxX = x + w + radius + shadowRadius;
-        float minY = y - radius - shadowRadius;
-        float maxY = y + h + radius + shadowRadius;
-        innerRounded(stack, x - radius, y, w + radius, h, radius, shadowRadius, color, shadowColor, x, maxX, minY, maxY);
-    }
-
-    public static void roundedLeft(PoseStack stack, float x, float y, float w, float h, float radius, float shadowRadius, int color, int shadowColor) {
-        float minX = x - radius - shadowRadius;
-        float maxX = x + w;
-        float minY = y - radius - shadowRadius;
-        float maxY = y + h + radius + shadowRadius;
-        innerRounded(stack, x, y, w + radius, h, radius, shadowRadius, color, shadowColor, minX, maxX, minY, maxY);
-    }
-
-    public static void roundedTop(PoseStack stack, float x, float y, float w, float h, float radius, float shadowRadius, int color, int shadowColor) {
-        float minX = x - radius - shadowRadius;
-        float maxX = x + w + radius + shadowRadius;
-        float minY = y - radius - shadowRadius;
-        float maxY = y + h;
-        innerRounded(stack, x, y, w, h + radius, radius, shadowRadius, color, shadowColor, minX, maxX, minY, maxY);
-    }
-
-    public static void roundedBottom(PoseStack stack, float x, float y, float w, float h, float radius, float shadowRadius, int color, int shadowColor) {
-        float minX = x - radius - shadowRadius;
-        float maxX = x + w + radius + shadowRadius;
-        float maxY = y + h + radius + shadowRadius;
-        innerRounded(stack, x, y - radius, w, h + radius, radius, shadowRadius, color, shadowColor, minX, maxX, y, maxY);
-    }
-
-    public static void roundedBottomLeft(PoseStack stack, float x, float y, float w, float h, float radius, float shadowRadius, int color, int shadowColor) {
-        float minX = x - radius - shadowRadius;
-        float maxX = x + w + radius + shadowRadius;
-        float minY = y - radius;
-        float maxY = y + h + radius + shadowRadius;
-        innerRounded(stack, x, y - radius, w + radius, h + radius, radius, shadowRadius, color, shadowColor, minX, maxX, minY, maxY);
-    }
-
     public static void rounded(PoseStack stack, float x, float y, float w, float h, float radius, float shadowRadius, int color, int shadowColor) {
-        float minX = x - radius - shadowRadius;
-        float maxX = x + w + radius + shadowRadius;
-        float minY = y - radius - shadowRadius;
-        float maxY = y + h + radius + shadowRadius;
-        innerRounded(stack, x, y, w, h, radius, shadowRadius, color, shadowColor, minX, maxX, minY, maxY);
+        rounded(stack, x, y, w, h, radius, shadowRadius, color, shadowColor, RoundedSide.ALL);
     }
 
-    private static void innerRounded(
-            PoseStack stack,
-            float x,
-            float y,
-            float w,
-            float h,
-            float radius,
-            float shadowRadius,
-            int color,
-            int shadowColor,
-            float minX,
-            float maxX,
-            float minY,
-            float maxY
-    ) {
+    public static void rounded(PoseStack stack, float x, float y, float w, float h, float radius, float shadowRadius, int color, int shadowColor, RoundedSide side) {
+        float ext = radius + shadowRadius;
+        float innerX = x, innerY = y, innerW = w, innerH = h;
+        float minX = x - ext, maxX = x + w + ext, minY = y - ext, maxY = y + h + ext;
+
+        switch (side) {
+            case RIGHT -> { minX = x; innerX = x - radius; innerW = w + radius; }
+            case LEFT -> { maxX = x + w; innerW = w + radius; }
+            case TOP -> { maxY = y + h; innerH = h + radius; }
+            case BOTTOM -> { minY = y; innerY = y - radius; innerH = h + radius; }
+            case BOTTOM_LEFT -> { minY = y - radius; innerY = y - radius; innerW = w + radius; innerH = h + radius; }
+            default -> {}
+        }
+
+        innerRounded(stack, innerX, innerY, innerW, innerH, radius, shadowRadius, color, shadowColor, minX, maxX, minY, maxY);
+    }
+
+    private static void prepareAndRender(PoseStack stack, float shadowRadius, float minX, float maxX, float minY, float maxY, ShaderQuadRenderer renderer) {
         minX -= SHADER_QUAD_PADDING;
         maxX += SHADER_QUAD_PADDING;
         minY -= SHADER_QUAD_PADDING;
         maxY += SHADER_QUAD_PADDING;
         Renderer.setMatrices(stack);
         if (shadowRadius > 0.0F) {
-            moreInnerRounded(x, y, w, h, radius, shadowRadius, color, shadowColor, minX, maxX, minY, maxY, true);
+            renderer.render(minX, maxX, minY, maxY, true);
         }
-
-        moreInnerRounded(x, y, w, h, radius, shadowRadius, color, shadowColor, minX, maxX, minY, maxY, false);
+        renderer.render(minX, maxX, minY, maxY, false);
     }
 
-    private static void moreInnerRounded(
-            float x,
-            float y,
-            float w,
-            float h,
-            float radius,
-            float shadowRadius,
-            int color,
-            int shadowColor,
-            float minX,
-            float maxX,
-            float minY,
-            float maxY,
-            boolean shadow
-    ) {
+    private static void renderShaderQuad(float minX, float maxX, float minY, float maxY, Shader shader, ShaderSetup setup) {
         ShaderRenderer shaderRenderer = ShaderRenderer.getInstance();
-        shaderRenderer.startRender(null, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+        try (RenderState state = shaderRenderer.begin(null, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION, shader, setup)) {
+            shaderRenderer.vertex2D(minX, maxY);
+            shaderRenderer.vertex2D(maxX, maxY);
+            shaderRenderer.vertex2D(maxX, minY);
+            shaderRenderer.vertex2D(minX, minY);
+        }
+    }
 
-        shaderRenderer.vertex2D(minX, maxY);
-        shaderRenderer.vertex2D(maxX, maxY);
-        shaderRenderer.vertex2D(maxX, minY);
-        shaderRenderer.vertex2D(minX, minY);
-
-        shaderRenderer.endRender(shadow ? Shaders.roundedshadow : Shaders.rounded, new ShaderSetup(setup -> {
-            setup.set("rad", radius, shadowRadius);
-            if (shadow) {
-                setup.color("shadowClr", shadowColor);
-            } else {
-                setup.color("clr", color);
-            }
-            setup.set("pos", x, y, w, h);
-        }));
+    private static void innerRounded(
+            PoseStack stack, float x, float y, float w, float h,
+            float radius, float shadowRadius, int color, int shadowColor,
+            float minX, float maxX, float minY, float maxY
+    ) {
+        prepareAndRender(stack, shadowRadius, minX, maxX, minY, maxY, (qMinX, qMaxX, qMinY, qMaxY, shadow) ->
+                renderShaderQuad(qMinX, qMaxX, qMinY, qMaxY, shadow ? Shaders.roundedshadow : Shaders.rounded, new ShaderSetup(setup -> {
+                    setup.set("rad", radius, shadowRadius);
+                    if (shadow) {
+                        setup.color("shadowClr", shadowColor);
+                    } else {
+                        setup.color("clr", color);
+                    }
+                    setup.set("pos", x, y, w, h);
+                }))
+        );
     }
 
     public static void fadeRounded(
             PoseStack stack, float x, float y, float w, float h, float radius, float shadowRadius, int clr, int clr2, float frequency, float speed
     ) {
-        float minX = x - radius - shadowRadius;
-        float maxX = x + w + radius + shadowRadius;
-        float minY = y - radius - shadowRadius;
-        float maxY = y + h + radius + shadowRadius;
-        fadeRounded(stack, x, y, w, h, radius, shadowRadius, clr, clr2, frequency, speed, minX, maxX, minY, maxY);
-    }
-
-    private static void fadeRounded(
-            PoseStack stack,
-            float x,
-            float y,
-            float w,
-            float h,
-            float radius,
-            float shadowRadius,
-            int clr,
-            int clr2,
-            float frequency,
-            float speed,
-            float minX,
-            float maxX,
-            float minY,
-            float maxY
-    ) {
-        minX -= SHADER_QUAD_PADDING;
-        maxX += SHADER_QUAD_PADDING;
-        minY -= SHADER_QUAD_PADDING;
-        maxY += SHADER_QUAD_PADDING;
-        Renderer.setMatrices(stack);
-        if (shadowRadius > 0.0F) {
-            moreFadeRounded(x, y, w, h, radius, shadowRadius, clr, clr2, frequency, speed, minX, maxX, minY, maxY, true);
-        }
-
-        moreFadeRounded(x, y, w, h, radius, shadowRadius, clr, clr2, frequency, speed, minX, maxX, minY, maxY, false);
-    }
-
-    private static void moreFadeRounded(
-            float x,
-            float y,
-            float w,
-            float h,
-            float radius,
-            float shadowRadius,
-            int clr,
-            int clr2,
-            float frequency,
-            float speed,
-            float minX,
-            float maxX,
-            float minY,
-            float maxY,
-            boolean shadow
-    ) {
-        ShaderRenderer shaderRenderer = ShaderRenderer.getInstance();
-        shaderRenderer.startRender(null, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-
-        shaderRenderer.vertex2D(minX, maxY);
-        shaderRenderer.vertex2D(maxX, maxY);
-        shaderRenderer.vertex2D(maxX, minY);
-        shaderRenderer.vertex2D(minX, minY);
-
-        shaderRenderer.endRender(shadow ? Shaders.shadowfade : Shaders.roundedfade, new ShaderSetup(setup -> {
-            setup.set("rad", radius, shadowRadius);
-            setup.color("clr", clr);
-            setup.color("clr2", clr2);
-            setup.set("pos", x, y, w, h);
-            setup.set("frequency", frequency * 2.0F);
-            setup.set("speed", speed);
-            setup.time(initTime);
-        }));
+        float ext = radius + shadowRadius;
+        prepareAndRender(stack, shadowRadius, x - ext, x + w + ext, y - ext, y + h + ext, (qMinX, qMaxX, qMinY, qMaxY, shadow) ->
+                renderShaderQuad(qMinX, qMaxX, qMinY, qMaxY, shadow ? Shaders.shadowfade : Shaders.roundedfade, new ShaderSetup(setup -> {
+                    setup.set("rad", radius, shadowRadius);
+                    setup.color("clr", clr);
+                    setup.color("clr2", clr2);
+                    setup.set("pos", x, y, w, h);
+                    setup.set("frequency", frequency * 2.0F);
+                    setup.set("speed", speed);
+                    setup.time(initTime);
+                }))
+        );
     }
 
     public static void rainbowRounded(
             PoseStack stack, float x, float y, float w, float h, float radius, float shadowRadius, float saturation, float frequency, float speed
     ) {
-        float minX = x - radius - shadowRadius;
-        float maxX = x + w + radius + shadowRadius;
-        float minY = y - radius - shadowRadius;
-        float maxY = y + h + radius + shadowRadius;
-        rainbowRounded(stack, x, y, w, h, radius, shadowRadius, saturation, frequency, speed, minX, maxX, minY, maxY);
-    }
-
-    private static void rainbowRounded(
-            PoseStack stack,
-            float x,
-            float y,
-            float w,
-            float h,
-            float radius,
-            float shadowRadius,
-            float saturation,
-            float frequency,
-            float speed,
-            float minX,
-            float maxX,
-            float minY,
-            float maxY
-    ) {
-        minX -= SHADER_QUAD_PADDING;
-        maxX += SHADER_QUAD_PADDING;
-        minY -= SHADER_QUAD_PADDING;
-        maxY += SHADER_QUAD_PADDING;
-        Renderer.setMatrices(stack);
-        if (shadowRadius > 0.0F) {
-            moreRainbowRounded(x, y, w, h, radius, shadowRadius, saturation, frequency, speed, minX, maxX, minY, maxY, true);
-        }
-
-        moreRainbowRounded(x, y, w, h, radius, shadowRadius, saturation, frequency, speed, minX, maxX, minY, maxY, false);
-    }
-
-    private static void moreRainbowRounded(
-            float x,
-            float y,
-            float w,
-            float h,
-            float radius,
-            float shadowRadius,
-            float saturation,
-            float frequency,
-            float speed,
-            float minX,
-            float maxX,
-            float minY,
-            float maxY,
-            boolean shadow
-    ) {
-        ShaderRenderer shaderRenderer = ShaderRenderer.getInstance();
-        shaderRenderer.startRender(null, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-
-        shaderRenderer.vertex2D(minX, maxY);
-        shaderRenderer.vertex2D(maxX, maxY);
-        shaderRenderer.vertex2D(maxX, minY);
-        shaderRenderer.vertex2D(minX, minY);
-
-        shaderRenderer.endRender(shadow ? Shaders.shadowrainbow : Shaders.roundedrainbow, new ShaderSetup(setup -> {
-            setup.set("rad", radius, shadowRadius);
-            setup.set("pos", x, y, w, h);
-            setup.set("frequency", frequency);
-            setup.set("speed", speed);
-            setup.set("saturation", saturation);
-            setup.time(initTime);
-        }));
+        float ext = radius + shadowRadius;
+        prepareAndRender(stack, shadowRadius, x - ext, x + w + ext, y - ext, y + h + ext, (qMinX, qMaxX, qMinY, qMaxY, shadow) ->
+                renderShaderQuad(qMinX, qMaxX, qMinY, qMaxY, shadow ? Shaders.shadowrainbow : Shaders.roundedrainbow, new ShaderSetup(setup -> {
+                    setup.set("rad", radius, shadowRadius);
+                    setup.set("pos", x, y, w, h);
+                    setup.set("frequency", frequency);
+                    setup.set("speed", speed);
+                    setup.set("saturation", saturation);
+                    setup.time(initTime);
+                }))
+        );
     }
 
     public static void tenaRounded(PoseStack stack, float x, float y, float w, float h, float radius, float shadowRadius, int clr, int clr2, float speed) {
-        float minX = x - radius - shadowRadius;
-        float maxX = x + w + radius + shadowRadius;
-        float minY = y - radius - shadowRadius;
-        float maxY = y + h + radius + shadowRadius;
-        tenaRounded(stack, x, y, w, h, radius, shadowRadius, clr, clr2, speed, minX, maxX, minY, maxY);
-    }
-
-    private static void tenaRounded(
-            PoseStack stack,
-            float x,
-            float y,
-            float w,
-            float h,
-            float radius,
-            float shadowRadius,
-            int clr,
-            int clr2,
-            float speed,
-            float minX,
-            float maxX,
-            float minY,
-            float maxY
-    ) {
-        minX -= SHADER_QUAD_PADDING;
-        maxX += SHADER_QUAD_PADDING;
-        minY -= SHADER_QUAD_PADDING;
-        maxY += SHADER_QUAD_PADDING;
-        Renderer.setMatrices(stack);
-        if (shadowRadius > 0.0F) {
-            moreTenaRounded(x, y, w, h, radius, shadowRadius, clr, clr2, speed, minX, maxX, minY, maxY, true);
-        }
-
-        moreTenaRounded(x, y, w, h, radius, shadowRadius, clr, clr2, speed, minX, maxX, minY, maxY, false);
-    }
-
-    private static void moreTenaRounded(
-            float x, float y, float w, float h, float radius, float shadowRadius,
-            int clr, int clr2, float speed, float minX, float maxX, float minY, float maxY,
-            boolean shadow
-    ) {
-        ShaderRenderer shaderRenderer = ShaderRenderer.getInstance();
-        shaderRenderer.startRender(null, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-
-        shaderRenderer.vertex2D(minX, maxY);
-        shaderRenderer.vertex2D(maxX, maxY);
-        shaderRenderer.vertex2D(maxX, minY);
-        shaderRenderer.vertex2D(minX, minY);
-
-        shaderRenderer.endRender(shadow ? Shaders.tenacityshadow : Shaders.tenacity, new ShaderSetup(setup -> {
-            setup.set("rad", radius, shadowRadius);
-            setup.color("color1", clr);
-            setup.color("color2", clr2);
-            setup.set("pos", x, y, w, h);
-            setup.set("speed", speed);
-            setup.time(initTime);
-        }));
+        float ext = radius + shadowRadius;
+        prepareAndRender(stack, shadowRadius, x - ext, x + w + ext, y - ext, y + h + ext, (qMinX, qMaxX, qMinY, qMaxY, shadow) ->
+                renderShaderQuad(qMinX, qMaxX, qMinY, qMaxY, shadow ? Shaders.tenacityshadow : Shaders.tenacity, new ShaderSetup(setup -> {
+                    setup.set("rad", radius, shadowRadius);
+                    setup.color("color1", clr);
+                    setup.color("color2", clr2);
+                    setup.set("pos", x, y, w, h);
+                    setup.set("speed", speed);
+                    setup.time(initTime);
+                }))
+        );
     }
 
     public static void bloom(PoseStack stack, float x, float y, float radX, float radY, int color) {
         Renderer.setMatrices(stack);
-
-        ShaderRenderer shaderRenderer = ShaderRenderer.getInstance();
-        shaderRenderer.startRender(null, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-
-        float minX = x - radX;
-        float maxX = x + radX;
-        float minY = y - radY;
-        float maxY = y + radY;
-
-        shaderRenderer.vertex2D(minX, maxY);
-        shaderRenderer.vertex2D(maxX, maxY);
-        shaderRenderer.vertex2D(maxX, minY);
-        shaderRenderer.vertex2D(minX, minY);
-
-        shaderRenderer.endRender(Shaders.bloom, new ShaderSetup(setup -> {
+        renderShaderQuad(x - radX, x + radX, y - radY, y + radY, Shaders.bloom, new ShaderSetup(setup -> {
             setup.color("clr", color);
             setup.set("pos", x, y, radX, radY);
         }));
@@ -757,24 +539,18 @@ public class RenderUtils {
             float x, float y, float w, float h, float saturation, float frequency, float speed, float minX, float maxX, float minY, float maxY
     ) {
         ShaderRenderer shaderRenderer = ShaderRenderer.getInstance();
-        shaderRenderer.startRender(null, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-
-        shaderRenderer.vertex2D(minX, maxY);
-        shaderRenderer.vertex2D(maxX, maxY);
-        shaderRenderer.vertex2D(maxX, minY);
-        shaderRenderer.vertex2D(minX, minY);
-
-        shaderRenderer.endRender(Shaders.skeet, new ShaderSetup(setup -> {
+        try (RenderState state = shaderRenderer.begin(null, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION, Shaders.skeet, new ShaderSetup(setup -> {
             setup.set("frequency", frequency);
             setup.set("speed", speed);
             setup.set("saturation", saturation);
             setup.time(initTime);
-        }));
+        }))) {
+            shaderRenderer.vertex2D(minX, maxY);
+            shaderRenderer.vertex2D(maxX, maxY);
+            shaderRenderer.vertex2D(maxX, minY);
+            shaderRenderer.vertex2D(minX, minY);
+        }
     }
-
-    private static final int SKEET_LIGHT = new Color(30, 30, 30, 255).getRGB();
-    private static final int SKEET_MID = new Color(20, 20, 20, 255).getRGB();
-    private static final int SKEET_BG = new Color(10, 10, 10, 255).getRGB();
 
     public static void drawSkeetBox(PoseStack stack, float x, float y, float width, float height, boolean drawLine) {
         quad(stack, x, y, width, height, SKEET_LIGHT);
@@ -786,57 +562,26 @@ public class RenderUtils {
         }
     }
 
-    public static void rightFade(PoseStack stack, float x, float y, float w, float h, int color) {
+    public static void fade(PoseStack stack, float x, float y, float w, float h, int color, FadeSide side) {
         float a = ARGB.alpha(color) / 255.0F;
         float r = ARGB.red(color) / 255.0F;
         float g = ARGB.green(color) / 255.0F;
         float b = ARGB.blue(color) / 255.0F;
 
-        quad(stack, x, y, w, h,
-                r, g, b, a,
-                r, g, b, a,
-                r, g, b, 0.0F,
-                r, g, b, 0.0F
-        );
-    }
-
-    public static void leftFade(PoseStack stack, float x, float y, float w, float h, int color) {
-        float a = ARGB.alpha(color) / 255.0F;
-        float r = ARGB.red(color) / 255.0F;
-        float g = ARGB.green(color) / 255.0F;
-        float b = ARGB.blue(color) / 255.0F;
-        quad(stack, x, y, w, h,
-                r, g, b, 0.0F,
-                r, g, b, 0.0F,
-                r, g, b, a,
-                r, g, b, a
-        );
-    }
-
-    public static void topFade(PoseStack stack, float x, float y, float w, float h, int color) {
-        float a = ARGB.alpha(color) / 255.0F;
-        float r = ARGB.red(color) / 255.0F;
-        float g = ARGB.green(color) / 255.0F;
-        float b = ARGB.blue(color) / 255.0F;
-        quad(stack, x, y, w, h,
-                r, g, b, 0.0F,
-                r, g, b, a,
-                r, g, b, 0.0F,
-                r, g, b, a
-        );
-    }
-
-    public static void bottomFade(PoseStack stack, float x, float y, float w, float h, int color) {
-        float a = ARGB.alpha(color) / 255.0F;
-        float r = ARGB.red(color) / 255.0F;
-        float g = ARGB.green(color) / 255.0F;
-        float b = ARGB.blue(color) / 255.0F;
+        float tl, bl, tr, br;
+        switch (side) {
+            case RIGHT -> { tl = a; bl = a; tr = 0.0F; br = 0.0F; }
+            case LEFT -> { tl = 0.0F; bl = 0.0F; tr = a; br = a; }
+            case TOP -> { tl = 0.0F; bl = a; tr = 0.0F; br = a; }
+            case BOTTOM -> { tl = a; bl = 0.0F; tr = a; br = 0.0F; }
+            default -> { tl = a; bl = a; tr = a; br = a; }
+        }
 
         quad(stack, x, y, w, h,
-                r, g, b, a,
-                r, g, b, 0.0F,
-                r, g, b, a,
-                r, g, b, 0.0F
+                r, g, b, tl,
+                r, g, b, bl,
+                r, g, b, tr,
+                r, g, b, br
         );
     }
 
@@ -879,5 +624,18 @@ public class RenderUtils {
 
     public static float getScale() {
         return (float) BlackOut.mc.getWindow().getGuiScale();
+    }
+
+    public enum RoundedSide {
+        ALL, LEFT, RIGHT, TOP, BOTTOM, BOTTOM_LEFT
+    }
+
+    public enum FadeSide {
+        RIGHT, LEFT, TOP, BOTTOM
+    }
+
+    @FunctionalInterface
+    private interface ShaderQuadRenderer {
+        void render(float minX, float maxX, float minY, float maxY, boolean shadow);
     }
 }

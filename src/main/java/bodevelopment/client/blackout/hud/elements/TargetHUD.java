@@ -21,7 +21,7 @@ import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import net.minecraft.client.multiplayer.PlayerInfo;
@@ -110,9 +110,9 @@ public class TargetHUD extends HudElement {
         if (BlackOut.mc.level != null && BlackOut.mc.player != null) {
             if (this.renderType.get() != RenderType.Hud && this.renderTarget != null) {
                 this.stack.pushPose();
-                RenderUtils.unGuiScale(this.stack);
+                Render2DUtils.unGuiScale(this.stack);
                 double yaw = Math.toRadians(RotationUtils.getYaw(this.renderPos, BlackOut.mc.gameRenderer.getMainCamera().getPosition(), 0.0));
-                Vec2 f = RenderUtils.getCoords(
+                Vec2 f = Render2DUtils.getCoords(
                         this.renderPos.x + Math.cos(yaw) * this.dist.get(),
                         this.renderPos.y + this.renderTarget.getBoundingBox().getYsize() * this.renderHeight.get(),
                         this.renderPos.z + Math.sin(yaw) * this.dist.get(),
@@ -181,7 +181,7 @@ public class TargetHUD extends HudElement {
         switch (this.mode.get()) {
             case Blackout:
                 if (this.blur.get()) {
-                    RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 105.0F, 20.0F, 3.0F, 10));
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 105.0F, 20.0F, 3.0F, 10));
                     Renderer.onHUDBlur();
                 }
 
@@ -198,7 +198,7 @@ public class TargetHUD extends HudElement {
                 this.drawFace(this.stack, 1.1F, -1.0F, -1.0F);
                 break;
             case ExhibitionNew:
-                RenderUtils.rounded(
+                Render2DUtils.rounded(
                         this.stack,
                         0.0F,
                         0.0F,
@@ -220,9 +220,9 @@ public class TargetHUD extends HudElement {
                                 false,
                                 false
                         );
-                RenderUtils.rounded(this.stack, 28.0F, 11.0F, 72.0F * this.progress, 1.0F, 2.0F, 0.0F, GOLD_BAR, 0);
-                RenderUtils.rounded(this.stack, 28.0F, 11.0F, 72.0F * this.progress, 1.0F, 1.0F, 0.0F, YELLOW_BAR, 0);
-                RenderUtils.rounded(this.stack, 6.0F, 8.0F, 12.0F, 12.0F, 5.0F, 0.0F, BG_45, 0);
+                Render2DUtils.rounded(this.stack, 28.0F, 11.0F, 72.0F * this.progress, 1.0F, 2.0F, 0.0F, GOLD_BAR, 0);
+                Render2DUtils.rounded(this.stack, 28.0F, 11.0F, 72.0F * this.progress, 1.0F, 1.0F, 0.0F, YELLOW_BAR, 0);
+                Render2DUtils.rounded(this.stack, 6.0F, 8.0F, 12.0F, 12.0F, 5.0F, 0.0F, BG_45, 0);
                 this.drawArmor(this.stack, this.renderTarget, 32.0F, 19.0F);
                 this.drawFace(this.stack, 1.1F, 1.0F, 3.0F);
                 break;
@@ -239,16 +239,16 @@ public class TargetHUD extends HudElement {
                 int popAmount = trackerData == null ? 0 : trackerData.pops;
                 String info = "HP: " + Math.round(renderHealth) + " Ping: " + ping + "ms Pops: " + popAmount;
                 if (this.blur.get()) {
-                    RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 120.0F, 50.0F, 3.0F, 10));
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 120.0F, 50.0F, 3.0F, 10));
                     Renderer.onHUDBlur();
                 }
 
                 this.background.render(this.stack, 0.0F, 0.0F, 120.0F, 50.0F, 3.0F, 3.0F);
                 BlackOut.FONT.text(this.stack, this.renderTarget.getName().getString(), 1.0F, 60.0F, 5.0F, this.textColor.get().getColor(), true, true);
-                RenderUtils.quad(this.stack, 5.0F, 3.0F + BlackOut.FONT.getHeight(), 110.0F, 1.0F, SHADOW_100);
+                Render2DUtils.quad(this.stack, 5.0F, 3.0F + BlackOut.FONT.getHeight(), 110.0F, 1.0F, SHADOW_100);
                 this.healthBar.render(this.stack, 5.0F, 3.0F + BlackOut.FONT.getHeight(), 110.0F * this.progress, 1.0F, 0.0F, 0.0F);
                 BlackOut.FONT.text(this.stack, info, 0.8F, 60.0F, 12.0F + BlackOut.FONT.getHeight(), this.textColor.get().getColor(), true, true);
-                RenderUtils.rounded(
+                Render2DUtils.rounded(
                         this.stack, 20.0F, 24.0F + BlackOut.FONT.getHeight(), 80.0F, 10.0F, 3.0F, 3.0F, FADE_80, FADE_40
                 );
                 if (naked) {
@@ -260,7 +260,7 @@ public class TargetHUD extends HudElement {
 
             case Old:
                 if (this.blur.get()) {
-                    RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 108.0F, 24.0F, 0.0F, 10));
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 108.0F, 24.0F, 0.0F, 10));
                     Renderer.onHUDBlur();
                 }
 
@@ -273,13 +273,13 @@ public class TargetHUD extends HudElement {
 
             case Tenacity:
                 if (this.blur.get()) {
-                    RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 115.0F, 26.0F, 6.0F, 10));
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 115.0F, 26.0F, 6.0F, 10));
                     Renderer.onHUDBlur();
                 }
 
                 this.background.render(this.stack, 0.0F, 0.0F, 115.0F, 26.0F, 6.0F, 3.0F);
                 BlackOut.FONT.text(this.stack, this.renderTarget.getName().getString(), 1.0F, 70.0F, 0.0F, this.textColor.get().getColor(), true, false);
-                RenderUtils.rounded(this.stack, 32.0F, 25.0F, 80.0F * this.progress, 0.2F, 1.0F, 0.0F, yes.getRGB(), yes.getRGB());
+                Render2DUtils.rounded(this.stack, 32.0F, 25.0F, 80.0F * this.progress, 0.2F, 1.0F, 0.0F, yes.getRGB(), yes.getRGB());
                 this.healthBar.render(this.stack, 32.0F, 25.0F, 80.0F * this.progress, 0.2F, 1.0F, 0.0F);
                 healthPercent = Math.round(this.renderTarget.getHealth() / this.renderTarget.getMaxHealth() * 100.0F) + "%";
                 BlackOut.FONT
@@ -298,7 +298,7 @@ public class TargetHUD extends HudElement {
 
             case Tenacity2:
                 if (this.blur.get()) {
-                    RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 100.0F, 26.0F, 6.0F, 10));
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 100.0F, 26.0F, 6.0F, 10));
                     Renderer.onHUDBlur();
                 }
 
@@ -314,7 +314,7 @@ public class TargetHUD extends HudElement {
                                 true,
                                 false
                         );
-                RenderUtils.rounded(this.stack, 31.0F, 13.2F, 68.0F, 0.4F, 1.2F, 0.0F, yes.getRGB(), yes.getRGB());
+                Render2DUtils.rounded(this.stack, 31.0F, 13.2F, 68.0F, 0.4F, 1.2F, 0.0F, yes.getRGB(), yes.getRGB());
                 this.healthBar.render(this.stack, 31.0F, 13.2F, 68.0F * this.progress, 0.4F, 1.2F, 0.0F);
                 healthPercent = Math.round(this.renderTarget.getHealth() / this.renderTarget.getMaxHealth() * 100.0F) + "%";
                 String dist = Math.round(this.renderTarget.distanceTo(BlackOut.mc.player)) + "m";
@@ -325,15 +325,15 @@ public class TargetHUD extends HudElement {
 
             case BlackoutNew:
                 if (this.blur.get()) {
-                    RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 100.0F, 20.0F, 3.0F, 10));
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 100.0F, 20.0F, 3.0F, 10));
                     Renderer.onHUDBlur();
                 }
 
                 this.background.render(this.stack, 0.0F, 0.0F, 100.0F, 20.0F, 3.0F, 3.0F);
                 BlackOut.FONT.text(this.stack, this.renderTarget.getName().getString(), 0.75F, 27.0F, 1.0F, this.textColor.get().getColor(), false, false);
-                RenderUtils.rounded(this.stack, 27.0F, 11.0F, 70.0F, 0.1F, 1.0F, 0.0F, SHADOW_100, SHADOW_100);
+                Render2DUtils.rounded(this.stack, 27.0F, 11.0F, 70.0F, 0.1F, 1.0F, 0.0F, SHADOW_100, SHADOW_100);
                 this.healthBar.render(this.stack, 27.0F, 11.0F, 70.0F * this.progress, 0.1F, 1.0F, 1.0F);
-                RenderUtils.rounded(this.stack, 27.0F, 18.0F, 70.0F, 0.1F, 1.0F, 0.0F, SHADOW_100, SHADOW_100);
+                Render2DUtils.rounded(this.stack, 27.0F, 18.0F, 70.0F, 0.1F, 1.0F, 0.0F, SHADOW_100, SHADOW_100);
                 this.armorBar.render(this.stack, 27.0F, 18.0F, 70.0F * this.getDurability(this.renderTarget), 0.1F, 1.0F, 1.0F);
                 String txt = "HP: " + Math.round(renderHealth);
                 x = 99.0F - BlackOut.FONT.getWidth(txt) * 0.75F;
@@ -347,7 +347,7 @@ public class TargetHUD extends HudElement {
                 width = Math.max(BlackOut.FONT.getWidth(name), BlackOut.FONT.getWidth(hp));
                 float height = BlackOut.FONT.getHeight() * 2.0F;
                 if (this.blur.get()) {
-                    RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, width, height, 0.0F, 10));
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, width, height, 0.0F, 10));
                     Renderer.onHUDBlur();
                 }
 
@@ -380,16 +380,16 @@ public class TargetHUD extends HudElement {
                 break;
 
             case Exhibition:
-                RenderUtils.quad(this.stack, 0.0F, 0.0F, 114.0F, 32.0F, OVERLAY_150);
-                RenderUtils.quad(this.stack, 1.0F, 1.0F, 30.0F, 30.0F, LIGHT_200);
+                Render2DUtils.quad(this.stack, 0.0F, 0.0F, 114.0F, 32.0F, OVERLAY_150);
+                Render2DUtils.quad(this.stack, 1.0F, 1.0F, 30.0F, 30.0F, LIGHT_200);
                 this.drawFace(this.stack, 1.4F, 2.0F, 2.0F);
                 BlackOut.FONT.text(this.stack, this.renderTarget.getName().getString(), 1.0F, 34.0F, 2.0F, this.textColor.get().getRGB(), false, false);
-                RenderUtils.quad(this.stack, 34.0F, 3.0F + BlackOut.FONT.getHeight(), 3.7F * health, 3.0F, YELLOW_220);
-                RenderUtils.quad(this.stack, 34.0F, 2.5F + BlackOut.FONT.getHeight(), 74.0F, 0.5F, Color.BLACK.getRGB());
-                RenderUtils.quad(this.stack, 34.0F, 6.0F + BlackOut.FONT.getHeight(), 74.0F, 0.5F, Color.BLACK.getRGB());
+                Render2DUtils.quad(this.stack, 34.0F, 3.0F + BlackOut.FONT.getHeight(), 3.7F * health, 3.0F, YELLOW_220);
+                Render2DUtils.quad(this.stack, 34.0F, 2.5F + BlackOut.FONT.getHeight(), 74.0F, 0.5F, Color.BLACK.getRGB());
+                Render2DUtils.quad(this.stack, 34.0F, 6.0F + BlackOut.FONT.getHeight(), 74.0F, 0.5F, Color.BLACK.getRGB());
 
                 for (int i = 0; i < 11; i++) {
-                    RenderUtils.quad(this.stack, (float) (33.5 + 7.4 * i), 2.5F + BlackOut.FONT.getHeight(), 0.5F, 4.0F, Color.BLACK.getRGB());
+                    Render2DUtils.quad(this.stack, (float) (33.5 + 7.4 * i), 2.5F + BlackOut.FONT.getHeight(), 0.5F, 4.0F, Color.BLACK.getRGB());
                 }
 
                 BlackOut.FONT
@@ -527,10 +527,10 @@ public class TargetHUD extends HudElement {
             case ExhibitionNew:
                 for (int ix = 0; ix < 4; ix++) {
                     ItemStack itemStack = player.getInventory().armor.get(3 - ix);
-                    RenderUtils.rounded(stack, x + ix * 18, y, 8.0F, 8.0F, 2.0F, 0.0F, BG_45, 0);
-                    RenderUtils.rounded(stack, x + ix * 18 + 1.0F, y + 1.0F, 6.0F, 6.0F, 2.0F, 0.0F, BG_25, 0);
+                    Render2DUtils.rounded(stack, x + ix * 18, y, 8.0F, 8.0F, 2.0F, 0.0F, BG_45, 0);
+                    Render2DUtils.rounded(stack, x + ix * 18 + 1.0F, y + 1.0F, 6.0F, 6.0F, 2.0F, 0.0F, BG_25, 0);
                     if (!itemStack.isEmpty()) {
-                        RenderUtils.renderItem(stack, itemStack, x - 4.0F + ix * 18, y - 4.0F, 10.0F, RenderLayer.HUD, true);
+                        Render2DUtils.renderItem(stack, itemStack, x - 4.0F + ix * 18, y - 4.0F, 10.0F, RenderLayer.HUD, true);
                     }
                 }
                 break;
@@ -538,7 +538,7 @@ public class TargetHUD extends HudElement {
                 for (int i = 0; i < 4; i++) {
                     ItemStack itemStack = player.getInventory().armor.get(3 - i);
                     if (!itemStack.isEmpty()) {
-                        RenderUtils.renderItem(stack, itemStack, x + i * 20, y - 3.0F, 16.0F, RenderLayer.HUD, true);
+                        Render2DUtils.renderItem(stack, itemStack, x + i * 20, y - 3.0F, 16.0F, RenderLayer.HUD, true);
                     }
                 }
         }

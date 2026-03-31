@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.util;
 
+import bodevelopment.client.blackout.BlackOut;
+
 public class CompatUtils {
     private static final boolean BARITONE_PRESENT;
 
@@ -16,6 +18,10 @@ public class CompatUtils {
 
     public static boolean isBaritonePathing() {
         return BARITONE_PRESENT && BaritoneLazyLoader.isPathing();
+    }
+
+    public static boolean shouldBypassRotations() {
+        return isBaritonePathing() && (BlackOut.mc.player == null || !BlackOut.mc.player.isFallFlying());
     }
 
     private static class BaritoneLazyLoader {

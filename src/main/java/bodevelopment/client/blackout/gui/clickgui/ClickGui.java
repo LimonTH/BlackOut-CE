@@ -23,13 +23,14 @@ import bodevelopment.client.blackout.rendering.framebuffer.GuiAlphaFrameBuffer;
 import bodevelopment.client.blackout.rendering.renderer.ColorRenderer;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
+import bodevelopment.client.blackout.util.render.RenderState;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.GuiRenderUtils;
 import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import bodevelopment.client.blackout.util.render.ScissorStack;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
@@ -171,7 +172,7 @@ public class ClickGui extends Screen {
 
         unscaled = scale;
 
-        float currentScale = RenderUtils.getScale();
+        float currentScale = Render2DUtils.getScale();
         scale = scale / (currentScale == 0 ? 1 : currentScale);
 
         double screenWidth = BlackOut.mc.getWindow().getScreenWidth();
@@ -186,7 +187,7 @@ public class ClickGui extends Screen {
         this.updatePos();
         this.updateScroll();
 
-        RenderUtils.startClickGui(this.stack, unscaled, scale, width, height, x, y);
+        Render2DUtils.startClickGui(this.stack, unscaled, scale, width, height, x, y);
         ScissorStack.clear();
 
         if (BlackOut.mc.level != null) {
@@ -196,15 +197,15 @@ public class ClickGui extends Screen {
         GuiAlphaFrameBuffer frameBuffer = Managers.FRAME_BUFFER.getGui();
         frameBuffer.start();
 
-        RenderUtils.roundedShadow(this.stack, 0.0F, 0.0F, width, height, 10.0F, 30.0F, new Color(0, 0, 0, 100).getRGB());
-        RenderUtils.roundedRight(this.stack, 200.0F, 0.0F, width - 200.0F, height, 10.0F, 0.0F, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
-        RenderUtils.rightFade(this.stack, 180.0F, -10.0F, 55.0F, height + 20.0F, new Color(0, 0, 0, 100).getRGB());
+        Render2DUtils.roundedShadow(this.stack, 0.0F, 0.0F, width, height, 10.0F, 30.0F, new Color(0, 0, 0, 100).getRGB());
+        Render2DUtils.rounded(this.stack, 200.0F, 0.0F, width - 200.0F, height, 10.0F, 0.0F, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I, Render2DUtils.RoundedSide.RIGHT);
+        Render2DUtils.fade(this.stack, 180.0F, -10.0F, 55.0F, height + 20.0F, new Color(0, 0, 0, 100).getRGB(), Render2DUtils.FadeSide.RIGHT);
 
         this.renderLogo();
         this.renderModules();
         this.renderFade();
 
-        RenderUtils.rounded(this.stack, 0.0F, 0.0F, 200.0F, height, 10.0F, 2.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
+        Render2DUtils.rounded(this.stack, 0.0F, 0.0F, 200.0F, height, 10.0F, 2.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I);
         GuiRenderUtils.renderWaveText(this.stack, "Blackout", 4.5F, 100.0F, 50.0F, true, true, true);
 
         if (this.scaling) {
@@ -215,7 +216,7 @@ public class ClickGui extends Screen {
 
         if (this.scaleDelta > 0.0F) {
             int clr = ColorUtils.withAlpha(Color.WHITE.getRGB(), (int) (this.scaleDelta * 100.0F));
-            RenderUtils.rounded(this.stack, width - 10.0F, height - 10.0F, 20.0F, 20.0F, 15.0F, 5.0F, clr, clr);
+            Render2DUtils.rounded(this.stack, width - 10.0F, height - 10.0F, 20.0F, 20.0F, 15.0F, 5.0F, clr, clr);
         }
 
         this.renderCategories(this.frameTime);
@@ -307,7 +308,7 @@ public class ClickGui extends Screen {
                 int bgColor = ColorUtils.withAlpha(GuiColorUtils.bg2.getRGB(), (int) (smoothAlpha * 235));
                 int textColor = ColorUtils.withAlpha(Color.WHITE.getRGB(), alphaInt);
 
-                RenderUtils.rounded(this.stack, rectX, rectY, finalWidth + 12, finalHeight + 10, 5.0F, 5.0F, bgColor, ColorUtils.SHADOW100I);
+                Render2DUtils.rounded(this.stack, rectX, rectY, finalWidth + 12, finalHeight + 10, 5.0F, 5.0F, bgColor, ColorUtils.SHADOW100I);
 
                 float currentY = rectY + 3.0F;
                 for (String line : lines) {
@@ -344,74 +345,73 @@ public class ClickGui extends Screen {
 
     private void renderFade() {
         ColorRenderer renderer = ColorRenderer.getInstance();
-        renderer.startRender(this.stack, VertexFormat.Mode.TRIANGLE_FAN);
-        renderer.vertex(
-                235.0F, height - 10.0F, 0.0F, GuiColorUtils.bg1.getRed() / 255.0F, GuiColorUtils.bg1.getGreen() / 255.0F, GuiColorUtils.bg1.getBlue() / 255.0F, 0.0F
-        );
-        renderer.vertex(
-                235.0F,
-                height + 10.0F,
-                0.0F,
-                GuiColorUtils.bg1.getRed() / 255.0F,
-                GuiColorUtils.bg1.getGreen() / 255.0F,
-                GuiColorUtils.bg1.getBlue() / 255.0F,
-                GuiColorUtils.bg1.getAlpha() / 255.0F
-        );
-
-        for (int i = 90; i >= 0; i -= 9) {
-            float y = (float) (Math.sin(Math.toRadians(i)) * 10.0);
+        try (RenderState state = renderer.begin(this.stack, VertexFormat.Mode.TRIANGLE_FAN)) {
             renderer.vertex(
-                    width + (float) Math.cos(Math.toRadians(i)) * 10.0F,
-                    height + y,
+                    235.0F, height - 10.0F, 0.0F, GuiColorUtils.bg1.getRed() / 255.0F, GuiColorUtils.bg1.getGreen() / 255.0F, GuiColorUtils.bg1.getBlue() / 255.0F, 0.0F
+            );
+            renderer.vertex(
+                    235.0F,
+                    height + 10.0F,
                     0.0F,
                     GuiColorUtils.bg1.getRed() / 255.0F,
                     GuiColorUtils.bg1.getGreen() / 255.0F,
                     GuiColorUtils.bg1.getBlue() / 255.0F,
-                    Mth.inverseLerp(y, -10.0F, 10.0F)
+                    GuiColorUtils.bg1.getAlpha() / 255.0F
             );
-        }
 
-        renderer.vertex(
-                width + 10.0F,
-                height - 10.0F,
-                0.0F,
-                GuiColorUtils.bg1.getRed() / 255.0F,
-                GuiColorUtils.bg1.getGreen() / 255.0F,
-                GuiColorUtils.bg1.getBlue() / 255.0F,
-                0.0F
-        );
-        renderer.endRender();
-        renderer.startRender(this.stack, VertexFormat.Mode.TRIANGLE_FAN);
-        renderer.vertex(
-                235.0F,
-                -10.0F,
-                0.0F,
-                GuiColorUtils.bg1.getRed() / 255.0F,
-                GuiColorUtils.bg1.getGreen() / 255.0F,
-                GuiColorUtils.bg1.getBlue() / 255.0F,
-                GuiColorUtils.bg1.getAlpha() / 255.0F
-        );
-        renderer.vertex(
-                235.0F, 10.0F, 0.0F, GuiColorUtils.bg1.getRed() / 255.0F, GuiColorUtils.bg1.getGreen() / 255.0F, GuiColorUtils.bg1.getBlue() / 255.0F, 0.0F
-        );
-        renderer.vertex(
-                width + 10.0F, 10.0F, 0.0F, GuiColorUtils.bg1.getRed() / 255.0F, GuiColorUtils.bg1.getGreen() / 255.0F, GuiColorUtils.bg1.getBlue() / 255.0F, 0.0F
-        );
+            for (int i = 90; i >= 0; i -= 9) {
+                float y = (float) (Math.sin(Math.toRadians(i)) * 10.0);
+                renderer.vertex(
+                        width + (float) Math.cos(Math.toRadians(i)) * 10.0F,
+                        height + y,
+                        0.0F,
+                        GuiColorUtils.bg1.getRed() / 255.0F,
+                        GuiColorUtils.bg1.getGreen() / 255.0F,
+                        GuiColorUtils.bg1.getBlue() / 255.0F,
+                        Mth.inverseLerp(y, -10.0F, 10.0F)
+                );
+            }
 
-        for (int i = 360; i >= 270; i -= 9) {
-            float y = (float) (Math.sin(Math.toRadians(i)) * 10.0);
             renderer.vertex(
-                    width + (float) Math.cos(Math.toRadians(i)) * 10.0F,
-                    y,
+                    width + 10.0F,
+                    height - 10.0F,
                     0.0F,
                     GuiColorUtils.bg1.getRed() / 255.0F,
                     GuiColorUtils.bg1.getGreen() / 255.0F,
                     GuiColorUtils.bg1.getBlue() / 255.0F,
-                    Mth.inverseLerp(y, 10.0F, -10.0F)
+                    0.0F
             );
         }
+        try (RenderState state = renderer.begin(this.stack, VertexFormat.Mode.TRIANGLE_FAN)) {
+            renderer.vertex(
+                    235.0F,
+                    -10.0F,
+                    0.0F,
+                    GuiColorUtils.bg1.getRed() / 255.0F,
+                    GuiColorUtils.bg1.getGreen() / 255.0F,
+                    GuiColorUtils.bg1.getBlue() / 255.0F,
+                    GuiColorUtils.bg1.getAlpha() / 255.0F
+            );
+            renderer.vertex(
+                    235.0F, 10.0F, 0.0F, GuiColorUtils.bg1.getRed() / 255.0F, GuiColorUtils.bg1.getGreen() / 255.0F, GuiColorUtils.bg1.getBlue() / 255.0F, 0.0F
+            );
+            renderer.vertex(
+                    width + 10.0F, 10.0F, 0.0F, GuiColorUtils.bg1.getRed() / 255.0F, GuiColorUtils.bg1.getGreen() / 255.0F, GuiColorUtils.bg1.getBlue() / 255.0F, 0.0F
+            );
 
-        renderer.endRender();
+            for (int i = 360; i >= 270; i -= 9) {
+                float y = (float) (Math.sin(Math.toRadians(i)) * 10.0);
+                renderer.vertex(
+                        width + (float) Math.cos(Math.toRadians(i)) * 10.0F,
+                        y,
+                        0.0F,
+                        GuiColorUtils.bg1.getRed() / 255.0F,
+                        GuiColorUtils.bg1.getGreen() / 255.0F,
+                        GuiColorUtils.bg1.getBlue() / 255.0F,
+                        Mth.inverseLerp(y, 10.0F, -10.0F)
+                );
+            }
+        }
     }
 
     private void renderLogo() {
@@ -422,19 +422,18 @@ public class ClickGui extends Screen {
             float ts = 1200.0F * guiSettings.logoScale.get().floatValue();
             float cx = width - 100.0F;
             float cy = height - 350.0F;
-            t.startRender(this.stack, cx - ts / 2.0F, cy - ts / 2.0F, ts, ts, 1.0F, 1.0F, 1.0F, 1.0F, alpha, VertexFormat.Mode.TRIANGLE_FAN);
+            try (RenderState state = t.begin(this.stack, cx - ts / 2.0F, cy - ts / 2.0F, ts, ts, 1.0F, 1.0F, 1.0F, 1.0F, alpha, VertexFormat.Mode.TRIANGLE_FAN)) {
+                for (int i = 90; i >= 0; i -= 9) {
+                    t.vertex(width + Math.cos(Math.toRadians(i)) * 10.0, height + Math.sin(Math.toRadians(i)) * 10.0);
+                }
 
-            for (int i = 90; i >= 0; i -= 9) {
-                t.vertex(width + Math.cos(Math.toRadians(i)) * 10.0, height + Math.sin(Math.toRadians(i)) * 10.0);
+                for (int i = 360; i >= 270; i -= 9) {
+                    t.vertex(width + Math.cos(Math.toRadians(i)) * 10.0, Math.sin(Math.toRadians(i)) * 10.0);
+                }
+
+                t.vertex(200.0F, -10.0F);
+                t.vertex(200.0F, height + 10.0F);
             }
-
-            for (int i = 360; i >= 270; i -= 9) {
-                t.vertex(width + Math.cos(Math.toRadians(i)) * 10.0, Math.sin(Math.toRadians(i)) * 10.0);
-            }
-
-            t.vertex(200.0F, -10.0F);
-            t.vertex(200.0F, height + 10.0F);
-            t.endRender();
         }
     }
 
@@ -442,7 +441,7 @@ public class ClickGui extends Screen {
         if (GuiSettings.getInstance() == null) return;
         int blur = GuiSettings.getInstance().blur.get();
         if (blur > 0) {
-            RenderUtils.blur(blur, popUpDelta);
+            Render2DUtils.blur(blur, popUpDelta);
         }
     }
 
@@ -543,8 +542,8 @@ public class ClickGui extends Screen {
 
         this.categoryOffset = totalHeightCounter;
 
-        RenderUtils.bottomFade(this.stack, 0.0F, 100.0F, 200.0F, 20.0F, GuiColorUtils.bg2.getRGB());
-        RenderUtils.topFade(this.stack, 0.0F, height - 10.0F, 200.0F, 20.0F, GuiColorUtils.bg2.getRGB());
+        Render2DUtils.fade(this.stack, 0.0F, 100.0F, 200.0F, 20.0F, GuiColorUtils.bg2.getRGB(), Render2DUtils.FadeSide.BOTTOM);
+        Render2DUtils.fade(this.stack, 0.0F, height - 10.0F, 200.0F, 20.0F, GuiColorUtils.bg2.getRGB(), Render2DUtils.FadeSide.TOP);
         ScissorStack.pop();
     }
 
@@ -777,7 +776,7 @@ public class ClickGui extends Screen {
     }
 
     private boolean mouseOnScale() {
-        return RenderUtils.insideRounded(this.mx, this.my, width - 10.0F, height - 10.0F, 20.0, 20.0, 15.0);
+        return Render2DUtils.insideRounded(this.mx, this.my, width - 10.0F, height - 10.0F, 20.0, 20.0, 15.0);
     }
 
     @Override

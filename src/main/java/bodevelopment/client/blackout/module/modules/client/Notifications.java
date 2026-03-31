@@ -11,7 +11,7 @@ import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.render.AnimUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import net.minecraft.ChatFormatting;
@@ -125,7 +125,7 @@ public class Notifications extends SettingsModule {
                 roundedWidth = width - r * 2 + 10.0F;
                 roundedHeight = 40.0F - r * 2 + 10.0F;
 
-                RenderUtils.rounded(stack, 0.0F, 0.0F, roundedWidth, roundedHeight, r, this.shadow.get() ? 3.0F : 0.0F, this.bgColor.get().getRGB(), this.shadowColor.get().getRGB());
+                Render2DUtils.rounded(stack, 0.0F, 0.0F, roundedWidth, roundedHeight, r, this.shadow.get() ? 3.0F : 0.0F, this.bgColor.get().getRGB(), this.shadowColor.get().getRGB());
                 stack.translate(25.0F - r, 22.0F - r, 0.0F);
 
                 float iVisualY = 0.5F;
@@ -133,7 +133,7 @@ public class Notifications extends SettingsModule {
                 float yCorrection = 1.5F;
                 float finalCenterY = iVisualY + yCorrection;
 
-                RenderUtils.circle(
+                Render2DUtils.circle(
                         stack,
                         0.0F,
                         finalCenterY+1.5F,
@@ -153,11 +153,11 @@ public class Notifications extends SettingsModule {
                 x = (float) (BlackOut.mc.getWindow().getScreenWidth() - (width + 20.0F) * delta);
                 stack.translate(x, y, 0.0F);
                 if (this.blur.get()) {
-                    RenderUtils.drawLoadedBlur("hudblur", stack, renderer -> renderer.rounded(0.0F, 0.0F, width, roundedHeight, 6.0F, 10));
+                    Render2DUtils.drawLoadedBlur("hudblur", stack, renderer -> renderer.rounded(0.0F, 0.0F, width, roundedHeight, 6.0F, 10));
                     Renderer.onHUDBlur();
                 }
 
-                RenderUtils.rounded(
+                Render2DUtils.rounded(
                         stack, 0.0F, 0.0F, width, roundedHeight, 6.0F, this.shadow.get() ? 6.0F : 0.0F, this.bgColor.get().getRGB(), this.shadowColor.get().getRGB()
                 );
                 this.textColor.render(stack, n.text, 2.0F, 2.0F, fHeight / 2.0F + 1.0F, false, false, this.bold.get());
@@ -171,11 +171,11 @@ public class Notifications extends SettingsModule {
                 x = (float) (BlackOut.mc.getWindow().getScreenWidth() - (width + 20.0F) * delta);
                 stack.translate(x, y, 0.0F);
                 if (this.blur.get()) {
-                    RenderUtils.drawLoadedBlur("hudblur", stack, renderer -> renderer.rounded(0.0F, 0.0F, width, roundedHeight, 6.0F, 10));
+                    Render2DUtils.drawLoadedBlur("hudblur", stack, renderer -> renderer.rounded(0.0F, 0.0F, width, roundedHeight, 6.0F, 10));
                     Renderer.onHUDBlur();
                 }
 
-                RenderUtils.rounded(stack, 0.0F, 0.0F, width, roundedHeight, 6.0F, this.shadow.get() ? 6.0F : 0.0F, c.getRGB(), c.getRGB());
+                Render2DUtils.rounded(stack, 0.0F, 0.0F, width, roundedHeight, 6.0F, this.shadow.get() ? 6.0F : 0.0F, c.getRGB(), c.getRGB());
                 t.quad(stack, -1.0F, -1.0F, tWidth, tHeight);
                 this.textColor.render(stack, n.text, 2.0F, 4.0F + tWidth, fHeight / 2.0F + 1.0F, false, false, this.bold.get());
                 break;
@@ -189,11 +189,11 @@ public class Notifications extends SettingsModule {
                 roundedWidth = width - r * 2 + 10.0F;
                 roundedHeight = 40 - r * 2 + 10;
                 if (this.blur.get()) {
-                    RenderUtils.drawLoadedBlur("hudblur", stack, renderer -> renderer.rounded(0.0F, 0.0F, roundedWidth, roundedHeight, r, 10));
+                    Render2DUtils.drawLoadedBlur("hudblur", stack, renderer -> renderer.rounded(0.0F, 0.0F, roundedWidth, roundedHeight, r, 10));
                     Renderer.onHUDBlur();
                 }
 
-                RenderUtils.rounded(stack, 0.0F, 0.0F, roundedWidth, roundedHeight, r, this.shadow.get() ? 5.0F : 0.0F, c.getRGB(), c.getRGB());
+                Render2DUtils.rounded(stack, 0.0F, 0.0F, roundedWidth, roundedHeight, r, this.shadow.get() ? 5.0F : 0.0F, c.getRGB(), c.getRGB());
                 stack.translate(25 - r, 25 - r, 0.0F);
                 tWidth = t.getWidth() / 5.0F;
                 tHeight = t.getHeight() / 5.0F;
@@ -209,15 +209,15 @@ public class Notifications extends SettingsModule {
                 x = (float) (BlackOut.mc.getWindow().getScreenWidth() - (width + 20.0F) * delta);
                 stack.translate(x - 5.0F, y - 5.0F, 0.0F);
                 if (this.blur.get()) {
-                    RenderUtils.drawLoadedBlur("hudblur", stack, renderer -> renderer.rounded(0.0F, 0.0F, width, height, 0.0F, 10));
+                    Render2DUtils.drawLoadedBlur("hudblur", stack, renderer -> renderer.rounded(0.0F, 0.0F, width, height, 0.0F, 10));
                     Renderer.onHUDBlur();
                 }
 
-                RenderUtils.rounded(
+                Render2DUtils.rounded(
                         stack, 0.0F, 0.0F, width, height, 0.0F, this.shadow.get() ? 5.0F : 0.0F, this.bgColor.get().getRGB(), this.shadowColor.get().getRGB()
                 );
-                RenderUtils.quad(stack, 0.0F, height - 5.0F, width, 5.0F, this.bgColor.get().getRGB());
-                RenderUtils.quad(stack, 0.0F, height - 5.0F, (float) (width * bar), 5.0F, c.getRGB());
+                Render2DUtils.quad(stack, 0.0F, height - 5.0F, width, 5.0F, this.bgColor.get().getRGB());
+                Render2DUtils.quad(stack, 0.0F, height - 5.0F, (float) (width * bar), 5.0F, c.getRGB());
                 this.textColor.render(stack, n.bigText, 2.5F, 5.0F, 5.0F, false, false, true);
                 this.textColor.render(stack, n.text, 2.2F, 5.0F, height - 15.0F - BlackOut.FONT.getHeight() * 1.3F, false, false);
                 tWidth = t.getWidth() / 7.0F;

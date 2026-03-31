@@ -11,7 +11,7 @@ import bodevelopment.client.blackout.module.setting.multisettings.BackgroundMult
 import bodevelopment.client.blackout.module.setting.multisettings.TextColorMultiSetting;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.TimeUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import java.util.function.Predicate;
 import net.minecraft.client.player.AbstractClientPlayer;
 
@@ -52,7 +52,7 @@ public class StatsHUD extends HudElement {
                         BlackOut.FONT.getHeight() * 1.5F + statCount * BlackOut.FONT.getHeight() + 10.0F
                 );
                 if (this.blur.get()) {
-                    RenderUtils.drawLoadedBlur(
+                    Render2DUtils.drawLoadedBlur(
                             "hudblur",
                             this.stack,
                             renderer -> renderer.rounded(0.0F, 0.0F, this.getWidth() / this.getScale(), this.getHeight() / this.getScale(), 3.0F, 10)

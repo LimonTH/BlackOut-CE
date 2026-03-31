@@ -11,7 +11,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.randomstuff.timers.RenderList;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.List;
 import net.minecraft.client.resources.sounds.SoundInstance;
@@ -78,14 +78,14 @@ public class SoundESP extends Module {
     @Event
     public void onRender(RenderEvent.Hud.Post event) {
         this.stack.pushPose();
-        RenderUtils.unGuiScale(this.stack);
+        Render2DUtils.unGuiScale(this.stack);
         Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
         this.renderList.update((render, time, delta) -> this.draw(render.x(), render.y(), render.z(), render.text(), time, camPos));
         this.stack.popPose();
     }
 
     private void draw(double x, double y, double z, String string, double time, Vec3 camPos) {
-        Vec2 f = RenderUtils.getCoords(x, y, z, true);
+        Vec2 f = Render2DUtils.getCoords(x, y, z, true);
         if (f != null) {
             double alpha = Mth.clamp(this.getAlpha(time), 0.0, 1.0);
             float scale = this.getScale(x, y, z, camPos);

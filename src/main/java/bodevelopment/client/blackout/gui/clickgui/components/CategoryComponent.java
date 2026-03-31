@@ -12,7 +12,7 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.GuiRenderUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import net.minecraft.util.Mth;
@@ -58,7 +58,7 @@ public class CategoryComponent extends Component {
             float rectY = this.y + shaderPadding;
             float rectW = 170.0F;
 
-            RenderUtils.rounded(this.stack, rectX, rectY, rectW, rectH, 6.0F, 2.0F, selCol, ColorUtils.SHADOW100I);
+            Render2DUtils.rounded(this.stack, rectX, rectY, rectW, rectH, 6.0F, 2.0F, selCol, ColorUtils.SHADOW100I);
 
             if (GuiSettings.getInstance().selectorBar.get()) {
                 float barHeight = rectH - (6.0F * fontScale);
@@ -66,11 +66,12 @@ public class CategoryComponent extends Component {
                 float fogRadius = (float) GuiSettings.getInstance().selectorGlow.get() * 2.5F;
                 int fogColor = ColorUtils.withAlpha(barColor, (int) (animation * 60));
 
-                this.stack.translate(0, 0, RenderLayer.OFFSET_SMALL);
                 float barY = rectY + (rectH - barHeight) / 2.0F;
-                RenderUtils.rounded(this.stack, this.x + 5.5F, barY, 0.5F, barHeight, 1.0F, fogRadius, fogColor, fogColor);
-                RenderUtils.rounded(this.stack, this.x + 5, barY, 1.5F, barHeight, 1.0F, 2.0F, ColorUtils.withAlpha(barColor, (int)(animation * 255)), ColorUtils.withAlpha(barColor, (int)(animation * 255)));
-                this.stack.translate(0, 0, -RenderLayer.OFFSET_SMALL);
+                this.stack.translate(0, 0, RenderLayer.OFFSET_SMALL);
+                Render2DUtils.rounded(this.stack, this.x + 5.5F, barY, 0.5F, barHeight, 1.0F, fogRadius, fogColor, fogColor);
+                this.stack.translate(0, 0, RenderLayer.OFFSET_MICRO);
+                Render2DUtils.rounded(this.stack, this.x + 5, barY, 1.5F, barHeight, 1.0F, 2.0F, ColorUtils.withAlpha(barColor, (int)(animation * 255)), ColorUtils.withAlpha(barColor, (int)(animation * 255)));
+                this.stack.translate(0, 0, -RenderLayer.OFFSET_SMALL - RenderLayer.OFFSET_MICRO);
             }
         }
 

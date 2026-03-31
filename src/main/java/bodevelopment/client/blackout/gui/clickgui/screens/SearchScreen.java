@@ -12,7 +12,7 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.GuiRenderUtils;
 import bodevelopment.client.blackout.util.SelectedComponent;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
@@ -53,7 +53,7 @@ public class SearchScreen extends ClickGuiScreen {
                 boolean hovered = this.mx > 20.0F && this.mx < this.width - 20.0F && this.my > yPos && this.my < yPos + entryHeight;
                 int bgColor = hovered ? ColorUtils.withAlpha(GuiColorUtils.bg1.getRGB(), 180) : ColorUtils.withAlpha(GuiColorUtils.bg1.getRGB(), 100);
 
-                RenderUtils.rounded(this.stack, 20.0F, yPos, this.width - 40.0F, entryHeight, RADIUS, SHADOW, bgColor, ColorUtils.SHADOW100I);
+                Render2DUtils.rounded(this.stack, 20.0F, yPos, this.width - 40.0F, entryHeight, RADIUS, SHADOW, bgColor, ColorUtils.SHADOW100I);
 
                 boolean isEnabled = module instanceof Module m && m.enabled;
                 int textColor = isEnabled ? GuiRenderUtils.getGuiColors(1.0F).getRGB() : Color.LIGHT_GRAY.getRGB();

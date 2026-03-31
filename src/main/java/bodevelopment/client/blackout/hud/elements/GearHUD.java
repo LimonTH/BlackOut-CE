@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.module.setting.multisettings.TextColorMulti
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.InvUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.List;
 import net.minecraft.world.item.Item;
@@ -48,7 +48,7 @@ public class GearHUD extends HudElement {
             this.stack.pushPose();
 
             if (this.blur.get()) {
-                RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, backgroundWidth, length, 3.0F, 10));
+                Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, backgroundWidth, length, 3.0F, 10));
                 Renderer.onHUDBlur();
             }
 
@@ -62,7 +62,7 @@ public class GearHUD extends HudElement {
             for (Item item : this.items.get()) {
                 int amount = this.getAmount(item);
                 this.textColor.render(this.stack, String.valueOf(amount), this.textScale.get().floatValue(), textWidth / 2.0F, 8.0F, true, true);
-                RenderUtils.renderItem(this.stack, item.getDefaultInstance(), textWidth, 0.0F, 16.0F, RenderLayer.HUD, true);
+                Render2DUtils.renderItem(this.stack, item.getDefaultInstance(), textWidth, 0.0F, 16.0F, RenderLayer.HUD, true);
                 this.stack.translate(0.0F, 22.0F, 0.0F);
             }
             BlackOut.mc.renderBuffers().bufferSource().endBatch();

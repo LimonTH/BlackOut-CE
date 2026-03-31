@@ -11,7 +11,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.TextColorMultiSetting;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.Collection;
@@ -56,7 +56,7 @@ public class CustomScoreboard extends Module {
                 float width = Math.max(this.getLongest(this.texts) * 2.0F + 20.0F, BlackOut.FONT.getWidth(this.objectiveName) * 2.0F + 40.0F);
                 float length = (this.texts.size() + 2) * BlackOut.FONT.getHeight() * 2.0F + 6.0F;
                 this.stack.pushPose();
-                RenderUtils.unGuiScale(this.stack);
+                Render2DUtils.unGuiScale(this.stack);
                 this.stack
                         .translate(
                                 BlackOut.mc.getWindow().getScreenWidth() - (width + 8.0F) * this.scale.get(),
@@ -65,12 +65,12 @@ public class CustomScoreboard extends Module {
                         );
                 this.stack.scale(this.scale.get().floatValue(), this.scale.get().floatValue(), 0.0F);
                 if (this.blur.get()) {
-                    RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, width, length + 4.0F, 6.0F, 10));
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, width, length + 4.0F, 6.0F, 10));
                     Renderer.onHUDBlur();
                 }
 
                 if (this.background.get()) {
-                    RenderUtils.rounded(this.stack, 0.0F, 0.0F, width, length + 4.0F, 6.0F, 6.0F, this.bgColor.get().getRGB(), this.shadowColor.get().getRGB());
+                    Render2DUtils.rounded(this.stack, 0.0F, 0.0F, width, length + 4.0F, 6.0F, 6.0F, this.bgColor.get().getRGB(), this.shadowColor.get().getRGB());
                 }
 
                 BlackOut.FONT.text(this.stack, this.objectiveName, 2.0F, width / 2.0F, 0.0F, this.objectiveColor, true, false);

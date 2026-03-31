@@ -1,4 +1,4 @@
-package bodevelopment.client.blackout.util.render;
+package bodevelopment.client.blackout.util.render.misc;
 
 import bodevelopment.client.blackout.rendering.framebuffer.FrameBuffer;
 import com.mojang.blaze3d.vertex.BufferBuilder;

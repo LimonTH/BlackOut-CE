@@ -9,7 +9,7 @@ import bodevelopment.client.blackout.randomstuff.mainmenu.MainMenuRenderer;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 
@@ -71,7 +71,7 @@ public class ColorMainMenu implements MainMenuRenderer { // (ThemeMainMenu)
 
         for (int i = 0; i < 4; i++) {
             float currentX = startX + (i * 54.0F);
-            boolean hovered = RenderUtils.insideRounded(mx, my, currentX + 5.0F, startY + 5.0F, 22.0F, 22.0F, 10.0F);
+            boolean hovered = Render2DUtils.insideRounded(mx, my, currentX + 5.0F, startY + 5.0F, 22.0F, 22.0F, 10.0F);
 
             stack.pushPose();
             if (hovered) {
@@ -99,13 +99,13 @@ public class ColorMainMenu implements MainMenuRenderer { // (ThemeMainMenu)
         ThemeSettings theme = ThemeSettings.getInstance();
         MainMenuSettings settings = MainMenuSettings.getInstance();
 
-        RenderUtils.drawLoadedBlur("title", stack, renderer ->
+        Render2DUtils.drawLoadedBlur("title", stack, renderer ->
                 renderer.rounded(5.0F, 5.0F, 22.0F, 22.0F, 10.0F, 10, 1.0F, 1.0F, 1.0F, 1.0F));
 
-        RenderUtils.tenaRounded(stack, 5.0F, 5.0F, 22.0F, 22.0F, 10.0F, 1.5F,
+        Render2DUtils.tenaRounded(stack, 5.0F, 5.0F, 22.0F, 22.0F, 10.0F, 1.5F,
                 theme.getMain(hovered ? 255 : 120), theme.getSecond(hovered ? 255 : 120), settings.speed.get().floatValue());
 
-        RenderUtils.rounded(stack, 5.0F, 5.0F, 22.0F, 22.0F, 10.0F, 3.0F,
+        Render2DUtils.rounded(stack, 5.0F, 5.0F, 22.0F, 22.0F, 10.0F, 3.0F,
                 new Color(0, 0, 0, hovered ? 70 : 35).getRGB(),
                 new Color(0, 0, 0, 225).getRGB());
 
@@ -120,7 +120,7 @@ public class ColorMainMenu implements MainMenuRenderer { // (ThemeMainMenu)
         float currentY = -100.0F;
 
         for (String name : MainMenu.getInstance().buttonNames) {
-            boolean hovered = RenderUtils.insideRounded(mx, my, -180.0, currentY, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS);
+            boolean hovered = Render2DUtils.insideRounded(mx, my, -180.0, currentY, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS);
 
             stack.pushPose();
             if (hovered) {
@@ -144,13 +144,13 @@ public class ColorMainMenu implements MainMenuRenderer { // (ThemeMainMenu)
         int mainCol = theme.getMain(hovered ? 255 : 140);
         int secondCol = theme.getSecond(hovered ? 255 : 140);
 
-        RenderUtils.drawLoadedBlur("title", stack, renderer ->
+        Render2DUtils.drawLoadedBlur("title", stack, renderer ->
                 renderer.rounded(0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10, 1.0F, 1.0F, 1.0F, 1.0F));
 
-        RenderUtils.tenaRounded(stack, 0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10.0F,
+        Render2DUtils.tenaRounded(stack, 0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10.0F,
                 mainCol, secondCol, settings.speed.get().floatValue());
 
-        RenderUtils.rounded(stack, 0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10.0F,
+        Render2DUtils.rounded(stack, 0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10.0F,
                 new Color(0, 0, 0, hovered ? 100 : 60).getRGB(),
                 new Color(0, 0, 0, 240).getRGB());
 
@@ -181,7 +181,7 @@ public class ColorMainMenu implements MainMenuRenderer { // (ThemeMainMenu)
         int buttonCount = MainMenu.getInstance().buttonNames.length;
         float yCenter = -100.0F;
         for (int i = 0; i < buttonCount; i++) {
-            if (RenderUtils.insideRounded(mx, my, -180.0, yCenter, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS))
+            if (Render2DUtils.insideRounded(mx, my, -180.0, yCenter, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS))
                 return i;
             yCenter += 85.0F;
         }
@@ -192,7 +192,7 @@ public class ColorMainMenu implements MainMenuRenderer { // (ThemeMainMenu)
 
         for (int i = 0; i < 4; i++) {
             float currentX = startX + (i * 54.0F);
-            if (RenderUtils.insideRounded(mx, my, currentX + 5.0F, startY + 5.0F, 22.0F, 22.0F, 10.0F)) {
+            if (Render2DUtils.insideRounded(mx, my, currentX + 5.0F, startY + 5.0F, 22.0F, 22.0F, 10.0F)) {
                 if (i == 3) return 6;
                 return 10 + i;
             }
@@ -206,15 +206,15 @@ public class ColorMainMenu implements MainMenuRenderer { // (ThemeMainMenu)
         ThemeSettings themeSettings = ThemeSettings.getInstance();
         boolean exiting = MainMenu.getInstance().isExiting();
 
-        RenderUtils.fadeRounded(stack, 0.0F, 0.0F, width, height, 0.0F, 0.0F,
+        Render2DUtils.fadeRounded(stack, 0.0F, 0.0F, width, height, 0.0F, 0.0F,
                 themeSettings.getMain(), themeSettings.getSecond(), 0.2F, mainMenuSettings.speed.get().floatValue() / 10.0F);
 
         int blurRadius = (int) (double) mainMenuSettings.blur.get();
         if (blurRadius > 0) {
             if (!exiting) {
-                RenderUtils.loadBlur("title", blurRadius);
+                Render2DUtils.loadBlur("title", blurRadius);
             }
-            RenderUtils.drawLoadedBlur("title", stack, renderer ->
+            Render2DUtils.drawLoadedBlur("title", stack, renderer ->
                     renderer.quadShape(0.0F, 0.0F, width, height, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F));
         }
     }

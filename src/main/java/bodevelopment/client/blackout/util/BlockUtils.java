@@ -19,7 +19,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.CollisionContext;
 
 public class BlockUtils {
-
     public static boolean mineable(BlockPos pos) {
         if (BlackOut.mc.level == null) return false;
         BlockState state = BlackOut.mc.level.getBlockState(pos);

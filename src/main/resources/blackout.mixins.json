@@ -48,6 +48,7 @@
     "mixins.MixinMinecraft",
     "mixins.MixinModelRenderer",
     "mixins.MixinMouseHandler",
+    "mixins.MixinOptions",
     "mixins.MixinMultiPlayerGameMode",
     "mixins.MixinParticleEngine",
     "mixins.MixinPlayerItemInHandLayer",

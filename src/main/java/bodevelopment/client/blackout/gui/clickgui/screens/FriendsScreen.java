@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.util.BOLogger;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.systems.RenderSystem;
 import java.awt.*;
@@ -33,7 +33,7 @@ public class FriendsScreen extends ClickGuiScreen {
 
     @Override
     public void render() {
-        RenderUtils.rounded(this.stack, 0, 0, width, height - 40.0F, 10, 10, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
+        Render2DUtils.rounded(this.stack, 0, 0, width, height - 40.0F, 10, 10, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
 
         this.stack.pushPose();
 
@@ -51,7 +51,7 @@ public class FriendsScreen extends ClickGuiScreen {
 
     private void renderFriend(FriendsManager.Friend friend) {
         if (!this.first) {
-            RenderUtils.line(this.stack, 20.0F, 0.0F, this.width - 20.0F, 0.0F, new Color(255, 255, 255, 12).getRGB());
+            Render2DUtils.line(this.stack, 20.0F, 0.0F, this.width - 20.0F, 0.0F, new Color(255, 255, 255, 12).getRGB());
         }
         this.first = false;
 
@@ -67,7 +67,7 @@ public class FriendsScreen extends ClickGuiScreen {
         float itemTopY = (ITEM_HEIGHT * index) + 10.0F - scroll.get();
 
         if (mx > width - 110 && mx < width - 10 && my > itemTopY && my < itemTopY + ITEM_HEIGHT) {
-            RenderUtils.rounded(this.stack, width - 100, 20, 85, 35, 7, 0, new Color(255, 50, 50, 35).getRGB(), 0);
+            Render2DUtils.rounded(this.stack, width - 100, 20, 85, 35, 7, 0, new Color(255, 50, 50, 35).getRGB(), 0);
             BlackOut.FONT.text(this.stack, "REMOVE", 1.5F, width - 57.0F, 37.0F, Color.RED, true, true);
         }
         this.stack.popPose();

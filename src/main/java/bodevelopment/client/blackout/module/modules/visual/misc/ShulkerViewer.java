@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
@@ -80,9 +80,9 @@ public class ShulkerViewer extends Module {
         stack.translate(0, 0, RenderLayer.GUI);
 
         if (shadow.get()) {
-            RenderUtils.roundedShadow(stack, posX, posY, width, height, round.get().floatValue(), 15.0F, new Color(0, 0, 0, 100).getRGB());
+            Render2DUtils.roundedShadow(stack, posX, posY, width, height, round.get().floatValue(), 15.0F, new Color(0, 0, 0, 100).getRGB());
         }
-        RenderUtils.rounded(stack, posX, posY, width, height, round.get().floatValue(), 1.0F, bgColor.get().getRGB(), ColorUtils.SHADOW100I);
+        Render2DUtils.rounded(stack, posX, posY, width, height, round.get().floatValue(), 1.0F, bgColor.get().getRGB(), ColorUtils.SHADOW100I);
 
         float textScale = 1.2F * s;
         BlackOut.FONT.text(stack, name, textScale, posX + 6 * s, posY + 8 * s, Color.WHITE.getRGB(), false, true);
@@ -96,7 +96,7 @@ public class ShulkerViewer extends Module {
             float itemX = posX + (5 + col * 18) * s;
             float itemY = posY + headerHeight + (2 + row * 18) * s;
 
-            RenderUtils.renderItem(stack, itemStack, itemX, itemY, 16.0F * s, RenderLayer.WORLD, true);
+            Render2DUtils.renderItem(stack, itemStack, itemX, itemY, 16.0F * s, RenderLayer.GUI, true);
         }
 
         stack.popPose();

@@ -127,8 +127,11 @@ public class Surround extends ObsidianModule {
     protected void addPlacements() {
         this.insideBlocks.forEach(pos -> {
             for (Direction dir : this.directions) {
-                if (!this.blockPlacements.contains(pos.relative(dir)) && !this.insideBlocks.contains(pos.relative(dir))) {
-                    this.blockPlacements.add(pos.relative(dir));
+                BlockPos target = pos.relative(dir);
+                if (!BlackOut.mc.level.isOutsideBuildHeight(target)
+                        && !this.blockPlacements.contains(target)
+                        && !this.insideBlocks.contains(target)) {
+                    this.blockPlacements.add(target);
                 }
             }
         });
@@ -140,10 +143,11 @@ public class Surround extends ObsidianModule {
 
         for (int x = size[0]; x <= size[1]; x++) {
             for (int z = size[2]; z <= size[3]; z++) {
-                BlockPos p = pos.offset(x, 0, z);
-                if ((!(BlackOut.mc.level.getBlockState(p).getBlock().getExplosionResistance() > 600.0F) || p.equals(this.currentPos))
-                        && !this.insideBlocks.contains(p.atY(this.currentPos.getY()))) {
-                    this.insideBlocks.add(p.atY(this.currentPos.getY()));
+                BlockPos p = pos.offset(x, 0, z).atY(this.currentPos.getY());
+                if (!BlackOut.mc.level.isOutsideBuildHeight(p)
+                        && (!(BlackOut.mc.level.getBlockState(p).getBlock().getExplosionResistance() > 600.0F) || p.equals(this.currentPos))
+                        && !this.insideBlocks.contains(p)) {
+                    this.insideBlocks.add(p);
                 }
             }
         }

@@ -14,7 +14,7 @@ import bodevelopment.client.blackout.module.setting.multisettings.ParticleMultiS
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.SoundUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.List;
 import net.minecraft.network.protocol.game.ServerboundInteractPacket;
@@ -110,14 +110,14 @@ public class HitEffects extends Module {
         if (this.hitMarker.get()) {
             if (System.currentTimeMillis() - this.startedDraw <= 100L) {
                 this.stack.pushPose();
-                RenderUtils.unGuiScale(this.stack);
+                Render2DUtils.unGuiScale(this.stack);
                 this.stack.translate(BlackOut.mc.getWindow().getScreenWidth() / 2.0F - 1.0F, BlackOut.mc.getWindow().getScreenHeight() / 2.0F - 1.0F, 0.0F);
                 int s = this.start.get();
                 int e = this.end.get();
-                RenderUtils.fadeLine(this.stack, s, s, e, e, this.markerColor.get().getRGB());
-                RenderUtils.fadeLine(this.stack, s, -s, e, -e, this.markerColor.get().getRGB());
-                RenderUtils.fadeLine(this.stack, -s, s, -e, e, this.markerColor.get().getRGB());
-                RenderUtils.fadeLine(this.stack, -s, -s, -e, -e, this.markerColor.get().getRGB());
+                Render2DUtils.fadeLine(this.stack, s, s, e, e, this.markerColor.get().getRGB());
+                Render2DUtils.fadeLine(this.stack, s, -s, e, -e, this.markerColor.get().getRGB());
+                Render2DUtils.fadeLine(this.stack, -s, s, -e, e, this.markerColor.get().getRGB());
+                Render2DUtils.fadeLine(this.stack, -s, -s, -e, -e, this.markerColor.get().getRGB());
                 this.stack.popPose();
             }
         }

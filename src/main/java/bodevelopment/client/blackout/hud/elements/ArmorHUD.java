@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.module.setting.multisettings.RoundedColorMu
 import bodevelopment.client.blackout.module.setting.multisettings.TextColorMultiSetting;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.render.RenderLayer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
@@ -49,7 +49,7 @@ public class ArmorHUD extends HudElement {
 
         if (armorCount == 0) return;
 
-        float bgWidth = 2.0F + (armorCount * 22.0F);
+        float bgWidth = 4.0F + (armorCount * 16.0F) + Math.max(0, armorCount - 1) * 6.0F;
         float bgHeight = this.bar.get() ? 22.0F : 18.0F;
         this.setSize(bgWidth, bgHeight);
 
@@ -63,7 +63,7 @@ public class ArmorHUD extends HudElement {
         float height = this.getHeight();
 
         if (this.blur.get()) {
-            RenderUtils.drawLoadedBlur("hudblur", stack, r -> r.rounded(0.0F, 0.0F, width, height, 3.0F, 10));
+            Render2DUtils.drawLoadedBlur("hudblur", stack, r -> r.rounded(0.0F, 0.0F, width, height, 3.0F, 10));
             Renderer.onHUDBlur();
         }
 
@@ -85,7 +85,7 @@ public class ArmorHUD extends HudElement {
 
             if (itemStack.isEmpty()) continue;
 
-            RenderUtils.renderItem(stack, itemStack, xOffset, 1.0F, 16.0F, RenderLayer.HUD, false);
+            Render2DUtils.renderItem(stack, itemStack, xOffset, 1.0F, 16.0F, RenderLayer.HUD, false);
 
             if (itemStack.isDamageableItem()) {
                 float durabilityValue = (float) (itemStack.getMaxDamage() - itemStack.getDamageValue()) / itemStack.getMaxDamage();
@@ -98,7 +98,7 @@ public class ArmorHUD extends HudElement {
 
                 if (this.bar.get()) {
                     float barY = 18.5F;
-                    RenderUtils.rounded(stack, xOffset, barY, 16.0F, 1.5F, 1.0F, 0.0F, BAR_BG, BAR_BG);
+                    Render2DUtils.rounded(stack, xOffset, barY, 16.0F, 1.5F, 1.0F, 0.0F, BAR_BG, BAR_BG);
 
                     float barWidth = Math.max(0.5F, 16.0F * durabilityValue);
                     this.armorBar.render(stack, xOffset, barY, barWidth, 1.5F, 1.0F, 0.0F);

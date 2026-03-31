@@ -15,9 +15,8 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.AnimUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import bodevelopment.client.blackout.util.render.ScissorStack;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.List;
@@ -222,10 +221,10 @@ public class ModuleComponent extends Component {
             case Shadow:
                 float bottomY = this.y + this.l + categoryLength - (10.0F * fs);
                 if (!last && bottomY < ClickGui.height + 50.0F) {
-                    RenderUtils.topFade(this.stack, this.x - 5, this.y + this.l + categoryLength - (10.0F * fs), this.width + 10.0F, 20.0F, ColorUtils.SHADOW80I);
+                    Render2DUtils.fade(this.stack, this.x - 5, this.y + this.l + categoryLength - (10.0F * fs), this.width + 10.0F, 20.0F, ColorUtils.SHADOW80I, Render2DUtils.FadeSide.TOP);
                 }
 
-                RenderUtils.bottomFade(this.stack, this.x - 5, this.y + this.l + (30.0F * fs), this.width + 10.0F, 20.0F, ColorUtils.SHADOW80I);
+                Render2DUtils.fade(this.stack, this.x - 5, this.y + this.l + (30.0F * fs), this.width + 10.0F, 20.0F, ColorUtils.SHADOW80I, Render2DUtils.FadeSide.BOTTOM);
                 this.text(
                         group.name,
                         groupScale,
@@ -237,7 +236,7 @@ public class ModuleComponent extends Component {
                 );
                 break;
             case Quad:
-                RenderUtils.rounded(
+                Render2DUtils.rounded(
                         this.stack,
                         this.x + 7,
                         this.y + this.l + (12.0F * fs),

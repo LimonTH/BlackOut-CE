@@ -7,7 +7,7 @@ import bodevelopment.client.blackout.module.modules.client.ThemeSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 
 import java.awt.*;
 
@@ -39,11 +39,11 @@ public class ThemeTest extends HudElement {
                     .forEach(
                             theme -> {
                                 if (this.useBlur.get()) {
-                                    RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(this.x, this.y, 100.0F, 30.0F, 2.0F, 10));
+                                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(this.x, this.y, 100.0F, 30.0F, 2.0F, 10));
                                     Renderer.onHUDBlur();
                                 }
 
-                                RenderUtils.tenaRounded(
+                                Render2DUtils.tenaRounded(
                                         this.stack,
                                         this.x,
                                         this.y,

@@ -90,7 +90,7 @@ public abstract class MixinLivingEntity {
 
     @Redirect(method = "updateFallFlyingMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getXRot()F"))
     private float redirectElytraPitch(LivingEntity instance) {
-        if ((Object) this == BlackOut.mc.player && !CompatUtils.isBaritonePathing()) {
+        if ((Object) this == BlackOut.mc.player && !CompatUtils.shouldBypassRotations()) {
             if (SettingUtils.grimMovement()) {
                 return Managers.ROTATION.nextPitch;
             }

@@ -63,10 +63,12 @@ public class SelfTrap extends ObsidianModule {
                 .forEach(
                         pos -> {
                             for (Direction dir : this.directions) {
+                                BlockPos target = pos.relative(dir);
                                 if (this.trapMode.get().allowed(dir)
-                                        && !this.blockPlacements.contains(pos.relative(dir))
-                                        && !this.insideBlocks.contains(pos.relative(dir))) {
-                                    this.blockPlacements.add(pos.relative(dir));
+                                        && !BlackOut.mc.level.isOutsideBuildHeight(target)
+                                        && !this.blockPlacements.contains(target)
+                                        && !this.insideBlocks.contains(target)) {
+                                    this.blockPlacements.add(target);
                                 }
                             }
                         }
@@ -85,7 +87,9 @@ public class SelfTrap extends ObsidianModule {
         for (int x = size[0]; x <= size[1]; x++) {
             for (int z = size[2]; z <= size[3]; z++) {
                 BlockPos p = entity.blockPosition().offset(x, 0, z).atY(eyeY - 1);
-                if (!(BlackOut.mc.level.getBlockState(p).getBlock().getExplosionResistance() > 600.0F) && SettingUtils.inPlaceRange(p)) {
+                if (!BlackOut.mc.level.isOutsideBuildHeight(p)
+                        && !(BlackOut.mc.level.getBlockState(p).getBlock().getExplosionResistance() > 600.0F)
+                        && SettingUtils.inPlaceRange(p)) {
                     this.insideBlocks.add(p);
                 }
             }

@@ -7,7 +7,9 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.rendering.renderer.ColorRenderer;
 import com.google.gson.JsonObject;
+import bodevelopment.client.blackout.util.render.RenderLayer;
 import com.mojang.blaze3d.vertex.PoseStack;
+import bodevelopment.client.blackout.util.render.RenderState;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import java.awt.*;
 import java.util.ArrayList;
@@ -68,16 +70,16 @@ public class HudElement {
         float g = this.enabled ? 1.0F : 0.0F;
         float b = this.enabled ? 1.0F : 0.0F;
         renderer.quad(stack, 0.0F, 0.0F, 0.0F, this.width, this.height, r, g, b, selected ? 0.1F : 0.05F);
-        renderer.startRender(stack, VertexFormat.Mode.DEBUG_LINE_STRIP);
-        renderer.quadOutlineShape(0.0F, 0.0F, 0.0F, this.width, this.height, r, g, b, selected ? 1.0F : 0.5F);
-        renderer.endRender();
+        try (RenderState state = renderer.begin(stack, VertexFormat.Mode.DEBUG_LINE_STRIP)) {
+            renderer.quadOutlineShape(0.0F, 0.0F, 0.0F, this.width, this.height, r, g, b, selected ? 1.0F : 0.5F);
+        }
         this.popStack(stack);
     }
 
     private void pushStack(PoseStack stack) {
         stack.pushPose();
-        stack.translate(this.x, this.y, 0.0F);
-        stack.scale(this.getScale(), this.getScale(), 0.0F);
+        stack.translate(this.x, this.y, RenderLayer.HUD);
+        stack.scale(this.getScale(), this.getScale(), 1.0F);
     }
 
     private void popStack(PoseStack stack) {

@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.module.modules.visual.misc.XRay;
-import bodevelopment.client.blackout.util.render.XRayVertexConsumer;
+import bodevelopment.client.blackout.util.render.consumers.XRayVertexConsumer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;

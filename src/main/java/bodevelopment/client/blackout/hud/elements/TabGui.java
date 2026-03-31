@@ -17,7 +17,7 @@ import bodevelopment.client.blackout.module.setting.multisettings.TextColorMulti
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ColorUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import org.apache.commons.lang3.mutable.MutableDouble;
 
 import java.awt.*;
@@ -167,7 +167,7 @@ public class TabGui extends HudElement {
                     ColorUtils.getWave(this.selectorColor.get().getColor(), this.waveColor.get().getColor(), this.waveSpeed.get(), 1.0, 1);
         };
 
-        RenderUtils.rounded(
+        Render2DUtils.rounded(
                 this.stack,
                 x,
                 y - BlackOut.FONT.getHeight() / 2.0F - 1.5F,
@@ -182,7 +182,7 @@ public class TabGui extends HudElement {
 
     private void renderBG(float height, float x) {
         float length = (BlackOut.FONT.getHeight() + 10.0F) * height;
-        RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(x + 1.0F, 0.0F, 75.0F, length, 3.0F, 10));
+        Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(x + 1.0F, 0.0F, 75.0F, length, 3.0F, 10));
         Renderer.onHUDBlur();
         this.background.render(this.stack, x + 1.0F, 0.0F, 75.0F, length, 3.0F, 3.0F);
     }

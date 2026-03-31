@@ -11,7 +11,7 @@ import bodevelopment.client.blackout.module.setting.multisettings.BackgroundMult
 import bodevelopment.client.blackout.module.setting.multisettings.TextColorMultiSetting;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 
 import java.util.Comparator;
 import java.util.List;
@@ -58,7 +58,7 @@ public class Keybinds extends HudElement {
                             this.length = ((BlackOut.FONT.getHeight() + 3.0F) * this.i + BlackOut.FONT.getHeight() + 3.0F) * modules.size();
                             this.checked = true;
                             if (this.blur.get()) {
-                                RenderUtils.drawLoadedBlur(
+                                Render2DUtils.drawLoadedBlur(
                                         "hudblur",
                                         this.stack,
                                         renderer -> renderer.rounded(

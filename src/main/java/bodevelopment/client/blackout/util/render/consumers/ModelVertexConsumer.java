@@ -1,4 +1,4 @@
-package bodevelopment.client.blackout.util.render;
+package bodevelopment.client.blackout.util.render.consumers;
 
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;

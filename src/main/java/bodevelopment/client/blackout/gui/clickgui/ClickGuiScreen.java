@@ -9,9 +9,8 @@ import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import bodevelopment.client.blackout.util.render.ScissorStack;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
@@ -55,10 +54,10 @@ public class ClickGuiScreen {
         float popUpDelta = (float) Mth.clamp(System.currentTimeMillis() - this.openTime, 0L, 500L) / 500.0F;
         popUpDelta = (float) AnimUtils.easeOutBack(popUpDelta);
         this.unscaled = popUpDelta;
-        float currentScale = RenderUtils.getScale();
+        float currentScale = Render2DUtils.getScale();
         this.scale = this.unscaled / (currentScale == 0 ? 1 : currentScale);
 
-        RenderUtils.startClickGui(this.stack, this.unscaled, this.scale, this.width, this.height, this.x, this.y);
+        Render2DUtils.startClickGui(this.stack, this.unscaled, this.scale, this.width, this.height, this.x, this.y);
 
         this.frameTime = frameTime;
         var window = BlackOut.mc.getWindow();
@@ -92,7 +91,7 @@ public class ClickGuiScreen {
             this.render();
         }
 
-        RenderUtils.bottomFade(this.stack, -10.0F, 0.0F, this.width + 20.0F, 20.0F, new Color(0, 0, 0, 100).getRGB());
+        Render2DUtils.fade(this.stack, -10.0F, 0.0F, this.width + 20.0F, 20.0F, new Color(0, 0, 0, 100).getRGB(), Render2DUtils.FadeSide.BOTTOM);
 
         frameBuffer.end(this.getAlpha());
         this.stack.popPose();
@@ -199,7 +198,7 @@ public class ClickGuiScreen {
     }
 
     public void rounded(float x, float y, float width, float height, float radius, float shadowRad, Color color, Color shadowColor) {
-        RenderUtils.rounded(this.stack, x, y, width, height, radius, shadowRad, color.getRGB(), shadowColor.getRGB());
+        Render2DUtils.rounded(this.stack, x, y, width, height, radius, shadowRad, color.getRGB(), shadowColor.getRGB());
     }
 
     public void text(String string, float scale, float x, float y, boolean xCenter, boolean yCenter, Color color) {
@@ -207,14 +206,14 @@ public class ClickGuiScreen {
     }
 
     public void line(float x1, float y1, float x2, float y2, Color color) {
-        RenderUtils.line(this.stack, x1, y1, x2, y2, color.getRGB());
+        Render2DUtils.line(this.stack, x1, y1, x2, y2, color.getRGB());
     }
 
     public void quad(float x, float y, float w, float h, Color color) {
-        RenderUtils.quad(this.stack, x, y, w, h, color.getRGB());
+        Render2DUtils.quad(this.stack, x, y, w, h, color.getRGB());
     }
 
     public void fadeLine(float x1, float y1, float x2, float y2, Color color) {
-        RenderUtils.fadeLine(this.stack, x1, y1, x2, y2, color.getRGB());
+        Render2DUtils.fadeLine(this.stack, x1, y1, x2, y2, color.getRGB());
     }
 }

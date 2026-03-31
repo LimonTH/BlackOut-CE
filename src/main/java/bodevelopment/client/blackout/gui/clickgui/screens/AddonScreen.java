@@ -12,7 +12,7 @@ import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.FileUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -49,7 +49,7 @@ public class AddonScreen extends ClickGuiScreen {
 
     @Override
     public void render() {
-        RenderUtils.rounded(this.stack, 0, 0, width, height - 40.0F, 10, 10, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
+        Render2DUtils.rounded(this.stack, 0, 0, width, height - 40.0F, 10, 10, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
 
         this.stack.pushPose();
         this.stack.translate(0.0F, 15.0F - this.scroll.get(), 0.0F);
@@ -71,7 +71,7 @@ public class AddonScreen extends ClickGuiScreen {
                 int alpha = (int) (anim.getValue() * 25);
 
                 float r = 8.0F;
-                RenderUtils.rounded(this.stack, 5 + r, 5 + r, width - 10 - r * 2, 60 - r * 2, r, 0, ColorUtils.withAlpha(Color.WHITE.getRGB(), alpha), 0);
+                Render2DUtils.rounded(this.stack, 5 + r, 5 + r, width - 10 - r * 2, 60 - r * 2, r, 0, ColorUtils.withAlpha(Color.WHITE.getRGB(), alpha), 0);
             }
 
             renderAddonRow(addon, i == 0);
@@ -85,7 +85,7 @@ public class AddonScreen extends ClickGuiScreen {
 
     private void renderAddonRow(BlackoutAddon addon, boolean first) {
         if (!first) {
-            RenderUtils.line(this.stack, -10.0F, 0.0F, this.width + 10.0F, 0.0F, LINE_COLOR);
+            Render2DUtils.line(this.stack, -10.0F, 0.0F, this.width + 10.0F, 0.0F, LINE_COLOR);
         }
 
         float textOffsetX = 15.0F;
@@ -144,9 +144,9 @@ public class AddonScreen extends ClickGuiScreen {
     }
 
     private void renderButtons() {
-        RenderUtils.roundedBottom(this.stack, 0.0F, this.height - 105.0F, this.width, 65.0F, 10.0F, 0.0F, GuiColorUtils.bg2.getRGB(), 0);
-        RenderUtils.topFade(this.stack, -10.0F, this.height - 125.0F, this.width + 20.0F, 20.0F, GuiColorUtils.bg2.getRGB());
-        RenderUtils.line(this.stack, -10.0F, this.height - 105.0F, this.width + 10.0F, this.height - 105.0F, LINE_COLOR);
+        Render2DUtils.rounded(this.stack, 0.0F, this.height - 105.0F, this.width, 65.0F, 10.0F, 0.0F, GuiColorUtils.bg2.getRGB(), 0, Render2DUtils.RoundedSide.BOTTOM);
+        Render2DUtils.fade(this.stack, -10.0F, this.height - 125.0F, this.width + 20.0F, 20.0F, GuiColorUtils.bg2.getRGB(), Render2DUtils.FadeSide.TOP);
+        Render2DUtils.line(this.stack, -10.0F, this.height - 105.0F, this.width + 10.0F, this.height - 105.0F, LINE_COLOR);
 
         renderIconButton("Folder", BOTextures.getFolderIconRenderer(), width / 2.0F - 60.0F, height - 70.0F);
         renderIconButton("Cloud", BOTextures.getCloudIconRenderer(), width / 2.0F + 60.0F, height - 70.0F);

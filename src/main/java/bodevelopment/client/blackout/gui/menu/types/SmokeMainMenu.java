@@ -11,7 +11,7 @@ import bodevelopment.client.blackout.rendering.renderer.ShaderRenderer;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
@@ -73,7 +73,7 @@ public class SmokeMainMenu implements MainMenuRenderer {
 
         for (int i = 0; i < 4; i++) {
             float currentX = startX + (i * 54.0F);
-            boolean hovered = RenderUtils.insideRounded(mx, my, currentX + 5.0F, startY + 5.0F, 22.0F, 22.0F, 10.0F);
+            boolean hovered = Render2DUtils.insideRounded(mx, my, currentX + 5.0F, startY + 5.0F, 22.0F, 22.0F, 10.0F);
 
             stack.pushPose();
             if (hovered) {
@@ -94,7 +94,7 @@ public class SmokeMainMenu implements MainMenuRenderer {
         float currentY = -100.0F;
 
         for (String name : MainMenu.getInstance().buttonNames) {
-            boolean hovered = RenderUtils.insideRounded(mx, my, -180.0, currentY, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS);
+            boolean hovered = Render2DUtils.insideRounded(mx, my, -180.0, currentY, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS);
 
             stack.pushPose();
             if (hovered) {
@@ -112,10 +112,10 @@ public class SmokeMainMenu implements MainMenuRenderer {
     }
 
     private void renderButton(PoseStack stack, String name, boolean hovered) {
-        RenderUtils.drawLoadedBlur("title", stack, renderer ->
+        Render2DUtils.drawLoadedBlur("title", stack, renderer ->
                 renderer.rounded(0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10, 1.0F, 1.0F, 1.0F, 1.0F));
 
-        RenderUtils.rounded(stack, 0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10.0F,
+        Render2DUtils.rounded(stack, 0.0F, 0.0F, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_RADIUS, 10.0F,
                 new Color(0, 0, 0, hovered ? 100 : 60).getRGB(),
                 new Color(0, 0, 0, 240).getRGB());
 
@@ -131,10 +131,10 @@ public class SmokeMainMenu implements MainMenuRenderer {
             default -> BOTextures.getGithubIconRenderer();
         };
 
-        RenderUtils.drawLoadedBlur("title", stack, renderer ->
+        Render2DUtils.drawLoadedBlur("title", stack, renderer ->
                 renderer.rounded(5.0F, 5.0F, 22.0F, 22.0F, 10.0F, 10, 1.0F, 1.0F, 1.0F, 1.0F));
 
-        RenderUtils.rounded(stack, 5.0F, 5.0F, 22.0F, 22.0F, 10.0F, 3.0F,
+        Render2DUtils.rounded(stack, 5.0F, 5.0F, 22.0F, 22.0F, 10.0F, 3.0F,
                 new Color(255, 255, 255, hovered ? 40 : 10).getRGB(),
                 new Color(0, 0, 0, 210).getRGB());
 
@@ -169,7 +169,7 @@ public class SmokeMainMenu implements MainMenuRenderer {
         int buttonCount = MainMenu.getInstance().buttonNames.length;
         float yCenter = -100.0F;
         for (int i = 0; i < buttonCount; i++) {
-            if (RenderUtils.insideRounded(mx, my, -180.0, yCenter, 360.0, 10.0, 25.0)) return i;
+            if (Render2DUtils.insideRounded(mx, my, -180.0, yCenter, 360.0, 10.0, 25.0)) return i;
             yCenter += 85.0F;
         }
 
@@ -179,7 +179,7 @@ public class SmokeMainMenu implements MainMenuRenderer {
 
         for (int i = 0; i < 4; i++) {
             float currentX = startX + (i * 54.0F);
-            if (RenderUtils.insideRounded(mx, my, currentX + 5.0F, startY + 5.0F, 22.0F, 22.0F, 10.0F)) {
+            if (Render2DUtils.insideRounded(mx, my, currentX + 5.0F, startY + 5.0F, 22.0F, 22.0F, 10.0F)) {
                 if (i == 3) return 6;
                 return 10 + i;
             }
@@ -214,10 +214,10 @@ public class SmokeMainMenu implements MainMenuRenderer {
 
         if (blurRadius > 0) {
             if (!exiting) {
-                RenderUtils.loadBlur("title", blurRadius);
+                Render2DUtils.loadBlur("title", blurRadius);
             }
 
-            RenderUtils.drawLoadedBlur("title", stack, renderer ->
+            Render2DUtils.drawLoadedBlur("title", stack, renderer ->
                     renderer.quadShape(0.0F, 0.0F, width, height, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F));
         }
     }

@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.randomstuff.mainmenu;
 
 import bodevelopment.client.blackout.BlackOut;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import org.lwjgl.glfw.GLFW;
 
@@ -71,13 +71,13 @@ public class AltHelpRenderer {
         stack.pushPose();
         stack.translate(this.helpX, this.helpY, 0.0F);
 
-        RenderUtils.roundedShadow(stack, 0.0F, 0.0F, width, height, 15.0F, 15.0F, new Color(0, 0, 0, 120).getRGB());
-        RenderUtils.drawLoadedBlur("title", stack, renderer -> renderer.rounded(0.0F, 0.0F, width, height, 15.0F, 10, 1.0F, 1.0F, 1.0F, 1.0F));
-        RenderUtils.rounded(stack, 0.0F, 0.0F, width, height, 15.0F, 2.0F, new Color(20, 20, 20, 160).getRGB(), new Color(10, 10, 10, 225).getRGB());
+        Render2DUtils.roundedShadow(stack, 0.0F, 0.0F, width, height, 15.0F, 15.0F, new Color(0, 0, 0, 120).getRGB());
+        Render2DUtils.drawLoadedBlur("title", stack, renderer -> renderer.rounded(0.0F, 0.0F, width, height, 15.0F, 10, 1.0F, 1.0F, 1.0F, 1.0F));
+        Render2DUtils.rounded(stack, 0.0F, 0.0F, width, height, 15.0F, 2.0F, new Color(20, 20, 20, 160).getRGB(), new Color(10, 10, 10, 225).getRGB());
 
         BlackOut.BOLD_FONT.text(stack, "Quick Guide", 2.0F, width / 2.0F, 12.0F, Color.WHITE.getRGB(), true, false);
 
-        RenderUtils.rounded(stack, 15.0F, 38.0F, width - 30.0F, 1.5F, 1.0F, 0.0F, new Color(255, 255, 255, 50).getRGB(), 0);
+        Render2DUtils.rounded(stack, 15.0F, 38.0F, width - 30.0F, 1.5F, 1.0F, 0.0F, new Color(255, 255, 255, 50).getRGB(), 0);
 
         for (int i = 0; i < helpLines.size(); i++) {
             String line = helpLines.get(i);

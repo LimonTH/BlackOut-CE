@@ -2,7 +2,7 @@ package bodevelopment.client.blackout.rendering.framebuffer;
 
 import bodevelopment.client.blackout.randomstuff.ShaderSetup;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import org.lwjgl.opengl.GL14;
 
 public class GuiAlphaFrameBuffer extends FrameBuffer {
@@ -14,6 +14,6 @@ public class GuiAlphaFrameBuffer extends FrameBuffer {
 
     public void end(float alpha) {
         this.unbind();
-        RenderUtils.renderBufferWith(this, Shaders.screentex, new ShaderSetup(setup -> setup.set("alpha", alpha)));
+        Render2DUtils.renderBufferWith(this, Shaders.screentex, new ShaderSetup(setup -> setup.set("alpha", alpha)));
     }
 }

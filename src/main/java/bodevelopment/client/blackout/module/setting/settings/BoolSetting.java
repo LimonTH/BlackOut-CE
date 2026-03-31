@@ -6,7 +6,7 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.util.Mth;
@@ -41,7 +41,7 @@ public class BoolSetting extends Setting<Boolean> {
 
         float toggleRenderY = middleY - 5.5F;
 
-        RenderUtils.rounded(
+        Render2DUtils.rounded(
                 this.stack,
                 toggleX,
                 toggleRenderY,
@@ -53,7 +53,7 @@ public class BoolSetting extends Setting<Boolean> {
                 ColorUtils.SHADOW100I
         );
 
-        RenderUtils.rounded(
+        Render2DUtils.rounded(
                 this.stack,
                 toggleX + (this.progress * toggleWidth),
                 toggleRenderY,

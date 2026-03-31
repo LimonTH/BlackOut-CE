@@ -19,7 +19,7 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import bodevelopment.client.blackout.util.render.RenderState;
 import bodevelopment.client.blackout.util.render.RenderLayer;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import bodevelopment.client.blackout.util.render.WireframeRenderer;
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -209,7 +209,7 @@ public class LogoutSpots extends Module {
             GlStateManager._enableBlend();
             GlStateManager._disableCull();
             this.matrixStack.pushPose();
-            RenderUtils.unGuiScale(this.matrixStack);
+            Render2DUtils.unGuiScale(this.matrixStack);
             this.spots.forEach(this::renderInfo);
             this.matrixStack.popPose();
         }
@@ -257,7 +257,7 @@ public class LogoutSpots extends Module {
         this.setAlpha(spot);
         int textColor = ColorUtils.withAlpha(-1, (int) (this.alphaMulti * 255.0F));
         Vec3 pos = this.infoPos(spot);
-        Vec2 coords = RenderUtils.getCoords(pos.x(), pos.y(), pos.z(), true);
+        Vec2 coords = Render2DUtils.getCoords(pos.x(), pos.y(), pos.z(), true);
         if (coords != null) {
             this.matrixStack.pushPose();
             this.matrixStack.translate(coords.x, coords.y, 0.0F);
@@ -340,7 +340,7 @@ public class LogoutSpots extends Module {
             ItemStack stack = item.itemStack();
 
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alphaMulti);
-            RenderUtils.renderItem(this.matrixStack, stack, 0.0F, 0.0F, 16.0F, RenderLayer.WORLD, false);
+            Render2DUtils.renderItem(this.matrixStack, stack, 0.0F, 0.0F, 16.0F, RenderLayer.WORLD, false);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
             if (item.armor()) {

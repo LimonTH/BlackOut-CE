@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ColorUtils;
-import bodevelopment.client.blackout.util.render.RenderUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
 import net.minecraft.client.KeyMapping;
 
 public class Keystrokes extends HudElement {
@@ -38,16 +38,16 @@ public class Keystrokes extends HudElement {
             this.renderKey(18, 18, "S", BlackOut.mc.options.keyDown);
             this.renderKey(36, 18, "D", BlackOut.mc.options.keyRight);
             if (this.useBlur.get()) {
-                RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 36.0F, 44.0F, 8.0F, 3.0F, 10));
+                Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 36.0F, 44.0F, 8.0F, 3.0F, 10));
                 Renderer.onHUDBlur();
             }
 
             boolean pressed = BlackOut.mc.options.keyJump.isDown();
             BlackOutColor color = pressed ? this.pressedColor.get() : this.backgroundColor.get();
-            RenderUtils.rounded(
+            Render2DUtils.rounded(
                     this.stack, 0.0F, 36.0F, 44.0F, 8.0F, 3.0F, this.shadow.get() ? 3.0F : 0.0F, color.getRGB(), color.withAlpha((int) (color.alpha * 0.5)).getRGB()
             );
-            RenderUtils.rounded(
+            Render2DUtils.rounded(
                     this.stack,
                     17.0F,
                     38.0F,
@@ -65,11 +65,11 @@ public class Keystrokes extends HudElement {
     public void renderKey(int x, int y, String key, KeyMapping bind) {
         boolean pressed = bind.isDown();
         if (this.useBlur.get()) {
-            RenderUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(x, y, 8.0F, 8.0F, 3.0F, 10));
+            Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(x, y, 8.0F, 8.0F, 3.0F, 10));
             Renderer.onHUDBlur();
         }
 
-        RenderUtils.rounded(
+        Render2DUtils.rounded(
                 this.stack,
                 x,
                 y,
