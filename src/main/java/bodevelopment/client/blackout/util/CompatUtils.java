@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.module.modules.movement.ElytraFly;
 
 public class CompatUtils {
     private static final boolean BARITONE_PRESENT;
@@ -21,7 +22,7 @@ public class CompatUtils {
     }
 
     public static boolean shouldBypassRotations() {
-        return isBaritonePathing() && (BlackOut.mc.player == null || !BlackOut.mc.player.isFallFlying());
+        return isBaritonePathing() && (BlackOut.mc.player == null || !BlackOut.mc.player.isFallFlying() || !ElytraFly.getInstance().enabled);
     }
 
     private static class BaritoneLazyLoader {
@@ -38,7 +39,8 @@ public class CompatUtils {
         private static boolean isPathing() {
             if (BARITONE_INSTANCE == null) return false;
             try {
-                return BARITONE_INSTANCE.getPathingBehavior().isPathing();
+                return BARITONE_INSTANCE.getPathingBehavior().isPathing()
+                        || BARITONE_INSTANCE.getPathingControlManager().mostRecentInControl().isPresent();
             } catch (Throwable ignored) {
                 return false;
             }
