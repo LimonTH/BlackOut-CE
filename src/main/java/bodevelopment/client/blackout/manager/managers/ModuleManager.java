@@ -110,6 +110,15 @@ public class ModuleManager extends Manager {
         return this.modules;
     }
 
+    public <T extends AbstractModule> T getModule(Class<T> clazz) {
+        for (AbstractModule module : this.modules) {
+            if (module.getClass() == clazz) {
+                return clazz.cast(module);
+            }
+        }
+        return null;
+    }
+
     /**
      * Returns only the toggleable modules (excludes SettingsModules).
      */

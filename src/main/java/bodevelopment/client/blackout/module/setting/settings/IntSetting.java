@@ -70,7 +70,7 @@ public class IntSetting extends Setting<Integer> {
             this.textField.setContent(String.valueOf(this.get()));
         }
 
-        float fieldWidth = 40.0F;
+        float fieldWidth = Math.max(40.0F, BlackOut.FONT.getWidth(this.textField.getContent()) * textScale + 12.0F);
         float fieldHeight = 10.0F;
         float fieldX = this.x + this.width - fieldWidth - 7.0F;
         float fieldY = middleY - (fieldHeight / 2.0F) - 5.5F;

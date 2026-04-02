@@ -69,7 +69,7 @@ public class DoubleSetting extends Setting<Double> {
             this.textField.setContent(String.format(java.util.Locale.US, "%." + this.decimals + "f", this.get()));
         }
 
-        float fieldWidth = 40.0F;
+        float fieldWidth = Math.max(40.0F, BlackOut.FONT.getWidth(this.textField.getContent()) * textScale + 12.0F);
         float fieldHeight = 10.0F;
         float fieldX = this.x + this.width - fieldWidth - 5.0F;
 
