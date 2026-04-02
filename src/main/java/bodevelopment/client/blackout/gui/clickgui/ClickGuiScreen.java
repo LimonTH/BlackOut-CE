@@ -132,6 +132,10 @@ public class ClickGuiScreen {
     public void onClose() {
     }
 
+    public boolean closesOnRightClick() {
+        return true;
+    }
+
     public boolean handleMouse(int button, boolean state) {
         boolean m = false;
         if (!state) {

@@ -571,7 +571,9 @@ public class ClickGui extends Screen {
 
             if (this.openedScreen != null) {
                 this.openedScreen.handleMouse(button, pressed);
-                if (button == 1) { this.setScreen(null); }
+                if (button == 1 && this.openedScreen != null && this.openedScreen.closesOnRightClick()) {
+                    this.setScreen(null);
+                }
                 return;
             }
 
