@@ -29,3 +29,6 @@ replay_*.log
 
 # OS specific
 .DS_Store
+
+# Agent
+.claude
