@@ -105,14 +105,15 @@ public class SeedMapScreen extends ClickGuiScreen {
     public void render() {
         if (BlackOut.mc.level != null) {
             ResourceKey<Level> currentDim = BlackOut.mc.level.dimension();
-            if (lastDim == null) lastDim = currentDim;
-
             if (currentDim != lastDim) {
                 lastDim = currentDim;
                 tileCache.values().forEach(MapTile::close);
                 tileCache.clear();
 
-                this.biomeSource = new SeedBiomeSource(this.seed, currentDim);
+                SeedFinder finder = Managers.MODULES.getModule(SeedFinder.class);
+                if (finder != null) {
+                    this.biomeSource = new SeedBiomeSource(this.seed, currentDim);
+                }
             }
         }
         float mapRight = MAP_X + MAP_WIDTH;
@@ -251,6 +252,18 @@ public class SeedMapScreen extends ClickGuiScreen {
                         int bx = (int) (startX + (tx + 0.5F) * bpp);
                         int bz = (int) (startZ + (ty + 0.5F) * bpp);
                         int color = biomeSource.getBiomeColor(bx, bz);
+                        int height = biomeSource.getHeight(bx, bz);
+
+                        // Shading based on height (64 is baseline)
+                        float factor = 0.95f + (height - 64) * 0.008f;
+                        factor = Math.max(0.75f, Math.min(1.25f, factor));
+
+                        int r = (int) (((color >> 16) & 0xFF) * factor);
+                        int g = (int) (((color >> 8) & 0xFF) * factor);
+                        int b = (int) ((color & 0xFF) * factor);
+                        int a = (color >> 24) & 0xFF;
+
+                        color = (Math.min(255, a) << 24) | (Math.min(255, r) << 16) | (Math.min(255, g) << 8) | Math.min(255, b);
 
                         int maxY = Math.min(ty + step, TILE_SIZE);
                         int maxX = Math.min(tx + step, TILE_SIZE);
@@ -344,9 +357,13 @@ public class SeedMapScreen extends ClickGuiScreen {
         }
     }
 
+    private final List<SeedFinder.FoundStructure> mapFound = new java.util.ArrayList<>();
+    private float lastMapX, lastMapZ, lastBpp;
+    private ResourceKey<Level> lastMapDim;
+
     private void renderStructures() {
         SeedFinder seedFinder = Managers.MODULES.getModule(SeedFinder.class);
-        if (seedFinder == null) return;
+        if (seedFinder == null || this.biomeSource == null) return;
 
         float worldLeft = this.mapCenterX - (MAP_WIDTH / 2.0F) * this.blocksPerPixel;
         float worldTop = this.mapCenterZ - (MAP_HEIGHT / 2.0F) * this.blocksPerPixel;
@@ -355,171 +372,26 @@ public class SeedMapScreen extends ClickGuiScreen {
 
         float markerSize = Math.max(3.5F, 8.0F / (this.blocksPerPixel / 4.0F));
 
-        boolean isNether = this.lastDim == Level.NETHER;
-        boolean isEnd = this.lastDim == Level.END;
+        if (Math.abs(mapCenterX - lastMapX) > 100 * blocksPerPixel || Math.abs(mapCenterZ - lastMapZ) > 100 * blocksPerPixel || blocksPerPixel != lastBpp || lastDim != lastMapDim) {
+            mapFound.clear();
+            int radius = (int) (Math.max(MAP_WIDTH, MAP_HEIGHT) * blocksPerPixel);
+            SeedFinder.findInArea(mapFound, seed, biomeSource, lastDim, (int) mapCenterX, (int) mapCenterZ, radius, false, t -> seedFinder.isDimensionEnabled(t, lastDim));
+
+            lastMapX = mapCenterX;
+            lastMapZ = mapCenterZ;
+            lastBpp = blocksPerPixel;
+            lastMapDim = lastDim;
+        }
+
         boolean hideMinor = this.blocksPerPixel >= 16.0F;
 
-        if (isNether) {
-            boolean showFortress = seedFinder.isStructureEnabled(SeedFinder.StructureType.NETHER_FORTRESS);
-            boolean showBastion = seedFinder.isStructureEnabled(SeedFinder.StructureType.BASTION_REMNANT);
+        for (SeedFinder.FoundStructure s : mapFound) {
+            if (hideMinor && !s.type().isMajor()) continue;
+            if (s.blockX() < worldLeft || s.blockX() > worldRight || s.blockZ() < worldTop || s.blockZ() > worldBottom) continue;
 
-            if (showFortress || showBastion) {
-                this.renderNetherStructures(worldLeft, worldTop, worldRight, worldBottom, markerSize, showFortress, showBastion);
-            }
-        }
-
-        for (SeedFinder.StructureType type : SeedFinder.StructureType.values()) {
-            if (!seedFinder.isStructureEnabled(type)) continue;
-            if (hideMinor && !type.isMajor()) continue;
-
-            boolean isNetherStruct = type == SeedFinder.StructureType.NETHER_FORTRESS || type == SeedFinder.StructureType.BASTION_REMNANT;
-            boolean isEndStruct = type == SeedFinder.StructureType.END_CITY;
-            if (isNetherStruct) continue;
-            if (isEnd && !isEndStruct) continue;
-            if (!isEnd && isEndStruct) continue;
-            if (isNether && !isNetherStruct) continue;
-
-            if (type == SeedFinder.StructureType.STRONGHOLD) {
-                renderStrongholds(worldLeft, worldTop, markerSize);
-                continue;
-            }
-
-            if (type.isCaveBiome()) continue;
-
-            int spacing = type.spacing;
-            if (spacing <= 0) continue;
-
-            int regionSizeBlocks = spacing * 16;
-            int minRegX = Math.floorDiv((int) worldLeft, regionSizeBlocks);
-            int maxRegX = Math.ceilDiv((int) worldRight, regionSizeBlocks);
-            int minRegZ = Math.floorDiv((int) worldTop, regionSizeBlocks);
-            int maxRegZ = Math.ceilDiv((int) worldBottom, regionSizeBlocks);
-
-            for (int rx = minRegX; rx <= maxRegX; rx++) {
-                for (int rz = minRegZ; rz <= maxRegZ; rz++) {
-                    long regionSeed = (long) rx * 341873128712L + (long) rz * 132897987541L + this.seed + type.salt;
-                    Random random = new Random(regionSeed);
-
-                    int range = spacing - type.separation;
-                    int offsetX = type.triangular ? (random.nextInt(range) + random.nextInt(range)) / 2 : random.nextInt(range);
-                    int offsetZ = type.triangular ? (random.nextInt(range) + random.nextInt(range)) / 2 : random.nextInt(range);
-
-                    int blockX = (rx * spacing + offsetX) * 16 + 8;
-                    int blockZ = (rz * spacing + offsetZ) * 16 + 8;
-
-                    if (blockX >= worldLeft && blockX <= worldRight && blockZ >= worldTop && blockZ <= worldBottom) {
-                        if (this.biomeSource != null && !checkBiome(type, blockX, blockZ)) continue;
-
-                        float sx = MAP_X + (blockX - worldLeft) / this.blocksPerPixel;
-                        float sy = MAP_Y + (blockZ - worldTop) / this.blocksPerPixel;
-                        drawMarker(sx, sy, markerSize, type.displayName, type.mapColor, blockX, blockZ);
-                    }
-                }
-            }
-        }
-
-        if (!isNether && !isEnd && this.biomeSource != null) {
-            this.renderCaveBiomes(seedFinder, worldLeft, worldTop, worldRight, worldBottom, markerSize);
-        }
-    }
-
-    private void renderCaveBiomes(SeedFinder seedFinder, float worldLeft, float worldTop,
-                                  float worldRight, float worldBottom, float markerSize) {
-        SeedFinder.StructureType[] caveTypes = {
-                SeedFinder.StructureType.DEEP_DARK,
-                SeedFinder.StructureType.LUSH_CAVES,
-                SeedFinder.StructureType.DRIPSTONE_CAVES
-        };
-
-        int scanStep = 128;
-        int sectionSize = 512;
-
-        for (SeedFinder.StructureType type : caveTypes) {
-            if (!seedFinder.isStructureEnabled(type)) continue;
-            var targetBiome = type.validBiomes.iterator().next();
-            int scanY = (type == SeedFinder.StructureType.DEEP_DARK) ? -52 : 16;
-
-            int minSecX = (int) Math.floor(worldLeft / sectionSize);
-            int maxSecX = (int) Math.floor(worldRight / sectionSize);
-            int minSecZ = (int) Math.floor(worldTop / sectionSize);
-            int maxSecZ = (int) Math.floor(worldBottom / sectionSize);
-
-            for (int sx = minSecX; sx <= maxSecX; sx++) {
-                for (int sz = minSecZ; sz <= maxSecZ; sz++) {
-
-                    long sumX = 0;
-                    long sumZ = 0;
-                    int count = 0;
-
-                    int sectionStartX = sx * sectionSize;
-                    int sectionStartZ = sz * sectionSize;
-
-                    for (int bx = sectionStartX; bx < sectionStartX + sectionSize; bx += scanStep) {
-                        for (int bz = sectionStartZ; bz < sectionStartZ + sectionSize; bz += scanStep) {
-                            if (this.biomeSource.getBiomeAt(bx, scanY, bz).equals(targetBiome)) {
-                                sumX += bx;
-                                sumZ += bz;
-                                count++;
-                            }
-                        }
-                    }
-
-                    if (count >= 2) {
-                        int cx = (int) (sumX / count);
-                        int cz = (int) (sumZ / count);
-
-                        if (cx >= worldLeft && cx <= worldRight && cz >= worldTop && cz <= worldBottom) {
-                            float screenX = MAP_X + (cx - worldLeft) / this.blocksPerPixel;
-                            float screenY = MAP_Y + (cz - worldTop) / this.blocksPerPixel;
-
-                            drawMarker(screenX, screenY, markerSize, type.displayName, type.mapColor, cx, cz);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private void renderNetherStructures(float worldLeft, float worldTop, float worldRight, float worldBottom,
-                                         float markerSize, boolean showFortress, boolean showBastion) {
-        int spacing = 27;
-        int separation = 4;
-        int salt = 30084232;
-
-        int regionSizeBlocks = spacing * 16;
-        int minRegX = Math.floorDiv((int) worldLeft, regionSizeBlocks);
-        int maxRegX = Math.ceilDiv((int) worldRight, regionSizeBlocks);
-        int minRegZ = Math.floorDiv((int) worldTop, regionSizeBlocks);
-        int maxRegZ = Math.ceilDiv((int) worldBottom, regionSizeBlocks);
-
-        for (int rx = minRegX; rx <= maxRegX; rx++) {
-            for (int rz = minRegZ; rz <= maxRegZ; rz++) {
-                long regionSeed = (long) rx * 341873128712L + (long) rz * 132897987541L + this.seed + salt;
-                Random random = new Random(regionSeed);
-
-                int range = spacing - separation;
-                int offsetX = random.nextInt(range);
-                int offsetZ = random.nextInt(range);
-
-                int chunkX = rx * spacing + offsetX;
-                int chunkZ = rz * spacing + offsetZ;
-
-                SeedFinder.StructureType type = SeedFinder.getNetherStructureType(this.seed, chunkX, chunkZ);
-
-                boolean isBastion = type == SeedFinder.StructureType.BASTION_REMNANT;
-                if (isBastion && !showBastion) continue;
-                if (!isBastion && !showFortress) continue;
-
-                int blockX = chunkX * 16 + 8;
-                int blockZ = chunkZ * 16 + 8;
-
-                if (blockX < worldLeft || blockX > worldRight || blockZ < worldTop || blockZ > worldBottom) continue;
-                if (this.biomeSource != null && !checkBiome(type, blockX, blockZ)) continue;
-
-                float sx = MAP_X + (blockX - worldLeft) / this.blocksPerPixel;
-                float sy = MAP_Y + (blockZ - worldTop) / this.blocksPerPixel;
-                drawMarker(sx, sy, markerSize, type.displayName, type.mapColor, blockX, blockZ);
-            }
+            float sx = MAP_X + (s.blockX() - worldLeft) / this.blocksPerPixel;
+            float sy = MAP_Y + (s.blockZ() - worldTop) / this.blocksPerPixel;
+            drawMarker(sx, sy, markerSize, s.type().displayName + s.extraInfo(), s.type().mapColor, s.blockX(), s.blockZ());
         }
     }
 
@@ -542,55 +414,6 @@ public class SeedMapScreen extends ClickGuiScreen {
             this.rounded(tx, ty, tw, 16.0F, 3.0F, 0.0F, new Color(25, 25, 25, 240), ColorUtils.SHADOW100);
             this.text(tooltip, scale, tx + tw / 2.0F, ty + 8.0F, true, true, Color.WHITE);
         }
-    }
-
-    private void renderStrongholds(float worldLeft, float worldTop, float markerSize) {
-        int count = 128;
-        int distance = 32;
-        int spread = 3;
-
-        Random random = new Random(this.seed);
-
-        double angle = random.nextDouble() * Math.PI * 2.0;
-        int placedInRing = 0;
-        int ring = 0;
-        int currentSpread = spread;
-
-        float worldRight = worldLeft + MAP_WIDTH * this.blocksPerPixel;
-        float worldBottom = worldTop + MAP_HEIGHT * this.blocksPerPixel;
-
-        for (int i = 0; i < count; i++) {
-            double dist = (4 * distance + distance * 6 * ring) + (random.nextDouble() - 0.5) * distance * 2.5;
-
-            int chunkX = (int) Math.round(Math.cos(angle) * dist);
-            int chunkZ = (int) Math.round(Math.sin(angle) * dist);
-
-            int blockX = chunkX * 16 + 8;
-            int blockZ = chunkZ * 16 + 8;
-
-            if (blockX >= worldLeft && blockX <= worldRight && blockZ >= worldTop && blockZ <= worldBottom) {
-                float sx = MAP_X + (blockX - worldLeft) / this.blocksPerPixel;
-                float sy = MAP_Y + (blockZ - worldTop) / this.blocksPerPixel;
-
-                drawMarker(sx, sy, markerSize, "Stronghold", new Color(255, 50, 50), blockX, blockZ);
-            }
-
-            angle += Math.PI * 2.0 / (double) currentSpread;
-            placedInRing++;
-            if (placedInRing == currentSpread) {
-                ring++;
-                placedInRing = 0;
-                currentSpread += 2 * currentSpread / (ring + 1);
-                currentSpread = Math.min(currentSpread, count - i - 1);
-                if (currentSpread <= 0) break;
-                angle += random.nextDouble() * Math.PI * 2.0;
-            }
-        }
-    }
-
-    private boolean checkBiome(SeedFinder.StructureType type, int x, int z) {
-        if (type.validBiomes == null) return true;
-        return type.validBiomes.contains(this.biomeSource.getBiome(x, z));
     }
 
     private void renderSlimeChunks() {

@@ -26,6 +26,7 @@ import net.minecraft.world.phys.Vec3;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.function.Predicate;
 
 public class SeedFinder extends Module {
     private static final long REGION_X_MULT = 341873128712L;
@@ -154,7 +155,7 @@ public class SeedFinder extends Module {
                 Render3DUtils.box(beam, this.beamColor.get(), this.beamColor.get(), RenderShape.Full);
 
                 double dist = Math.sqrt(distSq);
-                Render3DUtils.text(s.type.displayName + " (" + (int) dist + "m)",
+                Render3DUtils.text(s.type.displayName + s.extraInfo + " (" + (int) dist + "m)",
                         new Vec3(x, playerPos.y + 10, z), -1, this.textScale.get().floatValue());
             }
         }
@@ -177,28 +178,7 @@ public class SeedFinder extends Module {
         SeedBiomeSource source = this.getOrCreateBiomeSource(worldSeed);
         ResourceKey<Level> dim = BlackOut.mc.level.dimension();
 
-        int playerChunkX = (int) Math.floor(this.lastCalcX) >> 4;
-        int playerChunkZ = (int) Math.floor(this.lastCalcZ) >> 4;
-        int radiusChunks = this.searchRadius.get() >> 4;
-        double radiusSq = (double) this.searchRadius.get() * this.searchRadius.get();
-
-        if (dim == Level.NETHER) {
-            this.findNetherStructures(worldSeed, source, playerChunkX, playerChunkZ, radiusChunks, radiusSq);
-        } else {
-            for (StructureType type : StructureType.values()) {
-                if (!this.isDimensionEnabled(type)) continue;
-                if (type.isCaveBiome()) continue;
-
-                if (type == StructureType.STRONGHOLD) {
-                    this.findStrongholds(worldSeed, radiusSq);
-                } else {
-                    this.findRandomSpread(worldSeed, source, type, playerChunkX, playerChunkZ, radiusChunks, radiusSq);
-                }
-            }
-            if (dim != Level.END) {
-                this.findCaveBiomes(source, radiusSq);
-            }
-        }
+        findInArea(this.found, worldSeed, source, dim, (int) this.lastCalcX, (int) this.lastCalcZ, this.searchRadius.get(), true, t -> this.isDimensionEnabled(t, dim));
 
         this.found.sort(Comparator.comparingDouble(s -> {
             double ddx = s.blockX - this.lastCalcX;
@@ -207,10 +187,43 @@ public class SeedFinder extends Module {
         }));
     }
 
-    private void findRandomSpread(long worldSeed, SeedBiomeSource source, StructureType type,
-                                  int playerChunkX, int playerChunkZ, int radiusChunks, double radiusSq) {
-        int spacing = type.spacing;
-        int range = spacing - type.separation;
+    public static void findInArea(List<FoundStructure> results, long worldSeed, SeedBiomeSource source, ResourceKey<Level> dim,
+                                  int centerX, int centerZ, int radius, boolean limitRadius,
+                                  Predicate<StructureType> enabledCheck) {
+
+        int playerChunkX = centerX >> 4;
+        int playerChunkZ = centerZ >> 4;
+        int radiusChunks = radius >> 4;
+        double radiusSq = (double) radius * radius;
+
+        if (dim == Level.NETHER) {
+            findNetherStructures(results, worldSeed, source, playerChunkX, playerChunkZ, radiusChunks, radiusSq, limitRadius, enabledCheck);
+        } else if (dim == Level.END) {
+            if (enabledCheck.test(StructureType.END_CITY)) {
+                findEndCities(results, worldSeed, source, playerChunkX, playerChunkZ, radiusChunks, radiusSq, limitRadius, centerX, centerZ);
+            }
+        } else {
+            for (StructureType type : StructureType.values()) {
+                if (!enabledCheck.test(type)) continue;
+                if (type.isCaveBiome()) continue;
+
+                if (type == StructureType.STRONGHOLD) {
+                    findStrongholds(results, worldSeed, centerX, centerZ, radiusSq, limitRadius);
+                } else {
+                    findRandomSpread(results, worldSeed, source, type, playerChunkX, playerChunkZ, radiusChunks, radiusSq, limitRadius, centerX, centerZ);
+                }
+            }
+            findCaveBiomes(results, source, centerX, centerZ, radius, radiusSq, limitRadius, enabledCheck);
+        }
+    }
+
+    private static void findEndCities(List<FoundStructure> results, long worldSeed, SeedBiomeSource source,
+                                      int playerChunkX, int playerChunkZ, int radiusChunks, double radiusSq, boolean limitRadius,
+                                      int centerX, int centerZ) {
+
+        int spacing = StructureType.END_CITY.spacing;
+        int separation = StructureType.END_CITY.separation;
+        int range = spacing - separation;
 
         int minRegX = Math.floorDiv(playerChunkX - radiusChunks, spacing);
         int maxRegX = Math.floorDiv(playerChunkX + radiusChunks, spacing);
@@ -219,52 +232,99 @@ public class SeedFinder extends Module {
 
         for (int rx = minRegX; rx <= maxRegX; rx++) {
             for (int rz = minRegZ; rz <= maxRegZ; rz++) {
-                long regionSeed = (long) rx * REGION_X_MULT + (long) rz * REGION_Z_MULT + worldSeed + type.salt;
+
+                long regionSeed = rx * REGION_X_MULT + rz * REGION_Z_MULT + worldSeed + StructureType.END_CITY.salt;
                 Random random = new Random(regionSeed);
 
-                int offsetX, offsetZ;
-                if (type.triangular) {
-                    offsetX = (random.nextInt(range) + random.nextInt(range)) / 2;
-                    offsetZ = (random.nextInt(range) + random.nextInt(range)) / 2;
-                } else {
-                    offsetX = random.nextInt(range);
-                    offsetZ = random.nextInt(range);
-                }
+                int offsetX = (random.nextInt(range) + random.nextInt(range)) / 2;
+                int offsetZ = (random.nextInt(range) + random.nextInt(range)) / 2;
 
                 int chunkX = rx * spacing + offsetX;
                 int chunkZ = rz * spacing + offsetZ;
 
-                int blockX = chunkX * 16 + 8;
-                int blockZ = chunkZ * 16 + 8;
+                int locateX = chunkX << 4;
+                int locateZ = chunkZ << 4;
 
-                double dx = blockX - this.lastCalcX;
-                double dz = blockZ - this.lastCalcZ;
-                if (dx * dx + dz * dz > radiusSq) continue;
-
-                if (type.validBiomes != null && !type.validBiomes.contains(source.getBiome(blockX, blockZ))) continue;
-
-                if (type == StructureType.END_CITY) {
-                    int h1 = source.getHeight(blockX, blockZ);
-                    if (h1 < 60) continue;
-
-                    ResourceKey<Biome> centerBiome = source.getBiome(blockX, blockZ);
-                    if (centerBiome == Biomes.END_BARRENS || centerBiome == Biomes.SMALL_END_ISLANDS) continue;
-
-                    if (source.getHeight(blockX + 8, blockZ + 8) < 50 ||
-                            source.getHeight(blockX - 8, blockZ - 8) < 50 ||
-                            source.getHeight(blockX + 8, blockZ - 8) < 50 ||
-                            source.getHeight(blockX - 8, blockZ + 8) < 50) continue;
+                if (limitRadius) {
+                    double dx = (double) locateX - centerX;
+                    double dz = (double) locateZ - centerZ;
+                    if (dx * dx + dz * dz > radiusSq) continue;
                 }
 
-                this.found.add(new FoundStructure(type, blockX, blockZ));
+                int checkX = locateX + 8;
+                int checkZ = locateZ + 8;
+                ResourceKey<Biome> biome = source.getBiome(checkX, checkZ);
+
+                if (biome != Biomes.END_HIGHLANDS && biome != Biomes.END_MIDLANDS) {
+                    continue;
+                }
+
+                if (!source.hasSolidTerrainAt(checkX, 60, checkZ)) {
+                    continue;
+                }
+
+                long structureSeed = (long) chunkX * REGION_X_MULT + (long) chunkZ * REGION_Z_MULT ^ worldSeed;
+                Random jigsawRandom = new Random(structureSeed);
+
+                boolean hasShip = jigsawRandom.nextInt(2) == 0;
+                String extraInfo = hasShip ? " Ship" : "";
+
+                results.add(new FoundStructure(StructureType.END_CITY, locateX, locateZ, extraInfo));
             }
         }
     }
 
-    private void findNetherStructures(long worldSeed, SeedBiomeSource source,
-                                       int playerChunkX, int playerChunkZ, int radiusChunks, double radiusSq) {
-        boolean showFortress = this.fortresses.get();
-        boolean showBastion = this.bastions.get();
+    private static void findRandomSpread(List<FoundStructure> results, long worldSeed, SeedBiomeSource source, StructureType type,
+                                         int playerChunkX, int playerChunkZ, int radiusChunks, double radiusSq, boolean limitRadius,
+                                         int centerX, int centerZ) {
+
+        int spacing = type.spacing;
+        int separation = type.separation;
+        int range = spacing - separation;
+
+        int minRegX = Math.floorDiv(playerChunkX - radiusChunks, spacing);
+        int maxRegX = Math.floorDiv(playerChunkX + radiusChunks, spacing);
+        int minRegZ = Math.floorDiv(playerChunkZ - radiusChunks, spacing);
+        int maxRegZ = Math.floorDiv(playerChunkZ + radiusChunks, spacing);
+
+        for (int rx = minRegX; rx <= maxRegX; rx++) {
+            for (int rz = minRegZ; rz <= maxRegZ; rz++) {
+
+                long regionSeed = rx * REGION_X_MULT + rz * REGION_Z_MULT + worldSeed + type.salt;
+                Random regionRandom = new Random(regionSeed);
+
+                int offsetX = regionRandom.nextInt(range);
+                int offsetZ = regionRandom.nextInt(range);
+
+                int chunkX = rx * spacing + offsetX;
+                int chunkZ = rz * spacing + offsetZ;
+
+                int blockX = chunkX << 4;
+                int blockZ = chunkZ << 4;
+
+                if (limitRadius) {
+                    double dx = (double) blockX - centerX;
+                    double dz = (double) blockZ - centerZ;
+                    if (dx * dx + dz * dz > radiusSq) continue;
+                }
+
+                if (type.validBiomes != null) {
+                    ResourceKey<Biome> biome = source.getBiomeAt(blockX + 8, 64, blockZ + 8);
+                    if (!type.validBiomes.contains(biome)) {
+                        continue;
+                    }
+                }
+
+                results.add(new FoundStructure(type, blockX, blockZ, ""));
+            }
+        }
+    }
+
+    private static void findNetherStructures(List<FoundStructure> results, long worldSeed, SeedBiomeSource source,
+                                             int playerChunkX, int playerChunkZ, int radiusChunks, double radiusSq,
+                                             boolean limitRadius, java.util.function.Predicate<StructureType> enabledCheck) {
+        boolean showFortress = enabledCheck.test(StructureType.NETHER_FORTRESS);
+        boolean showBastion = enabledCheck.test(StructureType.BASTION_REMNANT);
         if (!showFortress && !showBastion) return;
 
         int range = NETHER_SPACING - NETHER_SEPARATION;
@@ -290,16 +350,18 @@ public class SeedFinder extends Module {
                 if (isBastion && !showBastion) continue;
                 if (!isBastion && !showFortress) continue;
 
-                int blockX = chunkX * 16 + 8;
-                int blockZ = chunkZ * 16 + 8;
+                int blockX = chunkX << 4;
+                int blockZ = chunkZ << 4;
 
-                double dx = blockX - this.lastCalcX;
-                double dz = blockZ - this.lastCalcZ;
-                if (dx * dx + dz * dz > radiusSq) continue;
+                if (limitRadius) {
+                    double dx = blockX - (playerChunkX << 4);
+                    double dz = blockZ - (playerChunkZ << 4);
+                    if (dx * dx + dz * dz > radiusSq) continue;
+                }
 
-                if (type.validBiomes != null && !type.validBiomes.contains(source.getBiome(blockX, blockZ))) continue;
+                if (type.validBiomes != null && !type.validBiomes.contains(source.getBiome(blockX + 8, blockZ + 8))) continue;
 
-                this.found.add(new FoundStructure(type, blockX, blockZ));
+                results.add(new FoundStructure(type, blockX, blockZ, ""));
             }
         }
     }
@@ -314,18 +376,16 @@ public class SeedFinder extends Module {
         return roll < 2 ? StructureType.NETHER_FORTRESS : StructureType.BASTION_REMNANT;
     }
 
-    private void findCaveBiomes(SeedBiomeSource source, double radiusSq) {
+    private static void findCaveBiomes(List<FoundStructure> results, SeedBiomeSource source, int centerX, int centerZ,
+                                       int radius, double radiusSq, boolean limitRadius,
+                                       java.util.function.Predicate<StructureType> enabledCheck) {
         int scanStep = 128;
         int sectionSize = 512;
-
-        int centerX = (int) this.lastCalcX;
-        int centerZ = (int) this.lastCalcZ;
-        int radius = this.searchRadius.get();
 
         StructureType[] caveTypes = { StructureType.DEEP_DARK, StructureType.LUSH_CAVES, StructureType.DRIPSTONE_CAVES };
 
         for (StructureType type : caveTypes) {
-            if (!isStructureEnabled(type)) continue;
+            if (!enabledCheck.test(type)) continue;
             ResourceKey<Biome> targetBiome = type.validBiomes.iterator().next();
             int scanY = (type == StructureType.DEEP_DARK) ? -52 : 16;
 
@@ -358,10 +418,21 @@ public class SeedFinder extends Module {
                         int finalX = (int) (sumX / count);
                         int finalZ = (int) (sumZ / count);
 
-                        double dx = finalX - this.lastCalcX;
-                        double dz = finalZ - this.lastCalcZ;
-                        if (dx * dx + dz * dz <= radiusSq) {
-                            this.found.add(new FoundStructure(type, finalX, finalZ));
+                        if (limitRadius) {
+                            double dx = finalX - centerX;
+                            double dz = finalZ - centerZ;
+                            if (dx * dx + dz * dz > radiusSq) continue;
+                        }
+
+                        boolean tooClose = false;
+                        for (FoundStructure s : results) {
+                            if (s.type == type && Math.abs(s.blockX - finalX) < 400 && Math.abs(s.blockZ - finalZ) < 400) {
+                                tooClose = true;
+                                break;
+                            }
+                        }
+                        if (!tooClose) {
+                            results.add(new FoundStructure(type, finalX, finalZ, ""));
                         }
                     }
                 }
@@ -369,7 +440,8 @@ public class SeedFinder extends Module {
         }
     }
 
-    private void findStrongholds(long worldSeed, double radiusSq) {
+    private static void findStrongholds(List<FoundStructure> results, long worldSeed, int centerX, int centerZ,
+                                        double radiusSq, boolean limitRadius) {
         Random random = new Random(worldSeed);
         double angle = random.nextDouble() * Math.PI * 2.0;
         int placedInRing = 0;
@@ -383,13 +455,17 @@ public class SeedFinder extends Module {
             int chunkX = (int) Math.round(Math.cos(angle) * dist);
             int chunkZ = (int) Math.round(Math.sin(angle) * dist);
 
-            int blockX = chunkX * 16 + 8;
-            int blockZ = chunkZ * 16 + 8;
+            int blockX = chunkX << 4;
+            int blockZ = chunkZ << 4;
 
-            double dx = blockX - this.lastCalcX;
-            double dz = blockZ - this.lastCalcZ;
-            if (dx * dx + dz * dz <= radiusSq) {
-                this.found.add(new FoundStructure(StructureType.STRONGHOLD, blockX, blockZ));
+            if (limitRadius) {
+                double dx = blockX - centerX;
+                double dz = blockZ - centerZ;
+                if (dx * dx + dz * dz <= radiusSq) {
+                    results.add(new FoundStructure(StructureType.STRONGHOLD, blockX, blockZ, ""));
+                }
+            } else {
+                results.add(new FoundStructure(StructureType.STRONGHOLD, blockX, blockZ, ""));
             }
 
             angle += Math.PI * 2.0 / currentSpread;
@@ -435,9 +511,8 @@ public class SeedFinder extends Module {
         clickGui.setScreen(screen);
     }
 
-    private boolean isDimensionEnabled(StructureType type) {
-        if (BlackOut.mc.level == null) return false;
-        ResourceKey<Level> dim = BlackOut.mc.level.dimension();
+    public boolean isDimensionEnabled(StructureType type, ResourceKey<Level> dim) {
+        if (dim == null) return false;
 
         boolean isNetherStruct = type == StructureType.NETHER_FORTRESS || type == StructureType.BASTION_REMNANT;
         boolean isEndStruct = type == StructureType.END_CITY;
@@ -483,7 +558,7 @@ public class SeedFinder extends Module {
         };
     }
 
-    public record FoundStructure(StructureType type, int blockX, int blockZ) {}
+    public record FoundStructure(StructureType type, int blockX, int blockZ, String extraInfo) {}
 
     @SafeVarargs
     private static Set<ResourceKey<Biome>> biomes(ResourceKey<Biome>... keys) {
@@ -492,53 +567,30 @@ public class SeedFinder extends Module {
 
     public enum StructureType {
         // Overworld
-        VILLAGE("Village", 34, 8, 10387312, false, new Color(0, 200, 0),
-                biomes(Biomes.PLAINS, Biomes.MEADOW, Biomes.DESERT, Biomes.SAVANNA, Biomes.SNOWY_PLAINS, Biomes.TAIGA)),
-        DESERT_PYRAMID("Desert Pyramid", 32, 8, 14357617, false, new Color(220, 180, 50),
-                biomes(Biomes.DESERT)),
-        JUNGLE_TEMPLE("Jungle Temple", 32, 8, 14357619, false, new Color(50, 180, 50),
-                biomes(Biomes.JUNGLE, Biomes.BAMBOO_JUNGLE)),
-        SWAMP_HUT("Swamp Hut", 32, 8, 14357620, false, new Color(100, 140, 60),
-                biomes(Biomes.SWAMP)),
-        IGLOO("Igloo", 32, 8, 14357618, false, new Color(180, 220, 255),
-                biomes(Biomes.SNOWY_PLAINS, Biomes.SNOWY_TAIGA, Biomes.SNOWY_SLOPES)),
-        OCEAN_MONUMENT("Ocean Monument", 32, 5, 10387313, true, new Color(0, 150, 200),
-                biomes(Biomes.DEEP_OCEAN, Biomes.DEEP_COLD_OCEAN, Biomes.DEEP_FROZEN_OCEAN, Biomes.DEEP_LUKEWARM_OCEAN)),
-        WOODLAND_MANSION("Woodland Mansion", 80, 20, 10387319, true, new Color(140, 80, 40),
-                biomes(Biomes.DARK_FOREST)),
-        PILLAGER_OUTPOST("Pillager Outpost", 32, 8, 165745296, false, new Color(160, 160, 160),
-                biomes(Biomes.PLAINS, Biomes.MEADOW, Biomes.DESERT, Biomes.SAVANNA, Biomes.SNOWY_PLAINS, Biomes.TAIGA,
-                        Biomes.SUNFLOWER_PLAINS, Biomes.CHERRY_GROVE, Biomes.GROVE, Biomes.SNOWY_TAIGA)),
-        ANCIENT_CITY("Ancient City", 24, 8, 20083232, false, new Color(30, 50, 80),
-                biomes(Biomes.DEEP_DARK)),
-        TRIAL_CHAMBERS("Trial Chambers", 34, 12, 94251327, false, new Color(200, 100, 0),
-                null),
-        TRAIL_RUINS("Trail Ruins", 34, 8, 83469867, false, new Color(180, 130, 80),
-                biomes(Biomes.TAIGA, Biomes.SNOWY_TAIGA, Biomes.OLD_GROWTH_SPRUCE_TAIGA, Biomes.OLD_GROWTH_PINE_TAIGA,
-                        Biomes.JUNGLE, Biomes.BIRCH_FOREST, Biomes.OLD_GROWTH_BIRCH_FOREST)),
-        RUINED_PORTAL("Ruined Portal", 40, 15, 34222645, false, new Color(160, 50, 200),
-                null),
-        SHIPWRECK("Shipwreck", 24, 4, 165745295, false, new Color(100, 80, 60),
-                biomes(Biomes.OCEAN, Biomes.DEEP_OCEAN, Biomes.COLD_OCEAN, Biomes.DEEP_COLD_OCEAN,
-                        Biomes.FROZEN_OCEAN, Biomes.DEEP_FROZEN_OCEAN, Biomes.LUKEWARM_OCEAN,
-                        Biomes.DEEP_LUKEWARM_OCEAN, Biomes.WARM_OCEAN, Biomes.BEACH, Biomes.SNOWY_BEACH)),
-        OCEAN_RUIN("Ocean Ruin", 20, 8, 14357621, false, new Color(60, 120, 160),
-                biomes(Biomes.OCEAN, Biomes.DEEP_OCEAN, Biomes.COLD_OCEAN, Biomes.DEEP_COLD_OCEAN,
-                        Biomes.FROZEN_OCEAN, Biomes.DEEP_FROZEN_OCEAN, Biomes.LUKEWARM_OCEAN,
-                        Biomes.DEEP_LUKEWARM_OCEAN, Biomes.WARM_OCEAN)),
+        VILLAGE("Village", 34, 8, 10387312, false, new Color(0, 200, 0), biomes(Biomes.PLAINS, Biomes.MEADOW, Biomes.DESERT, Biomes.SAVANNA, Biomes.SNOWY_PLAINS, Biomes.TAIGA)),
+        DESERT_PYRAMID("Desert Pyramid", 32, 8, 14357617, false, new Color(220, 180, 50), biomes(Biomes.DESERT)),
+        JUNGLE_TEMPLE("Jungle Temple", 32, 8, 14357619, false, new Color(50, 180, 50), biomes(Biomes.JUNGLE, Biomes.BAMBOO_JUNGLE)),
+        SWAMP_HUT("Swamp Hut", 32, 8, 14357620, false, new Color(100, 140, 60), biomes(Biomes.SWAMP)),
+        IGLOO("Igloo", 32, 8, 14357618, false, new Color(180, 220, 255), biomes(Biomes.SNOWY_PLAINS, Biomes.SNOWY_TAIGA, Biomes.SNOWY_SLOPES)),
+        OCEAN_MONUMENT("Ocean Monument", 32, 5, 10387313, true, new Color(0, 150, 200), biomes(Biomes.DEEP_OCEAN, Biomes.DEEP_COLD_OCEAN, Biomes.DEEP_FROZEN_OCEAN, Biomes.DEEP_LUKEWARM_OCEAN)),
+        WOODLAND_MANSION("Woodland Mansion", 80, 20, 10387319, true, new Color(140, 80, 40), biomes(Biomes.DARK_FOREST)),
+        PILLAGER_OUTPOST("Pillager Outpost", 32, 8, 165745296, false, new Color(160, 160, 160), biomes(Biomes.PLAINS, Biomes.MEADOW, Biomes.DESERT, Biomes.SAVANNA, Biomes.SNOWY_PLAINS, Biomes.TAIGA, Biomes.SUNFLOWER_PLAINS, Biomes.CHERRY_GROVE, Biomes.GROVE, Biomes.SNOWY_TAIGA)),
+        ANCIENT_CITY("Ancient City", 24, 8, 20083232, false, new Color(30, 50, 80), biomes(Biomes.DEEP_DARK)),
+        TRIAL_CHAMBERS("Trial Chambers", 34, 12, 94251327, false, new Color(200, 100, 0), null),
+        TRAIL_RUINS("Trail Ruins", 34, 8, 83469867, false, new Color(180, 130, 80), biomes(Biomes.TAIGA, Biomes.SNOWY_TAIGA, Biomes.OLD_GROWTH_SPRUCE_TAIGA, Biomes.OLD_GROWTH_PINE_TAIGA, Biomes.JUNGLE, Biomes.BIRCH_FOREST, Biomes.OLD_GROWTH_BIRCH_FOREST)),
+        RUINED_PORTAL("Ruined Portal", 40, 15, 34222645, false, new Color(160, 50, 200), null),
+        SHIPWRECK("Shipwreck", 24, 4, 165745295, false, new Color(100, 80, 60), biomes(Biomes.OCEAN, Biomes.DEEP_OCEAN, Biomes.COLD_OCEAN, Biomes.DEEP_COLD_OCEAN, Biomes.FROZEN_OCEAN, Biomes.DEEP_FROZEN_OCEAN, Biomes.LUKEWARM_OCEAN, Biomes.DEEP_LUKEWARM_OCEAN, Biomes.WARM_OCEAN, Biomes.BEACH, Biomes.SNOWY_BEACH)),
+        OCEAN_RUIN("Ocean Ruin", 20, 8, 14357621, false, new Color(60, 120, 160), biomes(Biomes.OCEAN, Biomes.DEEP_OCEAN, Biomes.COLD_OCEAN, Biomes.DEEP_COLD_OCEAN, Biomes.FROZEN_OCEAN, Biomes.DEEP_FROZEN_OCEAN, Biomes.LUKEWARM_OCEAN, Biomes.DEEP_LUKEWARM_OCEAN, Biomes.WARM_OCEAN)),
         STRONGHOLD("Stronghold", 0, 0, 0, false, new Color(255, 50, 50), null),
         // Nether
-        NETHER_FORTRESS("Nether Fortress", NETHER_SPACING, NETHER_SEPARATION, NETHER_SALT, false, new Color(200, 50, 50),
-                biomes(Biomes.NETHER_WASTES, Biomes.SOUL_SAND_VALLEY, Biomes.WARPED_FOREST, Biomes.CRIMSON_FOREST, Biomes.BASALT_DELTAS)),
-        BASTION_REMNANT("Bastion Remnant", NETHER_SPACING, NETHER_SEPARATION, NETHER_SALT, false, new Color(50, 50, 50),
-                biomes(Biomes.NETHER_WASTES, Biomes.SOUL_SAND_VALLEY, Biomes.WARPED_FOREST, Biomes.CRIMSON_FOREST)),
-        // End
-        END_CITY("End City", 20, 11, 10387313, false, new Color(200, 150, 255),
-                biomes(Biomes.END_HIGHLANDS, Biomes.END_MIDLANDS)),
+        NETHER_FORTRESS("Nether Fortress", NETHER_SPACING, NETHER_SEPARATION, NETHER_SALT, false, new Color(200, 50, 50), biomes(Biomes.NETHER_WASTES, Biomes.SOUL_SAND_VALLEY, Biomes.WARPED_FOREST, Biomes.CRIMSON_FOREST, Biomes.BASALT_DELTAS)),
+        BASTION_REMNANT("Bastion Remnant", NETHER_SPACING, NETHER_SEPARATION, NETHER_SALT, false, new Color(50, 50, 50), biomes(Biomes.NETHER_WASTES, Biomes.SOUL_SAND_VALLEY, Biomes.WARPED_FOREST, Biomes.CRIMSON_FOREST)),
         // Cave
         DEEP_DARK("Deep Dark", 0, 0, 0, false, new Color(10, 20, 35), biomes(Biomes.DEEP_DARK)),
         LUSH_CAVES("Lush Caves", 0, 0, 0, false, new Color(50, 140, 30), biomes(Biomes.LUSH_CAVES)),
-        DRIPSTONE_CAVES("Dripstone Caves", 0, 0, 0, false, new Color(140, 106, 70), biomes(Biomes.DRIPSTONE_CAVES));
+        DRIPSTONE_CAVES("Dripstone Caves", 0, 0, 0, false, new Color(140, 106, 70), biomes(Biomes.DRIPSTONE_CAVES)),
+        // End
+        END_CITY("End City", 20, 11, 10387313, false, new Color(200, 150, 255), biomes(Biomes.END_MIDLANDS, Biomes.END_HIGHLANDS));
 
         public final String displayName;
         public final int spacing;
