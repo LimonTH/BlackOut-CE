@@ -1,5 +1,6 @@
-package bodevelopment.client.blackout.util.render.consumers;
+package bodevelopment.client.blackout.util.render.consumers.providers;
 
+import bodevelopment.client.blackout.util.render.consumers.ModelVertexConsumer;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
