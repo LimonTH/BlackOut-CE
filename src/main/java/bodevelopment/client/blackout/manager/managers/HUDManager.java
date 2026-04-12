@@ -138,6 +138,10 @@ public class HUDManager extends Manager {
         Render2DUtils.unGuiScale(stack);
         s = 1.0F / s;
         stack.scale(s, s, s);
+        // HUD is 2D — depth writes would pollute the depth buffer and cause other
+        // HUD renders (vanilla / other mods) to fail the depth test in our areas.
+        RenderSystem.disableDepthTest();
+        RenderSystem.depthMask(false);
     }
 
     public void render(PoseStack stack, float frameTime) {
@@ -157,6 +161,8 @@ public class HUDManager extends Manager {
 
     public void end(PoseStack stack) {
         stack.popPose();
+        RenderSystem.enableDepthTest();
+        RenderSystem.depthMask(true);
     }
 
     public void forEachElement(BiConsumer<? super Integer, ? super HudElement> consumer) {

@@ -52,7 +52,6 @@ dependencies {
 	// Other
 	compileOnly "com.google.errorprone:error_prone_annotations:2.47.0"
 	implementation "com.github.LlamaLad7.MixinExtras:mixinextras-common:0.2.2"
-	implementation("io.github.xuyife:cubiomes_java:1.0")
 }
 
 /**

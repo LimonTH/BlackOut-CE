@@ -24,6 +24,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import org.joml.Matrix4f;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -55,6 +56,7 @@ public class SeedMapScreen extends ClickGuiScreen {
     private static final Color SLIME_COLOR = new Color(100, 200, 50, 60);
     private static final Color SLIME_BORDER = new Color(100, 200, 50, 120);
     private static final Color COORD_LABEL_COLOR = new Color(200, 200, 210, 180);
+    private static final Map<String, DynamicTexture> ICON_TEXTURE_CACHE = new java.util.HashMap<>();
 
     private final String seedString;
     private SeedBiomeSource biomeSource;
@@ -77,6 +79,21 @@ public class SeedMapScreen extends ClickGuiScreen {
     private final int fieldXId = SelectedComponent.nextId();
     private final int fieldZId = SelectedComponent.nextId();
     private boolean showSlimeChunks = false;
+
+    // Selected structure panel (click to open, click again or elsewhere to close)
+    private SeedFinder.FoundStructure selectedStructure = null;
+    private double mouseDownX, mouseDownY;
+
+    // Map-specific structure search (independent of module's 3D render settings)
+    private volatile List<SeedFinder.FoundStructure> mapStructures = new java.util.ArrayList<>();
+    private volatile boolean mapSearchRunning = false;
+    private float lastSearchCX = Float.MAX_VALUE;
+    private float lastSearchCZ = Float.MAX_VALUE;
+    private float lastSearchBpp = -1.0F;
+    private ResourceKey<Level> lastSearchDim;
+
+    private static final float ICON_SIZE = 20.0F;
+    private static final float ICON_SIZE_SELECTED = 26.0F;
 
     public SeedMapScreen(String seedString, long seed, SeedBiomeSource biomeSource) {
         super("Seed Map", MAP_WIDTH + 20.0F, MAP_HEIGHT + FOOTER_HEIGHT + 10.0F, false);
@@ -109,6 +126,9 @@ public class SeedMapScreen extends ClickGuiScreen {
                 lastDim = currentDim;
                 tileCache.values().forEach(MapTile::close);
                 tileCache.clear();
+                // reset structure search so it re-runs for new dimension
+                lastSearchDim = null;
+                this.selectedStructure = null;
 
                 SeedFinder finder = Managers.MODULES.getModule(SeedFinder.class);
                 if (finder != null) {
@@ -139,10 +159,11 @@ public class SeedMapScreen extends ClickGuiScreen {
                 this.renderSlimeChunks();
             }
             this.renderGrid(mapRight, mapBottom);
-            this.hoveredStructure = false;
-            this.renderStructures();
             this.renderPlayer();
         }
+        // Structures rendered outside scissor so icons near map edges don't get clipped
+        this.hoveredStructure = false;
+        this.renderStructures();
 
         // Footer
         float footerY = mapBottom + 5.0F;
@@ -193,6 +214,13 @@ public class SeedMapScreen extends ClickGuiScreen {
         this.rounded(slimeBtnX, fieldsY, slimeBtnW, fieldH, 3.0F, 0.0F, slimeBtnColor, ColorUtils.SHADOW100);
         this.text("Slime Chunks", 1.6F, slimeBtnX + slimeBtnW / 2.0F, fieldsY + fieldH / 2.0F, true, true, Color.WHITE);
 
+        // Player center button
+        float playerBtnW = 55.0F;
+        float playerBtnX = slimeBtnX + slimeBtnW + 12.0F;
+        boolean playerHovered = this.mx >= playerBtnX && this.mx <= playerBtnX + playerBtnW && this.my >= fieldsY && this.my <= fieldsY + fieldH;
+        this.rounded(playerBtnX, fieldsY, playerBtnW, fieldH, 3.0F, 0.0F, playerHovered ? BUTTON_HOVER : BUTTON_COLOR, ColorUtils.SHADOW100);
+        this.text("Player", 1.6F, playerBtnX + playerBtnW / 2.0F, fieldsY + fieldH / 2.0F, true, true, Color.WHITE);
+
         // Chunkbase button
         float btnW = 130.0F, btnH = 22.0F;
         float btnX = mapRight - btnW - 5.0F, btnY = footerY + (footerH - btnH) / 2.0F;
@@ -201,6 +229,8 @@ public class SeedMapScreen extends ClickGuiScreen {
         this.text("Open Chunkbase", 2.0F, btnX + btnW / 2.0F, btnY + btnH / 2.0F, true, true, Color.WHITE);
 
         this.renderBiomeTooltip();
+        renderSelectedStructurePanel();
+        renderControlsHint();
     }
 
     private void renderBiomeTexture() {
@@ -247,39 +277,35 @@ public class SeedMapScreen extends ClickGuiScreen {
                 int quartStep = Math.max(1, Math.round(4.0f / bpp));
                 int step = Math.min(4, Math.max(2, quartStep));
 
-                for (int ty = 0; ty < TILE_SIZE; ty += step) {
-                    for (int tx = 0; tx < TILE_SIZE; tx += step) {
-                        int bx = (int) (startX + (tx + 0.5F) * bpp);
-                        int bz = (int) (startZ + (ty + 0.5F) * bpp);
+                int numX = (TILE_SIZE + step - 1) / step;
+                int numZ = (TILE_SIZE + step - 1) / step;
+
+                for (int ti = 0; ti < numZ; ti++) {
+                    for (int tj = 0; tj < numX; tj++) {
+                        int bx = (int)(startX + (tj * step + 0.5F) * bpp);
+                        int bz = (int)(startZ + (ti * step + 0.5F) * bpp);
                         int color = biomeSource.getBiomeColor(bx, bz);
-                        int height = biomeSource.getHeight(bx, bz);
 
-                        // Shading based on height (64 is baseline)
-                        float factor = 0.95f + (height - 64) * 0.008f;
-                        factor = Math.max(0.75f, Math.min(1.25f, factor));
-
-                        int r = (int) (((color >> 16) & 0xFF) * factor);
-                        int g = (int) (((color >> 8) & 0xFF) * factor);
-                        int b = (int) ((color & 0xFF) * factor);
-                        int a = (color >> 24) & 0xFF;
-
-                        color = (Math.min(255, a) << 24) | (Math.min(255, r) << 16) | (Math.min(255, g) << 8) | Math.min(255, b);
-
-                        int maxY = Math.min(ty + step, TILE_SIZE);
-                        int maxX = Math.min(tx + step, TILE_SIZE);
-                        for (int fy = ty; fy < maxY; fy++) {
-                            for (int fx = tx; fx < maxX; fx++) {
+                        int tx = tj * step;
+                        int ty = ti * step;
+                        int maxTx = Math.min(tx + step, TILE_SIZE);
+                        int maxTy = Math.min(ty + step, TILE_SIZE);
+                        for (int fy = ty; fy < maxTy; fy++) {
+                            for (int fx = tx; fx < maxTx; fx++) {
                                 tile.image.setPixel(fx, fy, color);
                             }
                         }
                     }
                 }
 
+                final float bppSnapshot = bpp;
                 RenderSystem.recordRenderCall(() -> {
                     tile.texture.upload();
                     RenderSystem.bindTexture(tile.texture.getId());
                     GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
                     GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+                    tile.generatedBpp = bppSnapshot;
+                    tile.generating = false;
                     tile.ready = true;
                 });
             } catch (Exception e) {
@@ -328,6 +354,103 @@ public class SeedMapScreen extends ClickGuiScreen {
         this.text(label, scale, tx + tw / 2.0F, ty + 8, true, true, Color.WHITE);
     }
 
+    private void renderSelectedStructurePanel() {
+        if (this.selectedStructure == null) return;
+
+        float worldLeft = this.mapCenterX - (MAP_WIDTH / 2.0F) * this.blocksPerPixel;
+        float worldTop  = this.mapCenterZ - (MAP_HEIGHT / 2.0F) * this.blocksPerPixel;
+
+        float iconX = MAP_X + (this.selectedStructure.blockX() - worldLeft) / this.blocksPerPixel;
+        float iconY = MAP_Y + (this.selectedStructure.blockZ() - worldTop)  / this.blocksPerPixel;
+
+        if (iconX < MAP_X - ICON_SIZE || iconX > MAP_X + MAP_WIDTH + ICON_SIZE
+                || iconY < MAP_Y - ICON_SIZE || iconY > MAP_Y + MAP_HEIGHT + ICON_SIZE) return;
+
+        String title  = getStructureFullName(this.selectedStructure);
+        String coords = "X: " + this.selectedStructure.blockX() + "   Z: " + this.selectedStructure.blockZ();
+
+        float titleScale = 1.8F;
+        float coordScale = 1.5F;
+        float titleH = 13.0F;
+        float coordH = 11.0F;
+        float padX   = 10.0F;
+        float padY   = 6.0F;
+        float gap    = 3.0F;
+
+        float panelW = Math.max(
+                BlackOut.FONT.getWidth(title)  * titleScale,
+                BlackOut.FONT.getWidth(coords) * coordScale
+        ) + padX * 2;
+        float panelH = padY + titleH + gap + coordH + padY;
+
+        float panelX = iconX - panelW / 2.0F;
+        float panelY = iconY - ICON_SIZE / 2.0F - panelH - 6.0F;
+        panelX = Math.clamp(panelX, MAP_X, MAP_X + MAP_WIDTH - panelW);
+        if (panelY < MAP_Y) panelY = iconY + ICON_SIZE / 2.0F + 6.0F;
+
+        Color mc = this.selectedStructure.type().mapColor;
+        Color accent = new Color(mc.getRed(), mc.getGreen(), mc.getBlue(), 200);
+
+        this.rounded(panelX, panelY, panelW, panelH, 4.0F, 0.0F, new Color(18, 18, 22, 240), ColorUtils.SHADOW100);
+        this.quad(panelX + 4, panelY, panelW - 8, 2.0F, accent);
+
+        this.text(title,  titleScale, panelX + panelW / 2.0F, panelY + padY + titleH / 2.0F, true, true, Color.WHITE);
+        this.text(coords, coordScale, panelX + panelW / 2.0F, panelY + padY + titleH + gap + coordH / 2.0F, true, true, new Color(160, 160, 185, 255));
+    }
+
+    private static String getStructureFullName(SeedFinder.FoundStructure s) {
+        String extra = s.extraInfo().trim();
+
+        return switch (s.type()) {
+            case VILLAGE -> switch (extra) {
+                case "plains", "meadow" -> "Plains Village";
+                case "desert"           -> "Desert Village";
+                case "savanna"          -> "Savanna Village";
+                case "snowy_plains"     -> "Snowy Village";
+                case "taiga"            -> "Taiga Village";
+                default                 -> "Village";
+            };
+
+            case BASTION_REMNANT -> switch (extra) {
+                case "Housing"  -> "Bastion Housing Units";
+                case "Stables"  -> "Bastion Hoglin Stables";
+                case "Treasure" -> "Bastion Treasure Room";
+                case "Bridge"   -> "Bastion Bridge";
+                default         -> "Bastion Remnant";
+            };
+
+            case IGLOO -> extra.equals("Laboratory") ? "Igloo with Basement" : "Igloo";
+
+            case OCEAN_RUIN -> {
+                String size = extra.contains("Big") ? "Big " : "Small ";
+                String temp = (extra.contains("warm") || extra.contains("lukewarm")) ? "Warm " : "Cold ";
+                yield size + temp + "Ocean Ruin";
+            }
+
+            case END_CITY -> extra.equals("Ship") ? "End City with Ship" : "End City";
+
+            case SPAWN -> "World Spawn Point";
+
+            default -> s.type().displayName;
+        };
+    }
+
+    private void renderControlsHint() {
+        float panelW = 140.0F;
+        float panelH = 42.0F;
+        float panelX = MAP_X + MAP_WIDTH - panelW - 6.0F;
+        float panelY = MAP_Y + 6.0F;
+
+        this.rounded(panelX, panelY, panelW, panelH, 4.0F, 0.0F, new Color(15, 15, 18, 185), ColorUtils.SHADOW100);
+
+        float lx = panelX + 8.0F;
+        float scale = 1.45F;
+        float lineH = 12.0F;
+        this.text("Scroll: Zoom", scale, lx, panelY + 8.0F, false, true, new Color(190, 190, 200, 210));
+        this.text("R: Reset view", scale, lx, panelY + 8.0F + lineH, false, true, new Color(190, 190, 200, 210));
+        this.text("Enter: Go to coords", scale, lx, panelY + 8.0F + lineH * 2.0F, false, true, new Color(190, 190, 200, 210));
+    }
+
     private void renderGrid(float mapRight, float mapBottom) {
         float worldLeft = this.mapCenterX - (MAP_WIDTH / 2.0F) * this.blocksPerPixel;
         float worldTop = this.mapCenterZ - (MAP_HEIGHT / 2.0F) * this.blocksPerPixel;
@@ -357,62 +480,150 @@ public class SeedMapScreen extends ClickGuiScreen {
         }
     }
 
-    private final List<SeedFinder.FoundStructure> mapFound = new java.util.ArrayList<>();
-    private float lastMapX, lastMapZ, lastBpp;
-    private ResourceKey<Level> lastMapDim;
+    private void triggerStructureSearch(SeedFinder finder) {
+        if (this.biomeSource == null || mapSearchRunning) return;
+
+        float viewHalf = Math.max(MAP_WIDTH, MAP_HEIGHT) * this.blocksPerPixel * 0.6f;
+        boolean stale = Math.abs(mapCenterX - lastSearchCX) > viewHalf * 0.2f
+                     || Math.abs(mapCenterZ - lastSearchCZ) > viewHalf * 0.2f
+                     || this.blocksPerPixel != lastSearchBpp
+                     || this.lastDim != lastSearchDim;
+        if (!stale) return;
+
+        lastSearchCX  = mapCenterX;
+        lastSearchCZ  = mapCenterZ;
+        lastSearchBpp = this.blocksPerPixel;
+        lastSearchDim = this.lastDim;
+
+        int cx     = (int) mapCenterX;
+        int cz     = (int) mapCenterZ;
+        int radius = (int) viewHalf + 512;
+        long s     = this.seed;
+        SeedBiomeSource src = this.biomeSource;
+        ResourceKey<Level> dim = this.lastDim;
+
+        mapSearchRunning = true;
+        generatePool.execute(() -> {
+            try {
+                List<SeedFinder.FoundStructure> results = new java.util.ArrayList<>();
+                SeedFinder.findInArea(results, s, src, dim, cx, cz, radius, false,
+                        t -> finder.isDimensionEnabled(t, dim));
+                mapStructures = results;
+            } finally {
+                mapSearchRunning = false;
+            }
+        });
+    }
 
     private void renderStructures() {
         SeedFinder seedFinder = Managers.MODULES.getModule(SeedFinder.class);
         if (seedFinder == null || this.biomeSource == null) return;
 
-        float worldLeft = this.mapCenterX - (MAP_WIDTH / 2.0F) * this.blocksPerPixel;
-        float worldTop = this.mapCenterZ - (MAP_HEIGHT / 2.0F) * this.blocksPerPixel;
-        float worldRight = worldLeft + MAP_WIDTH * this.blocksPerPixel;
-        float worldBottom = worldTop + MAP_HEIGHT * this.blocksPerPixel;
+        triggerStructureSearch(seedFinder);
 
-        float markerSize = Math.max(3.5F, 8.0F / (this.blocksPerPixel / 4.0F));
+        float worldLeft   = this.mapCenterX - (MAP_WIDTH  / 2.0F) * this.blocksPerPixel;
+        float worldTop    = this.mapCenterZ - (MAP_HEIGHT / 2.0F) * this.blocksPerPixel;
+        float worldRight  = worldLeft + MAP_WIDTH  * this.blocksPerPixel;
+        float worldBottom = worldTop  + MAP_HEIGHT * this.blocksPerPixel;
 
-        if (Math.abs(mapCenterX - lastMapX) > 100 * blocksPerPixel || Math.abs(mapCenterZ - lastMapZ) > 100 * blocksPerPixel || blocksPerPixel != lastBpp || lastDim != lastMapDim) {
-            mapFound.clear();
-            int radius = (int) (Math.max(MAP_WIDTH, MAP_HEIGHT) * blocksPerPixel);
-            SeedFinder.findInArea(mapFound, seed, biomeSource, lastDim, (int) mapCenterX, (int) mapCenterZ, radius, false, t -> seedFinder.isDimensionEnabled(t, lastDim));
+        ResourceKey<Level> dim = this.lastDim;
 
-            lastMapX = mapCenterX;
-            lastMapZ = mapCenterZ;
-            lastBpp = blocksPerPixel;
-            lastMapDim = lastDim;
-        }
+        for (SeedFinder.FoundStructure s : mapStructures) {
+            if (!seedFinder.isDimensionEnabled(s.type(), dim)) continue;
 
-        boolean hideMinor = this.blocksPerPixel >= 16.0F;
+            // LOD: hide structures at far zoom levels
+            if (this.blocksPerPixel >= 32.0F && !s.type().isAlwaysVisible()) continue;
+            if (this.blocksPerPixel >= 12.0F && s.type().isMinor()) continue;
 
-        for (SeedFinder.FoundStructure s : mapFound) {
-            if (hideMinor && !s.type().isMajor()) continue;
-            if (s.blockX() < worldLeft || s.blockX() > worldRight || s.blockZ() < worldTop || s.blockZ() > worldBottom) continue;
+            if (s.blockX() < worldLeft || s.blockX() > worldRight
+                    || s.blockZ() < worldTop  || s.blockZ() > worldBottom) continue;
 
             float sx = MAP_X + (s.blockX() - worldLeft) / this.blocksPerPixel;
-            float sy = MAP_Y + (s.blockZ() - worldTop) / this.blocksPerPixel;
-            drawMarker(sx, sy, markerSize, s.type().displayName + s.extraInfo(), s.type().mapColor, s.blockX(), s.blockZ());
+            float sy = MAP_Y + (s.blockZ() - worldTop)  / this.blocksPerPixel;
+            drawMarker(sx, sy, ICON_SIZE, s.type().displayName + s.extraInfo(),
+                    s.type().mapColor, s.blockX(), s.blockZ(), s.type(), s.extraInfo());
         }
     }
 
-    private void drawMarker(float sx, float sy, float size, String name, Color color, int bx, int bz) {
-        float half = size / 2.0F;
-        this.quad(sx - half - 0.5F, sy - half - 0.5F, size + 1.0F, size + 1.0F, new Color(0, 0, 0, 180));
-        this.quad(sx - half, sy - half, size, size, color);
+    private static int getIconGlId(SeedFinder.StructureType type, String extraInfo) {
+        String extra = extraInfo.trim();
 
-        if (this.blocksPerPixel < 16.0F) {
-            this.text(name, 1.5F, sx, sy - half - 4.0F, true, true, Color.WHITE);
-        }
+        String path = switch (type) {
+            case BASTION_REMNANT ->
+                    "textures/map/structures/bastion/bastion_" + extra.trim().toLowerCase() + ".png";
 
-        if (this.mx >= sx - half - 2 && this.mx <= sx + half + 2 && this.my >= sy - half - 2 && this.my <= sy + half + 2) {
+            case IGLOO ->
+                    extra.equals("Laboratory")
+                            ? "textures/map/structures/igloo/igloo_with_basement.png"
+                            : "textures/map/structures/igloo/igloo_without_basement.png";
+
+            case OCEAN_RUIN ->
+                    extra.contains("Big")
+                            ? "textures/map/structures/ocean_ruins/ocean_ruins_large.png"
+                            : "textures/map/structures/ocean_ruins/ocean_ruins_small.png";
+
+            case END_CITY ->
+                    extra.equals("Ship")
+                            ? "textures/map/structures/end_city/end_city_with_ship.png"
+                            : "textures/map/structures/end_city/end_city_without_ship.png";
+
+            case VILLAGE -> {
+                if (!extra.isEmpty()) {
+                    yield "textures/map/structures/village/village.png";
+                }
+                yield type.iconPath;
+            }
+
+            default -> type.iconPath;
+        };
+
+        DynamicTexture tex = ICON_TEXTURE_CACHE.computeIfAbsent(path, p -> {
+            BufferedImage img = FileUtils.readResourceImage(p);
+            if (img == null) {
+                if (!p.equals(type.iconPath)) return ICON_TEXTURE_CACHE.get(type.iconPath);
+                return null;
+            }
+            NativeImage ni = new NativeImage(NativeImage.Format.RGBA, img.getWidth(), img.getHeight(), false);
+            for (int iy = 0; iy < img.getHeight(); iy++) {
+                for (int ix = 0; ix < img.getWidth(); ix++) {
+                    ni.setPixel(ix, iy, img.getRGB(ix, iy));
+                }
+            }
+            DynamicTexture dt = new DynamicTexture(ni);
+            dt.upload();
+            return dt;
+        });
+
+        return tex == null ? 0 : tex.getId();
+    }
+
+    private void drawStructureIcon(float sx, float sy, float size, int glId) {
+        if (glId == 0) return;
+        Matrix4f matrix = this.stack.last().pose();
+        RenderSystem.setShaderTexture(0, glId);
+        RenderSystem.setShader(CoreShaders.POSITION_TEX);
+        RenderSystem.enableBlend();
+        BufferBuilder buf = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        buf.addVertex(matrix, sx,        sy + size, 0).setUv(0, 1);
+        buf.addVertex(matrix, sx + size, sy + size, 0).setUv(1, 1);
+        buf.addVertex(matrix, sx + size, sy,        0).setUv(1, 0);
+        buf.addVertex(matrix, sx,        sy,        0).setUv(0, 0);
+        BufferUploader.drawWithShader(buf.buildOrThrow());
+    }
+
+    private void drawMarker(float sx, float sy, float size, String name, Color color, int bx, int bz, SeedFinder.StructureType type, String extraInfo) {
+        // Highlight selected structure with larger icon
+        boolean selected = this.selectedStructure != null
+                && this.selectedStructure.blockX() == bx && this.selectedStructure.blockZ() == bz;
+        float drawSize = selected ? ICON_SIZE_SELECTED : size;
+        float half = drawSize / 2.0F;
+
+        drawStructureIcon(sx - half, sy - half, drawSize, getIconGlId(type, extraInfo));
+
+        // Track hovered structure (used to suppress biome tooltip)
+        if (this.mx >= sx - half - 2 && this.mx <= sx + half + 2
+                && this.my >= sy - half - 2 && this.my <= sy + half + 2) {
             this.hoveredStructure = true;
-            String tooltip = name + " [" + bx + ", " + bz + "]";
-            float scale = 1.8F;
-            float tw = BlackOut.FONT.getWidth(tooltip) * scale + 10;
-            float tx = (float) this.mx + 10;
-            float ty = (float) this.my - 10;
-            this.rounded(tx, ty, tw, 16.0F, 3.0F, 0.0F, new Color(25, 25, 25, 240), ColorUtils.SHADOW100);
-            this.text(tooltip, scale, tx + tw / 2.0F, ty + 8.0F, true, true, Color.WHITE);
         }
     }
 
@@ -521,6 +732,17 @@ public class SeedMapScreen extends ClickGuiScreen {
                 return;
             }
 
+            // Player center button
+            float playerBtnW = 55.0F;
+            float playerBtnX = slimeBtnX + slimeBtnW + 12.0F;
+            if (this.mx >= playerBtnX && this.mx <= playerBtnX + playerBtnW && this.my >= fieldsY && this.my <= fieldsY + fieldH) {
+                if (BlackOut.mc.player != null) {
+                    this.mapCenterX = (float) BlackOut.mc.player.getX();
+                    this.mapCenterZ = (float) BlackOut.mc.player.getZ();
+                }
+                return;
+            }
+
             // Chunkbase button
             float btnW = 130.0F;
             float btnH = 22.0F;
@@ -535,6 +757,8 @@ public class SeedMapScreen extends ClickGuiScreen {
 
             if (this.mx >= MAP_X && this.mx <= MAP_X + MAP_WIDTH && this.my >= MAP_Y && this.my <= MAP_Y + MAP_HEIGHT) {
                 this.dragging = true;
+                this.mouseDownX = this.mx;
+                this.mouseDownY = this.my;
                 this.dragStartMx = this.mx;
                 this.dragStartMy = this.my;
                 this.dragStartCenterX = this.mapCenterX;
@@ -542,7 +766,40 @@ public class SeedMapScreen extends ClickGuiScreen {
             }
         } else if (button == 0) {
             this.dragging = false;
+            // Detect click (not drag) on the map area
+            double ddx = this.mx - this.mouseDownX;
+            double ddy = this.my - this.mouseDownY;
+            if (ddx * ddx + ddy * ddy < 9.0 // < 3px movement
+                    && this.mx >= MAP_X && this.mx <= MAP_X + MAP_WIDTH
+                    && this.my >= MAP_Y && this.my <= MAP_Y + MAP_HEIGHT) {
+                handleMapClick();
+            }
         }
+    }
+
+    private void handleMapClick() {
+        float worldLeft = this.mapCenterX - (MAP_WIDTH / 2.0F) * this.blocksPerPixel;
+        float worldTop  = this.mapCenterZ - (MAP_HEIGHT / 2.0F) * this.blocksPerPixel;
+        float half = ICON_SIZE / 2.0F;
+
+        for (SeedFinder.FoundStructure s : mapStructures) {
+            float sx = MAP_X + (s.blockX() - worldLeft) / this.blocksPerPixel;
+            float sy = MAP_Y + (s.blockZ() - worldTop)  / this.blocksPerPixel;
+            if (this.mx >= sx - half - 2 && this.mx <= sx + half + 2
+                    && this.my >= sy - half - 2 && this.my <= sy + half + 2) {
+                // Toggle: click same structure to deselect
+                if (this.selectedStructure != null
+                        && this.selectedStructure.blockX() == s.blockX()
+                        && this.selectedStructure.blockZ() == s.blockZ()) {
+                    this.selectedStructure = null;
+                } else {
+                    this.selectedStructure = s;
+                }
+                return;
+            }
+        }
+        // Clicked on empty map area — deselect
+        this.selectedStructure = null;
     }
 
     private void goToCoordinates() {
@@ -607,7 +864,6 @@ public class SeedMapScreen extends ClickGuiScreen {
             float relZ = ((float) this.my - MAP_Y) / MAP_HEIGHT - 0.5F;
             this.mapCenterX += relX * MAP_WIDTH * (oldBpp - this.blocksPerPixel);
             this.mapCenterZ += relZ * MAP_HEIGHT * (oldBpp - this.blocksPerPixel);
-
             tileCache.values().forEach(MapTile::close);
             tileCache.clear();
             return true;
@@ -641,14 +897,13 @@ public class SeedMapScreen extends ClickGuiScreen {
         return 16;
     }
 
-    public record StructureEntry(String name, int blockX, int blockZ, Color color) {}
-
     private static class MapTile {
         public final int tx, tz;
         public final DynamicTexture texture;
         public final NativeImage image;
         public volatile boolean ready = false;
         public volatile boolean generating = false;
+        public volatile float generatedBpp = -1F;
 
         public MapTile(int tx, int tz) {
             this.tx = tx;

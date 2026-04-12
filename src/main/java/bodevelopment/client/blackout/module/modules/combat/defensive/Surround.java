@@ -33,6 +33,8 @@ public class Surround extends ObsidianModule {
             "Prevents centering if you are already clipped/glitched inside a block to avoid getting stuck.", this.center::get);
     private final Setting<Boolean> extend = this.sgGeneral.booleanSetting("Extend", true,
             "Automatically expands the surround if another player or entity is standing in your way.");
+    private final Setting<Boolean> placeUnderFeet = this.sgGeneral.booleanSetting("Place Under Feet", true,
+            "Places a block directly under your feet as a foundation for the surround.");
 
     private final Setting<Boolean> toggleMove = this.sgToggle.booleanSetting("Toggle Move", false,
             "Disables Surround if you move to a different horizontal block.");
@@ -127,6 +129,7 @@ public class Surround extends ObsidianModule {
     protected void addPlacements() {
         this.insideBlocks.forEach(pos -> {
             for (Direction dir : this.directions) {
+                if (dir == Direction.DOWN && !this.placeUnderFeet.get()) continue;
                 BlockPos target = pos.relative(dir);
                 if (!BlackOut.mc.level.isOutsideBuildHeight(target)
                         && !this.blockPlacements.contains(target)

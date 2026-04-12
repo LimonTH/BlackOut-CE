@@ -3,7 +3,7 @@ package bodevelopment.client.blackout.util.render;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
-import bodevelopment.client.blackout.util.render.consumers.ModelVertexConsumerProvider;
+import bodevelopment.client.blackout.util.render.consumers.providers.ModelVertexConsumerProvider;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
