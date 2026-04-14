@@ -2,27 +2,39 @@ package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.events.GameJoinEvent;
+import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.mixin.accessors.AccessorServerboundMovePlayerPacket;
 import bodevelopment.client.blackout.module.modules.misc.NoRotate;
+import bodevelopment.client.blackout.module.modules.movement.Velocity;
 import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
 import bodevelopment.client.blackout.module.modules.visual.world.Ambience;
 import bodevelopment.client.blackout.util.CompatUtils;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientboundBundlePacket;
 import net.minecraft.network.protocol.game.ClientboundLoginPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 
 @Mixin(ClientPacketListener.class)
 public class MixinClientPacketListener {
@@ -138,6 +150,90 @@ public class MixinClientPacketListener {
         NoRender noRender = NoRender.getInstance();
         if (!noRender.enabled || !noRender.totem.get()) {
             instance.displayItemActivation(floatingItem);
+        }
+    }
+
+    /**
+     * Intercepts handleBundlePacket at HEAD and manually dispatches each sub-packet
+     * through the full PacketEvent pipeline (Pre → Post → handle → Received), exactly as
+     * MixinConnection does for top-level packets. The vanilla loop is cancelled so we own
+     * the entire dispatch. Without this, sub-packets bypass PacketEvent.Receive.Pre, so
+     * modules like Velocity (Grim/Delayed) never see bundled explosion packets and cannot
+     * cancel them — causing full knockback and sound to apply unexpectedly.
+     */
+    @SuppressWarnings("unchecked")
+    @Inject(method = "handleBundlePacket", at = @At("HEAD"), cancellable = true)
+    private void dispatchBundleSubPackets(ClientboundBundlePacket bundle, CallbackInfo ci) {
+        for (Packet<?> subPacket : bundle.subPackets()) {
+            if (BlackOut.EVENT_BUS.post(PacketEvent.Receive.Pre.get(subPacket)).isCancelled()) continue;
+            if (BlackOut.EVENT_BUS.post(PacketEvent.Receive.Post.get(subPacket)).isCancelled()) continue;
+            ((Packet<ClientGamePacketListener>) subPacket).handle((ClientGamePacketListener) (Object) this);
+            BlackOut.EVENT_BUS.post(PacketEvent.Received.get(subPacket));
+        }
+        ci.cancel();
+    }
+
+    /**
+     * Intercepts the playerKnockback().ifPresent(...) call in handleExplosion so we can scale
+     * or suppress explosion knockback directly at the source.
+     *
+     * For Simple, Matrix_AAC, and Vulcan modes this is the primary knockback handler.
+     * For Grim and Delayed modes, Velocity.onVelocity cancels the explosion packet via
+     * PacketEvent.Receive.Pre before handleExplosion is ever called — both for normal packets
+     * and for bundle sub-packets (now that dispatchBundleSubPackets re-routes them through
+     * PacketEvent). If the user's chance/condition logic doesn't cancel the packet, we fall
+     * through to vanilla here so intentional non-cancels still apply full knockback.
+     */
+    @SuppressWarnings("unchecked")
+    @WrapOperation(
+            method = "handleExplosion",
+            at = @At(value = "INVOKE", target = "Ljava/util/Optional;ifPresent(Ljava/util/function/Consumer;)V")
+    )
+    private void wrapExplosionKnockback(Optional<Vec3> optional, Consumer<Vec3> consumer, Operation<Void> original) {
+        Velocity velocity = Velocity.getInstance();
+        if (velocity == null || !velocity.enabled || !velocity.explosions.get()) {
+            original.call(optional, consumer);
+            return;
+        }
+
+        switch (velocity.mode.get()) {
+            case Grim:
+            case Delayed:
+                original.call(optional, consumer);
+                break;
+
+            case Simple: {
+                double rand = ThreadLocalRandom.current().nextDouble();
+                boolean hB = velocity.hChance.get() >= rand;
+                boolean vB = velocity.vChance.get() >= rand;
+                optional.ifPresent(knockback -> {
+                    LocalPlayer player = BlackOut.mc.player;
+                    if (player == null) return;
+                    player.push(
+                            hB ? knockback.x * velocity.horizontal.get() : knockback.x,
+                            vB ? knockback.y * velocity.vertical.get() : knockback.y,
+                            hB ? knockback.z * velocity.horizontal.get() : knockback.z
+                    );
+                });
+                break;
+            }
+
+            case Matrix_AAC: {
+                double h = Math.max(0.05, velocity.horizontal.get());
+                double v = velocity.vertical.get();
+                optional.ifPresent(knockback -> {
+                    LocalPlayer player = BlackOut.mc.player;
+                    if (player != null) player.push(knockback.x * h, knockback.y * v, knockback.z * h);
+                });
+                break;
+            }
+
+            case Vulcan:
+                optional.ifPresent(knockback -> {
+                    LocalPlayer player = BlackOut.mc.player;
+                    if (player != null) player.push(0.0, knockback.y * 0.2, 0.0);
+                });
+                break;
         }
     }
 }

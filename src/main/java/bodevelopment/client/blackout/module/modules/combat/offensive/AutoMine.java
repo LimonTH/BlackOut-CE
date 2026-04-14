@@ -56,6 +56,7 @@ public class AutoMine extends Module {
     private final SettingGroup sgCev = this.addGroup("Cev");
     private final SettingGroup sgTrapCev = this.addGroup("Trap Cev");
     private final SettingGroup sgSurroundCev = this.addGroup("Surround Cev");
+    private final SettingGroup sgSurroundMiner = this.addGroup("Surround Miner");
     private final SettingGroup sgAntiSurround = this.addGroup("Anti Surround");
     private final SettingGroup sgAntiBurrow = this.addGroup("Anti Burrow");
     private final SettingGroup sgRender = this.addGroup("Render");
@@ -116,6 +117,13 @@ public class AutoMine extends Module {
     private final Setting<Boolean> instantSurroundCev = this.sgSurroundCev.booleanSetting("Surround-CEV Instant-Mine", false, "Optimizes packet throughput for surround mining.", () -> this.surroundCevPriority.get() != Priority.Disabled);
     private final Setting<Boolean> antiAntiSurroundCev = this.sgSurroundCev.booleanSetting("Surround-CEV Bypass", false, "Synchronized placement and mining for feet-level blocks.", () -> this.surroundCevPriority.get() != Priority.Disabled);
     private final Setting<Boolean> acceptCollide = this.sgSurroundCev.booleanSetting("Collision Tolerance", false, "Allows placement of crystals that collide with the target block rather than sitting on top.", () -> this.surroundCevPriority.get() != Priority.Disabled);
+    private final Setting<Boolean> cevClearBlocker = this.sgSurroundCev.booleanSetting("CEV Blocker Clear", true, "If the crystal spawn above a valid CEV base is blocked by a mineable block, mine it first.");
+
+    private final Setting<Priority> surroundMinerPriority = this.sgSurroundMiner.enumSetting("Surround-Miner Priority", Priority.Normal, "Priority for mining blocks underneath surround walls to prepare obsidian bases for crystals.");
+    private final Setting<Boolean> surroundMinerDamageCheck = this.sgSurroundMiner.booleanSetting("Surround-Miner Safety", true, "Simulates base+surround state to verify damage thresholds before mining.", () -> this.surroundMinerPriority.get() != Priority.Disabled);
+    private final Setting<Double> minSurroundMinerDamage = this.sgSurroundMiner.doubleSetting("Surround-Miner Min Damage", 6.0, 0.0, 20.0, 0.5, "Required target damage (simulated: obsidian placed under surround, surround removed) for Surround-Miner.", () -> this.surroundMinerPriority.get() != Priority.Disabled && this.surroundMinerDamageCheck.get());
+    private final Setting<Double> maxSurroundMinerDamage = this.sgSurroundMiner.doubleSetting("Surround-Miner Max Self-Damage", 10.0, 0.0, 20.0, 0.5, "Max allowed self-damage in the simulated state.", () -> this.surroundMinerPriority.get() != Priority.Disabled && this.surroundMinerDamageCheck.get());
+    private final Setting<Boolean> instantSurroundMiner = this.sgSurroundMiner.booleanSetting("Surround-Miner Instant-Mine", false, "Optimizes packet throughput for Surround-Miner.", () -> this.surroundMinerPriority.get() != Priority.Disabled);
 
     private final Setting<Priority> autoCityPriority = this.sgAntiSurround.enumSetting("Auto-City Priority", Priority.Normal, "Priority for mining blocks adjacent to the target to facilitate crystal hits.");
     private final Setting<Boolean> autoCityDamageCheck = this.sgAntiSurround.booleanSetting("City Safety Check", true, "Enforces damage thresholds for City placements.", () -> this.autoCityPriority.get() != Priority.Disabled);
@@ -407,6 +415,7 @@ public class AutoMine extends Module {
             target = this.targetCheck(target, this.getCev(), this.cevPriority);
             target = this.targetCheck(target, this.getTrapCev(), this.trapCevPriority);
             target = this.targetCheck(target, this.getSurroundCev(), this.surroundCevPriority);
+            target = this.targetCheck(target, this.getSurroundMiner(), this.surroundMinerPriority);
             target = this.targetCheck(target, this.getAutoCity(), this.autoCityPriority);
             target = this.targetCheck(target, this.getAntiBurrow(), this.antiBurrowPriority);
         }
@@ -438,10 +447,42 @@ public class AutoMine extends Module {
                         bestPlayer = player;
                     }
                 }
+            } else if (this.cevClearBlocker.get()) {
+                Block baseBlock = this.getBlock(pos);
+                if ((baseBlock == Blocks.OBSIDIAN || baseBlock == Blocks.BEDROCK)
+                        && SettingUtils.getPlaceOnDirection(pos) != null
+                        && SettingUtils.inMineRange(pos)
+                        && SettingUtils.inInteractRange(pos)) {
+                    BlockPos blockerPos = pos.above();
+                    Block blocker = this.getBlock(blockerPos);
+                    if (!(blocker instanceof AirBlock)
+                            && BlockUtils.mineable(blockerPos)
+                            && !this.ignored(blockerPos)
+                            && SettingUtils.inMineRange(blockerPos)
+                            && SettingUtils.getPlaceOnDirection(blockerPos) != null
+                            && SettingUtils.inAttackRange(BoxUtils.crystalBox(blockerPos))) {
+                        if (blockerPos.equals(this.minePos)) {
+                            return new Target(blockerPos, blockerPos, MineType.Cev, this.cevPriority.get().priority, player);
+                        }
+                        if (this.isInstant(blockerPos)) {
+                            return new Target(blockerPos, blockerPos, MineType.Cev, this.cevPriority.get().priority, player);
+                        }
+                        double distance = this.getDist(blockerPos) + 0.5;
+                        if (!(distance >= bestDist)) {
+                            best = blockerPos;
+                            bestDist = distance;
+                            bestPlayer = player;
+                        }
+                    }
+                }
             }
         }
 
-        return best == null ? null : new  Target(best, best.above(),  MineType.Cev, this.cevPriority.get().priority, bestPlayer);
+        if (best == null) return null;
+        Block bestBase = this.getBlock(best.below());
+        boolean isBlockerClear = bestBase == Blocks.OBSIDIAN || bestBase == Blocks.BEDROCK;
+        BlockPos bestCrystal = isBlockerClear ? best : best.above();
+        return new Target(best, bestCrystal, MineType.Cev, this.cevPriority.get().priority, bestPlayer);
     }
 
     private  Target getTrapCev() {
@@ -504,6 +545,67 @@ public class AutoMine extends Module {
         return best == null
                 ? null
                 : new  Target(best, best.above(),  MineType.SurroundCev, this.surroundCevPriority.get().priority, bestPlayer);
+    }
+
+    private Target getSurroundMiner() {
+        if (this.surroundMinerPriority.get() == Priority.Disabled) return null;
+        BlockPos best = null;
+        BlockPos bestCrystal = null;
+        Player bestPlayer = null;
+        double bestDist = 1000.0;
+
+        for (Player player : this.enemies) {
+            BlockPos feetPos = new BlockPos(player.getBlockX(), (int) Math.round(player.getY()), player.getBlockZ());
+
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                BlockPos surroundPos = feetPos.relative(dir);
+                Block surroundBlock = this.getBlock(surroundPos);
+
+                if (surroundBlock != Blocks.OBSIDIAN && surroundBlock != Blocks.BEDROCK
+                        && surroundBlock != Blocks.ENDER_CHEST && surroundBlock != Blocks.RESPAWN_ANCHOR
+                        && surroundBlock != Blocks.CRYING_OBSIDIAN) continue;
+
+                BlockPos underSurround = surroundPos.below();
+                Block underBlock = this.getBlock(underSurround);
+
+                if (underBlock == Blocks.OBSIDIAN || underBlock == Blocks.BEDROCK) continue;
+
+                if (!BlockUtils.mineable(underSurround)) continue;
+                if (this.ignored(underSurround)) continue;
+                if (!SettingUtils.inMineRange(underSurround)) continue;
+                if (SettingUtils.getPlaceOnDirection(underSurround) == null) continue;
+
+                if (!SettingUtils.inAttackRange(BoxUtils.crystalBox(surroundPos))) continue;
+
+                if (this.surroundMinerDamageCheck.get()) {
+                    net.minecraft.world.level.block.state.BlockState savedBase = BlackOut.mc.level.getBlockState(underSurround);
+                    net.minecraft.world.level.block.state.BlockState savedSurround = BlackOut.mc.level.getBlockState(surroundPos);
+                    BlackOut.mc.level.setBlock(underSurround, Blocks.OBSIDIAN.defaultBlockState(), 0);
+                    BlackOut.mc.level.setBlock(surroundPos, Blocks.AIR.defaultBlockState(), 0);
+                    Vec3 crystalVec = new Vec3(surroundPos.getX() + 0.5, surroundPos.getY(), surroundPos.getZ() + 0.5);
+                    double tDmg = DamageUtils.crystalDamage(player, player.getBoundingBox(), crystalVec);
+                    double sDmg = DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), crystalVec);
+                    BlackOut.mc.level.setBlock(underSurround, savedBase, 0);
+                    BlackOut.mc.level.setBlock(surroundPos, savedSurround, 0);
+                    if (tDmg < this.minSurroundMinerDamage.get()) continue;
+                    if (sDmg > this.maxSurroundMinerDamage.get()) continue;
+                }
+
+                if (this.isInstant(underSurround)) {
+                    return new Target(underSurround, surroundPos, MineType.SurroundMiner, this.surroundMinerPriority.get().priority, player);
+                }
+
+                double distance = this.getDist(underSurround);
+                if (!(distance >= bestDist)) {
+                    best = underSurround;
+                    bestCrystal = surroundPos;
+                    bestDist = distance;
+                    bestPlayer = player;
+                }
+            }
+        }
+
+        return best == null ? null : new Target(best, bestCrystal, MineType.SurroundMiner, this.surroundMinerPriority.get().priority, bestPlayer);
     }
 
     private  Target getAutoCity() {
@@ -868,6 +970,7 @@ public class AutoMine extends Module {
             case Cev -> this.instantCev.get();
             case TrapCev -> this.instantTrapCev.get();
             case SurroundCev -> this.instantSurroundCev.get();
+            case SurroundMiner -> this.instantSurroundMiner.get();
             case AutoCity -> this.instantAutoCity.get();
             case Manual -> this.manualInstant.get();
             default -> false;
