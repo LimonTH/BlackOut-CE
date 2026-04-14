@@ -39,9 +39,14 @@ This project was born from a deep reconstruction of a leaked 2024 dev-build, man
 1. **Fork** the project.
 2. **Commit** changes (`git commit -m 'Add Feature'`).
 3. **Push** to the branch (`git push origin feature`).
-4. Open a **Pull Request**.
+4. Open a **Pull Request**.``
 
 <div align="center">
+
+## 💬 Join our Community
+Looking for configs, help, or want to contribute? Join our Discord server!
+
+[![Join Discord](https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/66e278299a53f5bf88615e90_Symbol.svg)](https://discord.gg/rCwZ8D9UvY)
 
 *Developed with ❤️ by Limon_TH*
 

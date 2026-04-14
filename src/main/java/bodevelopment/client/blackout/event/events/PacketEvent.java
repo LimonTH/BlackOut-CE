@@ -6,56 +6,61 @@ import net.minecraft.network.protocol.Packet;
 public class PacketEvent {
     public static class Receive {
         public static class Post extends Cancellable {
-            private static final Post INSTANCE = new Post();
+            private static final ThreadLocal<Post> INSTANCE = ThreadLocal.withInitial(Post::new);
             public Packet<?> packet = null;
 
             public static Post get(Packet<?> packet) {
-                INSTANCE.packet = packet;
-                INSTANCE.setCancelled(false);
-                return INSTANCE;
+                Post instance = INSTANCE.get();
+                instance.packet = packet;
+                instance.setCancelled(false);
+                return instance;
             }
         }
 
         public static class Pre extends Cancellable {
-            private static final Pre INSTANCE = new Pre();
+            private static final ThreadLocal<Pre> INSTANCE = ThreadLocal.withInitial(Pre::new);
             public Packet<?> packet = null;
 
             public static Pre get(Packet<?> packet) {
-                INSTANCE.packet = packet;
-                INSTANCE.setCancelled(false);
-                return INSTANCE;
+                Pre instance = INSTANCE.get();
+                instance.packet = packet;
+                instance.setCancelled(false);
+                return instance;
             }
         }
     }
 
     public static class Received {
-        private static final Received INSTANCE = new Received();
+        private static final ThreadLocal<Received> INSTANCE = ThreadLocal.withInitial(Received::new);
         public Packet<?> packet = null;
 
         public static Received get(Packet<?> packet) {
-            INSTANCE.packet = packet;
-            return INSTANCE;
+            Received instance = INSTANCE.get();
+            instance.packet = packet;
+            return instance;
         }
     }
 
     public static class Send extends Cancellable {
-        private static final Send INSTANCE = new Send();
+        private static final ThreadLocal<Send> INSTANCE = ThreadLocal.withInitial(Send::new);
         public Packet<?> packet = null;
 
         public static Send get(Packet<?> packet) {
-            INSTANCE.packet = packet;
-            INSTANCE.setCancelled(false);
-            return INSTANCE;
+            Send instance = INSTANCE.get();
+            instance.packet = packet;
+            instance.setCancelled(false);
+            return instance;
         }
     }
 
     public static class Sent {
-        private static final Sent INSTANCE = new Sent();
+        private static final ThreadLocal<Sent> INSTANCE = ThreadLocal.withInitial(Sent::new);
         public Packet<?> packet = null;
 
         public static Sent get(Packet<?> packet) {
-            INSTANCE.packet = packet;
-            return INSTANCE;
+            Sent instance = INSTANCE.get();
+            instance.packet = packet;
+            return instance;
         }
     }
 }

@@ -48,7 +48,7 @@ public class Velocity extends Module {
     private final Setting<Integer> maxDelay = this.sgKnockback.intSetting("Maximum Latency", 10, 0, 20, 1, "Maximum tick delay before the velocity packet is released.", () -> this.mode.get() == Mode.Delayed);
     private final Setting<Boolean> delayExplosion = this.sgKnockback.booleanSetting("Buffer Explosions", false, "Applies the latency delay to explosion-based velocity updates.", () -> this.mode.get() == Mode.Delayed);
     public final Setting<Boolean> fishingHook = this.sgKnockback.booleanSetting("Hook Immunity", true, "Negates knockback from fishing rod hooks.");
-    private final Setting<Boolean> explosions = this.sgKnockback.booleanSetting("Explosive Immunity", true, "Applies velocity reduction logic to TNT and crystal explosions.");
+    public final Setting<Boolean> explosions = this.sgKnockback.booleanSetting("Explosive Immunity", true, "Applies velocity reduction logic to TNT and crystal explosions.");
 
     public final Setting<PushMode> entityPush = this.sgPush.enumSetting("Entity Collision", PushMode.Ignore, "Determines the interaction logic when colliding with other entities.");
     public final Setting<Double> acceleration = this.sgPush.doubleSetting("Force Multiplier", 1.0, 0.0, 2.0, 0.02, "The strength of the repulsive force applied during entity collisions.", () -> this.entityPush.get() == PushMode.Accelerate);
@@ -56,9 +56,6 @@ public class Velocity extends Module {
 
     private final TickTimerList<Tuple<Vec3, Boolean>> delayed = new TickTimerList<>(false);
     public boolean grim = false;
-    // Accumulated correction to apply in MoveEvent.Pre for explosion packets
-    // that were let through to vanilla (so Grim/server see them) but need velocity overriding.
-    private Vec3 pendingExplosionCorrection = null;
 
     public Velocity() {
         super("Velocity", "Mitigates or negates knockback received from entities, projectiles, and environmental hazards.", SubCategory.MOVEMENT, true);
@@ -80,18 +77,6 @@ public class Velocity extends Module {
             if (this.grim && this.single.get()) {
                 this.sendGrimPackets();
                 this.grim = false;
-            }
-
-            // Apply accumulated explosion velocity correction.
-            // Vanilla already added the full knockback via push() when the packet was processed;
-            // this subtracts the unwanted portion so the net result is the scaled value.
-            if (this.pendingExplosionCorrection != null && BlackOut.mc.player != null) {
-                BlackOut.mc.player.push(
-                        this.pendingExplosionCorrection.x,
-                        this.pendingExplosionCorrection.y,
-                        this.pendingExplosionCorrection.z
-                );
-                this.pendingExplosionCorrection = null;
             }
 
             this.delayed
@@ -176,46 +161,23 @@ public class Velocity extends Module {
 
         if (event.packet instanceof ClientboundExplodePacket packet && this.explosions.get()) {
             packet.playerKnockback().ifPresent(knockback -> {
-                double vX = knockback.x;
-                double vY = knockback.y;
-                double vZ = knockback.z;
-
                 switch (this.mode.get()) {
-                    case Simple: {
-                        boolean hB = this.hChance.get() >= ThreadLocalRandom.current().nextDouble();
-                        boolean vB = this.vChance.get() >= ThreadLocalRandom.current().nextDouble();
-                        if (hB || vB) {
-                            // Let the packet through so the server (Grim/NCP) sees it acknowledged.
-                            // Vanilla will call player.push(vX, vY, vZ) when it processes the packet.
-                            // We schedule the correction: desired = vX*h, actual = vX  →  correction = vX*(h-1).
-                            double cX = hB ? vX * (this.horizontal.get() - 1.0) : 0;
-                            double cY = vB ? vY * (this.vertical.get() - 1.0) : 0;
-                            double cZ = hB ? vZ * (this.horizontal.get() - 1.0) : 0;
-                            this.accumulateExplosionCorrection(cX, cY, cZ);
-                        }
-                        break;
-                    }
-                    case Matrix_AAC: {
-                        double h = Math.max(0.05, this.horizontal.get());
-                        this.accumulateExplosionCorrection(vX * (h - 1.0), vY * (this.vertical.get() - 1.0), vZ * (h - 1.0));
-                        break;
-                    }
-                    case Vulcan: {
-                        // Keep only 20% vertical, zero horizontal.
-                        this.accumulateExplosionCorrection(-vX, vY * (0.2 - 1.0), -vZ);
-                        break;
-                    }
                     case Grim:
                         if (this.chance.get() >= ThreadLocalRandom.current().nextDouble()) {
                             this.grimCancel(event, true);
                         }
                         break;
-
                     case Delayed:
                         if (this.delayExplosion.get()) {
-                            this.delayed.add(new Tuple<>(new Vec3(vX, vY, vZ), true), this.getDelay());
+                            this.delayed.add(new Tuple<>(new Vec3(knockback.x, knockback.y, knockback.z), true), this.getDelay());
                             event.setCancelled(true);
                         }
+                        break;
+                    default:
+                        // Simple / Matrix_AAC / Vulcan: handled directly in
+                        // MixinClientPacketListener.wrapExplosionKnockback which intercepts
+                        // the LocalPlayer.push() call inside handleExplosion(). This works for
+                        // both normal packets and bundle-wrapped packets that bypass PacketEvent.
                         break;
                 }
             });
@@ -252,14 +214,6 @@ public class Velocity extends Module {
                             });
                 }
             }
-        }
-    }
-
-    private void accumulateExplosionCorrection(double x, double y, double z) {
-        if (this.pendingExplosionCorrection == null) {
-            this.pendingExplosionCorrection = new Vec3(x, y, z);
-        } else {
-            this.pendingExplosionCorrection = this.pendingExplosionCorrection.add(x, y, z);
         }
     }
 

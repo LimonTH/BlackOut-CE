@@ -1,6 +1,6 @@
 package bodevelopment.client.blackout.hud;
 
-import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.module.setting.multisettings.BackgroundMultiSetting;
 import bodevelopment.client.blackout.randomstuff.ShaderSetup;
 import bodevelopment.client.blackout.rendering.framebuffer.StencilFrameBuffer;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
@@ -14,7 +14,7 @@ import org.lwjgl.opengl.GL14;
  * Two-pass HUD background merging.
  *
  * <p>Pass 1 (COLLECT): All HUD elements render normally, but calls to
- * {@link bodevelopment.client.blackout.module.setting.multisettings.BackgroundMultiSetting#render}
+ * {@link BackgroundMultiSetting#render}
  * are redirected to the {@code bgFbo} framebuffer.  A global color-mask suppresses
  * all other rendering so content does not appear on screen prematurely.
  *
@@ -33,8 +33,6 @@ public class HudMergePass {
     private static Phase phase = Phase.IDLE;
     private static StencilFrameBuffer bgFbo;
 
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
-
     private static StencilFrameBuffer bgFbo() {
         if (bgFbo == null) bgFbo = new StencilFrameBuffer();
         else if (bgFbo.needsResize()) bgFbo.resize();
@@ -48,12 +46,9 @@ public class HudMergePass {
      */
     public static void beginCollect() {
         StencilFrameBuffer fbo = bgFbo();
-        // Clear to fully transparent and leave FBO bound
         fbo.clearAndBind();
-        // Restore main target (each background will rebind fbo when it renders)
         fbo.unbind();
         phase = Phase.COLLECT;
-        // Suppress content from reaching the main screen during this pass
         GL11C.glColorMask(false, false, false, false);
     }
 
@@ -64,24 +59,17 @@ public class HudMergePass {
      * Must be called only while {@link Phase#COLLECT} is active.
      */
     public static void renderBackgroundToBgFbo(Runnable renderLogic) {
-        // Re-enable color writes for the background FBO
         GL11C.glColorMask(true, true, true, true);
 
         StencilFrameBuffer fbo = bgFbo();
         fbo.bind();
 
-        // Enable stencil test (fbo has depth+stencil, so this is valid)
         GL11C.glEnable(GL11C.GL_STENCIL_TEST);
         GL11C.glStencilMask(0xFF);
 
-        // Default: shadow pass -- always draw, don't write stencil
         GL11C.glStencilFunc(GL11C.GL_ALWAYS, 0, 0xFF);
         GL11C.glStencilOp(GL11C.GL_KEEP, GL11C.GL_KEEP, GL11C.GL_KEEP);
 
-        // Use premultiplied-alpha-compatible separate blend so that
-        // compositing the FBO onto the main screen is correct:
-        //   RGB: standard alpha-over
-        //   Alpha: src + dst*(1-src)  →  correct alpha accumulation
         RenderSystem.enableBlend();
         GL14.glBlendFuncSeparate(
             GL14.GL_SRC_ALPHA, GL14.GL_ONE_MINUS_SRC_ALPHA,
@@ -92,10 +80,9 @@ public class HudMergePass {
 
         GL11C.glDisable(GL11C.GL_STENCIL_TEST);
         RenderSystem.disableBlend();
-        RenderSystem.defaultBlendFunc(); // restore for subsequent renders
+        RenderSystem.defaultBlendFunc();
 
         fbo.unbind();
-        // Re-suppress color writes for the remaining content
         GL11C.glColorMask(false, false, false, false);
     }
 
@@ -127,7 +114,6 @@ public class HudMergePass {
         GL11C.glColorMask(true, true, true, true);
         phase = Phase.IDLE;
 
-        // Composite merged backgrounds onto the main screen
         float savedAlpha = Renderer.getAlpha();
         Render2DUtils.renderBufferWithTexture(
             bgFbo().getTexture(),
@@ -142,11 +128,8 @@ public class HudMergePass {
     /** End the SKIP (content) pass; return to IDLE. */
     public static void endSkip() {
         phase = Phase.IDLE;
-        // Restore blend to Minecraft default for whatever comes next
         RenderSystem.defaultBlendFunc();
     }
-
-    // ── Queries ───────────────────────────────────────────────────────────────
 
     public static boolean isCollecting() { return phase == Phase.COLLECT; }
     public static boolean isSkipping()   { return phase == Phase.SKIP;    }
