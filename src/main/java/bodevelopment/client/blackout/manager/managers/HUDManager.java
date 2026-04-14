@@ -8,6 +8,7 @@ import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.gui.clickgui.ClickGui;
 import bodevelopment.client.blackout.hud.HudEditor;
 import bodevelopment.client.blackout.hud.HudElement;
+import bodevelopment.client.blackout.hud.HudMergePass;
 import bodevelopment.client.blackout.hud.elements.Arraylist;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.manager.Managers;
@@ -138,14 +139,23 @@ public class HUDManager extends Manager {
         Render2DUtils.unGuiScale(stack);
         s = 1.0F / s;
         stack.scale(s, s, s);
-        // HUD is 2D — depth writes would pollute the depth buffer and cause other
-        // HUD renders (vanilla / other mods) to fail the depth test in our areas.
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
     }
 
     public void render(PoseStack stack, float frameTime) {
+        // Pass 1: collect all BackgroundMultiSetting backgrounds into a merged FBO.
+        // Color writes to the main target are suppressed; content is discarded.
+        HudMergePass.beginCollect();
         Managers.HUD.forEachElement((id, element) -> element.renderElement(stack, frameTime));
+
+        // Composite the merged background FBO onto the main screen, then enter SKIP mode.
+        HudMergePass.endCollectAndComposite();
+
+        // Pass 2: render element content (text, items, blur).
+        // BackgroundMultiSetting.render() returns immediately while in SKIP mode.
+        Managers.HUD.forEachElement((id, element) -> element.renderElement(stack, frameTime));
+        HudMergePass.endSkip();
     }
 
     public void clear() {

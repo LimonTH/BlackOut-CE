@@ -2,6 +2,7 @@ package bodevelopment.client.blackout.util.render;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.gui.menu.MainMenu;
+import bodevelopment.client.blackout.hud.HudMergePass;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.randomstuff.ShaderSetup;
 import bodevelopment.client.blackout.rendering.framebuffer.FrameBuffer;
@@ -176,8 +177,13 @@ public class Render2DUtils {
     }
 
     public static void renderBufferWith(FrameBuffer frameBuffer, Shader shader, ShaderSetup setup) {
+        renderBufferWithTexture(frameBuffer.getTexture(), shader, setup);
+    }
+
+    /** Composite an arbitrary texture (e.g. from a {@link bodevelopment.client.blackout.rendering.framebuffer.StencilFrameBuffer}) onto the current render target. */
+    public static void renderBufferWithTexture(int textureId, Shader shader, ShaderSetup setup) {
         ShaderRenderer renderer = ShaderRenderer.getInstance();
-        Renderer.setTexture(frameBuffer.getTexture(), 0);
+        Renderer.setTexture(textureId, 0);
         emptyStack.pushPose();
         unGuiScale(emptyStack);
         Renderer.setMatrices(emptyStack);
@@ -298,7 +304,9 @@ public class Render2DUtils {
         if (shadowRadius > 0.0F) {
             renderer.render(minX, maxX, minY, maxY, true);
         }
+        HudMergePass.beginBodyRender();
         renderer.render(minX, maxX, minY, maxY, false);
+        HudMergePass.endBodyRender();
     }
 
     private static void renderShaderQuad(float minX, float maxX, float minY, float maxY, Shader shader, ShaderSetup setup) {

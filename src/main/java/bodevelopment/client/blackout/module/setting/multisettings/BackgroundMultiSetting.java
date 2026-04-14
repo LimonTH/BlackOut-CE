@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.module.setting.multisettings;
 
 import bodevelopment.client.blackout.enums.BackgroundType;
+import bodevelopment.client.blackout.hud.HudMergePass;
 import bodevelopment.client.blackout.interfaces.functional.SingleOut;
 import bodevelopment.client.blackout.module.modules.client.ThemeSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -75,24 +76,41 @@ public class BackgroundMultiSetting {
     }
 
     public void render(PoseStack stack, float x, float y, float w, float h, float r, float sr) {
-        ThemeSettings themeSettings = ThemeSettings.getInstance();
+        // During the HUD merge content pass, backgrounds are already in the bg FBO — skip.
+        if (HudMergePass.isSkipping()) return;
+
+        if (HudMergePass.isCollecting()) {
+            // Redirect this background into the merged bg FBO with stencil deduplication.
+            final float fr = r, fsr = this.shadow.get() ? sr : 0.0F;
+            final int color = this.roundedColor.get().getRGB();
+            final int shadowColor = this.shadowColor.get().getRGB();
+            final int secondaryColor = this.secondaryColor.get().getRGB();
+            final float speed = this.speed.get().floatValue();
+            final BackgroundType modeSnap = this.mode.get();
+            HudMergePass.renderBackgroundToBgFbo(() -> {
+                switch (modeSnap) {
+                    case Static:
+                        Render2DUtils.rounded(stack, x, y, w, h, fr, fsr, color, shadowColor);
+                        break;
+                    case Animated:
+                        Render2DUtils.tenaRounded(stack, x, y, w, h, fr, fsr, color, secondaryColor, speed);
+                        break;
+                }
+            });
+            return;
+        }
+
+        // Normal (non-HUD-merge) render path.
         switch (this.mode.get()) {
             case Static:
-                Render2DUtils.rounded(stack, x, y, w, h, r, this.shadow.get() ? sr : 0.0F, this.roundedColor.get().getRGB(), this.shadowColor.get().getRGB());
+                Render2DUtils.rounded(stack, x, y, w, h, r, this.shadow.get() ? sr : 0.0F,
+                        this.roundedColor.get().getRGB(), this.shadowColor.get().getRGB());
                 break;
             case Animated:
-                Render2DUtils.tenaRounded(
-                        stack,
-                        x,
-                        y,
-                        w,
-                        h,
-                        r,
-                        this.shadow.get() ? sr : 0.0F,
-                        this.roundedColor.get().getRGB(),
-                        this.secondaryColor.get().getRGB(),
-                        this.speed.get().floatValue()
-                );
+                Render2DUtils.tenaRounded(stack, x, y, w, h, r, this.shadow.get() ? sr : 0.0F,
+                        this.roundedColor.get().getRGB(), this.secondaryColor.get().getRGB(),
+                        this.speed.get().floatValue());
+                break;
         }
     }
 }

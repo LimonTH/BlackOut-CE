@@ -402,20 +402,24 @@ public class SeedMapScreen extends ClickGuiScreen {
         String extra = s.extraInfo().trim();
 
         return switch (s.type()) {
-            case VILLAGE -> switch (extra) {
-                case "plains", "meadow" -> "Plains Village";
-                case "desert"           -> "Desert Village";
-                case "savanna"          -> "Savanna Village";
-                case "snowy_plains"     -> "Snowy Village";
-                case "taiga"            -> "Taiga Village";
-                default                 -> "Village";
-            };
+            case VILLAGE -> {
+                String biome = extra.startsWith("zombie_") ? extra.substring(7) : extra;
+                String prefix = extra.startsWith("zombie_") ? "Zombie " : "";
+                yield prefix + switch (biome) {
+                    case "plains", "meadow", "sunflower_plains" -> "Plains Village";
+                    case "desert"           -> "Desert Village";
+                    case "savanna", "savanna_plateau", "windswept_savanna" -> "Savanna Village";
+                    case "snowy_plains"     -> "Snowy Village";
+                    case "taiga", "old_growth_pine_taiga", "old_growth_spruce_taiga" -> "Taiga Village";
+                    default                 -> "Village";
+                };
+            }
 
             case BASTION_REMNANT -> switch (extra) {
-                case "Housing"  -> "Bastion Housing Units";
-                case "Stables"  -> "Bastion Hoglin Stables";
-                case "Treasure" -> "Bastion Treasure Room";
-                case "Bridge"   -> "Bastion Bridge";
+                case "hoglin"   -> "Bastion Hoglin Stables";
+                case "housing"  -> "Bastion Housing Units";
+                case "bridges"  -> "Bastion Bridge";
+                case "treasure" -> "Bastion Treasure Room";
                 default         -> "Bastion Remnant";
             };
 
@@ -567,12 +571,9 @@ public class SeedMapScreen extends ClickGuiScreen {
                             ? "textures/map/structures/end_city/end_city_with_ship.png"
                             : "textures/map/structures/end_city/end_city_without_ship.png";
 
-            case VILLAGE -> {
-                if (!extra.isEmpty()) {
-                    yield "textures/map/structures/village/village.png";
-                }
-                yield type.iconPath;
-            }
+            case VILLAGE -> extra.startsWith("zombie_")
+                    ? "textures/map/structures/village/village_zombie.png"
+                    : "textures/map/structures/village/village_normal.png";
 
             default -> type.iconPath;
         };

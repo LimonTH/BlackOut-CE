@@ -243,7 +243,7 @@ public class SeedFinder extends Module {
                 findEndCities(results, worldSeed, source, playerChunkX, playerChunkZ, radiusChunks, radiusSq, limitRadius, centerX, centerZ);
             }
         } else {
-            findSpawnPos(results, source);
+            if (enabledCheck.test(StructureType.SPAWN)) findSpawnPos(results, source);
             for (StructureType type : StructureType.values()) {
                 if (!enabledCheck.test(type)) continue;
                 if (type.isCaveBiome()) continue;
@@ -543,19 +543,24 @@ public class SeedFinder extends Module {
                     if (dx * dx + dz * dz > radiusSq) continue;
                 }
 
-                String extra = "";
-                if (type == StructureType.IGLOO) {
-                    extra = getIglooExtra(worldSeed, chunkX, chunkZ) + " ";
-                } else if (type == StructureType.OCEAN_RUIN) {
-                    extra = getOceanRuinExtra(worldSeed, chunkX, chunkZ) + " ";
+                ResourceKey<Biome> biome = null;
+                if (type.validBiomes != null) {
+                    biome = source.getBiomeAt(blockX + 8, 64, blockZ + 8);
+                    if (!type.validBiomes.contains(biome)) continue;
                 }
 
-                if (type.validBiomes != null) {
-                    ResourceKey<Biome> biome = source.getBiomeAt(blockX + 8, 64, blockZ + 8);
-                    if (!type.validBiomes.contains(biome)) continue;
-                    if (type == StructureType.VILLAGE || type == StructureType.OCEAN_RUIN) {
-                        extra += biome.location().getPath();
-                    }
+                String extra = "";
+                if (type == StructureType.IGLOO) {
+                    extra = getIglooExtra(worldSeed, chunkX, chunkZ);
+                } else if (type == StructureType.OCEAN_RUIN) {
+                    boolean isWarm = biome == Biomes.WARM_OCEAN
+                            || biome == Biomes.LUKEWARM_OCEAN
+                            || biome == Biomes.DEEP_LUKEWARM_OCEAN;
+                    extra = getOceanRuinExtra(worldSeed, chunkX, chunkZ, isWarm);
+                } else if (type == StructureType.VILLAGE && biome != null) {
+                    extra = isZombieVillage(worldSeed, chunkX, chunkZ)
+                            ? "zombie_" + biome.location().getPath()
+                            : biome.location().getPath();
                 }
 
                 results.add(new FoundStructure(type, blockX, blockZ, extra));
@@ -614,6 +619,16 @@ public class SeedFinder extends Module {
         }
     }
 
+    private static boolean isZombieVillage(long worldSeed, int chunkX, int chunkZ) {
+        // Mirrors VillageStructure.findGenerationPoint → setLargeFeatureSeed → nextFloat() < 0.02
+        Random rand = new Random(worldSeed);
+        long a = rand.nextLong();
+        long b = rand.nextLong();
+        rand.setSeed((long)chunkX * a ^ (long)chunkZ * b ^ worldSeed);
+        rand.nextInt(4); // Rotation.getRandom
+        return rand.nextFloat() < 0.02F;
+    }
+
     public static StructureType getNetherStructureType(long worldSeed, int chunkX, int chunkZ) {
         Random rand = new Random(worldSeed);
         long a = rand.nextLong();
@@ -625,70 +640,83 @@ public class SeedFinder extends Module {
     }
 
     public static String getBastionType(long worldSeed, int chunkX, int chunkZ) {
+        // Mirrors BastionRemnantStructure.findGenerationPoint → setLargeFeatureSeed → WeightedRandomList.getRandom(nextInt(4))
+        // Order matches BastionPieces.BastionType enum: HOGLIN_STABLES, HOUSING_UNITS, BRIDGE, TREASURE
         Random rand = new Random(worldSeed);
         long a = rand.nextLong();
         long b = rand.nextLong();
-        rand.setSeed((long) chunkX * a ^ (long) chunkZ * b ^ worldSeed);
-        // TODO: Not determined correctly
-        int type = rand.nextInt(4);
-        return switch(type) {
-            case 0 -> " Housing";
-            case 1 -> " Stables";
-            case 2 -> " Treasure";
-            default -> " Bridge";
+        rand.setSeed((long)chunkX * a ^ (long)chunkZ * b ^ worldSeed);
+        return switch (rand.nextInt(4)) {
+            case 0 -> "hoglin";    // bastion_hoglin.png
+            case 1 -> "housing";   // bastion_housing.png
+            case 2 -> "bridges";   // bastion_bridges.png
+            default -> "treasure"; // bastion_treasure.png
         };
     }
 
     private static String getIglooExtra(long worldSeed, int chunkX, int chunkZ) {
+        // Mirrors IglooStructure.findGenerationPoint → setLargeFeatureSeed
+        // → Rotation.getRandom(random) consumes nextInt(4)
+        // → IglooStructurePieces: nextInt(10) == 0 → basement exists
         Random rand = new Random(worldSeed);
-        long a = rand.nextLong() | 1L;
-        long b = rand.nextLong() | 1L;
-        rand.setSeed((long)chunkX * a + (long)chunkZ * b ^ worldSeed);
-        // TODO: Not dermined correctly
-        return rand.nextFloat() < 0.5f ? " Laboratory" : "";
+        long a = rand.nextLong();
+        long b = rand.nextLong();
+        rand.setSeed((long)chunkX * a ^ (long)chunkZ * b ^ worldSeed);
+        rand.nextInt(4); // Rotation.getRandom
+        return rand.nextInt(10) == 0 ? "Laboratory" : "";
     }
 
-    private static String getOceanRuinExtra(long worldSeed, int chunkX, int chunkZ) {
+    private static String getOceanRuinExtra(long worldSeed, int chunkX, int chunkZ, boolean isWarm) {
+        // Mirrors OceanRuinStructure.findGenerationPoint → setLargeFeatureSeed
+        // → nextFloat() < largeProbability: warm=0.3 (30% large), cold=0.9 (90% large)
         Random rand = new Random(worldSeed);
-        long a = rand.nextLong() | 1L;
-        long b = rand.nextLong() | 1L;
-        rand.setSeed((long)chunkX * a + (long)chunkZ * b ^ worldSeed);
-        // TODO: Large or Small not determined correctly
-        return rand.nextFloat() < 0.3f ? " Big" : " Small";
+        long a = rand.nextLong();
+        long b = rand.nextLong();
+        rand.setSeed((long)chunkX * a ^ (long)chunkZ * b ^ worldSeed);
+        boolean large = rand.nextFloat() < (isWarm ? 0.3F : 0.9F);
+        return large ? "Big" : "Small";
     }
 
     private static void findSpawnPos(List<FoundStructure> results, SeedBiomeSource source) {
-        int bestX = 0;
-        int bestZ = 0;
-        boolean foundValid = false;
-
-        // TODO spawn search stub
-        for (int radius = 0; radius <= 2048; radius += 64) {
-            for (int x = -radius; x <= radius; x += 64) {
-                for (int z = -radius; z <= radius; z += 64) {
-                    if (Math.abs(x) != radius && Math.abs(z) != radius) continue;
-
-                    ResourceKey<Biome> biome = source.getBiome(x, z);
+        // Mirrors ServerLevel.findSpawnBiome — expand outward from (0,0) in quart steps,
+        // pick the first position that has a valid overworld spawn biome (non-ocean, non-nether, non-end).
+        int foundX = 0;
+        int foundZ = 0;
+        outer:
+        for (int r = 0; r <= 512; r++) {
+            for (int dz = -r; dz <= r; dz++) {
+                boolean edgeZ = Math.abs(dz) == r;
+                for (int dx = -r; dx <= r; dx++) {
+                    if (!edgeZ && Math.abs(dx) != r) continue;
+                    int blockX = dx * 4;
+                    int blockZ = dz * 4;
+                    ResourceKey<Biome> biome = source.getBiome(blockX, blockZ);
                     if (isValidSpawnBiome(biome)) {
-                        bestX = x;
-                        bestZ = z;
-                        foundValid = true;
-                        break;
+                        foundX = blockX;
+                        foundZ = blockZ;
+                        break outer;
                     }
                 }
-                if (foundValid) break;
             }
-            if (foundValid) break;
         }
-
-        results.add(new FoundStructure(StructureType.SPAWN, bestX, bestZ, ""));
+        results.add(new FoundStructure(StructureType.SPAWN, foundX, foundZ, ""));
     }
 
     private static boolean isValidSpawnBiome(ResourceKey<Biome> biome) {
-        return biome == Biomes.PLAINS || biome == Biomes.FOREST || biome == Biomes.SUNFLOWER_PLAINS ||
-                biome == Biomes.FLOWER_FOREST || biome == Biomes.BIRCH_FOREST || biome == Biomes.OLD_GROWTH_BIRCH_FOREST ||
-                biome == Biomes.DARK_FOREST || biome == Biomes.TAIGA || biome == Biomes.OLD_GROWTH_PINE_TAIGA ||
-                biome == Biomes.SNOWY_TAIGA || biome == Biomes.MEADOW || biome == Biomes.CHERRY_GROVE;
+        // All overworld biomes except ocean/deep-ocean variants are valid for spawn
+        return biome != Biomes.OCEAN && biome != Biomes.DEEP_OCEAN
+                && biome != Biomes.COLD_OCEAN && biome != Biomes.DEEP_COLD_OCEAN
+                && biome != Biomes.WARM_OCEAN && biome != Biomes.LUKEWARM_OCEAN
+                && biome != Biomes.DEEP_LUKEWARM_OCEAN
+                && biome != Biomes.FROZEN_OCEAN && biome != Biomes.DEEP_FROZEN_OCEAN
+                && biome != Biomes.RIVER && biome != Biomes.FROZEN_RIVER
+                && biome != Biomes.THE_VOID
+                && biome != Biomes.NETHER_WASTES && biome != Biomes.SOUL_SAND_VALLEY
+                && biome != Biomes.CRIMSON_FOREST && biome != Biomes.WARPED_FOREST
+                && biome != Biomes.BASALT_DELTAS
+                && biome != Biomes.THE_END && biome != Biomes.END_HIGHLANDS
+                && biome != Biomes.END_MIDLANDS && biome != Biomes.END_BARRENS
+                && biome != Biomes.SMALL_END_ISLANDS;
     }
 
     private static void findCaveBiomes(List<FoundStructure> results, SeedBiomeSource source, int centerX, int centerZ,

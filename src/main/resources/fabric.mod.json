@@ -5,14 +5,12 @@
   "name": "${name}",
   "description": "${description}",
   "authors": [
-    "KassuK",
-    "OLEPOSSU",
     "Limon_TH"
   ],
   "license": "GPL-3.0-only",
   "contact": {
     "repo": "https://github.com/LimonTH/Blackout-CE",
-    "discord": "https://discordapp.com/users/866910380097929217"
+    "discord": "https://discord.gg/ywfzfQeu"
   },
   "icon": "assets/blackout/textures/balkoot2.png",
   "environment": "client",
