@@ -32,7 +32,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
 
-@OnlyDev
 public class SeedFinder extends Module {
     private static final long REGION_X_MULT = 341873128712L;
     private static final long REGION_Z_MULT = 132897987541L;
