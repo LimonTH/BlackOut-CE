@@ -164,6 +164,8 @@ public class AutoMine extends Module {
     private long lastAttack = 0L;
     private BlockPos prevMined = null;
     private boolean shouldRestart = false;
+    private boolean holdingForNcp = false;
+    private boolean suppressResetOnSwitch = false;
 
     public AutoMine() {
         super("Auto Mine", "Automatically mines enemies' surround blocks to abuse them with crystals.", SubCategory.OFFENSIVE, true);
@@ -176,8 +178,16 @@ public class AutoMine extends Module {
 
     @Event
     public void onSent(PacketEvent.Sent event) {
-        if (this.resetOnSwitch.get() && event.packet instanceof ServerboundSetCarriedItemPacket) {
+        if (this.resetOnSwitch.get() && !this.suppressResetOnSwitch && event.packet instanceof ServerboundSetCarriedItemPacket) {
             this.shouldRestart = true;
+        }
+    }
+
+    @Override
+    public void onDisable() {
+        if (this.holdingForNcp) {
+            this.pickaxeSwitch.get().swapBack();
+            this.holdingForNcp = false;
         }
     }
 
@@ -802,7 +812,7 @@ public class AutoMine extends Module {
                 if (dir != null) {
                     if (!this.shouldRotateEnd() || this.rotation.rotateBlock(this.minePos, dir, this.getMineEndRotationVec(), RotationType.Mining, "mining")) {
                         boolean switched = false;
-                        if (holding || (switched = this.pickaxeSwitch.get().swap(slot))) {
+                        if (this.holdingForNcp || holding || (switched = this.pickaxeSwitch.get().swap(slot))) {
                             this.sendSequenced(s -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, this.minePos, dir, s));
                             SwingSettings.getInstance().mineSwing(SwingSettings.MiningSwingState.End);
                             if (this.mineEndSwing.get()) {
@@ -817,14 +827,17 @@ public class AutoMine extends Module {
                             Managers.ENTITY.addSpawning(this.minePos);
                             if (this.shouldInstant()) {
                                 this.prevMined = this.minePos;
+                                if (this.holdingForNcp) { this.pickaxeSwitch.get().swapBack(); this.holdingForNcp = false; }
                             } else if (!this.manualRemine.get() || this.mineType !=  MineType.Manual) {
                                 this.prevMined = null;
                                 this.started = false;
                                 this.minePos = null;
+                                if (this.holdingForNcp) { this.pickaxeSwitch.get().swapBack(); this.holdingForNcp = false; }
                             } else if (this.fastRemine.get()) {
                                 this.start(this.minePos, true);
                             } else {
                                 this.started = false;
+                                if (this.holdingForNcp) { this.pickaxeSwitch.get().swapBack(); this.holdingForNcp = false; }
                             }
 
                             this.rotation.end("mining");
@@ -955,7 +968,18 @@ public class AutoMine extends Module {
             this.minedFor = 0;
             if (!pos.equals(this.prevMined)) {
                 this.prevMined = null;
-                if (!isRemine && this.preSwitch.get()) {
+
+                if (this.ncpProgress.get() && this.pickaxeSwitch.get() != SwitchMode.Disabled && !this.holdingForNcp) {
+                    int slot = this.findBestSlot(
+                                    stack -> BlockUtils.getBlockBreakingDelta(
+                                            this.minePos, stack, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
+                                    )
+                            )
+                            .slot();
+                    this.suppressResetOnSwitch = true;
+                    this.holdingForNcp = this.pickaxeSwitch.get().swap(slot);
+                    this.suppressResetOnSwitch = false;
+                } else if (!isRemine && this.preSwitch.get() && !this.holdingForNcp) {
                     int slot = this.findBestSlot(
                                     stack -> BlockUtils.getBlockBreakingDelta(
                                             this.minePos, stack, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
@@ -968,7 +992,7 @@ public class AutoMine extends Module {
                 this.sendSequenced(s -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, dir, s));
                 SwingSettings.getInstance().mineSwing(SwingSettings.MiningSwingState.Start);
                 this.rotation.end("mining");
-                if (!isRemine && this.preSwitch.get()) {
+                if (!this.holdingForNcp && !isRemine && this.preSwitch.get()) {
                     this.pickaxeSwitch.get().swapBack();
                 }
 
@@ -980,6 +1004,10 @@ public class AutoMine extends Module {
     }
 
     private void abort(BlockPos pos) {
+        if (this.holdingForNcp) {
+            this.pickaxeSwitch.get().swapBack();
+            this.holdingForNcp = false;
+        }
         this.sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN, 0));
         this.started = false;
     }

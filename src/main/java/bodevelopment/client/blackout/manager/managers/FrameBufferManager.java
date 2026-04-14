@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.manager.managers;
 
+import bodevelopment.client.blackout.hud.HudMergePass;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.rendering.framebuffer.BlendFrameBuffer;
 import bodevelopment.client.blackout.rendering.framebuffer.FrameBuffer;
@@ -30,5 +31,6 @@ public class FrameBufferManager extends Manager {
 
     public void onResize() {
         this.buffers.forEach((name, buffer) -> buffer.resize());
+        HudMergePass.onResize();
     }
 }

@@ -11,14 +11,19 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.Notifications;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
+import bodevelopment.client.blackout.util.SoundUtils;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.world.effect.MobEffects;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Notifier extends Module {
     private static Notifier INSTANCE;
 
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgWeakness = this.addGroup("Weakness");
+    private final SettingGroup sgVisualRange = this.addGroup("Visual Range");
     private final SettingGroup sgPops = this.addGroup("Pops");
 
     public final Setting<Mode> mode = this.sgGeneral.enumSetting("Notify mode", Mode.Hud,
@@ -31,6 +36,13 @@ public class Notifier extends Module {
     private final Setting<Boolean> iFriends = this.sgPops.booleanSetting("Ignore Friends", true,
             "Toggle to stop receiving notifications when your FRIENDS pop a totem.");
 
+    private final Setting<Boolean> visualRange = this.sgVisualRange.booleanSetting("Visual Range", true,
+            "Notifies you when a player enters or leaves your render distance.");
+    private final Setting<Boolean> vrIgnoreFriends = this.sgVisualRange.booleanSetting("Ignore Friends", true,
+            "Toggle to stop receiving visual range notifications for your friends.");
+    private final Setting<Boolean> vrSound = this.sgVisualRange.booleanSetting("Sound Notification", true,
+            "Plays a custom sound when a player enters or leaves visual range.");
+
     private final Setting<Boolean> weakness = this.sgWeakness.booleanSetting("Weakness", true,
             "Alerts you when you are affected by the Weakness effect.");
     private final Setting<Boolean> single = this.sgWeakness.booleanSetting("Single", true,
@@ -40,6 +52,7 @@ public class Notifier extends Module {
 
     private double timer = 0.0;
     private boolean last = false;
+    private final List<AbstractClientPlayer> knownPlayers = new ArrayList<>();
 
     public Notifier() {
         super("Notifier", "Notifies you about events like effects or totems.", SubCategory.MISC_COMBAT, true);
@@ -85,7 +98,40 @@ public class Notifier extends Module {
                     }
                 }
             }
+            if (this.visualRange.get() && BlackOut.mc.level != null) {
+                List<AbstractClientPlayer> currentPlayers = BlackOut.mc.level.players();
+
+                for (AbstractClientPlayer player : currentPlayers) {
+                    if (player == BlackOut.mc.player) continue;
+
+                    if (!this.knownPlayers.contains(player)) {
+                        this.knownPlayers.add(player);
+                        if (this.vrIgnoreFriends.get() && Managers.FRIENDS.isFriend(player)) continue;
+                        this.sendNotification(player.getGameProfile().getName() + " has entered visual range!");
+                        this.playVrSound("vrenter");
+                    }
+                }
+
+                this.knownPlayers.removeIf(player -> {
+                    if (!currentPlayers.contains(player)) {
+                        if (!(this.vrIgnoreFriends.get() && Managers.FRIENDS.isFriend(player))) {
+                            this.sendNotification(player.getGameProfile().getName() + " has left visual range!");
+                            this.playVrSound("vrleave");
+                        }
+                        return true;
+                    }
+                    return false;
+                });
+            }
+
+        } else {
+            this.knownPlayers.clear();
         }
+    }
+
+    private void playVrSound(String soundName) {
+        if (!this.vrSound.get() || BlackOut.mc.player == null) return;
+        SoundUtils.play(1.0f, 0.8f, soundName);
     }
 
     private String getPopString(AbstractClientPlayer player, int pops) {

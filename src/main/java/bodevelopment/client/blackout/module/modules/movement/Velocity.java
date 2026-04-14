@@ -56,6 +56,9 @@ public class Velocity extends Module {
 
     private final TickTimerList<Tuple<Vec3, Boolean>> delayed = new TickTimerList<>(false);
     public boolean grim = false;
+    // Accumulated correction to apply in MoveEvent.Pre for explosion packets
+    // that were let through to vanilla (so Grim/server see them) but need velocity overriding.
+    private Vec3 pendingExplosionCorrection = null;
 
     public Velocity() {
         super("Velocity", "Mitigates or negates knockback received from entities, projectiles, and environmental hazards.", SubCategory.MOVEMENT, true);
@@ -78,6 +81,19 @@ public class Velocity extends Module {
                 this.sendGrimPackets();
                 this.grim = false;
             }
+
+            // Apply accumulated explosion velocity correction.
+            // Vanilla already added the full knockback via push() when the packet was processed;
+            // this subtracts the unwanted portion so the net result is the scaled value.
+            if (this.pendingExplosionCorrection != null && BlackOut.mc.player != null) {
+                BlackOut.mc.player.push(
+                        this.pendingExplosionCorrection.x,
+                        this.pendingExplosionCorrection.y,
+                        this.pendingExplosionCorrection.z
+                );
+                this.pendingExplosionCorrection = null;
+            }
+
             this.delayed
                     .timers
                     .removeIf(
@@ -165,25 +181,30 @@ public class Velocity extends Module {
                 double vZ = knockback.z;
 
                 switch (this.mode.get()) {
-                    case Simple:
+                    case Simple: {
                         boolean hB = this.hChance.get() >= ThreadLocalRandom.current().nextDouble();
                         boolean vB = this.vChance.get() >= ThreadLocalRandom.current().nextDouble();
                         if (hB || vB) {
-                            BlackOut.mc.player.push(hB ? vX * this.horizontal.get() : vX, vB ? vY * this.vertical.get() : vY, hB ? vZ * this.horizontal.get() : vZ);
-                            event.setCancelled(true);
+                            // Let the packet through so the server (Grim/NCP) sees it acknowledged.
+                            // Vanilla will call player.push(vX, vY, vZ) when it processes the packet.
+                            // We schedule the correction: desired = vX*h, actual = vX  →  correction = vX*(h-1).
+                            double cX = hB ? vX * (this.horizontal.get() - 1.0) : 0;
+                            double cY = vB ? vY * (this.vertical.get() - 1.0) : 0;
+                            double cZ = hB ? vZ * (this.horizontal.get() - 1.0) : 0;
+                            this.accumulateExplosionCorrection(cX, cY, cZ);
                         }
                         break;
-
-                    case Matrix_AAC:
-                        BlackOut.mc.player.push(vX * Math.max(0.05, this.horizontal.get()), vY * this.vertical.get(), vZ * Math.max(0.05, this.horizontal.get()));
-                        event.setCancelled(true);
+                    }
+                    case Matrix_AAC: {
+                        double h = Math.max(0.05, this.horizontal.get());
+                        this.accumulateExplosionCorrection(vX * (h - 1.0), vY * (this.vertical.get() - 1.0), vZ * (h - 1.0));
                         break;
-
-                    case Vulcan:
-                        BlackOut.mc.player.push(0, vY * 0.2, 0);
-                        event.setCancelled(true);
+                    }
+                    case Vulcan: {
+                        // Keep only 20% vertical, zero horizontal.
+                        this.accumulateExplosionCorrection(-vX, vY * (0.2 - 1.0), -vZ);
                         break;
-
+                    }
                     case Grim:
                         if (this.chance.get() >= ThreadLocalRandom.current().nextDouble()) {
                             this.grimCancel(event, true);
@@ -234,10 +255,19 @@ public class Velocity extends Module {
         }
     }
 
+    private void accumulateExplosionCorrection(double x, double y, double z) {
+        if (this.pendingExplosionCorrection == null) {
+            this.pendingExplosionCorrection = new Vec3(x, y, z);
+        } else {
+            this.pendingExplosionCorrection = this.pendingExplosionCorrection.add(x, y, z);
+        }
+    }
+
     private void sendGrimPackets() {
         if (BlackOut.mc.player == null) return;
-
-        Managers.PACKET.sendInstantly(new ServerboundContainerClickPacket(
+        // Use the normal packet queue (sendPacket) rather than sendInstantly so this packet
+        // is not injected in the middle of another module's inventory transaction sequence.
+        this.sendPacket(new ServerboundContainerClickPacket(
                 0, 0, -1, 0, ClickType.PICKUP,
                 BlackOut.mc.player.getInventory().getSelected(),
                 new Int2ObjectOpenHashMap<>()
