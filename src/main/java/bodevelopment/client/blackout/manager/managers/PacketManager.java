@@ -132,7 +132,8 @@ public class PacketManager extends Manager {
         if (e.packet instanceof ClientboundPlayerPositionPacket packet) {
             Vec3 vec = new Vec3(packet.change().position().x(), packet.change().position().y(), packet.change().position().z());
             int id = packet.id();
-            if (this.validPos.containsKey(id) && this.validPos.get(id).equals(vec)) {
+            Vec3 validVec = this.validPos.get(id);
+            if (validVec != null && validVec.equals(vec)) {
                 e.setCancelled(true);
                 this.validPos.removeKey(packet.id());
             }
@@ -144,8 +145,12 @@ public class PacketManager extends Manager {
             }
         }
 
-        if (e.packet instanceof ClientboundSetHeldSlotPacket(int slot1) && this.ignoreSetSlot.contains(slot1)) {
-            e.setCancelled(true);
+        if (e.packet instanceof ClientboundSetHeldSlotPacket(int slot1)) {
+            if (this.ignoreSetSlot.contains(slot1)) {
+                e.setCancelled(true);
+            } else {
+                this.slot = slot1;
+            }
         }
 
         if (e.packet instanceof ClientboundContainerSetSlotPacket packet

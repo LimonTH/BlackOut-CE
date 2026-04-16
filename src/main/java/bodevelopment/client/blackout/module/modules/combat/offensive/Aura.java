@@ -154,10 +154,12 @@ public class Aura extends MoveUpdateModule {
 
     private final RenderList<AABB> renderBoxes = RenderList.getList(false);
     private final ExtrapolationMap extrapolationMap = new ExtrapolationMap();
+    private final java.util.Map<Integer, Pair<Vec3, AABB>> expandCache = new java.util.HashMap<>();
     public boolean isBlocking = false;
     public boolean isAttacking = false;
     private boolean shouldRender = false;
     private long prevAttack = 0L;
+    private long lastTargetUpdate = 0L;
     private long nextBlock = 0L;
     private double alwaysRenderTime = 0.0;
     private float f = 0.0F;
@@ -187,6 +189,9 @@ public class Aura extends MoveUpdateModule {
         if (this.isBlocking) {
             this.stopBlocking();
         }
+        this.expandCache.clear();
+        this.targets.clear();
+        this.target = null;
     }
 
     @Override
@@ -208,6 +213,7 @@ public class Aura extends MoveUpdateModule {
 
     @Event
     public void onGameJoin(GameJoinEvent event) {
+        this.expandCache.clear();
         if (this.tpDisable.get()) {
             this.disable(this.getDisplayName() + " was disabled due to server change/teleport", 5, Notifications.Type.Info);
         }
@@ -275,7 +281,11 @@ public class Aura extends MoveUpdateModule {
             if (!this.enabled) {
                 this.renderSingle(false, event.frameTime);
             } else {
-                this.updateTarget();
+                long now = System.currentTimeMillis();
+                if (now - this.lastTargetUpdate >= 50L) {
+                    this.updateTarget();
+                    this.lastTargetUpdate = now;
+                }
                 if (this.target != null && this.shouldRender) {
                     this.renderBox = this.getBox(this.target);
                     Vec3 offset = this.target
@@ -320,9 +330,9 @@ public class Aura extends MoveUpdateModule {
         this.shouldRender = false;
         if (this.target != null && PlayerUtils.isInGame() && this.enabled) {
             int slot = this.bestSlot(this.switchMode.get().inventory);
-            boolean holding = !this.onlyWeapon.get() || isAllowedWeapon(BlackOut.mc.player.getMainHandItem());
+            boolean holding = !this.onlyWeapon.get() || holdingAllowedWeapon();
             if (slot >= 0) {
-                if (!this.onlyWeapon.get() || BlackOut.mc.player.getInventory().getItem(slot).has(DataComponents.TOOL)) {
+                if (!this.onlyWeapon.get() || this.isAllowedWeapon(BlackOut.mc.player.getInventory().getItem(slot))) {
                     if (holding || this.switchMode.get() != SwitchMode.Disabled) {
                         this.shouldRender = true;
                         boolean rotated = this.rotationMode.get() != RotationMode.Constant
@@ -696,6 +706,12 @@ public class Aura extends MoveUpdateModule {
     }
 
     private AABB expandHitbox(AABB box, Entity entity) {
+        Vec3 pos = entity.position();
+        Pair<Vec3, AABB> cached = this.expandCache.get(entity.getId());
+        if (cached != null && cached.getA().equals(pos)) {
+            return cached.getB();
+        }
+
         for (int i = 0; i <= 20; i++) {
             box = this.expand(entity, box, 0.05, 0.0, 0.0);
             box = this.expand(entity, box, 0.0, 0.0, 0.05);
@@ -705,6 +721,7 @@ public class Aura extends MoveUpdateModule {
             box = this.expand(entity, box, 0.0, -0.05, 0.0);
         }
 
+        this.expandCache.put(entity.getId(), new Pair<>(pos, box));
         return box;
     }
 

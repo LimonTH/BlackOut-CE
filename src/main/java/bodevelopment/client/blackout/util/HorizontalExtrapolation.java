@@ -7,9 +7,9 @@ import net.minecraft.world.phys.Vec3;
 
 public class HorizontalExtrapolation {
     public static MotionData getMotion(ExtrapolationManager.ExtrapolationData data) {
-        List<Vec3> motions = CollectionUtils.reversed(data.motions);
+        List<Vec3> motions = data.motions.reversed();
         if (motions.size() < 5) {
-            return MotionData.of(motions.isEmpty() ? new Vec3(0.0, 0.0, 0.0) : motions.getFirst());
+            return MotionData.of(motions.isEmpty() ? Vec3.ZERO : motions.getFirst());
         } else {
             double prev = motionYaw(motions.getFirst());
             Yaw[] yaws = new Yaw[motions.size() - 1];
@@ -23,25 +23,18 @@ public class HorizontalExtrapolation {
 
             double avg = avgDiff(yaws);
             double lastDiff = yaws[3].diff();
+            double x = 0.0, z = 0.0;
+            for (Vec3 m : motions) { x += m.x; z += m.z; }
+            double inv = 1.0 / motions.size();
+            x *= inv; z *= inv;
             if (Math.abs(lastDiff) > 115.0 && Math.abs(avg) > 10.0) {
-                Vec3 average = averageMotion(motions);
-                return average.horizontalDistance() > 0.15
-                        ? MotionData.of(averageMotion(motions).scale(0.0)).reset()
-                        : MotionData.of(averageMotion(motions).scale(0.0));
+                return x * x + z * z > 0.0225
+                        ? MotionData.of(Vec3.ZERO).reset()
+                        : MotionData.of(Vec3.ZERO);
             } else {
-                return MotionData.of(averageMotion(motions));
+                return MotionData.of(new Vec3(x, 0.0, z));
             }
         }
-    }
-
-    private static Vec3 averageMotion(List<Vec3> motions) {
-        Vec3 total = new Vec3(0.0, 0.0, 0.0);
-
-        for (Vec3 motion : motions) {
-            total = total.add(motion);
-        }
-
-        return total.multiply(1.0F / motions.size(), 0.0, 1.0F / motions.size());
     }
 
     private static double avgDiff(Yaw[] yaws) {

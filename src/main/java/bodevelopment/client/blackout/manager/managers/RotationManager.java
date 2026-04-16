@@ -10,23 +10,18 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.client.settings.RotationSettings;
 import bodevelopment.client.blackout.module.modules.movement.ElytraFly;
 import bodevelopment.client.blackout.module.modules.movement.PacketFly;
-import bodevelopment.client.blackout.util.CollectionUtils;
+import bodevelopment.client.blackout.randomstuff.FloatPairRingBuffer;
 import bodevelopment.client.blackout.util.CompatUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 import bodevelopment.client.blackout.util.SharedFeatures;
-import it.unimi.dsi.fastutil.floats.FloatFloatImmutablePair;
-import it.unimi.dsi.fastutil.floats.FloatFloatPair;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.util.Mth;
 
 public class RotationManager extends Manager {
-    public final List<FloatFloatPair> rotationHistory = Collections.synchronizedList(new ArrayList<>());
-    public final List<FloatFloatPair> tickRotationHistory = Collections.synchronizedList(new ArrayList<>());
+    public final FloatPairRingBuffer rotationHistory = new FloatPairRingBuffer();
+    public final FloatPairRingBuffer tickRotationHistory = new FloatPairRingBuffer();
     public long prevRotation = 0L;
     public float nextYaw = 0.0F;
     public float nextPitch = 0.0F;
@@ -60,10 +55,7 @@ public class RotationManager extends Manager {
         this.updateRender();
         this.packetsLeft = Math.min(this.packetsLeft, 1.0);
         this.packetsLeft = this.packetsLeft + RotationSettings.getInstance().packetRotations.get();
-        synchronized (this.tickRotationHistory) {
-            this.tickRotationHistory.addFirst(new FloatFloatImmutablePair(this.prevYaw, this.prevPitch));
-            CollectionUtils.limitSize(this.tickRotationHistory, 20);
-        }
+        this.tickRotationHistory.addFirst(this.prevYaw, this.prevPitch);
     }
 
     @Event
@@ -96,10 +88,7 @@ public class RotationManager extends Manager {
     }
 
     private void setPrev(float yaw, float pitch) {
-        synchronized (this.rotationHistory) {
-            this.rotationHistory.addFirst(new FloatFloatImmutablePair(Math.abs(yaw - this.prevYaw), Math.abs(pitch - this.prevPitch)));
-            CollectionUtils.limitSize(this.rotationHistory, 20);
-        }
+        this.rotationHistory.addFirst(Math.abs(yaw - this.prevYaw), Math.abs(pitch - this.prevPitch));
 
         this.prevYaw = yaw;
         this.prevPitch = pitch;

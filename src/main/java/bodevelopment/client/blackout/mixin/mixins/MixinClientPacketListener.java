@@ -153,14 +153,6 @@ public class MixinClientPacketListener {
         }
     }
 
-    /**
-     * Intercepts handleBundlePacket at HEAD and manually dispatches each sub-packet
-     * through the full PacketEvent pipeline (Pre → Post → handle → Received), exactly as
-     * MixinConnection does for top-level packets. The vanilla loop is cancelled so we own
-     * the entire dispatch. Without this, sub-packets bypass PacketEvent.Receive.Pre, so
-     * modules like Velocity (Grim/Delayed) never see bundled explosion packets and cannot
-     * cancel them — causing full knockback and sound to apply unexpectedly.
-     */
     @SuppressWarnings("unchecked")
     @Inject(method = "handleBundlePacket", at = @At("HEAD"), cancellable = true)
     private void dispatchBundleSubPackets(ClientboundBundlePacket bundle, CallbackInfo ci) {
@@ -173,18 +165,6 @@ public class MixinClientPacketListener {
         ci.cancel();
     }
 
-    /**
-     * Intercepts the playerKnockback().ifPresent(...) call in handleExplosion so we can scale
-     * or suppress explosion knockback directly at the source.
-     *
-     * For Simple, Matrix_AAC, and Vulcan modes this is the primary knockback handler.
-     * For Grim and Delayed modes, Velocity.onVelocity cancels the explosion packet via
-     * PacketEvent.Receive.Pre before handleExplosion is ever called — both for normal packets
-     * and for bundle sub-packets (now that dispatchBundleSubPackets re-routes them through
-     * PacketEvent). If the user's chance/condition logic doesn't cancel the packet, we fall
-     * through to vanilla here so intentional non-cancels still apply full knockback.
-     */
-    @SuppressWarnings("unchecked")
     @WrapOperation(
             method = "handleExplosion",
             at = @At(value = "INVOKE", target = "Ljava/util/Optional;ifPresent(Ljava/util/function/Consumer;)V")
@@ -198,6 +178,12 @@ public class MixinClientPacketListener {
 
         switch (velocity.mode.get()) {
             case Grim:
+                if (velocity.chance.get() >= ThreadLocalRandom.current().nextDouble()) {
+                    velocity.sendGrimPackets();
+                } else {
+                    original.call(optional, consumer);
+                }
+                break;
             case Delayed:
                 original.call(optional, consumer);
                 break;

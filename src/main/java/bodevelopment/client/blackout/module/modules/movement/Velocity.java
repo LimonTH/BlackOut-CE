@@ -217,7 +217,7 @@ public class Velocity extends Module {
         }
     }
 
-    private void sendGrimPackets() {
+    public void sendGrimPackets() {
         if (BlackOut.mc.player == null) return;
         // Use the normal packet queue (sendPacket) rather than sendInstantly so this packet
         // is not injected in the middle of another module's inventory transaction sequence.

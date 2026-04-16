@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.util;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class CollectionUtils {
@@ -8,12 +7,6 @@ public class CollectionUtils {
         if (list.size() > maxSize) {
             list.subList(maxSize, list.size()).clear();
         }
-    }
-
-    public static <T> List<T> reversed(List<T> list) {
-        List<T> result = new ArrayList<>();
-        list.forEach(result::addFirst);
-        return result;
     }
 
     public static <T> boolean contains(T[] array, T object) {

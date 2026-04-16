@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.event;
 
-import java.lang.reflect.InvocationTargetException;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +37,14 @@ public class EventBus {
         for (Method method : clazz.getDeclaredMethods()) {
             if (method.isAnnotationPresent(Event.class)) {
                 int priority = method.getAnnotation(Event.class).eventPriority();
-                list.add(this.getIndex(list, priority), new Listener(object, method, skip, priority));
+                method.setAccessible(true);
+                MethodHandle handle;
+                try {
+                    handle = MethodHandles.lookup().unreflect(method);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+                list.add(this.getIndex(list, priority), new Listener(object, method, handle, skip, priority));
             }
         }
 
@@ -53,9 +61,9 @@ public class EventBus {
             for (Listener l : eventListeners) {
                 try {
                     if (!l.skip.shouldSkip()) {
-                        l.method.invoke(l.object, object);
+                        l.handle.invoke(l.object, object);
                     }
-                } catch (InvocationTargetException | IllegalAccessException e) {
+                } catch (Throwable e) {
                     throw new RuntimeException(e);
                 }
             }
@@ -74,6 +82,6 @@ public class EventBus {
         return l.size();
     }
 
-    public record Listener(Object object, Method method, ISkip skip, int priority) {
+    public record Listener(Object object, Method method, MethodHandle handle, ISkip skip, int priority) {
     }
 }
