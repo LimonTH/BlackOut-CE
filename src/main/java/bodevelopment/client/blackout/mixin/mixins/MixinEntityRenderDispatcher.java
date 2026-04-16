@@ -21,6 +21,7 @@ import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -31,6 +32,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinEntityRenderDispatcher {
     @Shadow
     private boolean shouldRenderShadow;
+
+    @Unique
+    private final FramebufferMultiBufferSource blackout$handEspFboSource = new FramebufferMultiBufferSource();
 
     @Inject(
             method = "render*",
@@ -82,7 +86,7 @@ public class MixinEntityRenderDispatcher {
         HandESP handESP = HandESP.getInstance();
         if (handESP.enabled && entity == BlackOut.mc.player
                 && BlackOut.mc.options.getCameraType() == CameraType.FIRST_PERSON && !FreeCam.getInstance().enabled) {
-            FramebufferMultiBufferSource fboSource = new FramebufferMultiBufferSource();
+            FramebufferMultiBufferSource fboSource = this.blackout$handEspFboSource;
 
             if (handESP.texture.get()) {
                 MultiBufferSource dual = renderType ->

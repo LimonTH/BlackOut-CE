@@ -12,6 +12,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
@@ -79,6 +80,11 @@ public class BlockUtils {
             case EAST -> BlackOut.mc.player.getX() >= pos.getX() + 1;
             default -> throw new IncompatibleClassChangeError();
         };
+    }
+
+    public static boolean isLiquid(BlockPos pos) {
+        BlockState state = BlackOut.mc.level.getBlockState(pos);
+        return !state.getFluidState().isEmpty() || state.getBlock() instanceof LiquidBlock || !BlackOut.mc.level.getFluidState(pos).isEmpty();
     }
 
     public static boolean inWater(AABB box) {

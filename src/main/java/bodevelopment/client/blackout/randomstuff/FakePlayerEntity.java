@@ -92,6 +92,7 @@ public class FakePlayerEntity extends AbstractClientPlayer {
         try {
             return this.innerDamage(source, amount);
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -146,17 +147,13 @@ public class FakePlayerEntity extends AbstractClientPlayer {
                         if (amount <= this.lastHurt) {
                             return false;
                         }
-                        if (this.level() instanceof ServerLevel serverWorld) {
-                            this.actuallyHurt(serverWorld, source, amount - this.lastHurt);
-                        }
+                        this.applyDamageToHealth(source, amount - this.lastHurt);
                         this.lastHurt = amount;
                         bl2 = false;
                     } else {
                         this.lastHurt = amount;
                         this.invulnerableTime = 20;
-                        if (this.level() instanceof ServerLevel serverWorld) {
-                            this.actuallyHurt(serverWorld, source, amount);
-                        }
+                        this.applyDamageToHealth(source, amount);
                         this.hurtDuration = 10;
                         this.hurtTime = this.hurtDuration;
                     }
@@ -189,7 +186,10 @@ public class FakePlayerEntity extends AbstractClientPlayer {
                         if (!this.checkTotemDeathProtection(source)) {
                             SoundEvent soundEvent = this.getDeathSound();
                             if (bl2 && soundEvent != null) {
-                                this.playSound(soundEvent, this.getSoundVolume(), this.getVoicePitch());
+                                BlackOut.mc.level.playLocalSound(
+                                        this, soundEvent, this.getSoundSource(),
+                                        this.getSoundVolume(), this.getVoicePitch()
+                                );
                             }
                         } else {
                             BlackOut.mc.particleEngine.createTrackingEmitter(this, ParticleTypes.TOTEM_OF_UNDYING, 30);
@@ -208,7 +208,10 @@ public class FakePlayerEntity extends AbstractClientPlayer {
 
                         SoundEvent soundEvent = this.getHurtSound(source);
                         if (soundEvent != null) {
-                            this.playSound(soundEvent, this.getSoundVolume(), this.getVoicePitch());
+                            BlackOut.mc.level.playLocalSound(
+                                    this, soundEvent, this.getSoundSource(),
+                                    this.getSoundVolume(), this.getVoicePitch()
+                            );
                         }
                     }
 
@@ -316,11 +319,14 @@ public class FakePlayerEntity extends AbstractClientPlayer {
     }
 
     public void completeUsingItem() {
+        ItemStack handStack = this.getMainHandItem().copy();
         ItemStack itemStack = this.getMainHandItem().finishUsingItem(this.level(), this);
 
         if (itemStack != this.getMainHandItem()) {
             this.setItemInHand(InteractionHand.MAIN_HAND, itemStack);
         }
+
+        this.applyFoodEffects(handStack);
     }
 
     public ItemStack getStack(Level world, ItemStack stack) {
@@ -370,6 +376,19 @@ public class FakePlayerEntity extends AbstractClientPlayer {
         }
 
         this.refreshDirtyAttributes();
+    }
+
+    private void applyDamageToHealth(DamageSource source, float amount) {
+        float reduced = this.getDamageAfterArmorAbsorb(source, amount);
+        reduced = this.getDamageAfterMagicAbsorb(source, reduced);
+        if (reduced <= 0) return;
+        float absorption = this.getAbsorptionAmount();
+        if (reduced > absorption) {
+            this.setAbsorptionAmount(0);
+            this.setHealth(this.getHealth() - (reduced - absorption));
+        } else {
+            this.setAbsorptionAmount(absorption - reduced);
+        }
     }
 
     private void applyFoodEffects(ItemStack stack) {

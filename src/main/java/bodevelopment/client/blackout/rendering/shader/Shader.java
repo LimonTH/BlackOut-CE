@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Shader {
-    private final int[] currentShader = new int[1];
+    private static int trackedProgram = 0;
     private final Map<String, Uniform> uniformMap = new HashMap<>();
     private final List<String> absent = new ArrayList<>();
     private final int id;
@@ -64,11 +64,14 @@ public class Shader {
 
         this.setIf("uResolution", BlackOut.mc.getWindow().getScreenWidth(), BlackOut.mc.getWindow().getScreenHeight());
         this.timeIf(this.initTime);
-        GL30C.glGetIntegerv(35725, this.currentShader);
+        int prevProgram = trackedProgram;
         this.bind();
         vertexBuffer.draw();
         this.unbind();
-        GlStateManager._glUseProgram(this.currentShader[0]);
+        if (prevProgram != 0) {
+            GlStateManager._glUseProgram(prevProgram);
+            trackedProgram = prevProgram;
+        }
     }
 
     private boolean exists(String name) {
@@ -90,11 +93,13 @@ public class Shader {
 
     public void bind() {
         GlStateManager._glUseProgram(this.id);
+        trackedProgram = this.id;
         this.uniformMap.forEach((name, uniform) -> uniform.upload());
     }
 
     public void unbind() {
         GlStateManager._glUseProgram(0);
+        trackedProgram = 0;
     }
 
     public void set(String uniform, float f) {

@@ -13,7 +13,6 @@ import bodevelopment.client.blackout.util.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import net.minecraft.client.player.RemotePlayer;
@@ -44,19 +43,21 @@ public class ExtrapolationManager extends Manager {
     @Event
     public void onTick(TickEvent.Post event) {
         if (PlayerUtils.isInGame()) {
-            Map<Player, ExtrapolationData> newMap = new ConcurrentHashMap<>();
+            List<? extends Player> currentPlayers = BlackOut.mc.level.players();
 
-            for (Player player : BlackOut.mc.level.players()) {
-                ExtrapolationData data = this.getFromMap(player);
+            // Remove players no longer in the level
+            this.dataMap.keySet().removeIf(p -> !currentPlayers.contains(p));
+
+            // Update existing or create new data entries
+            for (Player player : currentPlayers) {
+                ExtrapolationData data = this.dataMap.get(player);
                 if (data != null) {
                     data.update();
-                    newMap.put(player, data);
                 } else {
-                    newMap.put(player, new ExtrapolationData(player));
+                    this.dataMap.put(player, new ExtrapolationData(player));
                 }
             }
 
-            this.dataMap = newMap;
             this.dataMap.forEach((playerx, datax) -> {
                 datax.setTicksSince(Math.min(datax.getTicksSince() + 1, 8));
                 if (!(playerx instanceof RemotePlayer)) {
@@ -78,13 +79,7 @@ public class ExtrapolationManager extends Manager {
     }
 
     private ExtrapolationData getFromMap(Player player) {
-        for (Entry<Player, ExtrapolationData> data : this.dataMap.entrySet()) {
-            if (data.getKey() == player) {
-                return data.getValue();
-            }
-        }
-
-        return null;
+        return this.dataMap.get(player);
     }
 
     public void tick(Player player, Vec3 motion) {
@@ -189,7 +184,10 @@ public class ExtrapolationManager extends Manager {
         }
 
         private boolean isOffGround() {
-            return this.onGrounds.stream().anyMatch(b -> !b);
+            for (boolean b : this.onGrounds) {
+                if (!b) return true;
+            }
+            return false;
         }
 
         private void handleMotion(Vec3 motion, Entity entity) {

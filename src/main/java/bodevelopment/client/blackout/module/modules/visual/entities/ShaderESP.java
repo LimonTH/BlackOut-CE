@@ -41,6 +41,8 @@ public class ShaderESP extends Module {
 
     public static boolean ignore = false;
 
+    private final FramebufferMultiBufferSource fboSource = new FramebufferMultiBufferSource();
+
     public ShaderESP() {
         super("Shader ESP", "Utilizes post-processing framebuffers and GLSL shaders to render glowing silhouettes around entities.", SubCategory.ENTITIES, true);
         INSTANCE = this;
@@ -67,9 +69,8 @@ public class ShaderESP extends Module {
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);
 
-        FramebufferMultiBufferSource fboSource = new FramebufferMultiBufferSource();
-        instance.render(state, matrices, fboSource, light);
-        fboSource.drawToFramebuffer(buffer);
+        instance.render(state, matrices, this.fboSource, light);
+        this.fboSource.drawToFramebuffer(buffer);
     }
 
     private <S extends EntityRenderState> boolean shouldRenderLabel(Entity entity, S state) {

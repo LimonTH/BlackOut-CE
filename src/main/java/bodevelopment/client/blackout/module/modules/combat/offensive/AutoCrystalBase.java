@@ -1,9 +1,3 @@
-/*
- * Copyright (c) 2026.
- * Original module logic by RegalMagic.
- * Refined by Limon_TH.
- */
-
 package bodevelopment.client.blackout.module.modules.combat.offensive;
 
 import bodevelopment.client.blackout.BlackOut;
@@ -20,6 +14,7 @@ import bodevelopment.client.blackout.module.modules.client.settings.SwingSetting
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
+import bodevelopment.client.blackout.randomstuff.PlaceData;
 import bodevelopment.client.blackout.util.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -36,8 +31,10 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Comparator;
 import java.util.List;
-
+// TODO: ПРОВЕРКА НА ЖИДКОСТЬ НЕ РАБОТАЕТ, ЗАЕБАЛА
 public class AutoCrystalBase extends ObsidianModule {
+    private static AutoCrystalBase INSTANCE;
+
     public final SettingGroup sgPerformance = this.addGroup("Performance");
     public final SettingGroup sgAutoMine = this.addGroup("Auto Mine");
 
@@ -66,7 +63,7 @@ public class AutoCrystalBase extends ObsidianModule {
     private final Setting<Boolean> waterCheck = this.sgAutoMine.booleanSetting("Fluid Penalty Check", true, "Applies vanilla slowdown in water.", this.autoMineToggle::get);
 
     private Player target = null;
-    private BlockPos lastBestPos = null;
+    BlockPos lastBestPos = null;
     private int internalTicks = 0;
 
     private int cachedSurroundState = 0;
@@ -81,6 +78,7 @@ public class AutoCrystalBase extends ObsidianModule {
 
     public AutoCrystalBase() {
         super("Auto Crystal Base", "Dynamic obsidian placement and mining for crystals.", SubCategory.OFFENSIVE);
+        INSTANCE = this;
         this.attack.hide(false);
     }
 
@@ -101,22 +99,31 @@ public class AutoCrystalBase extends ObsidianModule {
             this.shouldRestart = false;
             this.started = false;
         }
+        if (this.minePos != null) {
+            if (!BlackOut.mc.level.getFluidState(this.minePos).isEmpty() ||
+                    !BlackOut.mc.level.getFluidState(this.minePos.above()).isEmpty()) {
 
-        if (this.minePos != null && this.autoMineToggle.get()) {
-            if (this.rangeReset.get() && !SettingUtils.inMineRange(this.minePos)) {
                 this.abort(this.minePos);
                 this.minePos = null;
-                this.lastBestPos = null;
                 this.started = false;
                 return;
             }
-            if (!this.started && !this.paused()) {
-                Direction dir = SettingUtils.getPlaceOnDirection(this.minePos);
-                if (!this.shouldRotateStart() || this.rotation.rotateBlock(this.minePos, dir, this.minePos.getCenter(), RotationType.Mining, "mining")) {
-                    this.start(this.minePos);
+            if (this.autoMineToggle.get()) {
+                if (this.rangeReset.get() && !SettingUtils.inMineRange(this.minePos)) {
+                    this.abort(this.minePos);
+                    this.minePos = null;
+                    this.lastBestPos = null;
+                    this.started = false;
+                    return;
                 }
+                if (!this.started && !this.paused()) {
+                    Direction dir = SettingUtils.getPlaceOnDirection(this.minePos);
+                    if (!this.shouldRotateStart() || this.rotation.rotateBlock(this.minePos, dir, this.minePos.getCenter(), RotationType.Mining, "mining")) {
+                        this.start(this.minePos);
+                    }
+                }
+                this.updateMining();
             }
-            this.updateMining();
         }
     }
 
@@ -139,21 +146,21 @@ public class AutoCrystalBase extends ObsidianModule {
             return;
         }
 
+        AutoCrystal ac = AutoCrystal.getInstance();
+        if (ac == null || !ac.enabled) return;
+
         if (internalTicks < updateDelay.get()) {
             internalTicks++;
             if (lastBestPos != null && minePos == null) {
-                if (this.rangeReset.get() && !SettingUtils.inPlaceRange(lastBestPos)) {
-                    lastBestPos = null;
-                } else {
+                if (SettingUtils.inPlaceRange(lastBestPos)) {
                     this.blockPlacements.add(lastBestPos);
+                } else {
+                    lastBestPos = null;
                 }
             }
             return;
         }
         internalTicks = 0;
-
-        AutoCrystal ac = AutoCrystal.getInstance();
-        if (ac == null || !ac.enabled) return;
 
         BlockPos targetPos = target.blockPosition();
         cachedSurroundState = getSurroundState(targetPos);
@@ -185,13 +192,17 @@ public class AutoCrystalBase extends ObsidianModule {
                     minePos = null;
                 }
                 lastBestPos = bestPos;
-                this.blockPlacements.add(bestPos);
+
+                if (BlockUtils.replaceable(bestPos) && SettingUtils.inPlaceRange(bestPos)) {
+                    this.blockPlacements.add(bestPos);
+                }
             }
         } else {
             if (minePos != null) {
                 abort(minePos);
                 minePos = null;
             }
+            lastBestPos = null;
         }
     }
 
@@ -248,7 +259,6 @@ public class AutoCrystalBase extends ObsidianModule {
 
     private BlockPos getObstacle(BlockPos pos) {
         BlockPos crystalPos = pos.above();
-
         if (!BlackOut.mc.level.getBlockState(crystalPos).isAir() && !BlockUtils.replaceable(crystalPos)) {
             return crystalPos;
         }
@@ -263,45 +273,56 @@ public class AutoCrystalBase extends ObsidianModule {
     private boolean isValidForBase(BlockPos pos, AutoCrystal ac) {
         if (BlackOut.mc.level == null || BlackOut.mc.level.isOutsideBuildHeight(pos.getY())) return false;
 
+        BlockPos crystalPos = pos.above();
+
+        if (BlockUtils.isLiquid(crystalPos)) return false;
+        if (BlockUtils.isLiquid(pos)) return false;
+
         if (this.autoMineToggle.get()) {
             BlockPos obstacle = getObstacle(pos);
             if (obstacle != null) {
                 Block obstacleBlock = BlackOut.mc.level.getBlockState(obstacle).getBlock();
+
                 if (obstacleBlock == Blocks.OBSIDIAN || obstacleBlock == Blocks.BEDROCK || obstacleBlock == Blocks.ENDER_CHEST) {
                     return false;
                 }
                 if (this.ignore.get().contains(obstacleBlock) || !BlockUtils.mineable(obstacle)) {
                     return false;
                 }
+                if (!SettingUtils.inMineRange(obstacle)) return false;
                 if (SettingUtils.getPlaceOnDirection(obstacle) == null) return false;
+            } else if (BlockUtils.replaceable(pos)) {
+                PlaceData placeData = SettingUtils.getPlaceData(pos);
+                if (!placeData.valid() || !SettingUtils.inPlaceRange(placeData.pos())) return false;
+            } else {
+                return false;
             }
         } else {
             if (!BlockUtils.replaceable(pos)) return false;
-            if (!BlackOut.mc.level.getBlockState(pos.above()).isAir() && !BlockUtils.replaceable(pos.above())) return false;
-            if (SettingUtils.getPlaceOnDirection(pos) == null) return false;
+            if (!BlackOut.mc.level.getBlockState(crystalPos).isAir() && !BlockUtils.replaceable(crystalPos)) return false;
+
+            PlaceData placeData = SettingUtils.getPlaceData(pos);
+            if (!placeData.valid() || !SettingUtils.inPlaceRange(placeData.pos())) return false;
         }
 
-        if (ac.intersects(pos.above())) return false;
-        return ac.inAttackRangePlacing(pos.above());
+        if (ac.intersects(crystalPos)) return false;
+        return ac.inAttackRangePlacing(crystalPos);
     }
 
     private boolean isCurrentBaseBetter(BlockPos bestPos, AutoCrystal ac) {
         double bestScore = getSimulatedDmg(target, bestPos);
-        BlockPos targetPos = target.blockPosition();
 
+        BlockPos targetPos = target.blockPosition();
         double rH = searchRadius.get();
         int rV = verticalRadius.get();
-        double distToTargetSq = BlackOut.mc.player.distanceToSqr(target);
 
         for (int x = (int) -rH; x <= rH; x++) {
             for (int z = (int) -rH; z <= rH; z++) {
-                if (x * x + z * z > rH * rH) continue;
                 for (int y = -1; y >= -rV; y--) {
                     BlockPos pos = targetPos.offset(x, y, z);
 
-                    if (cachedIsFar && BlackOut.mc.player.distanceToSqr(pos.getCenter()) >= distToTargetSq) continue;
-
                     if (BlackOut.mc.level.getBlockState(pos).is(Blocks.OBSIDIAN) || BlackOut.mc.level.getBlockState(pos).is(Blocks.BEDROCK)) {
+                        if (BlockUtils.isLiquid(pos.above()) || BlockUtils.isLiquid(pos)) continue;
                         if (!ac.crystalBlock(pos.above()) || ac.intersects(pos.above())) continue;
 
                         double existingDmg = getDmg(target, pos);
@@ -310,23 +331,21 @@ public class AutoCrystalBase extends ObsidianModule {
                         double sDmg = getDmg(BlackOut.mc.player, pos);
                         if (sDmg > ac.getMaxSelfPlace().get()) continue;
 
-                        if (!isFriendSafe(pos, ac, existingDmg)) continue;
-                        if (ac.getCheckSelfPlacing().get() && (existingDmg / Math.max(sDmg, 1.0)) < ac.getMinSelfRatio().get()) continue;
-
                         double score = existingDmg;
-                        if (cachedSurroundState > 0 && y == -1) score += 5.0;
-                        else if (cachedSurroundState == 0 && y <= -2) score += 5.0;
 
-                        double distSqToPos = BlackOut.mc.player.distanceToSqr(pos.getCenter());
-                        score += Math.max(0, (25.0 - distSqToPos) * 0.1);
+                        int relY = pos.getY() - targetPos.getY();
+                        if (cachedSurroundState > 0 && relY == -1) score += 5.0;
+                        else if (cachedSurroundState == 0 && relY <= -2) score += 5.0;
 
                         double simulatedBestScore = bestScore;
-                        int bestY = bestPos.getY() - targetPos.getY();
-                        if (cachedSurroundState > 0 && bestY == -1) simulatedBestScore += 5.0;
-                        else if (cachedSurroundState == 0 && bestY <= -2) simulatedBestScore += 5.0;
-                        simulatedBestScore += Math.max(0, (25.0 - BlackOut.mc.player.distanceToSqr(bestPos.getCenter())) * 0.1);
+                        int bestRelY = bestPos.getY() - targetPos.getY();
+                        if (cachedSurroundState > 0 && bestRelY == -1) simulatedBestScore += 5.0;
+                        else if (cachedSurroundState == 0 && bestRelY <= -2) simulatedBestScore += 5.0;
 
-                        if (score + scoreImprove.get() >= simulatedBestScore) return true;
+                        if (score + scoreImprove.get() >= simulatedBestScore) {
+                            lastBestPos = pos;
+                            return true;
+                        }
                     }
                 }
             }
@@ -338,17 +357,20 @@ public class AutoCrystalBase extends ObsidianModule {
         if (BlackOut.mc.level == null) return 0;
 
         BlockState oldBase = BlackOut.mc.level.getBlockState(pos);
-        BlockState oldAbove = BlackOut.mc.level.getBlockState(pos.above());
+        BlockPos crystalPos = pos.above();
+        BlockState oldAbove = BlackOut.mc.level.getBlockState(crystalPos);
+
+        if (!oldAbove.getFluidState().isEmpty()) return 0;
 
         boolean needsBase = !(oldBase.is(Blocks.OBSIDIAN) || oldBase.is(Blocks.BEDROCK));
         boolean needsAbove = !oldAbove.isAir();
 
         if (needsBase) BlackOut.mc.level.setBlock(pos, Blocks.OBSIDIAN.defaultBlockState(), 0);
-        if (needsAbove) BlackOut.mc.level.setBlock(pos.above(), Blocks.AIR.defaultBlockState(), 0);
+        if (needsAbove) BlackOut.mc.level.setBlock(crystalPos, Blocks.AIR.defaultBlockState(), 0);
 
         double dmg = DamageUtils.crystalDamage(p, p.getBoundingBox(), pos.getCenter().add(0, 0.5, 0));
 
-        if (needsAbove) BlackOut.mc.level.setBlock(pos.above(), oldAbove, 0);
+        if (needsAbove) BlackOut.mc.level.setBlock(crystalPos, oldAbove, 0);
         if (needsBase) BlackOut.mc.level.setBlock(pos, oldBase, 0);
 
         return dmg;
@@ -444,9 +466,7 @@ public class AutoCrystalBase extends ObsidianModule {
                                     ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, this.minePos, dir, s));
                             SwingSettings.getInstance().mineSwing(SwingSettings.MiningSwingState.End);
 
-                            if (!this.minePacket.get()) {
-                                BlackOut.mc.level.setBlockAndUpdate(this.minePos, Blocks.AIR.defaultBlockState());
-                            }
+                            BlackOut.mc.level.setBlockAndUpdate(this.minePos, Blocks.AIR.defaultBlockState());
 
                             Managers.BLOCK.set(this.minePos, Blocks.AIR, true, true);
                             Managers.ENTITY.addSpawning(this.minePos);
@@ -536,6 +556,7 @@ public class AutoCrystalBase extends ObsidianModule {
 
     @Override protected boolean validForBlocking(Entity entity) { return false; }
     @Override protected double getCooldown() { return 0.1 * updateDelay.get(); }
+    public static AutoCrystalBase getInstance() { return INSTANCE; }
 
     public enum RotationMode {
         None, StartOnly, EndOnly, Both

@@ -64,9 +64,12 @@ public class Render2DUtils {
         lastProjMat.set(mc.gameRenderer.getProjectionMatrix(fov));
     }
 
+    private static final Vector4f TEMP_COORDS = new Vector4f();
+
     public static Vec2 getCoords(double x, double y, double z, boolean checkVisible) {
         Minecraft mc = BlackOut.mc;
-        Vector4f pos = new Vector4f(
+        Vector4f pos = TEMP_COORDS;
+        pos.set(
                 (float) (x - lastCamPos.x),
                 (float) (y - lastCamPos.y),
                 (float) (z - lastCamPos.z),

@@ -756,25 +756,50 @@ public class AutoCrystal extends Module {
 
     private boolean canPlace() {
         this.crystalResult = this.switchMode.get().find(Items.END_CRYSTAL);
+
         if (this.switchMode.get() == ACSwitchMode.Gapple && this.gappleSwitch(this.placePos != null)) {
             return false;
-        } else if (this.placePos == null) {
+        }
+        if (this.placePos == null) {
             return false;
-        } else {
-            this.crystalHand = InvUtils.getHand(stack -> stack.getItem() == Items.END_CRYSTAL);
-            if (this.crystalHand == null && !this.crystalResult.wasFound()) {
+        }
+
+        AutoCrystalBase base = AutoCrystalBase.getInstance();
+        if (base != null && base.enabled) {
+            BlockPos crystalBasePos = this.placePos.below();
+
+            if (crystalBasePos.equals(base.lastBestPos)) {
                 return false;
-            } else if (this.pauseEatPlace.get() && BlackOut.mc.player.isUsingItem()) {
+            }
+
+            if (crystalBasePos.equals(base.minePos)) {
                 return false;
-            } else if (System.currentTimeMillis() - this.lastSwitch < this.placeSwitchPenalty.get() * 1000.0) {
+            }
+
+            if (this.placePos.equals(base.minePos)) {
                 return false;
-            } else if (this.targetCrystal != null && this.eco.get()) {
-                return false;
-            } else {
-                this.crystalDir = SettingUtils.getPlaceOnDirection(this.placePos.below());
-                return this.crystalDir != null;
             }
         }
+
+        this.crystalHand = InvUtils.getHand(stack -> stack.getItem() == Items.END_CRYSTAL);
+        if (this.crystalHand == null && !this.crystalResult.wasFound()) {
+            return false;
+        }
+
+        if (this.pauseEatPlace.get() && BlackOut.mc.player.isUsingItem()) {
+            return false;
+        }
+
+        if (System.currentTimeMillis() - this.lastSwitch < this.placeSwitchPenalty.get() * 1000.0) {
+            return false;
+        }
+
+        if (this.targetCrystal != null && this.eco.get()) {
+            return false;
+        }
+
+        this.crystalDir = SettingUtils.getPlaceOnDirection(this.placePos.below());
+        return this.crystalDir != null;
     }
 
     private boolean canAttack() {

@@ -18,7 +18,8 @@ public class ExtrapolationMap {
     }
 
     public AABB get(Entity player) {
-        return !this.boxMap.containsKey(player) ? player.getBoundingBox() : this.boxMap.get(player);
+        AABB cached = this.boxMap.get(player);
+        return cached != null ? cached : player.getBoundingBox();
     }
 
     public Map<Entity, AABB> getMap() {

@@ -16,7 +16,6 @@ import bodevelopment.client.blackout.randomstuff.Rotation;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
-import it.unimi.dsi.fastutil.floats.FloatFloatPair;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -32,6 +31,7 @@ public class RotationHelper {
         priorities.add(Aura.class);
         priorities.add(Snombonty.class);
         priorities.add(AutoCrystal.class);
+        priorities.add(AutoCrystalBase.class);
         priorities.add(Scaffold.class);
         priorities.add(AutoMine.class);
         priorities.add(PistonCrystal.class);
@@ -208,8 +208,9 @@ public class RotationHelper {
             return true;
         } else {
             for (int i = 0; i < Math.min(Managers.ROTATION.rotationHistory.size(), rotSettings.attackTicks.get()); i++) {
-                FloatFloatPair pair = Managers.ROTATION.rotationHistory.get(i);
-                double f = Math.sqrt(pair.firstFloat() * pair.firstFloat() + pair.secondFloat() * pair.secondFloat());
+                float a = Managers.ROTATION.rotationHistory.getA(i);
+                float b = Managers.ROTATION.rotationHistory.getB(i);
+                double f = Math.sqrt(a * a + b * b);
                 if (f > rotSettings.attackMaxSpeed.get()) {
                     return false;
                 }

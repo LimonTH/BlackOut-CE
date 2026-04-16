@@ -14,7 +14,6 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.Rotation;
 import bodevelopment.client.blackout.util.*;
-import it.unimi.dsi.fastutil.floats.FloatFloatPair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
@@ -25,7 +24,6 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -396,19 +394,22 @@ public class RotationSettings extends SettingsModule {
     }
 
     private double getBalanceSpeed() {
-        List<FloatFloatPair> list = Managers.ROTATION.tickRotationHistory;
-        int length = Math.min(list.size(), this.averageTicks.get());
+        var buf = Managers.ROTATION.tickRotationHistory;
+        int length = Math.min(buf.size(), this.averageTicks.get());
         if (length <= 1) {
             return this.averageSpeed.get();
         } else {
-            FloatFloatPair prev = list.getFirst();
+            float prevYaw = buf.getA(0);
+            float prevPitch = buf.getB(0);
             double total = 0.0;
 
             for (int i = 1; i < length; i++) {
-                FloatFloatPair pair = list.get(i);
-                double yaw = Math.abs(RotationUtils.yawAngle(pair.firstFloat(), prev.firstFloat()));
-                float pitch = pair.secondFloat() - prev.secondFloat();
-                prev = pair;
+                float curYaw = buf.getA(i);
+                float curPitch = buf.getB(i);
+                double yaw = Math.abs(RotationUtils.yawAngle(curYaw, prevYaw));
+                float pitch = curPitch - prevPitch;
+                prevYaw = curYaw;
+                prevPitch = curPitch;
                 total += Math.min(Math.sqrt(yaw * yaw + pitch * pitch), 180.0);
             }
 

@@ -31,7 +31,8 @@ public class TimerMap<E, T> {
     }
 
     public void update() {
-        this.remove((key, value) -> System.currentTimeMillis() > value.endTime);
+        long now = System.currentTimeMillis();
+        this.timers.entrySet().removeIf(entry -> now > entry.getValue().endTime);
     }
 
     public T get(E key) {
