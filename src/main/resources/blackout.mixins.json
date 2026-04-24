@@ -63,7 +63,8 @@
     "mixins.MixinTitleScreen",
     "mixins.MixinVisibilitySet",
     "mixins.MixinWeatherEffectRenderer",
-    "mixins.fabricapi.MixinFabricBakedModel"
+    "mixins.fabricapi.MixinFabricBakedModel",
+    "mixins.MixinMcBlockedServerBypass"
   ],
   "injectors": {
     "defaultRequire": 1
