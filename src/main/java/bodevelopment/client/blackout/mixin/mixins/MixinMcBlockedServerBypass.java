@@ -14,6 +14,5 @@ abstract class MixinMcBlockedServerBypass {
 	public Predicate<String> createBlockList() {
     return (address) -> address.equalsIgnoreCase("7b7t.net");
     // :trol:
-		return null;
 	}
 }
