@@ -39,6 +39,7 @@ public class InvUtils {
     }
 
     public static int pickSlot = -1;
+    public static int pickPrevSlot = -1;
     public static int prevSlot = -1;
     private static int[] slots;
 
@@ -175,6 +176,7 @@ public class InvUtils {
 
     public static boolean pickSwap(int slot) {
         if (slot < 0 || slot >= 36) return false;
+        pickPrevSlot = BlackOut.mc.player.getInventory().selected;
         pickSlot = slot;
         sendPick(slot, false);
         return true;
@@ -182,6 +184,7 @@ public class InvUtils {
 
     public static boolean pickSwapInstantly(int slot) {
         if (slot < 0 || slot >= 36) return false;
+        pickPrevSlot = BlackOut.mc.player.getInventory().selected;
         pickSlot = slot;
         sendPick(slot, true);
         return true;
@@ -189,8 +192,15 @@ public class InvUtils {
 
     public static boolean pickSwapBack() {
         if (pickSlot >= 0) {
-            sendPick(pickSlot, false);
+            if (pickSlot < 9 && pickPrevSlot >= 0) {
+                BlackOut.mc.player.getInventory().selected = pickPrevSlot;
+                Managers.PACKET.sendPacket(new ServerboundSetCarriedItemPacket(pickPrevSlot));
+                Managers.PACKET.slot = pickPrevSlot;
+            } else {
+                sendPick(pickSlot, false);
+            }
             pickSlot = -1;
+            pickPrevSlot = -1;
             return true;
         }
         return false;
@@ -198,8 +208,15 @@ public class InvUtils {
 
     public static boolean pickSwapBackInstantly() {
         if (pickSlot >= 0) {
-            sendPick(pickSlot, true);
+            if (pickSlot < 9 && pickPrevSlot >= 0) {
+                BlackOut.mc.player.getInventory().selected = pickPrevSlot;
+                Managers.PACKET.sendInstantly(new ServerboundSetCarriedItemPacket(pickPrevSlot));
+                Managers.PACKET.slot = pickPrevSlot;
+            } else {
+                sendPick(pickSlot, true);
+            }
             pickSlot = -1;
+            pickPrevSlot = -1;
             return true;
         }
         return false;

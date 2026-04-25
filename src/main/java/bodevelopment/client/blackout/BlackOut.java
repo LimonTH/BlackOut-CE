@@ -6,6 +6,7 @@ import bodevelopment.client.blackout.gui.menu.MainMenu;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.setting.RegistryNames;
 import bodevelopment.client.blackout.rendering.font.CustomFontRenderer;
+import bodevelopment.client.blackout.util.BlocklistUtil;
 import bodevelopment.client.blackout.util.ClassUtils;
 import bodevelopment.client.blackout.util.EnchantmentNames;
 import bodevelopment.client.blackout.util.FileUtils;
@@ -37,6 +38,7 @@ public final class BlackOut extends bodevelopment.client.blackout.BlackOutInfo i
         Managers.CONFIG.readConfigs();
         Managers.CLICK_GUI.CLICK_GUI.initGui();
         RegistryNames.init();
+        BlocklistUtil.loadBlocklist();
     }
 
     public enum Type {
