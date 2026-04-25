@@ -10,56 +10,75 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ItemStack;
 
-public class AutoMace extends Module {
+public class MaceSwap extends Module {
 
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    private final Setting<Double> fallThreshold = sgGeneral.doubleSetting("Fall Threshold", 3.0, 0.5, 20.0, 0.5, "Minimum fall distance in blocks before switching to the mace.");
-    private final Setting<Boolean> restoreSlot   = sgGeneral.booleanSetting("Restore Slot", true, "Switch back to the previous hotbar slot after landing.");
+    private final Setting<Double> fallThreshold = sgGeneral.doubleSetting("Fall Threshold", 3.0, 0.5, 20.0, 0.5,
+            "Minimum fall distance in blocks before switching to the mace.");
+    private final Setting<Boolean> restoreSlot = sgGeneral.booleanSetting("Restore Slot", true,
+            "Switch back to the previous hotbar slot after landing.");
 
     private int previousSlot = -1;
     private boolean switched = false;
+    private double trackedFallDistance = 0.0;
+    private double lastY = Double.MAX_VALUE;
 
-    public AutoMace() {
-        super("AutoMace", "Swaps to a mace when falling.", SubCategory.LEGIT, true);
+    public MaceSwap() {
+        super("MaceSwap", "Automatically switches to a mace when falling to deal bonus damage.", SubCategory.LEGIT, true);
     }
 
     @Override
     public void onEnable() {
-        previousSlot = -1;
-        switched = false;
+        reset();
     }
 
     @Override
     public void onDisable() {
-        if (switched && restoreSlot.get() && previousSlot != -1) {
+        if (switched && restoreSlot.get() && previousSlot != -1
+                && BlackOut.mc.player != null) {
             BlackOut.mc.player.getInventory().selected = previousSlot;
         }
-        previousSlot = -1;
-        switched = false;
+        reset();
     }
 
     @Event
     public void onTick(TickEvent.Pre event) {
         if (BlackOut.mc.player == null || BlackOut.mc.level == null) return;
 
-        boolean isFalling = !BlackOut.mc.player.onGround()
-                && BlackOut.mc.player.getDeltaMovement().y < 0
-                && BlackOut.mc.player.fallDistance >= fallThreshold.get().floatValue();
+        double currentY = BlackOut.mc.player.getY();
 
-        if (isFalling && !switched) {
+        if (lastY == Double.MAX_VALUE) {
+            lastY = currentY;
+            return;
+        }
+
+        double dy = currentY - lastY;
+        lastY = currentY;
+
+        if (BlackOut.mc.player.onGround()) {
+            if (switched && restoreSlot.get() && previousSlot != -1) {
+                BlackOut.mc.player.getInventory().selected = previousSlot;
+            }
+            previousSlot = -1;
+            switched = false;
+            trackedFallDistance = 0.0;
+            return;
+        }
+
+        if (dy < 0) {
+            trackedFallDistance += Math.abs(dy);
+        } else {
+            trackedFallDistance = 0.0;
+        }
+
+        if (trackedFallDistance >= fallThreshold.get() && !switched) {
             int maceSlot = findMaceInHotbar();
             if (maceSlot != -1 && BlackOut.mc.player.getInventory().selected != maceSlot) {
                 previousSlot = BlackOut.mc.player.getInventory().selected;
                 BlackOut.mc.player.getInventory().selected = maceSlot;
                 switched = true;
             }
-        } else if (!isFalling && switched) {
-            if (restoreSlot.get() && previousSlot != -1) {
-                BlackOut.mc.player.getInventory().selected = previousSlot;
-            }
-            previousSlot = -1;
-            switched = false;
         }
     }
 
@@ -71,5 +90,12 @@ public class AutoMace extends Module {
             }
         }
         return -1;
+    }
+
+    private void reset() {
+        previousSlot = -1;
+        switched = false;
+        trackedFallDistance = 0.0;
+        lastY = Double.MAX_VALUE;
     }
 }
