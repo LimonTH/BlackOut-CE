@@ -10,7 +10,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ItemStack;
 
-public class MaceSwap extends Module {
+public class AutoMace extends Module {
 
     private final SettingGroup sgGeneral = this.addGroup("General");
 
@@ -24,8 +24,8 @@ public class MaceSwap extends Module {
     private double trackedFallDistance = 0.0;
     private double lastY = Double.MAX_VALUE;
 
-    public MaceSwap() {
-        super("MaceSwap", "Automatically switches to a mace when falling to deal bonus damage.", SubCategory.LEGIT, true);
+    public AutoMace() {
+        super("AutoMace", "Switches to Mace when falling.", SubCategory.LEGIT, true);
     }
 
     @Override
