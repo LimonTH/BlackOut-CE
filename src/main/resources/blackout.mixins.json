@@ -64,8 +64,8 @@
     "mixins.MixinVisibilitySet",
     "mixins.MixinWeatherEffectRenderer",
     "mixins.fabricapi.MixinFabricBakedModel",
-    "mixins.MixinMultiplayerScreen",
-    "mixins.MixinMcBlockedServerBypass"
+    "mixins.MixinJoinMultiplayerScreen",
+    "mixins.MixinAddressCheck"
   ],
   "injectors": {
     "defaultRequire": 1
