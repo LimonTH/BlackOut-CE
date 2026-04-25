@@ -28,7 +28,8 @@ public class BlocklistUtil {
     public static boolean isBlocked(String address) {
         if (!loaded || address == null) return false;
 
-        String serverHash = Hashing.sha256()
+        @SuppressWarnings("deprecation")
+        String serverHash = Hashing.sha1()
                 .hashString(address.toLowerCase(), StandardCharsets.ISO_8859_1)
                 .toString();
 
