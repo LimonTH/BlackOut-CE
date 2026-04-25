@@ -64,7 +64,8 @@ public class MainMenu {
             "Keyboard warrior approved",
             "Hyper-threaded performance",
             "Zero days since last blackout",
-            "Better than your average cheat"
+            "Better than your average cheat",
+            "Once you go black, you can never go back"
     };
 
     private final Runnable[] runnables;
