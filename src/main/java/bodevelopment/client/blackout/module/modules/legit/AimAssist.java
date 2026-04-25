@@ -20,11 +20,11 @@ public class AimAssist extends Module {
 
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    private final Setting<Double> range       = sgGeneral.doubleSetting("Range",    6.0,  1.0, 10.0,  0.1,  "Maximum range to target players.");
-    private final Setting<Double> strength    = sgGeneral.doubleSetting("Strength", 0.1,  0.01, 1.0,  0.01, "Aiming speed towards the target.");
-    private final Setting<Double> fov         = sgGeneral.doubleSetting("FOV",      90.0, 10.0, 360.0, 1.0, "Field of view cone for target selection.");
-    private final Setting<Boolean> eyeAim     = sgGeneral.boolSetting("Eye Aim",       false, "Aim at eye position instead of body center.");
-    private final Setting<Boolean> dynamicStr = sgGeneral.boolSetting("Dynamic Strength", true, "Scale strength based on distance to target.");
+    private final Setting<Double> range = sgGeneral.doubleSetting("Range", 6.0,  1.0, 10.0,  0.1,  "Maximum range to target players.");
+    private final Setting<Double> strength = sgGeneral.doubleSetting("Strength", 0.1,  0.01, 1.0,  0.01, "Aiming speed towards the target.");
+    private final Setting<Double> fov = sgGeneral.doubleSetting("FOV", 90.0, 10.0, 360.0, 1.0, "Field of view cone for target selection.");
+    private final Setting<Boolean> eyeAim = sgGeneral.booleanSetting("Eye Aim", false, "Aim at eye position instead of body center.");
+    private final Setting<Boolean> dynamicStr = sgGeneral.booleanSetting("Dynamic Strength", true,  "Scale strength based on distance to target.");
 
     private final Map<Player, Double> targetProgress = new HashMap<>();
     private double noiseOffset = Math.random() * 1000;
