@@ -169,7 +169,7 @@ public class Watermark extends HudElement {
 
                     Render2DUtils.rounded(this.stack, -2.0F, 1.0F, 0.1F, height, 0.5F, 0.5F, color.getRGB(), color.getRGB());
                     Render2DUtils.rounded(this.stack, width - 4.1F, 1.0F, 0.1F, height, 0.5F, 0.5F, color2.getRGB(), color2.getRGB());
-                    this.textColor.render(this.stack, BlackOut.NAME, 1.0F, 1.0F, BlackOut.FONT.getHeight() / 2.0F + 0.5F, false, true);
+                    this.textColor.render(this.stack, BlackOut.NAME, 1.0F, 1.0F, BlackOut.FONT.getHeight() / 2.0F, false, true);
                 }
             }
 

@@ -44,6 +44,7 @@ public class TextField {
     private boolean active = false;
     private int heldKey = 0;
     private long prevHeld = 0L;
+    private int maxLength = Integer.MAX_VALUE;
     private float width;
     private float height;
     private double mx;
@@ -75,9 +76,7 @@ public class TextField {
         this.radius = radius;
         this.limitIndex();
         Render2DUtils.rounded(stack, x, y, width, height, radius, shadow, bgColor.getRGB(), new Color(0, 0, 0, (int) Math.floor(bgColor.getAlpha() * 0.6)).getRGB());
-        float textHeight = BlackOut.FONT.getHeight() * scale;
         float centerY = y + height / 2.0F;
-        float manualY = centerY - (textHeight / 2.0F) - (scale);
 
         float cursorOffset = this.getOffset();
         float padding = 4.0F;
@@ -112,7 +111,7 @@ public class TextField {
             }
         }
 
-        BlackOut.FONT.text(stack, visibleText, scale, visibleX, manualY, textColor, false, false);
+        BlackOut.FONT.text(stack, visibleText, scale, visibleX, centerY, textColor, false, true);
         if (!Keys.get(this.heldKey)) {
             this.heldKey = 0;
         }
@@ -123,8 +122,7 @@ public class TextField {
         }
 
         if (this.active && (System.currentTimeMillis() - this.lastType) % 1000L < 500L) {
-            float fontHeight = BlackOut.FONT.getHeight() * scale;
-            float cursorHeight = fontHeight - 2.0F;
+            float cursorHeight = BlackOut.FONT.getRenderedGlyphHeight(scale) * 0.55F;
 
             float cursorY2 = centerY - (cursorHeight / 2.0F);
             float cursorX = x + cursorOffset - this.scrollOffset;
@@ -147,8 +145,16 @@ public class TextField {
     }
 
     public void setContent(String content) {
-        this.content = content;
-        this.typingIndex = content.length();
+        this.content = content.length() > maxLength ? content.substring(0, maxLength) : content;
+        this.typingIndex = this.content.length();
+    }
+
+    public void setMaxLength(int max) {
+        this.maxLength = max;
+        if (this.content.length() > max) {
+            this.content = this.content.substring(0, max);
+            this.typingIndex = Math.min(this.typingIndex, max);
+        }
     }
 
     private float getOffset() {
@@ -305,6 +311,7 @@ public class TextField {
 
     private void addChar(String c) {
         if (c == null || c.isEmpty()) return;
+        if (this.content.length() >= this.maxLength) return;
 
         String pre = this.content.substring(0, this.typingIndex);
         String post = this.content.substring(this.typingIndex);

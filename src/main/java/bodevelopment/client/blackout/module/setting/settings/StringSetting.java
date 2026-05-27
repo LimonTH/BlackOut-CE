@@ -13,7 +13,7 @@ import com.google.gson.JsonObject;
 import java.awt.*;
 
 public class StringSetting extends Setting<String> {
-    private final TextField textField = new TextField();
+    private final TextField textField = new TextField() {{ setMaxLength(64); }};
     private final int id = SelectedComponent.nextId();
 
     public StringSetting(String name, String val, String description, SingleOut<Boolean> visible) {
@@ -26,10 +26,7 @@ public class StringSetting extends Setting<String> {
         float baseH = 26.0F;
         float middleY = this.y + (baseH / 2.0F);
 
-        float fontHeight = BlackOut.FONT.getHeight() * textScale;
-        float nameY = middleY - (fontHeight / 2.0F);
-
-        BlackOut.FONT.text(this.stack, this.name, textScale, this.x + 5.0F, nameY, GuiColorUtils.getSettingText(this.y), false, true);
+        BlackOut.FONT.text(this.stack, this.name, textScale, this.x + 5.0F, middleY, GuiColorUtils.getSettingText(this.y), false, true);
 
         float fieldWidth = this.width - 20.0F;
         float fieldX = this.x + 10.0F;

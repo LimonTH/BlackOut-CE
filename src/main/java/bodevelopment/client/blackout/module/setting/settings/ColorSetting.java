@@ -33,11 +33,7 @@ public class ColorSetting extends Setting<BlackOutColor> {
         float h = this.getHeight();
         float middleY = this.y + (h / 2.0F);
 
-        float fontHeight = BlackOut.FONT.getHeight() * textScale;
-
-        float textY = middleY - (fontHeight / 2.0F);
-
-        BlackOut.FONT.text(this.stack, this.name, textScale, this.x + 5.0F, textY, GuiColorUtils.getSettingText(this.y), false, true);
+        BlackOut.FONT.text(this.stack, this.name, textScale, this.x + 5.0F, middleY, GuiColorUtils.getSettingText(this.y), false, true);
 
         float rectWidth = 25.0F;
         float rectHeight = 8.0F;

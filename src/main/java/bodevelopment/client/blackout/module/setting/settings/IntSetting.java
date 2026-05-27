@@ -19,7 +19,7 @@ public class IntSetting extends Setting<Integer> {
     public final int min;
     public final int max;
     public final int step;
-    private final TextField textField = new TextField();
+    private final TextField textField = new TextField() {{ setMaxLength(10); }};
     private final int id = SelectedComponent.nextId();
     private float sliderPos;
     private float sliderAnim = 0.0F;
@@ -53,10 +53,7 @@ public class IntSetting extends Setting<Integer> {
         float baseH = 26.0F;
         float middleY = this.y + (baseH / 2.0F);
 
-        float fontHeight = BlackOut.FONT.getHeight() * textScale;
-        float topTextY = middleY - (fontHeight / 2.0F);
-
-        BlackOut.FONT.text(this.stack, this.name, textScale, this.x + 5.0F, topTextY, GuiColorUtils.getSettingText(this.y), false, true);
+        BlackOut.FONT.text(this.stack, this.name, textScale, this.x + 5.0F, middleY, GuiColorUtils.getSettingText(this.y), false, true);
 
         if (SelectedComponent.is(this.id)) {
             try {
@@ -73,7 +70,7 @@ public class IntSetting extends Setting<Integer> {
         float fieldWidth = Math.max(40.0F, BlackOut.FONT.getWidth(this.textField.getContent()) * textScale + 12.0F);
         float fieldHeight = 10.0F;
         float fieldX = this.x + this.width - fieldWidth - 7.0F;
-        float fieldY = middleY - (fieldHeight / 2.0F) - 5.5F;
+        float fieldY = middleY - (fieldHeight / 2.0F);
 
         this.textField.setActive(SelectedComponent.is(this.id));
         this.textField.render(
@@ -81,12 +78,13 @@ public class IntSetting extends Setting<Integer> {
         );
 
         float barWidth = this.width - 20.0F;
+        float sliderY = this.y + 28;
 
-        Render2DUtils.rounded(this.stack, this.x + 10, this.y + 25, barWidth, 0.0F, 6.0F, 2.0F, new Color(0, 0, 0, 50).getRGB(), ColorUtils.SHADOW100I);
+        Render2DUtils.rounded(this.stack, this.x + 10, sliderY, barWidth, 0.0F, 6.0F, 2.0F, new Color(0, 0, 0, 50).getRGB(), ColorUtils.SHADOW100I);
         Render2DUtils.rounded(
                 this.stack,
                 this.x + 10,
-                this.y + 25,
+                sliderY,
                 this.sliderAnim * barWidth,
                 0.0F,
                 4.0F,
@@ -145,7 +143,7 @@ public class IntSetting extends Setting<Integer> {
 
     @Override
     public float getHeight() {
-        return 38.0F;
+        return 42.0F;
     }
 
     @Override
