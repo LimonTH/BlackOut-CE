@@ -82,19 +82,29 @@ public abstract class MixinCamera {
         this.partialTickTime = tickDelta;
         double delta = (System.currentTimeMillis() - this.prevTime) / 1000.0;
         this.prevTime = System.currentTimeMillis();
-        this.setRotation(focusedEntity.getViewYRot(tickDelta), focusedEntity.getViewXRot(tickDelta));
+
+        if (freecam != null && freecam.enabled && freecam.mode.get() == FreeCam.Mode.Simple) {
+            this.setRotation(
+                    Mth.lerp(tickDelta, freecam.lastYaw, freecam.yaw),
+                    Mth.lerp(tickDelta, freecam.lastPitch, freecam.pitch)
+            );
+        } else {
+            this.setRotation(focusedEntity.getViewYRot(tickDelta), focusedEntity.getViewXRot(tickDelta));
+        }
+
         this.setPosition(
                 Mth.lerp(tickDelta, focusedEntity.xo, focusedEntity.getX()),
                 Mth.lerp(tickDelta, focusedEntity.yo, focusedEntity.getY())
                         + Mth.lerp(tickDelta, this.eyeHeightOld, this.eyeHeight),
                 Mth.lerp(tickDelta, focusedEntity.zo, focusedEntity.getZ())
         );
+
         if (modifier.enabled) {
             modifier.updateDistance(thirdPerson, delta);
         }
 
         Entity spectateEntity = spectate != null && spectate.enabled ? spectate.getEntity() : null;
-        if (!freecam.enabled) {
+        if (freecam != null && !freecam.enabled) {
             freecam.pos = this.getPosition();
         }
 
@@ -121,7 +131,7 @@ public abstract class MixinCamera {
             this.prevPos = this.getPosition();
         }
 
-        if (!freecam.enabled) {
+        if (freecam != null && !freecam.enabled) {
             ((IVec3) freecam.velocity).blackout_Client$set(0.0, 0.0, 0.0);
         }
 
@@ -130,8 +140,10 @@ public abstract class MixinCamera {
                     EntityUtils.getLerpedPos(spectateEntity, tickDelta).add(0.0, spectateEntity.getEyeHeight(spectateEntity.getPose()), 0.0)
             );
             this.setRotation(spectateEntity.getViewYRot(tickDelta), spectateEntity.getViewXRot(tickDelta));
-        } else if (freecam.enabled) {
-            this.setPosition(freecam.getPos(this.getYRot(), this.getXRot()));
+        } else if (freecam != null && freecam.enabled) {
+            float camYaw = freecam.mode.get() == FreeCam.Mode.Simple ? freecam.yaw : this.getYRot();
+            float camPitch = freecam.mode.get() == FreeCam.Mode.Simple ? freecam.pitch : this.getXRot();
+            this.setPosition(freecam.getPos(camYaw, camPitch));
         } else if (thirdPerson) {
             if (inverseView) {
                 this.setRotation(this.yRot + 180.0F, -this.xRot);
