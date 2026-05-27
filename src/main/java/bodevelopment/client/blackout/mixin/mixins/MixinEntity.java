@@ -8,6 +8,7 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.legit.HitCrystal;
 import bodevelopment.client.blackout.module.modules.misc.Timer;
 import bodevelopment.client.blackout.module.modules.movement.*;
+import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
 import bodevelopment.client.blackout.util.CompatUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 import org.spongepowered.asm.mixin.Mixin;
@@ -286,5 +287,17 @@ public abstract class MixinEntity {
     @Inject(method = "setRemoved", at = @At("HEAD"))
     private void onRemove(Entity.RemovalReason reason, CallbackInfo ci) {
         BlackOut.EVENT_BUS.post(RemoveEvent.get((Entity) (Object) this, reason));
+    }
+
+    @Inject(method = "turn", at = @At("HEAD"), cancellable = true)
+    private void onTurn(double yRot, double xRot, CallbackInfo ci) {
+        FreeCam freeCam = FreeCam.getInstance();
+        if (freeCam != null && freeCam.enabled && freeCam.mode.get() == FreeCam.Mode.Simple) {
+            double deltaYaw = yRot * 0.15;
+            double deltaPitch = xRot * 0.15;
+
+            freeCam.changeLookDirection(deltaYaw, deltaPitch);
+            ci.cancel();
+        }
     }
 }

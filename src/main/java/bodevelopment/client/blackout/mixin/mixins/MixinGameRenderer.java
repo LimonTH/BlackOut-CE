@@ -13,6 +13,7 @@ import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.SharedFeatures;
 import com.mojang.blaze3d.vertex.PoseStack;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -145,10 +146,50 @@ public abstract class MixinGameRenderer {
             return instance.pick(maxDistance, tickDelta, includeFluids);
         } else {
             Vec3 start = freecam.pos;
-            Vec3 rotation = instance.getViewVector(tickDelta);
+            Vector3f rotation;
+
+            if (freecam.mode.get() == FreeCam.Mode.Simple) {
+                float pitch = net.minecraft.util.Mth.lerp(tickDelta, freecam.lastPitch, freecam.pitch);
+                float yaw = net.minecraft.util.Mth.lerp(tickDelta, freecam.lastYaw, freecam.yaw);
+                float f = pitch * ((float)Math.PI / 180F);
+                float g = -yaw * ((float)Math.PI / 180F);
+                float h = net.minecraft.util.Mth.cos(g);
+                float i = net.minecraft.util.Mth.sin(g);
+                float j = net.minecraft.util.Mth.cos(f);
+                float k = net.minecraft.util.Mth.sin(f);
+                rotation = new Vec3((i * j), -k, (h * j)).toVector3f();
+            } else {
+                rotation = BlackOut.mc.gameRenderer.getMainCamera().getLookVector();
+            }
+
             Vec3 end = start.add(rotation.x * maxDistance, rotation.y * maxDistance, rotation.z * maxDistance);
             return instance.level().clip(new ClipContext(start, end, ClipContext.Block.OUTLINE, includeFluids ? ClipContext.Fluid.ANY : ClipContext.Fluid.NONE, instance));
         }
+    }
+
+    @Redirect(
+            method = "pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getViewVector(F)Lnet/minecraft/world/phys/Vec3;")
+    )
+    private Vec3 redirectViewVector(Entity instance, float tickDelta) {
+        FreeCam freecam = FreeCam.getInstance();
+        if (freecam != null && freecam.enabled) {
+            if (freecam.mode.get() == FreeCam.Mode.Simple) {
+                float pitch = net.minecraft.util.Mth.lerp(tickDelta, freecam.lastPitch, freecam.pitch);
+                float yaw = net.minecraft.util.Mth.lerp(tickDelta, freecam.lastYaw, freecam.yaw);
+                float f = pitch * ((float)Math.PI / 180F);
+                float g = -yaw * ((float)Math.PI / 180F);
+                float h = net.minecraft.util.Mth.cos(g);
+                float i = net.minecraft.util.Mth.sin(g);
+                float j = net.minecraft.util.Mth.cos(f);
+                float k = net.minecraft.util.Mth.sin(f);
+                return new Vec3((i * j), -k, (h * j));
+            } else {
+                Vector3f look = BlackOut.mc.gameRenderer.getMainCamera().getLookVector();
+                return new Vec3(look.x, look.y, look.z);
+            }
+        }
+        return instance.getViewVector(tickDelta);
     }
 
     @Redirect(
