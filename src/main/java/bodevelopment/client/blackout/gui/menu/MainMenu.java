@@ -41,6 +41,8 @@ public class MainMenu {
     private static boolean isExiting = false;
     private float delta;
     private boolean playedStartup = false;
+    public boolean hudEditorVisible = false;
+    private float hudEditorFade = 0.0F;
 
     private String currentSplash = "";
     private String nextSplash = "";
@@ -150,10 +152,15 @@ public class MainMenu {
         float guiAlpha = (float) Math.sqrt(ClickGui.popUpDelta);
         boolean isGuiOpen = this.clickGui.isOpen() || guiAlpha > 0.01F;
 
+        this.hudEditorFade = this.hudEditorVisible
+                ? Math.min(1.0F, this.hudEditorFade + this.delta * 3.0F)
+                : Math.max(0.0F, this.hudEditorFade - this.delta * 3.0F);
+        boolean hudEditorActive = this.hudEditorVisible || this.hudEditorFade > 0.01F;
+
         this.startRender(this.scale);
 
-        float renderMx = (isGuiOpen || isExiting || globalFade < 0.99F) ? -5000.0F : this.mx;
-        float renderMy = (isGuiOpen || isExiting || globalFade < 0.99F) ? -5000.0F : this.my;
+        float renderMx = (isGuiOpen || isExiting || globalFade < 0.99F || hudEditorActive) ? -5000.0F : this.mx;
+        float renderMy = (isGuiOpen || isExiting || globalFade < 0.99F || hudEditorActive) ? -5000.0F : this.my;
 
         MainMenuSettings.getInstance().getRenderer().render(
                 this.stack,
@@ -191,6 +198,26 @@ public class MainMenu {
             Render2DUtils.unGuiScale(stack);
             Render2DUtils.quad(stack, 0, 0, screenW, screenH, blackColor);
             stack.popPose();
+        }
+
+        if (hudEditorActive) {
+            float hudAlpha = 1.0F - this.hudEditorFade;
+            if (hudAlpha > 0.01F) {
+                int alpha = (int) (hudAlpha * 255.0F);
+                int blackColor = (alpha << 24);
+                float screenW = (float) BlackOut.mc.getWindow().getScreenWidth();
+                float screenH = (float) BlackOut.mc.getWindow().getScreenHeight();
+
+                stack.pushPose();
+                Render2DUtils.unGuiScale(stack);
+                Render2DUtils.quad(stack, 0, 0, screenW, screenH, blackColor);
+                stack.popPose();
+            }
+
+            Managers.HUD.HUD_EDITOR.renderOverlay(
+                    new GuiGraphics(BlackOut.mc, BlackOut.mc.renderBuffers().bufferSource()),
+                    mouseX, mouseY, delta, this.hudEditorFade
+            );
         }
 
         if (isGuiOpen) {
@@ -246,7 +273,7 @@ public class MainMenu {
                 FileUtils.openLink("https://github.com/LimonTH/Blackout-CE");
                 break;
             case 1:
-                FileUtils.openLink("https://discord.gg/ywfzfQeu");
+                FileUtils.openLink("https://discord.gg/GnNBwTMUXp");
                 break;
             case 2:
                 FileUtils.openLink("https://www.youtube.com/watch?v=aWJpcxjk5DQ");
@@ -311,6 +338,10 @@ public class MainMenu {
 
     @Event
     public void onMouse(MouseButtonEvent buttonEvent) {
+        if (this.hudEditorVisible || this.hudEditorFade > 0.01F) {
+            return;
+        }
+
         if (BlackOut.mc.screen instanceof TitleScreen && (this.clickGui.isOpen() || ClickGui.popUpDelta > 0.1F)) {
             this.updateWindowData();
             this.clickGui.onClick(buttonEvent);
@@ -362,6 +393,24 @@ public class MainMenu {
                 this.clickGui.initGui();
             }
             SoundUtils.play(1.0F, 3.0F, "menubutton");
+            return;
+        }
+
+        if (event.pressed && event.key == 345) {
+            this.hudEditorVisible = !this.hudEditorVisible;
+            if (this.hudEditorVisible) {
+                Managers.HUD.HUD_EDITOR.onOpenFromMenu();
+            } else {
+                Managers.HUD.HUD_EDITOR.onCloseFromMenu();
+            }
+            event.cancel();
+            return;
+        }
+
+        if (event.pressed && event.key == 256 && this.hudEditorVisible) {
+            this.hudEditorVisible = false;
+            Managers.HUD.HUD_EDITOR.onCloseFromMenu();
+            event.cancel();
         }
     }
 

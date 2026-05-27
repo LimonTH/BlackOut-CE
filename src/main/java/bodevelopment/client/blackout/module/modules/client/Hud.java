@@ -27,7 +27,8 @@ public class Hud extends Module {
 
     @Event
     public void onKey(KeyEvent event) {
-        if (!event.pressed || !PlayerUtils.isInGame()) return;
+        if (!event.pressed || event.isCancelled()) return;
+        if (!PlayerUtils.isInGame()) return;
         if (!editorKey.get().isKey(event.key)) return;
 
         BlackOut.mc.execute(() -> {

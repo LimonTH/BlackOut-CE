@@ -6,6 +6,7 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.rendering.renderer.ColorRenderer;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import com.google.gson.JsonObject;
 import bodevelopment.client.blackout.util.render.RenderLayer;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -57,10 +58,37 @@ public class HudElement {
         if (this.enabled || HudEditor.isOpen()) {
             this.frameTime = frameTime;
             this.stack = stack;
+            float prevWidth = this.getWidth();
+            float prevHeight = this.getHeight();
             this.pushStack(stack);
             this.render();
+            boolean sizeWasNotSet = this.getWidth() <= 0.0F || this.getHeight() <= 0.0F;
+            if (sizeWasNotSet) {
+                float placeholderWidth = BlackOut.FONT.getWidth(this.name) * this.getScale() + 8.0F;
+                float placeholderHeight = BlackOut.FONT.getHeight() * this.getScale() + 4.0F;
+                this.setSize(placeholderWidth, placeholderHeight);
+            }
             this.popStack(stack);
+
+            if (sizeWasNotSet && HudEditor.isOpen() && !PlayerUtils.isInGame()) {
+                this.pushStack(stack);
+                this.renderPlaceholder();
+                this.popStack(stack);
+            }
         }
+    }
+
+    private void renderPlaceholder() {
+        BlackOut.FONT.text(
+                this.stack,
+                this.name,
+                this.getScale() * 0.7F,
+                4.0F,
+                this.getHeight() / 2.0F,
+                new Color(160, 160, 160),
+                false,
+                true
+        );
     }
 
     public void renderQuad(PoseStack stack, boolean selected) {
