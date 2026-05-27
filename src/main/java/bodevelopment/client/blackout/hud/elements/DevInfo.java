@@ -35,10 +35,10 @@ public class DevInfo extends HudElement {
     public void render() {
         if (PlayerUtils.isInGame()) {
             this.components.clear();
-            String text = BlackOut.TYPE + " Build - " + BlackOut.VERSION;
+            String text = BlackOut.TYPE + " Build — " + BlackOut.VERSION;
             this.components.add(new Component(""));
             this.components.add(new Component(BlackOut.TYPE.name(), this.typeColor.get() ? BlackOut.TYPECOLOR : null, true));
-            this.components.add(new Component(" Build - " + BlackOut.VERSION));
+            this.components.add(new Component(" Build — " + BlackOut.VERSION));
             this.stack.pushPose();
             if (this.blur.get()) {
                 Render2DUtils.drawLoadedBlur(

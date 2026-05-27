@@ -139,11 +139,11 @@ tasks.register('generateBlackOutInfo', Copy) {
 }
 
 sourceSets {
-	main {
-		java {
-			srcDir(tasks.named('generateBlackOutInfo').map { it.outputs.files.asPath })
-		}
-	}
+	main(({
+        java {
+            srcDir(tasks.named('generateBlackOutInfo').map { it.outputs.files.asPath })
+        }
+    }))
 }
 
 afterEvaluate {
