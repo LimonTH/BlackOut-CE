@@ -32,3 +32,5 @@ replay_*.log
 
 # Agent
 .claude
+.roo
+.roomodes

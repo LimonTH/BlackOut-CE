@@ -31,7 +31,6 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Comparator;
 import java.util.List;
-// TODO: ПРОВЕРКА НА ЖИДКОСТЬ НЕ РАБОТАЕТ, ЗАЕБАЛА
 public class AutoCrystalBase extends ObsidianModule {
     private static AutoCrystalBase INSTANCE;
 
@@ -152,7 +151,9 @@ public class AutoCrystalBase extends ObsidianModule {
         if (internalTicks < updateDelay.get()) {
             internalTicks++;
             if (lastBestPos != null && minePos == null) {
-                if (SettingUtils.inPlaceRange(lastBestPos)) {
+                if (BlockUtils.isLiquid(lastBestPos.above())) {
+                    lastBestPos = null;
+                } else if (SettingUtils.inPlaceRange(lastBestPos)) {
                     this.blockPlacements.add(lastBestPos);
                 } else {
                     lastBestPos = null;
@@ -191,10 +192,13 @@ public class AutoCrystalBase extends ObsidianModule {
                     abort(minePos);
                     minePos = null;
                 }
-                lastBestPos = bestPos;
-
-                if (BlockUtils.replaceable(bestPos) && SettingUtils.inPlaceRange(bestPos)) {
-                    this.blockPlacements.add(bestPos);
+                if (BlockUtils.isLiquid(bestPos.above())) {
+                    lastBestPos = null;
+                } else {
+                    lastBestPos = bestPos;
+                    if (BlockUtils.replaceable(bestPos) && SettingUtils.inPlaceRange(bestPos)) {
+                        this.blockPlacements.add(bestPos);
+                    }
                 }
             }
         } else {
@@ -276,7 +280,6 @@ public class AutoCrystalBase extends ObsidianModule {
         BlockPos crystalPos = pos.above();
 
         if (BlockUtils.isLiquid(crystalPos)) return false;
-        if (BlockUtils.isLiquid(pos)) return false;
 
         if (this.autoMineToggle.get()) {
             BlockPos obstacle = getObstacle(pos);

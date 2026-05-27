@@ -3,6 +3,7 @@ package bodevelopment.client.blackout.mixin.mixins;
 import bodevelopment.client.blackout.interfaces.mixin.IEndCrystal;
 import bodevelopment.client.blackout.interfaces.mixin.IEndCrystalRenderState;
 import bodevelopment.client.blackout.module.modules.visual.entities.CrystalChams;
+import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import org.joml.Quaternionf;
@@ -37,6 +38,10 @@ public abstract class MixinEndCrystalRenderer {
         ((IEndCrystalRenderState) state).blackout_Client$setSpawnTime(
                 ((IEndCrystal) entity).blackout_Client$getSpawnTime()
         );
+        NoRender noRender = NoRender.getInstance();
+        if (noRender.enabled && noRender.crystalBase.get()) {
+            state.showsBottom = false;
+        }
     }
 
     @Inject(method = "render(Lnet/minecraft/client/renderer/entity/state/EndCrystalRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V", at = @At("HEAD"), cancellable = true)
