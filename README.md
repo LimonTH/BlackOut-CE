@@ -17,6 +17,9 @@
 A modernized continuation of the original **Blackout Client** by *luhpossu* & *KassuK*.
 This project was born from a deep reconstruction of a leaked 2024 dev-build, manually deobfuscated and ported to the latest Fabric environment.
 
+* **ClickGui** Rshift
+* **Chat Prefix** -
+
 ### 💻 Technical Stack
 * **Loader:** Fabric
 * **Versions:** 1.21.4
@@ -46,7 +49,7 @@ This project was born from a deep reconstruction of a leaked 2024 dev-build, man
 ## 💬 Join our Community
 Looking for configs, help, or want to contribute? Join our Discord server!
 
-[![Join Discord](https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/66e278299a53f5bf88615e90_Symbol.svg)](https://discord.gg/rCwZ8D9UvY)
+[![Join Discord](https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/66e278299a53f5bf88615e90_Symbol.svg)](https://discord.gg/GnNBwTMUXp)
 
 *Developed with ❤️ by Limon_TH*
 
