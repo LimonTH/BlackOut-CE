@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.hud;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.ConfigType;
 import bodevelopment.client.blackout.event.Event;
@@ -10,7 +9,9 @@ import bodevelopment.client.blackout.event.events.MouseScrollEvent;
 import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
 import bodevelopment.client.blackout.keys.Keys;
 import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.module.modules.client.MainMenuSettings;
 import bodevelopment.client.blackout.rendering.renderer.ColorRenderer;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import bodevelopment.client.blackout.util.render.RenderState;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -45,6 +46,11 @@ public class HudEditor extends Screen {
     private float screenWidth;
     private boolean wasList = false;
     private static boolean isOpen = false;
+    private float menuFade = 0.0F;
+    private float menuMx = 0.0F;
+    private float menuMy = 0.0F;
+    private float menuScale = 1.0F;
+    private float menuWindowHeight = 0.0F;
 
     public HudEditor() {
         super(Component.nullToEmpty("HUD Editor"));
@@ -56,6 +62,13 @@ public class HudEditor extends Screen {
     }
 
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+        boolean inGame = PlayerUtils.isInGame();
+        if (inGame) {
+            this.renderOverlay(context, mouseX, mouseY, delta, 1.0F);
+        }
+    }
+
+    public void renderOverlay(GuiGraphics context, int mouseX, int mouseY, float delta, float fadeAlpha) {
         isOpen = true;
         float prevMx = this.mx;
         float prevMy = this.my;
@@ -69,50 +82,94 @@ public class HudEditor extends Screen {
         this.my *= scale;
         float deltaX = this.mx - prevMx;
         float deltaY = this.my - prevMy;
-        if (PlayerUtils.isInGame()) {
-            if (this.holding && this.moved() && this.still) {
-                this.still = false;
-                HudElement holding = this.holdElement();
-                if (holding == null) {
-                    this.clearSelected();
-                    this.setState(State.Selecting);
-                } else {
-                    this.setState(State.Moving);
-                }
+
+        boolean inGame = PlayerUtils.isInGame();
+
+        if (!inGame) {
+            this.updateMenuCoordinates();
+            this.renderMenuBackground();
+        }
+
+        if (this.holding && this.moved() && this.still) {
+            this.still = false;
+            HudElement holding = this.holdElement();
+            if (holding == null) {
+                this.clearSelected();
+                this.setState(State.Selecting);
+            } else {
+                this.setState(State.Moving);
             }
+        }
 
-            if (this.state == State.Moving) {
-                for (HudElement element : this.picked) {
-                    float newX = element.x + deltaX;
-                    float newY = element.y + deltaY;
+        if (this.state == State.Moving) {
+            for (HudElement element : this.picked) {
+                float newX = element.x + deltaX;
+                float newY = element.y + deltaY;
 
-                    element.x = Mth.clamp(newX, 0.0F, 1000.0F - element.getWidth());
-                    element.y = Mth.clamp(newY, 0.0F, this.screenHeight - element.getHeight());
-                }
+                element.x = Mth.clamp(newX, 0.0F, 1000.0F - element.getWidth());
+                element.y = Mth.clamp(newY, 0.0F, this.screenHeight - element.getHeight());
             }
+        }
 
-            Managers.HUD.start(this.stack);
-            Managers.HUD.render(this.stack, frameTime);
-            this.renderBG();
-            Managers.HUD.forEachElement((id, elementx) -> elementx.renderQuad(this.stack, this.selectedElements.contains(elementx)));
-            this.renderSelecting();
-            Managers.HUD.end(this.stack);
+        Managers.HUD.start(this.stack);
+        Managers.HUD.render(this.stack, frameTime);
+        this.renderBG();
+        Managers.HUD.forEachElement((id, elementx) -> elementx.renderQuad(this.stack, this.selectedElements.contains(elementx)));
+        this.renderSelecting();
+        Managers.HUD.end(this.stack);
+        this.stack.pushPose();
+        Render2DUtils.unGuiScale(this.stack);
+        RenderSystem.disableDepthTest();
+        this.settings.render(this.stack, frameTime, mouseX, mouseY);
+        this.elementList.render(this.stack, frameTime, mouseX, mouseY);
+
+        if (this.openedScreen != null) {
             this.stack.pushPose();
-            Render2DUtils.unGuiScale(this.stack);
-            RenderSystem.disableDepthTest();
-            this.settings.render(this.stack, frameTime, mouseX, mouseY);
-            this.elementList.render(this.stack, frameTime, mouseX, mouseY);
 
-            if (this.openedScreen != null) {
-                this.stack.pushPose();
-
-                this.openedScreen.onRender(frameTime, mouseX, mouseY);
-                this.stack.popPose();
-            }
-
-            RenderSystem.enableDepthTest();
+            this.openedScreen.onRender(frameTime, mouseX, mouseY);
             this.stack.popPose();
         }
+
+        RenderSystem.enableDepthTest();
+        this.stack.popPose();
+    }
+
+    public void onOpenFromMenu() {
+        isOpen = true;
+    }
+
+    public void onCloseFromMenu() {
+        isOpen = false;
+        Managers.CONFIG.save(ConfigType.HUD);
+        Managers.CONFIG.save(ConfigType.Binds);
+    }
+
+    private void updateMenuCoordinates() {
+        double physicalWidth = BlackOut.mc.getWindow().getScreenWidth();
+        double physicalHeight = BlackOut.mc.getWindow().getScreenHeight();
+
+        this.menuScale = (float) (physicalWidth / 2000.0F);
+        this.menuWindowHeight = (float) (physicalHeight / physicalWidth * 2000.0F);
+
+        double logicalX = BlackOut.mc.mouseHandler.xpos();
+        double logicalY = BlackOut.mc.mouseHandler.ypos();
+
+        this.menuMx = (float) ((logicalX - physicalWidth / 2.0) / this.menuScale);
+        this.menuMy = (float) ((logicalY - physicalHeight / 2.0) / this.menuScale);
+    }
+
+    private void renderMenuBackground() {
+        this.stack.pushPose();
+        Render2DUtils.unGuiScale(this.stack);
+
+        int screenW = BlackOut.mc.getWindow().getScreenWidth();
+        int screenH = BlackOut.mc.getWindow().getScreenHeight();
+
+        MainMenuSettings.getInstance()
+                .getRenderer()
+                .renderBackground(this.stack, screenW, screenH, this.menuMx, this.menuMy);
+
+        this.stack.popPose();
     }
 
     private void renderBG() {

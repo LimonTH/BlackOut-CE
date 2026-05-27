@@ -116,13 +116,14 @@ public class HUDManager extends Manager {
         if (event.key == 345 && event.pressed && PlayerUtils.isInGame()) {
             if (BlackOut.mc.screen == null || HudEditor.isOpen()) {
                 this.toggle();
+                event.cancel();
             }
         }
     }
 
     private float getProgress(float delta) {
         Screen screen = BlackOut.mc.screen;
-        if (!PlayerUtils.isInGame()) {
+        if (!PlayerUtils.isInGame() && !(screen instanceof HudEditor)) {
             return 0.0F;
         } else if (screen instanceof HudEditor) {
             return 1.0F;
