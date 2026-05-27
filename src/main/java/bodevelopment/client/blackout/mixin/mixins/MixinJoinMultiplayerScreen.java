@@ -9,6 +9,7 @@ import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -21,6 +22,17 @@ public class MixinJoinMultiplayerScreen {
     private void onJoin(ServerData serverData, CallbackInfo ci) {
         if (BlocklistUtil.isBlocked(serverData.ip)) {
             ci.cancel();
+
+            MutableComponent message = Component.literal("")
+                    .append(Component.literal("[").withStyle(ChatFormatting.DARK_GRAY))
+                    .append(Component.literal("BlackOut").withStyle(ChatFormatting.RED))
+                    .append(Component.literal("] ").withStyle(ChatFormatting.DARK_GRAY))
+                    .append(Component.literal("Blocklist detected!").withStyle(ChatFormatting.GRAY))
+                    .append(Component.literal("\n\n"))
+                    .append(Component.literal(serverData.ip).withStyle(ChatFormatting.WHITE, ChatFormatting.BOLD))
+                    .append(Component.literal("\n\nThis server is on the Mojang Blocklist.").withStyle(ChatFormatting.RED))
+                    .append(Component.literal("\nPossible EULA violation.\n").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC))
+                    .append(Component.literal("\nDo you want to connect anyway?").withStyle(ChatFormatting.WHITE));
 
             BlackOut.mc.setScreen(new ConfirmScreen(
                     (confirmed) -> {
@@ -37,14 +49,10 @@ public class MixinJoinMultiplayerScreen {
                             BlackOut.mc.setScreen((JoinMultiplayerScreen) (Object) this);
                         }
                     },
-                    Component.literal("Blocked Server Warning").withStyle(ChatFormatting.RED, ChatFormatting.BOLD),
-                    Component.literal("The server ")
-                            .append(Component.literal(serverData.ip).withStyle(ChatFormatting.GOLD))
-                            .append(" is on the Mojang Blocklist.\n\n")
-                            .append("This usually means it violated the EULA (monetization rules).\n")
-                            .append("Do you want to connect anyway?"),
-                    Component.literal("Connect Anyway"),
-                    Component.literal("Cancel")
+                    Component.literal("It Is Blocked Server").withStyle(ChatFormatting.RED, ChatFormatting.BOLD),
+                    message,
+                    Component.literal("Connect").withStyle(ChatFormatting.WHITE),
+                    Component.literal("Cancel").withStyle(ChatFormatting.WHITE)
             ));
         }
     }
