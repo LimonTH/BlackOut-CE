@@ -92,7 +92,7 @@ public class EnumSetting<T extends Enum<?>> extends Setting<T> {
 
     @Override
     public float render() {
-        if (BlackOut.mc.font != null && this.maxWidth == 0.0) {
+        if (this.maxWidth == 0.0) {
             this.maxWidth = 0.0;
             for (T v : this.values) {
                 double w = BlackOut.FONT.getWidth(v.name()) * 2.0F;
@@ -107,14 +107,11 @@ public class EnumSetting<T extends Enum<?>> extends Setting<T> {
         float textScale = 2.0F;
         float baseH = 26.0F;
         float middleY = this.y + (baseH / 2.0F);
-        float fontHeight = BlackOut.FONT.getHeight() * textScale;
 
-        float nameY = middleY - (fontHeight / 2.0F);
-        BlackOut.FONT.text(this.stack, this.name, textScale, this.x + 5.0F, nameY, GuiColorUtils.getSettingText(this.y), false, true);
+        BlackOut.FONT.text(this.stack, this.name, textScale, this.x + 5.0F, middleY, GuiColorUtils.getSettingText(this.y), false, true);
 
         float valueX = this.x + this.width - this.wi / 2.0F - 10.0F - this.xOffset;
-        float valueY = middleY - (fontHeight / 2.0F);
-        BlackOut.FONT.text(this.stack, this.get().name(), textScale, valueX, valueY, GuiColorUtils.getSettingText(this.y), true, true);
+        BlackOut.FONT.text(this.stack, this.get().name(), textScale, valueX, middleY, GuiColorUtils.getSettingText(this.y), true, true);
         return this.getHeight();
     }
 

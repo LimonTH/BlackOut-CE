@@ -67,6 +67,11 @@ public class CustomFontRenderer {
         return 8.0F;
     }
 
+    /** Returns the actual on-screen pixel height of a glyph rendered at the given text scale. */
+    public float getRenderedGlyphHeight(float textScale) {
+        return this.selectedFont.getGlyphHeight() * 1.5F / 8.0F * textScale;
+    }
+
     public void text(PoseStack stack, String string, float s, float textX, float textY, Color color, boolean xCenter, boolean yCenter) {
         this.textInternal(stack, string, s, textX, textY, color.getRGB(), xCenter, yCenter, Shaders.font, new ShaderSetup());
     }
@@ -95,7 +100,14 @@ public class CustomFontRenderer {
         float ds = s / d;
         stack.scale(ds, ds, 1.0F);
         float x = (textX / s - (xCenter ? this.getWidth(string) / 2.0F : 0.0F)) * d;
-        float y = (textY / s - (yCenter ? this.getHeight() / 2.0F : 0.0F)) * d;
+        float y;
+        if (yCenter) {
+            // Account for the y adjustment in renderString() so glyph visual centre lands at textY.
+            float glyphHalf = this.selectedFont.getGlyphHeight() * 0.75F;
+            y = (textY / s) * d + this.selectedFont.getFontSize() * 0.4F - (float) this.offset - glyphHalf;
+        } else {
+            y = (textY / s) * d;
+        }
         this.string(string, stack, x, y, color, shader, setup);
         stack.popPose();
     }

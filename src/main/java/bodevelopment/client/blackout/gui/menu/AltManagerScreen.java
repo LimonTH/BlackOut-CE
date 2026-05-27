@@ -6,6 +6,7 @@ import bodevelopment.client.blackout.helpers.ScrollHelper;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.client.MainMenuSettings;
 import bodevelopment.client.blackout.randomstuff.mainmenu.AltHelpRenderer;
+import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.SoundUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -17,7 +18,7 @@ import net.minecraft.network.chat.Component;
 
 public class AltManagerScreen extends Screen {
     private final Screen parent;
-    private final TextField textField = new TextField();
+    private final TextField textField = new TextField() {{ setMaxLength(32); }};
     private float windowHeight;
     private float scale;
     private float mx;
@@ -102,20 +103,25 @@ public class AltManagerScreen extends Screen {
             this.progress = Math.max(this.progress - this.delta, 0.0F);
         }
 
-        this.textField.render(
-                stack,
-                4.0F,
-                this.mx,
-                this.my,
-                -200.0F,
-                400.0F,
-                400.0F,
-                0.0F,
-                24.0F,
-                48.0F,
-                new Color(255, 255, 255, (int) Math.floor(this.progress * 255.0F)),
-                new Color(0, 0, 0, (int) Math.floor(this.progress * 200.0F))
-        );
+        if (this.progress > 0.01F) {
+            int textAlpha = (int) Math.floor(this.progress * 255.0F);
+            int bgAlpha = (int) Math.floor(this.progress * 220.0F);
+
+            this.textField.render(
+                    stack,
+                    3.5F,
+                    this.mx,
+                    this.my,
+                    -225.0F,
+                    400.0F,
+                    450.0F,
+                    48.0F,
+                    8.0F,
+                    10.0F,
+                    new Color(255, 255, 255, textAlpha),
+                    new Color(GuiColorUtils.bg2.getRed(), GuiColorUtils.bg2.getGreen(), GuiColorUtils.bg2.getBlue(), bgAlpha)
+            );
+        }
     }
 
     private void renderCurrentSession(PoseStack stack) {

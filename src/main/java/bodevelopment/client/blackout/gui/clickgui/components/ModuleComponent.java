@@ -45,8 +45,12 @@ public class ModuleComponent extends Component {
             case Quad -> 7.0F * fs;
         };
 
+        int visible = (int) settingGroups.stream().filter(g -> g.settings.stream().anyMatch(Setting::isVisible)).count();
+        int idx = 0;
+
         for (SettingGroup group : settingGroups) {
             if (group.settings.stream().noneMatch(Setting::isVisible)) continue;
+            idx++;
 
             length += switch (GuiSettings.getInstance().settingGroup.get()) {
                 case Line, None -> 40.0F * fs;
@@ -58,6 +62,10 @@ public class ModuleComponent extends Component {
                 if (setting.isVisible()) {
                     length += setting.getHeight();
                 }
+            }
+
+            if (idx < visible) {
+                length += 5.0F * fs;
             }
         }
         return length;
@@ -146,6 +154,10 @@ public class ModuleComponent extends Component {
 
             this.l += height;
             settingGroup.settings.forEach(s -> this.renderSetting(s, currentMx, currentMy));
+
+            if (!isReallyLast) {
+                this.l += 5.0F * fs;
+            }
         }
     }
 
@@ -195,7 +207,7 @@ public class ModuleComponent extends Component {
         float fs = GuiSettings.getInstance().fontScale.get().floatValue();
         float groupScale = fs * 2.0F;
 
-        float categoryLength = 35.0F * fs;
+        float categoryLength = 42.0F * fs;
 
         for (Setting<?> setting : group.settings) {
             if (setting.isVisible()) {
@@ -251,7 +263,7 @@ public class ModuleComponent extends Component {
                         group.name,
                         groupScale,
                         this.x + this.width / 2.0F,
-                        (int) (this.y + this.l + (25.0F * fs)),
+                        (int) (this.y + this.l + (31.0F * fs)),
                         true,
                         true,
                         GuiColorUtils.getSettingCategory(this.y + this.l + 30.0F)

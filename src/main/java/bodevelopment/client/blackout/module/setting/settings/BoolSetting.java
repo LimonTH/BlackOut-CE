@@ -31,20 +31,15 @@ public class BoolSetting extends Setting<Boolean> {
         float h = this.getHeight();
         float middleY = this.y + (h / 2.0F);
 
-        float fontHeight = BlackOut.FONT.getHeight() * textScale;
-        float textY = middleY - (fontHeight / 2.0F);
-
-        BlackOut.FONT.text(this.stack, this.name, textScale, this.x + 5.0F, textY, GuiColorUtils.getSettingText(this.y), false, true);
+        BlackOut.FONT.text(this.stack, this.name, textScale, this.x + 5.0F, middleY, GuiColorUtils.getSettingText(this.y), false, true);
 
         float toggleWidth = 16.0F;
         float toggleX = this.x + this.width - toggleWidth - 10.0F;
 
-        float toggleRenderY = middleY - 5.5F;
-
         Render2DUtils.rounded(
                 this.stack,
                 toggleX,
-                toggleRenderY,
+                middleY,
                 toggleWidth,
                 0.0F,
                 8.0F,
@@ -56,7 +51,7 @@ public class BoolSetting extends Setting<Boolean> {
         Render2DUtils.rounded(
                 this.stack,
                 toggleX + (this.progress * toggleWidth),
-                toggleRenderY,
+                middleY,
                 0.0F,
                 0.0F,
                 8.0F,

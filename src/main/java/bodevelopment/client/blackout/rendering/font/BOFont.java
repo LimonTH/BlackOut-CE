@@ -39,6 +39,13 @@ public class BOFont {
         return this.fontSize;
     }
 
+    public int getGlyphHeight() {
+        for (CharInfo info : this.map.values()) {
+            return info.height;
+        }
+        return this.fontSize;
+    }
+
     private Font registerFont() {
         try {
             GraphicsEnvironment graphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment();
