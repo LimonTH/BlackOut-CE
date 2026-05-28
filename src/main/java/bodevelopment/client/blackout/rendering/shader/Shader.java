@@ -62,7 +62,7 @@ public class Shader {
             }
         }
 
-        this.setIf("uResolution", BlackOut.mc.getWindow().getScreenWidth(), BlackOut.mc.getWindow().getScreenHeight());
+        this.setIf("uResolution", bodevelopment.client.blackout.util.ScreenUtils.screenWidth(), bodevelopment.client.blackout.util.ScreenUtils.screenHeight());
         this.timeIf(this.initTime);
         int prevProgram = trackedProgram;
         this.bind();

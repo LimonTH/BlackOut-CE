@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.gui.menu;
 
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.KeyEvent;
@@ -191,8 +192,8 @@ public class MainMenu {
         if (globalFade < 1.0F) {
             int alpha = (int) ((1.0F - globalFade) * 255.0F);
             int blackColor = (alpha << 24);
-            float screenW = (float) BlackOut.mc.getWindow().getScreenWidth();
-            float screenH = (float) BlackOut.mc.getWindow().getScreenHeight();
+            float screenW = (float) ScreenUtils.screenWidth();
+            float screenH = (float) ScreenUtils.screenHeight();
 
             stack.pushPose();
             Render2DUtils.unGuiScale(stack);
@@ -205,8 +206,8 @@ public class MainMenu {
             if (hudAlpha > 0.01F) {
                 int alpha = (int) (hudAlpha * 255.0F);
                 int blackColor = (alpha << 24);
-                float screenW = (float) BlackOut.mc.getWindow().getScreenWidth();
-                float screenH = (float) BlackOut.mc.getWindow().getScreenHeight();
+                float screenW = (float) ScreenUtils.screenWidth();
+                float screenH = (float) ScreenUtils.screenHeight();
 
                 stack.pushPose();
                 Render2DUtils.unGuiScale(stack);
@@ -281,8 +282,8 @@ public class MainMenu {
     }
 
     private void updateWindowData() {
-        double physicalWidth = BlackOut.mc.getWindow().getScreenWidth();
-        double physicalHeight = BlackOut.mc.getWindow().getScreenHeight();
+        double physicalWidth = ScreenUtils.screenWidth();
+        double physicalHeight = ScreenUtils.screenHeight();
 
         this.scale = (float) (physicalWidth / 2000.0F);
         this.windowHeight = (float) (physicalHeight / physicalWidth * 2000.0F);
@@ -298,8 +299,8 @@ public class MainMenu {
         this.stack.pushPose();
         Render2DUtils.unGuiScale(this.stack);
 
-        int screenW = BlackOut.mc.getWindow().getScreenWidth();
-        int screenH = BlackOut.mc.getWindow().getScreenHeight();
+        int screenW = ScreenUtils.screenWidth();
+        int screenH = ScreenUtils.screenHeight();
 
         MainMenuSettings.getInstance()
                 .getRenderer()
@@ -408,8 +409,10 @@ public class MainMenu {
         }
 
         if (event.pressed && event.key == 256 && this.hudEditorVisible) {
-            this.hudEditorVisible = false;
-            Managers.HUD.HUD_EDITOR.onCloseFromMenu();
+            if (Managers.HUD.HUD_EDITOR.handleEsc()) {
+                this.hudEditorVisible = false;
+                Managers.HUD.HUD_EDITOR.onCloseFromMenu();
+            }
             event.cancel();
         }
     }

@@ -1,7 +1,6 @@
 package bodevelopment.client.blackout.hud.elements;
 
 import bodevelopment.client.blackout.module.setting.Setting;
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
@@ -21,20 +20,18 @@ public class CatGirl extends HudElement {
 
     @Override
     public void render() {
-        if (PlayerUtils.isInGame()) {
-            TextureRenderer t = this.catType.get() == CatType.First ? BOTextures.getCatRenderer() : BOTextures.getCat2Renderer();
+        TextureRenderer t = this.catType.get() == CatType.First ? BOTextures.getCatRenderer() : BOTextures.getCat2Renderer();
 
-            float width = t.getWidth() / 4.0F;
-            float height = t.getHeight() / 4.0F;
-            this.setSize(width, height);
+        float width = t.getWidth() / 4.0F;
+        float height = t.getHeight() / 4.0F;
+        this.setSize(width, height);
 
-            boolean isRight = this.side.get() == Side.Right;
+        boolean isRight = this.side.get() == Side.Right;
 
-            if (isRight) {
-                t.quadUV(this.stack, 0.0F, 0.0F, width, height, 1.0F, 0.0F, 0.0F, 1.0F);
-            } else {
-                t.quadUV(this.stack, 0.0F, 0.0F, width, height, 0.0F, 0.0F, 1.0F, 1.0F);
-            }
+        if (isRight) {
+            t.quadUV(this.stack, 0.0F, 0.0F, width, height, 1.0F, 0.0F, 0.0F, 1.0F);
+        } else {
+            t.quadUV(this.stack, 0.0F, 0.0F, width, height, 0.0F, 0.0F, 1.0F, 1.0F);
         }
     }
 

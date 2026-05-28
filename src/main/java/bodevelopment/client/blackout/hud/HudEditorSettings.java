@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.hud;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.gui.clickgui.ClickGui;
 import bodevelopment.client.blackout.gui.clickgui.components.ModuleComponent;
 import bodevelopment.client.blackout.module.modules.client.GuiSettings;
@@ -32,6 +33,7 @@ public class HudEditorSettings {
     private float my;
     private float length;
     private boolean moving;
+    private boolean wasPressHandled;
     private float animDelta = 0.0F;
 
     private float scrollOffset = 0.0F;
@@ -68,8 +70,7 @@ public class HudEditorSettings {
             stack.translate(0, 0, RenderLayer.GUI);
 
             float fullLength = ModuleComponent.getLength(this.openedElement.settingGroups) + 30.0F;
-            var window = net.minecraft.client.Minecraft.getInstance().getWindow();
-            float screenH = (float) window.getScreenHeight();
+            float screenH = (float) ScreenUtils.screenHeight();
             this.maxVisibleHeight = Math.min(fullLength, screenH - this.y - 10.0F);
             this.length = fullLength;
 
@@ -185,23 +186,37 @@ public class HudEditorSettings {
     public boolean onMouse(int button, boolean pressed) {
         if (this.openedElement == null) {
             this.moving = false;
+            this.wasPressHandled = false;
             return false;
         } else if (button != 0) {
             return button == 1 && this.handleRightClick(pressed);
         } else if (!pressed) {
+            boolean handled = this.wasPressHandled;
             this.moving = false;
+            this.wasPressHandled = false;
             this.openedElement.settingGroups.forEach(group -> group.settings.forEach(setting -> {
                 if (setting.isVisible()) {
                     setting.onMouse(button, false);
                 }
             }));
-            return false;
+            return handled;
         } else if (this.mx < this.x || this.mx > this.x + 275.0F || this.my < this.y || this.my > this.y + this.length) {
-            return false;
+            if (!this.isOverDropdown()) {
+                return false;
+            }
+            this.wasPressHandled = true;
+            this.openedElement.settingGroups.forEach(group -> group.settings.forEach(setting -> {
+                if (setting.isVisible()) {
+                    setting.onMouse(button, true);
+                }
+            }));
+            return true;
         } else if (this.my < this.y + 30.0F) {
+            this.wasPressHandled = true;
             this.moving = true;
             return true;
         } else {
+            this.wasPressHandled = true;
             this.openedElement.settingGroups.forEach(group -> group.settings.forEach(setting -> {
                 if (setting.isVisible()) {
                     setting.onMouse(button, true);
@@ -219,6 +234,25 @@ public class HudEditorSettings {
         float maxScroll = Math.max(0, this.length - this.maxVisibleHeight);
         this.scrollOffset = Mth.clamp(this.scrollOffset - (float) amount * 20.0F, 0, maxScroll);
         return true;
+    }
+
+    private boolean isOverDropdown() {
+        if (this.openedElement == null) return false;
+        for (SettingGroup group : this.openedElement.settingGroups) {
+            for (Setting<?> s : group.settings) {
+                if (s instanceof EnumSetting<?> es && es.isChoosing() && es.isVisible()) {
+                    float listX = es.getX() + es.getWidth() - es.getWi() - 10.0F - es.getXOffset() - 5.0F;
+                    float listY = es.getY() + 26.0F;
+                    float listWidth = es.getWi() + 10.0F;
+                    float listHeight = (es.getValues().length - 1) * 20.0F;
+                    if (this.mx >= listX && this.mx <= listX + listWidth
+                            && this.my >= listY && this.my <= listY + listHeight) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public void onKey(int key, boolean pressed) {
@@ -252,9 +286,8 @@ public class HudEditorSettings {
     }
 
     private void updateMoving(float deltaX, float deltaY) {
-        var window = net.minecraft.client.Minecraft.getInstance().getWindow();
-        float screenW = (float) window.getScreenWidth();
-        float screenH = (float) window.getScreenHeight();
+        float screenW = (float) ScreenUtils.screenWidth();
+        float screenH = (float) ScreenUtils.screenHeight();
 
         this.x += deltaX;
         this.y += deltaY;
@@ -263,6 +296,11 @@ public class HudEditorSettings {
 
         float currentHeight = Math.max(this.length, 30.0F);
         this.y = Mth.clamp(this.y, 0, screenH - currentHeight);
+    }
+
+    public void refreshMouse() {
+        this.mx = (float) ScreenUtils.mouseX();
+        this.my = (float) ScreenUtils.mouseY();
     }
 
     public void set(HudElement hudElement) {
@@ -274,9 +312,8 @@ public class HudEditorSettings {
         this.openedElement = hudElement;
         this.scrollOffset = 0.0F;
 
-        var window = net.minecraft.client.Minecraft.getInstance().getWindow();
-        float screenW = (float) window.getScreenWidth();
-        float screenH = (float) window.getScreenHeight();
+        float screenW = (float) ScreenUtils.screenWidth();
+        float screenH = (float) ScreenUtils.screenHeight();
 
         float expectedLength = ModuleComponent.getLength(hudElement.settingGroups) + 30.0F;
 
@@ -386,11 +423,10 @@ public class HudEditorSettings {
         float rectX = this.mx + 15;
         float rectY = this.my + 15;
 
-        var window = net.minecraft.client.Minecraft.getInstance().getWindow();
-        if (rectX + finalWidth + 20 > window.getScreenWidth()) {
+        if (rectX + finalWidth + 20 > ScreenUtils.screenWidth()) {
             rectX = this.mx - finalWidth - 20;
         }
-        if (rectY + finalHeight + 20 > window.getScreenHeight()) {
+        if (rectY + finalHeight + 20 > ScreenUtils.screenHeight()) {
             rectY = this.my - finalHeight - 20;
         }
 

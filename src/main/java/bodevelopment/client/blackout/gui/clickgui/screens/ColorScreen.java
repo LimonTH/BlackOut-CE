@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.gui.clickgui.screens;
 
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.gui.TextField;
 import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
@@ -65,8 +66,8 @@ public class ColorScreen extends ClickGuiScreen {
 
         this.renderSidebarContent();
 
-        int screenWidth = BlackOut.mc.getWindow().getScreenWidth();
-        int screenHeight = BlackOut.mc.getWindow().getScreenHeight();
+        int screenWidth = ScreenUtils.screenWidth();
+        int screenHeight = ScreenUtils.screenHeight();
 
         float realX = (screenWidth / 2f + (x - width / 2f) * unscaled);
         float realY = (screenHeight / 2f + (y - height / 2f) * unscaled);

@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.gui.clickgui.components;
 
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.gui.clickgui.ClickGui;
 import bodevelopment.client.blackout.gui.clickgui.Component;
@@ -366,18 +367,18 @@ public class ModuleComponent extends Component {
     }
 
     private void shadowScissor() {
-        float sx = BlackOut.mc.getWindow().getScreenWidth() / 2.0F - ClickGui.width / 2.0F * ClickGui.unscaled + ClickGui.x;
-        float y1 = BlackOut.mc.getWindow().getScreenHeight() / 2.0F - (ClickGui.height / 2.0F + 10.0F) * ClickGui.unscaled - ClickGui.y;
-        float y2 = BlackOut.mc.getWindow().getScreenHeight() / 2.0F + (ClickGui.height / 2.0F + 10.0F) * ClickGui.unscaled - ClickGui.y;
+        float sx = ScreenUtils.screenWidth() / 2.0F - ClickGui.width / 2.0F * ClickGui.unscaled + ClickGui.x;
+        float y1 = ScreenUtils.screenHeight() / 2.0F - (ClickGui.height / 2.0F + 10.0F) * ClickGui.unscaled - ClickGui.y;
+        float y2 = ScreenUtils.screenHeight() / 2.0F + (ClickGui.height / 2.0F + 10.0F) * ClickGui.unscaled - ClickGui.y;
         ScissorStack.pushRaw((int) sx, (int) y1, (int) (ClickGui.width * ClickGui.unscaled), (int) Math.abs(y1 - y2));
     }
 
     private void scissor() {
         float minY = Math.max(0, this.y);
         float maxY = Math.min(ClickGui.height, this.y + this.maxLength);
-        float sx = BlackOut.mc.getWindow().getScreenWidth() / 2.0F - (ClickGui.width / 2.0F - this.x + 5.0F) * ClickGui.unscaled + ClickGui.x;
-        float y1 = BlackOut.mc.getWindow().getScreenHeight() / 2.0F - (ClickGui.height / 2.0F - (ClickGui.height - maxY) + 5.0F) * ClickGui.unscaled - ClickGui.y;
-        float y2 = BlackOut.mc.getWindow().getScreenHeight() / 2.0F + (ClickGui.height / 2.0F - minY + 10.0F) * ClickGui.unscaled - ClickGui.y;
+        float sx = ScreenUtils.screenWidth() / 2.0F - (ClickGui.width / 2.0F - this.x + 5.0F) * ClickGui.unscaled + ClickGui.x;
+        float y1 = ScreenUtils.screenHeight() / 2.0F - (ClickGui.height / 2.0F - (ClickGui.height - maxY) + 5.0F) * ClickGui.unscaled - ClickGui.y;
+        float y2 = ScreenUtils.screenHeight() / 2.0F + (ClickGui.height / 2.0F - minY + 10.0F) * ClickGui.unscaled - ClickGui.y;
         ScissorStack.pushRaw(
                 (int) sx, (int) Math.ceil(y1), (int) ((this.width + 10.0F) * ClickGui.unscaled), (int) Math.ceil(y1 > y2 ? 0.0 : Math.abs(y1 - y2))
         );

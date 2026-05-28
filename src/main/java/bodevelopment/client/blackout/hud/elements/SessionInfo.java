@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.hud.elements;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
@@ -43,18 +42,19 @@ public class SessionInfo extends HudElement {
 
     @Override
     public void render() {
-        if (PlayerUtils.isInGame()) {
-            String timeString = TimeUtils.formatMillis(System.currentTimeMillis() - startTime);
-            this.ip = !BlackOut.mc.hasSingleplayerServer() && BlackOut.mc.getConnection() != null && BlackOut.mc.getConnection().getServerData() != null
-                    ? BlackOut.mc.getConnection().getServerData().ip
-                    : "Singleplayer";
-            this.stack.pushPose();
+        String timeString = TimeUtils.formatMillis(System.currentTimeMillis() - startTime);
+        this.ip = BlackOut.mc.getConnection() != null && BlackOut.mc.getConnection().getServerData() != null
+                ? BlackOut.mc.getConnection().getServerData().ip
+                : "Main Menu";
+        this.stack.pushPose();
+        if (BlackOut.mc.player != null) {
             if (BlackOut.mc.player.isDeadOrDying() && !this.isDead) {
                 this.deaths++;
                 this.isDead = true;
             } else if (!BlackOut.mc.player.isDeadOrDying()) {
                 this.isDead = false;
             }
+        }
 
             float num = 0.0F;
             switch (this.style.get()) {
@@ -105,13 +105,12 @@ public class SessionInfo extends HudElement {
                     this.textColor.render(this.stack, timeString, 1.0F, 4.0F, 4.0F + num * 3.0F, false, false);
             }
 
-            this.stack.popPose();
-        }
+        this.stack.popPose();
     }
 
     @Event
     public void onReceive(PacketEvent.Receive.Pre event) {
-        if (PlayerUtils.isInGame()) {
+        if (BlackOut.mc.player != null) {
             if (this.mode.get() == Mode.Chat) {
                 if (event.packet instanceof ClientboundSystemChatPacket packet) {
                     String unformattedText = packet.content().getString();

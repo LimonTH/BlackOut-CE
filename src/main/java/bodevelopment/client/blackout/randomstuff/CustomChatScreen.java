@@ -3,6 +3,7 @@ package bodevelopment.client.blackout.randomstuff;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.module.modules.visual.misc.CustomChat;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
@@ -34,14 +35,13 @@ public class CustomChatScreen extends ChatScreen {
         float textWidth = BlackOut.FONT.getWidth(measurementText) * textScale;
         float width = textWidth > 250.0F ? textWidth + 10.0F : 250.0F;
 
-        this.stack.pushPose();
-        Render2DUtils.unGuiScale(this.stack);
+        ScreenUtils.beginPixelSpace(this.stack);
 
         if (customChat.blur.get()) {
             Render2DUtils.drawLoadedBlur(
                     "hudblur",
                     this.stack,
-                    renderer -> renderer.rounded(10.0F, BlackOut.mc.getWindow().getScreenHeight() - (fontHeight + 16.0F), width, fontHeight + 4.0F, 6.0F, 10)
+                    renderer -> renderer.rounded(10.0F, ScreenUtils.screenHeight() - (fontHeight + 16.0F), width, fontHeight + 4.0F, 6.0F, 10)
             );
             Renderer.onHUDBlur();
         }
@@ -50,7 +50,7 @@ public class CustomChatScreen extends ChatScreen {
             Render2DUtils.rounded(
                     this.stack,
                     10.0F,
-                    BlackOut.mc.getWindow().getScreenHeight() - (fontHeight + 16.0F),
+                    ScreenUtils.screenHeight() - (fontHeight + 16.0F),
                     width,
                     fontHeight + 4.0F,
                     6.0F,
@@ -65,11 +65,11 @@ public class CustomChatScreen extends ChatScreen {
                 text,
                 textScale,
                 15.0F,
-                BlackOut.mc.getWindow().getScreenHeight() - (fontHeight + 13.0F),
+                ScreenUtils.screenHeight() - (fontHeight + 13.0F),
                 false,
                 false
         );
 
-        this.stack.popPose();
+        ScreenUtils.endPixelSpace(this.stack);
     }
 }

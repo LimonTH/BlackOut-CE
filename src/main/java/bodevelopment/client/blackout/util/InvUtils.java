@@ -44,6 +44,7 @@ public class InvUtils {
     private static int[] slots;
 
     public static int count(boolean hotbar, boolean inventory, Predicate<ItemStack> predicate) {
+        if (BlackOut.mc.player == null) return 0;
         int count = 0;
 
         for (int i = hotbar ? 0 : 9; i < (inventory ? BlackOut.mc.player.getInventory().getContainerSize() : 9); i++) {

@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.hud.elements;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -33,8 +32,7 @@ public class DevInfo extends HudElement {
 
     @Override
     public void render() {
-        if (PlayerUtils.isInGame()) {
-            this.components.clear();
+        this.components.clear();
             String text = BlackOut.TYPE + " Build — " + BlackOut.VERSION;
             this.components.add(new Component(""));
             this.components.add(new Component(BlackOut.TYPE.name(), this.typeColor.get() ? BlackOut.TYPECOLOR : null, true));
@@ -66,7 +64,6 @@ public class DevInfo extends HudElement {
 
                 this.offset = this.offset + component.width;
             });
-            this.stack.popPose();
-        }
+        this.stack.popPose();
     }
 }

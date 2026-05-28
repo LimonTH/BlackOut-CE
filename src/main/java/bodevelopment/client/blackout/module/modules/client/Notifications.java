@@ -11,6 +11,7 @@ import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.render.AnimUtils;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
@@ -78,7 +79,7 @@ public class Notifications extends SettingsModule {
 
     public float render(PoseStack stack, NotificationManager.Notification n, float offset) {
         double delta = this.getAnimationProgress(n.startTime, n.time);
-        float y = BlackOut.mc.getWindow().getScreenHeight() - offset;
+        float y = ScreenUtils.screenHeight() - offset;
         double bar = 1.0 - Math.min((double) (System.currentTimeMillis() - n.startTime), 1000.0) / 1000.0;
         float returnHeight = 0.0F;
 
@@ -117,7 +118,7 @@ public class Notifications extends SettingsModule {
             case Classic:
                 returnHeight = 40.0F;
                 width = Math.max(150.0F, BlackOut.FONT.getWidth(n.text) * 2.0F + 50.0F);
-                x = (float) (BlackOut.mc.getWindow().getScreenWidth() - (width + 20.0F) * delta);
+                x = (float) (ScreenUtils.screenWidth() - (width + 20.0F) * delta);
                 r = this.getRounding();
 
                 stack.pushPose();
@@ -150,7 +151,7 @@ public class Notifications extends SettingsModule {
                 returnHeight = 30.0F;
                 roundedHeight = fHeight * 3.0F;
                 width = this.getWidth(n.text) * 2.0F + 4.0F;
-                x = (float) (BlackOut.mc.getWindow().getScreenWidth() - (width + 20.0F) * delta);
+                x = (float) (ScreenUtils.screenWidth() - (width + 20.0F) * delta);
                 stack.translate(x, y, 0.0F);
                 if (this.blur.get()) {
                     Render2DUtils.drawLoadedBlur("hudblur", stack, renderer -> renderer.rounded(0.0F, 0.0F, width, roundedHeight, 6.0F, 10));
@@ -168,7 +169,7 @@ public class Notifications extends SettingsModule {
                 tHeight = t.getHeight() / 4.8F;
                 roundedHeight = fHeight * 3.0F;
                 width = this.getWidth(n.text) * 2.0F + 6.0F + tHeight;
-                x = (float) (BlackOut.mc.getWindow().getScreenWidth() - (width + 20.0F) * delta);
+                x = (float) (ScreenUtils.screenWidth() - (width + 20.0F) * delta);
                 stack.translate(x, y, 0.0F);
                 if (this.blur.get()) {
                     Render2DUtils.drawLoadedBlur("hudblur", stack, renderer -> renderer.rounded(0.0F, 0.0F, width, roundedHeight, 6.0F, 10));
@@ -183,7 +184,7 @@ public class Notifications extends SettingsModule {
                 returnHeight = 40.0F;
                 textWidth = Math.max(BlackOut.BOLD_FONT.getWidth(n.bigText) * 2.5F, BlackOut.FONT.getWidth(n.text) * 2.0F);
                 width = Math.max(150.0F, textWidth + 50.0F);
-                x = (float) (BlackOut.mc.getWindow().getScreenWidth() - (width + 20.0F) * delta);
+                x = (float) (ScreenUtils.screenWidth() - (width + 20.0F) * delta);
                 r = this.getRounding();
                 stack.translate(x + r - 5.0F, y + r - 5.0F, 0.0F);
                 roundedWidth = width - r * 2 + 10.0F;
@@ -206,7 +207,7 @@ public class Notifications extends SettingsModule {
                 textWidth = Math.max(BlackOut.BOLD_FONT.getWidth(n.bigText) * 2.5F, BlackOut.FONT.getWidth(n.text) * 2.0F);
                 width = Math.max(150.0F, textWidth + 50.0F);
                 float height = 60.0F;
-                x = (float) (BlackOut.mc.getWindow().getScreenWidth() - (width + 20.0F) * delta);
+                x = (float) (ScreenUtils.screenWidth() - (width + 20.0F) * delta);
                 stack.translate(x - 5.0F, y - 5.0F, 0.0F);
                 if (this.blur.get()) {
                     Render2DUtils.drawLoadedBlur("hudblur", stack, renderer -> renderer.rounded(0.0F, 0.0F, width, height, 0.0F, 10));

@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.visual.entities;
 
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
@@ -140,10 +141,9 @@ public class PhaseESP extends Module {
             GlStateManager._disableDepthTest();
             GlStateManager._enableBlend();
             GlStateManager._disableCull();
-            this.stack.pushPose();
-            Render2DUtils.unGuiScale(this.stack);
+            ScreenUtils.beginPixelSpace(this.stack);
             this.players.forEach(entity -> this.renderNameTag(event.tickDelta, entity));
-            this.stack.popPose();
+            ScreenUtils.endPixelSpace(this.stack);
         }
     }
 

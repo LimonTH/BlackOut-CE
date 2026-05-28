@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.gui.clickgui;
 
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.KeyEvent;
@@ -175,8 +176,8 @@ public class ClickGui extends Screen {
         float currentScale = Render2DUtils.getScale();
         scale = scale / (currentScale == 0 ? 1 : currentScale);
 
-        double screenWidth = BlackOut.mc.getWindow().getScreenWidth();
-        double screenHeight = BlackOut.mc.getWindow().getScreenHeight();
+        double screenWidth = ScreenUtils.screenWidth();
+        double screenHeight = ScreenUtils.screenHeight();
 
         double startX = (screenWidth / 2.0 + x - width / 2.0F) / unscaled;
         double startY = (screenHeight / 2.0 + y - height / 2.0F) / unscaled;
@@ -504,9 +505,9 @@ public class ClickGui extends Screen {
         ParentCategory prevParent = null;
         float currentY = 110.0F - this.categoryScroll.get();
 
-        float sx = BlackOut.mc.getWindow().getScreenWidth() / 2.0F - width / 2.0F * unscaled + x;
-        float y1 = BlackOut.mc.getWindow().getScreenHeight() / 2.0F - (height / 2.0F + 10.0F) * unscaled - y;
-        float y2 = BlackOut.mc.getWindow().getScreenHeight() / 2.0F + (height / 2.0F - 100.0F) * unscaled - y;
+        float sx = ScreenUtils.screenWidth() / 2.0F - width / 2.0F * unscaled + x;
+        float y1 = ScreenUtils.screenHeight() / 2.0F - (height / 2.0F + 10.0F) * unscaled - y;
+        float y2 = ScreenUtils.screenHeight() / 2.0F + (height / 2.0F - 100.0F) * unscaled - y;
         float scissorHeight = Math.abs(y1 - y2);
         ScissorStack.pushRaw((int) sx, (int) y1, (int) (210.0F * unscaled), (int) scissorHeight);
 

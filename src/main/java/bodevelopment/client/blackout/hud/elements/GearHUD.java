@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.hud.elements;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -34,40 +33,38 @@ public class GearHUD extends HudElement {
 
     @Override
     public void render() {
-        if (PlayerUtils.isInGame()) {
-            float textWidth = 10.0F;
+        float textWidth = 10.0F;
 
-            for (Item item : this.items.get()) {
-                textWidth = Math.max(textWidth, BlackOut.FONT.getWidth(String.valueOf(this.getAmount(item))) * this.textScale.get().floatValue());
-            }
-
-            textWidth += 2.0F;
-            float backgroundWidth = textWidth + 16.0F;
-            float length = this.items.get().size() * 16 + this.items.get().size() * 6 - 6;
-            this.setSize(backgroundWidth, length);
-            this.stack.pushPose();
-
-            if (this.blur.get()) {
-                Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, backgroundWidth, length, 3.0F, 10));
-                Renderer.onHUDBlur();
-            }
-
-            if (this.bg.get()) {
-                this.background.render(this.stack, 0.0F, 0.0F, backgroundWidth, length, 3.0F, 3.0F);
-            }
-
-            BlackOut.mc.renderBuffers().bufferSource().endBatch();
-            RenderSystem.disableDepthTest();
-
-            for (Item item : this.items.get()) {
-                int amount = this.getAmount(item);
-                this.textColor.render(this.stack, String.valueOf(amount), this.textScale.get().floatValue(), textWidth / 2.0F, 8.0F, true, true);
-                Render2DUtils.renderItem(this.stack, item.getDefaultInstance(), textWidth, 0.0F, 16.0F, RenderLayer.HUD, true);
-                this.stack.translate(0.0F, 22.0F, 0.0F);
-            }
-            BlackOut.mc.renderBuffers().bufferSource().endBatch();
-            this.stack.popPose();
+        for (Item item : this.items.get()) {
+            textWidth = Math.max(textWidth, BlackOut.FONT.getWidth(String.valueOf(this.getAmount(item))) * this.textScale.get().floatValue());
         }
+
+        textWidth += 2.0F;
+        float backgroundWidth = textWidth + 16.0F;
+        float length = this.items.get().size() * 16 + this.items.get().size() * 6 - 6;
+        this.setSize(backgroundWidth, length);
+        this.stack.pushPose();
+
+        if (this.blur.get()) {
+            Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, backgroundWidth, length, 3.0F, 10));
+            Renderer.onHUDBlur();
+        }
+
+        if (this.bg.get()) {
+            this.background.render(this.stack, 0.0F, 0.0F, backgroundWidth, length, 3.0F, 3.0F);
+        }
+
+        BlackOut.mc.renderBuffers().bufferSource().endBatch();
+        RenderSystem.disableDepthTest();
+
+        for (Item item : this.items.get()) {
+            int amount = this.getAmount(item);
+            this.textColor.render(this.stack, String.valueOf(amount), this.textScale.get().floatValue(), textWidth / 2.0F, 8.0F, true, true);
+            Render2DUtils.renderItem(this.stack, item.getDefaultInstance(), textWidth, 0.0F, 16.0F, RenderLayer.HUD, true);
+            this.stack.translate(0.0F, 22.0F, 0.0F);
+        }
+        BlackOut.mc.renderBuffers().bufferSource().endBatch();
+        this.stack.popPose();
     }
 
     private int getAmount(Item item) {

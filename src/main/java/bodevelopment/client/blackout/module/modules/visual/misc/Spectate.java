@@ -12,6 +12,7 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
@@ -47,23 +48,22 @@ public class Spectate extends Module {
     @Event
     public void onRender(RenderEvent.Hud.Pre event) {
         if (PlayerUtils.isInGame()) {
-            this.stack.pushPose();
-            Render2DUtils.unGuiScale(this.stack);
+            ScreenUtils.beginPixelSpace(this.stack);
             if (this.target instanceof AbstractClientPlayer) {
                 BlackOut.FONT
                         .text(
                                 this.stack,
                                 "Spectating " + this.target.getName().getString(),
                                 2.0F,
-                                BlackOut.mc.getWindow().getScreenWidth() / 2.0F,
-                                BlackOut.mc.getWindow().getScreenHeight() / 2.0F + BlackOut.FONT.getHeight() * 3.0F,
+                                ScreenUtils.screenWidth() / 2.0F,
+                                ScreenUtils.screenHeight() / 2.0F + BlackOut.FONT.getHeight() * 3.0F,
                                 Color.WHITE,
                                 true,
                                 true
                         );
             }
 
-            this.stack.popPose();
+            ScreenUtils.endPixelSpace(this.stack);
         }
     }
 

@@ -11,6 +11,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.TextColorMultiSetting;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
@@ -55,12 +56,11 @@ public class CustomScoreboard extends Module {
             if (this.objectiveName != null && this.texts != null && !this.remove.get()) {
                 float width = Math.max(this.getLongest(this.texts) * 2.0F + 20.0F, BlackOut.FONT.getWidth(this.objectiveName) * 2.0F + 40.0F);
                 float length = (this.texts.size() + 2) * BlackOut.FONT.getHeight() * 2.0F + 6.0F;
-                this.stack.pushPose();
-                Render2DUtils.unGuiScale(this.stack);
+                ScreenUtils.beginPixelSpace(this.stack);
                 this.stack
                         .translate(
-                                BlackOut.mc.getWindow().getScreenWidth() - (width + 8.0F) * this.scale.get(),
-                                BlackOut.mc.getWindow().getScreenHeight() / 2.0F + this.addedY.get(),
+                                ScreenUtils.screenWidth() - (width + 8.0F) * this.scale.get(),
+                                ScreenUtils.screenHeight() / 2.0F + this.addedY.get(),
                                 0.0
                         );
                 this.stack.scale(this.scale.get().floatValue(), this.scale.get().floatValue(), 0.0F);
@@ -79,7 +79,7 @@ public class CustomScoreboard extends Module {
                     this.textColor.render(this.stack, text, 2.0F, 0.0F, this.y, false, false);
                     this.y = this.y + (BlackOut.FONT.getHeight() * 2.0F + 2.0F);
                 });
-                this.stack.popPose();
+                ScreenUtils.endPixelSpace(this.stack);
             }
         }
     }

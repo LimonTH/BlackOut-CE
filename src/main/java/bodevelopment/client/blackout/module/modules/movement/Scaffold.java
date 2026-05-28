@@ -190,12 +190,11 @@ public class Scaffold extends MoveUpdateModule {
             }
 
             if (this.drawBlocks.get()) {
-                this.stack.pushPose();
-                Render2DUtils.unGuiScale(this.stack);
+                ScreenUtils.beginPixelSpace(this.stack);
                 float anim = (float) AnimUtils.easeOutQuart(this.delta);
                 this.stack
                         .translate(
-                                BlackOut.mc.getWindow().getScreenWidth() / 2.0F - width / 2.0F, BlackOut.mc.getWindow().getScreenHeight() / 2.0F + height + 2.0F, 0.0F
+                                ScreenUtils.screenWidth() / 2.0F - width / 2.0F, ScreenUtils.screenHeight() / 2.0F + height + 2.0F, 0.0F
                         );
                 this.stack.scale(anim, anim, 1.0F);
                 float prevAlpha = Renderer.getAlpha();
@@ -216,7 +215,7 @@ public class Scaffold extends MoveUpdateModule {
                 Render2DUtils.renderItem(this.stack, itemStack, 3.0F, 3.0F, 24.0F, RenderLayer.HUD, false);
                 BlackOut.FONT.text(this.stack, text, textScale, 26.0F, 1.0F, this.customColor.get().getColor(), false, false);
                 Renderer.setAlpha(prevAlpha);
-                this.stack.popPose();
+                ScreenUtils.endPixelSpace(this.stack);
                 this.stack.popPose();
             }
         }

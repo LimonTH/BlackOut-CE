@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.hud.elements;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -25,14 +24,12 @@ public class Keystrokes extends HudElement {
 
     public Keystrokes() {
         super("Keystrokes", "Displays a real-time visual representation of movement and jump key inputs.");
-        this.setSize(10.0F, 10.0F);
     }
 
     @Override
     public void render() {
-        if (PlayerUtils.isInGame()) {
-            this.stack.pushPose();
-            this.setSize(44.0F, 48.0F);
+        this.stack.pushPose();
+        this.setSize(44.0F, 48.0F);
             this.renderKey(18, 0, "W", BlackOut.mc.options.keyUp);
             this.renderKey(0, 18, "A", BlackOut.mc.options.keyLeft);
             this.renderKey(18, 18, "S", BlackOut.mc.options.keyDown);
@@ -58,8 +55,7 @@ public class Keystrokes extends HudElement {
                     pressed ? this.pressedtxtColor.get().getRGB() : this.txtdColor.get().getRGB(),
                     ColorUtils.SHADOW100I
             );
-            this.stack.popPose();
-        }
+        this.stack.popPose();
     }
 
     public void renderKey(int x, int y, String key, KeyMapping bind) {

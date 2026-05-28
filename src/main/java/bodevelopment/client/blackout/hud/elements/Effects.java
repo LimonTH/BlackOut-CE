@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.hud.elements;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -47,26 +46,22 @@ public class Effects extends HudElement {
 
     @Override
     public void render() {
-        if (PlayerUtils.isInGame()) {
-            if (BlackOut.mc.player.getActiveEffectsMap() != null) {
-                this.stack.pushPose();
-                float width = BlackOut.FONT.getWidth("idunnoman 4:20");
-                this.setSize(width, BlackOut.FONT.getHeight() * 2.0F + 1.0F);
-                if (this.side.get() == Side.Right) {
-                    this.stack.translate(width, 0.0F, 0.0F);
-                }
-
-                Comparator<Entry<Holder<MobEffect>, MobEffectInstance>> comparator = Comparator.comparingDouble(this::getWidth);
-                BlackOut.mc
-                        .player
-                        .getActiveEffectsMap()
-                        .entrySet()
-                        .stream()
-                        .sorted(this.order.get() == Order.Shortest ? comparator : comparator.reversed())
-                        .forEach(entry -> this.stack.translate(0.0F, this.render(entry.getKey().value(), entry.getValue()), 0.0F));
-                this.stack.popPose();
-            }
+        this.stack.pushPose();
+        float width = BlackOut.FONT.getWidth("idunnoman 4:20");
+        this.setSize(width, BlackOut.FONT.getHeight() * 2.0F + 1.0F);
+        if (this.side.get() == Side.Right) {
+            this.stack.translate(width, 0.0F, 0.0F);
         }
+
+        Comparator<Entry<Holder<MobEffect>, MobEffectInstance>> comparator = Comparator.comparingDouble(this::getWidth);
+        BlackOut.mc
+                .player
+                .getActiveEffectsMap()
+                .entrySet()
+                .stream()
+                .sorted(this.order.get() == Order.Shortest ? comparator : comparator.reversed())
+                .forEach(entry -> this.stack.translate(0.0F, this.render(entry.getKey().value(), entry.getValue()), 0.0F));
+        this.stack.popPose();
     }
 
     private float render(MobEffect effect, MobEffectInstance effectInstance) {
