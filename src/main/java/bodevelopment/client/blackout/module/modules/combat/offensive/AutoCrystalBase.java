@@ -90,6 +90,7 @@ public class AutoCrystalBase extends ObsidianModule {
 
     @Event
     public void onTick(TickEvent.Pre event) {
+        super.onTick(event);
         if (!PlayerUtils.isInGame()) return;
         this.startedThisTick = false;
 
@@ -170,7 +171,8 @@ public class AutoCrystalBase extends ObsidianModule {
         BlockPos bestPos = findOptimalBase(ac);
 
         if (bestPos != null) {
-            if (isCurrentBaseBetter(bestPos, ac)) {
+            if (isNearExistingBase(bestPos)) {
+                lastBestPos = null;
                 if (minePos != null) {
                     abort(minePos);
                     minePos = null;
@@ -192,13 +194,9 @@ public class AutoCrystalBase extends ObsidianModule {
                     abort(minePos);
                     minePos = null;
                 }
-                if (BlockUtils.isLiquid(bestPos.above())) {
-                    lastBestPos = null;
-                } else {
-                    lastBestPos = bestPos;
-                    if (BlockUtils.replaceable(bestPos) && SettingUtils.inPlaceRange(bestPos)) {
-                        this.blockPlacements.add(bestPos);
-                    }
+                lastBestPos = bestPos;
+                if (BlockUtils.replaceable(bestPos) && SettingUtils.inPlaceRange(bestPos)) {
+                    this.blockPlacements.add(bestPos);
                 }
             }
         } else {
@@ -213,7 +211,7 @@ public class AutoCrystalBase extends ObsidianModule {
     private BlockPos findOptimalBase(AutoCrystal ac) {
         BlockPos targetPos = target.blockPosition();
         BlockPos currentBest = null;
-        double maxScore = 0;
+        double maxScore = -Double.MAX_VALUE;
 
         double rH = searchRadius.get();
         int rV = verticalRadius.get();
@@ -232,6 +230,9 @@ public class AutoCrystalBase extends ObsidianModule {
                     if (!isValidForBase(pos, ac)) continue;
 
                     double tDmg = getSimulatedDmg(target, pos);
+                    if (tDmg <= 0.0 && BlockUtils.isLiquid(pos.above())) {
+                        tDmg = ac.getMinPlace().get() + 0.5;
+                    }
                     if (tDmg < ac.getMinPlace().get()) continue;
 
                     double sDmg = getSimulatedDmg(BlackOut.mc.player, pos);
@@ -250,6 +251,17 @@ public class AutoCrystalBase extends ObsidianModule {
                     double distSqToPos = BlackOut.mc.player.distanceToSqr(pos.getCenter());
                     score += Math.max(0, (25.0 - distSqToPos) * 0.1);
 
+                    if (this.autoMineToggle.get()) {
+                        BlockPos obstacle = getObstacle(pos);
+                        if (obstacle != null) {
+                            double bestDelta = getBestBreakDelta(obstacle);
+                            if (bestDelta > 0.0) {
+                                double estimatedTicks = Math.ceil(1.0 / bestDelta) / this.speed.get();
+                                score -= estimatedTicks * 0.2;
+                            }
+                        }
+                    }
+
                     if (score > maxScore) {
                         maxScore = score;
                         currentBest = pos.immutable();
@@ -258,6 +270,16 @@ public class AutoCrystalBase extends ObsidianModule {
             }
         }
         return currentBest;
+    }
+
+    private double getBestBreakDelta(BlockPos pos) {
+        int slot = this.findBestSlot(stack -> BlockUtils.getBlockBreakingDelta(
+                pos, stack, this.effectCheck.get(), this.waterCheck.get(),
+                this.onGroundCheck.get() && !this.onGroundSpoof.get())).slot();
+        ItemStack bestStack = BlackOut.mc.player.getInventory().getItem(slot);
+        return BlockUtils.getBlockBreakingDelta(pos, bestStack,
+                this.effectCheck.get(), this.waterCheck.get(),
+                this.onGroundCheck.get() && !this.onGroundSpoof.get());
     }
 
 
@@ -279,8 +301,6 @@ public class AutoCrystalBase extends ObsidianModule {
 
         BlockPos crystalPos = pos.above();
 
-        if (BlockUtils.isLiquid(crystalPos)) return false;
-
         if (this.autoMineToggle.get()) {
             BlockPos obstacle = getObstacle(pos);
             if (obstacle != null) {
@@ -295,8 +315,7 @@ public class AutoCrystalBase extends ObsidianModule {
                 if (!SettingUtils.inMineRange(obstacle)) return false;
                 if (SettingUtils.getPlaceOnDirection(obstacle) == null) return false;
             } else if (BlockUtils.replaceable(pos)) {
-                PlaceData placeData = SettingUtils.getPlaceData(pos);
-                if (!placeData.valid() || !SettingUtils.inPlaceRange(placeData.pos())) return false;
+                if (!hasSupport(pos, true)) return false;
             } else {
                 return false;
             }
@@ -304,56 +323,30 @@ public class AutoCrystalBase extends ObsidianModule {
             if (!BlockUtils.replaceable(pos)) return false;
             if (!BlackOut.mc.level.getBlockState(crystalPos).isAir() && !BlockUtils.replaceable(crystalPos)) return false;
 
-            PlaceData placeData = SettingUtils.getPlaceData(pos);
-            if (!placeData.valid() || !SettingUtils.inPlaceRange(placeData.pos())) return false;
+            if (!hasSupport(pos, true)) return false;
         }
 
         if (ac.intersects(crystalPos)) return false;
+        if (isBlockedByCrystal(pos)) return false;
         return ac.inAttackRangePlacing(crystalPos);
     }
 
-    private boolean isCurrentBaseBetter(BlockPos bestPos, AutoCrystal ac) {
-        double bestScore = getSimulatedDmg(target, bestPos);
-
-        BlockPos targetPos = target.blockPosition();
-        double rH = searchRadius.get();
-        int rV = verticalRadius.get();
-
-        for (int x = (int) -rH; x <= rH; x++) {
-            for (int z = (int) -rH; z <= rH; z++) {
-                for (int y = -1; y >= -rV; y--) {
-                    BlockPos pos = targetPos.offset(x, y, z);
-
-                    if (BlackOut.mc.level.getBlockState(pos).is(Blocks.OBSIDIAN) || BlackOut.mc.level.getBlockState(pos).is(Blocks.BEDROCK)) {
-                        if (BlockUtils.isLiquid(pos.above()) || BlockUtils.isLiquid(pos)) continue;
-                        if (!ac.crystalBlock(pos.above()) || ac.intersects(pos.above())) continue;
-
-                        double existingDmg = getDmg(target, pos);
-                        if (existingDmg < ac.getMinPlace().get()) continue;
-
-                        double sDmg = getDmg(BlackOut.mc.player, pos);
-                        if (sDmg > ac.getMaxSelfPlace().get()) continue;
-
-                        double score = existingDmg;
-
-                        int relY = pos.getY() - targetPos.getY();
-                        if (cachedSurroundState > 0 && relY == -1) score += 5.0;
-                        else if (cachedSurroundState == 0 && relY <= -2) score += 5.0;
-
-                        double simulatedBestScore = bestScore;
-                        int bestRelY = bestPos.getY() - targetPos.getY();
-                        if (cachedSurroundState > 0 && bestRelY == -1) simulatedBestScore += 5.0;
-                        else if (cachedSurroundState == 0 && bestRelY <= -2) simulatedBestScore += 5.0;
-
-                        if (score + scoreImprove.get() >= simulatedBestScore) {
-                            lastBestPos = pos;
-                            return true;
-                        }
-                    }
+    private boolean isNearExistingBase(BlockPos pos) {
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                if (dx == 0 && dz == 0) continue;
+                BlockPos check = pos.offset(dx, 0, dz);
+                if (BlackOut.mc.level.getBlockState(check).is(Blocks.OBSIDIAN)
+                        || BlackOut.mc.level.getBlockState(check).is(Blocks.BEDROCK)) {
+                    return true;
                 }
             }
         }
         return false;
+    }
+
+    private boolean isBlockedByCrystal(BlockPos pos) {
+        return EntityUtils.intersects(BoxUtils.get(pos), entity -> entity instanceof net.minecraft.world.entity.boss.enderdragon.EndCrystal);
     }
 
     private double getSimulatedDmg(Player p, BlockPos pos) {

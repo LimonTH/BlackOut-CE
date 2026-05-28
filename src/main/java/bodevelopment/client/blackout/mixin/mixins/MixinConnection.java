@@ -67,6 +67,10 @@ public abstract class MixinConnection {
 
     @Inject(method = "exceptionCaught", at = @At("HEAD"))
     private void onException(ChannelHandlerContext context, Throwable ex, CallbackInfo ci) {
+        // ClosedChannelException and its subclass StacklessClosedChannelException are
+        // normal during disconnect/shutdown — the channel is already closed and pending
+        // writes fail. Do not spam the log with these.
+        if (ex instanceof java.nio.channels.ClosedChannelException) return;
         LOGGER.warn("Crashed on packet event ", ex);
     }
 
