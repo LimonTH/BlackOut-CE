@@ -17,7 +17,7 @@ public class PlayerUtils {
      * Returns true if the player and level are both loaded (i.e., we are in a world).
      */
     public static boolean isInGame() {
-        return BlackOut.mc.player != null && BlackOut.mc.level != null;
+        return BlackOut.mc.player != null && BlackOut.mc.level != null && !BlackOut.mc.isPaused();
     }
 
     /**
