@@ -166,6 +166,67 @@ public class MixinClientPacketListener {
     }
 
     @WrapOperation(
+            method = "handleSetEntityMotion",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;lerpMotion(DDD)V")
+    )
+    private void wrapEntityMotion(Entity entity, double x, double y, double z, Operation<Void> original) {
+        // Defense-in-depth: intercepts entity motion knockback at the vanilla handler level,
+        // ensuring knockback reduction applies regardless of whether the packet arrived
+        // directly or wrapped inside a ClientboundBundlePacket.
+        if (entity != BlackOut.mc.player) {
+            original.call(entity, x, y, z);
+            return;
+        }
+
+        Velocity velocity = Velocity.getInstance();
+        if (velocity == null || !velocity.enabled) {
+            original.call(entity, x, y, z);
+            return;
+        }
+
+        switch (velocity.mode.get()) {
+            case Simple: {
+                double rand = ThreadLocalRandom.current().nextDouble();
+                boolean hB = velocity.hChance.get() >= rand;
+                boolean vB = velocity.vChance.get() >= rand;
+                original.call(entity,
+                        hB ? x * velocity.horizontal.get() : x,
+                        vB ? y * velocity.vertical.get() : y,
+                        hB ? z * velocity.horizontal.get() : z
+                );
+                break;
+            }
+            case Matrix_AAC: {
+                Vec3 playerVel = BlackOut.mc.player.getDeltaMovement();
+                double h = velocity.horizontal.get();
+                double v = velocity.vertical.get();
+                double velX = (x - playerVel.x) * h;
+                double velY = (y - playerVel.y) * v;
+                double velZ = (z - playerVel.z) * h;
+                original.call(entity,
+                        velX + playerVel.x,
+                        velY + playerVel.y,
+                        velZ + playerVel.z
+                );
+                break;
+            }
+            case Vulcan: {
+                if (BlackOut.mc.player.onGround()) {
+                    original.call(entity, 0.0, 0.42, 0.0);
+                } else {
+                    original.call(entity, x, y, z);
+                }
+                break;
+            }
+            default:
+                // Grim and Delayed modes cancel the packet in the Pre event;
+                // handleSetEntityMotion is never reached for those modes.
+                original.call(entity, x, y, z);
+                break;
+        }
+    }
+
+    @WrapOperation(
             method = "handleExplosion",
             at = @At(value = "INVOKE", target = "Ljava/util/Optional;ifPresent(Ljava/util/function/Consumer;)V")
     )

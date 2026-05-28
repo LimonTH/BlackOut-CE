@@ -40,8 +40,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 
 public class PacketManager extends Manager {
@@ -49,8 +49,8 @@ public class PacketManager extends Manager {
     public final TimerMap<Integer, Vec3> validPos = new TimerMap<>(true);
     public final TimerList<Integer> ignoreSetSlot = new TimerList<>(true);
     public final TimerList<ClientboundContainerSetSlotPacket> ignoredInventory = new TimerList<>(true);
-    private final List<Consumer<? super ClientPacketListener>> grimQueue = new ArrayList<>();
-    private final List<Consumer<? super ClientPacketListener>> postGrimQueue = new ArrayList<>();
+    private final Queue<Consumer<? super ClientPacketListener>> grimQueue = new ConcurrentLinkedQueue<>();
+    private final Queue<Consumer<? super ClientPacketListener>> postGrimQueue = new ConcurrentLinkedQueue<>();
     private final TimerList<BlockPos> own = new TimerList<>(true);
     public int slot = 0;
     public Vec3 pos = Vec3.ZERO;
@@ -185,14 +185,16 @@ public class PacketManager extends Manager {
 
     public void sendPackets() {
         if (PlayerUtils.isInGame()) {
-            this.sendList(this.grimQueue);
-            this.sendList(this.postGrimQueue);
+            this.drainQueue(this.grimQueue);
+            this.drainQueue(this.postGrimQueue);
         }
     }
 
-    private void sendList(List<Consumer<? super ClientPacketListener>> list) {
-        list.forEach(consumer -> this.sendPacket(BlackOut.mc.getConnection(), consumer));
-        list.clear();
+    private void drainQueue(Queue<Consumer<? super ClientPacketListener>> queue) {
+        Consumer<? super ClientPacketListener> consumer;
+        while ((consumer = queue.poll()) != null) {
+            this.sendPacket(BlackOut.mc.getConnection(), consumer);
+        }
     }
 
     private void sendPacket(ClientPacketListener handler, Consumer<? super ClientPacketListener> consumer) {
@@ -213,9 +215,9 @@ public class PacketManager extends Manager {
         this.sendPacket(BlackOut.mc.getConnection(), handler -> handler.send(packet));
     }
 
-    private void sendPacketToList(Packet<?> packet, List<Consumer<? super ClientPacketListener>> list) {
+    private void sendPacketToList(Packet<?> packet, Queue<Consumer<? super ClientPacketListener>> queue) {
         if (this.shouldBeDelayed(packet)) {
-            this.addToQueue(handler -> handler.send(packet), list);
+            this.addToQueue(handler -> handler.send(packet), queue);
         } else {
             BlackOut.mc.getConnection().send(packet);
         }
@@ -229,9 +231,9 @@ public class PacketManager extends Manager {
         this.addToQueue(consumer, this.postGrimQueue);
     }
 
-    private void addToQueue(Consumer<? super ClientPacketListener> consumer, List<Consumer<? super ClientPacketListener>> list) {
+    private void addToQueue(Consumer<? super ClientPacketListener> consumer, Queue<Consumer<? super ClientPacketListener>> queue) {
         if (SettingUtils.grimPackets()) {
-            list.add(consumer);
+            queue.offer(consumer);
         } else {
             consumer.accept(BlackOut.mc.getConnection());
         }
