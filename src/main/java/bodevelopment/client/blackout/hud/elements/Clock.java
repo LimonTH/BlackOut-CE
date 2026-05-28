@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.hud.elements;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -29,33 +28,30 @@ public class Clock extends HudElement {
 
     public Clock() {
         super("Clock", "Displays the current local system time with customizable formatting and post-processing effects.");
-        this.setSize(10.0F, 10.0F);
     }
 
     @Override
     public void render() {
-        if (PlayerUtils.isInGame()) {
-            String time = switch (this.mode.get()) {
-                case Normal -> LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
-                case American -> new SimpleDateFormat("hh:mm a").format(new Date());
-            };
-            this.textWidth = BlackOut.FONT.getWidth(time);
-            this.setSize(this.textWidth, BlackOut.FONT.getHeight());
-            this.stack.pushPose();
-            if (this.blur.get()) {
-                Render2DUtils.drawLoadedBlur(
-                        "hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, this.textWidth, BlackOut.FONT.getHeight(), this.rounded.get() ? 3.0F : 0.0F, 10)
-                );
-                Renderer.onHUDBlur();
-            }
-
-            if (this.bg.get()) {
-                this.background.render(this.stack, 0.0F, 0.0F, this.textWidth, BlackOut.FONT.getHeight(), this.rounded.get() ? 3.0F : 0.0F, 3.0F);
-            }
-
-            this.textColor.render(this.stack, time, 1.0F, 0.0F, 0.0F, false, false);
-            this.stack.popPose();
+        String time = switch (this.mode.get()) {
+            case Normal -> LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+            case American -> new SimpleDateFormat("hh:mm a").format(new Date());
+        };
+        this.textWidth = BlackOut.FONT.getWidth(time);
+        this.setSize(this.textWidth, BlackOut.FONT.getHeight());
+        this.stack.pushPose();
+        if (this.blur.get()) {
+            Render2DUtils.drawLoadedBlur(
+                    "hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, this.textWidth, BlackOut.FONT.getHeight(), this.rounded.get() ? 3.0F : 0.0F, 10)
+            );
+            Renderer.onHUDBlur();
         }
+
+        if (this.bg.get()) {
+            this.background.render(this.stack, 0.0F, 0.0F, this.textWidth, BlackOut.FONT.getHeight(), this.rounded.get() ? 3.0F : 0.0F, 3.0F);
+        }
+
+        this.textColor.render(this.stack, time, 1.0F, 0.0F, 0.0F, false, false);
+        this.stack.popPose();
     }
 
     public enum Mode {

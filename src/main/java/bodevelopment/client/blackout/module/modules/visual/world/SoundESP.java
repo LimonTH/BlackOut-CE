@@ -11,6 +11,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.randomstuff.timers.RenderList;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.List;
@@ -77,11 +78,10 @@ public class SoundESP extends Module {
 
     @Event
     public void onRender(RenderEvent.Hud.Post event) {
-        this.stack.pushPose();
-        Render2DUtils.unGuiScale(this.stack);
+        ScreenUtils.beginPixelSpace(this.stack);
         Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
         this.renderList.update((render, time, delta) -> this.draw(render.x(), render.y(), render.z(), render.text(), time, camPos));
-        this.stack.popPose();
+        ScreenUtils.endPixelSpace(this.stack);
     }
 
     private void draw(double x, double y, double z, String string, double time, Vec3 camPos) {

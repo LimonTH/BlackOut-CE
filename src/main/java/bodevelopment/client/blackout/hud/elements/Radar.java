@@ -73,10 +73,11 @@ public class Radar extends HudElement {
                 }
         }
 
-        this.stack.translate(20.0F, 20.0F, 0.0F);
+        if (BlackOut.mc.level != null && BlackOut.mc.player != null) {
+            this.stack.translate(20.0F, 20.0F, 0.0F);
 
-        for (Player player : BlackOut.mc.level.players()) {
-            if (player != BlackOut.mc.player && this.shouldRender(player)) {
+            for (Player player : BlackOut.mc.level.players()) {
+                if (player != BlackOut.mc.player && this.shouldRender(player)) {
                 boolean isFriend = Managers.FRIENDS.isFriend(player);
                 double dist = player.position().subtract(BlackOut.mc.player.position()).horizontalDistance();
                 double yaw = RotationUtils.getYaw(player.position());
@@ -91,6 +92,7 @@ public class Radar extends HudElement {
                         z *= 20.0F;
                         this.renderEnemy(this.stack, x, z, isFriend);
                     }
+                }
                 }
             }
         }

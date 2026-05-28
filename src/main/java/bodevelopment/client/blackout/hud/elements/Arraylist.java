@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.hud.elements;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.FilterMode;
 import bodevelopment.client.blackout.hud.HudElement;
@@ -61,8 +60,7 @@ public class Arraylist extends HudElement {
 
     @Override
     public void render() {
-        if (PlayerUtils.isInGame()) {
-            Comparator<Module> comparator = Comparator.comparingDouble(
+        Comparator<Module> comparator = Comparator.comparingDouble(
                     m -> BlackOut.FONT.getWidth(m.getDisplayName() + (m.getInfo() == null ? "" : this.getInfo(m.getInfo())))
             );
             List<Module> modules = Managers.MODULES
@@ -153,8 +151,7 @@ public class Arraylist extends HudElement {
                 }
             }
 
-            this.renderTexts(modules);
-        }
+        this.renderTexts(modules);
     }
 
     private void renderTexts(List<Module> modules) {

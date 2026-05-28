@@ -11,6 +11,7 @@ import bodevelopment.client.blackout.keys.Keys;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.client.MainMenuSettings;
 import bodevelopment.client.blackout.rendering.renderer.ColorRenderer;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import bodevelopment.client.blackout.util.render.RenderState;
@@ -46,6 +47,7 @@ public class HudEditor extends Screen {
     private float screenWidth;
     private boolean wasList = false;
     private static boolean isOpen = false;
+    private static boolean isOverlayOpen = false;
     private float menuFade = 0.0F;
     private float menuMx = 0.0F;
     private float menuMy = 0.0F;
@@ -54,7 +56,7 @@ public class HudEditor extends Screen {
 
     public HudEditor() {
         super(Component.nullToEmpty("HUD Editor"));
-        BlackOut.EVENT_BUS.subscribe(this, () -> !(HudEditor.isOpen()));
+        BlackOut.EVENT_BUS.subscribe(this, () -> !(HudEditor.isEditing()));
     }
 
     public void initElements() {
@@ -64,12 +66,12 @@ public class HudEditor extends Screen {
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         boolean inGame = PlayerUtils.isInGame();
         if (inGame) {
+            isOpen = true;
             this.renderOverlay(context, mouseX, mouseY, delta, 1.0F);
         }
     }
 
     public void renderOverlay(GuiGraphics context, int mouseX, int mouseY, float delta, float fadeAlpha) {
-        isOpen = true;
         float prevMx = this.mx;
         float prevMy = this.my;
         this.mx = (float) mouseX * Render2DUtils.getScale();
@@ -88,6 +90,7 @@ public class HudEditor extends Screen {
         if (!inGame) {
             this.updateMenuCoordinates();
             this.renderMenuBackground();
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, fadeAlpha);
         }
 
         if (this.holding && this.moved() && this.still) {
@@ -105,9 +108,11 @@ public class HudEditor extends Screen {
             for (HudElement element : this.picked) {
                 float newX = element.x + deltaX;
                 float newY = element.y + deltaY;
+                float w = element.getWidth() * element.getScale();
+                float h = element.getHeight() * element.getScale();
 
-                element.x = Mth.clamp(newX, 0.0F, 1000.0F - element.getWidth());
-                element.y = Mth.clamp(newY, 0.0F, this.screenHeight - element.getHeight());
+                element.x = Mth.clamp(newX, -w / 2.0F, 1000.0F - w / 2.0F);
+                element.y = Mth.clamp(newY, -h / 2.0F, this.screenHeight - h / 2.0F);
             }
         }
 
@@ -132,14 +137,18 @@ public class HudEditor extends Screen {
 
         RenderSystem.enableDepthTest();
         this.stack.popPose();
+
+        if (!inGame) {
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        }
     }
 
     public void onOpenFromMenu() {
-        isOpen = true;
+        isOverlayOpen = true;
     }
 
     public void onCloseFromMenu() {
-        isOpen = false;
+        isOverlayOpen = false;
         Managers.CONFIG.save(ConfigType.HUD);
         Managers.CONFIG.save(ConfigType.Binds);
     }
@@ -184,6 +193,12 @@ public class HudEditor extends Screen {
         return Math.abs(ox * ox + oy * oy) > 0.5;
     }
 
+    private void refreshMousePosition() {
+        float scale = 1000.0F / BlackOut.mc.getMainRenderTarget().viewWidth;
+        this.mx = ScreenUtils.mouseGuiX() * Render2DUtils.getScale() * scale;
+        this.my = ScreenUtils.mouseGuiY() * Render2DUtils.getScale() * scale;
+    }
+
     @Event
     public void onKey(KeyEvent event) {
         if (this.openedScreen == null || !this.openedScreen.handleKey(event.key, event.pressed)) {
@@ -203,6 +218,7 @@ public class HudEditor extends Screen {
 
     @Event
     public void onClick(MouseButtonEvent event) {
+        this.refreshMousePosition();
         if (this.openedScreen == null || !this.openedScreen.handleMouse(event.button, event.pressed)) {
             if (!this.settings.onMouse(event.button, event.pressed)) {
                 if (this.elementList.onMouse(event.button, event.pressed)) {
@@ -257,6 +273,7 @@ public class HudEditor extends Screen {
                         HudElement element = this.holdElement();
 
                         if (element != null) {
+                            this.settings.refreshMouse();
                             this.settings.set(element);
                         } else {
                             this.settings.setOpenedElement(null);
@@ -269,6 +286,7 @@ public class HudEditor extends Screen {
 
     @Event
     public void onScroll(MouseScrollEvent event) {
+        this.refreshMousePosition();
         if (this.openedScreen == null || !this.openedScreen.handleScroll(event.horizontal, event.vertical)) {
             if (!this.settings.onScroll(event.vertical)) {
                 this.elementList.onScroll(event.vertical);
@@ -288,11 +306,13 @@ public class HudEditor extends Screen {
         Managers.CONFIG.save(ConfigType.HUD);
         Managers.CONFIG.save(ConfigType.Binds);
 
-        float targetX = this.mx - element.getWidth() / 2.0F;
-        float targetY = this.my - element.getHeight() / 2.0F;
+        float w = element.getWidth() * element.getScale();
+        float h = element.getHeight() * element.getScale();
+        float targetX = this.mx - w / 2.0F;
+        float targetY = this.my - h / 2.0F;
 
-        element.x = Mth.clamp(targetX, 0.0F, 1000.0F - element.getWidth());
-        element.y = Mth.clamp(targetY, 0.0F, this.screenHeight - element.getHeight());
+        element.x = Mth.clamp(targetX, -w / 2.0F, 1000.0F - w / 2.0F);
+        element.y = Mth.clamp(targetY, -h / 2.0F, this.screenHeight - h / 2.0F);
 
         this.picked.clear();
         this.picked.add(element);
@@ -335,7 +355,9 @@ public class HudEditor extends Screen {
         float maxX1 = Math.max(this.mx, this.holdX);
         float minY1 = Math.min(this.my, this.holdY);
         float maxY1 = Math.max(this.my, this.holdY);
-        return minX1 < element.x + element.getWidth() && maxX1 > element.x && minY1 < element.y + element.getHeight() && maxY1 > element.y;
+        float w = element.getWidth() * element.getScale();
+        float h = element.getHeight() * element.getScale();
+        return minX1 < element.x + w && maxX1 > element.x && minY1 < element.y + h && maxY1 > element.y;
     }
 
     private void setState(State state) {
@@ -343,7 +365,9 @@ public class HudEditor extends Screen {
     }
 
     private boolean insideBounds(HudElement element) {
-        return this.insideBounds(element.x, element.y, element.getWidth(), element.getHeight());
+        float w = element.getWidth() * element.getScale();
+        float h = element.getHeight() * element.getScale();
+        return this.insideBounds(element.x, element.y, w, h);
     }
 
     private boolean insideBounds(float x, float y, float w, float h) {
@@ -355,25 +379,35 @@ public class HudEditor extends Screen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (keyCode == 256) {
-            if (this.openedScreen != null) {
-                this.setScreen(null);
-                return true;
+            if (this.handleEsc()) {
+                this.onClose();
             }
-
-            if (this.elementList.isOpen()) {
-                this.elementList.setOpen(false);
-                return true;
-            }
-
-            if (this.settings.getOpenedElement() != null) {
-                this.settings.setOpenedElement(null);
-                return true;
-            }
-
-            this.onClose();
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    /**
+     * Handles ESC with sequential close logic (openedScreen → elementList → settings).
+     * @return true if all sub-windows are already closed and the editor itself should close
+     */
+    public boolean handleEsc() {
+        if (this.openedScreen != null) {
+            this.setScreen(null);
+            return false;
+        }
+
+        if (this.elementList.isOpen()) {
+            this.elementList.setOpen(false);
+            return false;
+        }
+
+        if (this.settings.getOpenedElement() != null) {
+            this.settings.setOpenedElement(null);
+            return false;
+        }
+
+        return true;
     }
 
     @Override
@@ -402,6 +436,14 @@ public class HudEditor extends Screen {
 
     public static boolean isOpen() {
         return isOpen;
+    }
+
+    public static boolean isOverlayOpen() {
+        return isOverlayOpen;
+    }
+
+    public static boolean isEditing() {
+        return isOpen || isOverlayOpen;
     }
 
     private enum State {

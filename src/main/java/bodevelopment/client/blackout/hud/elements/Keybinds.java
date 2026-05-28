@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.hud.elements;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.manager.Managers;
@@ -38,8 +37,7 @@ public class Keybinds extends HudElement {
 
     @Override
     public void render() {
-        if (PlayerUtils.isInGame()) {
-            Comparator<Module> comparator = Comparator.comparingDouble(m -> BlackOut.FONT.getWidth(m.getDisplayName() + m.bind.get().getName()));
+        Comparator<Module> comparator = Comparator.comparingDouble(m -> BlackOut.FONT.getWidth(m.getDisplayName() + m.bind.get().getName()));
             List<Module> modules = Managers.MODULES
                     .getToggleableModules()
                     .stream()
@@ -90,7 +88,6 @@ public class Keybinds extends HudElement {
                         this.i++;
                     }
             );
-            this.stack.popPose();
-        }
+        this.stack.popPose();
     }
 }

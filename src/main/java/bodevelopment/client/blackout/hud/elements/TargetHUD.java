@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.hud.elements;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
@@ -21,6 +20,7 @@ import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
@@ -83,8 +83,7 @@ public class TargetHUD extends HudElement {
 
     @Override
     public void render() {
-        if (PlayerUtils.isInGame()) {
-            this.updateTarget();
+        this.updateTarget();
             if (this.target != null) {
                 this.setRendering(this.target);
             }
@@ -96,7 +95,6 @@ public class TargetHUD extends HudElement {
             this.setSize(this.getRenderWidth(), this.getRenderHeight());
             if (this.renderType.get() == RenderType.Hud) {
                 this.renderTargetHUD(false);
-            }
         }
     }
 
@@ -119,12 +117,12 @@ public class TargetHUD extends HudElement {
                         true
                 );
                 if (f == null) {
-                    this.stack.popPose();
+                    ScreenUtils.endPixelSpace(this.stack);
                 } else {
                     this.stack.translate(f.x, f.y, 0.0F);
                     this.stack.scale(this.getScale() * 2.0F, this.getScale() * 2.0F, 0.0F);
                     this.renderTargetHUD(true);
-                    this.stack.popPose();
+                    ScreenUtils.endPixelSpace(this.stack);
                 }
             }
         }
@@ -433,7 +431,7 @@ public class TargetHUD extends HudElement {
         }
 
         Renderer.setAlpha(prevAlpha);
-        this.stack.popPose();
+        ScreenUtils.endPixelSpace(this.stack);
     }
 
     private float getRenderWidth() {

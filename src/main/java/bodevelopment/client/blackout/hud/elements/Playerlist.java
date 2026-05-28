@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.hud.elements;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
@@ -56,8 +55,7 @@ public class Playerlist extends HudElement {
 
     @Override
     public void render() {
-        if (PlayerUtils.isInGame()) {
-            this.stack.pushPose();
+        this.stack.pushPose();
             this.setSize(Math.max(this.bgLength, 10.0F), this.y + 6.0F);
             this.currentLongest = BlackOut.FONT.getWidth("PlayersHealthPing" + (this.showPops.get() ? "pops" : ""));
             this.currentLongestPing = BlackOut.FONT.getWidth("Ping");
@@ -97,8 +95,7 @@ public class Playerlist extends HudElement {
             });
             this.longest = this.currentLongest;
             this.longestPing = this.currentLongestPing;
-            this.stack.popPose();
-        }
+        this.stack.popPose();
     }
 
     private void drawText(

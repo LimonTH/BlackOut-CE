@@ -19,6 +19,7 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import bodevelopment.client.blackout.util.render.RenderState;
 import bodevelopment.client.blackout.util.render.RenderLayer;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import bodevelopment.client.blackout.util.render.WireframeRenderer;
 import com.mojang.authlib.GameProfile;
@@ -193,7 +194,7 @@ public class LogoutSpots extends Module {
                     );
                 }
             }
-            event.stack.popPose();
+            this.matrixStack.popPose();
 
             if (this.infinite.get()) return false;
 

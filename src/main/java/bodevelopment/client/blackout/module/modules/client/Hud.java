@@ -32,7 +32,7 @@ public class Hud extends Module {
         if (!editorKey.get().isKey(event.key)) return;
 
         BlackOut.mc.execute(() -> {
-            if (HudEditor.isOpen()) {
+            if (BlackOut.mc.screen instanceof HudEditor) {
                 BlackOut.mc.setScreen(null);
             } else {
                 BlackOut.mc.setScreen(Managers.HUD.HUD_EDITOR);

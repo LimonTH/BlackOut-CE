@@ -69,7 +69,7 @@ public class ConfigManager extends Manager {
         if (shouldSave
                 && System.currentTimeMillis() > this.previousSave + 10000L
                 && !(Managers.CLICK_GUI.CLICK_GUI.isOpen())
-                && !(HudEditor.isOpen())) {
+                && !(HudEditor.isEditing())) {
             this.writeCurrent();
         }
     }

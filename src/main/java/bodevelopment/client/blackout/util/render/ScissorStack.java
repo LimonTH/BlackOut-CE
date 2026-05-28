@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.util.render;
 
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import com.mojang.blaze3d.platform.GlStateManager;
 
@@ -27,7 +28,7 @@ public class ScissorStack {
      */
     public static Region push(float x, float y, float w, float h) {
         double scale = BlackOut.mc.getWindow().getGuiScale();
-        int screenH = BlackOut.mc.getWindow().getScreenHeight();
+        int screenH = ScreenUtils.screenHeight();
 
         int glX = (int) (x * scale);
         int glY = (int) (screenH - (y + h) * scale);

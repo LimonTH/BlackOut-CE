@@ -49,20 +49,22 @@ public class HudElement {
         this.enabled = !this.enabled;
     }
 
+    private boolean sizeChangedInRender = false;
+
     protected void setSize(float width, float height) {
         this.width = width;
         this.height = height;
+        this.sizeChangedInRender = true;
     }
 
     public void renderElement(PoseStack stack, float frameTime) {
-        if (this.enabled || HudEditor.isOpen()) {
+        if (this.enabled || HudEditor.isEditing()) {
             this.frameTime = frameTime;
             this.stack = stack;
-            float prevWidth = this.getWidth();
-            float prevHeight = this.getHeight();
             this.pushStack(stack);
+            this.sizeChangedInRender = false;
             this.render();
-            boolean sizeWasNotSet = this.getWidth() <= 0.0F || this.getHeight() <= 0.0F;
+            boolean sizeWasNotSet = !this.sizeChangedInRender;
             if (sizeWasNotSet) {
                 float placeholderWidth = BlackOut.FONT.getWidth(this.name) * this.getScale() + 8.0F;
                 float placeholderHeight = BlackOut.FONT.getHeight() * this.getScale() + 4.0F;
@@ -70,7 +72,7 @@ public class HudElement {
             }
             this.popStack(stack);
 
-            if (sizeWasNotSet && HudEditor.isOpen() && !PlayerUtils.isInGame()) {
+            if (sizeWasNotSet && HudEditor.isEditing() && !PlayerUtils.isInGame()) {
                 this.pushStack(stack);
                 this.renderPlaceholder();
                 this.popStack(stack);
@@ -79,12 +81,13 @@ public class HudElement {
     }
 
     private void renderPlaceholder() {
+        float s = this.getScale();
         BlackOut.FONT.text(
                 this.stack,
                 this.name,
-                this.getScale() * 0.7F,
+                s * 0.7F,
                 4.0F,
-                this.getHeight() / 2.0F,
+                BlackOut.FONT.getHeight() * s * 0.5F + 2.0F,
                 new Color(160, 160, 160),
                 false,
                 true

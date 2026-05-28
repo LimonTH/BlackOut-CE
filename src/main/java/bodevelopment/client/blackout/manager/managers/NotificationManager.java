@@ -5,6 +5,7 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.ArrayList;
@@ -25,8 +26,7 @@ public class NotificationManager extends Manager {
     public void onRender2D(RenderEvent.Hud.Pre event) {
         if (BlackOut.mc.screen == null && BlackOut.mc.level != null && BlackOut.mc.player != null) {
             this.y = 100.0F;
-            this.stack.pushPose();
-            Render2DUtils.unGuiScale(this.stack);
+            ScreenUtils.beginPixelSpace(this.stack);
             synchronized (this.notifications) {
                 this.notifications.removeIf(notification -> {
                     if (System.currentTimeMillis() > notification.startTime + notification.time) {
@@ -38,7 +38,7 @@ public class NotificationManager extends Manager {
                 });
             }
 
-            this.stack.popPose();
+            ScreenUtils.endPixelSpace(this.stack);
         }
     }
 

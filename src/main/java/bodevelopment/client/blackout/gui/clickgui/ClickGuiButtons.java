@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.gui.clickgui;
 
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.gui.clickgui.screens.AddonScreen;
 import bodevelopment.client.blackout.gui.clickgui.screens.ConfigScreen;
@@ -43,8 +44,8 @@ public class ClickGuiButtons {
         stack.pushPose();
         Render2DUtils.unGuiScale(stack);
 
-        double screenWidth = BlackOut.mc.getWindow().getScreenWidth();
-        double screenHeight = BlackOut.mc.getWindow().getScreenHeight();
+        double screenWidth = ScreenUtils.screenWidth();
+        double screenHeight = ScreenUtils.screenHeight();
 
         stack.translate((screenWidth - this.getWidth()) / 2.0,
                 screenHeight - 105.0 - BUTTON_SEPARATION, 0.0);
@@ -68,8 +69,8 @@ public class ClickGuiButtons {
         double rawX = xArr[0];
         double rawY = yArr[0];
 
-        double screenWidth = BlackOut.mc.getWindow().getScreenWidth();
-        double screenHeight = BlackOut.mc.getWindow().getScreenHeight();
+        double screenWidth = ScreenUtils.screenWidth();
+        double screenHeight = ScreenUtils.screenHeight();
 
         double startX = (screenWidth - this.getWidth()) / 2.0;
         double startY = screenHeight - 105.0 - BUTTON_SEPARATION;

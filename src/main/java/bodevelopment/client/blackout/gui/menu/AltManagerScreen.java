@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.gui.menu;
 
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.gui.TextField;
 import bodevelopment.client.blackout.helpers.ScrollHelper;
@@ -68,8 +69,8 @@ public class AltManagerScreen extends Screen {
         stack.pushPose();
         Render2DUtils.unGuiScale(stack);
 
-        int screenW = BlackOut.mc.getWindow().getScreenWidth();
-        int screenH = BlackOut.mc.getWindow().getScreenHeight();
+        int screenW = ScreenUtils.screenWidth();
+        int screenH = ScreenUtils.screenHeight();
 
         MainMenuSettings.getInstance().getRenderer().renderBackground(stack, screenW, screenH, this.mx, this.my);
 
@@ -240,8 +241,8 @@ public class AltManagerScreen extends Screen {
     }
 
     private void updateWindowData(double ignoredX, double ignoredY) {
-        double physicalWidth = BlackOut.mc.getWindow().getScreenWidth();
-        double physicalHeight = BlackOut.mc.getWindow().getScreenHeight();
+        double physicalWidth = ScreenUtils.screenWidth();
+        double physicalHeight = ScreenUtils.screenHeight();
 
         this.scale = (float) (physicalWidth / 2000.0F);
         this.windowHeight = (float) (physicalHeight / physicalWidth * 2000.0F);

@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.hud;
 
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.ConfigType;
 import bodevelopment.client.blackout.helpers.ScrollHelper;
@@ -72,8 +73,8 @@ public class HudElementList {
             return false;
         }
 
-        float listX = (BlackOut.mc.getWindow().getScreenWidth() - this.width) / 2.0F;
-        float listY = BlackOut.mc.getWindow().getScreenHeight() - this.height;
+        float listX = (ScreenUtils.screenWidth() - this.width) / 2.0F;
+        float listY = ScreenUtils.screenHeight() - this.height;
 
         if (insideBounds(listX, listY, this.width, 40.0F)) { // Клик по шапке
             this.open = !this.open;
@@ -86,8 +87,8 @@ public class HudElementList {
     }
 
     public boolean onScroll(double vertical) {
-        float listX = (BlackOut.mc.getWindow().getScreenWidth() - this.width) / 2.0F;
-        float listY = BlackOut.mc.getWindow().getScreenHeight() - this.height;
+        float listX = (ScreenUtils.screenWidth() - this.width) / 2.0F;
+        float listY = ScreenUtils.screenHeight() - this.height;
 
         if (!this.insideBounds(listX, listY, this.width, this.height)) {
             return false;
@@ -137,7 +138,7 @@ public class HudElementList {
         this.stack.pushPose();
         float width = this.getWidth();
         float height = this.getHeight();
-        this.stack.translate((BlackOut.mc.getWindow().getScreenWidth() - width) / 2.0F, BlackOut.mc.getWindow().getScreenHeight() - height, 0.0F);
+        this.stack.translate((ScreenUtils.screenWidth() - width) / 2.0F, ScreenUtils.screenHeight() - height, 0.0F);
         Render2DUtils.rounded(this.stack, 0.0F, 0.0F, width, height, 10.0F, 30.0F, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
         Render2DUtils.rounded(this.stack, 0.0F, 0.0F, width, 40.0F, 10.0F, 0.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I, Render2DUtils.RoundedSide.TOP);
         this.renderListContent();
@@ -164,8 +165,8 @@ public class HudElementList {
     }
 
     private void renderListContent() {
-        float listX = (BlackOut.mc.getWindow().getScreenWidth() - this.width) / 2.0F;
-        float listY = BlackOut.mc.getWindow().getScreenHeight() - this.height;
+        float listX = (ScreenUtils.screenWidth() - this.width) / 2.0F;
+        float listY = ScreenUtils.screenHeight() - this.height;
 
         float y = 60.0F - this.scroll.get();
         try (ScissorStack.Region region = this.scissor()) {
@@ -219,7 +220,7 @@ public class HudElementList {
 
     private float getHeight() {
         return Mth.lerp(
-                (float) AnimUtils.easeInOutCubic(this.clampLerpProgress(this.openProgress, 0.5F, 1.0F)), 40.0F, BlackOut.mc.getWindow().getScreenHeight() * 0.5F
+                (float) AnimUtils.easeInOutCubic(this.clampLerpProgress(this.openProgress, 0.5F, 1.0F)), 40.0F, ScreenUtils.screenHeight() * 0.5F
         );
     }
 

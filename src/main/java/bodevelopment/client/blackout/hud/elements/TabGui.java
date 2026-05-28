@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.hud.elements;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.KeyEvent;
@@ -60,8 +59,7 @@ public class TabGui extends HudElement {
 
     @Override
     public void render() {
-        if (PlayerUtils.isInGame()) {
-            this.stack.pushPose();
+        this.stack.pushPose();
             this.selectedParent = ParentCategory.categories.get(this.selectedParentId);
             this.selectedChild = this.getChild(this.selectedChildId);
             if (this.opened > -1) {
@@ -76,8 +74,7 @@ public class TabGui extends HudElement {
                 this.renderModules(180.0F, this.frameTime * 2.0F);
             }
 
-            this.stack.popPose();
-        }
+        this.stack.popPose();
     }
 
     private void renderParents(float x) {

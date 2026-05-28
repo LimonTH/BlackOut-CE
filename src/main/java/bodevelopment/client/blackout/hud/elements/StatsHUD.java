@@ -41,42 +41,56 @@ public class StatsHUD extends HudElement {
 
     @Override
     public void render() {
-        AbstractClientPlayer target = this.getTarget();
-        if (target != null) {
-            StatsManager.TrackerData data = Managers.STATS.getStats(target);
-            if (data != null) {
-                int statCount = this.statCount();
-                this.stack.pushPose();
-                this.setSize(
-                        Math.max(50.0F, BlackOut.FONT.getWidth(target.getGameProfile().getName()) * 1.5F + 20.0F),
-                        BlackOut.FONT.getHeight() * 1.5F + statCount * BlackOut.FONT.getHeight() + 10.0F
-                );
-                if (this.blur.get()) {
-                    Render2DUtils.drawLoadedBlur(
-                            "hudblur",
-                            this.stack,
-                            renderer -> renderer.rounded(0.0F, 0.0F, this.getWidth() / this.getScale(), this.getHeight() / this.getScale(), 3.0F, 10)
-                    );
-                    Renderer.onHUDBlur();
-                }
+        String playerName = BlackOut.mc.player != null
+                ? BlackOut.mc.player.getName().getString()
+                : "Player";
+        AbstractClientPlayer target = BlackOut.mc.level != null ? this.getTarget() : null;
 
-                if (this.bg.get()) {
-                    this.background.render(this.stack, 0.0F, 0.0F, this.getWidth() / this.getScale(), this.getHeight() / this.getScale(), 3.0F, 3.0F);
-                }
+        int statCount = this.statCount();
+        this.stack.pushPose();
+        this.setSize(
+                Math.max(50.0F, BlackOut.FONT.getWidth(playerName) * 1.5F + 20.0F),
+                BlackOut.FONT.getHeight() * 1.5F + statCount * BlackOut.FONT.getHeight() + 10.0F
+        );
+        if (this.blur.get()) {
+            Render2DUtils.drawLoadedBlur(
+                    "hudblur",
+                    this.stack,
+                    renderer -> renderer.rounded(0.0F, 0.0F, this.getWidth() / this.getScale(), this.getHeight() / this.getScale(), 3.0F, 10)
+            );
+            Renderer.onHUDBlur();
+        }
 
-                this.textColor.render(this.stack, target.getGameProfile().getName(), 1.5F, this.getWidth() / 2.0F / this.getScale(), 0.0F, true, false);
-                this.stack.translate(0.0, BlackOut.FONT.getHeight() * 1.5 + 10.0, 0.0);
+        if (this.bg.get()) {
+            this.background.render(this.stack, 0.0F, 0.0F, this.getWidth() / this.getScale(), this.getHeight() / this.getScale(), 3.0F, 3.0F);
+        }
 
-                for (Stats stat : Stats.values()) {
-                    if (this.shouldRender(stat)) {
-                        this.textColor.render(this.stack, this.getStat(stat, data), 1.0F, 0.0F, 0.0F, false, true);
-                        this.stack.translate(0.0F, BlackOut.FONT.getHeight(), 0.0F);
-                    }
-                }
+        this.textColor.render(this.stack, playerName, 1.5F, this.getWidth() / 2.0F / this.getScale(), 0.0F, true, false);
+        this.stack.translate(0.0, BlackOut.FONT.getHeight() * 1.5 + 10.0, 0.0);
 
-                this.stack.popPose();
+        StatsManager.TrackerData data = target != null ? Managers.STATS.getStats(target) : null;
+
+        for (Stats stat : Stats.values()) {
+            if (this.shouldRender(stat)) {
+                String value = data != null ? this.getStat(stat, data) : this.getDefaultStat(stat);
+                this.textColor.render(this.stack, value, 1.0F, 0.0F, 0.0F, false, true);
+                this.stack.translate(0.0F, BlackOut.FONT.getHeight(), 0.0F);
             }
         }
+
+        this.stack.popPose();
+    }
+
+    private String getDefaultStat(Stats stat) {
+        return switch (stat) {
+            case Hole -> "In Hole: 0s";
+            case Phased -> "Phased: 0s";
+            case Pops -> "Pops: 0";
+            case Eaten -> "Eaten: 0";
+            case Bottles -> "Bottles: 0";
+            case Moved -> "Moved: 0";
+            case Damage -> "Damage: 0.0";
+        };
     }
 
     private String getStat(Stats stat, StatsManager.TrackerData data) {

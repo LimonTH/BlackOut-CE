@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.visual.entities;
 
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.GameJoinEvent;
@@ -58,10 +59,9 @@ public class Breadcrumbs extends Module {
                 this.lastAddition = System.currentTimeMillis();
             }
 
-            this.stack.pushPose();
-            Render2DUtils.unGuiScale(this.stack);
+            ScreenUtils.beginPixelSpace(this.stack);
             this.list.update((pos, time, d) -> this.drawDot(this.stack, pos, d));
-            this.stack.popPose();
+            ScreenUtils.endPixelSpace(this.stack);
         }
     }
 

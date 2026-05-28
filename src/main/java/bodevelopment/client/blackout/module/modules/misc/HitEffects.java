@@ -14,6 +14,7 @@ import bodevelopment.client.blackout.module.setting.multisettings.ParticleMultiS
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.SoundUtils;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.List;
@@ -109,16 +110,15 @@ public class HitEffects extends Module {
     private void drawHitMarker() {
         if (this.hitMarker.get()) {
             if (System.currentTimeMillis() - this.startedDraw <= 100L) {
-                this.stack.pushPose();
-                Render2DUtils.unGuiScale(this.stack);
-                this.stack.translate(BlackOut.mc.getWindow().getScreenWidth() / 2.0F - 1.0F, BlackOut.mc.getWindow().getScreenHeight() / 2.0F - 1.0F, 0.0F);
+                ScreenUtils.beginPixelSpace(this.stack);
+                this.stack.translate(ScreenUtils.screenWidth() / 2.0F - 1.0F, ScreenUtils.screenHeight() / 2.0F - 1.0F, 0.0F);
                 int s = this.start.get();
                 int e = this.end.get();
                 Render2DUtils.fadeLine(this.stack, s, s, e, e, this.markerColor.get().getRGB());
                 Render2DUtils.fadeLine(this.stack, s, -s, e, -e, this.markerColor.get().getRGB());
                 Render2DUtils.fadeLine(this.stack, -s, s, -e, e, this.markerColor.get().getRGB());
                 Render2DUtils.fadeLine(this.stack, -s, -s, -e, -e, this.markerColor.get().getRGB());
-                this.stack.popPose();
+                ScreenUtils.endPixelSpace(this.stack);
             }
         }
     }

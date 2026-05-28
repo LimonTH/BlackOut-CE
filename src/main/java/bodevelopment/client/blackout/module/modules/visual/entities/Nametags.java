@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.module.modules.visual.entities;
 
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.FilterMode;
 import bodevelopment.client.blackout.event.Event;
@@ -130,15 +131,13 @@ public class Nametags extends Module {
     @Event(eventPriority = 5)
     public void onRender(RenderEvent.Hud.Pre event) {
         if (BlackOut.mc.level == null || BlackOut.mc.player == null) return;
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthMask(false);
-
         this.stack.pushPose();
-        Render2DUtils.unGuiScale(this.stack);
+        ScreenUtils.beginPixelSpace(this.stack);
         this.stack.translate(0, 0, RenderLayer.NAMETAGS);
 
         this.entities.forEach(entity -> this.renderNameTag(event.tickDelta, entity));
         this.stack.popPose();
+        ScreenUtils.endPixelSpace(this.stack);
 
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);

@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.hud.elements;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.module.modules.client.ThemeSettings;
@@ -28,8 +27,7 @@ public class ThemeTest extends HudElement {
 
     @Override
     public void render() {
-        if (PlayerUtils.isInGame()) {
-            this.stack.pushPose();
+        this.stack.pushPose();
             this.setSize(20.0F, 20.0F);
             ThemeSettings themeSettings = ThemeSettings.getInstance();
             this.i = 0;
@@ -64,7 +62,6 @@ public class ThemeTest extends HudElement {
                                 }
                             }
                     );
-            this.stack.popPose();
-        }
+        this.stack.popPose();
     }
 }

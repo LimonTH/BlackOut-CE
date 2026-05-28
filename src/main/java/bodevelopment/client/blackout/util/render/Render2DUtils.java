@@ -10,6 +10,7 @@ import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.renderer.ShaderRenderer;
 import bodevelopment.client.blackout.rendering.shader.Shader;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -193,7 +194,7 @@ public class Render2DUtils {
         float alpha = Renderer.getAlpha();
         Renderer.setAlpha(1.0F);
         try (RenderState state = renderer.begin(emptyStack, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION, shader, setup)) {
-            renderer.quadShape(0.0F, 0.0F, BlackOut.mc.getWindow().getScreenWidth(), BlackOut.mc.getWindow().getScreenHeight());
+            renderer.quadShape(0.0F, 0.0F, ScreenUtils.screenWidth(), ScreenUtils.screenHeight());
         }
         Renderer.setAlpha(alpha);
         emptyStack.popPose();
@@ -211,8 +212,8 @@ public class Render2DUtils {
         float alpha = Renderer.getAlpha();
         Renderer.setAlpha(1.0F);
 
-        float w = (float) BlackOut.mc.getWindow().getScreenWidth();
-        float h = (float) BlackOut.mc.getWindow().getScreenHeight();
+        float w = (float) ScreenUtils.screenWidth();
+        float h = (float) ScreenUtils.screenHeight();
 
         try (RenderState state = renderer.begin(emptyStack, 1.0F, 1.0F, 1.0F, 1.0F, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION, Shaders.screentexoverlay, new ShaderSetup(setup -> {
             setup.set("uTexture0", 0);
@@ -265,7 +266,7 @@ public class Render2DUtils {
         ShaderRenderer renderer = ShaderRenderer.getInstance();
         Renderer.setTexture(from, 0);
         renderer.quad(
-                emptyStack, 0.0F, 0.0F, BlackOut.mc.getWindow().getScreenWidth(), BlackOut.mc.getWindow().getScreenHeight(), shader, new ShaderSetup(setup -> {
+                emptyStack, 0.0F, 0.0F, ScreenUtils.screenWidth(), ScreenUtils.screenHeight(), shader, new ShaderSetup(setup -> {
                     setup.set("dist", getBlurDist(dist));
                     setup.set("uTexture", 0);
                 }), DefaultVertexFormat.POSITION_COLOR
@@ -625,7 +626,7 @@ public class Render2DUtils {
         stack.pushPose();
         stack.scale(scale, scale, 1.0F);
         stack.translate(width / -2.0F, height / -2.0F, 0.0F);
-        stack.translate((BlackOut.mc.getWindow().getScreenWidth() / 2.0 + x) / unscaled, (BlackOut.mc.getWindow().getScreenHeight() / 2.0 + y) / unscaled, 0.0);
+        stack.translate((ScreenUtils.screenWidth() / 2.0 + x) / unscaled, (ScreenUtils.screenHeight() / 2.0 + y) / unscaled, 0.0);
     }
 
     public static void unGuiScale(PoseStack stack) {
