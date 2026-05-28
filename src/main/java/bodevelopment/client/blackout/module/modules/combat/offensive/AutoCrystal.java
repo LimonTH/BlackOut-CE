@@ -772,6 +772,10 @@ public class AutoCrystal extends Module {
                 return false;
             }
 
+            if (this.placePos.equals(base.lastBestPos)) {
+                return false;
+            }
+
             if (crystalBasePos.equals(base.minePos)) {
                 return false;
             }
@@ -1298,6 +1302,9 @@ public class AutoCrystal extends Module {
         } else if (System.currentTimeMillis() - this.lastCalc > 100L) {
             return true;
         } else if (this.placePos == null) {
+            return true;
+        } else if (AutoCrystalBase.getInstance() != null && AutoCrystalBase.getInstance().lastBestPos != null
+                && !AutoCrystalBase.getInstance().lastBestPos.equals(this.placePos.below())) {
             return true;
         } else if (!this.crystalBlock(this.placePos)) {
             return true;

@@ -309,12 +309,12 @@ public class ObsidianModule extends Module {
                 if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
                     switch (this.rotationMode.get()) {
                         case Normal:
-                            if (!this.rotation.rotateBlock(data, RotationType.BlockPlace, "placing")) {
+                            if (!this.rotation.rotateBlock(data, RotationType.BlockPlace, "blockPlacing")) {
                                 return;
                             }
                             break;
                         case Instant:
-                            if (!this.rotation.rotateBlock(data, RotationType.InstantBlockPlace, "placing")) {
+                            if (!this.rotation.rotateBlock(data, RotationType.InstantBlockPlace, "blockPlacing")) {
                                 return;
                             }
                     }
@@ -344,7 +344,7 @@ public class ObsidianModule extends Module {
                         this.blocksLeft--;
                         this.placesLeft--;
                         if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-                            this.rotation.end("placing");
+                            this.rotation.end("blockPlacing");
                         }
                     }
                 }
