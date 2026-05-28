@@ -201,15 +201,12 @@ public class HudEditorSettings {
             }));
             return handled;
         } else if (this.mx < this.x || this.mx > this.x + 275.0F || this.my < this.y || this.my > this.y + this.length) {
-            if (!this.isOverDropdown()) {
+            EnumSetting<?> dropdown = this.getDropdownUnderMouse();
+            if (dropdown == null) {
                 return false;
             }
             this.wasPressHandled = true;
-            this.openedElement.settingGroups.forEach(group -> group.settings.forEach(setting -> {
-                if (setting.isVisible()) {
-                    setting.onMouse(button, true);
-                }
-            }));
+            dropdown.onMouse(button, true);
             return true;
         } else if (this.my < this.y + 30.0F) {
             this.wasPressHandled = true;
@@ -217,11 +214,16 @@ public class HudEditorSettings {
             return true;
         } else {
             this.wasPressHandled = true;
-            this.openedElement.settingGroups.forEach(group -> group.settings.forEach(setting -> {
-                if (setting.isVisible()) {
-                    setting.onMouse(button, true);
-                }
-            }));
+            EnumSetting<?> dropdown = this.getDropdownUnderMouse();
+            if (dropdown != null) {
+                dropdown.onMouse(button, true);
+            } else {
+                this.openedElement.settingGroups.forEach(group -> group.settings.forEach(setting -> {
+                    if (setting.isVisible()) {
+                        setting.onMouse(button, true);
+                    }
+                }));
+            }
             return true;
         }
     }
@@ -236,8 +238,8 @@ public class HudEditorSettings {
         return true;
     }
 
-    private boolean isOverDropdown() {
-        if (this.openedElement == null) return false;
+    private EnumSetting<?> getDropdownUnderMouse() {
+        if (this.openedElement == null) return null;
         for (SettingGroup group : this.openedElement.settingGroups) {
             for (Setting<?> s : group.settings) {
                 if (s instanceof EnumSetting<?> es && es.isChoosing() && es.isVisible()) {
@@ -247,12 +249,12 @@ public class HudEditorSettings {
                     float listHeight = (es.getValues().length - 1) * 20.0F;
                     if (this.mx >= listX && this.mx <= listX + listWidth
                             && this.my >= listY && this.my <= listY + listHeight) {
-                        return true;
+                        return es;
                     }
                 }
             }
         }
-        return false;
+        return null;
     }
 
     public void onKey(int key, boolean pressed) {
