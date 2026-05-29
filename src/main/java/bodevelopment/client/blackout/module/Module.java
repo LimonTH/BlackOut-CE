@@ -9,7 +9,7 @@ import bodevelopment.client.blackout.event.events.ModuleEvent;
 import bodevelopment.client.blackout.gui.clickgui.ConsoleLog;
 import bodevelopment.client.blackout.helpers.RotationHelper;
 import bodevelopment.client.blackout.manager.Managers;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.modules.visual.misc.SwingModifier;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.Settings;
@@ -103,10 +103,10 @@ public class Module extends AbstractModule {
                         message == null ? this.getDisplayName() + ChatFormatting.GREEN.toString() + " Enabled" : " " + message,
                         message == null ? "Enabled " + this.getDisplayName() : message,
                         "Module Toggle",
-                        Notifications.Type.Enable,
+                        NotificationsSettings.Type.Enable,
                         time == 0 ? 2 : time
                 );
-                if (Notifications.getInstance().sound.get()) {
+                if (NotificationsSettings.getInstance().sound.get()) {
                     SoundUtils.play(1.0F, 1.0F, "enable");
                 }
             }
@@ -114,7 +114,7 @@ public class Module extends AbstractModule {
     }
 
     public void silentDisable() {
-        this.doDisable(null, 0, Notifications.Type.Disable, false);
+        this.doDisable(null, 0, NotificationsSettings.Type.Disable, false);
     }
 
     public void disable() {
@@ -126,14 +126,14 @@ public class Module extends AbstractModule {
     }
 
     public void disable(String message, int time) {
-        this.doDisable(message, time, Notifications.Type.Disable, true);
+        this.doDisable(message, time, NotificationsSettings.Type.Disable, true);
     }
 
-    public void disable(String message, int time, Notifications.Type type) {
+    public void disable(String message, int time, NotificationsSettings.Type type) {
         this.doDisable(message, time, type, true);
     }
 
-    private void doDisable(String message, int time, Notifications.Type type, Boolean sendNotification) {
+    private void doDisable(String message, int time, NotificationsSettings.Type type, Boolean sendNotification) {
         if (this.enabled) {
             BlackOut.EVENT_BUS.post(new ModuleEvent.Disable(this));
             this.onDisable();
@@ -148,15 +148,15 @@ public class Module extends AbstractModule {
                         type,
                         time == 0 ? 2 : time
                 );
-                if (Notifications.getInstance().sound.get()) {
+                if (NotificationsSettings.getInstance().sound.get()) {
                     SoundUtils.play(1.0F, 1.0F, "disable");
                 }
             }
         }
     }
 
-    protected void sendNotification(String chatMessage, String text, String bigText, Notifications.Type type, double time) {
-        Notifications notifications = Notifications.getInstance();
+    protected void sendNotification(String chatMessage, String text, String bigText, NotificationsSettings.Type type, double time) {
+        NotificationsSettings notifications = NotificationsSettings.getInstance();
         if (notifications.chatNotifications.get()) {
             this.sendMessage(chatMessage);
         }
@@ -171,7 +171,7 @@ public class Module extends AbstractModule {
     }
 
     protected void sendMessage(String message) {
-        ChatUtils.addMessage(Notifications.getInstance().getClientPrefix() + " " + message, Objects.hash(this.name + "toggle"));
+        ChatUtils.addMessage(NotificationsSettings.getInstance().getClientPrefix() + " " + message, Objects.hash(this.name + "toggle"));
     }
 
     protected void sendPacket(Packet<?> packet) {

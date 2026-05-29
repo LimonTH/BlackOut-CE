@@ -14,15 +14,29 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 public class SoundUtils {
-    public static void play(float pitch, float volume, String name) {
-        play(pitch, volume, 0.0, 0.0, 0.0, false, name);
+    public static ChannelAccess.ChannelHandle play(float pitch, float volume, String name) {
+        return play(pitch, volume, 0.0, 0.0, 0.0, false, name);
     }
 
-    public static void play(SoundInstance instance, String name) {
-        play(instance.getPitch(), instance.getVolume(), instance.getX(), instance.getY(), instance.getZ(), instance.isRelative(), name);
+    public static ChannelAccess.ChannelHandle play(SoundInstance instance, String name) {
+        return play(instance.getPitch(), instance.getVolume(), instance.getX(), instance.getY(), instance.getZ(), instance.isRelative(), name);
     }
 
-    public static void play(float pitch, float volume, double x, double y, double z, boolean relative, String name) {
+    public static ChannelAccess.ChannelHandle play(float pitch, float volume, double x, double y, double z, boolean relative, String name) {
+        return playInternal(pitch, volume, x, y, z, relative, false, name);
+    }
+
+    public static ChannelAccess.ChannelHandle playLooping(float pitch, float volume, String name) {
+        return playInternal(pitch, volume, 0.0, 0.0, 0.0, false, true, name);
+    }
+
+    public static void stop(ChannelAccess.ChannelHandle handle) {
+        if (handle != null) {
+            handle.execute(source -> source.stop());
+        }
+    }
+
+    private static ChannelAccess.ChannelHandle playInternal(float pitch, float volume, double x, double y, double z, boolean relative, boolean looping, String name) {
         InputStream inputStream = FileUtils.getResourceStream("sounds", name + ".ogg");
         SoundEngine engine = BlackOut.mc.getSoundManager().soundEngine;
         ChannelAccess.ChannelHandle sourceManager = createSourceManager(engine, 5);
@@ -32,7 +46,7 @@ public class SoundUtils {
                 source.setPitch(pitch);
                 source.setVolume(volume);
                 source.disableAttenuation();
-                source.setLooping(false);
+                source.setLooping(looping);
                 source.setSelfPosition(vec);
                 source.setRelative(relative);
             });
@@ -47,6 +61,7 @@ public class SoundUtils {
                 source.play();
             }));
         }
+        return sourceManager;
     }
 
     private static ChannelAccess.ChannelHandle createSourceManager(SoundEngine engine, int i) {

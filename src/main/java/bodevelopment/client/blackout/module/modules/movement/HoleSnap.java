@@ -11,7 +11,7 @@ import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.interfaces.mixin.IVec3;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.modules.misc.Timer;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -85,7 +85,7 @@ public class HoleSnap extends Module {
                 && this.maxRubberbands.get() > 0
                 && ++this.rubberbands >= this.maxRubberbands.get()
                 && this.maxRubberbands.get() > 0) {
-            this.disable(this.getDisplayName() + " disabled, rubberbanded " + this.rubberbands + " times", 2, Notifications.Type.Alert);
+            this.disable(this.getDisplayName() + " disabled, rubberbanded " + this.rubberbands + " times", 2, NotificationsSettings.Type.Alert);
         }
     }
 
@@ -105,7 +105,7 @@ public class HoleSnap extends Module {
                     if (BlockUtils.hasEntityCollision(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(x, 0.0, z))) {
                         this.collisions++;
                         if (this.collisions >= this.maxCollisions.get() && this.maxCollisions.get() > 0) {
-                            this.disable(this.getDisplayName() + " disabled, collided " + this.collisions + " times", 2, Notifications.Type.Alert);
+                            this.disable(this.getDisplayName() + " disabled, collided " + this.collisions + " times", 2, NotificationsSettings.Type.Alert);
                         }
                     } else {
                         this.collisions = 0;
@@ -124,12 +124,12 @@ public class HoleSnap extends Module {
                     this.disable(this.getDisplayName() + " disabled, in hole");
                     ((IVec3) event.movement).blackout_Client$setXZ(0.0, 0.0);
                 } else if (BlockUtils.hasEntityCollision(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox().move(0.0, -0.05, 0.0))) {
-                    this.disable(this.getDisplayName() + " hole unreachable, disabling", 2, Notifications.Type.Alert);
+                    this.disable(this.getDisplayName() + " hole unreachable, disabling", 2, NotificationsSettings.Type.Alert);
                 } else {
                     event.setXZ(this, 0.0, 0.0);
                 }
             } else {
-                this.disable("No hole was found disabling " + this.getDisplayName(), 2, Notifications.Type.Alert);
+                this.disable("No hole was found disabling " + this.getDisplayName(), 2, NotificationsSettings.Type.Alert);
             }
         }
     }

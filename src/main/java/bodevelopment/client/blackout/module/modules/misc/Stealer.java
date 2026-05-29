@@ -9,7 +9,7 @@ import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.BoxMultiSetting;
@@ -134,7 +134,7 @@ public class Stealer extends Module {
     @Event
     public void onGameJoin(GameJoinEvent event) {
         if (this.tpDisable.get()) {
-            this.disable(this.getDisplayName() + " was disabled due to server change/teleport", 5, Notifications.Type.Info);
+            this.disable(this.getDisplayName() + " was disabled due to server change/teleport", 5, NotificationsSettings.Type.Info);
         }
     }
 

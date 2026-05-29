@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.manager.Managers;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.util.ChatUtils;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -21,7 +21,7 @@ public class MixinChatScreen {
             if (rur == null) {
                 ChatUtils.addMessage("Unrecognized command!");
             } else {
-                ChatUtils.addMessage(Notifications.getInstance().getClientPrefix() + " " + rur);
+                ChatUtils.addMessage(NotificationsSettings.getInstance().getClientPrefix() + " " + rur);
             }
         } else {
             instance.sendChat(content);

@@ -6,7 +6,7 @@ import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.event.events.ModuleEvent;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 
 import java.util.Stack;
@@ -65,7 +65,7 @@ public class SafeMyFPS extends Module {
         Module culprit = history.pop();
 
         if (culprit != null && culprit.enabled) {
-            culprit.disable("FPS Disabled " + culprit.getDisplayName(), 3, Notifications.Type.Alert);
+            culprit.disable("FPS Disabled " + culprit.getDisplayName(), 3, NotificationsSettings.Type.Alert);
 
             lowFpsTime = -1;
         }

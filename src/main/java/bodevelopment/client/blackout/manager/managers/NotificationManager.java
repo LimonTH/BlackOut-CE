@@ -4,9 +4,8 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.manager.Manager;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.util.ScreenUtils;
-import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,7 +31,7 @@ public class NotificationManager extends Manager {
                     if (System.currentTimeMillis() > notification.startTime + notification.time) {
                         return true;
                     } else {
-                        this.y = this.y + Notifications.getInstance().render(this.stack, notification, this.y);
+                        this.y = this.y + NotificationsSettings.getInstance().render(this.stack, notification, this.y);
                         return false;
                     }
                 });
@@ -42,8 +41,8 @@ public class NotificationManager extends Manager {
         }
     }
 
-    public void addNotification(String text, String bigText, double time, Notifications.Type type) {
-        if (Notifications.getInstance().hudNotifications.get()) {
+    public void addNotification(String text, String bigText, double time, NotificationsSettings.Type type) {
+        if (NotificationsSettings.getInstance().hudNotifications.get()) {
             this.notifications.addFirst(new Notification(text, bigText, time, type));
         }
     }
@@ -51,11 +50,11 @@ public class NotificationManager extends Manager {
     public static class Notification {
         public final String text;
         public final String bigText;
-        public final Notifications.Type type;
+        public final NotificationsSettings.Type type;
         public final long startTime;
         public final long time;
 
-        public Notification(String text, String bigText, double time, Notifications.Type type) {
+        public Notification(String text, String bigText, double time, NotificationsSettings.Type type) {
             this.text = text;
             this.bigText = bigText;
             this.type = type;

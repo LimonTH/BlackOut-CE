@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.modules.misc.Timer;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -98,7 +98,7 @@ public class LongJump extends Module {
     public void onPacket(PacketEvent.Receive.Pre event) {
         if (event.packet instanceof ClientboundPlayerPositionPacket) {
             if (this.enabled) {
-                this.disable(this.getDisplayName() + " was disabled to prevent rubberbanding", 4, Notifications.Type.Alert);
+                this.disable(this.getDisplayName() + " was disabled to prevent rubberbanding", 4, NotificationsSettings.Type.Alert);
             }
 
             this.prevRubberband = System.currentTimeMillis();
