@@ -230,11 +230,7 @@ public class MenuMusicSettings extends SettingsModule {
     }
 
     public enum MusicTrack {
-        MoneyPhonk("money_phonk"),
-        WalkPhonk("walk_phonk"),
-        DearHell("dear_hell"),
-        NoWords("no_words");
-
+        MoneyPhonk("money_phonk");
         public final String fileName;
 
         MusicTrack(String fileName) {
