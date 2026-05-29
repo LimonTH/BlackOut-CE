@@ -1,36 +1,26 @@
 package bodevelopment.client.blackout.module.modules.combat.offensive;
 
 import bodevelopment.client.blackout.BlackOut;
-import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.enums.SwitchMode;
-import bodevelopment.client.blackout.event.Event;
-import bodevelopment.client.blackout.event.events.PacketEvent;
-import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.interfaces.functional.EpicInterface;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.ObsidianModule;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.module.modules.client.settings.SwingSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
-import bodevelopment.client.blackout.randomstuff.PlaceData;
 import bodevelopment.client.blackout.util.*;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
-import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.SwordItem;
-import net.minecraft.world.level.block.AirBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Comparator;
 import java.util.List;
+
 public class AutoCrystalBase extends ObsidianModule {
     private static AutoCrystalBase INSTANCE;
 
@@ -44,15 +34,10 @@ public class AutoCrystalBase extends ObsidianModule {
     private final Setting<Integer> verticalRadius = this.sgPerformance.intSetting("Vertical Depth", 3, 1, 10, 1, "How many blocks to search up and down.");
 
     private final Setting<Boolean> autoMineToggle = this.sgAutoMine.booleanSetting("Enable Auto Mine", true, "Master switch: mines obstacles blocking base placement.");
-    private final Setting<Boolean> minePacket = this.sgAutoMine.booleanSetting("Packet Mine", true, "Sends mining packets without client-side block removal.", this.autoMineToggle::get);
     private final Setting<Boolean> pauseEat = this.sgAutoMine.booleanSetting("Pause on Consume", false, "Stops mining while eating or drinking.", this.autoMineToggle::get);
     private final Setting<Boolean> pauseSword = this.sgAutoMine.booleanSetting("Sword Safety", false, "Disables mining while holding a sword.", this.autoMineToggle::get);
     private final Setting<List<Block>> ignore = this.sgAutoMine.blockListSetting("Exclusion List", "Blocks that will never be targeted for mining.", this.autoMineToggle::get);
-    private final Setting<Boolean> switchReset = this.sgAutoMine.booleanSetting("Switch Reset", true, "Aborts mining progress if held item changes.", this.autoMineToggle::get);
-    private final Setting<Boolean> rangeReset = this.sgAutoMine.booleanSetting("Range Reset", true, "Cancels mining if block moves out of reach.", this.autoMineToggle::get);
     private final Setting<Boolean> ncpProgress = this.sgAutoMine.booleanSetting("NCP Validation", true, "Calculates speed based on NCP thresholds.", this.autoMineToggle::get);
-    private final Setting<RotationMode> rotationMode = this.sgAutoMine.enumSetting("Rotation Mode", RotationMode.Both, "When to rotate head towards block.", this.autoMineToggle::get);
-    private final Setting<Boolean> preSwitch = this.sgAutoMine.booleanSetting("Predictive Switch", false, "Swaps to pickaxe slightly before break.", this.autoMineToggle::get);
     private final Setting<SwitchMode> pickaxeSwitch = this.sgAutoMine.enumSetting("Pickaxe Swap Mode", SwitchMode.InvSwitch, "Method to equip pickaxe.", this.autoMineToggle::get);
     private final Setting<Boolean> allowInventory = this.sgAutoMine.booleanSetting("Inventory Mining", false, "Allows tools in inventory.", () -> this.autoMineToggle.get() && this.pickaxeSwitch.get().inventory);
     private final Setting<Double> speed = this.sgAutoMine.doubleSetting("Mining Speed Multiplier", 1.0, 0.0, 2.0, 0.05, "Global multiplier for block breaking speed.", this.autoMineToggle::get);
@@ -61,7 +46,7 @@ public class AutoCrystalBase extends ObsidianModule {
     private final Setting<Boolean> effectCheck = this.sgAutoMine.booleanSetting("Status Effect Scaling", true, "Adjusts speed based on Haste/Fatigue.", this.autoMineToggle::get);
     private final Setting<Boolean> waterCheck = this.sgAutoMine.booleanSetting("Fluid Penalty Check", true, "Applies vanilla slowdown in water.", this.autoMineToggle::get);
 
-    private Player target = null;
+    public Player target = null;
     BlockPos lastBestPos = null;
     private int internalTicks = 0;
 
@@ -69,62 +54,11 @@ public class AutoCrystalBase extends ObsidianModule {
     private boolean cachedIsFar = false;
 
     public BlockPos minePos = null;
-    public boolean started = false;
-    private double progress = 0.0;
-    private int minedFor = 0;
-    private boolean shouldRestart = false;
-    private boolean startedThisTick = false;
 
     public AutoCrystalBase() {
         super("Auto Crystal Base", "Dynamic obsidian placement and mining for crystals.", SubCategory.OFFENSIVE);
         INSTANCE = this;
         this.attack.hide(false);
-    }
-
-    @Event
-    public void onSent(PacketEvent.Sent event) {
-        if (this.switchReset.get() && event.packet instanceof ServerboundSetCarriedItemPacket) {
-            this.shouldRestart = true;
-        }
-    }
-
-    @Event
-    public void onTick(TickEvent.Pre event) {
-        super.onTick(event);
-        if (!PlayerUtils.isInGame()) return;
-        this.startedThisTick = false;
-
-        if (this.shouldRestart) {
-            if (this.minePos != null) this.abort(this.minePos);
-            this.shouldRestart = false;
-            this.started = false;
-        }
-        if (this.minePos != null) {
-            if (!BlackOut.mc.level.getFluidState(this.minePos).isEmpty() ||
-                    !BlackOut.mc.level.getFluidState(this.minePos.above()).isEmpty()) {
-
-                this.abort(this.minePos);
-                this.minePos = null;
-                this.started = false;
-                return;
-            }
-            if (this.autoMineToggle.get()) {
-                if (this.rangeReset.get() && !SettingUtils.inMineRange(this.minePos)) {
-                    this.abort(this.minePos);
-                    this.minePos = null;
-                    this.lastBestPos = null;
-                    this.started = false;
-                    return;
-                }
-                if (!this.started && !this.paused()) {
-                    Direction dir = SettingUtils.getPlaceOnDirection(this.minePos);
-                    if (!this.shouldRotateStart() || this.rotation.rotateBlock(this.minePos, dir, this.minePos.getCenter(), RotationType.Mining, "mining")) {
-                        this.start(this.minePos);
-                    }
-                }
-                this.updateMining();
-            }
-        }
     }
 
     @Override
@@ -146,23 +80,24 @@ public class AutoCrystalBase extends ObsidianModule {
             return;
         }
 
-        AutoCrystal ac = AutoCrystal.getInstance();
-        if (ac == null || !ac.enabled) return;
-
         if (internalTicks < updateDelay.get()) {
             internalTicks++;
             if (lastBestPos != null && minePos == null) {
-                if (BlockUtils.isLiquid(lastBestPos.above())) {
+                if (!SettingUtils.inPlaceRange(lastBestPos)) {
                     lastBestPos = null;
-                } else if (SettingUtils.inPlaceRange(lastBestPos)) {
-                    this.blockPlacements.add(lastBestPos);
                 } else {
-                    lastBestPos = null;
+                    this.blockPlacements.add(lastBestPos);
                 }
             }
             return;
         }
         internalTicks = 0;
+
+        AutoCrystal ac = AutoCrystal.getInstance();
+        if (ac == null || !ac.enabled) {
+            minePos = null;
+            return;
+        }
 
         BlockPos targetPos = target.blockPosition();
         cachedSurroundState = getSurroundState(targetPos);
@@ -173,37 +108,24 @@ public class AutoCrystalBase extends ObsidianModule {
         if (bestPos != null) {
             if (isNearExistingBase(bestPos)) {
                 lastBestPos = null;
-                if (minePos != null) {
-                    abort(minePos);
-                    minePos = null;
-                }
+                minePos = null;
                 return;
             }
 
             BlockPos obstacle = getObstacle(bestPos);
 
             if (obstacle != null && this.autoMineToggle.get()) {
-                if (!obstacle.equals(minePos)) {
-                    if (minePos != null) abort(minePos);
-                    minePos = obstacle;
-                    lastBestPos = bestPos;
-                    started = false;
-                }
+                minePos = obstacle;
+                lastBestPos = bestPos;
             } else {
-                if (minePos != null) {
-                    abort(minePos);
-                    minePos = null;
-                }
+                minePos = null;
                 lastBestPos = bestPos;
                 if (BlockUtils.replaceable(bestPos) && SettingUtils.inPlaceRange(bestPos)) {
                     this.blockPlacements.add(bestPos);
                 }
             }
         } else {
-            if (minePos != null) {
-                abort(minePos);
-                minePos = null;
-            }
+            minePos = null;
             lastBestPos = null;
         }
     }
@@ -273,7 +195,7 @@ public class AutoCrystalBase extends ObsidianModule {
     }
 
     private double getBestBreakDelta(BlockPos pos) {
-        int slot = this.findBestSlot(stack -> BlockUtils.getBlockBreakingDelta(
+        int slot = findBestSlot(stack -> BlockUtils.getBlockBreakingDelta(
                 pos, stack, this.effectCheck.get(), this.waterCheck.get(),
                 this.onGroundCheck.get() && !this.onGroundSpoof.get())).slot();
         ItemStack bestStack = BlackOut.mc.player.getInventory().getItem(slot);
@@ -281,7 +203,6 @@ public class AutoCrystalBase extends ObsidianModule {
                 this.effectCheck.get(), this.waterCheck.get(),
                 this.onGroundCheck.get() && !this.onGroundSpoof.get());
     }
-
 
     private BlockPos getObstacle(BlockPos pos) {
         BlockPos crystalPos = pos.above();
@@ -374,7 +295,7 @@ public class AutoCrystalBase extends ObsidianModule {
 
     private int getSurroundState(BlockPos targetPos) {
         int count = 0;
-        for (Direction dir : Direction.Plane.HORIZONTAL) {
+        for (net.minecraft.core.Direction dir : net.minecraft.core.Direction.Plane.HORIZONTAL) {
             Block b = BlackOut.mc.level.getBlockState(targetPos.relative(dir)).getBlock();
             if (b == Blocks.OBSIDIAN || b == Blocks.BEDROCK || b == Blocks.ENDER_CHEST
                     || b == Blocks.RESPAWN_ANCHOR || b == Blocks.CRYING_OBSIDIAN) {
@@ -399,162 +320,11 @@ public class AutoCrystalBase extends ObsidianModule {
         return DamageUtils.crystalDamage(p, p.getBoundingBox(), pos.getCenter().add(0, 0.5, 0));
     }
 
-    private void updateMining() {
-        if (this.minePos != null && !this.startedThisTick) {
-            boolean holding = this.itemMinedCheck(Managers.PACKET.getStack());
-            int slot = this.findBestSlot(stack -> BlockUtils.getBlockBreakingDelta(
-                    this.minePos, stack, this.effectCheck.get(), this.waterCheck.get(),
-                    this.onGroundCheck.get() && !this.onGroundSpoof.get())).slot();
-            ItemStack bestStack = holding ? Managers.PACKET.getStack() : BlackOut.mc.player.getInventory().getItem(slot);
-
-            if (this.ncpProgress.get()) {
-                this.minedFor++;
-            } else {
-                this.progress += BlockUtils.getBlockBreakingDelta(this.minePos, bestStack,
-                        this.effectCheck.get(), this.waterCheck.get(),
-                        this.onGroundCheck.get() && !this.onGroundSpoof.get());
-            }
-
-            if (this.minedCheck(bestStack)) {
-                this.endMining(holding, slot);
-            } else if (this.almostMined(bestStack) && this.shouldRotateEnd()) {
-                this.preRotate();
-            }
-        }
-    }
-
-    private void start(BlockPos pos) {
-        Direction dir = SettingUtils.getPlaceOnDirection(pos);
-        if (dir != null) {
-            this.started = true;
-            this.startedThisTick = true;
-            this.progress = 0.0;
-            this.minedFor = 0;
-
-            if (this.preSwitch.get()) {
-                int slot = this.findBestSlot(stack -> BlockUtils.getBlockBreakingDelta(this.minePos, stack,
-                        this.effectCheck.get(), this.waterCheck.get(),
-                        this.onGroundCheck.get() && !this.onGroundSpoof.get())).slot();
-                this.pickaxeSwitch.get().swap(slot);
-            }
-
-            this.sendSequenced(s -> new ServerboundPlayerActionPacket(
-                    ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, dir, s));
-            SwingSettings.getInstance().mineSwing(SwingSettings.MiningSwingState.Start);
-            this.rotation.end("mining");
-
-            if (this.preSwitch.get()) {
-                this.pickaxeSwitch.get().swapBack();
-            }
-        }
-    }
-
-    private void endMining(boolean holding, int slot) {
-        if (!(BlackOut.mc.level.getBlockState(this.minePos).getBlock() instanceof AirBlock)) {
-            if (SettingUtils.inMineRange(this.minePos)) {
-                Direction dir = SettingUtils.getPlaceOnDirection(this.minePos);
-                if (dir != null) {
-                    if (!this.shouldRotateEnd() || this.rotation.rotateBlock(this.minePos, dir,
-                            this.minePos.getCenter(), RotationType.Mining, "mining")) {
-                        boolean switched = false;
-                        if (holding || (switched = this.pickaxeSwitch.get().swap(slot))) {
-                            this.sendSequenced(s -> new ServerboundPlayerActionPacket(
-                                    ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, this.minePos, dir, s));
-                            SwingSettings.getInstance().mineSwing(SwingSettings.MiningSwingState.End);
-
-                            BlackOut.mc.level.setBlockAndUpdate(this.minePos, Blocks.AIR.defaultBlockState());
-
-                            Managers.BLOCK.set(this.minePos, Blocks.AIR, true, true);
-                            Managers.ENTITY.addSpawning(this.minePos);
-
-                            this.started = false;
-                            this.minePos = null;
-                            this.rotation.end("mining");
-
-                            if (switched) {
-                                this.pickaxeSwitch.get().swapBack();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private void abort(BlockPos pos) {
-        this.sendPacket(new ServerboundPlayerActionPacket(
-                ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN, 0));
-        this.started = false;
-    }
-
-    private void preRotate() {
-        if (!(BlackOut.mc.level.getBlockState(this.minePos).getBlock() instanceof AirBlock)) {
-            if (SettingUtils.inMineRange(this.minePos)) {
-                Direction dir = SettingUtils.getPlaceOnDirection(this.minePos);
-                if (dir != null && this.shouldRotateEnd()) {
-                    this.rotation.rotateBlock(this.minePos, dir, this.minePos.getCenter(), RotationType.Mining, "mining");
-                }
-            }
-        }
-    }
-
     private FindResult findBestSlot(EpicInterface<ItemStack, Double> test) {
         return InvUtils.findBest(this.pickaxeSwitch.get().hotbar, this.allowInventory.get(), test);
-    }
-
-    private boolean itemMinedCheck(ItemStack stack) {
-        if (!this.ncpProgress.get()) {
-            return this.progress * this.speed.get() >= 1.0;
-        } else {
-            return this.minedFor * this.speed.get() >= Math.ceil(1.0 / BlockUtils.getBlockBreakingDelta(
-                    this.minePos, stack, this.effectCheck.get(), this.waterCheck.get(),
-                    this.onGroundCheck.get() || this.onGroundSpoof.get()));
-        }
-    }
-
-    private boolean minedCheck(ItemStack stack) {
-        if (this.itemMinedCheck(stack)) {
-            return true;
-        } else {
-            if (this.onGroundSpoof.get()) Managers.PACKET.spoofOG(true);
-            return false;
-        }
-    }
-
-    private boolean almostMined(ItemStack stack) {
-        if (BlackOut.mc.level.getBlockState(this.minePos).getBlock() instanceof AirBlock) return false;
-        if (!SettingUtils.inMineRange(this.minePos)) return false;
-        if (SettingUtils.getPlaceOnDirection(this.minePos) == null) return false;
-
-        if (!this.ncpProgress.get()) {
-            return this.progress >= 0.9;
-        } else {
-            return this.minedFor + 2 >= Math.ceil(1.0 / BlockUtils.getBlockBreakingDelta(
-                    this.minePos, stack, this.effectCheck.get(), this.waterCheck.get(),
-                    this.onGroundCheck.get() || this.onGroundSpoof.get()));
-        }
-    }
-
-    private boolean paused() {
-        return (this.pauseEat.get() && BlackOut.mc.player.isUsingItem())
-                || (this.pauseSword.get() && BlackOut.mc.player.getMainHandItem().getItem() instanceof SwordItem);
-    }
-
-    private boolean shouldRotateStart() {
-        RotationMode mode = rotationMode.get();
-        return mode == RotationMode.StartOnly || mode == RotationMode.Both || SettingUtils.shouldRotate(RotationType.Mining);
-    }
-
-    private boolean shouldRotateEnd() {
-        RotationMode mode = rotationMode.get();
-        return mode == RotationMode.EndOnly || mode == RotationMode.Both || SettingUtils.shouldRotate(RotationType.Mining);
     }
 
     @Override protected boolean validForBlocking(Entity entity) { return false; }
     @Override protected double getCooldown() { return 0.1 * updateDelay.get(); }
     public static AutoCrystalBase getInstance() { return INSTANCE; }
-
-    public enum RotationMode {
-        None, StartOnly, EndOnly, Both
-    }
 }

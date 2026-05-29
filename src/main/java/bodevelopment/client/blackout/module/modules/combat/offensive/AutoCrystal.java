@@ -1700,6 +1700,12 @@ public class AutoCrystal extends Module {
             return switch (autoMine.mineType) {
                 case Cev, TrapCev, SurroundCev ->
                         BlockPos.containing(entity.position().add(0.0, -0.3, 0.0)).equals(autoMine.minePos);
+                case CrystalBase -> {
+                    if (entity instanceof EndCrystal) {
+                        yield false;
+                    }
+                    yield BoxUtils.get(autoMine.minePos).intersects(entity.getBoundingBox());
+                }
                 case SurroundMiner, AutoCity, AntiBurrow, Manual ->
                         BoxUtils.get(autoMine.minePos).intersects(entity.getBoundingBox());
                 default -> false;

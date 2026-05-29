@@ -40,10 +40,14 @@ import net.minecraft.world.level.block.AirBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.client.multiplayer.prediction.BlockStatePredictionHandler;
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.List;
 
 public class AutoMine extends Module {
@@ -59,6 +63,7 @@ public class AutoMine extends Module {
     private final SettingGroup sgSurroundMiner = this.addGroup("Surround Miner");
     private final SettingGroup sgAntiSurround = this.addGroup("Anti Surround");
     private final SettingGroup sgAntiBurrow = this.addGroup("Anti Burrow");
+    private final SettingGroup sgCrystalBase = this.addGroup("Crystal Base");
     private final SettingGroup sgRender = this.addGroup("Render");
 
     private final Setting<Boolean> pauseEat = this.sgGeneral.booleanSetting("Pause on Consume", false, "Stops mining operations while eating or drinking.");
@@ -95,6 +100,7 @@ public class AutoMine extends Module {
     private final Setting<Double> placeSpeed = this.sgCrystals.doubleSetting("Crystal Placement Rate", 2.0, 0.0, 20.0, 0.1, "The frequency of crystal placements per second during mining.");
     private final Setting<Double> attackSpeed = this.sgCrystals.doubleSetting("Crystal Attack Rate", 2.0, 0.0, 20.0, 0.1, "The frequency of crystal detonations per second.");
     private final Setting<Double> attackTime = this.sgCrystals.doubleSetting("Detonation Window", 2.0, 0.0, 10.0, 0.1, "The duration in seconds to keep attacking a placed crystal.");
+    private final Setting<Boolean> sequenceExploit = this.sgCrystals.booleanSetting("Packet Exploit", false, "Sends STOP and crystal placement in the same prediction sequence to bypass right-click reset.");
 
     private final Setting<Priority> cevPriority = this.sgCev.enumSetting("CEV Priority", Priority.Normal, "Priority level for Crystal-End-Vantage (Top-down) attacks.");
     private final Setting<Boolean> cevDamageCheck = this.sgCev.booleanSetting("CEV Safety Check", true, "Ensures CEV placement deals damage to the target and not the player.", () -> this.cevPriority.get() != Priority.Disabled);
@@ -135,6 +141,8 @@ public class AutoMine extends Module {
 
     private final Setting<Priority> antiBurrowPriority = this.sgAntiBurrow.enumSetting("Anti-Burrow Priority", Priority.Normal, "Priority for mining blocks inside the target's feet (burrowed blocks).");
 
+    private final Setting<Priority> crystalBasePriority = this.sgCrystalBase.enumSetting("Crystal Base Priority", Priority.Normal, "Priority for Crystal Base mining.");
+
     private final Setting<Boolean> mineStartSwing = this.sgRender.booleanSetting("Initiation Animation", false, "Shows a hand swing when starting a mining operation.");
     private final Setting<Boolean> mineEndSwing = this.sgRender.booleanSetting("Completion Animation", false, "Shows a hand swing when the block is broken.");
     private final Setting<SwingHand> mineHand = this.sgRender.enumSetting("Mining Arm", SwingHand.RealHand, "The arm used for mining animations.", () -> this.mineStartSwing.get() || this.mineEndSwing.get());
@@ -174,6 +182,8 @@ public class AutoMine extends Module {
     private boolean shouldRestart = false;
     private boolean holdingForNcp = false;
     private boolean suppressResetOnSwitch = false;
+    private boolean silentSwap = false;
+    private int silentPrevSlot = 0;
 
     public AutoMine() {
         super("Auto Mine", "Automatically mines enemies' surround blocks to abuse them with crystals.", SubCategory.OFFENSIVE, true);
@@ -193,10 +203,7 @@ public class AutoMine extends Module {
 
     @Override
     public void onDisable() {
-        if (this.holdingForNcp) {
-            this.pickaxeSwitch.get().swapBack();
-            this.holdingForNcp = false;
-        }
+        this.restoreSwap();
     }
 
     @Event
@@ -418,6 +425,7 @@ public class AutoMine extends Module {
             target = this.targetCheck(target, this.getSurroundMiner(), this.surroundMinerPriority);
             target = this.targetCheck(target, this.getAutoCity(), this.autoCityPriority);
             target = this.targetCheck(target, this.getAntiBurrow(), this.antiBurrowPriority);
+            target = this.targetCheck(target, this.getCrystalBase(), this.crystalBasePriority);
         }
 
         return target == null ? new  Target(null, null, null, 0, null) : target;
@@ -655,7 +663,23 @@ public class AutoMine extends Module {
         return best == null ? null : new  Target(best, bestCrystal,  MineType.AutoCity, this.autoCityPriority.get().priority, bestPlayer);
     }
 
-    private  Target getAntiBurrow() {
+    private Target getCrystalBase() {
+        AutoCrystalBase crystalBase = AutoCrystalBase.getInstance();
+
+        if (crystalBase == null || !crystalBase.enabled || crystalBase.minePos == null) {
+            return null;
+        }
+
+        return new Target(
+                crystalBase.minePos,
+                null,
+                MineType.CrystalBase,
+                this.crystalBasePriority.get().priority,
+                crystalBase.target
+        );
+    }
+
+    private Target getAntiBurrow() {
         BlockPos best = null;
         Player bestPlayer = null;
         double bestDist = 1000.0;
@@ -831,20 +855,17 @@ public class AutoMine extends Module {
     private void mineEndUpdate(boolean holding, int slot) {
         EndCrystal crystalAt = this.endCrystalAt(this.crystalPos);
         if (!this.notPressed() && !this.ignored(this.minePos)) {
+            boolean cevOnMinePos = false;
+            boolean cevAnti = false;
+
             switch (this.mineType) {
                 case Cev:
                     if (crystalAt == null) {
                         if (EntityUtils.intersects(BoxUtils.crystalSpawnBox(this.crystalPos), entity -> true)) {
                             return;
                         }
-
-                        if (!this.placeCrystal(this.crystalPos.below())) {
-                            return;
-                        }
-
-                        if (!this.antiAntiCev.get()) {
-                            return;
-                        }
+                        cevOnMinePos = true;
+                        cevAnti = this.antiAntiCev.get();
                     }
                     break;
                 case TrapCev:
@@ -852,14 +873,8 @@ public class AutoMine extends Module {
                         if (EntityUtils.intersects(BoxUtils.crystalSpawnBox(this.crystalPos), entity -> true)) {
                             return;
                         }
-
-                        if (!this.placeCrystal(this.crystalPos.below())) {
-                            return;
-                        }
-
-                        if (!this.antiAntiTrapCev.get()) {
-                            return;
-                        }
+                        cevOnMinePos = true;
+                        cevAnti = this.antiAntiTrapCev.get();
                     }
                     break;
                 case SurroundCev:
@@ -870,12 +885,16 @@ public class AutoMine extends Module {
                         if (EntityUtils.intersects(BoxUtils.crystalSpawnBox(this.crystalPos), entity -> true)) {
                             return;
                         }
-
-                        if (!this.placeCrystal(this.crystalPos.below())) {
+                        cevOnMinePos = true;
+                        cevAnti = this.antiAntiSurroundCev.get();
+                    }
+                    break;
+                case CrystalBase:
+                    if (this.endCrystalAt(this.minePos) == null) {
+                        if (EntityUtils.intersects(BoxUtils.crystalSpawnBox(this.minePos), entity -> true)) {
                             return;
                         }
-
-                        if (!this.antiAntiSurroundCev.get()) {
+                        if (!this.placeCrystal(this.minePos.below())) {
                             return;
                         }
                     }
@@ -886,7 +905,77 @@ public class AutoMine extends Module {
                     }
             }
 
+            if (cevOnMinePos) {
+                if (cevAnti) {
+                    if (!this.placeCrystal(this.crystalPos.below())) return;
+                } else if (this.sequenceExploit.get()) {
+                    this.endMiningWithCrystal(holding, slot);
+                    return;
+                } else {
+                    if (!this.placeCrystal(this.crystalPos.below())) return;
+                    this.started = false;
+                    this.progress = 0.0;
+                    this.minedFor = 0;
+                    return;
+                }
+            }
+
             this.endMining(holding, slot);
+        }
+    }
+
+    private void endMiningWithCrystal(boolean holding, int slot) {
+        if (!(this.getBlock(this.minePos) instanceof AirBlock)
+                && SettingUtils.inMineRange(this.minePos)) {
+            Direction dir = SettingUtils.getPlaceOnDirection(this.minePos);
+            Direction crystalDir = SettingUtils.getPlaceOnDirection(this.crystalPos.below());
+            if (dir != null && crystalDir != null) {
+                if (!this.shouldRotateEnd() || this.rotation.rotateBlock(this.minePos, dir,
+                        this.getMineEndRotationVec(), RotationType.Mining, "mining")) {
+                    boolean switched = false;
+                    if (this.holdingForNcp || holding || (switched = this.pickaxeSwitch.get().swap(slot))) {
+                        InteractionHand hand = InvUtils.getHand(Items.END_CRYSTAL);
+                        boolean crystalSwitched = false;
+                        FindResult result = this.crystalSwitch.get().find(Items.END_CRYSTAL);
+                        if (hand == null && result.wasFound()) {
+                            crystalSwitched = this.crystalSwitch.get().swap(result.slot());
+                            hand = InteractionHand.MAIN_HAND;
+                        }
+                        InteractionHand finalHand = Objects.requireNonNullElse(hand, InteractionHand.MAIN_HAND);
+
+                        BlockStatePredictionHandler seq = BlackOut.mc.level.getBlockStatePredictionHandler().startPredicting();
+                        int s = seq.currentSequence();
+                        this.sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, this.minePos, dir, s));
+                        boolean inside = !BlackOut.mc.level.getBlockState(this.crystalPos.below()).is(Blocks.COBWEB)
+                                && !BlackOut.mc.level.getBlockState(this.crystalPos.below()).is(Blocks.POWDER_SNOW);
+                        this.sendPacket(new ServerboundUseItemOnPacket(finalHand,
+                                new BlockHitResult(this.crystalPos.below().getCenter(), crystalDir, this.crystalPos.below(), inside), s));
+                        seq.close();
+
+                        SwingSettings.getInstance().mineSwing(SwingSettings.MiningSwingState.End);
+                        if (this.mineEndSwing.get()) {
+                            this.clientSwing(this.mineHand.get(), InteractionHand.MAIN_HAND);
+                        }
+                        if (!this.packet.get()) {
+                            BlackOut.mc.level.setBlockAndUpdate(this.minePos, Blocks.AIR.defaultBlockState());
+                        }
+                        Managers.BLOCK.set(this.minePos, Blocks.AIR, true, true);
+                        Managers.ENTITY.addSpawning(this.minePos);
+
+                        this.prevMined = null;
+                        this.started = false;
+                        this.minePos = null;
+                        this.restoreSwap();
+
+                        this.rotation.end("mining");
+                        if (this.crystalPos != null && this.shouldAttack()) {
+                            this.crystals.add(this.crystalPos, this.attackTime.get());
+                        }
+                        if (switched) this.pickaxeSwitch.get().swapBack();
+                        if (crystalSwitched) this.crystalSwitch.get().swapBack();
+                    }
+                }
+            }
         }
     }
 
@@ -929,17 +1018,17 @@ public class AutoMine extends Module {
                             Managers.ENTITY.addSpawning(this.minePos);
                             if (this.shouldInstant()) {
                                 this.prevMined = this.minePos;
-                                if (this.holdingForNcp) { this.pickaxeSwitch.get().swapBack(); this.holdingForNcp = false; }
+                                this.restoreSwap();
                             } else if (!this.manualRemine.get() || this.mineType !=  MineType.Manual) {
                                 this.prevMined = null;
                                 this.started = false;
                                 this.minePos = null;
-                                if (this.holdingForNcp) { this.pickaxeSwitch.get().swapBack(); this.holdingForNcp = false; }
+                                this.restoreSwap();
                             } else if (this.fastRemine.get()) {
                                 this.start(this.minePos, true);
                             } else {
                                 this.started = false;
-                                if (this.holdingForNcp) { this.pickaxeSwitch.get().swapBack(); this.holdingForNcp = false; }
+                                this.restoreSwap();
                             }
 
                             this.rotation.end("mining");
@@ -1004,7 +1093,7 @@ public class AutoMine extends Module {
         return switch (this.mineType) {
             case Cev, TrapCev, SurroundCev -> true;
             case AutoCity -> this.attackCrystal.get();
-            case Manual, SurroundMiner, AntiBurrow -> false;
+            case Manual, SurroundMiner, AntiBurrow, CrystalBase -> false;
         };
     }
 
@@ -1072,7 +1161,7 @@ public class AutoMine extends Module {
             if (!pos.equals(this.prevMined)) {
                 this.prevMined = null;
 
-                if (this.ncpProgress.get() && this.pickaxeSwitch.get() != SwitchMode.Disabled && !this.holdingForNcp) {
+                if (this.pickaxeSwitch.get() != SwitchMode.Disabled && !this.holdingForNcp) {
                     int slot = this.findBestSlot(
                                     stack -> BlockUtils.getBlockBreakingDelta(
                                             this.minePos, stack, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
@@ -1080,24 +1169,24 @@ public class AutoMine extends Module {
                             )
                             .slot();
                     this.suppressResetOnSwitch = true;
-                    this.holdingForNcp = this.pickaxeSwitch.get().swap(slot);
+
+                    SwitchMode mode = this.pickaxeSwitch.get();
+                    if (mode == SwitchMode.Silent) {
+                        this.silentPrevSlot = BlackOut.mc.player.getInventory().selected;
+                        Managers.PACKET.slot = slot;
+                        Managers.PACKET.sendInstantly(new ServerboundSetCarriedItemPacket(slot));
+                        this.silentSwap = true;
+                        this.holdingForNcp = true;
+                    } else {
+                        this.holdingForNcp = mode.swap(slot);
+                    }
+
                     this.suppressResetOnSwitch = false;
-                } else if (!isRemine && this.preSwitch.get() && !this.holdingForNcp) {
-                    int slot = this.findBestSlot(
-                                    stack -> BlockUtils.getBlockBreakingDelta(
-                                            this.minePos, stack, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
-                                    )
-                            )
-                            .slot();
-                    this.pickaxeSwitch.get().swap(slot);
                 }
 
                 this.sendSequenced(s -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, dir, s));
                 SwingSettings.getInstance().mineSwing(SwingSettings.MiningSwingState.Start);
                 this.rotation.end("mining");
-                if (!this.holdingForNcp && !isRemine && this.preSwitch.get()) {
-                    this.pickaxeSwitch.get().swapBack();
-                }
 
                 if (this.mineStartSwing.get()) {
                     this.clientSwing(this.mineHand.get(), InteractionHand.MAIN_HAND);
@@ -1106,11 +1195,19 @@ public class AutoMine extends Module {
         }
     }
 
-    private void abort(BlockPos pos) {
-        if (this.holdingForNcp) {
+    private void restoreSwap() {
+        if (this.silentSwap) {
+            Managers.PACKET.slot = this.silentPrevSlot;
+            Managers.PACKET.sendInstantly(new ServerboundSetCarriedItemPacket(this.silentPrevSlot));
+            this.silentSwap = false;
+        } else if (this.holdingForNcp) {
             this.pickaxeSwitch.get().swapBack();
-            this.holdingForNcp = false;
         }
+        this.holdingForNcp = false;
+    }
+
+    private void abort(BlockPos pos) {
+        this.restoreSwap();
         this.sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN, 0));
         this.started = false;
     }
@@ -1229,6 +1326,7 @@ public class AutoMine extends Module {
         SurroundMiner(false),
         AutoCity(false),
         AntiBurrow(false),
+        CrystalBase(false),
         Manual(false);
 
         public final boolean cev;
