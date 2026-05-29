@@ -43,7 +43,8 @@ public class MainMenu {
     private float delta;
     private boolean playedStartup = false;
     public boolean hudEditorVisible = false;
-    private float hudEditorFade = 0.0F;
+    private boolean hudEntering = false;
+    private boolean hudExiting = false;
 
     private String currentSplash = "";
     private String nextSplash = "";
@@ -138,7 +139,24 @@ public class MainMenu {
         this.updateWindowData();
         this.delta = delta / 20.0F;
         this.updateSplash(this.delta);
-        if (isExiting) {
+
+        if (this.hudEntering) {
+            globalFade = Math.max(0.0F, globalFade - this.delta * 3.0F);
+            if (globalFade <= 0.0F) {
+                globalFade = 0.0F;
+                this.hudEntering = false;
+                this.hudEditorVisible = true;
+                Managers.HUD.HUD_EDITOR.onOpenFromMenu();
+            }
+        } else if (this.hudExiting) {
+            globalFade = Math.max(0.0F, globalFade - this.delta * 3.0F);
+            if (globalFade <= 0.0F) {
+                globalFade = 0.0F;
+                this.hudExiting = false;
+                this.hudEditorVisible = false;
+                Managers.HUD.HUD_EDITOR.onCloseFromMenu();
+            }
+        } else if (isExiting) {
             globalFade = Math.max(0.0F, globalFade - this.delta * 3.0F);
             if (globalFade <= 0.0F && screenToSet != null) {
                 BlackOut.mc.setScreen(screenToSet);
@@ -153,10 +171,7 @@ public class MainMenu {
         float guiAlpha = (float) Math.sqrt(ClickGui.popUpDelta);
         boolean isGuiOpen = this.clickGui.isOpen() || guiAlpha > 0.01F;
 
-        this.hudEditorFade = this.hudEditorVisible
-                ? Math.min(1.0F, this.hudEditorFade + this.delta * 3.0F)
-                : Math.max(0.0F, this.hudEditorFade - this.delta * 3.0F);
-        boolean hudEditorActive = this.hudEditorVisible || this.hudEditorFade > 0.01F;
+        boolean hudEditorActive = this.hudEditorVisible;
 
         this.startRender(this.scale);
 
@@ -189,6 +204,13 @@ public class MainMenu {
 
         this.endRender();
 
+        if (hudEditorActive) {
+            Managers.HUD.HUD_EDITOR.renderOverlay(
+                    new GuiGraphics(BlackOut.mc, BlackOut.mc.renderBuffers().bufferSource()),
+                    mouseX, mouseY, delta, 1.0F
+            );
+        }
+
         if (globalFade < 1.0F) {
             int alpha = (int) ((1.0F - globalFade) * 255.0F);
             int blackColor = (alpha << 24);
@@ -199,26 +221,6 @@ public class MainMenu {
             Render2DUtils.unGuiScale(stack);
             Render2DUtils.quad(stack, 0, 0, screenW, screenH, blackColor);
             stack.popPose();
-        }
-
-        if (hudEditorActive) {
-            float hudAlpha = 1.0F - this.hudEditorFade;
-            if (hudAlpha > 0.01F) {
-                int alpha = (int) (hudAlpha * 255.0F);
-                int blackColor = (alpha << 24);
-                float screenW = (float) ScreenUtils.screenWidth();
-                float screenH = (float) ScreenUtils.screenHeight();
-
-                stack.pushPose();
-                Render2DUtils.unGuiScale(stack);
-                Render2DUtils.quad(stack, 0, 0, screenW, screenH, blackColor);
-                stack.popPose();
-            }
-
-            Managers.HUD.HUD_EDITOR.renderOverlay(
-                    new GuiGraphics(BlackOut.mc, BlackOut.mc.renderBuffers().bufferSource()),
-                    mouseX, mouseY, delta, this.hudEditorFade
-            );
         }
 
         if (isGuiOpen) {
@@ -339,7 +341,7 @@ public class MainMenu {
 
     @Event
     public void onMouse(MouseButtonEvent buttonEvent) {
-        if (this.hudEditorVisible || this.hudEditorFade > 0.01F) {
+        if (this.hudEditorVisible || this.hudEntering || this.hudExiting) {
             return;
         }
 
@@ -398,11 +400,12 @@ public class MainMenu {
         }
 
         if (event.pressed && event.key == 345) {
-            this.hudEditorVisible = !this.hudEditorVisible;
+            if (this.hudEntering || this.hudExiting) return;
+
             if (this.hudEditorVisible) {
-                Managers.HUD.HUD_EDITOR.onOpenFromMenu();
+                this.hudExiting = true;
             } else {
-                Managers.HUD.HUD_EDITOR.onCloseFromMenu();
+                this.hudEntering = true;
             }
             event.cancel();
             return;
@@ -410,8 +413,9 @@ public class MainMenu {
 
         if (event.pressed && event.key == 256 && this.hudEditorVisible) {
             if (Managers.HUD.HUD_EDITOR.handleEsc()) {
-                this.hudEditorVisible = false;
-                Managers.HUD.HUD_EDITOR.onCloseFromMenu();
+                if (!this.hudExiting) {
+                    this.hudExiting = true;
+                }
             }
             event.cancel();
         }

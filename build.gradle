@@ -2,6 +2,13 @@ plugins {
 	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
 	id 'java'
 	id 'maven-publish'
+	id 'idea'
+}
+
+idea {
+	module {
+		inheritOutputDirs = true
+	}
 }
 
 def staticArchivesName = project.archives_base_name
@@ -139,11 +146,11 @@ tasks.register('generateBlackOutInfo', Copy) {
 }
 
 sourceSets {
-	main(({
-        java {
-            srcDir(tasks.named('generateBlackOutInfo').map { it.outputs.files.asPath })
-        }
-    }))
+	main {
+		java {
+			srcDir tasks.named('generateBlackOutInfo')
+		}
+	}
 }
 
 afterEvaluate {

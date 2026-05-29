@@ -52,10 +52,11 @@ public class Arraylist extends HudElement {
     }
 
     public static void updateDeltas() {
-        deltaMap.forEach((module, mutableFloat) -> {
+        for (Module module : Managers.MODULES.getToggleableModules()) {
+            MutableFloat mut = deltaMap.computeIfAbsent(module, m -> new MutableFloat(m.enabled ? 1.0F : 0.0F));
             float delta = BlackOut.mc.getDeltaTracker().getGameTimeDeltaTicks() / 20.0F * 4.0F;
-            mutableFloat.setValue(module.enabled ? Math.min(mutableFloat.getValue() + delta, 1.0F) : Math.max(mutableFloat.getValue() - delta, 0.0F));
-        });
+            mut.setValue(module.enabled ? Math.min(mut.floatValue() + delta, 1.0F) : Math.max(mut.floatValue() - delta, 0.0F));
+        }
     }
 
     @Override
@@ -222,7 +223,8 @@ public class Arraylist extends HudElement {
         this.i = 0;
         list.forEach(
                 module -> {
-                    float delta = deltaMap.get(module).floatValue();
+                    MutableFloat mut = deltaMap.computeIfAbsent(module, m -> new MutableFloat(m.enabled ? 1.0F : 0.0F));
+                    float delta = mut.floatValue();
                     if (!(delta <= 0.0F)) {
                         delta = (float) AnimUtils.easeOutQuad(delta);
                         float yDelta = (float) (Math.min(delta, 0.3) / 0.3);

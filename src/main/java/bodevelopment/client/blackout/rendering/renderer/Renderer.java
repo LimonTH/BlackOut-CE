@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.rendering.renderer;
 
 import bodevelopment.client.blackout.interfaces.functional.QuadConsumer;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -23,19 +24,21 @@ public class Renderer {
     protected float renderAlpha;
 
     public static void onHUDBlur() {
+        if (!PlayerUtils.isInGame()) return;
         prevHUDBlur = System.currentTimeMillis();
     }
 
     public static void on3DBlur() {
+        if (!PlayerUtils.isInGame()) return;
         prev3DBlur = System.currentTimeMillis();
     }
 
     public static boolean shouldLoadHUDBlur() {
-        return System.currentTimeMillis() - prevHUDBlur < 5000L;
+        return PlayerUtils.isInGame() && System.currentTimeMillis() - prevHUDBlur < 5000L;
     }
 
     public static boolean shouldLoad3DBlur() {
-        return System.currentTimeMillis() - prev3DBlur < 5000L;
+        return PlayerUtils.isInGame() && System.currentTimeMillis() - prev3DBlur < 5000L;
     }
 
     public static float getAlpha() {

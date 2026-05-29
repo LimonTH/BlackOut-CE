@@ -84,9 +84,6 @@ public class ModuleManager extends Manager {
 
         if (!alreadyExists) {
             this.modules.add(module);
-            if (module instanceof Module toggleable) {
-                Arraylist.deltaMap.put(toggleable, new org.apache.commons.lang3.mutable.MutableFloat(0.0F));
-            }
         }
     }
 
