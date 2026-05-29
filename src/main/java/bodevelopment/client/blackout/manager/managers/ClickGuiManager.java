@@ -31,7 +31,7 @@ public class ClickGuiManager extends Manager {
     }
 
     public void openScreen(ClickGuiScreen screen) {
-        if (Managers.CLICK_GUI.CLICK_GUI.isOpen() || BlackOut.mc.screen instanceof TitleScreen) {
+        if (Managers.CLICK_GUI.CLICK_GUI.isOpen()) {
             this.CLICK_GUI.setScreen(screen);
         } else {
             Managers.HUD.HUD_EDITOR.setScreen(screen);

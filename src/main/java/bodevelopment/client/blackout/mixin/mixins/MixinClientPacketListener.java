@@ -170,9 +170,6 @@ public class MixinClientPacketListener {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;lerpMotion(DDD)V")
     )
     private void wrapEntityMotion(Entity entity, double x, double y, double z, Operation<Void> original) {
-        // Defense-in-depth: intercepts entity motion knockback at the vanilla handler level,
-        // ensuring knockback reduction applies regardless of whether the packet arrived
-        // directly or wrapped inside a ClientboundBundlePacket.
         if (entity != BlackOut.mc.player) {
             original.call(entity, x, y, z);
             return;

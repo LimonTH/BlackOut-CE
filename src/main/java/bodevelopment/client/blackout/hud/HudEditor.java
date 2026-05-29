@@ -9,6 +9,7 @@ import bodevelopment.client.blackout.event.events.MouseScrollEvent;
 import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
 import bodevelopment.client.blackout.keys.Keys;
 import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.module.modules.client.BlurSettings;
 import bodevelopment.client.blackout.module.modules.client.MainMenuSettings;
 import bodevelopment.client.blackout.rendering.renderer.ColorRenderer;
 import bodevelopment.client.blackout.util.ScreenUtils;
@@ -48,7 +49,6 @@ public class HudEditor extends Screen {
     private boolean wasList = false;
     private static boolean isOpen = false;
     private static boolean isOverlayOpen = false;
-    private float menuFade = 0.0F;
     private float menuMx = 0.0F;
     private float menuMy = 0.0F;
     private float menuScale = 1.0F;
@@ -91,6 +91,11 @@ public class HudEditor extends Screen {
             this.updateMenuCoordinates();
             this.renderMenuBackground();
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, fadeAlpha);
+
+            int blurStrength = BlurSettings.getInstance().getHUDBlurStrength();
+            if (blurStrength > 0) {
+                Render2DUtils.loadBlur("hudblur", blurStrength);
+            }
         }
 
         if (this.holding && this.moved() && this.still) {

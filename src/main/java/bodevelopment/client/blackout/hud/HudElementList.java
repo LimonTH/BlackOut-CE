@@ -141,6 +141,7 @@ public class HudElementList {
         this.stack.translate((ScreenUtils.screenWidth() - width) / 2.0F, ScreenUtils.screenHeight() - height, 0.0F);
         Render2DUtils.rounded(this.stack, 0.0F, 0.0F, width, height, 10.0F, 30.0F, GuiColorUtils.bg1.getRGB(), ColorUtils.SHADOW100I);
         Render2DUtils.rounded(this.stack, 0.0F, 0.0F, width, 40.0F, 10.0F, 0.0F, GuiColorUtils.bg2.getRGB(), ColorUtils.SHADOW100I, Render2DUtils.RoundedSide.TOP);
+        BlackOut.FONT.text(this.stack, "Elements", 2.0F, width / 2.0F, 20.0F, Color.WHITE, true, true);
         this.renderListContent();
         Render2DUtils.fade(this.stack, -10.0F, 40.0F, width + 20.0F, 10.0F, ColorUtils.SHADOW100I, Render2DUtils.FadeSide.BOTTOM);
         this.stack.popPose();

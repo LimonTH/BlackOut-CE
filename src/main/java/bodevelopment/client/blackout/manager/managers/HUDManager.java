@@ -123,15 +123,18 @@ public class HUDManager extends Manager {
 
     private float getProgress(float delta) {
         Screen screen = BlackOut.mc.screen;
-        if (!PlayerUtils.isInGame() && !(screen instanceof HudEditor)) {
-            return 0.0F;
-        } else if (screen instanceof HudEditor) {
+        if (screen instanceof HudEditor) {
             return 1.0F;
-        } else {
-            return screen != null && (!(screen instanceof ClickGui) || Managers.CLICK_GUI.CLICK_GUI.isOpen()) && !SharedFeatures.shouldSilentScreen()
-                    ? Math.max(this.progress - delta, 0.0F)
-                    : Math.min(this.progress + delta, 1.0F);
         }
+
+        boolean inGame = PlayerUtils.isInGame();
+        float target = inGame ? 1.0F : 0.0F;
+
+        float diff = target - this.progress;
+        if (Math.abs(diff) < 0.0001F) return target;
+
+        float step = Math.min(delta * 0.02F, Math.abs(diff));
+        return this.progress + Math.signum(diff) * step;
     }
 
     public void start(PoseStack stack) {
@@ -145,16 +148,11 @@ public class HUDManager extends Manager {
     }
 
     public void render(PoseStack stack, float frameTime) {
-        // Pass 1: collect all BackgroundMultiSetting backgrounds into a merged FBO.
-        // Color writes to the main target are suppressed; content is discarded.
         HudMergePass.beginCollect();
         Managers.HUD.forEachElement((id, element) -> element.renderElement(stack, frameTime));
 
-        // Composite the merged background FBO onto the main screen, then enter SKIP mode.
         HudMergePass.endCollectAndComposite();
 
-        // Pass 2: render element content (text, items, blur).
-        // BackgroundMultiSetting.render() returns immediately while in SKIP mode.
         Managers.HUD.forEachElement((id, element) -> element.renderElement(stack, frameTime));
         HudMergePass.endSkip();
     }
