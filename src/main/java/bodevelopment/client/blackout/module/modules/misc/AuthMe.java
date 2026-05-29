@@ -9,7 +9,7 @@ import bodevelopment.client.blackout.interfaces.functional.SingleOut;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.ChatUtils;
@@ -68,7 +68,7 @@ public class AuthMe extends Module {
                     Managers.NOTIFICATIONS.addNotification(
                             (this.register ? "Registering" : "Logging in") + " as " + BlackOut.mc.player.getGameProfile().getName(),
                             this.getDisplayName(),
-                            2.0, Notifications.Type.Info
+                            2.0, NotificationsSettings.Type.Info
                     );
                 }
                 this.time = -1L;

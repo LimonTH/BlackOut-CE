@@ -11,7 +11,7 @@ import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.modules.movement.PacketFly;
 import bodevelopment.client.blackout.module.modules.movement.Scaffold;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -113,7 +113,7 @@ public class Burrow extends Module {
                     }
 
                     if (!switched) {
-                        this.disable(this.getDisplayName() + " correct blocks not found", 2, Notifications.Type.Alert);
+                        this.disable(this.getDisplayName() + " correct blocks not found", 2, NotificationsSettings.Type.Alert);
                     } else {
                         if (this.instaRot.get() && SettingUtils.shouldRotate(RotationType.BlockPlace)) {
                             this.sendPacket(new ServerboundMovePlayerPacket.Rot(Managers.ROTATION.nextYaw, 90.0F, Managers.PACKET.isOnGround(), BlackOut.mc.player.horizontalCollision));

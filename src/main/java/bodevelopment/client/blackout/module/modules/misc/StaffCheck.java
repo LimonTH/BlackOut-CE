@@ -7,7 +7,7 @@ import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import java.util.ArrayList;
@@ -64,7 +64,7 @@ public class StaffCheck extends Module {
         if (BlackOut.mc.player != null) {
             if (x == 0.0F && z == 0.0F && y > 0.0F && this.kb.get()) {
                 Managers.NOTIFICATIONS
-                        .addNotification("Suspicious Knockback taken at tick " + BlackOut.mc.player.tickCount, this.getDisplayName(), 2.0, Notifications.Type.Alert);
+                        .addNotification("Suspicious Knockback taken at tick " + BlackOut.mc.player.tickCount, this.getDisplayName(), 2.0, NotificationsSettings.Type.Alert);
             }
         }
     }
@@ -80,7 +80,7 @@ public class StaffCheck extends Module {
                                 if (entry.displayName() != null
                                         && this.staff.contains(entry.displayName().toFlatList().toString())
                                         && System.currentTimeMillis() - this.prevTime > 5000L) {
-                                    Managers.NOTIFICATIONS.addNotification("Detected Staff", this.getDisplayName(), 2.0, Notifications.Type.Alert);
+                                    Managers.NOTIFICATIONS.addNotification("Detected Staff", this.getDisplayName(), 2.0, NotificationsSettings.Type.Alert);
                                     this.prevTime = System.currentTimeMillis();
                                 }
                             }

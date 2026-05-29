@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.event.events.MouseButtonEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
@@ -53,7 +53,7 @@ public class MiddleClick extends Module {
                                 : Managers.FRIENDS.add(name, targetPlayer.getUUID());
 
                         String fullMessage = String.format("%s [friends]%s %s",
-                                Notifications.getInstance().getClientPrefix(),
+                                NotificationsSettings.getInstance().getClientPrefix(),
                                 ChatFormatting.GRAY,
                                 respond
                         );

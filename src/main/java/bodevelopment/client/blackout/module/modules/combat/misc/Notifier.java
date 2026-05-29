@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.SoundUtils;
@@ -154,7 +154,7 @@ public class Notifier extends Module {
     private void sendNotification(String info) {
         switch (this.mode.get()) {
             case Hud:
-                Managers.NOTIFICATIONS.addNotification(info, this.getDisplayName(), 2.0, Notifications.Type.Info);
+                Managers.NOTIFICATIONS.addNotification(info, this.getDisplayName(), 2.0, NotificationsSettings.Type.Info);
                 break;
             case Chat:
                 this.sendMessage(info);

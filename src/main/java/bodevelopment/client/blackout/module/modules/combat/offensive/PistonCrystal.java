@@ -9,7 +9,7 @@ import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
@@ -340,7 +340,7 @@ public class PistonCrystal extends Module {
             } else {
                 if (!autoMine.enabled) {
                     if (System.currentTimeMillis() - this.prevNotification > 500L) {
-                        Managers.NOTIFICATIONS.addNotification("Automine required for redstone block mode.", this.getDisplayName(), 1.0, Notifications.Type.Info);
+                        Managers.NOTIFICATIONS.addNotification("Automine required for redstone block mode.", this.getDisplayName(), 1.0, NotificationsSettings.Type.Info);
                         this.prevNotification = System.currentTimeMillis();
                     }
 

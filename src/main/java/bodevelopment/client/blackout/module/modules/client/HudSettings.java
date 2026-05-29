@@ -12,7 +12,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.PlayerUtils;
 
-public class Hud extends Module {
+public class HudSettings extends Module {
 
     private final SettingGroup sgGeneral = this.addGroup("General");
 
@@ -21,7 +21,7 @@ public class Hud extends Module {
             "Bind"
     );
 
-    public Hud() {
+    public HudSettings() {
         super("HUD", "Enables the Hud.", SubCategory.CLIENT, true);
     }
 

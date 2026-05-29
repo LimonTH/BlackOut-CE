@@ -7,7 +7,7 @@ import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.BlockUtils;
@@ -53,7 +53,7 @@ public class AntiVoid extends Module {
                     }
 
                     BlackOut.mc.player.fallDistance = 0.0F;
-                    Managers.NOTIFICATIONS.addNotification("Attempted to save you from the void!", this.getDisplayName(), 2.0, Notifications.Type.Info);
+                    Managers.NOTIFICATIONS.addNotification("Attempted to save you from the void!", this.getDisplayName(), 2.0, NotificationsSettings.Type.Info);
                 }
             }
         }

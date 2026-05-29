@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.interfaces.functional.DoubleConsumer;
 import bodevelopment.client.blackout.keys.KeyBind;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.ItemUtils;
@@ -130,7 +130,7 @@ public class Manager extends Module {
     @Event
     public void onGameJoin(GameJoinEvent event) {
         if (this.tpDisable.get()) {
-            this.disable(this.getDisplayName() + " was disabled due to server change/teleport", 5, Notifications.Type.Info);
+            this.disable(this.getDisplayName() + " was disabled due to server change/teleport", 5, NotificationsSettings.Type.Info);
         }
     }
 
@@ -180,7 +180,7 @@ public class Manager extends Module {
                 this.getDisplayName() + " " + ChatFormatting.BLUE.toString() + " changed to " + (this.currentlyElytra ? "Elytra" : "Chestplate"),
                 this.getDisplayName() + "  changed to " + (this.currentlyElytra ? "Elytra" : "Chestplate"),
                 "Chest Swap",
-                Notifications.Type.Info,
+                NotificationsSettings.Type.Info,
                 2.0
         );
     }

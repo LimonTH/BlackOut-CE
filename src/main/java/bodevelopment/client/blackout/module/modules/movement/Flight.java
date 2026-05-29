@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.modules.misc.Timer;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -56,11 +56,11 @@ public class Flight extends Module {
         this.damaged = false;
         this.startY = BlackOut.mc.player.getY();
         if (this.mode.get() == Mode.VerusBow) {
-            Managers.NOTIFICATIONS.addNotification("Shoot yourself with a bow", this.getDisplayName(), 2.0, Notifications.Type.Info);
+            Managers.NOTIFICATIONS.addNotification("Shoot yourself with a bow", this.getDisplayName(), 2.0, NotificationsSettings.Type.Info);
         }
 
         if (this.mode.get() == Mode.Verus) {
-            Managers.NOTIFICATIONS.addNotification("Hold blocks in your hand to prevent flagging", this.getDisplayName(), 2.0, Notifications.Type.Info);
+            Managers.NOTIFICATIONS.addNotification("Hold blocks in your hand to prevent flagging", this.getDisplayName(), 2.0, NotificationsSettings.Type.Info);
         }
 
         if (this.mode.get() == Mode.VerusDMG) {
@@ -213,7 +213,7 @@ public class Flight extends Module {
 
                     if (ticks >= this.verusLimit.get()) {
                         event.setXZ(this, MovementUtils.xMovement(0.2873, Managers.ROTATION.moveYaw), MovementUtils.zMovement(0.2873, Managers.ROTATION.moveYaw));
-                        Managers.NOTIFICATIONS.addNotification("Reached tick limit", this.getDisplayName(), 2.0, Notifications.Type.Info);
+                        Managers.NOTIFICATIONS.addNotification("Reached tick limit", this.getDisplayName(), 2.0, NotificationsSettings.Type.Info);
                         this.toggle();
                     }
                     break;

@@ -11,9 +11,8 @@ import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.interfaces.mixin.IClipContext;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.MoveUpdateModule;
-import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.modules.combat.misc.AntiBot;
 import bodevelopment.client.blackout.module.modules.combat.misc.Teams;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -215,7 +214,7 @@ public class Aura extends MoveUpdateModule {
     public void onGameJoin(GameJoinEvent event) {
         this.expandCache.clear();
         if (this.tpDisable.get()) {
-            this.disable(this.getDisplayName() + " was disabled due to server change/teleport", 5, Notifications.Type.Info);
+            this.disable(this.getDisplayName() + " was disabled due to server change/teleport", 5, NotificationsSettings.Type.Info);
         }
     }
 

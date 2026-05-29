@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.CollectionUtils;
@@ -142,7 +142,7 @@ public class AntiBot extends Module {
             this.bots.add(bot);
             if (this.notif.get()) {
                 Managers.NOTIFICATIONS
-                        .addNotification(bot.getName().getString() + " has been flagged as a bot!", this.getDisplayName(), 2.0, Notifications.Type.Info);
+                        .addNotification(bot.getName().getString() + " has been flagged as a bot!", this.getDisplayName(), 2.0, NotificationsSettings.Type.Info);
             }
         }
     }
@@ -150,7 +150,7 @@ public class AntiBot extends Module {
     private void removeBot(AbstractClientPlayer bot) {
         this.bots.remove(bot);
         if (this.notif.get() && this.remove.get()) {
-            Managers.NOTIFICATIONS.addNotification(bot.getName().getString() + " was set as a player!", this.getDisplayName(), 2.0, Notifications.Type.Info);
+            Managers.NOTIFICATIONS.addNotification(bot.getName().getString() + " was set as a player!", this.getDisplayName(), 2.0, NotificationsSettings.Type.Info);
         }
     }
 

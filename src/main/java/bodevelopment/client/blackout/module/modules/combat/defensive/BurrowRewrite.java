@@ -9,9 +9,8 @@ import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.modules.misc.Timer;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -406,7 +405,7 @@ public class BurrowRewrite extends Module {
         }
 
         this.lastNotify = now;
-        this.sendNotification("Burrow: " + reason, reason, "Burrow Alert", Notifications.Type.Alert, 2.0);
+        this.sendNotification("Burrow: " + reason, reason, "Burrow Alert", NotificationsSettings.Type.Alert, 2.0);
     }
 
 

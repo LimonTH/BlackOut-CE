@@ -1,14 +1,13 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
 import bodevelopment.client.blackout.util.PlayerUtils;
-import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.ChatUtils;
@@ -52,7 +51,7 @@ public class AutoChatGame extends Module {
                 double delay = this.getDelay();
                 this.sendTime = System.currentTimeMillis() + Math.round(delay * 1000.0);
                 Managers.NOTIFICATIONS
-                        .addNotification(String.format("Answering to a chat game in %.1fs", delay), this.getDisplayName(), 5.0, Notifications.Type.Info);
+                        .addNotification(String.format("Answering to a chat game in %.1fs", delay), this.getDisplayName(), 5.0, NotificationsSettings.Type.Info);
             }
         }
     }

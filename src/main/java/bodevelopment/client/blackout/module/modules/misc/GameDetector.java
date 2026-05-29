@@ -8,7 +8,7 @@ import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.module.modules.client.Notifications;
+import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.modules.combat.offensive.Aura;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -115,12 +115,12 @@ public class GameDetector extends Module {
     }
 
     private void sendNotification(String message, String bigText) {
-        Notifications notifications = Notifications.getInstance();
+        NotificationsSettings notifications = NotificationsSettings.getInstance();
         if (notifications.chatNotifications.get()) {
             this.sendMessage(this.getDisplayName() + " " + message);
         }
 
-        Managers.NOTIFICATIONS.addNotification(message == null ? "Disabled " + this.getDisplayName() : message, bigText, 5.0, Notifications.Type.Info);
+        Managers.NOTIFICATIONS.addNotification(message == null ? "Disabled " + this.getDisplayName() : message, bigText, 5.0, NotificationsSettings.Type.Info);
         if (notifications.sound.get()) {
             SoundUtils.play(1.0F, 1.0F, "disable");
         }

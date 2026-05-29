@@ -18,8 +18,8 @@ import java.awt.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.util.Mth;
 
-public class Notifications extends SettingsModule {
-    private static Notifications INSTANCE;
+public class NotificationsSettings extends SettingsModule {
+    private static NotificationsSettings INSTANCE;
 
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRender = this.addGroup("Render");
@@ -60,12 +60,12 @@ public class Notifications extends SettingsModule {
     private final Setting<ChatFormatting> txtColor = this.sgRender.enumSetting("Chat Text Color", ChatFormatting.WHITE,
             "The default color for the notification message body in chat.");
 
-    public Notifications() {
+    public NotificationsSettings() {
         super("Notifications", true, true);
         INSTANCE = this;
     }
 
-    public static Notifications getInstance() {
+    public static NotificationsSettings getInstance() {
         return INSTANCE;
     }
 
