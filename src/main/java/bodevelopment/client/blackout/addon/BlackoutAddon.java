@@ -95,16 +95,11 @@ public abstract class BlackoutAddon {
     public String getUrl() { return null; }
     public String getMinClientVersion() { return null; }
 
-    /**
-     * Returns the addon API version this addon was compiled against.
-     * <p>
-     * This is a monotonically increasing integer, incremented whenever the
-     * BlackOut addon API introduces breaking changes. The loader checks this
-     * <b>before</b> {@link #getMinClientVersion()} to reject incompatible addons.
-     * <p>
-     * Current API version: <b>1</b> (initial release).
-     */
-    public int getApiVersion() { return 1; }
+    /** API contract version this addon was compiled against. Bump on breaking changes. */
+    public int getApiVersion() { return BlackOut.API_VERSION; }
+
+    /** Current addon API version sourced from gradle.properties. */
+    public static final int API_VERSION = BlackOut.API_VERSION;
 
     void loadIconFromMod(BufferedImage image) {
         this.pendingIcon = image;
