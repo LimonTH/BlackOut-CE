@@ -12,7 +12,6 @@ glow {
     out vec4 fragColor;
 
     fun void main() {
-        float dist = getDist();
         vec4 c = texture(uTexture, gl_FragCoord.xy / uResolution.xy);
 
         if (c.a == 0.0) {

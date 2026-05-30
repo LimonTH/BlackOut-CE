@@ -1,4 +1,6 @@
 frag {
+    import utils.rainbow.hslWave;
+
     $alpha
 
     in vec4 vertexColor;
@@ -14,13 +16,9 @@ frag {
         }
 
         float pos = gl_FragCoord.x / 1000.0 - gl_FragCoord.y / 1000.0;
+        float x = 2.0 + fract(pos - time / 10.0) * 6.0;
+        vec3 rgb = hslWave(x, 1.0);
 
-        float x = 2.0 + fract(pos - time / 10) * 6.0;
-
-        float r = -(clamp(x - 3.0, 0.0, 1.0) + clamp(-x + 1.0, 0.0, 1.0)) + 1.0 -(clamp(x - 9.0, 0.0, 1.0) + clamp(-x + 7.0, 0.0, 1.0)) + 1.0;
-        float g = -(clamp(x - 5.0, 0.0, 1.0) + clamp(-x + 3.0, 0.0, 1.1)) + 1.0;
-        float b = -(clamp(x - 7.0, 0.0, 1.0) + clamp(-x + 5.0, 0.0, 1.0)) + 1.0;
-
-        fragColor = vec4(r, g, b, alp * uAlpha);
+        fragColor = vec4(rgb, alp * uAlpha);
     }
 }

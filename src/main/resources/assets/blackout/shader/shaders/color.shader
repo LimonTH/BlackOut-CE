@@ -27,9 +27,9 @@ thingy {
     uniform vec3 clr1;
     uniform vec3 clr2;
 
-    out fragColor;
+    out vec4 fragColor;
 
-    float getSus(vec2 timeV) {
+    fun float getSus(vec2 timeV) {
         vec2 position = gl_FragCoord.xy / uResolution.xy ;
         vec2 timeVec = vec2(time) * 0.4 * timeV;
 
@@ -37,7 +37,7 @@ thingy {
         return length(mogus);
     }
 
-    void main( void ) {
+    fun void main() {
         vec2 position = (sin(gl_FragCoord.xy / resolution.xy + vec2(time / 10.0)) + 1.0) / 2.0;
 
         float sus = getSus(vec2(1, 0.3));

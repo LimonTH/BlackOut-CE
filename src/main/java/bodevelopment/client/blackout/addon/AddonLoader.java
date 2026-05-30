@@ -78,12 +78,8 @@ public class AddonLoader {
                             });
                         }
 
-                        if (addon.themePath != null) {
-                            scan(addonLoader, addon.themePath, Theme.class, instance -> {
-                                ThemeSettings.themes.add(instance);
-                                addon.themes.add(instance);
-                            });
-                        }
+                        // Themes are registered manually via registerTheme(), not auto-scanned.
+                        // Enums implementing Theme cannot be instantiated by ClassUtils.instance().
 
                         if (addon.guiPath != null) {
                             scan(addonLoader, addon.guiPath, ClickGuiScreen.class, instance -> {

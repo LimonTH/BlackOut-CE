@@ -2,25 +2,6 @@ frag {
     $alpha
 
     uniform sampler2D uTexture;
-
-    uniform vec4 clr;
-
-    in vec2 texCoord0;
-
-    out vec4 fragColor;
-
-    fun void main() {
-        vec4 c = texture(uTexture, texCoord0) * clr;
-        fragColor = vec4(c.r, c.g, c.b, c.a * uAlpha);
-    }
-}
-
-frag2 {
-    import utils.math.lerpProgress;
-    $alpha
-
-    uniform sampler2D uTexture;
-
     uniform vec4 clr;
 
     in vec2 texCoord0;
