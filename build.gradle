@@ -150,10 +150,8 @@ signing {
 	}
 	if (signingKey != null && !signingKey.isEmpty()) {
 		useInMemoryPgpKeys(signingKey, "")
-	} else {
-		useGpgCmd()
+		sign publishing.publications.mavenJava
 	}
-	sign publishing.publications.mavenJava
 }
 
 tasks.withType(JavaCompile).configureEach {
