@@ -15,6 +15,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -46,15 +47,22 @@ public class Capes {
         return identifier;
     }
 
+    private static final int HTTP_TIMEOUT_MS = 5000;
+
     public static void requestCapes() {
         CompletableFuture.runAsync(() -> {
-            try (InputStream stream = URI.create("https://raw.githubusercontent.com/LimonTH/Blackout-CE-capes/main/capes").toURL().openStream();
-                 BufferedReader read = new BufferedReader(new InputStreamReader(stream))) {
-
-                Map<String, ResourceLocation> identifiers = new HashMap<>();
-                read.lines().forEach(line -> readLine(line, identifiers));
+            try {
+                HttpURLConnection conn = (HttpURLConnection) URI.create(
+                        "https://raw.githubusercontent.com/LimonTH/Blackout-CE-capes/main/capes").toURL().openConnection();
+                conn.setConnectTimeout(HTTP_TIMEOUT_MS);
+                conn.setReadTimeout(HTTP_TIMEOUT_MS);
+                try (InputStream stream = conn.getInputStream();
+                     BufferedReader read = new BufferedReader(new InputStreamReader(stream))) {
+                    Map<String, ResourceLocation> identifiers = new HashMap<>();
+                    read.lines().forEach(line -> readLine(line, identifiers));
+                }
             } catch (IOException e) {
-                System.err.println("[BlackOut] Failed to fetch capes list");
+                System.err.println("[BlackOut] Failed to fetch capes list (server unreachable or timeout)");
             }
         });
     }
@@ -87,7 +95,11 @@ public class Capes {
     private static class CapeTexture extends AbstractTexture {
         public CapeTexture(String name, ResourceLocation identifier) {
             try {
-                BufferedImage image = ImageIO.read(URI.create("https://raw.githubusercontent.com/LimonTH/Blackout-CE-capes/main/textures/" + name + ".png").toURL());
+                HttpURLConnection conn = (HttpURLConnection) URI.create(
+                        "https://raw.githubusercontent.com/LimonTH/Blackout-CE-capes/main/textures/" + name + ".png").toURL().openConnection();
+                conn.setConnectTimeout(HTTP_TIMEOUT_MS);
+                conn.setReadTimeout(HTTP_TIMEOUT_MS);
+                BufferedImage image = ImageIO.read(conn.getInputStream());
 
                 RenderSystem.recordRenderCall(() -> {
                     uploadAndRegister(name, identifier, image);

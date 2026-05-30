@@ -121,6 +121,7 @@ public class ClickGui extends Screen {
     }
 
     public void onClose() {
+        EnumSetting.closeAllDropdowns();
         this.setOpen(false);
         this.toggleTime = System.currentTimeMillis();
 
@@ -254,12 +255,17 @@ public class ClickGui extends Screen {
             if (mc.module.category == selectedCategory && mc.opened) {
                 for (SettingGroup group : mc.module.settingGroups) {
                     for (Setting<?> s : group.settings) {
-                        if (s instanceof EnumSetting<?> es && es.isChoosing()) {
+                        if (s instanceof EnumSetting<?> es && es.isChoosing()
+                                && es != EnumSetting.getGlobalLastOpened()) {
                             es.renderDropdown();
                         }
                     }
                 }
             }
+        }
+        EnumSetting<?> lastOpened = EnumSetting.getGlobalLastOpened();
+        if (lastOpened != null && lastOpened.isChoosing()) {
+            lastOpened.renderDropdown();
         }
 
         if (hoveredDescription != null && !hoveredDescription.isEmpty()) {

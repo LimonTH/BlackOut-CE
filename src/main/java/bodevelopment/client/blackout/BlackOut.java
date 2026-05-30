@@ -39,6 +39,44 @@ public final class BlackOut extends bodevelopment.client.blackout.BlackOutInfo i
         Managers.CLICK_GUI.CLICK_GUI.initGui();
         RegistryNames.init();
         BlocklistUtil.loadBlocklist();
+        validateAccessWidenerTargets();
+    }
+
+    /**
+     * Validates that critical access widener targets are accessible at runtime.
+     * If a Minecraft update removed a field/method, this logs a warning instead
+     * of crashing with an inscrutable {@link NoSuchFieldError} later.
+     */
+    private static void validateAccessWidenerTargets() {
+        String[] criticalTargets = {
+            "net.minecraft.client.multiplayer.ClientLevel::getBlockStatePredictionHandler",
+            "net.minecraft.client.multiplayer.MultiPlayerGameMode::startPrediction",
+            "net.minecraft.client.multiplayer.MultiPlayerGameMode::carriedIndex",
+            "net.minecraft.world.entity.LivingEntity::attackStrengthTicker",
+        };
+        for (String target : criticalTargets) {
+            try {
+                String[] parts = target.split("::");
+                Class<?> clazz = Class.forName(parts[0]);
+                String member = parts[1];
+                // Try field first, then method
+                try {
+                    clazz.getDeclaredField(member);
+                } catch (NoSuchFieldException e) {
+                    boolean found = false;
+                    for (java.lang.reflect.Method m : clazz.getDeclaredMethods()) {
+                        if (m.getName().equals(member)) { found = true; break; }
+                    }
+                    if (!found) {
+                        bodevelopment.client.blackout.util.BOLogger.warn(
+                            "Access widener target may be missing: " + target);
+                    }
+                }
+            } catch (ClassNotFoundException e) {
+                bodevelopment.client.blackout.util.BOLogger.warn(
+                    "Access widener target class missing: " + target);
+            }
+        }
     }
 
     public enum Type {

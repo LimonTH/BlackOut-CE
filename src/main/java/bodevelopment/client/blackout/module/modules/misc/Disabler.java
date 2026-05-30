@@ -61,7 +61,8 @@ public class Disabler extends Module {
                 }
 
                 if (this.b1.get()) {
-                    this.sendPacket(new ServerboundUseItemPacket(hand == null ? InteractionHand.MAIN_HAND : hand, 0, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch));
+                    InteractionHand useHand = hand == null ? InteractionHand.MAIN_HAND : hand;
+                    this.sendSequenced(s -> new ServerboundUseItemPacket(useHand, s, Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch));
                 }
 
                 if (this.b2.get()) {

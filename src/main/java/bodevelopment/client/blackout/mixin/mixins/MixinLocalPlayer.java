@@ -25,9 +25,10 @@ import net.minecraft.world.InteractionHand;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LocalPlayer.class)
@@ -60,15 +61,15 @@ public abstract class MixinLocalPlayer {
         wasRotation = false;
     }
 
-    @Redirect(
+    @WrapOperation(
             method = "sendPosition",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;send(Lnet/minecraft/network/protocol/Packet;)V")
     )
-    private void onSendPacket(ClientPacketListener instance, Packet<?> packet) {
+    private void onSendPacket(ClientPacketListener instance, Packet<?> packet, Operation<Void> original) {
         sent = true;
         wasMove = packet instanceof ServerboundMovePlayerPacket moveC2SPacket && moveC2SPacket.hasPosition();
         wasRotation = packet instanceof ServerboundMovePlayerPacket moveC2SPacketx && moveC2SPacketx.hasRotation();
-        instance.send(packet);
+        original.call(instance, packet);
     }
 
     @Inject(method = "sendPosition", at = @At("TAIL"))
@@ -90,53 +91,53 @@ public abstract class MixinLocalPlayer {
         BlackOut.EVENT_BUS.post(MoveEvent.PostSend.get());
     }
 
-    @Redirect(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getYRot()F"))
-    private float getYaw(LocalPlayer instance) {
-        return instance == BlackOut.mc.player ? Managers.ROTATION.getNextYaw() : instance.getYRot();
+    @WrapOperation(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getYRot()F"))
+    private float getYaw(LocalPlayer instance, Operation<Float> original) {
+        return instance == BlackOut.mc.player ? Managers.ROTATION.getNextYaw() : original.call(instance);
     }
 
-    @Redirect(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getXRot()F"))
-    private float getPitch(LocalPlayer instance) {
-        return instance == BlackOut.mc.player ? Managers.ROTATION.getNextPitch() : instance.getXRot();
+    @WrapOperation(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getXRot()F"))
+    private float getPitch(LocalPlayer instance, Operation<Float> original) {
+        return instance == BlackOut.mc.player ? Managers.ROTATION.getNextPitch() : original.call(instance);
     }
 
-    @Redirect(method = "sendPosition", at = @At(value = "FIELD", target = "Lnet/minecraft/client/player/LocalPlayer;yRotLast:F", opcode = 180))
-    private float prevYaw(LocalPlayer instance) {
+    @WrapOperation(method = "sendPosition", at = @At(value = "FIELD", target = "Lnet/minecraft/client/player/LocalPlayer;yRotLast:F", opcode = 180))
+    private float prevYaw(LocalPlayer instance, Operation<Float> original) {
         if (instance == BlackOut.mc.player && !CompatUtils.shouldBypassRotations()) {
             return Managers.ROTATION.prevYaw;
         }
-        return this.yRotLast;
+        return original.call(instance);
     }
 
-    @Redirect(method = "sendPosition", at = @At(value = "FIELD", target = "Lnet/minecraft/client/player/LocalPlayer;xRotLast:F", opcode = 180))
-    private float prevPitch(LocalPlayer instance) {
+    @WrapOperation(method = "sendPosition", at = @At(value = "FIELD", target = "Lnet/minecraft/client/player/LocalPlayer;xRotLast:F", opcode = 180))
+    private float prevPitch(LocalPlayer instance, Operation<Float> original) {
         if (instance == BlackOut.mc.player && !CompatUtils.shouldBypassRotations()) {
             return Managers.ROTATION.prevPitch;
         }
-        return this.xRotLast;
+        return original.call(instance);
     }
 
-    @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z"))
-    private boolean usingItem(LocalPlayer instance) {
+    @WrapOperation(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z"))
+    private boolean usingItem(LocalPlayer instance, Operation<Boolean> original) {
         if (instance == BlackOut.mc.player && NoSlow.getInstance().enabled) {
             return NoSlow.shouldSlow();
         }
-        return instance.isUsingItem();
+        return original.call(instance);
     }
 
-    @Redirect(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;onGround()Z"))
-    private boolean isOnGround(LocalPlayer instance) {
+    @WrapOperation(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;onGround()Z"))
+    private boolean isOnGround(LocalPlayer instance, Operation<Boolean> original) {
         if (instance == BlackOut.mc.player && !CompatUtils.isBaritonePathing()) {
             AntiHunger antiHunger = AntiHunger.getInstance();
             if (antiHunger.enabled && antiHunger.moving.get()) {
                 return false;
             }
         }
-        return instance.onGround();
+        return original.call(instance);
     }
 
-    @Redirect(method = "sendIsSprintingIfNeeded", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isSprinting()Z"))
-    private boolean sprinting(LocalPlayer instance) {
+    @WrapOperation(method = "sendIsSprintingIfNeeded", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isSprinting()Z"))
+    private boolean sprinting(LocalPlayer instance, Operation<Boolean> original) {
         if (instance == BlackOut.mc.player && !CompatUtils.isBaritonePathing()) {
             AntiHunger antiHunger = AntiHunger.getInstance();
             if (antiHunger.enabled && antiHunger.sprint.get()) {
@@ -144,7 +145,7 @@ public abstract class MixinLocalPlayer {
             }
         }
 
-        return instance.isSprinting();
+        return original.call(instance);
     }
 
     @Inject(method = "moveTowardsClosestSpace", at = @At("HEAD"), cancellable = true)
@@ -157,8 +158,8 @@ public abstract class MixinLocalPlayer {
         }
     }
 
-    @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isSprinting()Z"))
-    private boolean forwardMovement(LocalPlayer value) {
+    @WrapOperation(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isSprinting()Z"))
+    private boolean forwardMovement(LocalPlayer value, Operation<Boolean> original) {
         if ((Object) this != BlackOut.mc.player || CompatUtils.isBaritonePathing()) {
             return value.isSprinting();
         }
@@ -187,16 +188,16 @@ public abstract class MixinLocalPlayer {
         return false;
     }
 
-    @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/ClientInput;tick()V"))
-    private void tickInput(ClientInput instance) {
+    @WrapOperation(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/ClientInput;tick()V"))
+    private void tickInput(ClientInput instance, Operation<Void> original) {
         if ((Object) this != BlackOut.mc.player) {
-            instance.tick();
+            original.call(instance);
         } else {
             FreeCam freecam = FreeCam.getInstance();
             if (freecam.enabled) {
                 freecam.resetInput((KeyboardInput) instance);
             } else {
-                instance.tick();
+                original.call(instance);
             }
         }
     }

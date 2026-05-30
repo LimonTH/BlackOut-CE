@@ -7,10 +7,13 @@ import bodevelopment.client.blackout.gui.menu.Account;
 import bodevelopment.client.blackout.interfaces.mixin.IMinecraft;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.manager.Persistable;
+import bodevelopment.client.blackout.util.BOLogger;
+import bodevelopment.client.blackout.util.EncryptionUtils;
 import bodevelopment.client.blackout.util.FileUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.User;
@@ -32,8 +35,52 @@ public class AltManager extends Manager implements Persistable {
         this.selected = new Account(BlackOut.mc.getUser());
         this.currentSession = this.selected;
         BlackOut.EVENT_BUS.subscribe(this, () -> false);
-        String path = "accounts.json";
-        if (FileUtils.exists(path)) {
+
+        String encryptedPath = "accounts.dat";
+        String legacyPath = "accounts.json";
+
+        if (FileUtils.exists(encryptedPath)) {
+            this.loadEncrypted(encryptedPath);
+        } else if (FileUtils.exists(legacyPath)) {
+            this.loadLegacy(legacyPath);
+        } else {
+            FileUtils.addFile(encryptedPath);
+        }
+
+        this.save();
+    }
+
+    /**
+     * Loads accounts from AES-GCM encrypted storage.
+     */
+    private void loadEncrypted(String path) {
+        try {
+            String encrypted = FileUtils.readString(FileUtils.getFile(path));
+            if (encrypted == null || encrypted.isEmpty()) return;
+
+            String json = EncryptionUtils.decryptString(encrypted);
+            if (json == null || json.isEmpty()) return;
+
+            JsonElement jsonElement = JsonParser.parseString(json);
+            JsonObject jsonObject = jsonElement instanceof JsonNull ? new JsonObject() : (JsonObject) jsonElement;
+            jsonObject.entrySet().forEach(entry -> {
+                JsonElement element = entry.getValue();
+                if (element instanceof JsonObject object) {
+                    this.readData(object);
+                } else {
+                    this.getAccounts().add(new Account(entry.getKey(), null, null, "", null, null, User.Type.MOJANG));
+                }
+            });
+        } catch (Exception e) {
+            BOLogger.error("Failed to load encrypted accounts, starting fresh", e);
+        }
+    }
+
+    /**
+     * Migrates legacy plaintext accounts.json to encrypted accounts.dat.
+     */
+    private void loadLegacy(String path) {
+        try {
             JsonElement jsonElement = FileUtils.readElement(FileUtils.getFile(path));
             JsonObject jsonObject = jsonElement instanceof JsonNull ? new JsonObject() : (JsonObject) jsonElement;
             jsonObject.entrySet().forEach(entry -> {
@@ -44,11 +91,13 @@ public class AltManager extends Manager implements Persistable {
                     this.getAccounts().add(new Account(entry.getKey(), null, null, "", null, null, User.Type.MOJANG));
                 }
             });
-        } else {
-            FileUtils.addFile(path);
-        }
 
-        this.save();
+            // Delete the legacy plaintext file after successful migration
+            FileUtils.getFile(path).delete();
+            BOLogger.info("Migrated legacy accounts.json to encrypted accounts.dat");
+        } catch (Exception e) {
+            BOLogger.error("Failed to migrate legacy accounts", e);
+        }
     }
 
     private void readData(JsonObject jsonObject) {
@@ -77,7 +126,14 @@ public class AltManager extends Manager implements Persistable {
                     object.add(account.getScript(), accountObject);
                 }
             });
-            FileUtils.write(FileUtils.getFile("accounts.json"), object);
+
+            String json = object.toString();
+            String encrypted = EncryptionUtils.encryptString(json);
+            if (encrypted != null) {
+                FileUtils.write(FileUtils.getFile("accounts.dat"), encrypted);
+            } else {
+                BOLogger.error("Failed to encrypt accounts data — skipping save to prevent data loss");
+            }
             this.lastSave = System.currentTimeMillis();
         }
     }

@@ -12,6 +12,7 @@ import net.minecraft.network.protocol.common.ServerboundPongPacket;
 import net.minecraft.util.Mth;
 
 public class PingSpoof extends Module {
+    private static final int MAX_SAFE_DELAY_MS = 15000;
     private static PingSpoof INSTANCE;
 
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -20,6 +21,7 @@ public class PingSpoof extends Module {
     private final Setting<Integer> extra = this.sgGeneral.intSetting("Additional Ping", 50, 0, 1000, 10, "The base amount of extra latency added to your connection in milliseconds.");
     private final Setting<Integer> jitter = this.sgGeneral.intSetting("Jitter Magnitude", 5, 0, 1000, 10, "The maximum random variance added to the extra ping to simulate a natural connection.");
     private final Setting<Integer> jitterInterval = this.sgGeneral.intSetting("Refresh Rate", 5, 0, 20, 1, "The interval in ticks at which the jitter value is recalculated for Real mode.", () -> this.mode.get() == SpoofMode.Real);
+    private boolean warnedCap = false;
 
     private int ji = 0;
     private long nextJ = 0L;
@@ -56,7 +58,18 @@ public class PingSpoof extends Module {
     }
 
     public int getPing() {
-        return this.mode.get() == SpoofMode.Fake ? this.extra.get() : this.extra.get() + this.ji;
+        int raw = this.mode.get() == SpoofMode.Fake ? this.extra.get() : this.extra.get() + this.ji;
+        if (raw > MAX_SAFE_DELAY_MS) {
+            if (!warnedCap) {
+                Managers.NOTIFICATIONS.addNotification("PingSpoof",
+                        "Delay capped at " + MAX_SAFE_DELAY_MS / 1000 + "s to prevent timeout disconnects",
+                        5.0, bodevelopment.client.blackout.module.modules.client.NotificationsSettings.Type.Alert);
+                warnedCap = true;
+            }
+            return MAX_SAFE_DELAY_MS;
+        }
+        warnedCap = false;
+        return raw;
     }
 
     public enum SpoofMode {

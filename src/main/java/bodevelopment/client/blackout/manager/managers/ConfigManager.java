@@ -111,7 +111,7 @@ public class ConfigManager extends Manager {
     }
 
     private void readExtra(String hudConfig, String bindsConfig) {
-        JsonObject hudObject = FileUtils.readElement("configs", hudConfig + ".json") instanceof JsonObject jsonObject ? jsonObject : null;
+        JsonObject hudObject = readJsonSafe("configs", hudConfig + ".json");
         Managers.HUD.clear();
 
         if (hudObject == null) {
@@ -129,7 +129,7 @@ public class ConfigManager extends Manager {
             state.applyToCurrent();
         }
 
-        JsonObject bindsObject = FileUtils.readElement("configs", bindsConfig + ".json") instanceof JsonObject jsonObject2 ? jsonObject2 : null;
+        JsonObject bindsObject = readJsonSafe("configs", bindsConfig + ".json");
 
         if (bindsObject != null && bindsObject.has("binds")) {
             JsonObject bindObject = bindsObject.getAsJsonObject("binds");
@@ -143,10 +143,8 @@ public class ConfigManager extends Manager {
 
     public void readConfig(String config, ConfigType type) {
         FileUtils.addFile("configs", config + ".json");
-        JsonObject object;
-        if (FileUtils.readElement("configs", config + ".json") instanceof JsonObject jsonObject) {
-            object = jsonObject;
-        } else {
+        JsonObject object = readJsonSafe("configs", config + ".json");
+        if (object == null) {
             object = new JsonObject();
         }
 
@@ -239,10 +237,8 @@ public class ConfigManager extends Manager {
     }
 
     private void writeConfigFile(String name, EnumSet<ConfigType> types) {
-        JsonObject configObject;
-        if (FileUtils.readElement("configs", name + ".json") instanceof JsonObject existing) {
-            configObject = existing;
-        } else {
+        JsonObject configObject = readJsonSafe("configs", name + ".json");
+        if (configObject == null) {
             configObject = new JsonObject();
         }
 
@@ -344,6 +340,21 @@ public class ConfigManager extends Manager {
             if (predicate != null && predicate.test(m)) {
                 this.save(configType);
             }
+        }
+    }
+
+    /**
+     * Safely reads a JSON file, returning null on any parse error (corrupted file, etc.)
+     * instead of propagating an exception that would crash client initialization.
+     */
+    private static JsonObject readJsonSafe(String... path) {
+        try {
+            if (!FileUtils.exists(path)) return null;
+            return FileUtils.readElement(path) instanceof JsonObject obj ? obj : null;
+        } catch (Exception e) {
+            bodevelopment.client.blackout.util.BOLogger.error(
+                    "Corrupted config file: " + String.join("/", path) + " — resetting to defaults", e);
+            return null;
         }
     }
 

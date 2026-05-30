@@ -190,10 +190,14 @@ public class PacketManager extends Manager {
         }
     }
 
+    private static final int MAX_PACKETS_PER_TICK = 20;
+
     private void drainQueue(Queue<Consumer<? super ClientPacketListener>> queue) {
         Consumer<? super ClientPacketListener> consumer;
-        while ((consumer = queue.poll()) != null) {
+        int sent = 0;
+        while (sent < MAX_PACKETS_PER_TICK && (consumer = queue.poll()) != null) {
             this.sendPacket(BlackOut.mc.getConnection(), consumer);
+            sent++;
         }
     }
 

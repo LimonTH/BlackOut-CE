@@ -12,7 +12,12 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
+import bodevelopment.client.blackout.util.BOLogger;
 import bodevelopment.client.blackout.util.ChatUtils;
+import bodevelopment.client.blackout.util.EncryptionUtils;
+import bodevelopment.client.blackout.util.FileUtils;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
@@ -41,6 +46,7 @@ public class AuthMe extends Module {
             "please", "type", "use", "welcome", "введите", "используйте"
     };
 
+    private static final String AUTHME_DATA_FILE = "authme_data.dat";
     private long time = -1L;
     private boolean register = false;
 
@@ -52,8 +58,37 @@ public class AuthMe extends Module {
             SingleOut<Boolean> visibility = () -> profileCount.get() >= index;
 
             nicks.add(this.sgProfiles.stringSetting("Nick " + i, "Player" + i, "The username associated with profile " + i + ".", visibility));
-            passes.add(this.sgProfiles.stringSetting("Password " + i, "pass" + i, "The password associated with profilee " + i + ".", visibility));
+            passes.add(this.sgProfiles.stringSetting("Password " + i, "pass" + i, "The password associated with profile " + i + ".", visibility));
         }
+
+    }
+
+    /**
+     * Saves nick/password pairs to encrypted storage.
+     * Called on module disable and periodically.
+     */
+    public void saveEncryptedData() {
+        try {
+            JsonObject obj = new JsonObject();
+            for (int i = 0; i < profileCount.get(); i++) {
+                JsonObject entry = new JsonObject();
+                entry.addProperty("nick", nicks.get(i).get() != null ? nicks.get(i).get() : "");
+                entry.addProperty("pass", passes.get(i).get() != null ? passes.get(i).get() : "");
+                obj.add(String.valueOf(i), entry);
+            }
+
+            String encrypted = EncryptionUtils.encryptString(obj.toString());
+            if (encrypted != null) {
+                FileUtils.write(FileUtils.getFile(AUTHME_DATA_FILE), encrypted);
+            }
+        } catch (Exception e) {
+            BOLogger.error("Failed to save encrypted AuthMe data", e);
+        }
+    }
+
+    @Override
+    public void onDisable() {
+        saveEncryptedData();
     }
 
     @Event

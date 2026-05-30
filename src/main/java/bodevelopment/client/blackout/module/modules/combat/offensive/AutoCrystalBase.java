@@ -138,31 +138,41 @@ public class AutoCrystalBase extends ObsidianModule {
         double rH = searchRadius.get();
         int rV = verticalRadius.get();
         double distToTargetSq = BlackOut.mc.player.distanceToSqr(target);
+        double px = BlackOut.mc.player.getX();
+        double py = BlackOut.mc.player.getY();
+        double pz = BlackOut.mc.player.getZ();
+
+        BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
 
         for (int x = (int) -rH; x <= rH; x++) {
             for (int z = (int) -rH; z <= rH; z++) {
                 if (x * x + z * z > rH * rH) continue;
 
                 for (int y = -1; y >= -rV; y--) {
-                    BlockPos pos = targetPos.offset(x, y, z);
+                    mutablePos.set(targetPos.getX() + x, targetPos.getY() + y, targetPos.getZ() + z);
 
-                    if (cachedIsFar && BlackOut.mc.player.distanceToSqr(pos.getCenter()) >= distToTargetSq) continue;
+                    if (cachedIsFar) {
+                        double dx = mutablePos.getX() + 0.5 - px;
+                        double dy = mutablePos.getY() + 0.5 - py;
+                        double dz = mutablePos.getZ() + 0.5 - pz;
+                        if (dx * dx + dy * dy + dz * dz >= distToTargetSq) continue;
+                    }
                     if (y == -1 && cachedSurroundState == 4) continue;
 
-                    if (!isValidForBase(pos, ac)) continue;
+                    if (!isValidForBase(mutablePos, ac)) continue;
 
-                    double tDmg = getSimulatedDmg(target, pos);
-                    if (tDmg <= 0.0 && BlockUtils.isLiquid(pos.above())) {
+                    double tDmg = getSimulatedDmg(target, mutablePos);
+                    if (tDmg <= 0.0 && BlockUtils.isLiquid(mutablePos.above())) {
                         tDmg = ac.getMinPlace().get() + 0.5;
                     }
                     if (tDmg < ac.getMinPlace().get()) continue;
 
-                    double sDmg = getSimulatedDmg(BlackOut.mc.player, pos);
+                    double sDmg = getSimulatedDmg(BlackOut.mc.player, mutablePos);
                     if (sDmg > ac.getMaxSelfPlace().get()) continue;
-                    if (!isFriendSafe(pos, ac, tDmg)) continue;
+                    if (!isFriendSafe(mutablePos, ac, tDmg)) continue;
                     if (ac.getCheckSelfPlacing().get() && (tDmg / Math.max(sDmg, 1.0)) < ac.getMinSelfRatio().get()) continue;
 
-                    double score = tDmg + (pos.equals(lastBestPos) ? scoreImprove.get() : 0);
+                    double score = tDmg + (mutablePos.equals(lastBestPos) ? scoreImprove.get() : 0);
 
                     if (cachedSurroundState > 0) {
                         if (y == -1) score += 5.0;
@@ -170,11 +180,13 @@ public class AutoCrystalBase extends ObsidianModule {
                         if (y <= -2) score += 5.0;
                     }
 
-                    double distSqToPos = BlackOut.mc.player.distanceToSqr(pos.getCenter());
-                    score += Math.max(0, (25.0 - distSqToPos) * 0.1);
+                    double dx2 = mutablePos.getX() + 0.5 - px;
+                    double dy2 = mutablePos.getY() + 0.5 - py;
+                    double dz2 = mutablePos.getZ() + 0.5 - pz;
+                    score += Math.max(0, (25.0 - (dx2 * dx2 + dy2 * dy2 + dz2 * dz2)) * 0.1);
 
                     if (this.autoMineToggle.get()) {
-                        BlockPos obstacle = getObstacle(pos);
+                        BlockPos obstacle = getObstacle(mutablePos);
                         if (obstacle != null) {
                             double bestDelta = getBestBreakDelta(obstacle);
                             if (bestDelta > 0.0) {
@@ -186,7 +198,7 @@ public class AutoCrystalBase extends ObsidianModule {
 
                     if (score > maxScore) {
                         maxScore = score;
-                        currentBest = pos.immutable();
+                        currentBest = mutablePos.immutable();
                     }
                 }
             }
@@ -270,6 +282,14 @@ public class AutoCrystalBase extends ObsidianModule {
         return EntityUtils.intersects(BoxUtils.get(pos), entity -> entity instanceof net.minecraft.world.entity.boss.enderdragon.EndCrystal);
     }
 
+    /**
+     * Calculates simulated crystal damage by temporarily replacing blocks in the world.
+     * <p>
+     * <b>TOCTOU mitigation:</b> The block manipulation is wrapped in a {@code synchronized} block
+     * to prevent rendering or other threads from observing intermediate block states.
+     * A future optimization should use a {@code BlockGetter}-based explosion simulation
+     * to avoid world mutation entirely.
+     */
     private double getSimulatedDmg(Player p, BlockPos pos) {
         if (BlackOut.mc.level == null) return 0;
 
@@ -282,15 +302,17 @@ public class AutoCrystalBase extends ObsidianModule {
         boolean needsBase = !(oldBase.is(Blocks.OBSIDIAN) || oldBase.is(Blocks.BEDROCK));
         boolean needsAbove = !oldAbove.isAir();
 
-        if (needsBase) BlackOut.mc.level.setBlock(pos, Blocks.OBSIDIAN.defaultBlockState(), 0);
-        if (needsAbove) BlackOut.mc.level.setBlock(crystalPos, Blocks.AIR.defaultBlockState(), 0);
+        synchronized (BlackOut.mc.level) {
+            if (needsBase) BlackOut.mc.level.setBlock(pos, Blocks.OBSIDIAN.defaultBlockState(), 0);
+            if (needsAbove) BlackOut.mc.level.setBlock(crystalPos, Blocks.AIR.defaultBlockState(), 0);
 
-        double dmg = DamageUtils.crystalDamage(p, p.getBoundingBox(), pos.getCenter().add(0, 0.5, 0));
+            double dmg = DamageUtils.crystalDamage(p, p.getBoundingBox(), pos.getCenter().add(0, 0.5, 0));
 
-        if (needsAbove) BlackOut.mc.level.setBlock(crystalPos, oldAbove, 0);
-        if (needsBase) BlackOut.mc.level.setBlock(pos, oldBase, 0);
+            if (needsAbove) BlackOut.mc.level.setBlock(crystalPos, oldAbove, 0);
+            if (needsBase) BlackOut.mc.level.setBlock(pos, oldBase, 0);
 
-        return dmg;
+            return dmg;
+        }
     }
 
     private int getSurroundState(BlockPos targetPos) {
