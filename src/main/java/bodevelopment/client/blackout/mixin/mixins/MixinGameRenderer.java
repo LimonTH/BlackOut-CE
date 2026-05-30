@@ -8,6 +8,7 @@ import bodevelopment.client.blackout.module.modules.misc.Reach;
 import bodevelopment.client.blackout.module.modules.visual.misc.*;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.randomstuff.timers.TimerMap;
+import bodevelopment.client.blackout.util.Capes;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.SharedFeatures;
@@ -106,7 +107,8 @@ public abstract class MixinGameRenderer {
 
     @Inject(method = "preloadUiShader", at = @At("TAIL"))
     private void onShaderLoad(ResourceProvider factory, CallbackInfo ci) {
-        Shaders.loadPrograms();
+        Shaders.loadAll();
+        Capes.requestCapes();
         BlackOut.FONT.loadFont();
         BlackOut.BOLD_FONT.loadFont();
         BOTextures.init();

@@ -1,10 +1,13 @@
 package bodevelopment.client.blackout.rendering.shader;
 
-import bodevelopment.client.blackout.util.Capes;
-
 import java.util.Arrays;
 
-public class Shaders {
+/**
+ * Central registry of all shader programs.
+ * Each static field is populated automatically by {@link #loadAll()}.
+ */
+public final class Shaders {
+
     public static Shader rainbow;
     public static Shader menu;
     public static Shader picker;
@@ -39,19 +42,19 @@ public class Shaders {
     public static Shader convert;
     public static Shader subtract;
 
-    public static void loadPrograms() {
-        ShaderReader.loadShaders();
-        Arrays.stream(Shaders.class.getDeclaredFields()).forEach(field -> {
-            try {
-                field.set(field, newShader(field.getName()));
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        });
-        Capes.requestCapes();
+    public static void loadAll() {
+        ShaderReader.loadAll();
+
+        Arrays.stream(Shaders.class.getDeclaredFields())
+                .filter(f -> f.getType() == Shader.class)
+                .forEach(field -> {
+                    try {
+                        field.set(null, new Shader(field.getName()));
+                    } catch (IllegalAccessException e) {
+                        throw new RuntimeException("Failed to initialise shader: " + field.getName(), e);
+                    }
+                });
     }
 
-    private static Shader newShader(String name) {
-        return new Shader(name);
-    }
+    private Shaders() {}
 }

@@ -21,3 +21,15 @@ math {
         return v3.x + v3.y;
     }
 }
+
+rainbow {
+    // HSL→RGB rainbow wave.  x ∈ [0, 2π] maps through the hue spectrum.
+    // Returns (r, g, b) ready for mixing with a base colour.
+    @fun vec3 hslWave(float x, float saturation) {
+        float r = -(clamp(x - 3.0, 0.0, 1.0) + clamp(-x + 1.0, 0.0, 1.0)) + 1.0 - (clamp(x - 9.0, 0.0, 1.0) + clamp(-x + 7.0, 0.0, 1.0)) + 1.0;
+        float g = -(clamp(x - 5.0, 0.0, 1.0) + clamp(-x + 3.0, 0.0, 1.1)) + 1.0;
+        float b = -(clamp(x - 7.0, 0.0, 1.0) + clamp(-x + 5.0, 0.0, 1.0)) + 1.0;
+        return vec3(1.0 - r * saturation, 1.0 - g * saturation, 1.0 - b * saturation);
+    }
+
+}

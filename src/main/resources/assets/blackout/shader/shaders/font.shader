@@ -5,7 +5,6 @@ frag {
 
     uniform sampler2D uTexture;
     uniform vec2 texRes;
-
     uniform vec4 clr;
 
     in vec2 texCoord0;
@@ -24,10 +23,9 @@ shadow {
 
     uniform sampler2D uTexture;
     uniform vec2 texRes;
+    uniform float alphaMulti;
 
     in vec2 texCoord0;
-
-    uniform float alphaMulti;
 
     out vec4 fragColor;
 
@@ -38,6 +36,7 @@ shadow {
 
 grad {
     import font.utils.getAlpha;
+    import utils.rainbow.hslWave;
 
     $alpha
     $res
@@ -61,13 +60,10 @@ grad {
         }
 
         float pos = (gl_FragCoord.x / uResolution.x - gl_FragCoord.y / uResolution.y) * frequency;
-
         float x = 2.0 + fract(pos - time * speed) * 6.2831;
+        vec3 rgb = hslWave(x, saturation);
 
-        float r = -(clamp(x - 3.0, 0.0, 1.0) + clamp(-x + 1.0, 0.0, 1.0)) + 1.0 - (clamp(x - 9.0, 0.0, 1.0) + clamp(-x + 7.0, 0.0, 1.0)) + 1.0;
-        float g = -(clamp(x - 5.0, 0.0, 1.0) + clamp(-x + 3.0, 0.0, 1.1)) + 1.0;
-        float b = -(clamp(x - 7.0, 0.0, 1.0) + clamp(-x + 5.0, .0, 1.0)) + 1.0;
-        fragColor = vec4(1 - r * saturation, 1 - g * saturation, 1 - b * saturation, a * uAlpha);
+        fragColor = vec4(rgb, a * uAlpha);
     }
 }
 
@@ -103,7 +99,6 @@ wave {
         fragColor = c;
     }
 }
-
 
 utils {
     fun float getAlpha() {
