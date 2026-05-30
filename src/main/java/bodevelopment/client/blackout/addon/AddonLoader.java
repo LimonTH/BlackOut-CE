@@ -2,9 +2,18 @@ package bodevelopment.client.blackout.addon;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.command.Command;
+import bodevelopment.client.blackout.event.Event;
+import bodevelopment.client.blackout.event.EventBus;
+import bodevelopment.client.blackout.event.events.GameJoinEvent;
+import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
 import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.AbstractModule;
+import bodevelopment.client.blackout.module.modules.client.MainMenuSettings;
+import bodevelopment.client.blackout.module.modules.client.MenuMusicSettings;
+import bodevelopment.client.blackout.module.modules.client.ThemeSettings;
+import bodevelopment.client.blackout.randomstuff.mainmenu.MainMenuRenderer;
+import bodevelopment.client.blackout.theme.Theme;
 import bodevelopment.client.blackout.util.BOLogger;
 import bodevelopment.client.blackout.util.ClassUtils;
 import net.fabricmc.loader.api.FabricLoader;
@@ -23,6 +32,7 @@ import java.util.Optional;
 
 public class AddonLoader {
     public static final List<BlackoutAddon> addons = new ArrayList<>();
+    private static boolean anyAddonHadWorld = false;
 
     public static void load() {
         BOLogger.info("Loading BlackOut addons...");
@@ -32,7 +42,7 @@ public class AddonLoader {
                 .forEach(container -> {
                     try {
                         BlackoutAddon addon = container.getEntrypoint();
-                        ClassLoader addonLoader = addon.getClass().getClassLoader();
+                        ClassLoader addonLoader = addon.getAddonClassLoader();
 
                         BOLogger.info(String.format("Found addon: %s (version %s)", addon.getName(), addon.getVersion()));
 
@@ -67,6 +77,34 @@ public class AddonLoader {
                                 }
                             });
                         }
+
+                        if (addon.themePath != null) {
+                            scan(addonLoader, addon.themePath, Theme.class, instance -> {
+                                ThemeSettings.themes.add(instance);
+                                addon.themes.add(instance);
+                            });
+                        }
+
+                        if (addon.guiPath != null) {
+                            scan(addonLoader, addon.guiPath, ClickGuiScreen.class, instance -> {
+                                addon.guiScreens.add(instance);
+                            });
+                            scan(addonLoader, addon.guiPath, MainMenuRenderer.class, instance -> {
+                                String id = instance.getClass().getSimpleName();
+                                addon.menuRenderers.put(id, instance);
+                            });
+                        }
+
+                        for (Theme theme : addon.themes) {
+                            if (!ThemeSettings.themes.contains(theme)) {
+                                ThemeSettings.themes.add(theme);
+                            }
+                        }
+                        addon.menuRenderers.forEach(MainMenuSettings.CUSTOM_RENDERERS::putIfAbsent);
+                        addon.musicTracks.forEach(MenuMusicSettings.CUSTOM_TRACKS::putIfAbsent);
+
+                        BlackOut.EVENT_BUS.subscribe(addon, () -> false);
+
                         addon.onEnable();
 
                         loadAddonIcon(addon, container.getProvider());
@@ -76,17 +114,23 @@ public class AddonLoader {
                         BOLogger.error("Failed to load addon: " + container.getProvider().getMetadata().getId(), e);
                     }
                 });
+
+        BlackOut.EVENT_BUS.subscribe(new AddonLifecycleBridge(), () -> false);
     }
 
     public static void unloadAll() {
         for (BlackoutAddon addon : addons) {
             try {
                 addon.onDisable();
+                BlackOut.EVENT_BUS.unsubscribe(addon);
             } catch (Exception e) {
                 BOLogger.error("Error disabling addon: " + addon.getName(), e);
             }
         }
+        addons.clear();
+        anyAddonHadWorld = false;
     }
+
 
     private static boolean isVersionCompatible(String minVersion, String currentVersion) {
         try {
@@ -133,5 +177,32 @@ public class AddonLoader {
                 }
             }
         }, path, loader);
+    }
+
+    /**
+     * Internal bridge that listens to {@link GameJoinEvent} and delegates to
+     * {@link BlackoutAddon#onWorldJoin()} / {@link BlackoutAddon#onWorldLeave()}.
+     */
+    private static class AddonLifecycleBridge {
+        @Event
+        public void onGameJoin(GameJoinEvent event) {
+            if (anyAddonHadWorld) {
+                for (BlackoutAddon addon : addons) {
+                    try {
+                        addon.onWorldLeave();
+                    } catch (Exception e) {
+                        BOLogger.error("Error in onWorldLeave for addon: " + addon.getName(), e);
+                    }
+                }
+            }
+            anyAddonHadWorld = true;
+            for (BlackoutAddon addon : addons) {
+                try {
+                    addon.onWorldJoin();
+                } catch (Exception e) {
+                    BOLogger.error("Error in onWorldJoin for addon: " + addon.getName(), e);
+                }
+            }
+        }
     }
 }
