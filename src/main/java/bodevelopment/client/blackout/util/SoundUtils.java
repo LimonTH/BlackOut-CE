@@ -30,6 +30,42 @@ public class SoundUtils {
         return playInternal(pitch, volume, 0.0, 0.0, 0.0, false, true, name);
     }
 
+    /**
+     * Plays an OGG audio stream directly, e.g. from an addon JAR resource.
+     * The caller is responsible for closing the stream.
+     */
+    public static ChannelAccess.ChannelHandle playStream(float pitch, float volume, InputStream inputStream) {
+        return playStream(pitch, volume, inputStream, false);
+    }
+
+    /**
+     * Plays an OGG audio stream with optional looping.
+     */
+    public static ChannelAccess.ChannelHandle playStream(float pitch, float volume, InputStream inputStream, boolean looping) {
+        SoundEngine engine = BlackOut.mc.getSoundManager().soundEngine;
+        ChannelAccess.ChannelHandle sourceManager = createSourceManager(engine, 5);
+        if (sourceManager != null) {
+            sourceManager.execute(source -> {
+                source.setPitch(pitch);
+                source.setVolume(volume);
+                source.disableAttenuation();
+                source.setLooping(looping);
+                source.setRelative(false);
+            });
+            CompletableFuture.supplyAsync(() -> {
+                try {
+                    return new JOrbisAudioStream(inputStream);
+                } catch (IOException e) {
+                    throw new CompletionException(e);
+                }
+            }, Util.backgroundExecutor()).thenAccept(stream -> sourceManager.execute(source -> {
+                source.attachBufferStream(stream);
+                source.play();
+            }));
+        }
+        return sourceManager;
+    }
+
     public static void stop(ChannelAccess.ChannelHandle handle) {
         if (handle != null) {
             handle.execute(source -> source.stop());

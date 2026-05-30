@@ -7,11 +7,23 @@ import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.module.SettingsModule;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
+import bodevelopment.client.blackout.util.BOLogger;
 import bodevelopment.client.blackout.util.SoundUtils;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.sounds.ChannelAccess;
 
+import java.io.InputStream;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class MenuMusicSettings extends SettingsModule {
+    /**
+     * Registry for addon-provided custom music tracks.
+     * Key = display name shown in the Custom Track Name setting.
+     * Value = supplier that opens a fresh OGG InputStream on each play.
+     */
+    public static final Map<String, TrackProvider> CUSTOM_TRACKS = new ConcurrentHashMap<>();
+
     private static MenuMusicSettings INSTANCE;
 
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -21,6 +33,9 @@ public class MenuMusicSettings extends SettingsModule {
     public final Setting<MusicTrack> track = this.sgGeneral.enumSetting("Track", MusicTrack.MoneyPhonk,
             "Selects the background music track to play in the main menu.",
             () -> this.mode.get() != Mode.Vanilla);
+    public final Setting<String> customTrackName = this.sgGeneral.stringSetting("Custom Track Name", "",
+            "Name of the addon-provided track to play (visible when Track is set to Custom).",
+            () -> this.mode.get() != Mode.Vanilla && this.track.get() == MusicTrack.Custom);
     public final Setting<Double> volume = this.sgGeneral.doubleSetting("Volume", 0.3, 0.0, 1.0, 0.01,
             "Controls the output volume of the menu music.",
             () -> this.mode.get() != Mode.Vanilla);
@@ -36,6 +51,7 @@ public class MenuMusicSettings extends SettingsModule {
 
     private ChannelAccess.ChannelHandle currentHandle;
     private MusicTrack currentTrack;
+    private String currentCustomTrackName;
 
     private State state = State.Stopped;
     private double stateEnteredAt;
@@ -75,7 +91,9 @@ public class MenuMusicSettings extends SettingsModule {
         boolean paused = BlackOut.mc.isPaused();
         boolean inMenu = BlackOut.mc.screen instanceof TitleScreen;
         MusicTrack selectedTrack = this.track.get();
-        boolean trackChanged = this.currentTrack != selectedTrack;
+        String selectedCustom = this.customTrackName.get();
+        boolean trackChanged = this.currentTrack != selectedTrack
+                || (selectedTrack == MusicTrack.Custom && !selectedCustom.equals(this.currentCustomTrackName));
         double now = now();
 
         if (this.wasPaused && !paused && inMenu
@@ -152,7 +170,32 @@ public class MenuMusicSettings extends SettingsModule {
                 this.restartAfterFade = false;
                 this.killSource();
                 this.currentTrack = this.track.get();
-                this.currentHandle = SoundUtils.play(1.0f, 0.0f, this.currentTrack.fileName);
+
+                if (this.currentTrack == MusicTrack.Custom) {
+                    this.currentCustomTrackName = this.customTrackName.get();
+                    TrackProvider provider = CUSTOM_TRACKS.get(this.currentCustomTrackName);
+                    if (provider != null) {
+                        InputStream stream = provider.openStream();
+                        if (stream != null) {
+                            this.currentHandle = SoundUtils.playStream(1.0f, 0.0f, stream);
+                        } else {
+                            BOLogger.error("MenuMusic: custom track '" + this.currentCustomTrackName + "' returned null stream");
+                            this.state = State.Stopped;
+                            this.currentTrack = null;
+                            this.currentCustomTrackName = null;
+                            return;
+                        }
+                    } else {
+                        BOLogger.error("MenuMusic: custom track '" + this.currentCustomTrackName + "' not found in CUSTOM_TRACKS");
+                        this.state = State.Stopped;
+                        this.currentTrack = null;
+                        this.currentCustomTrackName = null;
+                        return;
+                    }
+                } else {
+                    this.currentCustomTrackName = null;
+                    this.currentHandle = SoundUtils.play(1.0f, 0.0f, this.currentTrack.fileName);
+                }
                 this.setVolume(0.0f);
             }
             case FadingOut -> {
@@ -163,6 +206,7 @@ public class MenuMusicSettings extends SettingsModule {
             case Stopped -> {
                 this.killSource();
                 this.currentTrack = null;
+                this.currentCustomTrackName = null;
             }
             default -> {}
         }
@@ -230,11 +274,23 @@ public class MenuMusicSettings extends SettingsModule {
     }
 
     public enum MusicTrack {
-        MoneyPhonk("money_phonk");
+        MoneyPhonk("money_phonk"),
+        /** Select this to use an addon-registered track from {@link MenuMusicSettings#CUSTOM_TRACKS}. */
+        Custom(null);
         public final String fileName;
 
         MusicTrack(String fileName) {
-            this.fileName = "menu/" + fileName;
+            this.fileName = fileName != null ? "menu/" + fileName : null;
         }
+    }
+
+    /**
+     * Functional interface for addon-provided music tracks.
+     * Each call to {@link #openStream()} must return a fresh {@link InputStream}
+     * positioned at the start of an OGG Vorbis audio stream.
+     */
+    @FunctionalInterface
+    public interface TrackProvider {
+        InputStream openStream();
     }
 }
