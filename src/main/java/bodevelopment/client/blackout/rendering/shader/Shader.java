@@ -156,8 +156,8 @@ public class Shader {
             }
         }
 
-        void set(float... values)   { floatData = values; }
-        void set(int... values)     { intData = values; }
+        void set(float... values)   { System.arraycopy(values, 0, floatData, 0, Math.min(values.length, floatData.length)); }
+        void set(int... values)     { System.arraycopy(values, 0, intData, 0, Math.min(values.length, intData.length)); }
         void set(Matrix4f mat)      { mat.get(floatData); }
         void set(Matrix3f mat)      { mat.get(floatData); }
 

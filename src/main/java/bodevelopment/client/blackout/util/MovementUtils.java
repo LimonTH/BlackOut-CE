@@ -20,6 +20,7 @@ public class MovementUtils {
     }
 
     public static double getSpeed(double baseSpeed, double multi) {
+        if (BlackOut.mc.player == null) return 0.0;
         double effectMulti = getEffectMulti();
         if (BlackOut.mc.player.isShiftKeyDown()) {
             baseSpeed *= 0.3;
@@ -32,6 +33,7 @@ public class MovementUtils {
     }
 
     public static double getEffectMulti() {
+        if (BlackOut.mc.player == null) return 0.0;
         double multiBonus = 0.0;
         if (BlackOut.mc.player.hasEffect(MobEffects.MOVEMENT_SPEED)) {
             multiBonus += BlackOut.mc.player.getEffect(MobEffects.MOVEMENT_SPEED).getAmplifier() * 0.2 + 0.2;

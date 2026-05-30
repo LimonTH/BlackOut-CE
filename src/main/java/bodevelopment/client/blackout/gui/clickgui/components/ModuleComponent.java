@@ -12,6 +12,8 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.settings.KeyBindSetting;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
+import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
+import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.SelectedComponent;
@@ -25,6 +27,10 @@ import net.minecraft.util.Mth;
 
 public class ModuleComponent extends Component {
     private static final Color disabledColor = new Color(150, 150, 150, 255);
+    private static final float RESET_ICON_SIZE = 20.0F;
+    private static final float RESET_HIT_SIZE = 28.0F;
+    private static final float RESET_HOLD_THRESHOLD = 2.5F;
+
     public final AbstractModule module;
     public float length;
     public float l;
@@ -33,6 +39,8 @@ public class ModuleComponent extends Component {
     private float openProgress = 0.0F;
     private double toggleProgress = 0.0;
     private long prevTime = 0L;
+    private boolean resetHovered = false;
+    private float resetHoldTime = 0.0F;
 
     public ModuleComponent(PoseStack stack, AbstractModule module) {
         super(stack);
@@ -216,6 +224,8 @@ public class ModuleComponent extends Component {
             }
         }
 
+        float iconCenterY = 0.0F;
+
         switch (GuiSettings.getInstance().settingGroup.get()) {
             case Line:
                 this.fadeLine(
@@ -230,6 +240,7 @@ public class ModuleComponent extends Component {
                         true,
                         GuiColorUtils.getSettingCategory(this.y + this.l + 30.0F)
                 );
+                iconCenterY = this.y + this.l + (20.0F * fs);
                 break;
             case Shadow:
                 float bottomY = this.y + this.l + categoryLength - (10.0F * fs);
@@ -247,6 +258,7 @@ public class ModuleComponent extends Component {
                         true,
                         GuiColorUtils.getSettingCategory(this.y + this.l + 30.0F)
                 );
+                iconCenterY = this.y + this.l + (15.0F * fs);
                 break;
             case Quad:
                 Render2DUtils.rounded(
@@ -269,6 +281,7 @@ public class ModuleComponent extends Component {
                         true,
                         GuiColorUtils.getSettingCategory(this.y + this.l + 30.0F)
                 );
+                iconCenterY = this.y + this.l + (31.0F * fs);
                 break;
             case None:
                 this.text(
@@ -280,6 +293,11 @@ public class ModuleComponent extends Component {
                         true,
                         GuiColorUtils.getSettingCategory(this.y + this.l + 30.0F)
                 );
+                iconCenterY = this.y + this.l + (20.0F * fs);
+        }
+
+        if (group == this.module.sgModule) {
+            this.renderResetButton(this.x + this.width - 22.0F, iconCenterY, (float) this.mx, (float) this.my);
         }
     }
 
@@ -310,6 +328,39 @@ public class ModuleComponent extends Component {
         }
     }
 
+    private void renderResetButton(float centerX, float centerY, float currentMx, float currentMy) {
+        float halfHit = RESET_HIT_SIZE / 2.0F;
+        this.resetHovered = currentMx > centerX - halfHit
+                && currentMx < centerX + halfHit
+                && currentMy > centerY - halfHit
+                && currentMy < centerY + halfHit;
+
+        if (this.resetHovered) {
+            this.resetHoldTime = Math.min(this.resetHoldTime + this.frameTime, RESET_HOLD_THRESHOLD);
+            if (this.resetHoldTime >= RESET_HOLD_THRESHOLD) {
+                ClickGui.hoveredDescription = "Click to revert module settings to stock.";
+            } else {
+                ClickGui.hoveredDescription = "Wait...";
+            }
+        } else {
+            this.resetHoldTime = Math.max(this.resetHoldTime - this.frameTime * 3.0F, 0.0F);
+        }
+
+        float progress = this.resetHoldTime / RESET_HOLD_THRESHOLD;
+        boolean ready = progress >= 1.0F;
+
+        int alpha = ready ? 255 : (int) (80 + progress * 175);
+        int color = ColorUtils.withAlpha(Color.WHITE.getRGB(), alpha);
+        TextureRenderer icon = BOTextures.getResetIconRenderer();
+        float halfIcon = RESET_ICON_SIZE / 2.0F;
+
+        this.stack.pushPose();
+        this.stack.translate(centerX, centerY, 0.0F);
+        this.stack.mulPose(com.mojang.math.Axis.ZP.rotation((float) (progress * Math.PI * 6.0)));
+        icon.quad(this.stack, -halfIcon, -halfIcon, RESET_ICON_SIZE, RESET_ICON_SIZE, color);
+        this.stack.popPose();
+    }
+
     private float getModuleNameOffset() {
         return this.getHeight() / 2.0F;
     }
@@ -319,6 +370,17 @@ public class ModuleComponent extends Component {
         if (Managers.CLICK_GUI.CLICK_GUI.openedScreen != null) return false;
 
         if (this.module instanceof Module toggleable && toggleable.bind.get().onMouse(button, pressed)) {
+            return true;
+        }
+
+        if (pressed && button == 0 && this.resetHovered && this.resetHoldTime >= RESET_HOLD_THRESHOLD) {
+            this.module.resetToDefaults();
+            Managers.CONFIG.saveModule(this.module);
+            this.resetHoldTime = 0.0F;
+            return true;
+        }
+
+        if (pressed && button == 0 && this.resetHovered) {
             return true;
         }
 

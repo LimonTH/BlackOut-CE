@@ -12,6 +12,7 @@ import bodevelopment.client.blackout.module.modules.client.NotificationsSettings
 import bodevelopment.client.blackout.module.modules.misc.Timer;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
+import bodevelopment.client.blackout.util.MovementController;
 import bodevelopment.client.blackout.util.MovementUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -19,6 +20,11 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.world.InteractionHand;
 
 public class Flight extends Module {
+    /** Vanilla anti-kick offset: the minimal downward velocity to satisfy the server's movement check. */
+    private static final double ANTI_KICK_OFFSET = -0.0315;
+    /** Vanilla walking speed constant (blocks/tick). */
+    private static final double VANILLA_WALK_SPEED = 0.2873;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
 
     public final Setting<Mode> mode = this.sgGeneral.enumSetting("Flight Mode", Mode.Motion, "The bypass logic used to maintain altitude.");
@@ -39,10 +45,11 @@ public class Flight extends Module {
     private double startY = 0.0;
     private boolean changedTimer = false;
     private boolean damaged = false;
-    private static int i = 0;
-    private static int dmgFlyTicks = 0;
-    private static int ticks = 0;
-    private static boolean jumped = false;
+    private int i = 0;
+    private int dmgFlyTicks = 0;
+    private int ticks = 0;
+    private boolean jumped = false;
+    private int verusDmgPhase = -1;
 
     public Flight() {
         super("Flight", "Overrides gravity and air friction to allow the player to travel through the air freely.", SubCategory.MOVEMENT, true);
@@ -54,6 +61,7 @@ public class Flight extends Module {
         dmgFlyTicks = 0;
         jumped = false;
         this.damaged = false;
+        this.verusDmgPhase = -1;
         this.startY = BlackOut.mc.player.getY();
         if (this.mode.get() == Mode.VerusBow) {
             Managers.NOTIFICATIONS.addNotification("Shoot yourself with a bow", this.getDisplayName(), 2.0, NotificationsSettings.Type.Info);
@@ -64,25 +72,33 @@ public class Flight extends Module {
         }
 
         if (this.mode.get() == Mode.VerusDMG) {
-            this.sendPacket(
-                    new ServerboundMovePlayerPacket.Pos(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision)
-            );
-            this.sendPacket(
-                    new ServerboundMovePlayerPacket.Pos(
-                            BlackOut.mc.player.getX(),
-                            BlackOut.mc.player.getY() + this.verusDMGheight.get(),
-                            BlackOut.mc.player.getZ(),
-                            false,
-                            BlackOut.mc.player.horizontalCollision
-                    )
-            );
-            this.sendPacket(
-                    new ServerboundMovePlayerPacket.Pos(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), false, BlackOut.mc.player.horizontalCollision)
-            );
-            this.sendPacket(
-                    new ServerboundMovePlayerPacket.Pos(BlackOut.mc.player.getX(), BlackOut.mc.player.getY(), BlackOut.mc.player.getZ(), true, BlackOut.mc.player.horizontalCollision)
-            );
+            // Phase 0 sends the first packet immediately; remaining phases spread across ticks
+            this.verusDmgPhase = 0;
         }
+    }
+
+    /**
+     * Spreads the 4 VerusDMG position packets across 4 ticks to avoid Grim's
+     * multi-position-per-tick detection. One packet is sent per tick via onTick.
+     */
+    private void tickVerusDmgPhase() {
+        if (this.verusDmgPhase < 0 || this.verusDmgPhase > 3) return;
+        double px = BlackOut.mc.player.getX();
+        double py = BlackOut.mc.player.getY();
+        double pz = BlackOut.mc.player.getZ();
+        boolean hCol = BlackOut.mc.player.horizontalCollision;
+
+        switch (this.verusDmgPhase) {
+            case 0 -> this.sendPacket(
+                    new ServerboundMovePlayerPacket.Pos(px, py, pz, false, hCol));
+            case 1 -> this.sendPacket(
+                    new ServerboundMovePlayerPacket.Pos(px, py + this.verusDMGheight.get(), pz, false, hCol));
+            case 2 -> this.sendPacket(
+                    new ServerboundMovePlayerPacket.Pos(px, py, pz, false, hCol));
+            case 3 -> this.sendPacket(
+                    new ServerboundMovePlayerPacket.Pos(px, py, pz, true, hCol));
+        }
+        this.verusDmgPhase++;
     }
 
     @Override
@@ -102,9 +118,12 @@ public class Flight extends Module {
                 this.changedTimer = true;
             }
 
-            if (this.mode.get() == Mode.VerusDMG && this.damaged) {
-                this.changedTimer = true;
-                dmgFlyTicks++;
+            if (this.mode.get() == Mode.VerusDMG) {
+                this.tickVerusDmgPhase();
+                if (this.damaged) {
+                    this.changedTimer = true;
+                    dmgFlyTicks++;
+                }
             }
         }
     }
@@ -130,9 +149,12 @@ public class Flight extends Module {
                         y = -this.v.get();
                     }
 
-                    if (this.antiKick.get() && i > this.delay.get()) {
-                        y = Math.min(y, -0.0315);
-                        i = 0;
+                    if (this.antiKick.get()) {
+                        double adjustedY = MovementController.applyAntiKick(i, this.delay.get(), y);
+                        if (adjustedY != y) {
+                            y = adjustedY;
+                            i = 0;
+                        }
                     }
 
                     event.setY(this, y);
@@ -140,9 +162,7 @@ public class Flight extends Module {
                         return;
                     }
 
-                    event.setXZ(
-                            this, MovementUtils.xMovement(this.h.get(), Managers.ROTATION.moveYaw), MovementUtils.zMovement(this.h.get(), Managers.ROTATION.moveYaw)
-                    );
+                    MovementController.applyHorizontalMotion(event, this, this.h.get());
                     break;
                 case Verus:
                     if (BlackOut.mc.player.getY() == this.startY) {
@@ -187,11 +207,7 @@ public class Flight extends Module {
                         return;
                     }
 
-                    event.setXZ(
-                            this,
-                            MovementUtils.xMovement(this.verusSpeed.get(), Managers.ROTATION.moveYaw),
-                            MovementUtils.zMovement(this.verusSpeed.get(), Managers.ROTATION.moveYaw)
-                    );
+                    MovementController.applyHorizontalMotion(event, this, this.verusSpeed.get());
                     break;
                 case VerusBow:
                     if (BlackOut.mc.player.hurtTime > 0) {
@@ -200,11 +216,7 @@ public class Flight extends Module {
                         }
 
                         jumped = true;
-                        event.setXZ(
-                                this,
-                                MovementUtils.xMovement(this.verusBowSpeed.get(), Managers.ROTATION.moveYaw),
-                                MovementUtils.zMovement(this.verusBowSpeed.get(), Managers.ROTATION.moveYaw)
-                        );
+                        MovementController.applyHorizontalMotion(event, this, this.verusBowSpeed.get());
                         if (BlackOut.mc.player.getY() + event.originalMovement.y < this.startY) {
                             event.setY(this, this.startY - BlackOut.mc.player.getY());
                             Managers.PACKET.spoofOG(true);
@@ -212,7 +224,7 @@ public class Flight extends Module {
                     }
 
                     if (ticks >= this.verusLimit.get()) {
-                        event.setXZ(this, MovementUtils.xMovement(0.2873, Managers.ROTATION.moveYaw), MovementUtils.zMovement(0.2873, Managers.ROTATION.moveYaw));
+                        MovementController.applyHorizontalMotion(event, this, MovementController.getVanillaWalkSpeed());
                         Managers.NOTIFICATIONS.addNotification("Reached tick limit", this.getDisplayName(), 2.0, NotificationsSettings.Type.Info);
                         this.toggle();
                     }
@@ -227,14 +239,10 @@ public class Flight extends Module {
                     }
 
                     event.setY(this, 0.0);
-                    event.setXZ(
-                            this,
-                            MovementUtils.xMovement(this.verusDMGSpeed.get(), Managers.ROTATION.moveYaw),
-                            MovementUtils.zMovement(this.verusDMGSpeed.get(), Managers.ROTATION.moveYaw)
-                    );
+                    MovementController.applyHorizontalMotion(event, this, this.verusDMGSpeed.get());
                     Timer.set(0.1F);
                     if (dmgFlyTicks > this.verusDMGLimit.get()) {
-                        event.setXZ(this, MovementUtils.xMovement(0.2873, Managers.ROTATION.moveYaw), MovementUtils.zMovement(0.2873, Managers.ROTATION.moveYaw));
+                        MovementController.applyHorizontalMotion(event, this, MovementController.getVanillaWalkSpeed());
                         Timer.reset();
                         this.disable();
                     }

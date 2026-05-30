@@ -25,7 +25,10 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.*;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Optional;
@@ -74,11 +77,11 @@ public abstract class MixinMinecraft implements IMinecraft {
     @Shadow
     protected abstract void startUseItem();
 
-    @Redirect(
+    @WrapOperation(
             method = "handleKeybinds",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/CameraType;cycle()Lnet/minecraft/client/CameraType;")
     )
-    private CameraType setPerspective(CameraType instance) {
+    private CameraType setPerspective(CameraType instance, Operation<CameraType> original) {
         CameraModifier modifier = CameraModifier.getInstance();
         if (modifier != null && modifier.enabled && modifier.noInverse.get()) {
             if (instance == CameraType.FIRST_PERSON) {
@@ -87,7 +90,7 @@ public abstract class MixinMinecraft implements IMinecraft {
                 return CameraType.FIRST_PERSON;
             }
         } else {
-            return instance.cycle();
+            return original.call(instance);
         }
     }
 
@@ -143,9 +146,9 @@ public abstract class MixinMinecraft implements IMinecraft {
         }
     }
 
-    @Redirect(method = "continueAttack", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z"))
-    private boolean isUsing(LocalPlayer instance) {
-        return !MultiTask.getInstance().enabled && instance.isUsingItem();
+    @WrapOperation(method = "continueAttack", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z"))
+    private boolean isUsing(LocalPlayer instance, Operation<Boolean> original) {
+        return !MultiTask.getInstance().enabled && original.call(instance);
     }
 
     @Override
@@ -165,84 +168,84 @@ public abstract class MixinMinecraft implements IMinecraft {
         this.startUseItem();
     }
 
-    @Redirect(
+    @WrapOperation(
             method = "startUseItem",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;useItemOn(Lnet/minecraft/client/player/LocalPlayer;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/BlockHitResult;)Lnet/minecraft/world/InteractionResult;"
             )
     )
-    private InteractionResult onInteractBlock(MultiPlayerGameMode instance, LocalPlayer player, InteractionHand hand, BlockHitResult hitResult) {
+    private InteractionResult onInteractBlock(MultiPlayerGameMode instance, LocalPlayer player, InteractionHand hand, BlockHitResult hitResult, Operation<InteractionResult> original) {
         if (!BlackOut.EVENT_BUS.post(InteractBlockEvent.get(hitResult, hand)).isCancelled()) {
             NoInteract noInteract = NoInteract.getInstance();
             return noInteract.enabled
-                    ? noInteract.handleBlock(hand, hitResult.getBlockPos(), () -> instance.useItemOn(player, hand, hitResult))
-                    : instance.useItemOn(player, hand, hitResult);
+                    ? noInteract.handleBlock(hand, hitResult.getBlockPos(), () -> original.call(instance, player, hand, hitResult))
+                    : original.call(instance, player, hand, hitResult);
         } else {
             return InteractionResult.FAIL;
         }
     }
 
-    @Redirect(
+    @WrapOperation(
             method = "startUseItem",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;interactAt(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/EntityHitResult;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"
             )
     )
-    private InteractionResult onEntityInteractAt(MultiPlayerGameMode instance, Player player, Entity entity, EntityHitResult hitResult, InteractionHand hand) {
+    private InteractionResult onEntityInteractAt(MultiPlayerGameMode instance, Player player, Entity entity, EntityHitResult hitResult, InteractionHand hand, Operation<InteractionResult> original) {
         NoInteract noInteract = NoInteract.getInstance();
         return noInteract.enabled
-                ? noInteract.handleEntity(hand, entity, () -> instance.interactAt(player, entity, hitResult, hand))
-                : instance.interactAt(player, entity, hitResult, hand);
+                ? noInteract.handleEntity(hand, entity, () -> original.call(instance, player, entity, hitResult, hand))
+                : original.call(instance, player, entity, hitResult, hand);
     }
 
-    @Redirect(
+    @WrapOperation(
             method = "startUseItem",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;interact(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"
             )
     )
-    private InteractionResult onEntityInteract(MultiPlayerGameMode instance, Player player, Entity entity, InteractionHand hand) {
+    private InteractionResult onEntityInteract(MultiPlayerGameMode instance, Player player, Entity entity, InteractionHand hand, Operation<InteractionResult> original) {
         NoInteract noInteract = NoInteract.getInstance();
         return noInteract.enabled
-                ? noInteract.handleEntity(hand, entity, () -> instance.interact(player, entity, hand))
-                : instance.interact(player, entity, hand);
+                ? noInteract.handleEntity(hand, entity, () -> original.call(instance, player, entity, hand))
+                : original.call(instance, player, entity, hand);
     }
 
-    @Redirect(
+    @WrapOperation(
             method = "startUseItem",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;useItem(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"
             )
     )
-    private InteractionResult onItemInteract(MultiPlayerGameMode instance, Player player, InteractionHand hand) {
+    private InteractionResult onItemInteract(MultiPlayerGameMode instance, Player player, InteractionHand hand, Operation<InteractionResult> original) {
         NoInteract noInteract = NoInteract.getInstance();
-        return noInteract.enabled ? noInteract.handleUse(hand, () -> instance.useItem(player, hand)) : instance.useItem(player, hand);
+        return noInteract.enabled ? noInteract.handleUse(hand, () -> original.call(instance, player, hand)) : original.call(instance, player, hand);
     }
 
-    @Redirect(
+    @WrapOperation(
             method = "handleKeybinds",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;releaseUsingItem(Lnet/minecraft/world/entity/player/Player;)V"
             )
     )
-    private void onReleaseUsing(MultiPlayerGameMode instance, Player player) {
+    private void onReleaseUsing(MultiPlayerGameMode instance, Player player, Operation<Void> original) {
         if (!Quiver.charging && !FastEat.eating()) {
-            instance.releaseUsingItem(player);
+            original.call(instance, player);
         }
     }
 
-    @Redirect(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/KeyMapping;isDown()Z"))
-    private boolean shouldKeepUsing(KeyMapping instance) {
+    @WrapOperation(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/KeyMapping;isDown()Z"))
+    private boolean shouldKeepUsing(KeyMapping instance, Operation<Boolean> original) {
         FastRiptide fastRiptide = FastRiptide.getInstance();
         ItemStack activeItem = BlackOut.mc.player != null ? BlackOut.mc.player.getUseItem() : null;
         return fastRiptide.enabled && activeItem != null && activeItem.getItem() instanceof TridentItem
                 ? System.currentTimeMillis() - fastRiptide.prevRiptide < fastRiptide.cooldown.get() * 1000.0
-                : instance.isDown();
+                : original.call(instance);
     }
 
     @Inject(method = "resizeDisplay", at = @At("TAIL"))
@@ -250,13 +253,13 @@ public abstract class MixinMinecraft implements IMinecraft {
         Managers.FRAME_BUFFER.onResize();
     }
 
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;createTitle()Ljava/lang/String;"))
-    private String windowTitle(Minecraft instance) {
+    @WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;createTitle()Ljava/lang/String;"))
+    private String windowTitle(Minecraft instance, Operation<String> original) {
         return this.getBOTitle();
     }
 
-    @Redirect(method = "updateTitle", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;createTitle()Ljava/lang/String;"))
-    private String updateTitle(Minecraft instance) {
+    @WrapOperation(method = "updateTitle", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;createTitle()Ljava/lang/String;"))
+    private String updateTitle(Minecraft instance, Operation<String> original) {
         return this.getBOTitle();
     }
 
@@ -271,8 +274,8 @@ public abstract class MixinMinecraft implements IMinecraft {
         }
     }
 
-    @Redirect(method = "startUseItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;isDestroying()Z"))
-    private boolean multiTaskThingy(MultiPlayerGameMode instance) {
+    @WrapOperation(method = "startUseItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;isDestroying()Z"))
+    private boolean multiTaskThingy(MultiPlayerGameMode instance, Operation<Boolean> original) {
         MultiTask multiTask = MultiTask.getInstance();
         FastUse fastUse = FastUse.getInstance();
         if (fastUse.enabled) {
@@ -282,7 +285,7 @@ public abstract class MixinMinecraft implements IMinecraft {
             }
         }
 
-        return !multiTask.enabled && instance.isDestroying();
+        return !multiTask.enabled && original.call(instance);
     }
 
     @Unique

@@ -28,6 +28,22 @@ public class Managers {
     public static final TPSManager TPS = new TPSManager();
     public static final UtilsManager UTILS = new UtilsManager();
 
+    /**
+     * Initializes all managers in dependency order.
+     * <p>
+     * <b>Dependency chain:</b>
+     * <ol>
+     *   <li>{@link ConfigManager} — file system init (must be first)</li>
+     *   <li>{@link ModuleManager} — loads modules before other managers</li>
+     *   <li>{@link PacketManager}, {@link RotationManager} — core systems</li>
+     *   <li>All other managers — order-independent</li>
+     * </ol>
+     * Phase 1 ({@code init}): one-time setup, event subscriptions, loading.<br>
+     * Phase 2 ({@code postInit}): cross-manager wiring (requires all inited).
+     * <p>
+     * Uses reflection via field declaration order as a fallback;
+     * the JLS does not guarantee field order but HotSpot preserves it.
+     */
     public static void init() {
         forEach(field -> {
             try {

@@ -76,7 +76,7 @@ public class ObsidianModule extends Module {
     private final TimerList<BlockPos> placed = new TimerList<>(false);
     private final RenderList<BlockPos> render = RenderList.getList(true);
     private final RenderList<BlockPos> supportRender = RenderList.getList(true);
-    public boolean placing = false;
+    public volatile boolean placing = false;
     private int tickTimer = 0;
     private double timer = 0.0;
     private boolean support = false;
@@ -102,8 +102,15 @@ public class ObsidianModule extends Module {
 
     @Override
     public void onDisable() {
-        this.blockPlacements.stream().filter(BlockUtils::replaceable).forEach(pos -> this.render.add(pos, 0.5));
-        this.supportPositions.forEach(pos -> this.supportRender.add(pos, 0.5));
+        for (int i = 0; i < this.blockPlacements.size(); i++) {
+            BlockPos pos = this.blockPlacements.get(i);
+            if (BlockUtils.replaceable(pos)) {
+                this.render.add(pos, 0.5);
+            }
+        }
+        for (int i = 0; i < this.supportPositions.size(); i++) {
+            this.supportRender.add(this.supportPositions.get(i), 0.5);
+        }
     }
 
     @Override
@@ -148,21 +155,23 @@ public class ObsidianModule extends Module {
                 this.updateBlocks();
                 this.updateSupport();
 
-                this.blockPlacements.stream()
-                        .filter(BlockUtils::replaceable)
-                        .forEach(block -> {
-                            this.normalRendering.render(BoxUtils.get(block));
-                            if (this.firstCalc) {
-                                this.render.remove(block);
-                            }
-                        });
-
-                this.supportPositions.forEach(block -> {
+                for (int i = 0; i < this.blockPlacements.size(); i++) {
+                    BlockPos block = this.blockPlacements.get(i);
+                    if (BlockUtils.replaceable(block)) {
+                        this.normalRendering.render(BoxUtils.get(block));
+                        if (this.firstCalc) {
+                            this.render.remove(block);
+                        }
+                    }
+                }
+    
+                for (int i = 0; i < this.supportPositions.size(); i++) {
+                    BlockPos block = this.supportPositions.get(i);
                     this.supportRendering.render(BoxUtils.get(block));
                     if (this.firstCalc) {
                         this.supportRender.remove(block);
                     }
-                });
+                }
 
                 this.render.update((pos, time, delta) ->
                         this.normalRendering.render(BoxUtils.get(pos), (float) (1.0 - delta), 1.0F)
@@ -217,17 +226,18 @@ public class ObsidianModule extends Module {
     private Entity getBlocking() {
         Entity crystal = null;
         double lowest = 1000.0;
+        AABB searchBox = BlackOut.mc.player.getBoundingBox().inflate(6.0);
 
         for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
-            if (entity instanceof EndCrystal
-                    && !(BlackOut.mc.player.distanceTo(entity) > 5.0F)
-                    && SettingUtils.inAttackRange(entity.getBoundingBox())
-                    && this.validForBlocking(entity)) {
-                double dmg = Math.max(10.0, DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), entity.position()));
-                if (dmg < lowest) {
-                    lowest = dmg;
-                    crystal = entity;
-                }
+            if (!(entity instanceof EndCrystal)) continue;
+            if (!entity.getBoundingBox().intersects(searchBox)) continue;
+            if (!SettingUtils.inAttackRange(entity.getBoundingBox())) continue;
+            if (!this.validForBlocking(entity)) continue;
+
+            double dmg = DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), entity.position());
+            if (dmg < lowest) {
+                lowest = dmg;
+                crystal = entity;
             }
         }
 
@@ -254,18 +264,25 @@ public class ObsidianModule extends Module {
         }
 
         this.valids.clear();
-        positions.stream().filter(this::validBlock).forEach(this.valids::add);
+        for (int i = 0; i < positions.size(); i++) {
+            BlockPos pos = positions.get(i);
+            if (this.validBlock(pos)) {
+                this.valids.add(pos);
+            }
+        }
         this.updateAttack();
         this.updatePlaces();
         if ((this.result = this.switchMode.get().find(this::valid)).wasFound()) {
             this.blocksLeft = Math.min(this.placesLeft, this.result.amount());
             this.hand = InvUtils.getHand(this::valid);
             this.switched = false;
-            this.valids
-                    .stream()
-                    .filter(pos -> !EntityUtils.intersects(BoxUtils.get(pos), this::validEntity))
-                    .sorted(Comparator.comparingDouble(RotationUtils::getYaw))
-                    .forEach(this::place);
+            this.valids.sort(Comparator.comparingDouble(RotationUtils::getYaw));
+            for (int i = 0; i < this.valids.size(); i++) {
+                BlockPos pos = this.valids.get(i);
+                if (!EntityUtils.intersects(BoxUtils.get(pos), this::validEntity)) {
+                    this.place(pos);
+                }
+            }
             if (this.switched && this.hand == null) {
                 this.switchMode.get().swapBack();
             }

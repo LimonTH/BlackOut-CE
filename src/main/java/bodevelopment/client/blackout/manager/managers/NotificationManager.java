@@ -12,6 +12,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class NotificationManager extends Manager {
+    /** Merge duplicate notifications within this window instead of dropping them. */
+    private static final long DEDUP_WINDOW_MS = 500L;
     private final List<Notification> notifications = Collections.synchronizedList(new ArrayList<>());
     private final PoseStack stack = new PoseStack();
     private float y = 0.0F;
@@ -42,24 +44,41 @@ public class NotificationManager extends Manager {
     }
 
     public void addNotification(String text, String bigText, double time, NotificationsSettings.Type type) {
-        if (NotificationsSettings.getInstance().hudNotifications.get()) {
-            this.notifications.addFirst(new Notification(text, bigText, time, type));
+        if (!NotificationsSettings.getInstance().hudNotifications.get()) return;
+
+        long now = System.currentTimeMillis();
+        String dedupKey = bigText + "|" + text;
+
+        synchronized (this.notifications) {
+            // Merge with existing identical notification still on screen
+            for (Notification n : this.notifications) {
+                if (dedupKey.equals(n.dedupKey) && (now - n.startTime) < DEDUP_WINDOW_MS) {
+                    n.counter++;
+                    n.startTime = now; // reset timer so merged notification stays visible
+                    return;
+                }
+            }
         }
+
+        this.notifications.addFirst(new Notification(text, bigText, time, type, dedupKey));
     }
 
     public static class Notification {
         public final String text;
         public final String bigText;
         public final NotificationsSettings.Type type;
-        public final long startTime;
         public final long time;
+        public long startTime;
+        public int counter = 1;
+        final String dedupKey;
 
-        public Notification(String text, String bigText, double time, NotificationsSettings.Type type) {
+        Notification(String text, String bigText, double time, NotificationsSettings.Type type, String dedupKey) {
             this.text = text;
             this.bigText = bigText;
             this.type = type;
             this.startTime = System.currentTimeMillis();
             this.time = Math.round(time * 1000.0);
+            this.dedupKey = dedupKey;
         }
     }
 }

@@ -73,7 +73,10 @@ public class FileUtils {
 
     public static void write(File file, String content) {
         try {
-            Files.writeString(file.toPath(), content, java.nio.charset.StandardCharsets.UTF_8);
+            // Atomic write: write to .tmp first, then rename to prevent corruption on crash
+            File tmpFile = new File(file.getParentFile(), file.getName() + ".tmp");
+            Files.writeString(tmpFile.toPath(), content, java.nio.charset.StandardCharsets.UTF_8);
+            Files.move(tmpFile.toPath(), file.toPath(), java.nio.file.StandardCopyOption.ATOMIC_MOVE, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             BOLogger.error("Failed to write file " + file + " with error: ", e);
         }

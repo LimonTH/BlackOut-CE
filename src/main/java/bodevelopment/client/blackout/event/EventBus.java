@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.event;
 
+import bodevelopment.client.blackout.annotations.Profile;
+import bodevelopment.client.blackout.util.BOLogger;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
@@ -55,21 +57,59 @@ public class EventBus {
         return list;
     }
 
+    public static volatile boolean profiling = false;
+    public static final ConcurrentHashMap<String, long[]> profileData = new ConcurrentHashMap<>();
+
     public <T> T post(T object) {
         List<Listener> eventListeners = this.listeners.get(object.getClass());
         if (eventListeners != null) {
             for (Listener l : eventListeners) {
                 try {
                     if (!l.skip.shouldSkip()) {
-                        l.handle.invoke(l.object, object);
+                        if (profiling && l.method.isAnnotationPresent(Profile.class)) {
+                            long start = System.nanoTime();
+                            l.handle.invoke(l.object, object);
+                            long elapsed = System.nanoTime() - start;
+                            String key = l.object.getClass().getSimpleName() + "#" + l.method.getName();
+                            profileData.compute(key, (k, v) -> {
+                                if (v == null) return new long[]{elapsed, 1L};
+                                v[0] += elapsed;
+                                v[1]++;
+                                return v;
+                            });
+                        } else {
+                            l.handle.invoke(l.object, object);
+                        }
                     }
                 } catch (Throwable e) {
-                    throw new RuntimeException(e);
+                    BOLogger.error("Error dispatching event " + object.getClass().getSimpleName()
+                            + " to listener " + l.object.getClass().getSimpleName()
+                            + "#" + l.method.getName(), e);
                 }
             }
         }
 
         return object;
+    }
+
+    /** Returns a formatted profile report, or null if profiling is disabled. */
+    public static String getProfileReport() {
+        if (!profiling || profileData.isEmpty()) return null;
+        StringBuilder sb = new StringBuilder("=== Profile Report (avg μs) ===\n");
+        profileData.entrySet().stream()
+                .sorted((a, b) -> Long.compare(b.getValue()[0], a.getValue()[0]))
+                .forEach(e -> {
+                    long[] data = e.getValue();
+                    double avgUs = (data[0] / (double) data[1]) / 1000.0;
+                    sb.append(String.format("  %-50s %8.1f μs  (%d calls)%n",
+                            e.getKey(), avgUs, data[1]));
+                });
+        return sb.toString();
+    }
+
+    /** Resets all accumulated profile data. */
+    public static void resetProfileData() {
+        profileData.clear();
     }
 
     private int getIndex(List<Listener> l, int priority) {

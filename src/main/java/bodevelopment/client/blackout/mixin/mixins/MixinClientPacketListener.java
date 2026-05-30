@@ -29,7 +29,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Optional;
@@ -48,13 +47,13 @@ public class MixinClientPacketListener {
         BlackOut.EVENT_BUS.post(GameJoinEvent.get(packet));
     }
 
-    @Redirect(
+    @WrapOperation(
             method = "setValuesFromPositionPacket",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;setYRot(F)V")
     )
-    private static void rubberbandYaw(Entity entity, float yaw) {
+    private static void rubberbandYaw(Entity entity, float yaw, Operation<Void> original) {
         if (!(entity instanceof Player player)) {
-            entity.setYRot(yaw);
+            original.call(entity, yaw);
             return;
         }
 
@@ -63,18 +62,18 @@ public class MixinClientPacketListener {
         if (noRotate.enabled && noRotate.mode.get() == NoRotate.NoRotateMode.Rel) {
             noRotate.relYaw = yaw - player.getYRot();
         } else if (!noRotate.enabled) {
-            player.setYRot(yaw);
+            original.call(entity, yaw);
         }
         lastServerYaw = yaw;
     }
 
-    @Redirect(
+    @WrapOperation(
             method = "setValuesFromPositionPacket",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;setXRot(F)V")
     )
-    private static void rubberbandPitch(Entity entity, float pitch) {
+    private static void rubberbandPitch(Entity entity, float pitch, Operation<Void> original) {
         if (!(entity instanceof Player player)) {
-            entity.setXRot(pitch);
+            original.call(entity, pitch);
             return;
         }
 
@@ -83,18 +82,18 @@ public class MixinClientPacketListener {
         if (noRotate.enabled && noRotate.mode.get() == NoRotate.NoRotateMode.Rel) {
             noRotate.relPitch = pitch - player.getXRot();
         } else if (!noRotate.enabled) {
-            player.setXRot(pitch);
+            original.call(entity, pitch);
         }
         lastServerPitch = pitch;
     }
 
-    @Redirect(
+    @WrapOperation(
             method = "handleMovePlayer",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Connection;send(Lnet/minecraft/network/protocol/Packet;)V", ordinal = 1)
     )
-    private void sendFull(Connection instance, Packet<?> packet) {
+    private void sendFull(Connection instance, Packet<?> packet, Operation<Void> original) {
         if (CompatUtils.isBaritonePathing()) {
-            instance.send(packet);
+            original.call(instance, packet);
             return;
         }
 
@@ -122,34 +121,34 @@ public class MixinClientPacketListener {
                         break;
                 }
             }
-            instance.send(moveC2SPacket);
+            original.call(instance, moveC2SPacket);
         } else {
-            instance.send(packet);
+            original.call(instance, packet);
         }
     }
 
-    @Redirect(
+    @WrapOperation(
             method = "handleSetTime",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;setTimeFromServer(JJZ)V")
     )
-    private void redirectSetTime(ClientLevel world, long time, long timeOfDay, boolean shouldTickTimeOfDay) {
+    private void redirectSetTime(ClientLevel world, long time, long timeOfDay, boolean shouldTickTimeOfDay, Operation<Void> original) {
         Ambience ambience = Ambience.getInstance();
 
         long finalTimeOfDay = (ambience.enabled && ambience.modifyTime.get())
                 ? ambience.time.get().longValue()
                 : timeOfDay;
 
-        world.setTimeFromServer(time, finalTimeOfDay, shouldTickTimeOfDay);
+        original.call(world, time, finalTimeOfDay, shouldTickTimeOfDay);
     }
 
-    @Redirect(
+    @WrapOperation(
             method = "handleEntityEvent",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;displayItemActivation(Lnet/minecraft/world/item/ItemStack;)V")
     )
-    private void showTotemAnimation(GameRenderer instance, ItemStack floatingItem) {
+    private void showTotemAnimation(GameRenderer instance, ItemStack floatingItem, Operation<Void> original) {
         NoRender noRender = NoRender.getInstance();
         if (!noRender.enabled || !noRender.totem.get()) {
-            instance.displayItemActivation(floatingItem);
+            original.call(instance, floatingItem);
         }
     }
 

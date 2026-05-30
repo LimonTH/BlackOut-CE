@@ -6,8 +6,11 @@ import bodevelopment.client.blackout.module.setting.WarningSettingGroup;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Base class for all module types. Provides shared infrastructure:
@@ -23,6 +26,7 @@ public abstract class AbstractModule {
     public final String name;
     public final String description;
     public final SubCategory category;
+    public final Set<String> tags = new LinkedHashSet<>();
     public final List<SettingGroup> settingGroups = new ArrayList<>();
     public final SettingGroup sgModule = this.addGroup("Module");
 
@@ -81,6 +85,14 @@ public abstract class AbstractModule {
     }
 
     /**
+     * Resets all settings in this module to their default values
+     * and persists the changes to config.
+     */
+    public void resetToDefaults() {
+        this.settingGroups.forEach(group -> group.settings.forEach(Setting::reset));
+    }
+
+    /**
      * If true, event listeners for this module are skipped.
      */
     public boolean shouldSkipListeners() {
@@ -92,6 +104,12 @@ public abstract class AbstractModule {
         return this == object || object instanceof AbstractModule module && module.name.equals(this.name);
     }
 
+    /**
+     * File-name based identity: two modules with the same name are considered equal.
+     * This is intentional — module identity is name-based, not class-based.
+     * A hypothetical addon module named "Manager" would conflict with the built-in
+     * Manager module, which is the desired behavior (no duplicate module names).
+     */
     @Override
     public int hashCode() {
         return Objects.hash(this.name);

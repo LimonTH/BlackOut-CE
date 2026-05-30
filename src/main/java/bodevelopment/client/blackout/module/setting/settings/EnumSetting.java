@@ -3,7 +3,9 @@ package bodevelopment.client.blackout.module.setting.settings;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.interfaces.functional.SingleOut;
 import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.module.AbstractModule;
 import bodevelopment.client.blackout.module.setting.Setting;
+import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
@@ -14,8 +16,12 @@ import com.google.gson.JsonObject;
 import java.awt.*;
 
 public class EnumSetting<T extends Enum<?>> extends Setting<T> {
+    private static long globalLastOpenTime = 0L;
+    private static EnumSetting<?> globalLastOpened = null;
+
     public T[] values;
     private boolean choosing = false;
+    private long lastOpenTime = 0L;
     private double maxWidth = 0.0;
     private float xOffset = 0.0F;
     private float wi = 0.0F;
@@ -29,6 +35,44 @@ public class EnumSetting<T extends Enum<?>> extends Setting<T> {
 
     public boolean isChoosing() {
         return choosing;
+    }
+
+    public void closeChooser() {
+        this.choosing = false;
+    }
+
+    public long getLastOpenTime() {
+        return lastOpenTime;
+    }
+
+    public static EnumSetting<?> getGlobalLastOpened() {
+        return globalLastOpened;
+    }
+
+    public static void closeAllDropdowns() {
+        for (AbstractModule module : Managers.MODULES.getModules()) {
+            for (SettingGroup group : module.settingGroups) {
+                for (Setting<?> setting : group.settings) {
+                    if (setting instanceof EnumSetting<?> es && es.isChoosing()) {
+                        es.closeChooser();
+                    }
+                }
+            }
+        }
+        globalLastOpened = null;
+        globalLastOpenTime = 0L;
+    }
+
+    private void closeAllOtherEnums() {
+        for (AbstractModule module : Managers.MODULES.getModules()) {
+            for (SettingGroup group : module.settingGroups) {
+                for (Setting<?> setting : group.settings) {
+                    if (setting instanceof EnumSetting<?> es && es != this && es.isChoosing()) {
+                        es.closeChooser();
+                    }
+                }
+            }
+        }
     }
 
     public float getWi() {
@@ -130,6 +174,12 @@ public class EnumSetting<T extends Enum<?>> extends Setting<T> {
                     && this.my > clickY && this.my < clickY + clickHeight;
 
             if (mainHover) {
+                if (!this.choosing) {
+                    closeAllOtherEnums();
+                    this.lastOpenTime = System.currentTimeMillis();
+                    globalLastOpenTime = this.lastOpenTime;
+                    globalLastOpened = this;
+                }
                 this.choosing = !this.choosing;
                 return true;
             }

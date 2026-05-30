@@ -122,7 +122,7 @@ protected BlackoutAddon(
     String modulePath,   // Package scanned for Module subclasses (or null)
     String commandPath,  // Package scanned for Command subclasses (or null)
     String hudPath,      // Package scanned for HudElement subclasses (or null)
-    String themePath,    // Package scanned for Theme enum constants (or null)
+    String themePath,    // Ignored — themes are registered manually via registerTheme() (or null)
     String soundPath,    // Resource prefix for .ogg sounds, e.g. "assets/myaddon/sounds"
     String guiPath       // Package scanned for ClickGuiScreen & MainMenuRenderer (or null)
 )
@@ -294,8 +294,6 @@ public void onInitialize() {
     registerTheme(MyThemes.NATURE);
 }
 ```
-
-Alternatively, set `themePath` in the constructor to auto-scan an enum package.
 
 ---
 
