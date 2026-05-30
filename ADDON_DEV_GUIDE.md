@@ -25,6 +25,8 @@ How to create an addon for BlackOut Client (1.21.4+, Fabric, Mojang Mappings).
 
 ## 1. Project Setup
 
+> **Quick start:** Clone the [addon template repository](https://github.com/LimonTH/Blackout-CE-addon-template) for a ready-to-use project skeleton with all required files pre-configured.
+
 ### `build.gradle`
 
 ```groovy
