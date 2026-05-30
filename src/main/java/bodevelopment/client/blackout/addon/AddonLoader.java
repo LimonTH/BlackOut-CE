@@ -44,7 +44,13 @@ public class AddonLoader {
                         BlackoutAddon addon = container.getEntrypoint();
                         ClassLoader addonLoader = addon.getAddonClassLoader();
 
-                        BOLogger.info(String.format("Found addon: %s (version %s)", addon.getName(), addon.getVersion()));
+                        BOLogger.info(String.format("Found addon: %s (version %s, api %d)", addon.getName(), addon.getVersion(), addon.getApiVersion()));
+
+                        if (addon.getApiVersion() > BlackOut.API_VERSION) {
+                            BOLogger.error(String.format("Addon '%s' requires API v%d but client provides v%d. Skipping.",
+                                    addon.getName(), addon.getApiVersion(), BlackOut.API_VERSION));
+                            return;
+                        }
 
                         String minVersion = addon.getMinClientVersion();
                         if (minVersion != null && !isVersionCompatible(minVersion, BlackOut.VERSION)) {

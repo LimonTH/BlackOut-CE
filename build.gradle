@@ -15,6 +15,7 @@ idea {
 def staticArchivesName = project.archives_base_name
 def staticModName = project.mod_name
 def staticModVersion = project.mod_version
+def staticApiVersion = project.api_version
 def staticModDescription = project.mod_description
 def staticMavenGroup = project.maven_group
 def javaComponent = components.java
@@ -165,13 +166,15 @@ tasks.withType(JavaCompile).configureEach {
 tasks.register('generateBlackOutInfo', Copy) {
 	inputs.property("name", staticModName)
 	inputs.property("version", staticModVersion)
+	inputs.property("api_version", staticApiVersion)
 
 	from(layout.projectDirectory.dir("src/main/templates"))
 	into(layout.buildDirectory.dir("${genPath}/bodevelopment/client/blackout"))
 
 	expand(
 			"name": staticModName,
-			"version": staticModVersion
+			"version": staticModVersion,
+			"api_version": staticApiVersion
 	)
 }
 

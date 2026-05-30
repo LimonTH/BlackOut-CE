@@ -18,6 +18,8 @@ import java.io.File;
 public final class BlackOut extends bodevelopment.client.blackout.BlackOutInfo implements ClientModInitializer {
     public static final String NAME = bodevelopment.client.blackout.BlackOutInfo.NAME;
     public static final String VERSION = bodevelopment.client.blackout.BlackOutInfo.VERSION;
+    /** Current BlackOut addon API version. Addons requiring a higher version are rejected. */
+    public static final Integer API_VERSION = bodevelopment.client.blackout.BlackOutInfo.API_VERSION;
 
     public static final Type TYPE = Type.Beta;
     public static final Color TYPECOLOR = TYPE.getColor();
@@ -59,7 +61,6 @@ public final class BlackOut extends bodevelopment.client.blackout.BlackOutInfo i
                 String[] parts = target.split("::");
                 Class<?> clazz = Class.forName(parts[0]);
                 String member = parts[1];
-                // Try field first, then method
                 try {
                     clazz.getDeclaredField(member);
                 } catch (NoSuchFieldException e) {
