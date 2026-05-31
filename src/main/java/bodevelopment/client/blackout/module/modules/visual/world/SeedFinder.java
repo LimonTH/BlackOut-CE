@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.module.modules.visual.world;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Experimental;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.GameJoinEvent;
@@ -31,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
 
+@Experimental
 public class SeedFinder extends Module {
     private static final long REGION_X_MULT = 341873128712L;
     private static final long REGION_Z_MULT = 132897987541L;
@@ -1031,6 +1033,7 @@ public class SeedFinder extends Module {
         /**
          * @deprecated use isAlwaysVisible() or isMinor()
          */
+        @Deprecated
         public boolean isMajor() {
             return isAlwaysVisible() || isCaveBiome();
         }

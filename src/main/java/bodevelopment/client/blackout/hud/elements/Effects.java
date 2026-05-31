@@ -54,15 +54,60 @@ public class Effects extends HudElement {
             this.stack.translate(width, 0.0F, 0.0F);
         }
 
-        Comparator<Entry<Holder<MobEffect>, MobEffectInstance>> comparator = Comparator.comparingDouble(this::getWidth);
-        BlackOut.mc
-                .player
-                .getActiveEffectsMap()
-                .entrySet()
-                .stream()
-                .sorted(this.order.get() == Order.Shortest ? comparator : comparator.reversed())
-                .forEach(entry -> this.stack.translate(0.0F, this.render(entry.getKey().value(), entry.getValue()), 0.0F));
+        if (BlackOut.mc.player == null) {
+            this.renderDummy();
+        } else {
+            Comparator<Entry<Holder<MobEffect>, MobEffectInstance>> comparator = Comparator.comparingDouble(this::getWidth);
+            BlackOut.mc
+                    .player
+                    .getActiveEffectsMap()
+                    .entrySet()
+                    .stream()
+                    .sorted(this.order.get() == Order.Shortest ? comparator : comparator.reversed())
+                    .forEach(entry -> this.stack.translate(0.0F, this.render(entry.getKey().value(), entry.getValue()), 0.0F));
+        }
         this.stack.popPose();
+    }
+
+    private void renderDummy() {
+        String dummyName = "Speed";
+        String dummyAmplifier = "II";
+        String dummyDuration = "4:20";
+        Color dummyColor = Color.WHITE;
+
+        float width = Math.max(BlackOut.FONT.getWidth(dummyName + " " + dummyAmplifier) + 10.0F, this.minWidth.get().floatValue());
+        float height = BlackOut.FONT.getHeight() * 2.0F + 1.0F;
+        float rad = 3.0F;
+
+        if (this.style.get() == Style.Blackout) {
+            if (this.blur.get()) {
+                Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(this.side.get().getSide(width), 0.0F, width, height, rad, 10));
+                Renderer.onHUDBlur();
+            }
+            this.background.render(this.stack, this.side.get().getSide(width), 0.0F, width, height, rad, 3.0F);
+            switch (this.colorMode.get()) {
+                case Custom:
+                    this.textColor.render(this.stack, dummyName + " " + dummyAmplifier, 1.0F, this.side.get().getSide(width) + 2.0F, 5.0F, false, true);
+                    break;
+                case Effect:
+                    BlackOut.FONT.text(this.stack, dummyName + " " + dummyAmplifier, 1.0F, this.side.get().getSide(width) + 2.0F, 5.0F, dummyColor, false, true);
+            }
+            BlackOut.FONT.text(this.stack, dummyAmplifier, 1.0F, this.side.get().getSide(width) + width - 5.0F, 5.0F, this.infoColor.get().getColor(), true, true);
+            BlackOut.FONT.text(this.stack, dummyDuration, 1.0F, this.side.get().getSide(width) + 2.0F, height - BlackOut.FONT.getHeight() / 2.0F, this.infoColor.get().getColor(), false, true);
+        } else {
+            float offset = 0.0F;
+            Component nameComponent = new Component(dummyName + " " + dummyAmplifier, false);
+            Component durationComponent = new Component("(" + dummyDuration + ")", true);
+            switch (this.colorMode.get()) {
+                case Custom:
+                    this.textColor.render(this.stack, nameComponent.text, 1.0F, offset, 0.0F, false, true);
+                    break;
+                case Effect:
+                    BlackOut.FONT.text(this.stack, nameComponent.text, 1.0F, offset, 0.0F, dummyColor, false, true);
+            }
+            offset += nameComponent.width + BlackOut.FONT.getWidth(" ");
+            BlackOut.FONT.text(this.stack, durationComponent.text, 1.0F, offset, 0.0F, this.infoColor.get().getColor(), false, true);
+        }
     }
 
     private float render(MobEffect effect, MobEffectInstance effectInstance) {

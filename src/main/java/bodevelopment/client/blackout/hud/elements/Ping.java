@@ -17,9 +17,9 @@ public class Ping extends TextElement {
 
     private String getPing() {
         if (BlackOut.mc.player == null || BlackOut.mc.getConnection() == null) {
-            return "-";
+            return "-1";
         }
         PlayerInfo entry = BlackOut.mc.getConnection().getPlayerInfo(BlackOut.mc.player.getGameProfile().getName());
-        return entry == null ? "-" : String.valueOf(entry.getLatency());
+        return entry == null ? "-1" : String.valueOf(entry.getLatency());
     }
 }

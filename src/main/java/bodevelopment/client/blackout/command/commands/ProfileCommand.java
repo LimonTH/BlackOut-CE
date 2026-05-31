@@ -8,7 +8,7 @@ import java.util.List;
 
 public class ProfileCommand extends Command {
     public ProfileCommand() {
-        super("profile", ".profile <on|off|report|reset|status>");
+        super("profile", "Usage: profile [on, off, report, reset, status]");
     }
 
     @Override
@@ -22,15 +22,15 @@ public class ProfileCommand extends Command {
                 if (EventBus.profiling) return "Profiling is already ON.";
                 EventBus.profiling = true;
                 EventBus.resetProfileData();
-                return "Profiling enabled. Use .profile report to view results.";
+                return "Profiling enabled. Use -profile report to view results.";
             }
             case "off" -> {
                 if (!EventBus.profiling) return "Profiling is already OFF.";
                 EventBus.profiling = false;
-                return "Profiling disabled. Use .profile reset to clear collected data.";
+                return "Profiling disabled. Use -profile reset to clear collected data.";
             }
             case "report" -> {
-                if (!EventBus.profiling) return "Profiling is OFF. Enable with .profile on first.";
+                if (!EventBus.profiling) return "Profiling is OFF. Enable with -profile on first.";
                 String report = EventBus.getProfileReport();
                 return report != null ? report : "No profile data collected yet.";
             }

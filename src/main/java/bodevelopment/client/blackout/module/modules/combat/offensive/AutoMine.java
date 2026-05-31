@@ -2,6 +2,7 @@ package bodevelopment.client.blackout.module.modules.combat.offensive;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.annotations.Experimental;
+import bodevelopment.client.blackout.annotations.Profile;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.enums.SwingHand;
@@ -391,15 +392,15 @@ public class AutoMine extends Module {
                             )
                     )
                     .stack();
+            if (bestStack == null || bestStack.isEmpty()) {
+                bestStack = Managers.PACKET.getStack();
+            }
+            double delta = BlockUtils.getBlockBreakingDelta(
+                    bestStack, this.ncpState(), this.minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
+            );
             return !this.ncpProgress.get()
                     ? this.progress
-                    : this.minedFor
-                      / (
-                    1.0
-                    / BlockUtils.getBlockBreakingDelta(
-                            bestStack, this.ncpState(), this.minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
-                    )
-            );
+                    : delta > 0.0 ? this.minedFor / (1.0 / delta) : 0.0;
         }
     }
 
@@ -824,7 +825,8 @@ public class AutoMine extends Module {
                             )
                     )
                     .slot();
-            ItemStack bestStack = holding ? Managers.PACKET.getStack() : BlackOut.mc.player.getInventory().getItem(slot);
+            ItemStack bestStack = holding ? Managers.PACKET.getStack()
+                    : (slot >= 0 ? BlackOut.mc.player.getInventory().getItem(slot) : Managers.PACKET.getStack());
             if (this.ncpProgress.get()) {
                 this.minedFor++;
             } else {
@@ -1173,15 +1175,24 @@ public class AutoMine extends Module {
                             .slot();
                     this.suppressResetOnSwitch = true;
 
-                    SwitchMode mode = this.pickaxeSwitch.get();
-                    if (mode == SwitchMode.Silent) {
-                        this.silentPrevSlot = BlackOut.mc.player.getInventory().selected;
-                        Managers.PACKET.slot = slot;
-                        Managers.PACKET.sendInstantly(new ServerboundSetCarriedItemPacket(slot));
-                        this.silentSwap = true;
-                        this.holdingForNcp = true;
-                    } else {
-                        this.holdingForNcp = mode.swap(slot);
+                    if (slot >= 0) {
+                        SwitchMode mode = this.pickaxeSwitch.get();
+                        if (mode == SwitchMode.Silent) {
+                            this.silentPrevSlot = BlackOut.mc.player.getInventory().selected;
+                            Managers.PACKET.slot = slot;
+                            Managers.PACKET.sendInstantly(new ServerboundSetCarriedItemPacket(slot));
+                            this.silentSwap = true;
+                            this.holdingForNcp = true;
+                        } else {
+                            this.holdingForNcp = mode.swap(slot);
+                            if (this.holdingForNcp && (mode == SwitchMode.InvSwitch || mode == SwitchMode.PickSilent)) {
+                                int currentSlot = BlackOut.mc.player.getInventory().selected;
+                                ItemStack fromInv = BlackOut.mc.player.getInventory().getItem(slot);
+                                ItemStack fromHotbar = BlackOut.mc.player.getInventory().getItem(currentSlot);
+                                BlackOut.mc.player.getInventory().setItem(slot, fromHotbar);
+                                BlackOut.mc.player.getInventory().setItem(currentSlot, fromInv);
+                            }
+                        }
                     }
 
                     this.suppressResetOnSwitch = false;
@@ -1201,7 +1212,7 @@ public class AutoMine extends Module {
     private void restoreSwap() {
         if (this.silentSwap) {
             Managers.PACKET.slot = this.silentPrevSlot;
-            Managers.PACKET.sendInstantly(new ServerboundSetCarriedItemPacket(this.silentPrevSlot));
+            Managers.PACKET.sendPacket(new ServerboundSetCarriedItemPacket(this.silentPrevSlot));
             this.silentSwap = false;
         } else if (this.holdingForNcp) {
             this.pickaxeSwitch.get().swapBack();

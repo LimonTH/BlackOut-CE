@@ -1,9 +1,8 @@
 package bodevelopment.client.blackout.randomstuff;
 
+import java.awt.*;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
-
-import java.awt.*;
 
 public class BlackOutColor {
     public static final BlackOutColor WHITE = new BlackOutColor(255, 255, 255, 255);
