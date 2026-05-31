@@ -9,7 +9,7 @@ import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
 
 public class AutoRespawn extends Module {
     public AutoRespawn() {
-        super("AutoRespawn", "Automatically respawns after dying.", SubCategory.MISC, true);
+        super("Auto Respawn", "Automatically respawns after dying.", SubCategory.MISC, true);
     }
 
     @Event
