@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.visual.entities;
 
-import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.FilterMode;
 import bodevelopment.client.blackout.event.Event;
@@ -19,15 +18,12 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.EnchantmentNames;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import bodevelopment.client.blackout.util.render.RenderLayer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.Holder;
@@ -44,6 +40,11 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.phys.Vec2;
+
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class Nametags extends Module {
     private static Nametags INSTANCE;
@@ -87,7 +88,6 @@ public class Nametags extends Module {
     private final Setting<BlackOutColor> hp = this.sgColor.colorSetting("Health Accent", new BlackOutColor(150, 150, 150, 255), "The color used for health indicators when using a fixed palette.", () -> this.colorMode.get() == ColorMode.Custom);
     private final Setting<BlackOutColor> txt = this.sgColor.colorSetting("Primary Text Color", new BlackOutColor(255, 255, 255, 255), "The default color for names and info.");
     private final Setting<BlackOutColor> friendColor = this.sgColor.colorSetting("Friendship Color", new BlackOutColor(150, 150, 255, 255), "The color applied to entities identified as friends.");
-
 
 
     private final PoseStack stack = new PoseStack();
@@ -167,7 +167,8 @@ public class Nametags extends Module {
         this.components.add(new Component(name, mainColor));
 
         if (entity instanceof ItemEntity item) {
-            if (item.getItem().getCount() > 1) this.components.add(new Component(item.getItem().getCount() + "x", Color.WHITE));
+            if (item.getItem().getCount() > 1)
+                this.components.add(new Component(item.getItem().getCount() + "x", Color.WHITE));
         }
 
         if (entity instanceof AbstractClientPlayer player) {

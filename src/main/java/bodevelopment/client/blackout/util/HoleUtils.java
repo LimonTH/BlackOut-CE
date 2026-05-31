@@ -1,11 +1,13 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.enums.HoleType;
 import bodevelopment.client.blackout.randomstuff.Hole;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 
+@PublicAPI
 public class HoleUtils {
     public static Hole getHole(BlockPos pos) {
         return getHole(pos, true, true, true, 3, true);

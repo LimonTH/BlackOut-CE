@@ -10,12 +10,13 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.RotationUtils;
-import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ThrowablePotionItem;
+
+import java.util.concurrent.ThreadLocalRandom;
 
 public class AntiAim extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");

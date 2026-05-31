@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
@@ -13,16 +12,20 @@ import bodevelopment.client.blackout.module.modules.misc.Timer;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.MovementController;
-import bodevelopment.client.blackout.util.MovementUtils;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.world.InteractionHand;
 
 public class Flight extends Module {
-    /** Vanilla anti-kick offset: the minimal downward velocity to satisfy the server's movement check. */
+    /**
+     * Vanilla anti-kick offset: the minimal downward velocity to satisfy the server's movement check.
+     */
     private static final double ANTI_KICK_OFFSET = -0.0315;
-    /** Vanilla walking speed constant (blocks/tick). */
+    /**
+     * Vanilla walking speed constant (blocks/tick).
+     */
     private static final double VANILLA_WALK_SPEED = 0.2873;
 
     private final SettingGroup sgGeneral = this.addGroup("General");

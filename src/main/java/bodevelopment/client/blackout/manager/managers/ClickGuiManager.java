@@ -1,15 +1,16 @@
 package bodevelopment.client.blackout.manager.managers;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.KeyEvent;
 import bodevelopment.client.blackout.gui.clickgui.ClickGui;
 import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.manager.Managers;
-import net.minecraft.client.gui.screens.TitleScreen;
+import bodevelopment.client.blackout.util.PlayerUtils;
 
+@PublicAPI
 public class ClickGuiManager extends Manager {
     public final ClickGui CLICK_GUI = new ClickGui();
 

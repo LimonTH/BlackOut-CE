@@ -8,12 +8,13 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.SoundUtils;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class SoundModifier extends Module {
     private final Map<ResourceLocation[], SoundSettingGroup> soundSettings = new HashMap<>();

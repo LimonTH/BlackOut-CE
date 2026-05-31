@@ -24,8 +24,8 @@ import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.AnimUtils;
-import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
+import bodevelopment.client.blackout.util.render.RenderLayer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -40,6 +40,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -114,6 +115,7 @@ public class Scaffold extends MoveUpdateModule {
     private boolean towerRotate = false;
     private int jumpProgress = -1;
     private double startY = 0.0;
+
     public Scaffold() {
         super("Scaffold", "Constructs a walking surface beneath the player in real-time to facilitate rapid travel and bridging.", SubCategory.MOVEMENT);
         INSTANCE = this;

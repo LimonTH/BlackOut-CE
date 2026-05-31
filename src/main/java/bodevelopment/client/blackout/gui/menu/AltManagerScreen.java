@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.gui.menu;
 
-import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.gui.TextField;
 import bodevelopment.client.blackout.helpers.ScrollHelper;
@@ -8,18 +7,22 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.client.MainMenuSettings;
 import bodevelopment.client.blackout.randomstuff.mainmenu.AltHelpRenderer;
 import bodevelopment.client.blackout.util.GuiColorUtils;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.SoundUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
-import java.awt.*;
-import java.util.ArrayList;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
+import java.awt.*;
+import java.util.ArrayList;
+
 public class AltManagerScreen extends Screen {
     private final Screen parent;
-    private final TextField textField = new TextField() {{ setMaxLength(32); }};
+    private final TextField textField = new TextField() {{
+        setMaxLength(32);
+    }};
     private float windowHeight;
     private float scale;
     private float mx;
@@ -164,6 +167,7 @@ public class AltManagerScreen extends Screen {
         this.clickAltManager(button, false);
         return super.mouseReleased(mouseX, mouseY, button);
     }
+
     private void clickAltManager(int button, boolean pressed) {
         if (this.textField.click(button, pressed)) return;
 

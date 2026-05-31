@@ -1,9 +1,9 @@
 package bodevelopment.client.blackout.addon;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.command.Command;
 import bodevelopment.client.blackout.event.Event;
-import bodevelopment.client.blackout.event.EventBus;
 import bodevelopment.client.blackout.event.events.GameJoinEvent;
 import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
 import bodevelopment.client.blackout.hud.HudElement;
@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Internal
 public class AddonLoader {
     public static final List<BlackoutAddon> addons = new ArrayList<>();
     private static boolean anyAddonHadWorld = false;
@@ -44,18 +45,16 @@ public class AddonLoader {
                         BlackoutAddon addon = container.getEntrypoint();
                         ClassLoader addonLoader = addon.getAddonClassLoader();
 
-                        BOLogger.info(String.format("Found addon: %s (version %s, api %d)", addon.getName(), addon.getVersion(), addon.getApiVersion()));
+                        BOLogger.info(String.format("Found addon: %s (version %s, api %d)",
+                                addon.getName(), addon.getVersion(), addon.getApiVersion()));
 
-                        if (addon.getApiVersion() > BlackOut.API_VERSION) {
-                            BOLogger.error(String.format("Addon '%s' requires API v%d but client provides v%d. Skipping.",
-                                    addon.getName(), addon.getApiVersion(), BlackOut.API_VERSION));
+                        // --- Tier 1: API contract (primary compatibility gate) ---
+                        if (!checkApiCompatibility(addon)) {
                             return;
                         }
 
-                        String minVersion = addon.getMinClientVersion();
-                        if (minVersion != null && !isVersionCompatible(minVersion, BlackOut.VERSION)) {
-                            BOLogger.error(String.format("Addon '%s' requires client version %s or higher (current: %s). Skipping.",
-                                    addon.getName(), minVersion, BlackOut.VERSION));
+                        // --- Tier 2: Client version (optional secondary gate) ---
+                        if (!checkClientVersion(addon)) {
                             return;
                         }
 
@@ -130,15 +129,125 @@ public class AddonLoader {
         anyAddonHadWorld = false;
     }
 
+    /**
+     * Primary compatibility check based on the API contract version.
+     *
+     * <h3>Rules</h3>
+     * <ul>
+     *   <li>{@code addon.api > client.api} — <b>HARD REJECT</b>:
+     *       the addon uses API features not yet available in this client.</li>
+     *   <li>{@code addon.api < client.api} — <b>SOFT WARN</b>:
+     *       the addon targets an older API; deprecated symbols may have been removed.</li>
+     *   <li>{@code addon.api == client.api} — <b>OK</b>.</li>
+     * </ul>
+     *
+     * @return {@code true} if the addon passed the API gate
+     */
+    private static boolean checkApiCompatibility(BlackoutAddon addon) {
+        int addonApi = addon.getApiVersion();
+        int clientApi = BlackOut.API_VERSION;
 
+        if (addonApi > clientApi) {
+            BOLogger.error(String.format(
+                    "[%s] HARD REJECT: addon requires API v%d but client provides v%d. "
+                            + "Update BlackOut Client to use this addon.",
+                    addon.getName(), addonApi, clientApi));
+            return false;
+        }
+
+        if (addonApi < clientApi) {
+            BOLogger.warn(String.format(
+                    "[%s] SOFT WARN: addon targets API v%d but client is v%d. "
+                            + "Deprecated APIs may have been removed. "
+                            + "If the addon misbehaves, ask the author to update it.",
+                    addon.getName(), addonApi, clientApi));
+            // Not a hard rejection — old addons may still work
+        }
+
+        return true;
+    }
+
+    /**
+     * Secondary compatibility check based on the client (mod) version.
+     *
+     * <p>This is <b>optional</b> — only triggered when the addon overrides
+     * {@link BlackoutAddon#getMinClientVersion()}. Use this when the addon
+     * depends on a specific client behaviour (bugfix, rendering change, etc.)
+     * that is not reflected in the API version.</p>
+     *
+     * @return {@code true} if the addon passed the version gate (or didn't set one)
+     */
+    private static boolean checkClientVersion(BlackoutAddon addon) {
+        String minVersion = addon.getMinClientVersion();
+        if (minVersion == null) {
+            return true; // No restriction
+        }
+
+        if (!isVersionCompatible(minVersion, BlackOut.VERSION)) {
+            BOLogger.error(String.format(
+                    "[%s] HARD REJECT: addon requires BlackOut >= %s but current is %s.",
+                    addon.getName(), minVersion, BlackOut.VERSION));
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Compares two dot-separated version strings using natural numeric ordering.
+     * <p>
+     * The {@code minVersion} may contain {@code *} wildcards that match any value
+     * at that position. This allows addons to declare compatibility with entire
+     * minor/patch ranges without listing every version.
+     * <p>
+     * Examples:
+     * <pre>{@code
+     * // Exact / range
+     * isVersionCompatible("2.2", "2.2")   → true
+     * isVersionCompatible("2.2", "2.3")   → true
+     * isVersionCompatible("2.3", "2.2")   → false
+     * isVersionCompatible("2.2.1", "2.2") → true
+     * isVersionCompatible("2.10", "2.2")  → true  (numeric: 10 > 2, not lexicographic)
+     *
+     * // Wildcards
+     * isVersionCompatible("2.*", "2.0")   → true
+     * isVersionCompatible("2.*", "2.99")  → true
+     * isVersionCompatible("2.*", "3.0")   → false (major mismatch)
+     * isVersionCompatible("*", "any")     → true  (matches anything)
+     * isVersionCompatible("2.2.*", "2.2.5") → true
+     * }</pre>
+     */
     private static boolean isVersionCompatible(String minVersion, String currentVersion) {
+        if (minVersion == null || currentVersion == null) return true;
+
+        String[] minParts = minVersion.split("\\.");
+        String[] curParts = currentVersion.split("\\.");
+
+        int len = Math.max(minParts.length, curParts.length);
+        for (int i = 0; i < len; i++) {
+            String minPart = i < minParts.length ? minParts[i] : "0";
+            String curPart = i < curParts.length ? curParts[i] : "0";
+
+            // Wildcard matches anything at this position
+            if ("*".equals(minPart)) {
+                continue;
+            }
+
+            int min = parseVersionPart(minPart);
+            int cur = parseVersionPart(curPart);
+
+            if (cur > min) return true;
+            if (cur < min) return false;
+        }
+        return true; // equal or all wildcards matched
+    }
+
+    private static int parseVersionPart(String part) {
         try {
-            double min = Double.parseDouble(minVersion);
-            double current = Double.parseDouble(currentVersion);
-            return current >= min;
+            return Integer.parseInt(part);
         } catch (NumberFormatException e) {
-            BOLogger.error("Invalid version format: min=" + minVersion + " current=" + currentVersion);
-            return true;
+            BOLogger.warn("Non-numeric version component: '" + part + "', treating as 0");
+            return 0;
         }
     }
 
@@ -164,6 +273,13 @@ public class AddonLoader {
     private static <T> void scan(ClassLoader loader, String path, Class<T> type, java.util.function.Consumer<T> action) {
         ClassUtils.forEachClass(clazz -> {
             if (type.isAssignableFrom(clazz) && !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())) {
+
+                // Honor @OnlyDev — skip dev-only components on release/beta builds
+                if (!BlackOut.TYPE.isDevBuild() && clazz.isAnnotationPresent(bodevelopment.client.blackout.annotations.OnlyDev.class)) {
+                    BOLogger.debug("Skipping @OnlyDev addon component: " + clazz.getName());
+                    return;
+                }
+
                 try {
                     Class<? extends T> targetClazz = clazz.asSubclass(type);
                     T instance = ClassUtils.instance(targetClazz);

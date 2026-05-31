@@ -17,13 +17,13 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
+import net.minecraft.util.Mth;
 import org.apache.commons.lang3.mutable.MutableDouble;
 
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import net.minecraft.util.Mth;
 
 public class TabGui extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -60,19 +60,19 @@ public class TabGui extends HudElement {
     @Override
     public void render() {
         this.stack.pushPose();
-            this.selectedParent = ParentCategory.categories.get(this.selectedParentId);
-            this.selectedChild = this.getChild(this.selectedChildId);
-            if (this.opened > -1) {
-                this.renderParents(0.0F);
-            }
+        this.selectedParent = ParentCategory.categories.get(this.selectedParentId);
+        this.selectedChild = this.getChild(this.selectedChildId);
+        if (this.opened > -1) {
+            this.renderParents(0.0F);
+        }
 
-            if (this.opened > 0) {
-                this.renderChildren(90.0F);
-            }
+        if (this.opened > 0) {
+            this.renderChildren(90.0F);
+        }
 
-            if (this.opened > 1) {
-                this.renderModules(180.0F, this.frameTime * 2.0F);
-            }
+        if (this.opened > 1) {
+            this.renderModules(180.0F, this.frameTime * 2.0F);
+        }
 
         this.stack.popPose();
     }

@@ -143,7 +143,8 @@ public class MenuMusicSettings extends SettingsModule {
             switch (this.state) {
                 case Playing, FadingIn, Waiting -> this.enterState(State.FadingOut, now, false);
                 case FadingOut -> this.tickFadeOut(now);
-                default -> {}
+                default -> {
+                }
             }
         }
     }
@@ -202,13 +203,15 @@ public class MenuMusicSettings extends SettingsModule {
                 this.restartAfterFade = restartAfter;
                 this.volumeAtFadeStart = this.volume.get();
             }
-            case Waiting -> {}
+            case Waiting -> {
+            }
             case Stopped -> {
                 this.killSource();
                 this.currentTrack = null;
                 this.currentCustomTrackName = null;
             }
-            default -> {}
+            default -> {
+            }
         }
     }
 
@@ -275,7 +278,9 @@ public class MenuMusicSettings extends SettingsModule {
 
     public enum MusicTrack {
         MoneyPhonk("money_phonk"),
-        /** Select this to use an addon-registered track from {@link MenuMusicSettings#CUSTOM_TRACKS}. */
+        /**
+         * Select this to use an addon-registered track from {@link MenuMusicSettings#CUSTOM_TRACKS}.
+         */
         Custom(null);
         public final String fileName;
 

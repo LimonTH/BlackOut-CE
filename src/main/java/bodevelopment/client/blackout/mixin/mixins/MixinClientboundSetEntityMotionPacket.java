@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.interfaces.mixin.IClientboundSetEntityMotionPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import org.spongepowered.asm.mixin.Final;
@@ -8,6 +10,7 @@ import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(ClientboundSetEntityMotionPacket.class)
+@Internal
 public class MixinClientboundSetEntityMotionPacket implements IClientboundSetEntityMotionPacket {
     @Mutable
     @Shadow

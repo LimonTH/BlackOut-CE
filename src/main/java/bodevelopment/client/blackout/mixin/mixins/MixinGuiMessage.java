@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.interfaces.mixin.IGuiMessage;
 import net.minecraft.client.GuiMessage;
 import net.minecraft.network.chat.Component;
@@ -7,6 +9,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(GuiMessage.class)
+@Internal
 public class MixinGuiMessage implements IGuiMessage {
     @Unique
     private int id;

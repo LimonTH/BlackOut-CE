@@ -6,16 +6,17 @@ import bodevelopment.client.blackout.gui.TextField;
 import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
 import bodevelopment.client.blackout.gui.clickgui.ConsoleLog;
 import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.util.CollectionUtils;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
-import bodevelopment.client.blackout.util.CollectionUtils;
 import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
+import net.minecraft.ChatFormatting;
+import org.lwjgl.glfw.GLFW;
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.ChatFormatting;
-import org.lwjgl.glfw.GLFW;
 
 public class ConsoleScreen extends ClickGuiScreen {
     private static final int LINE_COLOR = new Color(50, 50, 50, 255).getRGB();
@@ -413,7 +414,6 @@ public class ConsoleScreen extends ClickGuiScreen {
         this.stack.popPose();
         return currentClr;
     }
-
 
 
     private String[] split(String string, String time) {

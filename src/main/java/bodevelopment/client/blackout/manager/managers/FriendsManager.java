@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.manager.managers;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Manager;
@@ -9,17 +9,20 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.manager.Persistable;
 import bodevelopment.client.blackout.util.BOLogger;
 import bodevelopment.client.blackout.util.FileUtils;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.authlib.GameProfile;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.world.entity.player.Player;
+
 import java.io.File;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.util.*;
-import net.minecraft.client.multiplayer.PlayerInfo;
-import net.minecraft.world.entity.player.Player;
 
+@PublicAPI
 public class FriendsManager extends Manager implements Persistable {
     private final List<Friend> friends = new ArrayList<>();
     private boolean shouldSave = false;

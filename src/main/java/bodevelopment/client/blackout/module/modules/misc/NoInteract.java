@@ -6,7 +6,6 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.world.InteractionHand;
@@ -17,6 +16,8 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
+
+import java.util.List;
 
 public class NoInteract extends Module {
     private static NoInteract INSTANCE;
@@ -38,6 +39,7 @@ public class NoInteract extends Module {
     private final Setting<List<Item>> whenHoldingEntity = this.sgEntity.itemListSetting("When Holding (Entity)", "Prevents entity interaction (like mounting or trading) only when holding these items.", Items.ENCHANTED_GOLDEN_APPLE, Items.GOLDEN_APPLE);
     private final Setting<NoInteractFilterMode> entityFilterMode = this.sgEntity.enumSetting("Entity Filter Mode", NoInteractFilterMode.Accept, "Determines if the 'Entities' list acts as a whitelist or a blacklist.");
     private final Setting<List<EntityType<?>>> entities = this.sgEntity.entityListSetting("Entities", "The specific entity types to block or allow interaction with.");
+
     public NoInteract() {
         super("No Interact", "Prevents accidental interactions with containers, entities, or items while performing other actions.", SubCategory.MISC, false);
         INSTANCE = this;

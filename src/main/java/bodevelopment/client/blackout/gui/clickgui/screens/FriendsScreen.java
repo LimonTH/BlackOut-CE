@@ -11,11 +11,12 @@ import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.resources.DefaultPlayerSkin;
+import net.minecraft.resources.ResourceLocation;
+
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
-import net.minecraft.client.resources.DefaultPlayerSkin;
-import net.minecraft.resources.ResourceLocation;
 
 public class FriendsScreen extends ClickGuiScreen {
     private static final float ITEM_HEIGHT = 75.0F;

@@ -13,12 +13,7 @@ import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import bodevelopment.client.blackout.util.render.RenderState;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;
@@ -112,7 +107,7 @@ public class ExtrapolationSettings extends SettingsModule {
                                 matrix4f, (float) (vec.x - camPos.x), (float) (vec.y - camPos.y), (float) (vec.z - camPos.z)
                         )
                         .setColor(red, green, blue, alpha)
-                        
+
         );
         BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
     }

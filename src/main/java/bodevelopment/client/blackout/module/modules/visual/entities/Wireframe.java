@@ -12,16 +12,16 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.render.WireframeRenderer;
-import org.joml.Quaternionf;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 import net.minecraft.client.Camera;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class Wireframe extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");

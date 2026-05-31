@@ -8,6 +8,7 @@ import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
+import net.minecraft.util.Mth;
 import org.apache.commons.lang3.mutable.MutableDouble;
 
 import java.awt.*;
@@ -22,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
-import net.minecraft.util.Mth;
 
 public class ConfigScreen extends ClickGuiScreen {
     private static final int lineColor = new Color(50, 50, 50, 255).getRGB();
@@ -348,7 +348,7 @@ public class ConfigScreen extends ClickGuiScreen {
 
             String animKey = name + i;
             MutableDouble anim = slotAnims.computeIfAbsent(animKey, k -> new MutableDouble(0));
-            anim.setValue(Mth.lerp(this.frameTime * 10.0F, (float)anim.getValue().doubleValue(), isHovered ? 1.0F : 0.0F));
+            anim.setValue(Mth.lerp(this.frameTime * 10.0F, (float) anim.getValue().doubleValue(), isHovered ? 1.0F : 0.0F));
             float animVal = anim.getValue().floatValue();
 
             Render2DUtils.roundedShadow(this.stack, -4.0F, -4.0F, 8.0F, 8.0F, 10.0F, 10.0F, ColorUtils.SHADOW100I);

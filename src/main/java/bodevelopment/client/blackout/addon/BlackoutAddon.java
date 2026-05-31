@@ -2,13 +2,13 @@ package bodevelopment.client.blackout.addon;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.annotations.PublicAPI;
+import bodevelopment.client.blackout.command.Command;
+import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
 import bodevelopment.client.blackout.hud.HudElement;
+import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.AbstractModule;
 import bodevelopment.client.blackout.module.ParentCategory;
 import bodevelopment.client.blackout.module.SubCategory;
-import bodevelopment.client.blackout.command.Command;
-import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
-import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.client.MenuMusicSettings;
 import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.randomstuff.mainmenu.MainMenuRenderer;
@@ -46,7 +46,9 @@ public abstract class BlackoutAddon {
     private TextureRenderer iconRenderer;
     private BufferedImage pendingIcon;
 
-    /** Backward-compatible constructor for addons that only provide modules, commands and HUD elements. */
+    /**
+     * Backward-compatible constructor for addons that only provide modules, commands and HUD elements.
+     */
     protected BlackoutAddon(String name, String modulePath, String commandPath, String hudPath) {
         this(name, modulePath, commandPath, hudPath, null, null, null);
     }
@@ -73,32 +75,105 @@ public abstract class BlackoutAddon {
         this.guiPath = guiPath;
     }
 
-    /** Called once during addon discovery, before any component scanning. */
+    /**
+     * Called once during addon discovery, before any component scanning.
+     */
     public abstract void onInitialize();
 
-    /** Called after all components have been registered. */
-    public void onEnable() {}
+    /**
+     * Called after all components have been registered.
+     */
+    public void onEnable() {
+    }
 
-    /** Called when the client shuts down or addons are unloaded. */
-    public void onDisable() {}
+    /**
+     * Called when the client shuts down or addons are unloaded.
+     */
+    public void onDisable() {
+    }
 
-    /** Called when the local player joins a world (null-safe). */
-    public void onWorldJoin() {}
+    /**
+     * Called when the local player joins a world (null-safe).
+     */
+    public void onWorldJoin() {
+    }
 
-    /** Called when the local player leaves a world (null-safe). */
-    public void onWorldLeave() {}
+    /**
+     * Called when the local player leaves a world (null-safe).
+     */
+    public void onWorldLeave() {
+    }
 
-    public String getName() { return name; }
-    public String getAuthor() { return "Limon_TH"; }
-    public String getDescription() { return "A simple addon for BlackOut Client."; }
-    public String getVersion() { return BlackOut.VERSION; }
-    public String getUrl() { return null; }
-    public String getMinClientVersion() { return null; }
+    public String getName() {
+        return name;
+    }
 
-    /** API contract version this addon was compiled against. Bump on breaking changes. */
-    public int getApiVersion() { return BlackOut.API_VERSION; }
+    /**
+     * Addon author shown in the addon list. Override to customise.
+     */
+    public String getAuthor() {
+        return "Limon_TH";
+    }
 
-    /** Current addon API version sourced from gradle.properties. */
+    /**
+     * Short description shown in the addon list. Override to customise.
+     */
+    public String getDescription() {
+        return "A simple addon for BlackOut Client.";
+    }
+
+    /**
+     * Addon version string (informational). Defaults to the client version the addon was built against.
+     */
+    public String getVersion() {
+        return BlackOut.VERSION;
+    }
+
+    /**
+     * Optional URL (GitHub, website, etc.) shown in the addon list.
+     */
+    public String getUrl() {
+        return null;
+    }
+
+    /**
+     * Optional minimum BlackOut client (mod) version required.
+     *
+     * <p>This is a <b>secondary</b> compatibility gate. Use it only when the addon
+     * depends on a specific client behaviour (e.g. a rendering fix, a non-API internal
+     * change) that is not captured by {@link #getApiVersion()}.</p>
+     *
+     * <p>The primary compatibility contract is <b>API version</b> ({@link #getApiVersion()}).</p>
+     *
+     * <p>Format: dot-separated numeric, e.g. {@code "2.2"}, {@code "2.3.1"}.
+     * Returns {@code null} (no restriction) by default.</p>
+     */
+    public String getMinClientVersion() {
+        return null;
+    }
+
+    /**
+     * API contract version this addon was compiled against.
+     *
+     * <p>This is the <b>primary</b> compatibility gate:</p>
+     * <ul>
+     *   <li>If the addon's API version is <b>higher</b> than the client's —
+     *       <b>hard reject</b> (addon uses newer symbols).</li>
+     *   <li>If the addon's API version is <b>lower</b> than the client's —
+     *       <b>soft warning</b> (deprecated symbols may have been removed).</li>
+     *   <li>If equal — <b>exact match</b>, guaranteed compatible.</li>
+     * </ul>
+     *
+     * <p>Bump {@code api_version} in {@code gradle.properties} on breaking changes
+     * to the {@code @PublicAPI} surface.</p>
+     */
+    public int getApiVersion() {
+        return BlackOut.API_VERSION;
+    }
+
+    /**
+     * Current addon API version, sourced from {@code gradle.properties → api_version}.
+     */
     public static final int API_VERSION = BlackOut.API_VERSION;
 
     void loadIconFromMod(BufferedImage image) {
@@ -118,7 +193,9 @@ public abstract class BlackoutAddon {
         return iconRenderer;
     }
 
-    /** Creates a new {@link SubCategory} under the given parent. */
+    /**
+     * Creates a new {@link SubCategory} under the given parent.
+     */
     protected SubCategory addSubCategory(String name, ParentCategory parent) {
         return new SubCategory(name, parent);
     }

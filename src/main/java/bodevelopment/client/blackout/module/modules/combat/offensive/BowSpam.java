@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.combat.offensive;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
@@ -9,6 +8,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.InvUtils;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ArrowItem;
 import net.minecraft.world.item.Items;

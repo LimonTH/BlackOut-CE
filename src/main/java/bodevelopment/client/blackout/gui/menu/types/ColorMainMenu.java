@@ -11,6 +11,7 @@ import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
+
 import java.awt.*;
 
 public class ColorMainMenu implements MainMenuRenderer { // (ThemeMainMenu)
@@ -63,6 +64,7 @@ public class ColorMainMenu implements MainMenuRenderer { // (ThemeMainMenu)
             stack.popPose();
         }
     }
+
     private void renderAllIconButtons(PoseStack stack, float windowHeight, float mx, float my) {
         stack.pushPose();
         float startX = -1000.0F + 14.0F;

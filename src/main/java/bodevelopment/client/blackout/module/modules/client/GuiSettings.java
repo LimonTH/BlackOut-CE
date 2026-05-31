@@ -54,6 +54,7 @@ public class GuiSettings extends SettingsModule {
             "The target scale for the modules when the GUI is closed. Can be used to create a 'shrink' or 'expand' effect.");
     public final Setting<Double> moduleHeightClosed = this.sgClosed.doubleSetting("Closed Module height", 40.0, 25.0, 100.0, 1.0,
             "The height each module entry reaches at the end of the closing animation.");
+
     public GuiSettings() {
         super("GUI", true, true);
         INSTANCE = this;

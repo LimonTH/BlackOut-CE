@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.module.modules.misc.Streamer;
 import bodevelopment.client.blackout.util.Capes;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -16,6 +17,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(CapeLayer.class)
+@Internal
 public class MixinCapeLayer {
 
     @Inject(method = "render*", at = @At("HEAD"))

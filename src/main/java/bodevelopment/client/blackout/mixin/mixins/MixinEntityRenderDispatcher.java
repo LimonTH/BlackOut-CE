@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.visual.entities.ShaderESP;
 import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
@@ -29,6 +30,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(EntityRenderDispatcher.class)
+@Internal
 public class MixinEntityRenderDispatcher {
     @Shadow
     private boolean shouldRenderShadow;

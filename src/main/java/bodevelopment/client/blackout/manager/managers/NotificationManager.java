@@ -1,18 +1,23 @@
 package bodevelopment.client.blackout.manager.managers;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.util.ScreenUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@PublicAPI
 public class NotificationManager extends Manager {
-    /** Merge duplicate notifications within this window instead of dropping them. */
+    /**
+     * Merge duplicate notifications within this window instead of dropping them.
+     */
     private static final long DEDUP_WINDOW_MS = 500L;
     private final List<Notification> notifications = Collections.synchronizedList(new ArrayList<>());
     private final PoseStack stack = new PoseStack();

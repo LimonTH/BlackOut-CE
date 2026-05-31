@@ -2,8 +2,8 @@ package bodevelopment.client.blackout.module.modules.misc;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
-import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.event.events.ModuleEvent;
+import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;

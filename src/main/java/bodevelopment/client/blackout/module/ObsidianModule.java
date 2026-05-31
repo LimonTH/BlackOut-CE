@@ -17,9 +17,6 @@ import bodevelopment.client.blackout.randomstuff.Rotation;
 import bodevelopment.client.blackout.randomstuff.timers.RenderList;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.util.*;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundInteractPacket;
@@ -34,6 +31,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class ObsidianModule extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
@@ -164,7 +165,7 @@ public class ObsidianModule extends Module {
                         }
                     }
                 }
-    
+
                 for (int i = 0; i < this.supportPositions.size(); i++) {
                     BlockPos block = this.supportPositions.get(i);
                     this.supportRendering.render(BoxUtils.get(block));

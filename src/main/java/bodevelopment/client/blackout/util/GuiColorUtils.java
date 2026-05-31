@@ -1,12 +1,12 @@
 package bodevelopment.client.blackout.util;
 
+import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.module.AbstractModule;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.util.render.AnimUtils;
-import bodevelopment.client.blackout.hud.HudElement;
+import net.minecraft.util.Mth;
 
 import java.awt.*;
-import net.minecraft.util.Mth;
 
 public class GuiColorUtils {
     public static Color bg1 = getColor(25);

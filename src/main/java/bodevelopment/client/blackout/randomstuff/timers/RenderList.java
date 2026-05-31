@@ -1,10 +1,11 @@
 package bodevelopment.client.blackout.randomstuff.timers;
 
+import net.minecraft.util.Mth;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
-import net.minecraft.util.Mth;
 
 public class RenderList<T> {
     protected final List<Timer<T>> timers = Collections.synchronizedList(new ArrayList<>());

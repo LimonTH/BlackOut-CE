@@ -11,16 +11,17 @@ import bodevelopment.client.blackout.module.modules.movement.PacketFly;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.Pair;
-import bodevelopment.client.blackout.util.MovementUtils;
 import bodevelopment.client.blackout.util.BlockUtils;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
+import bodevelopment.client.blackout.util.MovementUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Clip extends Module {
     private static Clip INSTANCE;

@@ -1,11 +1,10 @@
 package bodevelopment.client.blackout.manager.managers;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.KeyEvent;
 import bodevelopment.client.blackout.event.events.RenderEvent;
-import bodevelopment.client.blackout.gui.clickgui.ClickGui;
 import bodevelopment.client.blackout.hud.HudEditor;
 import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.hud.HudMergePass;
@@ -16,14 +15,19 @@ import bodevelopment.client.blackout.randomstuff.Pair;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.BOLogger;
 import bodevelopment.client.blackout.util.ClassUtils;
-import bodevelopment.client.blackout.util.SharedFeatures;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import java.util.*;
-import java.util.function.BiConsumer;
 import net.minecraft.client.gui.screens.Screen;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
+
+@PublicAPI
 public class HUDManager extends Manager {
     public final HudEditor HUD_EDITOR = new HudEditor();
     private final List<Pair<String, Class<? extends HudElement>>> elements = new ArrayList<>();

@@ -1,22 +1,25 @@
 package bodevelopment.client.blackout.hud;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.enums.ConfigType;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.rendering.renderer.ColorRenderer;
 import bodevelopment.client.blackout.util.PlayerUtils;
-import com.google.gson.JsonObject;
 import bodevelopment.client.blackout.util.render.RenderLayer;
-import com.mojang.blaze3d.vertex.PoseStack;
 import bodevelopment.client.blackout.util.render.RenderState;
+import com.google.gson.JsonObject;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+@PublicAPI
 public class HudElement {
     public final List<SettingGroup> settingGroups = new ArrayList<>();
 
@@ -35,6 +38,7 @@ public class HudElement {
     protected PoseStack stack;
     private float width = 0.0F;
     private float height = 0.0F;
+
     public HudElement(String name, String description) {
         this.name = name;
         this.description = description;

@@ -12,8 +12,9 @@ import bodevelopment.client.blackout.module.setting.multisettings.TextColorMulti
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.TimeUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
-import java.util.function.Predicate;
 import net.minecraft.client.player.AbstractClientPlayer;
+
+import java.util.function.Predicate;
 
 public class StatsHUD extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");

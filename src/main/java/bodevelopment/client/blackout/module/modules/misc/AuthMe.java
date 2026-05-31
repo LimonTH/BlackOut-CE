@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
@@ -12,15 +11,12 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import bodevelopment.client.blackout.util.BOLogger;
-import bodevelopment.client.blackout.util.ChatUtils;
-import bodevelopment.client.blackout.util.EncryptionUtils;
-import bodevelopment.client.blackout.util.FileUtils;
+import bodevelopment.client.blackout.util.*;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
+
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 
 public class AuthMe extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");

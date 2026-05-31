@@ -5,11 +5,12 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.RegistryNames;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import java.util.List;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.HumanoidArm;
+
+import java.util.List;
 
 public class NoRender extends Module {
     private static NoRender INSTANCE;
@@ -40,7 +41,7 @@ public class NoRender extends Module {
     private final Setting<List<ParticleType<?>>> particles = this.sgWorld.registrySetting("Particle Filter", "A list of specific particle types that will not be rendered in the game world.", BuiltInRegistries.PARTICLE_TYPE, RegistryNames::get);
 
     public final Setting<Boolean> enchantGlint = this.sgItems.booleanSetting("Enchantment Glint", false, "Removes the shimmering glint effect on enchanted items and armor.");
-    public final Setting<Boolean> helmet  = this.sgItems.booleanSetting("Cranial Armor", false, "Hides the helmet model on entities.");
+    public final Setting<Boolean> helmet = this.sgItems.booleanSetting("Cranial Armor", false, "Hides the helmet model on entities.");
     public final Setting<Boolean> chestplate = this.sgItems.booleanSetting("Torso Armor", false, "Hides the chestplate model on entities.");
     public final Setting<Boolean> leggings = this.sgItems.booleanSetting("Leg Armor", false, "Hides the legging models on entities.");
     public final Setting<Boolean> boots = this.sgItems.booleanSetting("Footwear", false, "Hides the boot models on entities.");
@@ -52,7 +53,9 @@ public class NoRender extends Module {
         INSTANCE = this;
     }
 
-    public static NoRender getInstance() { return INSTANCE; }
+    public static NoRender getInstance() {
+        return INSTANCE;
+    }
 
     public boolean shouldNoRender(ParticleType<?> particleType) {
         return this.particles.get().contains(particleType);

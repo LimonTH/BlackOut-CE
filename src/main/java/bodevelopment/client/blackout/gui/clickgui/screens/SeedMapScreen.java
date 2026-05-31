@@ -1,29 +1,24 @@
 package bodevelopment.client.blackout.gui.clickgui.screens;
 
-import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.gui.TextField;
 import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.visual.world.SeedFinder;
-import bodevelopment.client.blackout.util.ColorUtils;
-import bodevelopment.client.blackout.util.FileUtils;
-import bodevelopment.client.blackout.util.GuiColorUtils;
-import bodevelopment.client.blackout.util.SelectedComponent;
-import bodevelopment.client.blackout.util.SeedBiomeSource;
+import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.ScissorStack;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import org.joml.Matrix4f;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.List;
@@ -32,10 +27,6 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
 
 public class SeedMapScreen extends ClickGuiScreen {
     private static final int TILE_SIZE = 256;
@@ -117,7 +108,9 @@ public class SeedMapScreen extends ClickGuiScreen {
     }
 
     @Override
-    public boolean closesOnRightClick() { return false; }
+    public boolean closesOnRightClick() {
+        return false;
+    }
 
     @Override
     public void render() {
@@ -283,8 +276,8 @@ public class SeedMapScreen extends ClickGuiScreen {
 
                 for (int ti = 0; ti < numZ; ti++) {
                     for (int tj = 0; tj < numX; tj++) {
-                        int bx = (int)(startX + (tj * step + 0.5F) * bpp);
-                        int bz = (int)(startZ + (ti * step + 0.5F) * bpp);
+                        int bx = (int) (startX + (tj * step + 0.5F) * bpp);
+                        int bz = (int) (startZ + (ti * step + 0.5F) * bpp);
                         int color = biomeSource.getBiomeColor(bx, bz);
 
                         int tx = tj * step;
@@ -359,27 +352,27 @@ public class SeedMapScreen extends ClickGuiScreen {
         if (this.selectedStructure == null) return;
 
         float worldLeft = this.mapCenterX - (MAP_WIDTH / 2.0F) * this.blocksPerPixel;
-        float worldTop  = this.mapCenterZ - (MAP_HEIGHT / 2.0F) * this.blocksPerPixel;
+        float worldTop = this.mapCenterZ - (MAP_HEIGHT / 2.0F) * this.blocksPerPixel;
 
         float iconX = MAP_X + (this.selectedStructure.blockX() - worldLeft) / this.blocksPerPixel;
-        float iconY = MAP_Y + (this.selectedStructure.blockZ() - worldTop)  / this.blocksPerPixel;
+        float iconY = MAP_Y + (this.selectedStructure.blockZ() - worldTop) / this.blocksPerPixel;
 
         if (iconX < MAP_X - ICON_SIZE || iconX > MAP_X + MAP_WIDTH + ICON_SIZE
                 || iconY < MAP_Y - ICON_SIZE || iconY > MAP_Y + MAP_HEIGHT + ICON_SIZE) return;
 
-        String title  = getStructureFullName(this.selectedStructure);
+        String title = getStructureFullName(this.selectedStructure);
         String coords = "X: " + this.selectedStructure.blockX() + "   Z: " + this.selectedStructure.blockZ();
 
         float titleScale = 1.8F;
         float coordScale = 1.5F;
         float titleH = 13.0F;
         float coordH = 11.0F;
-        float padX   = 10.0F;
-        float padY   = 6.0F;
-        float gap    = 3.0F;
+        float padX = 10.0F;
+        float padY = 6.0F;
+        float gap = 3.0F;
 
         float panelW = Math.max(
-                BlackOut.FONT.getWidth(title)  * titleScale,
+                BlackOut.FONT.getWidth(title) * titleScale,
                 BlackOut.FONT.getWidth(coords) * coordScale
         ) + padX * 2;
         float panelH = padY + titleH + gap + coordH + padY;
@@ -395,7 +388,7 @@ public class SeedMapScreen extends ClickGuiScreen {
         this.rounded(panelX, panelY, panelW, panelH, 4.0F, 0.0F, new Color(18, 18, 22, 240), ColorUtils.SHADOW100);
         this.quad(panelX + 4, panelY, panelW - 8, 2.0F, accent);
 
-        this.text(title,  titleScale, panelX + panelW / 2.0F, panelY + padY + titleH / 2.0F, true, true, Color.WHITE);
+        this.text(title, titleScale, panelX + panelW / 2.0F, panelY + padY + titleH / 2.0F, true, true, Color.WHITE);
         this.text(coords, coordScale, panelX + panelW / 2.0F, panelY + padY + titleH + gap + coordH / 2.0F, true, true, new Color(160, 160, 185, 255));
     }
 
@@ -408,20 +401,20 @@ public class SeedMapScreen extends ClickGuiScreen {
                 String prefix = extra.startsWith("zombie_") ? "Zombie " : "";
                 yield prefix + switch (biome) {
                     case "plains", "meadow", "sunflower_plains" -> "Plains Village";
-                    case "desert"           -> "Desert Village";
+                    case "desert" -> "Desert Village";
                     case "savanna", "savanna_plateau", "windswept_savanna" -> "Savanna Village";
-                    case "snowy_plains"     -> "Snowy Village";
+                    case "snowy_plains" -> "Snowy Village";
                     case "taiga", "old_growth_pine_taiga", "old_growth_spruce_taiga" -> "Taiga Village";
-                    default                 -> "Village";
+                    default -> "Village";
                 };
             }
 
             case BASTION_REMNANT -> switch (extra) {
-                case "hoglin"   -> "Bastion Hoglin Stables";
-                case "housing"  -> "Bastion Housing Units";
-                case "bridges"  -> "Bastion Bridge";
+                case "hoglin" -> "Bastion Hoglin Stables";
+                case "housing" -> "Bastion Housing Units";
+                case "bridges" -> "Bastion Bridge";
                 case "treasure" -> "Bastion Treasure Room";
-                default         -> "Bastion Remnant";
+                default -> "Bastion Remnant";
             };
 
             case IGLOO -> extra.equals("Laboratory") ? "Igloo with Basement" : "Igloo";
@@ -490,20 +483,20 @@ public class SeedMapScreen extends ClickGuiScreen {
 
         float viewHalf = Math.max(MAP_WIDTH, MAP_HEIGHT) * this.blocksPerPixel * 0.6f;
         boolean stale = Math.abs(mapCenterX - lastSearchCX) > viewHalf * 0.2f
-                     || Math.abs(mapCenterZ - lastSearchCZ) > viewHalf * 0.2f
-                     || this.blocksPerPixel != lastSearchBpp
-                     || this.lastDim != lastSearchDim;
+                || Math.abs(mapCenterZ - lastSearchCZ) > viewHalf * 0.2f
+                || this.blocksPerPixel != lastSearchBpp
+                || this.lastDim != lastSearchDim;
         if (!stale) return;
 
-        lastSearchCX  = mapCenterX;
-        lastSearchCZ  = mapCenterZ;
+        lastSearchCX = mapCenterX;
+        lastSearchCZ = mapCenterZ;
         lastSearchBpp = this.blocksPerPixel;
         lastSearchDim = this.lastDim;
 
-        int cx     = (int) mapCenterX;
-        int cz     = (int) mapCenterZ;
+        int cx = (int) mapCenterX;
+        int cz = (int) mapCenterZ;
         int radius = (int) viewHalf + 512;
-        long s     = this.seed;
+        long s = this.seed;
         SeedBiomeSource src = this.biomeSource;
         ResourceKey<Level> dim = this.lastDim;
 
@@ -526,10 +519,10 @@ public class SeedMapScreen extends ClickGuiScreen {
 
         triggerStructureSearch(seedFinder);
 
-        float worldLeft   = this.mapCenterX - (MAP_WIDTH  / 2.0F) * this.blocksPerPixel;
-        float worldTop    = this.mapCenterZ - (MAP_HEIGHT / 2.0F) * this.blocksPerPixel;
-        float worldRight  = worldLeft + MAP_WIDTH  * this.blocksPerPixel;
-        float worldBottom = worldTop  + MAP_HEIGHT * this.blocksPerPixel;
+        float worldLeft = this.mapCenterX - (MAP_WIDTH / 2.0F) * this.blocksPerPixel;
+        float worldTop = this.mapCenterZ - (MAP_HEIGHT / 2.0F) * this.blocksPerPixel;
+        float worldRight = worldLeft + MAP_WIDTH * this.blocksPerPixel;
+        float worldBottom = worldTop + MAP_HEIGHT * this.blocksPerPixel;
 
         ResourceKey<Level> dim = this.lastDim;
 
@@ -541,10 +534,10 @@ public class SeedMapScreen extends ClickGuiScreen {
             if (this.blocksPerPixel >= 12.0F && s.type().isMinor()) continue;
 
             if (s.blockX() < worldLeft || s.blockX() > worldRight
-                    || s.blockZ() < worldTop  || s.blockZ() > worldBottom) continue;
+                    || s.blockZ() < worldTop || s.blockZ() > worldBottom) continue;
 
             float sx = MAP_X + (s.blockX() - worldLeft) / this.blocksPerPixel;
-            float sy = MAP_Y + (s.blockZ() - worldTop)  / this.blocksPerPixel;
+            float sy = MAP_Y + (s.blockZ() - worldTop) / this.blocksPerPixel;
             drawMarker(sx, sy, ICON_SIZE, s.type().displayName + s.extraInfo(),
                     s.type().mapColor, s.blockX(), s.blockZ(), s.type(), s.extraInfo());
         }
@@ -554,23 +547,19 @@ public class SeedMapScreen extends ClickGuiScreen {
         String extra = extraInfo.trim();
 
         String path = switch (type) {
-            case BASTION_REMNANT ->
-                    "textures/map/structures/bastion/bastion_" + extra.trim().toLowerCase() + ".png";
+            case BASTION_REMNANT -> "textures/map/structures/bastion/bastion_" + extra.trim().toLowerCase() + ".png";
 
-            case IGLOO ->
-                    extra.equals("Laboratory")
-                            ? "textures/map/structures/igloo/igloo_with_basement.png"
-                            : "textures/map/structures/igloo/igloo_without_basement.png";
+            case IGLOO -> extra.equals("Laboratory")
+                    ? "textures/map/structures/igloo/igloo_with_basement.png"
+                    : "textures/map/structures/igloo/igloo_without_basement.png";
 
-            case OCEAN_RUIN ->
-                    extra.contains("Big")
-                            ? "textures/map/structures/ocean_ruins/ocean_ruins_large.png"
-                            : "textures/map/structures/ocean_ruins/ocean_ruins_small.png";
+            case OCEAN_RUIN -> extra.contains("Big")
+                    ? "textures/map/structures/ocean_ruins/ocean_ruins_large.png"
+                    : "textures/map/structures/ocean_ruins/ocean_ruins_small.png";
 
-            case END_CITY ->
-                    extra.equals("Ship")
-                            ? "textures/map/structures/end_city/end_city_with_ship.png"
-                            : "textures/map/structures/end_city/end_city_without_ship.png";
+            case END_CITY -> extra.equals("Ship")
+                    ? "textures/map/structures/end_city/end_city_with_ship.png"
+                    : "textures/map/structures/end_city/end_city_without_ship.png";
 
             case VILLAGE -> extra.startsWith("zombie_")
                     ? "textures/map/structures/village/village_zombie.png"
@@ -606,10 +595,10 @@ public class SeedMapScreen extends ClickGuiScreen {
         RenderSystem.setShader(CoreShaders.POSITION_TEX);
         RenderSystem.enableBlend();
         BufferBuilder buf = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        buf.addVertex(matrix, sx,        sy + size, 0).setUv(0, 1);
+        buf.addVertex(matrix, sx, sy + size, 0).setUv(0, 1);
         buf.addVertex(matrix, sx + size, sy + size, 0).setUv(1, 1);
-        buf.addVertex(matrix, sx + size, sy,        0).setUv(1, 0);
-        buf.addVertex(matrix, sx,        sy,        0).setUv(0, 0);
+        buf.addVertex(matrix, sx + size, sy, 0).setUv(1, 0);
+        buf.addVertex(matrix, sx, sy, 0).setUv(0, 0);
         BufferUploader.drawWithShader(buf.buildOrThrow());
     }
 
@@ -663,11 +652,11 @@ public class SeedMapScreen extends ClickGuiScreen {
     private static boolean isSlimeChunk(long seed, int chunkX, int chunkZ) {
         return new Random(
                 seed
-                + ((long) chunkX * chunkX * 0x4c1906)
-                + (chunkX * 0x5ac0dbL)
-                + (long) chunkZ * chunkZ * 0x4307a7L
-                + (chunkZ * 0x5f24fL)
-                ^ 0x3ad8025fL
+                        + ((long) chunkX * chunkX * 0x4c1906)
+                        + (chunkX * 0x5ac0dbL)
+                        + (long) chunkZ * chunkZ * 0x4307a7L
+                        + (chunkZ * 0x5f24fL)
+                        ^ 0x3ad8025fL
         ).nextInt(10) == 0;
     }
 
@@ -781,12 +770,12 @@ public class SeedMapScreen extends ClickGuiScreen {
 
     private void handleMapClick() {
         float worldLeft = this.mapCenterX - (MAP_WIDTH / 2.0F) * this.blocksPerPixel;
-        float worldTop  = this.mapCenterZ - (MAP_HEIGHT / 2.0F) * this.blocksPerPixel;
+        float worldTop = this.mapCenterZ - (MAP_HEIGHT / 2.0F) * this.blocksPerPixel;
         float half = ICON_SIZE / 2.0F;
 
         for (SeedFinder.FoundStructure s : mapStructures) {
             float sx = MAP_X + (s.blockX() - worldLeft) / this.blocksPerPixel;
-            float sy = MAP_Y + (s.blockZ() - worldTop)  / this.blocksPerPixel;
+            float sy = MAP_Y + (s.blockZ() - worldTop) / this.blocksPerPixel;
             if (this.mx >= sx - half - 2 && this.mx <= sx + half + 2
                     && this.my >= sy - half - 2 && this.my <= sy + half + 2) {
                 // Toggle: click same structure to deselect
@@ -810,7 +799,8 @@ public class SeedMapScreen extends ClickGuiScreen {
             String zText = this.fieldZ.getContent().trim();
             if (!xText.isEmpty()) this.mapCenterX = Float.parseFloat(xText);
             if (!zText.isEmpty()) this.mapCenterZ = Float.parseFloat(zText);
-        } catch (NumberFormatException ignored) {}
+        } catch (NumberFormatException ignored) {
+        }
     }
 
     @Override

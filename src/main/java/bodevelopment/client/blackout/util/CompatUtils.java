@@ -1,8 +1,10 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.module.modules.movement.ElytraFly;
 
+@Internal
 public class CompatUtils {
     private static final boolean BARITONE_PRESENT;
 
@@ -32,7 +34,8 @@ public class CompatUtils {
             baritone.api.IBaritone inst = null;
             try {
                 inst = baritone.api.BaritoneAPI.getProvider().getPrimaryBaritone();
-            } catch (Throwable ignored) {}
+            } catch (Throwable ignored) {
+            }
             BARITONE_INSTANCE = inst;
         }
 

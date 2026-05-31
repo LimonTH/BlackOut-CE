@@ -1,11 +1,13 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.interfaces.mixin.IVec3;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+@PublicAPI
 public class MovementUtils {
     public static double xMovement(double speed, double yaw) {
         return Math.cos(Math.toRadians(yaw + 90.0)) * speed;

@@ -1,5 +1,8 @@
 package bodevelopment.client.blackout.rendering.font;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
+@Internal
 public class CharInfo {
     public int x;
     public int y;

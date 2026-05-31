@@ -1,5 +1,8 @@
 package bodevelopment.client.blackout.keys;
 
+import bodevelopment.client.blackout.annotations.PublicAPI;
+
+@PublicAPI
 public class Pressable {
     public int key;
 

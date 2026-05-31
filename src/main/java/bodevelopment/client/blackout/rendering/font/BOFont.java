@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.rendering.font;
 
+import bodevelopment.client.blackout.annotations.PublicAPI;
+
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.FileUtils;
 
@@ -9,6 +11,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+@PublicAPI
 public class BOFont {
     public final Map<Integer, CharInfo> map = new HashMap<>();
     private final String name;

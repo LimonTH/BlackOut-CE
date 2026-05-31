@@ -1,16 +1,11 @@
 package bodevelopment.client.blackout.util.render;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.NoAlloc;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.CoreShaders;
@@ -20,6 +15,7 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 
+@NoAlloc
 public class Render3DUtils {
     public static PoseStack matrices = new PoseStack();
 
@@ -92,10 +88,10 @@ public class Render3DUtils {
             float b = ARGB.blue(color) / 255.0F;
             float a = ARGB.alpha(color) / 255.0F;
 
-        drawOutlines(stack, bufferBuilder,
-                (float) box.minX, (float) box.minY, (float) box.minZ,
-                (float) box.maxX, (float) box.maxY, (float) box.maxZ,
-                r, g, b, a);
+            drawOutlines(stack, bufferBuilder,
+                    (float) box.minX, (float) box.minY, (float) box.minZ,
+                    (float) box.maxX, (float) box.maxY, (float) box.maxZ,
+                    r, g, b, a);
 
             BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
         }
@@ -275,7 +271,9 @@ public class Render3DUtils {
         return RenderState.blend3D();
     }
 
-    /** @deprecated Use {@link #begin()} with try-with-resources instead. */
+    /**
+     * @deprecated Use {@link #begin()} with try-with-resources instead.
+     */
     @Deprecated
     public static void start() {
         RenderSystem.enableBlend();
@@ -288,7 +286,9 @@ public class Render3DUtils {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
-    /** @deprecated Use {@link #begin()} with try-with-resources instead. */
+    /**
+     * @deprecated Use {@link #begin()} with try-with-resources instead.
+     */
     @Deprecated
     public static void end() {
         RenderSystem.enableDepthTest();
@@ -399,7 +399,7 @@ public class Render3DUtils {
         Quaternionf invRotation = new Quaternionf(camera.rotation()).conjugate();
         stack.mulPose(invRotation);
 
-        stack.translate((float)(pos.x - camPos.x), (float)(pos.y - camPos.y), (float)(pos.z - camPos.z));
+        stack.translate((float) (pos.x - camPos.x), (float) (pos.y - camPos.y), (float) (pos.z - camPos.z));
         stack.translate(0, 0, RenderLayer.WORLD);
 
         stack.mulPose(camera.rotation());

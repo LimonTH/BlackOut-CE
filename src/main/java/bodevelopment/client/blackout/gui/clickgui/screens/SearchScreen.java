@@ -133,6 +133,7 @@ public class SearchScreen extends ClickGuiScreen {
             this.textField.type(key, false);
         }
     }
+
     public void updateResults() {
         String query = this.textField.getContent().toLowerCase();
         if (query.isEmpty()) {

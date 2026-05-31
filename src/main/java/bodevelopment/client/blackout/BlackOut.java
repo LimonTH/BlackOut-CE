@@ -6,19 +6,20 @@ import bodevelopment.client.blackout.gui.menu.MainMenu;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.setting.RegistryNames;
 import bodevelopment.client.blackout.rendering.font.CustomFontRenderer;
-import bodevelopment.client.blackout.util.BlocklistUtil;
-import bodevelopment.client.blackout.util.ClassUtils;
-import bodevelopment.client.blackout.util.EnchantmentNames;
-import bodevelopment.client.blackout.util.FileUtils;
+import bodevelopment.client.blackout.util.*;
 import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.client.Minecraft;
+
 import java.awt.*;
 import java.io.File;
+import java.lang.reflect.Method;
 
 public final class BlackOut extends bodevelopment.client.blackout.BlackOutInfo implements ClientModInitializer {
     public static final String NAME = bodevelopment.client.blackout.BlackOutInfo.NAME;
     public static final String VERSION = bodevelopment.client.blackout.BlackOutInfo.VERSION;
-    /** Current BlackOut addon API version. Addons requiring a higher version are rejected. */
+    /**
+     * Current BlackOut addon API version. Addons requiring a higher version are rejected.
+     */
     public static final Integer API_VERSION = bodevelopment.client.blackout.BlackOutInfo.API_VERSION;
 
     public static final Type TYPE = Type.Beta;
@@ -51,10 +52,10 @@ public final class BlackOut extends bodevelopment.client.blackout.BlackOutInfo i
      */
     private static void validateAccessWidenerTargets() {
         String[] criticalTargets = {
-            "net.minecraft.client.multiplayer.ClientLevel::getBlockStatePredictionHandler",
-            "net.minecraft.client.multiplayer.MultiPlayerGameMode::startPrediction",
-            "net.minecraft.client.multiplayer.MultiPlayerGameMode::carriedIndex",
-            "net.minecraft.world.entity.LivingEntity::attackStrengthTicker",
+                "net.minecraft.client.multiplayer.ClientLevel::getBlockStatePredictionHandler",
+                "net.minecraft.client.multiplayer.MultiPlayerGameMode::startPrediction",
+                "net.minecraft.client.multiplayer.MultiPlayerGameMode::carriedIndex",
+                "net.minecraft.world.entity.LivingEntity::attackStrengthTicker",
         };
         for (String target : criticalTargets) {
             try {
@@ -65,17 +66,20 @@ public final class BlackOut extends bodevelopment.client.blackout.BlackOutInfo i
                     clazz.getDeclaredField(member);
                 } catch (NoSuchFieldException e) {
                     boolean found = false;
-                    for (java.lang.reflect.Method m : clazz.getDeclaredMethods()) {
-                        if (m.getName().equals(member)) { found = true; break; }
+                    for (Method m : clazz.getDeclaredMethods()) {
+                        if (m.getName().equals(member)) {
+                            found = true;
+                            break;
+                        }
                     }
                     if (!found) {
-                        bodevelopment.client.blackout.util.BOLogger.warn(
-                            "Access widener target may be missing: " + target);
+                        BOLogger.warn(
+                                "Access widener target may be missing: " + target);
                     }
                 }
             } catch (ClassNotFoundException e) {
-                bodevelopment.client.blackout.util.BOLogger.warn(
-                    "Access widener target class missing: " + target);
+                BOLogger.warn(
+                        "Access widener target class missing: " + target);
             }
         }
     }

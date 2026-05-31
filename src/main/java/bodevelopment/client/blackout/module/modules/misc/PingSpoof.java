@@ -5,11 +5,12 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.common.ServerboundKeepAlivePacket;
 import net.minecraft.network.protocol.common.ServerboundPongPacket;
 import net.minecraft.util.Mth;
+
+import java.util.concurrent.ThreadLocalRandom;
 
 public class PingSpoof extends Module {
     private static final int MAX_SAFE_DELAY_MS = 15000;

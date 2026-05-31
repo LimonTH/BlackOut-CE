@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.gui.clickgui;
 
-import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.helpers.ScrollHelper;
 import bodevelopment.client.blackout.helpers.SmoothScrollHelper;
@@ -14,8 +13,9 @@ import bodevelopment.client.blackout.util.render.Render2DUtils;
 import bodevelopment.client.blackout.util.render.ScissorStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import java.awt.*;
 import net.minecraft.util.Mth;
+
+import java.awt.*;
 
 public class ClickGuiScreen {
     protected final PoseStack stack;

@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.combat.misc;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.event.Event;
@@ -14,8 +13,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.Pair;
 import bodevelopment.client.blackout.randomstuff.timers.TickTimerList;
 import bodevelopment.client.blackout.util.InvUtils;
-import java.util.ArrayList;
-import java.util.List;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.world.InteractionHand;
@@ -29,6 +27,9 @@ import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.PotionContents;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Quiver extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");

@@ -3,6 +3,7 @@ package bodevelopment.client.blackout.gui.clickgui;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
+
 import java.awt.*;
 
 public class Component {

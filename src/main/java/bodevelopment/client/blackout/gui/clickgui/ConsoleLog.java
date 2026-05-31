@@ -1,11 +1,11 @@
 package bodevelopment.client.blackout.gui.clickgui;
 
+import net.minecraft.ChatFormatting;
+
 import java.awt.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import net.minecraft.ChatFormatting;
 
 public class ConsoleLog {
     private static final List<Entry> entries = new CopyOnWriteArrayList<>();
@@ -67,7 +67,8 @@ public class ConsoleLog {
         listeners.remove(listener);
     }
 
-    public record Entry(String text, String time, int color, long timestamp) {}
+    public record Entry(String text, String time, int color, long timestamp) {
+    }
 
     public interface Listener {
         void onEntry(Entry entry);

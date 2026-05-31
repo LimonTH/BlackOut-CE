@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import com.mojang.blaze3d.audio.Library;
 import net.minecraft.Util;
 import net.minecraft.client.resources.sounds.SoundInstance;
@@ -8,11 +9,13 @@ import net.minecraft.client.sounds.ChannelAccess;
 import net.minecraft.client.sounds.JOrbisAudioStream;
 import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.world.phys.Vec3;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
+@PublicAPI
 public class SoundUtils {
     public static ChannelAccess.ChannelHandle play(float pitch, float volume, String name) {
         return play(pitch, volume, 0.0, 0.0, 0.0, false, name);

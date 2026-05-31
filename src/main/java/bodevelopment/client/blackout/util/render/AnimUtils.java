@@ -5,6 +5,7 @@ public class AnimUtils {
     public static double lerp(double delta, double start, double end) {
         return start + delta * (end - start);
     }
+
     public static double easeOutQuart(double start, double end, double progress) {
         return lerp(easeOutQuart(progress), start, end);
     }
@@ -157,11 +158,11 @@ public class AnimUtils {
                 ? 0.0
                 : (
                 delta == 1.0
-                        ? 1.0
-                        : (
+                ? 1.0
+                : (
                         delta < 0.5
-                                ? -(Math.pow(2.0, 20.0 * delta - 10.0) * sin) / 2.0
-                                : Math.pow(2.0, -20.0 * delta + 10.0) * sin / 2.0 + 1.0
+                        ? -(Math.pow(2.0, 20.0 * delta - 10.0) * sin) / 2.0
+                        : Math.pow(2.0, -20.0 * delta + 10.0) * sin / 2.0 + 1.0
                 )
         );
     }

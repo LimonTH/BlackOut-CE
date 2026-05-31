@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.MeshData;
 import org.spongepowered.asm.mixin.Mixin;
@@ -8,6 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BufferUploader.class)
+@Internal
 public abstract class MixinBufferUploader {
     @Inject(method = "draw", at = @At("HEAD"), cancellable = true)
     private static void blackout$drawNullSafe(MeshData buffer, CallbackInfo ci) {

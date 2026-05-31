@@ -1,13 +1,14 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.interfaces.mixin.IVec3;
-import java.util.List;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
+
+import java.util.List;
 
 public class MovementPrediction {
     public static Vec3 adjustMovementForCollisions(Entity entity, Vec3 movement) {

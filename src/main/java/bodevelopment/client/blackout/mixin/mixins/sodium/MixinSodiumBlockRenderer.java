@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins.sodium;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.module.modules.visual.misc.XRay;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.DefaultTerrainRenderPasses;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
@@ -15,6 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Pseudo
 @Mixin(targets = "net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer", remap = false)
+@Internal
 public class MixinSodiumBlockRenderer {
     @Final
     @Shadow
@@ -28,11 +31,20 @@ public class MixinSodiumBlockRenderer {
             BakedModel model, BlockState state, BlockPos pos, BlockPos origin, CallbackInfo ci
     ) {
         XRay xray = XRay.getInstance();
-        if (xray == null || !xray.enabled) { XRAY_ALPHA.set(-1); return; }
-        if (xray.isTarget(state.getBlock())) { XRAY_ALPHA.set(-1); return; }
+        if (xray == null || !xray.enabled) {
+            XRAY_ALPHA.set(-1);
+            return;
+        }
+        if (xray.isTarget(state.getBlock())) {
+            XRAY_ALPHA.set(-1);
+            return;
+        }
 
         final int opacity = xray.opacity.get();
-        if (opacity <= 0) { ci.cancel(); return; }
+        if (opacity <= 0) {
+            ci.cancel();
+            return;
+        }
         XRAY_ALPHA.set(opacity < 255 ? opacity : -1);
     }
 

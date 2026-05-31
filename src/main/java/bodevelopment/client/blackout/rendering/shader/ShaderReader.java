@@ -34,7 +34,9 @@ public final class ShaderReader {
     private static final int GLSL_VERSION = 150;
     private static final String VERSION_DIRECTIVE = "#version " + GLSL_VERSION + "\n";
 
-    /** Macro name → GLSL replacement text. */
+    /**
+     * Macro name → GLSL replacement text.
+     */
     private static final Map<String, String> MACROS = new LinkedHashMap<>();
 
     static {
@@ -146,7 +148,10 @@ public final class ShaderReader {
         int i = 0;
         while (i < lines.size()) {
             String line = lines.get(i).strip();
-            if (line.isEmpty()) { i++; continue; }
+            if (line.isEmpty()) {
+                i++;
+                continue;
+            }
 
             if (line.startsWith("import ")) {
                 imports.add(extractImport(line));
@@ -186,7 +191,7 @@ public final class ShaderReader {
                 functions.add(parseFunction(fullSig, pre));
                 i++;
             } else if (line.startsWith("uniform ") || line.startsWith("in ") ||
-                       line.startsWith("out ") || line.startsWith("const ")) {
+                    line.startsWith("out ") || line.startsWith("const ")) {
                 fields.add(parseField(line));
                 i++;
             } else {
@@ -336,37 +341,24 @@ public final class ShaderReader {
                 .toList();
     }
 
-    private static class ShaderUnit {
-        final String name;
-        final String file;
-        final List<Function> functions;
-        final List<Field> fields;
-        final List<String> imports;
-
-        ShaderUnit(String name, String file, List<Function> functions,
-                   List<Field> fields, List<String> imports) {
-            this.name = name;
-            this.file = file;
-            this.functions = functions;
-            this.fields = fields;
-            this.imports = imports;
-        }
+    private record ShaderUnit(String name, String file, List<Function> functions, List<Field> fields,
+                              List<String> imports) {
 
         String build() {
-            StringBuilder sb = new StringBuilder(VERSION_DIRECTIVE);
+                StringBuilder sb = new StringBuilder(VERSION_DIRECTIVE);
 
-            for (Field f : fields) {
-                sb.append(f.build()).append('\n');
+                for (Field f : fields) {
+                    sb.append(f.build()).append('\n');
+                }
+                for (Function f : functions) {
+                    if (f.pre) sb.append(f.build()).append('\n');
+                }
+                for (Function f : functions) {
+                    if (!f.pre) sb.append(f.build()).append('\n');
+                }
+                return sb.toString();
             }
-            for (Function f : functions) {
-                if (f.pre) sb.append(f.build()).append('\n');
-            }
-            for (Function f : functions) {
-                if (!f.pre) sb.append(f.build()).append('\n');
-            }
-            return sb.toString();
         }
-    }
 
     private record Function(String name, String returnType, String args, String body, boolean pre) {
         String build() {
@@ -390,12 +382,22 @@ public final class ShaderReader {
         }
     }
 
-    /** Simple registry holding compiled GLSL source strings, keyed by "file.name". */
+    /**
+     * Simple registry holding compiled GLSL source strings, keyed by "file.name".
+     */
     private static final class ShaderRegistry {
         private static final Map<String, String> store = new LinkedHashMap<>();
 
-        static void clear() { store.clear(); }
-        static void put(String key, String source) { store.put(key, source); }
-        static String get(String key) { return store.get(key); }
+        static void clear() {
+            store.clear();
+        }
+
+        static void put(String key, String source) {
+            store.put(key, source);
+        }
+
+        static String get(String key) {
+            return store.get(key);
+        }
     }
 }

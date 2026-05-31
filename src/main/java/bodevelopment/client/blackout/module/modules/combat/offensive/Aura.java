@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.combat.offensive;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.*;
 import bodevelopment.client.blackout.event.Event;
@@ -21,10 +20,7 @@ import bodevelopment.client.blackout.module.setting.multisettings.BoxMultiSettin
 import bodevelopment.client.blackout.randomstuff.ExtrapolationMap;
 import bodevelopment.client.blackout.randomstuff.Pair;
 import bodevelopment.client.blackout.randomstuff.timers.RenderList;
-import bodevelopment.client.blackout.util.DamageUtils;
-import bodevelopment.client.blackout.util.BlockUtils;
-import bodevelopment.client.blackout.util.RotationUtils;
-import bodevelopment.client.blackout.util.SettingUtils;
+import bodevelopment.client.blackout.util.*;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.gui.screens.DeathScreen;
@@ -33,31 +29,20 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.network.protocol.game.ServerboundInteractPacket;
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
-import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
-import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.network.protocol.game.*;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.AreaEffectCloud;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.ExperienceOrb;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.item.AxeItem;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.*;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -84,7 +69,7 @@ public class Aura extends MoveUpdateModule {
                 return item instanceof SwordItem
                         || item == Items.TRIDENT
                         || item == Items.MACE;
-                    },
+            },
             Items.WOODEN_SWORD,
             Items.STONE_SWORD,
             Items.GOLDEN_SWORD,
@@ -545,7 +530,7 @@ public class Aura extends MoveUpdateModule {
                 boolean preferred = matchesPreference(stack, this.weaponPreference.get());
 
                 if (this.weaponPreference.get() == WeaponPreference.Default ||
-                    this.weaponPreference.get() == WeaponPreference.Damage) {
+                        this.weaponPreference.get() == WeaponPreference.Damage) {
                     if (damage > bestDamage) {
                         bestSlot = i;
                         bestDamage = damage;
@@ -563,8 +548,8 @@ public class Aura extends MoveUpdateModule {
             }
         }
 
-        if (bestSlot == -1 && this.weaponPreference.get() != WeaponPreference.Default && 
-            this.weaponPreference.get() != WeaponPreference.Damage) {
+        if (bestSlot == -1 && this.weaponPreference.get() != WeaponPreference.Default &&
+                this.weaponPreference.get() != WeaponPreference.Damage) {
             bestDamage = -1.0;
             for (int i = 0; i < limit; i++) {
                 ItemStack stack = BlackOut.mc.player.getInventory().getItem(i);
@@ -577,14 +562,14 @@ public class Aura extends MoveUpdateModule {
                 }
             }
         }
-        
+
         return bestSlot;
     }
-    
+
     private boolean matchesPreference(ItemStack stack, WeaponPreference preference) {
         if (stack.isEmpty()) return false;
         Item item = stack.getItem();
-        
+
         return switch (preference) {
             case Sword -> item instanceof SwordItem;
             case Axe -> item instanceof AxeItem;
@@ -599,7 +584,7 @@ public class Aura extends MoveUpdateModule {
         this.extrapolationMap.update(entity -> this.extrapolation.get());
 
         List<Pair<Entity, Double>> candidates = new ArrayList<>();
-        
+
         BlackOut.mc.level.entitiesForRendering().forEach(entity -> {
             if (this.entities.get().contains(entity.getType()) && entity != BlackOut.mc.player) {
                 if (entity instanceof ItemEntity ||
@@ -624,7 +609,7 @@ public class Aura extends MoveUpdateModule {
                             10000.0 - Math.abs(RotationUtils.yawAngle(BlackOut.mc.player.getYRot(), RotationUtils.getYaw(entity)));
                     case Distance -> 10000.0 - BlackOut.mc.player.position().distanceTo(entity.position());
                 };
-                
+
                 if (entity instanceof LivingEntity livingEntity) {
                     if (livingEntity.isRemoved() || !livingEntity.isAlive()) return;
                     if (livingEntity.getHealth() <= 0.0F) {

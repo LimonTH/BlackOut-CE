@@ -1,6 +1,8 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -18,6 +20,7 @@ import java.time.format.DateTimeFormatter;
  * individual modules (AutoCrystal, Surround, etc.) is future work.
  * Call {@link #log(String, String)} from module action methods.
  */
+@Internal
 public class AuditLogger {
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -26,14 +29,19 @@ public class AuditLogger {
 
     private static boolean enabled = false;
 
-    public static void enable() { enabled = true; }
-    public static void disable() { enabled = false; }
+    public static void enable() {
+        enabled = true;
+    }
+
+    public static void disable() {
+        enabled = false;
+    }
 
     /**
      * Records an auditable action.
      *
-     * @param module  the module that performed the action
-     * @param action  description of what was done (e.g., "placed obsidian at 10,64,-5")
+     * @param module the module that performed the action
+     * @param action description of what was done (e.g., "placed obsidian at 10,64,-5")
      */
     public static void log(String module, String action) {
         if (!enabled) return;
@@ -56,12 +64,16 @@ public class AuditLogger {
         log(module, "sent " + packetType);
     }
 
-    /** Returns the size of the log file in bytes, or -1 if unreadable. */
+    /**
+     * Returns the size of the log file in bytes, or -1 if unreadable.
+     */
     public static long getLogSize() {
         return LOG_FILE.exists() ? LOG_FILE.length() : 0;
     }
 
-    /** Truncates the audit log, keeping only the last N bytes. */
+    /**
+     * Truncates the audit log, keeping only the last N bytes.
+     */
     public static void rotate(long maxBytes) {
         if (LOG_FILE.exists() && LOG_FILE.length() > maxBytes) {
             // Simple rotation: rename old, start fresh

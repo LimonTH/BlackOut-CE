@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.module.modules.visual.world;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Experimental;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.BlockStateEvent;
 import bodevelopment.client.blackout.event.events.GameJoinEvent;
@@ -12,8 +13,6 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.BoxMultiSetting;
 import bodevelopment.client.blackout.util.BoxUtils;
-import java.util.*;
-import java.util.concurrent.*;
 import net.minecraft.client.multiplayer.ClientChunkCache;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -24,6 +23,12 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ForkJoinPool;
+
+@Experimental
 public class Search extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRender = this.addGroup("Visuals");
@@ -34,11 +39,11 @@ public class Search extends Module {
 
     private final ForkJoinPool pool = new ForkJoinPool();
 
-    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Target Blocks", "The specific block types to locate.").onChanged(ignored -> refresh());;
+    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Target Blocks", "The specific block types to locate.").onChanged(ignored -> refresh());
     private final Setting<Boolean> dynamicBox = this.sgGeneral.booleanSetting("Voxel Bounds", true, "Adjusts highlight to match the exact block shape.").onChanged(ignored -> refresh());
     private final Setting<Boolean> instantScan = this.sgGeneral.booleanSetting("Force Scan", false, "Scans all loaded chunks immediately.");
     private final Setting<Integer> scanSpeed = this.sgGeneral.intSetting("Iteration Rate", 1, 1, 10, 1, "Chunks per frame during scan.", () -> !this.instantScan.get());
-    private final Setting<Boolean> onlyExposed = this.sgGeneral.booleanSetting("Culling", false, "Only highlights blocks exposed to air.").onChanged(ignored -> refresh());;
+    private final Setting<Boolean> onlyExposed = this.sgGeneral.booleanSetting("Culling", false, "Only highlights blocks exposed to air.").onChanged(ignored -> refresh());
 
     private final BoxMultiSetting rendering = BoxMultiSetting.of(this.sgRender);
 
@@ -47,10 +52,14 @@ public class Search extends Module {
     }
 
     @Override
-    public void onEnable() { this.reset(); }
+    public void onEnable() {
+        this.reset();
+    }
 
     @Event
-    public void onJoin(GameJoinEvent event) { this.reset(); }
+    public void onJoin(GameJoinEvent event) {
+        this.reset();
+    }
 
     @Event
     public void onTick(TickEvent.Post event) {
@@ -215,5 +224,6 @@ public class Search extends Module {
         return BoxUtils.get(pos);
     }
 
-    private record FoundBlock(Block block, BlockPos pos) {}
+    private record FoundBlock(Block block, BlockPos pos) {
+    }
 }

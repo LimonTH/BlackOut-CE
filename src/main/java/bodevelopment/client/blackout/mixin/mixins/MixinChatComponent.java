@@ -1,9 +1,15 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.interfaces.mixin.IChatComponent;
 import bodevelopment.client.blackout.interfaces.mixin.IGuiMessage;
 import bodevelopment.client.blackout.interfaces.mixin.ILine;
 import bodevelopment.client.blackout.module.modules.misc.AntiSpam;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.GuiMessage;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.ChatComponent;
+import net.minecraft.network.chat.Component;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,22 +21,29 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.GuiMessage;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.ChatComponent;
-import net.minecraft.network.chat.Component;
 
 @Mixin(ChatComponent.class)
+@Internal
 public abstract class MixinChatComponent implements IChatComponent {
-    @Shadow @Final private Minecraft minecraft;
-    @Shadow @Final private List<GuiMessage> allMessages;
-    @Shadow @Final private List<GuiMessage.Line> trimmedMessages;
-    @Shadow public abstract void addMessage(Component text);
+    @Shadow
+    @Final
+    private Minecraft minecraft;
+    @Shadow
+    @Final
+    private List<GuiMessage> allMessages;
+    @Shadow
+    @Final
+    private List<GuiMessage.Line> trimmedMessages;
 
-    @Unique private int addedId = -1;
-    @Unique private int lastSpamCount = 1;
-    @Unique private Component originalContent = null;
+    @Shadow
+    public abstract void addMessage(Component text);
+
+    @Unique
+    private int addedId = -1;
+    @Unique
+    private int lastSpamCount = 1;
+    @Unique
+    private Component originalContent = null;
 
     @Override
     public void blackout_Client$addMessageToChat(Component text, int id) {

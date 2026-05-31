@@ -2,10 +2,11 @@ package bodevelopment.client.blackout.command.commands;
 
 import bodevelopment.client.blackout.command.Command;
 import bodevelopment.client.blackout.manager.Managers;
+import net.minecraft.ChatFormatting;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import net.minecraft.ChatFormatting;
 
 public class HelpCommand extends Command {
     public HelpCommand() {
@@ -26,7 +27,7 @@ public class HelpCommand extends Command {
 
         for (Command cmd : sorted) {
             sb.append(ChatFormatting.GREEN).append(cmd.name)
-              .append(ChatFormatting.GRAY).append(" - ").append(cmd.format);
+                    .append(ChatFormatting.GRAY).append(" - ").append(cmd.format);
             if (cmd != sorted.getLast()) {
                 sb.append("\n");
             }

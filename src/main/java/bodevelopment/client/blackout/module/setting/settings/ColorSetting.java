@@ -12,9 +12,10 @@ import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import java.awt.*;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
+
+import java.awt.*;
 
 public class ColorSetting extends Setting<BlackOutColor> {
     public int theme = 0;

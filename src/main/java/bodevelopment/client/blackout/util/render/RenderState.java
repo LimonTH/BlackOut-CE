@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.util.render;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.CoreShaders;
 
@@ -7,10 +9,11 @@ import net.minecraft.client.renderer.CoreShaders;
  * AutoCloseable GL state management. Automatically restores state on close.
  * <p>
  * Usage:
- *   try (RenderState state = RenderState.blend2D()) {
- *       // draw calls
- *   }
+ * try (RenderState state = RenderState.blend2D()) {
+ * // draw calls
+ * }
  */
+@Internal
 public class RenderState implements AutoCloseable {
     private final Runnable restore;
 

@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.visual.entities;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.event.Event;
@@ -13,6 +12,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.util.render.WireframeRenderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
@@ -37,6 +37,7 @@ public class PopChams extends Module {
     private final Setting<BlackOutColor> sideColor = this.sgGeneral.colorSetting("Face Color", new BlackOutColor(255, 255, 255, 50), "The color applied to the polygon faces of the model.");
 
     private final TimerList<Pop> pops = new TimerList<>(true);
+
     public PopChams() {
         super("Pop Chams", "Renders a temporary, translucent phantom of a player's model at the exact position where they 'popped' a Totem of Undying.", SubCategory.ENTITIES, true);
         INSTANCE = this;

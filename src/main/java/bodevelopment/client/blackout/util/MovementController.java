@@ -15,9 +15,13 @@ import bodevelopment.client.blackout.module.Module;
  * with a single call to {@link #applyHorizontalMotion}.
  */
 public final class MovementController {
-    /** Vanilla anti-kick offset: the minimal downward velocity to satisfy the server's movement check. */
+    /**
+     * Vanilla anti-kick offset: the minimal downward velocity to satisfy the server's movement check.
+     */
     public static final double ANTI_KICK_OFFSET = -0.0315;
-    /** Vanilla walking speed constant (blocks/tick). */
+    /**
+     * Vanilla walking speed constant (blocks/tick).
+     */
     public static final double VANILLA_WALK_SPEED = 0.2873;
 
     private MovementController() {
@@ -28,9 +32,9 @@ public final class MovementController {
      * Applies horizontal motion using the module's movement yaw and the given speed.
      * Standard pattern used by Flight, Speed, Strafe, Jesus, etc.
      *
-     * @param event the move event to modify
+     * @param event  the move event to modify
      * @param module the calling module (for event attribution)
-     * @param speed horizontal speed in blocks/tick
+     * @param speed  horizontal speed in blocks/tick
      */
     public static void applyHorizontalMotion(MoveEvent.Pre event, Module module, double speed) {
         double yaw = Managers.ROTATION.moveYaw;
@@ -63,8 +67,8 @@ public final class MovementController {
      * }</pre>
      *
      * @param tickCounter mutable tick counter (caller must reset to 0 when kick applied)
-     * @param delay ticks between anti-kick applications
-     * @param currentY the current Y velocity to compare against
+     * @param delay       ticks between anti-kick applications
+     * @param currentY    the current Y velocity to compare against
      * @return {@code Math.min(currentY, ANTI_KICK_OFFSET)} if kick needed, else {@code currentY}
      */
     public static double applyAntiKick(int tickCounter, int delay, double currentY) {

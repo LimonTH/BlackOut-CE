@@ -1,22 +1,23 @@
 package bodevelopment.client.blackout.manager.managers;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.OnlyDev;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.enums.BindMode;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.KeyEvent;
 import bodevelopment.client.blackout.event.events.MouseButtonEvent;
 import bodevelopment.client.blackout.event.events.RenderEvent;
-import bodevelopment.client.blackout.hud.elements.Arraylist;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.module.AbstractModule;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.util.*;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+@PublicAPI
 public class ModuleManager extends Manager {
     private final List<AbstractModule> modules = new ArrayList<>();
 

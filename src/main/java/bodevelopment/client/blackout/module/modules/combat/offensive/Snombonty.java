@@ -1,8 +1,5 @@
 package bodevelopment.client.blackout.module.modules.combat.offensive;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
-import bodevelopment.client.blackout.util.InvUtils;
-
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.enums.RotationType;
@@ -19,9 +16,7 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.randomstuff.ExtrapolationMap;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.randomstuff.Rotation;
-import bodevelopment.client.blackout.util.BoxUtils;
-import bodevelopment.client.blackout.util.MathUtils;
-import bodevelopment.client.blackout.util.ProjectileUtils;
+import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -34,6 +29,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 

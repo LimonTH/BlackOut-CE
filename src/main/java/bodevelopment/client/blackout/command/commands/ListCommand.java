@@ -4,9 +4,9 @@ import bodevelopment.client.blackout.command.Command;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.ParentCategory;
-import bodevelopment.client.blackout.module.SubCategory;
-import java.util.*;
 import net.minecraft.ChatFormatting;
+
+import java.util.*;
 
 public class ListCommand extends Command {
     public ListCommand() {

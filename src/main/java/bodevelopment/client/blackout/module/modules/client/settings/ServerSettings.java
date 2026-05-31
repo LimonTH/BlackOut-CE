@@ -22,6 +22,7 @@ public class ServerSettings extends SettingsModule {
             "Modifies packet order to send interaction packets before movement updates, helping with action-sequence validation on GrimAC.");
     public final Setting<Boolean> grimUsing = this.sgGeneral.booleanSetting("Grim Using", false,
             "Injects a dedicated rotation packet immediately before any interaction (like using an item) to ensure the server sees you looking at the target on that specific frame.");
+
     public ServerSettings() {
         super("Server", false, true);
         INSTANCE = this;

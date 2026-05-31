@@ -4,9 +4,10 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.command.Command;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.manager.managers.FriendsManager;
+import net.minecraft.client.multiplayer.PlayerInfo;
+
 import java.util.Collections;
 import java.util.List;
-import net.minecraft.client.multiplayer.PlayerInfo;
 
 public class FriendCommand extends Command {
     public FriendCommand() {

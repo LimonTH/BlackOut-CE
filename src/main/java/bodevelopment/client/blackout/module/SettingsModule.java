@@ -1,12 +1,14 @@
 package bodevelopment.client.blackout.module;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 
 /**
  * Non-toggleable module that serves as a global settings panel.
  * Unlike {@link Module}, it has no keybind, no enabled/disabled state,
  * and its event listeners are always active.
  */
+@PublicAPI
 public class SettingsModule extends AbstractModule {
     public SettingsModule(String name, boolean client, boolean subscribe) {
         super(name, "Global " + name.toLowerCase() + " settings for all BlackOut modules.", client ? SubCategory.CLIENT : SubCategory.SETTINGS);

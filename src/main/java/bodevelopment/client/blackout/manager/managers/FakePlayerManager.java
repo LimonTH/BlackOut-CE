@@ -8,8 +8,6 @@ import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.randomstuff.FakePlayerEntity;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.DamageUtils;
-import java.util.ArrayList;
-import java.util.List;
 import net.minecraft.network.protocol.game.ClientboundExplodePacket;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -21,6 +19,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class FakePlayerManager extends Manager {
     public final List<FakePlayerEntity> fakePlayers = new ArrayList<>();

@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
 import net.minecraft.client.CloudStatus;
 import net.minecraft.client.Options;
@@ -9,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Options.class)
+@Internal
 public class MixinOptions {
     @Inject(method = "getCloudsType", at = @At("HEAD"), cancellable = true)
     private void onGetCloudsType(CallbackInfoReturnable<CloudStatus> cir) {

@@ -1,12 +1,13 @@
 package bodevelopment.client.blackout.util.render.consumers;
 
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
-import com.mojang.blaze3d.vertex.VertexConsumer;
+
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.world.phys.Vec3;
 
 public class ModelVertexConsumer implements VertexConsumer {
     public final List<List<Vec3>> parts = new ArrayList<>();
@@ -64,8 +65,12 @@ public class ModelVertexConsumer implements VertexConsumer {
     }
 
     private void addTriangle(Vec3 v1, Vec3 v2, Vec3 v3) {
-        vertices.add(v1); vertices.add(v2); vertices.add(v3);
-        currentPart.add(v1); currentPart.add(v2); currentPart.add(v3);
+        vertices.add(v1);
+        vertices.add(v2);
+        vertices.add(v3);
+        currentPart.add(v1);
+        currentPart.add(v2);
+        currentPart.add(v3);
     }
 
     public void fixRemaining() {
@@ -75,11 +80,30 @@ public class ModelVertexConsumer implements VertexConsumer {
         }
     }
 
-    @Override public @NotNull VertexConsumer setColor(int r, int g, int b, int a) { return this; }
-    @Override public @NotNull VertexConsumer setUv(float u, float v) { return this; }
-    @Override public @NotNull VertexConsumer setUv1(int u, int v) { return this; }
-    @Override public @NotNull VertexConsumer setUv2(int u, int v) { return this; }
-    @Override public @NotNull VertexConsumer setNormal(float x, float y, float z) { return this; }
+    @Override
+    public @NotNull VertexConsumer setColor(int r, int g, int b, int a) {
+        return this;
+    }
+
+    @Override
+    public @NotNull VertexConsumer setUv(float u, float v) {
+        return this;
+    }
+
+    @Override
+    public @NotNull VertexConsumer setUv1(int u, int v) {
+        return this;
+    }
+
+    @Override
+    public @NotNull VertexConsumer setUv2(int u, int v) {
+        return this;
+    }
+
+    @Override
+    public @NotNull VertexConsumer setNormal(float x, float y, float z) {
+        return this;
+    }
 
     public record Wrapper(ModelVertexConsumer parent) implements VertexConsumer {
         @Override
@@ -94,10 +118,29 @@ public class ModelVertexConsumer implements VertexConsumer {
             return this;
         }
 
-        @Override public @NotNull VertexConsumer setColor(int r, int g, int b, int a) { return this; }
-        @Override public @NotNull VertexConsumer setUv(float u, float v) { return this; }
-        @Override public @NotNull VertexConsumer setUv1(int u, int v) { return this; }
-        @Override public @NotNull VertexConsumer setUv2(int u, int v) { return this; }
-        @Override public @NotNull VertexConsumer setNormal(float x, float y, float z) { return this; }
+        @Override
+        public @NotNull VertexConsumer setColor(int r, int g, int b, int a) {
+            return this;
+        }
+
+        @Override
+        public @NotNull VertexConsumer setUv(float u, float v) {
+            return this;
+        }
+
+        @Override
+        public @NotNull VertexConsumer setUv1(int u, int v) {
+            return this;
+        }
+
+        @Override
+        public @NotNull VertexConsumer setUv2(int u, int v) {
+            return this;
+        }
+
+        @Override
+        public @NotNull VertexConsumer setNormal(float x, float y, float z) {
+            return this;
+        }
     }
 }

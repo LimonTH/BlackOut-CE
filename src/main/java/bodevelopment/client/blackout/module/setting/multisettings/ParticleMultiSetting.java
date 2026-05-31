@@ -5,9 +5,10 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
+import net.minecraft.world.phys.Vec3;
+
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
-import net.minecraft.world.phys.Vec3;
 
 public class ParticleMultiSetting {
     private static final Function<Double, Vec3> randomMotion = speed -> {

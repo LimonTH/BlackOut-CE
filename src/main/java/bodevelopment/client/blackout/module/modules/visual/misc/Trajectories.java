@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.visual.misc;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
@@ -15,42 +14,24 @@ import bodevelopment.client.blackout.module.modules.visual.entities.Trails;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
-import bodevelopment.client.blackout.util.ColorUtils;
-import net.minecraft.util.ARGB;
-import bodevelopment.client.blackout.util.DamageUtils;
-import bodevelopment.client.blackout.util.BlockUtils;
-import bodevelopment.client.blackout.util.EntityUtils;
-import bodevelopment.client.blackout.util.MathUtils;
-import bodevelopment.client.blackout.util.RotationUtils;
+import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import bodevelopment.client.blackout.util.render.RenderState;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
-import net.minecraft.world.item.BowItem;
-import net.minecraft.world.item.CrossbowItem;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.ChargedProjectiles;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.EntityHitResult;
-import net.minecraft.world.phys.HitResult;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.*;
 import org.apache.commons.lang3.mutable.MutableDouble;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
@@ -222,7 +203,7 @@ public class Trajectories extends Module {
                             matrix4f, (float) (vec.x - camPos.x), (float) (vec.y - camPos.y), (float) (vec.z - camPos.z)
                     )
                     .setColor(color.getRed() / 255.0F, color.getGreen() / 255.0F, color.getBlue() / 255.0F, color.getAlpha() / 255.0F)
-                    ;
+            ;
         };
         double totalDist = prevPos.distanceTo(pos);
         if (dist.getValue() <= this.fadeLength.get()) {
@@ -413,7 +394,8 @@ public class Trajectories extends Module {
             DoubleFunction<ItemStack, Float, Vec3> startPos,
             Function<ItemStack, double[]> speed,
             DoubleConsumer<AABB, double[]> physics
-    ) {}
+    ) {
+    }
 
     private boolean isChargedWith(ItemStack crossbowStack, Item projectileItem) {
         if (!(crossbowStack.getItem() instanceof CrossbowItem)) return false;

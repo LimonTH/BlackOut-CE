@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -11,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ItemRenderer.class)
+@Internal
 public class MixinItemRenderer {
     @Inject(method = "getFoilBuffer", at = @At("HEAD"), cancellable = true)
     private static void onGetFoilBuffer(MultiBufferSource multiBufferSource, RenderType renderType, boolean bl, boolean hasFoil, CallbackInfoReturnable<VertexConsumer> cir) {

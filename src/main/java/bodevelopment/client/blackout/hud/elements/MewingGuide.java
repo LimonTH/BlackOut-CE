@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.hud.elements;
 
-import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
@@ -18,9 +17,9 @@ public class MewingGuide extends HudElement {
     @Override
     public void render() {
         TextureRenderer t = BOTextures.getMewingIconRenderer();
-            float width = t.getWidth() / 4.0F;
-            float height = t.getHeight() / 4.0F;
-            this.setSize(width, height);
+        float width = t.getWidth() / 4.0F;
+        float height = t.getHeight() / 4.0F;
+        this.setSize(width, height);
         t.quad(this.stack, 0.0F, 0.0F, width, height);
     }
 }

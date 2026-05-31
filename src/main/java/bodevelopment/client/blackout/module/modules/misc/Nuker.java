@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.enums.RotationType;
@@ -21,10 +20,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.randomstuff.Pair;
-import bodevelopment.client.blackout.util.BlockUtils;
-import bodevelopment.client.blackout.util.BoxUtils;
-import bodevelopment.client.blackout.util.InvUtils;
-import bodevelopment.client.blackout.util.SettingUtils;
+import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -40,6 +36,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -202,9 +199,9 @@ public class Nuker extends Module {
                     .stack();
             return this.ncpProgress.get()
                     ? this.minedFor
-                    / (
+                      / (
                     1.0
-                            / BlockUtils.getBlockBreakingDelta(
+                    / BlockUtils.getBlockBreakingDelta(
                             itemStack, BlackOut.mc.level.getBlockState(this.minePos), this.minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get()
                     )
             )
@@ -397,7 +394,7 @@ public class Nuker extends Module {
     private boolean itemMinedCheck(ItemStack stack) {
         return this.ncpProgress.get()
                 ? this.minedFor * this.speed.get()
-                >= Math.ceil(1.0 / BlockUtils.getBlockBreakingDelta(this.minePos, stack, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get()))
+                  >= Math.ceil(1.0 / BlockUtils.getBlockBreakingDelta(this.minePos, stack, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get()))
                 : this.progress * this.speed.get() >= 1.0;
     }
 
@@ -411,7 +408,7 @@ public class Nuker extends Module {
         } else {
             return this.ncpProgress.get()
                     ? this.minedFor + 2
-                    >= Math.ceil(
+                      >= Math.ceil(
                     1.0 / BlockUtils.getBlockBreakingDelta(this.minePos, stack, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get())
             )
                     : this.progress >= 0.9;

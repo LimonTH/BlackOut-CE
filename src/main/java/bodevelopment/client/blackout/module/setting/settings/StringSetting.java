@@ -13,7 +13,9 @@ import com.google.gson.JsonObject;
 import java.awt.*;
 
 public class StringSetting extends Setting<String> {
-    private final TextField textField = new TextField() {{ setMaxLength(64); }};
+    private final TextField textField = new TextField() {{
+        setMaxLength(64);
+    }};
     private final int id = SelectedComponent.nextId();
 
     public StringSetting(String name, String val, String description, SingleOut<Boolean> visible) {
@@ -70,9 +72,9 @@ public class StringSetting extends Setting<String> {
     @Override
     public void onKey(int key, boolean pressed) {
         if (SelectedComponent.is(this.id)) {
-                this.textField.type(key, pressed);
-                this.setValue(this.textField.getContent());
-                Managers.CONFIG.saveAll();
+            this.textField.type(key, pressed);
+            this.setValue(this.textField.getContent());
+            Managers.CONFIG.saveAll();
         }
     }
 

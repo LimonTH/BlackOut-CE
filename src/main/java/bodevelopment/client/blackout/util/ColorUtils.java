@@ -1,10 +1,16 @@
 package bodevelopment.client.blackout.util;
 
+import bodevelopment.client.blackout.annotations.NoAlloc;
+import bodevelopment.client.blackout.annotations.PublicAPI;
+
 
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
+
 import java.awt.*;
 
+@PublicAPI
+@NoAlloc
 public class ColorUtils {
     public static Color SHADOW100 = new Color(0, 0, 0, 100);
     public static int SHADOW100I = SHADOW100.getRGB();

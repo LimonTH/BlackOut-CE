@@ -9,18 +9,19 @@ import net.minecraft.data.registries.VanillaRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.*;
-import net.minecraft.world.level.levelgen.*;
 import net.minecraft.world.level.levelgen.DensityFunction;
+import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
+import net.minecraft.world.level.levelgen.RandomState;
 
 import java.util.Set;
 
 public class SeedBiomeSource {
     private static final Set<ResourceKey<Biome>> OCEAN_BIOMES = Set.of(
-        Biomes.OCEAN, Biomes.DEEP_OCEAN,
-        Biomes.COLD_OCEAN, Biomes.DEEP_COLD_OCEAN,
-        Biomes.WARM_OCEAN, Biomes.LUKEWARM_OCEAN,
-        Biomes.DEEP_LUKEWARM_OCEAN,
-        Biomes.FROZEN_OCEAN, Biomes.DEEP_FROZEN_OCEAN
+            Biomes.OCEAN, Biomes.DEEP_OCEAN,
+            Biomes.COLD_OCEAN, Biomes.DEEP_COLD_OCEAN,
+            Biomes.WARM_OCEAN, Biomes.LUKEWARM_OCEAN,
+            Biomes.DEEP_LUKEWARM_OCEAN,
+            Biomes.FROZEN_OCEAN, Biomes.DEEP_FROZEN_OCEAN
     );
 
     private static HolderLookup.Provider vanillaRegistries;
@@ -118,7 +119,9 @@ public class SeedBiomeSource {
         return BiomeColorMap.getHeight(getBiome(blockX, blockZ));
     }
 
-    /** Returns color in low 32 bits, height in bits 32-63 (single biome lookup). */
+    /**
+     * Returns color in low 32 bits, height in bits 32-63 (single biome lookup).
+     */
     public long getBiomeSurfaceData(int blockX, int blockZ) {
         return BiomeColorMap.getSurfaceData(getBiome(blockX, blockZ));
     }
@@ -143,16 +146,16 @@ public class SeedBiomeSource {
                     boolean edgeX = Math.abs(dqx) == dq;
                     if (!edgeX && !edgeZ) continue; // only check the border of each ring
                     ResourceKey<Biome> biome = getBiomeAt(
-                        QuartPos.toBlock(quartX + dqx), OPTIMAL_Y, QuartPos.toBlock(quartZ + dqz)
+                            QuartPos.toBlock(quartX + dqx), OPTIMAL_Y, QuartPos.toBlock(quartZ + dqz)
                     );
                     if (!OCEAN_BIOMES.contains(biome)) {
                         int foundBlock = QuartPos.toBlock(quartX + dqx);
                         int foundBlockZ = QuartPos.toBlock(quartZ + dqz);
-                        return new int[]{ foundBlock >> 4, foundBlockZ >> 4 };
+                        return new int[]{foundBlock >> 4, foundBlockZ >> 4};
                     }
                 }
             }
         }
-        return new int[]{ chunkX, chunkZ };
+        return new int[]{chunkX, chunkZ};
     }
 }

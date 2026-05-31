@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.misc.memes;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
@@ -10,8 +9,10 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.ChatUtils;
-import java.util.concurrent.ThreadLocalRandom;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import net.minecraft.world.entity.player.Player;
+
+import java.util.concurrent.ThreadLocalRandom;
 
 public class AutoMoan extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");

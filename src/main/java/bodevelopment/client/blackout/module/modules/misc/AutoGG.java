@@ -1,12 +1,11 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
-import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.util.ChatUtils;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 
 public class AutoGG extends Module {

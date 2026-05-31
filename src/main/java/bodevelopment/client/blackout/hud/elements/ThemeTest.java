@@ -28,40 +28,40 @@ public class ThemeTest extends HudElement {
     @Override
     public void render() {
         this.stack.pushPose();
-            this.setSize(20.0F, 20.0F);
-            ThemeSettings themeSettings = ThemeSettings.getInstance();
-            this.i = 0;
-            this.x = 0.0F;
-            this.y = 0.0F;
-            themeSettings.getThemes()
-                    .forEach(
-                            theme -> {
-                                if (this.useBlur.get()) {
-                                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(this.x, this.y, 100.0F, 30.0F, 2.0F, 10));
-                                    Renderer.onHUDBlur();
-                                }
-
-                                Render2DUtils.tenaRounded(
-                                        this.stack,
-                                        this.x,
-                                        this.y,
-                                        100.0F,
-                                        30.0F,
-                                        2.0F,
-                                        this.shadow.get() ? 2.0F : 0.0F,
-                                        theme.mainWithAlpha(175),
-                                        theme.secondaryWithAlpha(175),
-                                        1.5F
-                                );
-                                BlackOut.BOLD_FONT.text(this.stack, theme.getName(), 1.0F, this.x + 50.0F, this.y + 15.0F, Color.WHITE.getRGB(), true, true);
-                                this.i++;
-                                this.x += 108.0F;
-                                if (this.i % 5 == 0) {
-                                    this.y += 38.0F;
-                                    this.x = 0.0F;
-                                }
+        this.setSize(20.0F, 20.0F);
+        ThemeSettings themeSettings = ThemeSettings.getInstance();
+        this.i = 0;
+        this.x = 0.0F;
+        this.y = 0.0F;
+        themeSettings.getThemes()
+                .forEach(
+                        theme -> {
+                            if (this.useBlur.get()) {
+                                Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(this.x, this.y, 100.0F, 30.0F, 2.0F, 10));
+                                Renderer.onHUDBlur();
                             }
-                    );
+
+                            Render2DUtils.tenaRounded(
+                                    this.stack,
+                                    this.x,
+                                    this.y,
+                                    100.0F,
+                                    30.0F,
+                                    2.0F,
+                                    this.shadow.get() ? 2.0F : 0.0F,
+                                    theme.mainWithAlpha(175),
+                                    theme.secondaryWithAlpha(175),
+                                    1.5F
+                            );
+                            BlackOut.BOLD_FONT.text(this.stack, theme.getName(), 1.0F, this.x + 50.0F, this.y + 15.0F, Color.WHITE.getRGB(), true, true);
+                            this.i++;
+                            this.x += 108.0F;
+                            if (this.i % 5 == 0) {
+                                this.y += 38.0F;
+                                this.x = 0.0F;
+                            }
+                        }
+                );
         this.stack.popPose();
     }
 }

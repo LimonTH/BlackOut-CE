@@ -1,6 +1,9 @@
 package bodevelopment.client.blackout.util;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import com.google.common.hash.Hashing;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URI;
@@ -9,6 +12,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+@Internal
 public class BlocklistUtil {
     private static final Set<String> BLOCKED_HASHES = new HashSet<>();
     private static boolean loaded = false;
@@ -21,7 +25,8 @@ public class BlocklistUtil {
                     reader.lines().forEach(line -> BLOCKED_HASHES.add(line.trim().toLowerCase()));
                 }
                 loaded = true;
-            } catch (Exception ignored) { }
+            } catch (Exception ignored) {
+            }
         });
     }
 

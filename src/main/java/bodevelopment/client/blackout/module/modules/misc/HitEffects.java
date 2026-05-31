@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
@@ -13,16 +12,18 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.ParticleMultiSetting;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.BoxUtils;
-import bodevelopment.client.blackout.util.SoundUtils;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.util.ScreenUtils;
+import bodevelopment.client.blackout.util.SoundUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
-import java.util.List;
 import net.minecraft.network.protocol.game.ServerboundInteractPacket;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+
+import java.util.List;
 
 public class HitEffects extends Module {
     private final SettingGroup sgEntities = this.addGroup("Entities");
@@ -45,6 +46,7 @@ public class HitEffects extends Module {
 
     private final PoseStack stack = new PoseStack();
     private long startedDraw = System.currentTimeMillis();
+
     public HitEffects() {
         super("Hit Effects", "Provides visual and auditory feedback, such as hitmarkers and custom sounds, when successfully attacking entities.", SubCategory.MISC, true);
     }

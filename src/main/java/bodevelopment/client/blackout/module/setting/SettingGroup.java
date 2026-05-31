@@ -1,17 +1,20 @@
 package bodevelopment.client.blackout.module.setting;
 
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.interfaces.functional.EpicInterface;
 import bodevelopment.client.blackout.interfaces.functional.SingleOut;
 import bodevelopment.client.blackout.keys.KeyBind;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Predicate;
 import net.minecraft.core.Registry;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
+
+@PublicAPI
 public class SettingGroup {
     public final String name;
     public final List<Setting<?>> settings = new ArrayList<>();

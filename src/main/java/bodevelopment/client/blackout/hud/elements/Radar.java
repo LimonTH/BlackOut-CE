@@ -14,11 +14,12 @@ import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
-import java.awt.*;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+
+import java.awt.*;
 
 public class Radar extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -78,21 +79,21 @@ public class Radar extends HudElement {
 
             for (Player player : BlackOut.mc.level.players()) {
                 if (player != BlackOut.mc.player && this.shouldRender(player)) {
-                boolean isFriend = Managers.FRIENDS.isFriend(player);
-                double dist = player.position().subtract(BlackOut.mc.player.position()).horizontalDistance();
-                double yaw = RotationUtils.getYaw(player.position());
-                yaw = Math.toRadians(Mth.wrapDegrees(yaw - BlackOut.mc.player.getYRot() - 90.0));
-                float x = (float) (Math.cos(yaw) * dist);
-                float z = (float) (Math.sin(yaw) * dist);
-                x /= this.range.get();
-                if (!(Math.abs(x) >= 1.0F)) {
-                    x *= 20.0F;
-                    z /= this.range.get();
-                    if (!(Math.abs(z) >= 1.0F)) {
-                        z *= 20.0F;
-                        this.renderEnemy(this.stack, x, z, isFriend);
+                    boolean isFriend = Managers.FRIENDS.isFriend(player);
+                    double dist = player.position().subtract(BlackOut.mc.player.position()).horizontalDistance();
+                    double yaw = RotationUtils.getYaw(player.position());
+                    yaw = Math.toRadians(Mth.wrapDegrees(yaw - BlackOut.mc.player.getYRot() - 90.0));
+                    float x = (float) (Math.cos(yaw) * dist);
+                    float z = (float) (Math.sin(yaw) * dist);
+                    x /= this.range.get();
+                    if (!(Math.abs(x) >= 1.0F)) {
+                        x *= 20.0F;
+                        z /= this.range.get();
+                        if (!(Math.abs(z) >= 1.0F)) {
+                            z *= 20.0F;
+                            this.renderEnemy(this.stack, x, z, isFriend);
+                        }
                     }
-                }
                 }
             }
         }

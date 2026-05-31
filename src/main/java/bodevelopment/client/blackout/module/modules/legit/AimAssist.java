@@ -20,11 +20,11 @@ public class AimAssist extends Module {
 
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    private final Setting<Double> range = sgGeneral.doubleSetting("Range", 6.0,  1.0, 10.0,  0.1,  "Maximum range to target players.");
-    private final Setting<Double> strength = sgGeneral.doubleSetting("Strength", 0.1,  0.01, 1.0,  0.01, "Aiming speed towards the target.");
+    private final Setting<Double> range = sgGeneral.doubleSetting("Range", 6.0, 1.0, 10.0, 0.1, "Maximum range to target players.");
+    private final Setting<Double> strength = sgGeneral.doubleSetting("Strength", 0.1, 0.01, 1.0, 0.01, "Aiming speed towards the target.");
     private final Setting<Double> fov = sgGeneral.doubleSetting("FOV", 90.0, 10.0, 360.0, 1.0, "Field of view cone for target selection.");
     private final Setting<Boolean> eyeAim = sgGeneral.booleanSetting("Eye Aim", false, "Aim at eye position instead of body center.");
-    private final Setting<Boolean> dynamicStr = sgGeneral.booleanSetting("Dynamic Strength", true,  "Scale strength based on distance to target.");
+    private final Setting<Boolean> dynamicStr = sgGeneral.booleanSetting("Dynamic Strength", true, "Scale strength based on distance to target.");
 
     private final Map<Player, Double> targetProgress = new HashMap<>();
     private double noiseOffset = Math.random() * 1000;
@@ -79,7 +79,7 @@ public class AimAssist extends Module {
             AABB bb = currentTarget.getBoundingBox();
             targetPos = new Vec3(
                     (bb.minX + bb.maxX) * 0.5 + (Math.random() - 0.5) * 0.2,
-                    (bb.minY + bb.maxY) * 0.5 + 0.3  + (Math.random() - 0.5) * 0.15,
+                    (bb.minY + bb.maxY) * 0.5 + 0.3 + (Math.random() - 0.5) * 0.15,
                     (bb.minZ + bb.maxZ) * 0.5 + (Math.random() - 0.5) * 0.2
             );
         }
@@ -93,22 +93,22 @@ public class AimAssist extends Module {
                 (eyePos.z + targetPos.z) * 0.5
         );
         Vec3 controlPoint = midPoint.add(
-                (perlinNoise(noiseOffset)     - 0.5) * 0.4,
+                (perlinNoise(noiseOffset) - 0.5) * 0.4,
                 (perlinNoise(noiseOffset + 1) - 0.5) * 0.2,
                 (perlinNoise(noiseOffset + 2) - 0.5) * 0.4
         );
         noiseOffset += 0.05;
 
         Vec3 bezierPos = bezier(eyePos, controlPoint, targetPos, t);
-        double dx   = bezierPos.x - eyePos.x;
-        double dy   = bezierPos.y - eyePos.y;
-        double dz   = bezierPos.z - eyePos.z;
+        double dx = bezierPos.x - eyePos.x;
+        double dy = bezierPos.y - eyePos.y;
+        double dz = bezierPos.z - eyePos.z;
         double dist = Math.sqrt(dx * dx + dz * dz);
 
-        float targetYaw   = (float) (Math.toDegrees(Math.atan2(dz, dx)) - 90.0);
+        float targetYaw = (float) (Math.toDegrees(Math.atan2(dz, dx)) - 90.0);
         float targetPitch = (float) (-Math.toDegrees(Math.atan2(dy, dist)));
 
-        float yawDelta   = Mth.wrapDegrees(targetYaw   - BlackOut.mc.player.getYRot());
+        float yawDelta = Mth.wrapDegrees(targetYaw - BlackOut.mc.player.getYRot());
         float pitchDelta = targetPitch - BlackOut.mc.player.getXRot();
 
         float appliedStrength = strength.get().floatValue();
@@ -117,11 +117,11 @@ public class AimAssist extends Module {
             appliedStrength *= 0.7f + 0.3f * easeOutCubic(1.0 - d);
         }
 
-        float fraction   = appliedStrength * (0.2f + (float) Math.random() * 0.3f);
-        float smoothYaw   = BlackOut.mc.player.getYRot()  + yawDelta   * fraction;
+        float fraction = appliedStrength * (0.2f + (float) Math.random() * 0.3f);
+        float smoothYaw = BlackOut.mc.player.getYRot() + yawDelta * fraction;
         float smoothPitch = BlackOut.mc.player.getXRot() + pitchDelta * fraction;
 
-        smoothYaw   += (float) ((perlinNoise(noiseOffset + 3) - 0.5) * 0.3);
+        smoothYaw += (float) ((perlinNoise(noiseOffset + 3) - 0.5) * 0.3);
         smoothPitch += (float) ((perlinNoise(noiseOffset + 4) - 0.5) * 0.3);
 
         BlackOut.mc.player.setYRot(smoothYaw);
@@ -144,7 +144,7 @@ public class AimAssist extends Module {
 
     private float easeOutCubic(double x) {
         double sign = Math.signum(x);
-        double abs  = Math.abs(x);
+        double abs = Math.abs(x);
         return (float) (sign * (1.0 - Math.pow(1.0 - abs, 3.0)));
     }
 

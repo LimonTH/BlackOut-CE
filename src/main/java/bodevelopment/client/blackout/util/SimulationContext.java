@@ -2,12 +2,13 @@ package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.interfaces.functional.DoubleConsumer;
-import java.util.List;
-import java.util.function.Consumer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
+
+import java.util.List;
+import java.util.function.Consumer;
 
 public class SimulationContext {
     public final Entity entity;

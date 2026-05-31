@@ -512,12 +512,65 @@ Place the JAR in `minecraft/mods/` alongside BlackOut Client.
 
 ### Version Compatibility
 
-Override `getMinClientVersion()` to prevent loading on incompatible client versions:
+BlackOut uses a **two-tier** compatibility system:
+
+#### Tier 1 — API Version (Primary Gate)
+
+The **API version** is the semantic contract between your addon and BlackOut.
+It is an integer that increments on breaking changes to the `@PublicAPI` surface.
+
+Your addon automatically reports the API version it was compiled against:
+
+```java
+// Inherited from BlackoutAddon — no override needed
+public int getApiVersion() { return BlackOut.API_VERSION; }
+```
+
+**How the loader interprets it:**
+
+| Condition | Result |
+|-----------|--------|
+| `addon.api > client.api` | **HARD REJECT** — addon needs a newer BlackOut |
+| `addon.api < client.api` | **SOFT WARN** — deprecated APIs may have been removed; addon may still work |
+| `addon.api == client.api` | **OK** — exact match, guaranteed compatible |
+
+> **For addon devs:** you don't need to do anything. The API version is embedded at compile time via `BlackOutInfo.API_VERSION` (sourced from `gradle.properties → api_version`).
+
+#### Tier 2 — Client Version (Optional Secondary Gate)
+
+Override `getMinClientVersion()` **only** when your addon depends on a specific
+client behaviour that is not reflected in the API version (e.g., a rendering fix,
+a non-API internal change, a specific module's behaviour):
 
 ```java
 @Override
 public String getMinClientVersion() {
-    return "1.21.4";  // Minimum BlackOut version required
+    return "2.2";  // Minimum BlackOut mod version required (dot-separated numeric)
+}
+```
+
+Format: dot-separated numeric (`"2.2"`, `"2.3.1"`). Comparison is numeric per segment
+(`"2.10" > "2.2"`).
+
+**Wildcards:** use `*` to match any value at a position:
+
+| Min version | Meaning | Matches |
+|-------------|---------|---------|
+| `"2.*"` | Any 2.x | `2.0`, `2.2`, `2.99` — but NOT `3.0` |
+| `"2.2.*"` | Any 2.2.x patch | `2.2.0`, `2.2.5` — but NOT `2.3.0` |
+| `"*"` | Any version at all | Everything (same as `null`) |
+
+> **Rule of thumb:** if your addon only uses `@PublicAPI` classes and methods,
+> you should **not** override `getMinClientVersion()`. Leave it at the default (`null`).
+> The API version check is sufficient.
+
+#### Tier 3 — Minecraft Version
+
+Handled by Fabric Loader via your addon's `fabric.mod.json`:
+
+```json
+"depends": {
+    "minecraft": "~1.21.4"
 }
 ```
 

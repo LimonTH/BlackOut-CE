@@ -1,18 +1,21 @@
 package bodevelopment.client.blackout.module.setting;
 
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.interfaces.functional.EpicInterface;
 import bodevelopment.client.blackout.interfaces.functional.SingleOut;
 import bodevelopment.client.blackout.keys.KeyBind;
 import bodevelopment.client.blackout.module.setting.settings.*;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
-import java.util.List;
-import java.util.function.Predicate;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
+import java.util.List;
+import java.util.function.Predicate;
+
+@PublicAPI
 public class Settings {
     public static Setting<Boolean> booleanSetting(String name, boolean value, String description, SingleOut<Boolean> visible) {
         return new BoolSetting(name, value, description, visible);

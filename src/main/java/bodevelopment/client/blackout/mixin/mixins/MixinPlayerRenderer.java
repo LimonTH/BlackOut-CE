@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.interfaces.mixin.IUUIDHolder;
 import bodevelopment.client.blackout.module.modules.visual.entities.PlayerModifier;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -11,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PlayerRenderer.class)
+@Internal
 public class MixinPlayerRenderer {
 
     @Inject(

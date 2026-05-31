@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.rendering.font;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.module.modules.client.GuiSettings;
@@ -11,16 +12,13 @@ import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.ColorUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL13C;
 
 import java.awt.*;
 
+@Internal
 public class CustomFontRenderer {
     private final String name;
     private final long initTime = System.currentTimeMillis();
@@ -67,7 +65,9 @@ public class CustomFontRenderer {
         return 8.0F;
     }
 
-    /** Returns the actual on-screen pixel height of a glyph rendered at the given text scale. */
+    /**
+     * Returns the actual on-screen pixel height of a glyph rendered at the given text scale.
+     */
     public float getRenderedGlyphHeight(float textScale) {
         return this.selectedFont.getGlyphHeight() * 1.5F / 8.0F * textScale;
     }

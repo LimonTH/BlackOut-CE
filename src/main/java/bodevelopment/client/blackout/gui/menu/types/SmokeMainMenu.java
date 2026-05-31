@@ -14,6 +14,7 @@ import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
+
 import java.awt.*;
 
 public class SmokeMainMenu implements MainMenuRenderer {

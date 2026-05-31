@@ -5,14 +5,15 @@ import bodevelopment.client.blackout.interfaces.functional.EpicInterface;
 import bodevelopment.client.blackout.interfaces.functional.SingleOut;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import com.google.gson.JsonElement;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
-import net.minecraft.core.Registry;
-import net.minecraft.resources.ResourceLocation;
 
 public class RegistrySetting<T> extends ListSetting<T> {
     private static final Map<Registry<?>, List<?>> registries = new HashMap<>();

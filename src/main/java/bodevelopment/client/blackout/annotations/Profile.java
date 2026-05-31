@@ -16,7 +16,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
+@PublicAPI
 public @interface Profile {
-    /** Human-readable label for this profiled operation. Defaults to method name. */
     String value() default "";
 }

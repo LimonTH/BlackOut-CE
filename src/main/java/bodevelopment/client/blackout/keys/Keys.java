@@ -28,7 +28,7 @@ public class Keys {
         names.put(346, "RALT");
         names.put(348, "MENU");
         names.put(258, "TAB");
-        names.put(32,  "SPACE");
+        names.put(32, "SPACE");
         names.put(259, "BACK");
         names.put(260, "INS");
         names.put(268, "HOME");

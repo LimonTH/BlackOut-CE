@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.visual.misc;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
@@ -11,9 +10,11 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.TextColorMultiSetting;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
+
 import java.awt.*;
 import java.util.Collection;
 
@@ -41,6 +42,7 @@ public class CustomScoreboard extends Module {
     public Color objectiveColor;
     public Collection<String> texts;
     private float y = 0.0F;
+
     public CustomScoreboard() {
         super("Scoreboard", "Provides extensive customization for the in-game scoreboard, including font overrides, background effects, and scaling.", SubCategory.MISC_VISUAL, true);
         INSTANCE = this;

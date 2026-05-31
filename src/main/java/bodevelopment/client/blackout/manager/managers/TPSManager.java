@@ -1,18 +1,20 @@
 package bodevelopment.client.blackout.manager.managers;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.ThreadSafe;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.util.CollectionUtils;
+import net.minecraft.network.protocol.game.ClientboundBundlePacket;
+import net.minecraft.network.protocol.game.ClientboundSetTimePacket;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import net.minecraft.network.protocol.game.ClientboundBundlePacket;
-import net.minecraft.network.protocol.game.ClientboundSetTimePacket;
-
+@ThreadSafe
 public class TPSManager extends Manager {
     private static final int MAX_SAMPLES = 10;
     private static final long TICK_GAP_MS = 10;

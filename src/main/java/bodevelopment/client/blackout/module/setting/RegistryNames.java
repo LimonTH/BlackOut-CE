@@ -1,10 +1,11 @@
 package bodevelopment.client.blackout.module.setting;
 
-import java.util.HashMap;
-import java.util.Map;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class RegistryNames {
     private static final Map<ParticleType<?>, String> particles = new HashMap<>();

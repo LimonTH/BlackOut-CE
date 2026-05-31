@@ -10,6 +10,7 @@ import bodevelopment.client.blackout.randomstuff.ShaderSetup;
 import bodevelopment.client.blackout.rendering.font.CustomFontRenderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import com.mojang.blaze3d.vertex.PoseStack;
+
 import java.awt.*;
 
 public class TextColorMultiSetting {

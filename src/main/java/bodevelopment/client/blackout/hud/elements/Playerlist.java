@@ -17,14 +17,15 @@ import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
+
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class Playerlist extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -56,45 +57,45 @@ public class Playerlist extends HudElement {
     @Override
     public void render() {
         this.stack.pushPose();
-            this.setSize(Math.max(this.bgLength, 10.0F), this.y + 6.0F);
-            this.currentLongest = BlackOut.FONT.getWidth("PlayersHealthPing" + (this.showPops.get() ? "pops" : ""));
-            this.currentLongestPing = BlackOut.FONT.getWidth("Ping");
-            if (this.blur.get()) {
-                Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, this.bgLength, this.y + 6.0F, 3.0F, 10));
-                Renderer.onHUDBlur();
+        this.setSize(Math.max(this.bgLength, 10.0F), this.y + 6.0F);
+        this.currentLongest = BlackOut.FONT.getWidth("PlayersHealthPing" + (this.showPops.get() ? "pops" : ""));
+        this.currentLongestPing = BlackOut.FONT.getWidth("Ping");
+        if (this.blur.get()) {
+            Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, this.bgLength, this.y + 6.0F, 3.0F, 10));
+            Renderer.onHUDBlur();
+        }
+
+        if (this.bg.get()) {
+            this.background.render(this.stack, 0.0F, 0.0F, this.bgLength, this.y + 6.0F, 3.0F, 3.0F);
+        }
+
+        this.drawText(this.stack, 0.0F, 0.0F, "Players", "Health", "Ping", "Pops", true, 0.0F, 0.0F, 0.0F);
+        this.y = 0.0F;
+        this.players.forEach(player -> {
+            AbstractClientPlayer current = (AbstractClientPlayer) player;
+            String name = this.nameMode.get().getName(current);
+            PlayerInfo entry = BlackOut.mc.getConnection().getPlayerInfo(current.getUUID());
+            int pingValue = entry == null ? 0 : entry.getLatency();
+            float healthValue = Math.round(current.getHealth() + current.getAbsorptionAmount());
+            StatsManager.TrackerData trackerData = Managers.STATS.getStats(current);
+            int popAmount = trackerData == null ? 0 : trackerData.pops;
+            String ping = String.valueOf(pingValue);
+            String health = String.valueOf(healthValue);
+            String pops = String.valueOf(popAmount);
+            if (BlackOut.FONT.getWidth(name + health + ping) > this.currentLongest) {
+                this.currentLongest = BlackOut.FONT.getWidth(name + health + ping);
             }
 
-            if (this.bg.get()) {
-                this.background.render(this.stack, 0.0F, 0.0F, this.bgLength, this.y + 6.0F, 3.0F, 3.0F);
+            if (BlackOut.FONT.getWidth(ping) > this.currentLongestPing) {
+                this.currentLongestPing = BlackOut.FONT.getWidth(ping);
             }
 
-            this.drawText(this.stack, 0.0F, 0.0F, "Players", "Health", "Ping", "Pops", true, 0.0F, 0.0F, 0.0F);
-            this.y = 0.0F;
-            this.players.forEach(player -> {
-                AbstractClientPlayer current = (AbstractClientPlayer) player;
-                String name = this.nameMode.get().getName(current);
-                PlayerInfo entry = BlackOut.mc.getConnection().getPlayerInfo(current.getUUID());
-                int pingValue = entry == null ? 0 : entry.getLatency();
-                float healthValue = Math.round(current.getHealth() + current.getAbsorptionAmount());
-                StatsManager.TrackerData trackerData = Managers.STATS.getStats(current);
-                int popAmount = trackerData == null ? 0 : trackerData.pops;
-                String ping = String.valueOf(pingValue);
-                String health = String.valueOf(healthValue);
-                String pops = String.valueOf(popAmount);
-                if (BlackOut.FONT.getWidth(name + health + ping) > this.currentLongest) {
-                    this.currentLongest = BlackOut.FONT.getWidth(name + health + ping);
-                }
-
-                if (BlackOut.FONT.getWidth(ping) > this.currentLongestPing) {
-                    this.currentLongestPing = BlackOut.FONT.getWidth(ping);
-                }
-
-                this.drawFace(this.stack, 10.0F + this.y, current.getSkin().texture());
-                this.drawText(this.stack, 8.0F, 10.0F + this.y, name, health, ping, pops, false, healthValue, pingValue, popAmount);
-                this.y += 10.0F;
-            });
-            this.longest = this.currentLongest;
-            this.longestPing = this.currentLongestPing;
+            this.drawFace(this.stack, 10.0F + this.y, current.getSkin().texture());
+            this.drawText(this.stack, 8.0F, 10.0F + this.y, name, health, ping, pops, false, healthValue, pingValue, popAmount);
+            this.y += 10.0F;
+        });
+        this.longest = this.currentLongest;
+        this.longestPing = this.currentLongestPing;
         this.stack.popPose();
     }
 

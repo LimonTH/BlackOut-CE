@@ -12,21 +12,22 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.client.BlurSettings;
 import bodevelopment.client.blackout.module.modules.client.MainMenuSettings;
 import bodevelopment.client.blackout.rendering.renderer.ColorRenderer;
-import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.PlayerUtils;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import bodevelopment.client.blackout.util.render.RenderState;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map.Entry;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map.Entry;
 
 public class HudEditor extends Screen {
     private final PoseStack stack = new PoseStack();
@@ -394,6 +395,7 @@ public class HudEditor extends Screen {
 
     /**
      * Handles ESC with sequential close logic (openedScreen → elementList → settings).
+     *
      * @return true if all sub-windows are already closed and the editor itself should close
      */
     public boolean handleEsc() {

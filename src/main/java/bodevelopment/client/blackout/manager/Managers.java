@@ -1,11 +1,13 @@
 package bodevelopment.client.blackout.manager;
 
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.manager.managers.*;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
+@PublicAPI
 public class Managers {
     public static final AltManager ALT = new AltManager();
     public static final BlockManager BLOCK = new BlockManager();

@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.event.events.RemoveEvent;
 import bodevelopment.client.blackout.interfaces.mixin.IVec3;
@@ -11,6 +12,15 @@ import bodevelopment.client.blackout.module.modules.movement.*;
 import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
 import bodevelopment.client.blackout.util.CompatUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -21,17 +31,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
-import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.MoverType;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.VoxelShape;
 
 @Mixin(Entity.class)
+@Internal
 public abstract class MixinEntity {
     @Shadow
     public abstract AABB getBoundingBox();
@@ -51,8 +53,11 @@ public abstract class MixinEntity {
     @Shadow
     public abstract Vec3 calculateViewVector(float pitch, float yaw);
 
-    @Shadow public abstract float getYRot();
-    @Shadow public abstract float getXRot();
+    @Shadow
+    public abstract float getYRot();
+
+    @Shadow
+    public abstract float getXRot();
 
     @Inject(method = "move", at = @At("HEAD"))
     private void onMove(MoverType movementType, Vec3 movement, CallbackInfo ci) {

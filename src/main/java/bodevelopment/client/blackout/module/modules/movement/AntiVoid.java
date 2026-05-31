@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
@@ -11,6 +10,7 @@ import bodevelopment.client.blackout.module.modules.client.NotificationsSettings
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.BlockUtils;
+import bodevelopment.client.blackout.util.PlayerUtils;
 
 public class AntiVoid extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");

@@ -170,7 +170,8 @@ public class AutoCrystalBase extends ObsidianModule {
                     double sDmg = getSimulatedDmg(BlackOut.mc.player, mutablePos);
                     if (sDmg > ac.getMaxSelfPlace().get()) continue;
                     if (!isFriendSafe(mutablePos, ac, tDmg)) continue;
-                    if (ac.getCheckSelfPlacing().get() && (tDmg / Math.max(sDmg, 1.0)) < ac.getMinSelfRatio().get()) continue;
+                    if (ac.getCheckSelfPlacing().get() && (tDmg / Math.max(sDmg, 1.0)) < ac.getMinSelfRatio().get())
+                        continue;
 
                     double score = tDmg + (mutablePos.equals(lastBestPos) ? scoreImprove.get() : 0);
 
@@ -254,7 +255,8 @@ public class AutoCrystalBase extends ObsidianModule {
             }
         } else {
             if (!BlockUtils.replaceable(pos)) return false;
-            if (!BlackOut.mc.level.getBlockState(crystalPos).isAir() && !BlockUtils.replaceable(crystalPos)) return false;
+            if (!BlackOut.mc.level.getBlockState(crystalPos).isAir() && !BlockUtils.replaceable(crystalPos))
+                return false;
 
             if (!hasSupport(pos, true)) return false;
         }
@@ -346,7 +348,17 @@ public class AutoCrystalBase extends ObsidianModule {
         return InvUtils.findBest(this.pickaxeSwitch.get().hotbar, this.allowInventory.get(), test);
     }
 
-    @Override protected boolean validForBlocking(Entity entity) { return false; }
-    @Override protected double getCooldown() { return 0.1 * updateDelay.get(); }
-    public static AutoCrystalBase getInstance() { return INSTANCE; }
+    @Override
+    protected boolean validForBlocking(Entity entity) {
+        return false;
+    }
+
+    @Override
+    protected double getCooldown() {
+        return 0.1 * updateDelay.get();
+    }
+
+    public static AutoCrystalBase getInstance() {
+        return INSTANCE;
+    }
 }

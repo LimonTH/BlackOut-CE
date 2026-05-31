@@ -11,11 +11,12 @@ import bodevelopment.client.blackout.module.modules.client.GuiSettings;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.GuiRenderUtils;
-import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
+import bodevelopment.client.blackout.util.render.RenderLayer;
 import com.mojang.blaze3d.vertex.PoseStack;
-import java.awt.*;
 import net.minecraft.util.Mth;
+
+import java.awt.*;
 
 public class CategoryComponent extends Component {
     public final SubCategory category;
@@ -70,7 +71,7 @@ public class CategoryComponent extends Component {
                 this.stack.translate(0, 0, RenderLayer.OFFSET_SMALL);
                 Render2DUtils.rounded(this.stack, this.x + 5.5F, barY, 0.5F, barHeight, 1.0F, fogRadius, fogColor, fogColor);
                 this.stack.translate(0, 0, RenderLayer.OFFSET_MICRO);
-                Render2DUtils.rounded(this.stack, this.x + 5, barY, 1.5F, barHeight, 1.0F, 2.0F, ColorUtils.withAlpha(barColor, (int)(animation * 255)), ColorUtils.withAlpha(barColor, (int)(animation * 255)));
+                Render2DUtils.rounded(this.stack, this.x + 5, barY, 1.5F, barHeight, 1.0F, 2.0F, ColorUtils.withAlpha(barColor, (int) (animation * 255)), ColorUtils.withAlpha(barColor, (int) (animation * 255)));
                 this.stack.translate(0, 0, -RenderLayer.OFFSET_SMALL - RenderLayer.OFFSET_MICRO);
             }
         }

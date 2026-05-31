@@ -16,12 +16,7 @@ import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import bodevelopment.client.blackout.util.render.RenderState;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.BlockHitResult;
@@ -94,21 +89,21 @@ public class Sight extends Module {
             bufferBuilder.addVertex(matrix4f, (float) start.x, (float) start.y, (float) start.z)
                     .setColor(ColorUtils.withAlpha(this.lineColor.get().getRGB(), 0))
                     .setNormal(entry, (float) normal.x, (float) normal.y, (float) normal.z)
-                    ;
+            ;
             bufferBuilder.addVertex(matrix4f, (float) lerpedPos.x, (float) lerpedPos.y, (float) lerpedPos.z)
                     .setColor(ColorUtils.withAlpha(this.lineColor.get().getRGB(), Math.min((int) (1.0 / lerpDelta * 255.0), 255)))
                     .setNormal(entry, (float) normal.x, (float) normal.y, (float) normal.z)
-                    ;
+            ;
             if (!(lerpDelta >= 1.0)) {
                 Vec3 normal2 = end.subtract(lerpedPos).normalize();
                 bufferBuilder.addVertex(matrix4f, (float) lerpedPos.x, (float) lerpedPos.y, (float) lerpedPos.z)
                         .setColor(this.lineColor.get().getRGB())
                         .setNormal(entry, (float) normal2.x, (float) normal2.y, (float) normal2.z)
-                        ;
+                ;
                 bufferBuilder.addVertex(matrix4f, (float) end.x, (float) end.y, (float) end.z)
                         .setColor(this.lineColor.get().getRGB())
                         .setNormal(entry, (float) normal2.x, (float) normal2.y, (float) normal2.z)
-                        ;
+                ;
             }
         }
     }

@@ -11,11 +11,6 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.Hole;
 import bodevelopment.client.blackout.randomstuff.timers.TimerMap;
 import bodevelopment.client.blackout.util.*;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Predicate;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -38,6 +33,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 public class Offhand extends Module {
     private final SettingGroup sgItem = this.addGroup("Item");
@@ -352,10 +353,7 @@ public class Offhand extends Module {
         if (this.inDanger(BlackOut.mc.player.getBoundingBox(), health)) {
             return true;
         }
-        if (this.prediction.get() && this.inDanger(this.predictedBox(), health)) {
-            return true;
-        }
-        return false;
+        return this.prediction.get() && this.inDanger(this.predictedBox(), health);
     }
 
     private double getHealth() {

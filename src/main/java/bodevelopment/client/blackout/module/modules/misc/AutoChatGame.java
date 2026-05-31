@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
@@ -11,11 +10,13 @@ import bodevelopment.client.blackout.module.modules.client.NotificationsSettings
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.ChatUtils;
+import bodevelopment.client.blackout.util.PlayerUtils;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
+import net.minecraft.util.Mth;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
-import net.minecraft.util.Mth;
 
 public class AutoChatGame extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -74,8 +75,7 @@ public class AutoChatGame extends Module {
 
     private double getDelay() {
         return switch (this.delayMode.get()) {
-            case Dumb ->
-                    Mth.lerp(ThreadLocalRandom.current().nextDouble(), this.minDelay.get(), this.maxDelay.get());
+            case Dumb -> Mth.lerp(ThreadLocalRandom.current().nextDouble(), this.minDelay.get(), this.maxDelay.get());
             case Smart -> this.getSmartDelay(this.message);
         };
     }

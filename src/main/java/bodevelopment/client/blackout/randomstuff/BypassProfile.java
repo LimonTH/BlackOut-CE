@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.randomstuff;
 
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,9 +23,14 @@ public class BypassProfile {
         this.name = name;
     }
 
-    public String getName() { return name; }
+    public String getName() {
+        return name;
+    }
 
-    public void set(String key, String value) { settings.put(key, value); }
+    public void set(String key, String value) {
+        settings.put(key, value);
+    }
+
     public String get(String key, String defaultValue) {
         return settings.getOrDefault(key, defaultValue);
     }
@@ -44,7 +49,7 @@ public class BypassProfile {
         if (obj.has("settings")) {
             JsonObject settingsObj = obj.getAsJsonObject("settings");
             settingsObj.entrySet().forEach(e ->
-                profile.set(e.getKey(), e.getValue().getAsString()));
+                    profile.set(e.getKey(), e.getValue().getAsString()));
         }
         return profile;
     }

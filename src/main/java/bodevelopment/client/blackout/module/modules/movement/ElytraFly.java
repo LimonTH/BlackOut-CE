@@ -59,7 +59,8 @@ public class ElytraFly extends Module {
     private int sinceFalling, sinceJump;
     private boolean sus;
 
-    private enum GlideState { DIVE, CRUISE, CLIMB }
+    private enum GlideState {DIVE, CRUISE, CLIMB}
+
     private GlideState glideState = GlideState.CRUISE;
     private boolean climbingToTarget = false;
     private double cruisePhase = 0;
@@ -75,7 +76,9 @@ public class ElytraFly extends Module {
         INSTANCE = this;
     }
 
-    public static ElytraFly getInstance() { return INSTANCE; }
+    public static ElytraFly getInstance() {
+        return INSTANCE;
+    }
 
     @Override
     public String getInfo() {
@@ -201,7 +204,8 @@ public class ElytraFly extends Module {
             event.set(this, dir.x * horizontalSpeed.get(), dir.y * verticalSpeed.get(), dir.z * horizontalSpeed.get());
         } else if (idleWobble.get()) {
             if (System.currentTimeMillis() - lastHoverTime > 500) {
-                hoverB = !hoverB; lastHoverTime = System.currentTimeMillis();
+                hoverB = !hoverB;
+                lastHoverTime = System.currentTimeMillis();
             }
             BlackOut.mc.player.setYRot(BlackOut.mc.player.getYRot() + (hoverB ? 0.4f : -0.4f));
             if (lockPitch.get()) BlackOut.mc.player.setXRot(fixedPitchValue.get().floatValue());
@@ -255,7 +259,8 @@ public class ElytraFly extends Module {
     private Vec3 getNamiControlDir() {
         float f = BlackOut.mc.player.input.forwardImpulse;
         float s = BlackOut.mc.player.input.leftImpulse;
-        if (f == 0 && s == 0 && !BlackOut.mc.options.keyJump.isDown() && !BlackOut.mc.options.keyShift.isDown()) return null;
+        if (f == 0 && s == 0 && !BlackOut.mc.options.keyJump.isDown() && !BlackOut.mc.options.keyShift.isDown())
+            return null;
         if (BlackOut.mc.options.keyJump.isDown()) return new Vec3(0, 1, 0);
         if (BlackOut.mc.options.keyShift.isDown()) return new Vec3(0, -1, 0);
         float yawRad = (float) Math.toRadians(BlackOut.mc.player.getYRot());
@@ -287,11 +292,18 @@ public class ElytraFly extends Module {
         float f = BlackOut.mc.player.input.forwardImpulse;
         float s = BlackOut.mc.player.input.leftImpulse;
         float y = BlackOut.mc.player.getYRot();
-        if (f > 0) { moving = true; y += s > 0 ? -45 : (s < 0 ? 45 : 0); }
-        else if (f < 0) { moving = true; y += s > 0 ? -135 : (s < 0 ? 135 : 180); }
-        else { moving = s != 0; y += s > 0 ? -90 : (s < 0 ? 90 : 0); }
+        if (f > 0) {
+            moving = true;
+            y += s > 0 ? -45 : (s < 0 ? 45 : 0);
+        } else if (f < 0) {
+            moving = true;
+            y += s > 0 ? -135 : (s < 0 ? 135 : 180);
+        } else {
+            moving = s != 0;
+            y += s > 0 ? -90 : (s < 0 ? 90 : 0);
+        }
         this.yaw = y;
     }
 
-    public enum Mode { Wasp, Control, Bounce, Glide, Rotation }
+    public enum Mode {Wasp, Control, Bounce, Glide, Rotation}
 }

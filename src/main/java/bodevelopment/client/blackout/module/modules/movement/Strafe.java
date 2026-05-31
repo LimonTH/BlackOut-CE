@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
@@ -13,16 +12,7 @@ import bodevelopment.client.blackout.module.modules.misc.Timer;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
-import bodevelopment.client.blackout.util.ChatUtils;
-import bodevelopment.client.blackout.util.FileUtils;
-import bodevelopment.client.blackout.util.MovementUtils;
-import bodevelopment.client.blackout.util.CollectionUtils;
-import bodevelopment.client.blackout.util.MathUtils;
-import org.apache.commons.lang3.mutable.MutableDouble;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import bodevelopment.client.blackout.util.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundExplodePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
@@ -30,6 +20,11 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
+import org.apache.commons.lang3.mutable.MutableDouble;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Strafe extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -105,6 +100,7 @@ public class Strafe extends Module {
     private boolean waiting = false;
     private boolean setTimer = false;
     private double boostAmount = 0.0;
+
     public Strafe() {
         super("Strafe", "Enhances airborne and ground-based movement by manipulating air friction, jump impulses, and kinetic damage feedback.", SubCategory.MOVEMENT, true);
     }

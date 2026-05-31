@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.module.modules.visual.world.Brightness;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.CompiledShaderProgram;
@@ -12,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LightTexture.class)
+@Internal
 public class MixinLightTexture {
     @Inject(method = "getBrightness(Lnet/minecraft/world/level/dimension/DimensionType;I)F", at = @At("HEAD"), cancellable = true)
     private static void onGetBrightness(DimensionType type, int lightLevel, CallbackInfoReturnable<Float> info) {

@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Inventory;
@@ -11,6 +12,7 @@ import net.minecraft.world.phys.Vec3;
  * Common null-safe accessors for the local player and level.
  * Replaces scattered {@code !PlayerUtils.isInGame()} guards.
  */
+@PublicAPI
 public class PlayerUtils {
 
     /**

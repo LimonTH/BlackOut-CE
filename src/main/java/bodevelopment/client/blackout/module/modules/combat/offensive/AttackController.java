@@ -9,7 +9,6 @@ import bodevelopment.client.blackout.helpers.RotationHelper;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.DamageUtils;
-import bodevelopment.client.blackout.util.EntityUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ServerboundInteractPacket;
