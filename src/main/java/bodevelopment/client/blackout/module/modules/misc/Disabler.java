@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.SwitchMode;
 import bodevelopment.client.blackout.event.Event;
@@ -13,6 +12,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.util.InvUtils;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 import net.minecraft.world.InteractionHand;

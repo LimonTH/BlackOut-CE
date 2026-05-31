@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.module.modules.visual.misc.XRay;
 import net.minecraft.client.renderer.chunk.VisibilitySet;
 import org.spongepowered.asm.mixin.Mixin;
@@ -8,6 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(VisibilitySet.class)
+@Internal
 public class MixinVisibilitySet {
     @Inject(method = "visibilityBetween", at = @At("HEAD"), cancellable = true)
     private void onIsVisibleThrough(net.minecraft.core.Direction from, net.minecraft.core.Direction to, CallbackInfoReturnable<Boolean> cir) {

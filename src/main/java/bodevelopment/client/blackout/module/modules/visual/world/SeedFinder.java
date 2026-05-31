@@ -1,7 +1,6 @@
 package bodevelopment.client.blackout.module.modules.visual.world;
 
 import bodevelopment.client.blackout.BlackOut;
-import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.GameJoinEvent;
@@ -15,8 +14,8 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
-import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.SeedBiomeSource;
+import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
@@ -79,7 +78,11 @@ public class SeedFinder extends Module {
     private final Setting<Double> beamWidth = this.sgRender.doubleSetting("Beam Width", 0.5, 0.1, 2.0, 0.1, "Width of the structure beam.");
 
     private final List<FoundStructure> found = new CopyOnWriteArrayList<>();
-    public List<FoundStructure> getFound() { return this.found; }
+
+    public List<FoundStructure> getFound() {
+        return this.found;
+    }
+
     private CompletableFuture<Void> calcFuture = null;
 
     private double lastCalcX = Double.MAX_VALUE;
@@ -314,7 +317,7 @@ public class SeedFinder extends Module {
                 int l = locateZ + 7;
 
                 if (!source.hasSolidTerrainAtY60(k, l) || !source.hasSolidTerrainAtY60(k, l + dj) ||
-                    !source.hasSolidTerrainAtY60(k + di, l) || !source.hasSolidTerrainAtY60(k + di, l + dj)) {
+                        !source.hasSolidTerrainAtY60(k + di, l) || !source.hasSolidTerrainAtY60(k + di, l + dj)) {
                     continue;
                 }
 
@@ -331,32 +334,48 @@ public class SeedFinder extends Module {
             T_FLOOR2_1 = 9, T_FLOOR2_2 = 10, T_ROOF2 = 11, T_SHIP = 12, T_FLOOR3_1 = 13, T_FLOOR3_2 = 14,
             T_ROOF3 = 15, T_TOWER_BASE = 16, T_TOWER_PIECE = 17, T_TOWER_TOP = 18;
     private static final int[][] TSIZES = {
-            {10,4,10},{12,2,12},{5,6,2},{5,7,8},{5,6,4},{5,7,4},{13,4,13},{13,8,13},{17,6,17},
-            {12,8,12},{12,8,12},{14,2,14},{13,24,29},{14,8,14},{14,8,14},{16,2,16},{7,7,7},{7,4,7},{9,5,9}
+            {10, 4, 10}, {12, 2, 12}, {5, 6, 2}, {5, 7, 8}, {5, 6, 4}, {5, 7, 4}, {13, 4, 13}, {13, 8, 13}, {17, 6, 17},
+            {12, 8, 12}, {12, 8, 12}, {14, 2, 14}, {13, 24, 29}, {14, 8, 14}, {14, 8, 14}, {16, 2, 16}, {7, 7, 7}, {7, 4, 7}, {9, 5, 9}
     };
-    private static final int[][] TOWER_BD = {{0,1,-1,0},{1,6,-1,1},{3,0,-1,5},{2,5,-1,6}};
-    private static final int[][] FAT_BD = {{0,4,-1,0},{1,12,-1,4},{3,0,-1,8},{2,8,-1,12}};
+    private static final int[][] TOWER_BD = {{0, 1, -1, 0}, {1, 6, -1, 1}, {3, 0, -1, 5}, {2, 5, -1, 6}};
+    private static final int[][] FAT_BD = {{0, 4, -1, 0}, {1, 12, -1, 4}, {3, 0, -1, 8}, {2, 8, -1, 12}};
 
     // Rotate (x,z) by rotation ordinal (0=NONE,1=CW90,2=CW180,3=CCW90), pivot (0,0)
-    private static int rx(int x, int z, int r) { return switch(r){case 1->z;case 2-> -x;case 3-> -z;default->x;}; }
-    private static int rz(int x, int z, int r) { return switch(r){case 1-> -x;case 2-> -z;case 3->x;default->z;}; }
+    private static int rx(int x, int z, int r) {
+        return switch (r) {
+            case 1 -> z;
+            case 2 -> -x;
+            case 3 -> -z;
+            default -> x;
+        };
+    }
+
+    private static int rz(int x, int z, int r) {
+        return switch (r) {
+            case 1 -> -x;
+            case 2 -> -z;
+            case 3 -> x;
+            default -> z;
+        };
+    }
 
     // Simulated piece: position + bounding box + genDepth + rotation
-    private record SP(int px,int py,int pz, int x1,int y1,int z1, int x2,int y2,int z2, int gd, int rot) {}
+    private record SP(int px, int py, int pz, int x1, int y1, int z1, int x2, int y2, int z2, int gd, int rot) {
+    }
 
     private static SP mkp(int px, int py, int pz, int t, int rot, int gd) {
-        int sx=TSIZES[t][0]-1, sy=TSIZES[t][1]-1, sz=TSIZES[t][2]-1;
-        int cx=rx(sx,sz,rot), cz=rz(sx,sz,rot);
-        return new SP(px,py,pz, px+Math.min(0,cx),py,pz+Math.min(0,cz), px+Math.max(0,cx),py+sy,pz+Math.max(0,cz), gd, rot);
+        int sx = TSIZES[t][0] - 1, sy = TSIZES[t][1] - 1, sz = TSIZES[t][2] - 1;
+        int cx = rx(sx, sz, rot), cz = rz(sx, sz, rot);
+        return new SP(px, py, pz, px + Math.min(0, cx), py, pz + Math.min(0, cz), px + Math.max(0, cx), py + sy, pz + Math.max(0, cz), gd, rot);
     }
 
     // Child piece: position = parent.pos + rotate(offset, parentRot)
     private static SP child(SP par, int ox, int oy, int oz, int t, int rot) {
-        return mkp(par.px+rx(ox,oz,par.rot), par.py+oy, par.pz+rz(ox,oz,par.rot), t, rot, par.gd);
+        return mkp(par.px + rx(ox, oz, par.rot), par.py + oy, par.pz + rz(ox, oz, par.rot), t, rot, par.gd);
     }
 
     private static boolean overlaps(SP a, SP b) {
-        return a.x2>=b.x1 && a.x1<=b.x2 && a.y2>=b.y1 && a.y1<=b.y2 && a.z2>=b.z1 && a.z1<=b.z2;
+        return a.x2 >= b.x1 && a.x1 <= b.x2 && a.y2 >= b.y1 && a.y1 <= b.y2 && a.z2 >= b.z1 && a.z1 <= b.z2;
     }
 
     private static SP findHit(List<SP> pieces, SP test) {
@@ -367,15 +386,19 @@ public class SeedFinder extends Module {
     private static boolean simulateEndCityShip(long worldSeed, int chunkX, int chunkZ) {
         Random r = new Random(worldSeed);
         long a = r.nextLong(), b = r.nextLong();
-        r = new Random((long)chunkX * a + (long)chunkZ * b ^ worldSeed);
+        r = new Random((long) chunkX * a + (long) chunkZ * b ^ worldSeed);
         int rot = r.nextInt(4); // Rotation.getRandom
 
         // startHouseTower: initial pieces (no random calls)
         List<SP> pieces = new ArrayList<>();
-        SP p = mkp(0, 0, 0, T_BASE_FLOOR, rot, 0); pieces.add(p);
-        p = child(p, -1, 0, -1, T_FLOOR2_1, rot); pieces.add(p);
-        p = child(p, -1, 4, -1, T_FLOOR3_1, rot); pieces.add(p);
-        p = child(p, -1, 8, -1, T_ROOF3, rot); pieces.add(p);
+        SP p = mkp(0, 0, 0, T_BASE_FLOOR, rot, 0);
+        pieces.add(p);
+        p = child(p, -1, 0, -1, T_FLOOR2_1, rot);
+        pieces.add(p);
+        p = child(p, -1, 4, -1, T_FLOOR3_1, rot);
+        pieces.add(p);
+        p = child(p, -1, 8, -1, T_ROOF3, rot);
+        pieces.add(p);
 
         boolean[] ship = {false};
         ecRC(pieces, r, 0, 1, p, rot, ship);
@@ -391,7 +414,7 @@ public class SeedFinder extends Module {
                                 int bpX, int bpY, int bpZ) {
         if (depth > 8) return false;
         List<SP> tmp = new ArrayList<>();
-        boolean ok = switch(gt) {
+        boolean ok = switch (gt) {
             case 0 -> ecTower(tmp, r, depth, parent, rot, ship);
             case 1 -> ecBridge(tmp, r, depth, parent, rot, ship);
             case 2 -> ecHouse(tmp, r, depth, parent, rot, ship, bpX, bpY, bpZ);
@@ -402,12 +425,16 @@ public class SeedFinder extends Module {
             int gd = r.nextInt();
             boolean collision = false;
             for (SP tp : tmp) {
-                SP tp2 = new SP(tp.px,tp.py,tp.pz, tp.x1,tp.y1,tp.z1, tp.x2,tp.y2,tp.z2, gd, tp.rot);
+                SP tp2 = new SP(tp.px, tp.py, tp.pz, tp.x1, tp.y1, tp.z1, tp.x2, tp.y2, tp.z2, gd, tp.rot);
                 SP hit = findHit(main, tp2);
-                if (hit != null && hit.gd != parent.gd) { collision = true; break; }
+                if (hit != null && hit.gd != parent.gd) {
+                    collision = true;
+                    break;
+                }
             }
             if (!collision) {
-                for (SP tp : tmp) main.add(new SP(tp.px,tp.py,tp.pz, tp.x1,tp.y1,tp.z1, tp.x2,tp.y2,tp.z2, gd, tp.rot));
+                for (SP tp : tmp)
+                    main.add(new SP(tp.px, tp.py, tp.pz, tp.x1, tp.y1, tp.z1, tp.x2, tp.y2, tp.z2, gd, tp.rot));
                 return true;
             }
         }
@@ -415,88 +442,115 @@ public class SeedFinder extends Module {
     }
 
     private static boolean ecTower(List<SP> L, Random r, int d, SP par, int rot, boolean[] ship) {
-        int tox = 3+r.nextInt(2), toz = 3+r.nextInt(2);
-        SP p = child(par, tox, -3, toz, T_TOWER_BASE, rot); L.add(p);
-        p = child(p, 0, 7, 0, T_TOWER_PIECE, rot); L.add(p);
-        SP anchor = r.nextInt(3)==0 ? p : null;
+        int tox = 3 + r.nextInt(2), toz = 3 + r.nextInt(2);
+        SP p = child(par, tox, -3, toz, T_TOWER_BASE, rot);
+        L.add(p);
+        p = child(p, 0, 7, 0, T_TOWER_PIECE, rot);
+        L.add(p);
+        SP anchor = r.nextInt(3) == 0 ? p : null;
         int layers = 1 + r.nextInt(3);
-        for (int k=0; k<layers; k++) {
-            p = child(p, 0, 4, 0, T_TOWER_PIECE, rot); L.add(p);
-            if (k < layers-1 && r.nextBoolean()) anchor = p;
+        for (int k = 0; k < layers; k++) {
+            p = child(p, 0, 4, 0, T_TOWER_PIECE, rot);
+            L.add(p);
+            if (k < layers - 1 && r.nextBoolean()) anchor = p;
         }
         if (anchor != null) {
             for (int[] bd : TOWER_BD) {
                 if (r.nextBoolean()) {
-                    int br = (rot+bd[0])%4;
-                    SP be = child(anchor, bd[1], bd[2], bd[3], T_BRIDGE_END, br); L.add(be);
-                    ecRC(L, r, 1, d+1, be, br, ship);
+                    int br = (rot + bd[0]) % 4;
+                    SP be = child(anchor, bd[1], bd[2], bd[3], T_BRIDGE_END, br);
+                    L.add(be);
+                    ecRC(L, r, 1, d + 1, be, br, ship);
                 }
             }
-            SP top = child(p, -1, 4, -1, T_TOWER_TOP, rot); L.add(top);
+            SP top = child(p, -1, 4, -1, T_TOWER_TOP, rot);
+            L.add(top);
         } else {
-            if (d != 7) ecRC(L, r, 3, d+1, p, rot, ship);
-            SP top = child(p, -1, 4, -1, T_TOWER_TOP, rot); L.add(top);
+            if (d != 7) ecRC(L, r, 3, d + 1, p, rot, ship);
+            SP top = child(p, -1, 4, -1, T_TOWER_TOP, rot);
+            L.add(top);
         }
         return true;
     }
 
     private static boolean ecBridge(List<SP> L, Random r, int d, SP par, int rot, boolean[] ship) {
-        int blen = r.nextInt(4)+1;
-        SP p = child(par, 0, 0, -4, T_BRIDGE_PIECE, rot); L.add(p);
+        int blen = r.nextInt(4) + 1;
+        SP p = child(par, 0, 0, -4, T_BRIDGE_PIECE, rot);
+        L.add(p);
         int k = 0;
-        for (int l=0; l<blen; l++) {
+        for (int l = 0; l < blen; l++) {
             if (r.nextBoolean()) {
-                p = child(p, 0, k, -4, T_BRIDGE_PIECE, rot); L.add(p); k = 0;
+                p = child(p, 0, k, -4, T_BRIDGE_PIECE, rot);
+                L.add(p);
+                k = 0;
             } else {
-                if (r.nextBoolean()) { p = child(p, 0, k, -4, T_BRIDGE_STEEP, rot); }
-                else { p = child(p, 0, k, -8, T_BRIDGE_GENTLE, rot); }
-                L.add(p); k = 4;
+                if (r.nextBoolean()) {
+                    p = child(p, 0, k, -4, T_BRIDGE_STEEP, rot);
+                } else {
+                    p = child(p, 0, k, -8, T_BRIDGE_GENTLE, rot);
+                }
+                L.add(p);
+                k = 4;
             }
         }
-        if (!ship[0] && r.nextInt(10-d)==0) {
-            SP s = child(p, -8+r.nextInt(8), k, -70+r.nextInt(10), T_SHIP, rot); L.add(s);
+        if (!ship[0] && r.nextInt(10 - d) == 0) {
+            SP s = child(p, -8 + r.nextInt(8), k, -70 + r.nextInt(10), T_SHIP, rot);
+            L.add(s);
             ship[0] = true;
-        } else if (!ecRC(L, r, 2, d+1, p, rot, ship, -3, k+1, -11)) {
+        } else if (!ecRC(L, r, 2, d + 1, p, rot, ship, -3, k + 1, -11)) {
             return false;
         }
-        SP end = child(p, 4, k, 0, T_BRIDGE_END, (rot+2)%4); L.add(end);
+        SP end = child(p, 4, k, 0, T_BRIDGE_END, (rot + 2) % 4);
+        L.add(end);
         return true;
     }
 
     private static boolean ecHouse(List<SP> L, Random r, int d, SP par, int rot, boolean[] ship,
                                    int bpX, int bpY, int bpZ) {
         if (d > 8) return false;
-        SP p = child(par, bpX, bpY, bpZ, T_BASE_FLOOR, rot); L.add(p);
+        SP p = child(par, bpX, bpY, bpZ, T_BASE_FLOOR, rot);
+        L.add(p);
         int j = r.nextInt(3);
-        if (j==0) {
-            p = child(p, -1, 4, -1, T_BASE_ROOF, rot); L.add(p);
-        } else if (j==1) {
-            p = child(p, -1, 0, -1, T_FLOOR2_2, rot); L.add(p);
-            p = child(p, -1, 8, -1, T_ROOF2, rot); L.add(p);
-            ecRC(L, r, 0, d+1, p, rot, ship);
+        if (j == 0) {
+            p = child(p, -1, 4, -1, T_BASE_ROOF, rot);
+            L.add(p);
+        } else if (j == 1) {
+            p = child(p, -1, 0, -1, T_FLOOR2_2, rot);
+            L.add(p);
+            p = child(p, -1, 8, -1, T_ROOF2, rot);
+            L.add(p);
+            ecRC(L, r, 0, d + 1, p, rot, ship);
         } else {
-            p = child(p, -1, 0, -1, T_FLOOR2_2, rot); L.add(p);
-            p = child(p, -1, 4, -1, T_FLOOR3_2, rot); L.add(p);
-            p = child(p, -1, 8, -1, T_ROOF3, rot); L.add(p);
-            ecRC(L, r, 0, d+1, p, rot, ship);
+            p = child(p, -1, 0, -1, T_FLOOR2_2, rot);
+            L.add(p);
+            p = child(p, -1, 4, -1, T_FLOOR3_2, rot);
+            L.add(p);
+            p = child(p, -1, 8, -1, T_ROOF3, rot);
+            L.add(p);
+            ecRC(L, r, 0, d + 1, p, rot, ship);
         }
         return true;
     }
 
     private static boolean ecFat(List<SP> L, Random r, int d, SP par, int rot, boolean[] ship) {
-        SP p = child(par, -3, 4, -3, T_FAT_BASE, rot); L.add(p);
-        p = child(p, 0, 4, 0, T_FAT_MID, rot); L.add(p);
-        for (int j=0; j<2 && r.nextInt(3)!=0; j++) {
-            p = child(p, 0, 8, 0, T_FAT_MID, rot); L.add(p);
+        SP p = child(par, -3, 4, -3, T_FAT_BASE, rot);
+        L.add(p);
+        p = child(p, 0, 4, 0, T_FAT_MID, rot);
+        L.add(p);
+        for (int j = 0; j < 2 && r.nextInt(3) != 0; j++) {
+            p = child(p, 0, 8, 0, T_FAT_MID, rot);
+            L.add(p);
             for (int[] bd : FAT_BD) {
                 if (r.nextBoolean()) {
-                    int br = (rot+bd[0])%4;
-                    SP be = child(p, bd[1], bd[2], bd[3], T_BRIDGE_END, br); L.add(be);
-                    ecRC(L, r, 1, d+1, be, br, ship);
+                    int br = (rot + bd[0]) % 4;
+                    SP be = child(p, bd[1], bd[2], bd[3], T_BRIDGE_END, br);
+                    L.add(be);
+                    ecRC(L, r, 1, d + 1, be, br, ship);
                 }
             }
         }
-        SP top = child(p, -2, 8, -2, T_FAT_TOP, rot); L.add(top);
+        SP top = child(p, -2, 8, -2, T_FAT_TOP, rot);
+        L.add(top);
         return true;
     }
     // End of End City simulation
@@ -611,7 +665,8 @@ public class SeedFinder extends Module {
                     if (dx * dx + dz * dz > radiusSq) continue;
                 }
 
-                if (type.validBiomes != null && !type.validBiomes.contains(source.getBiome(blockX + 8, blockZ + 8))) continue;
+                if (type.validBiomes != null && !type.validBiomes.contains(source.getBiome(blockX + 8, blockZ + 8)))
+                    continue;
 
                 results.add(new FoundStructure(type, blockX, blockZ, extra));
             }
@@ -623,7 +678,7 @@ public class SeedFinder extends Module {
         Random rand = new Random(worldSeed);
         long a = rand.nextLong();
         long b = rand.nextLong();
-        rand.setSeed((long)chunkX * a ^ (long)chunkZ * b ^ worldSeed);
+        rand.setSeed((long) chunkX * a ^ (long) chunkZ * b ^ worldSeed);
         rand.nextInt(4); // Rotation.getRandom
         return rand.nextFloat() < 0.02F;
     }
@@ -644,7 +699,7 @@ public class SeedFinder extends Module {
         Random rand = new Random(worldSeed);
         long a = rand.nextLong();
         long b = rand.nextLong();
-        rand.setSeed((long)chunkX * a ^ (long)chunkZ * b ^ worldSeed);
+        rand.setSeed((long) chunkX * a ^ (long) chunkZ * b ^ worldSeed);
         return switch (rand.nextInt(4)) {
             case 0 -> "hoglin";    // bastion_hoglin.png
             case 1 -> "housing";   // bastion_housing.png
@@ -660,7 +715,7 @@ public class SeedFinder extends Module {
         Random rand = new Random(worldSeed);
         long a = rand.nextLong();
         long b = rand.nextLong();
-        rand.setSeed((long)chunkX * a ^ (long)chunkZ * b ^ worldSeed);
+        rand.setSeed((long) chunkX * a ^ (long) chunkZ * b ^ worldSeed);
         rand.nextInt(4); // Rotation.getRandom
         return rand.nextInt(10) == 0 ? "Laboratory" : "";
     }
@@ -671,7 +726,7 @@ public class SeedFinder extends Module {
         Random rand = new Random(worldSeed);
         long a = rand.nextLong();
         long b = rand.nextLong();
-        rand.setSeed((long)chunkX * a ^ (long)chunkZ * b ^ worldSeed);
+        rand.setSeed((long) chunkX * a ^ (long) chunkZ * b ^ worldSeed);
         boolean large = rand.nextFloat() < (isWarm ? 0.3F : 0.9F);
         return large ? "Big" : "Small";
     }
@@ -724,7 +779,7 @@ public class SeedFinder extends Module {
         int scanStep = 128;
         int sectionSize = 512;
 
-        StructureType[] caveTypes = {StructureType.LUSH_CAVES, StructureType.DRIPSTONE_CAVES };
+        StructureType[] caveTypes = {StructureType.LUSH_CAVES, StructureType.DRIPSTONE_CAVES};
 
         for (StructureType type : caveTypes) {
             if (!enabledCheck.test(type)) continue;
@@ -907,7 +962,8 @@ public class SeedFinder extends Module {
         };
     }
 
-    public record FoundStructure(StructureType type, int blockX, int blockZ, String extraInfo) {}
+    public record FoundStructure(StructureType type, int blockX, int blockZ, String extraInfo) {
+    }
 
     @SafeVarargs
     private static Set<ResourceKey<Biome>> biomes(ResourceKey<Biome>... keys) {
@@ -940,7 +996,7 @@ public class SeedFinder extends Module {
         // End
         END_CITY("End City", 20, 11, 10387313, true, new Color(200, 150, 255), biomes(Biomes.END_HIGHLANDS), "textures/map/structures/end_city/end_city_without_ship.png"),
         // Misc
-        SPAWN("World Spawn", 0, 0, 0, false, new Color(255,255,255), null, "textures/map/spawn_point.png");
+        SPAWN("World Spawn", 0, 0, 0, false, new Color(255, 255, 255), null, "textures/map/spawn_point.png");
 
         public final String displayName;
         public final int spacing;
@@ -955,20 +1011,26 @@ public class SeedFinder extends Module {
             return this == LUSH_CAVES || this == DRIPSTONE_CAVES;
         }
 
-        /** Shown at ALL zoom levels (very important landmarks). */
+        /**
+         * Shown at ALL zoom levels (very important landmarks).
+         */
         public boolean isAlwaysVisible() {
             return this == STRONGHOLD || this == ANCIENT_CITY || this == WOODLAND_MANSION
                     || this == END_CITY || this == NETHER_FORTRESS || this == BASTION_REMNANT;
         }
 
-        /** Small/common structures hidden when zoomed out (bpp >= 12). */
+        /**
+         * Small/common structures hidden when zoomed out (bpp >= 12).
+         */
         public boolean isMinor() {
             return this == SHIPWRECK || this == OCEAN_RUIN || this == RUINED_PORTAL
                     || this == TRAIL_RUINS || this == SWAMP_HUT || this == IGLOO
                     || isCaveBiome();
         }
 
-        /** @deprecated use isAlwaysVisible() or isMinor() */
+        /**
+         * @deprecated use isAlwaysVisible() or isMinor()
+         */
         public boolean isMajor() {
             return isAlwaysVisible() || isCaveBiome();
         }

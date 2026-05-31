@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.visual.entities;
 
-import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
@@ -13,21 +12,23 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
-import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.BlockUtils;
+import bodevelopment.client.blackout.util.ColorUtils;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.vertex.PoseStack;
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec2;
+
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class PhaseESP extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");

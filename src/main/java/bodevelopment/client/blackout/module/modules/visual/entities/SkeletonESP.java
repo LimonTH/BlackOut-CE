@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.visual.entities;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.event.Event;
@@ -11,16 +10,12 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import bodevelopment.client.blackout.util.render.RenderState;
 import bodevelopment.client.blackout.util.render.WireframeRenderer;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Camera;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.CoreShaders;
@@ -134,7 +129,9 @@ public class SkeletonESP extends Module {
         int count = 0;
         for (Vec3 v : vertices) {
             if (v.distanceToSqr(closest) < 0.25) {
-                avgX += v.x; avgY += v.y; avgZ += v.z;
+                avgX += v.x;
+                avgY += v.y;
+                avgZ += v.z;
                 count++;
             }
         }
@@ -156,7 +153,9 @@ public class SkeletonESP extends Module {
 
         for (Vec3 v : vertices) {
             if (v.distanceToSqr(joint) >= threshold) {
-                avgX += v.x; avgY += v.y; avgZ += v.z;
+                avgX += v.x;
+                avgY += v.y;
+                avgZ += v.z;
                 count++;
             }
         }
@@ -171,7 +170,10 @@ public class SkeletonESP extends Module {
             if (top ? (v.y > extremum.y) : (v.y < extremum.y)) extremum = v;
         }
         double avgX = 0, avgZ = 0;
-        for (Vec3 v : vertices) { avgX += v.x; avgZ += v.z; }
+        for (Vec3 v : vertices) {
+            avgX += v.x;
+            avgZ += v.z;
+        }
         return new Vec3(avgX / vertices.size(), extremum.y, avgZ / vertices.size());
     }
 

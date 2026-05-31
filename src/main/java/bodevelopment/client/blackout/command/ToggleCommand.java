@@ -26,28 +26,28 @@ public class ToggleCommand extends Command {
             if (found == null) {
                 AbstractModule similar = this.similar(idkRurAmogus);
                 return similar != null
-                        ? ChatFormatting.RED.toString() + String.format("couldn't find %s from modules, did you mean %s", built, this.moduleNameString(similar))
-                        : ChatFormatting.RED.toString() + String.format("couldn't find %s from modules", built);
+                        ? ChatFormatting.RED + String.format("couldn't find %s from modules, did you mean %s", built, this.moduleNameString(similar))
+                        : ChatFormatting.RED + String.format("couldn't find %s from modules", built);
             }
 
             if (found instanceof Module module) {
                 if (this.lowerCase.equals("enable")) {
                     if (module.enabled) {
-                        return ChatFormatting.YELLOW.toString() + this.moduleNameString(module) + " is already enabled!";
+                        return ChatFormatting.YELLOW + this.moduleNameString(module) + " is already enabled!";
                     }
                     module.enable();
                 } else if (this.lowerCase.equals("disable")) {
                     if (!module.enabled) {
-                        return ChatFormatting.YELLOW.toString() + this.moduleNameString(module) + " is already disabled!";
+                        return ChatFormatting.YELLOW + this.moduleNameString(module) + " is already disabled!";
                     }
                     module.disable();
                 } else {
                     module.toggle();
                 }
 
-                return this.color + this.lowerCase + "d " + ChatFormatting.WHITE.toString() + this.moduleNameString(module);
+                return this.color + this.lowerCase + "d " + ChatFormatting.WHITE + this.moduleNameString(module);
             } else {
-                return String.format("%s%s%s is not toggleable", ChatFormatting.GRAY.toString(), this.moduleNameString(found), ChatFormatting.RED.toString());
+                return String.format("%s%s%s is not toggleable", ChatFormatting.GRAY, this.moduleNameString(found), ChatFormatting.RED);
             }
         } else {
             return this.format;

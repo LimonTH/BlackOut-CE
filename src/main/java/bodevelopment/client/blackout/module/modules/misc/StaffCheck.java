@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
@@ -10,11 +9,13 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import java.util.ArrayList;
-import java.util.List;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import net.minecraft.network.protocol.game.ClientboundExplodePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class StaffCheck extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");

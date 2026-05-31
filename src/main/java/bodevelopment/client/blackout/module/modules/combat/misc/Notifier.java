@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.combat.misc;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PopEvent;
@@ -11,6 +10,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.util.SoundUtils;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.world.effect.MobEffects;

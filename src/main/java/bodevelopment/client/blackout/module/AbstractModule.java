@@ -1,16 +1,12 @@
 package bodevelopment.client.blackout.module;
 
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.WarningSettingGroup;
 import com.google.gson.JsonObject;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Base class for all module types. Provides shared infrastructure:
@@ -22,6 +18,7 @@ import java.util.Set;
  *   <li>{@link SettingsModule} — non-toggleable global settings panels</li>
  * </ul>
  */
+@PublicAPI
 public abstract class AbstractModule {
     public final String name;
     public final String description;

@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.module.modules.misc.AntiPose;
 import bodevelopment.client.blackout.module.modules.movement.SafeWalk;
 import net.minecraft.world.entity.Pose;
@@ -11,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(Player.class)
+@Internal
 public abstract class MixinPlayer {
     @Shadow
     protected abstract boolean canPlayerFitWithinBlocksAndEntitiesWhen(Pose pose);

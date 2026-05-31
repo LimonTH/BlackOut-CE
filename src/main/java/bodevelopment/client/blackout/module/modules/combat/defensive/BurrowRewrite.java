@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.combat.defensive;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.enums.SwitchMode;
@@ -16,13 +15,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.randomstuff.PlaceData;
-import bodevelopment.client.blackout.util.BoxUtils;
-import bodevelopment.client.blackout.util.EntityUtils;
-import bodevelopment.client.blackout.util.InvUtils;
-import bodevelopment.client.blackout.util.BlockUtils;
-import bodevelopment.client.blackout.util.SettingUtils;
-import java.util.List;
-import java.util.function.Predicate;
+import bodevelopment.client.blackout.util.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
@@ -37,6 +30,9 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.List;
+import java.util.function.Predicate;
 
 public class BurrowRewrite extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -407,7 +403,6 @@ public class BurrowRewrite extends Module {
         this.lastNotify = now;
         this.sendNotification("Burrow: " + reason, reason, "Burrow Alert", NotificationsSettings.Type.Alert, 2.0);
     }
-
 
 
     public enum BurrowMode {

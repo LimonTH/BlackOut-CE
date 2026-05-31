@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.manager.managers;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.EntityAddEvent;
@@ -8,13 +7,10 @@ import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.event.events.PopEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Manager;
-import bodevelopment.client.blackout.util.HoleUtils;
 import bodevelopment.client.blackout.util.BlockUtils;
+import bodevelopment.client.blackout.util.HoleUtils;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.UUID;
-import java.util.function.ToDoubleFunction;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
@@ -25,6 +21,11 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.projectile.ThrownExperienceBottle;
 import net.minecraft.world.item.ItemStack;
+
+import java.util.Comparator;
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.ToDoubleFunction;
 
 public class StatsManager extends Manager {
     private final Map<UUID, TrackerMap> dataMap = new Object2ObjectOpenHashMap<>();

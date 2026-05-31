@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.visual.world;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
@@ -13,6 +12,7 @@ import bodevelopment.client.blackout.module.setting.multisettings.BoxMultiSettin
 import bodevelopment.client.blackout.randomstuff.SimulatedMaterial;
 import bodevelopment.client.blackout.randomstuff.timers.RenderList;
 import bodevelopment.client.blackout.util.BlockUtils;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket;

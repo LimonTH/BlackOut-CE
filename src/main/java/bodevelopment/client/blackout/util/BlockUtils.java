@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.manager.Managers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -19,6 +20,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.CollisionContext;
 
+@PublicAPI
 public class BlockUtils {
     public static boolean mineable(BlockPos pos) {
         if (BlackOut.mc.level == null) return false;

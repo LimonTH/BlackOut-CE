@@ -3,11 +3,11 @@ package bodevelopment.client.blackout.randomstuff.mainmenu;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.ArrayList;
-import net.minecraft.util.Mth;
 
 public class ChangelogRenderer {
     private final ArrayList<String> changelog = new ArrayList<>();

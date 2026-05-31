@@ -5,7 +5,6 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.MoveEvent;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.manager.Managers;
-import bodevelopment.client.blackout.util.CompatUtils;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.combat.offensive.Aura;
@@ -53,13 +52,13 @@ public class NoSlow extends Module {
                     return !getInstance().blocking.get();
                 } else if (BlackOut.mc.player.isUsingItem()) {
                     InteractionHand activeHand = BlackOut.mc.player.getUsedItemHand();
-                    ItemStack activeStack = activeHand == InteractionHand.MAIN_HAND ? 
-                        Managers.PACKET.getStack() : 
-                        BlackOut.mc.player.getOffhandItem();
+                    ItemStack activeStack = activeHand == InteractionHand.MAIN_HAND ?
+                            Managers.PACKET.getStack() :
+                            BlackOut.mc.player.getOffhandItem();
 
-                    return activeStack.getItem() instanceof SwordItem ? 
-                        !getInstance().blocking.get() : 
-                        !getInstance().using.get();
+                    return activeStack.getItem() instanceof SwordItem ?
+                            !getInstance().blocking.get() :
+                            !getInstance().using.get();
                 } else {
                     return false;
                 }

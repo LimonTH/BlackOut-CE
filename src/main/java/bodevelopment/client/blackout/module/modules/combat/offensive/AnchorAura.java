@@ -3,7 +3,6 @@ package bodevelopment.client.blackout.module.modules.combat.offensive;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.enums.RotationType;
-import bodevelopment.client.blackout.module.modules.client.settings.RotationSettings;
 import bodevelopment.client.blackout.enums.SwingHand;
 import bodevelopment.client.blackout.enums.SwitchMode;
 import bodevelopment.client.blackout.event.Event;
@@ -11,8 +10,8 @@ import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
-import bodevelopment.client.blackout.annotations.OnlyDev;
 import bodevelopment.client.blackout.module.SubCategory;
+import bodevelopment.client.blackout.module.modules.client.settings.RotationSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
@@ -21,12 +20,6 @@ import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.randomstuff.PlaceData;
 import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
@@ -43,6 +36,13 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Predicate;
 
 public class AnchorAura extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
@@ -119,6 +119,7 @@ public class AnchorAura extends Module {
     public AnchorAura() {
         super("Anchor Aura", "Automatically places, charges, and detonates Respawn Anchors for high offensive damage.", SubCategory.OFFENSIVE, true);
     }
+
     @Event
     public void onTick(TickEvent.Post event) {
         if (PlayerUtils.isInGame()) {

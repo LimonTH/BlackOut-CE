@@ -8,8 +8,8 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
-import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
+import bodevelopment.client.blackout.util.render.RenderLayer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 

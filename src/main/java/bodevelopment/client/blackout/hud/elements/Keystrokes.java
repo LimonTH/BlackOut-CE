@@ -30,31 +30,31 @@ public class Keystrokes extends HudElement {
     public void render() {
         this.stack.pushPose();
         this.setSize(44.0F, 48.0F);
-            this.renderKey(18, 0, "W", BlackOut.mc.options.keyUp);
-            this.renderKey(0, 18, "A", BlackOut.mc.options.keyLeft);
-            this.renderKey(18, 18, "S", BlackOut.mc.options.keyDown);
-            this.renderKey(36, 18, "D", BlackOut.mc.options.keyRight);
-            if (this.useBlur.get()) {
-                Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 36.0F, 44.0F, 8.0F, 3.0F, 10));
-                Renderer.onHUDBlur();
-            }
+        this.renderKey(18, 0, "W", BlackOut.mc.options.keyUp);
+        this.renderKey(0, 18, "A", BlackOut.mc.options.keyLeft);
+        this.renderKey(18, 18, "S", BlackOut.mc.options.keyDown);
+        this.renderKey(36, 18, "D", BlackOut.mc.options.keyRight);
+        if (this.useBlur.get()) {
+            Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 36.0F, 44.0F, 8.0F, 3.0F, 10));
+            Renderer.onHUDBlur();
+        }
 
-            boolean pressed = BlackOut.mc.options.keyJump.isDown();
-            BlackOutColor color = pressed ? this.pressedColor.get() : this.backgroundColor.get();
-            Render2DUtils.rounded(
-                    this.stack, 0.0F, 36.0F, 44.0F, 8.0F, 3.0F, this.shadow.get() ? 3.0F : 0.0F, color.getRGB(), color.withAlpha((int) (color.alpha * 0.5)).getRGB()
-            );
-            Render2DUtils.rounded(
-                    this.stack,
-                    17.0F,
-                    38.0F,
-                    10.0F,
-                    1.0F,
-                    1.0F,
-                    0.0F,
-                    pressed ? this.pressedtxtColor.get().getRGB() : this.txtdColor.get().getRGB(),
-                    ColorUtils.SHADOW100I
-            );
+        boolean pressed = BlackOut.mc.options.keyJump.isDown();
+        BlackOutColor color = pressed ? this.pressedColor.get() : this.backgroundColor.get();
+        Render2DUtils.rounded(
+                this.stack, 0.0F, 36.0F, 44.0F, 8.0F, 3.0F, this.shadow.get() ? 3.0F : 0.0F, color.getRGB(), color.withAlpha((int) (color.alpha * 0.5)).getRGB()
+        );
+        Render2DUtils.rounded(
+                this.stack,
+                17.0F,
+                38.0F,
+                10.0F,
+                1.0F,
+                1.0F,
+                0.0F,
+                pressed ? this.pressedtxtColor.get().getRGB() : this.txtdColor.get().getRGB(),
+                ColorUtils.SHADOW100I
+        );
         this.stack.popPose();
     }
 

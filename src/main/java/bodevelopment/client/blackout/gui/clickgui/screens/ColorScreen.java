@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.gui.clickgui.screens;
 
-import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.gui.TextField;
 import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
@@ -13,15 +12,12 @@ import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import bodevelopment.client.blackout.util.render.ScissorStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
@@ -238,7 +234,7 @@ public class ColorScreen extends ClickGuiScreen {
                     SelectedComponent.reset();
 
                     if (this.colorSetting.theme == 0) {
-                        if (this.inside(200, 700, 10, 210))      this.selecting = 1;
+                        if (this.inside(200, 700, 10, 210)) this.selecting = 1;
                         else if (this.inside(200, 700, 225, 238)) this.selecting = 2;
                         else if (this.inside(455, 700, 260, 273)) this.selecting = 3;
                         else if (this.inside(455, 700, 300, 313)) this.selecting = 4;
@@ -247,7 +243,7 @@ public class ColorScreen extends ClickGuiScreen {
                         else if (this.inside(200, 445, 260, 273)) this.selecting = 7;
                         else if (this.inside(200, 445, 300, 313)) this.selecting = 8;
                     } else {
-                        if (this.inside(200, 700, 10, 210))      this.selecting = 4;
+                        if (this.inside(200, 700, 10, 210)) this.selecting = 4;
                         else if (this.inside(200, 700, 260, 273)) this.selecting = 1;
                         else if (this.inside(200, 700, 300, 313)) this.selecting = 2;
                         else if (this.inside(200, 700, 340, 353)) this.selecting = 3;
@@ -255,8 +251,8 @@ public class ColorScreen extends ClickGuiScreen {
 
                     if (this.selecting == 0) {
                         int oldTheme = this.colorSetting.theme;
-                        if (this.inside(0, 200, 20, 50))       this.colorSetting.theme = 0;
-                        else if (this.inside(0, 200, 60, 90))  this.colorSetting.theme = 1;
+                        if (this.inside(0, 200, 20, 50)) this.colorSetting.theme = 0;
+                        else if (this.inside(0, 200, 60, 90)) this.colorSetting.theme = 1;
                         else if (this.inside(0, 200, 100, 130)) this.colorSetting.theme = 2;
 
                         if (oldTheme != this.colorSetting.theme) {

@@ -11,12 +11,12 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import java.util.List;
-
 import bodevelopment.client.blackout.util.PlayerUtils;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+
+import java.util.List;
 
 public class FastUse extends Module {
     private static FastUse INSTANCE;

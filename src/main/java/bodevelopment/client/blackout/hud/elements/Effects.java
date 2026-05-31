@@ -9,14 +9,15 @@ import bodevelopment.client.blackout.module.setting.multisettings.TextColorMulti
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
+import net.minecraft.core.Holder;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
-import net.minecraft.core.Holder;
-import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.effect.MobEffectInstance;
 
 public class Effects extends HudElement {
     public final SettingGroup sgGeneral = this.addGroup("General");

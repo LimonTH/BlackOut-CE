@@ -12,6 +12,7 @@ public class AntiSpam extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");
 
     private final Setting<Double> similarity = this.sgGeneral.doubleSetting("Similarity Threshold", 0.9, 0.0, 1.0, 0.01, "The percentage of character matching required to identify and stack similar messages.");
+
     public AntiSpam() {
         super("Anti Spam", "Reduces chat clutter by grouping and stacking highly similar or repetitive messages.", SubCategory.MISC, false);
         INSTANCE = this;

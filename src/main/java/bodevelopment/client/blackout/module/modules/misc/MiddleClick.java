@@ -66,8 +66,7 @@ public class MiddleClick extends Module {
             Throwable action = this.actionType.get();
             if (action == Throwable.Firework || (action == Throwable.Smart && BlackOut.mc.player.isFallFlying())) {
                 this.useTargetItem(Items.FIREWORK_ROCKET);
-            }
-            else if (action == Throwable.Pearl || action == Throwable.Smart) {
+            } else if (action == Throwable.Pearl || action == Throwable.Smart) {
                 this.useTargetItem(Items.ENDER_PEARL);
             }
         }

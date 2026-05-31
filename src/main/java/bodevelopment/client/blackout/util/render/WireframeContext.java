@@ -1,9 +1,12 @@
 package bodevelopment.client.blackout.util.render;
 
-import java.util.ArrayList;
-import java.util.List;
+import bodevelopment.client.blackout.annotations.Internal;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
+import java.util.List;
+
+@Internal
 public class WireframeContext {
     public final List<Vec3[]> lines = new ArrayList<>();
     public final List<Vec3[]> quads = new ArrayList<>();

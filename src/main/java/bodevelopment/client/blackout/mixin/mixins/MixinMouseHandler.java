@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.event.events.MouseButtonEvent;
 import bodevelopment.client.blackout.event.events.MouseScrollEvent;
 import bodevelopment.client.blackout.keys.MouseButtons;
@@ -18,6 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(MouseHandler.class)
+@Internal
 public abstract class MixinMouseHandler {
     @Shadow
     private boolean mouseGrabbed;

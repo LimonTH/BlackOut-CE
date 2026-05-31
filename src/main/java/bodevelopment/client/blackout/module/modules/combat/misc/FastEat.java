@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.combat.misc;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
@@ -13,6 +12,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.InvUtils;
 import bodevelopment.client.blackout.util.ItemUtils;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;

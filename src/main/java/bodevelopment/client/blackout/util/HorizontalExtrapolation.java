@@ -2,8 +2,9 @@ package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.manager.managers.ExtrapolationManager;
 import bodevelopment.client.blackout.randomstuff.MotionData;
-import java.util.List;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.List;
 
 public class HorizontalExtrapolation {
     public static MotionData getMotion(ExtrapolationManager.ExtrapolationData data) {
@@ -24,9 +25,13 @@ public class HorizontalExtrapolation {
             double avg = avgDiff(yaws);
             double lastDiff = yaws[3].diff();
             double x = 0.0, z = 0.0;
-            for (Vec3 m : motions) { x += m.x; z += m.z; }
+            for (Vec3 m : motions) {
+                x += m.x;
+                z += m.z;
+            }
             double inv = 1.0 / motions.size();
-            x *= inv; z *= inv;
+            x *= inv;
+            z *= inv;
             if (Math.abs(lastDiff) > 115.0 && Math.abs(avg) > 10.0) {
                 return x * x + z * z > 0.0225
                         ? MotionData.of(Vec3.ZERO).reset()

@@ -6,9 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -24,7 +22,7 @@ public class ClickGuiState {
     private float moduleScroll;
     private float categoryScroll;
     private final Set<String> openedModules = new HashSet<>();
-    
+
     public ClickGuiState() {
         this.selectedCategory = SubCategory.OFFENSIVE;
         this.x = 0.0f;
@@ -34,83 +32,83 @@ public class ClickGuiState {
         this.moduleScroll = 0.0f;
         this.categoryScroll = 0.0f;
     }
-    
+
     public SubCategory getSelectedCategory() {
         return selectedCategory;
     }
-    
+
     public void setSelectedCategory(SubCategory selectedCategory) {
         this.selectedCategory = selectedCategory;
     }
-    
+
     public float getX() {
         return x;
     }
-    
+
     public void setX(float x) {
         this.x = x;
     }
-    
+
     public float getY() {
         return y;
     }
-    
+
     public void setY(float y) {
         this.y = y;
     }
-    
+
     public float getWidth() {
         return width;
     }
-    
+
     public void setWidth(float width) {
         this.width = width;
     }
-    
+
     public float getHeight() {
         return height;
     }
-    
+
     public void setHeight(float height) {
         this.height = height;
     }
-    
+
     public float getModuleScroll() {
         return moduleScroll;
     }
-    
+
     public void setModuleScroll(float moduleScroll) {
         this.moduleScroll = moduleScroll;
     }
-    
+
     public float getCategoryScroll() {
         return categoryScroll;
     }
-    
+
     public void setCategoryScroll(float categoryScroll) {
         this.categoryScroll = categoryScroll;
     }
-    
+
     public Set<String> getOpenedModules() {
         return openedModules;
     }
-    
+
     public void addOpenedModule(String moduleFileName) {
         openedModules.add(moduleFileName);
     }
-    
+
     public void removeOpenedModule(String moduleFileName) {
         openedModules.remove(moduleFileName);
     }
-    
+
     public void clearOpenedModules() {
         openedModules.clear();
     }
-    
+
     public boolean isModuleOpened(String moduleFileName) {
         return openedModules.contains(moduleFileName);
     }
-    
+
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
 
@@ -131,13 +129,13 @@ public class ClickGuiState {
             openedArray.add(new JsonPrimitive(moduleName));
         }
         json.add("openedModules", openedArray);
-        
+
         return json;
     }
-    
+
     public static ClickGuiState fromJson(JsonObject json) {
         ClickGuiState state = new ClickGuiState();
-        
+
         if (json == null) {
             return state;
         }
@@ -181,10 +179,10 @@ public class ClickGuiState {
                 }
             }
         }
-        
+
         return state;
     }
-    
+
     /**
      * Creates a ClickGuiState from the current ClickGui instance.
      */
@@ -197,21 +195,21 @@ public class ClickGuiState {
         state.width = bodevelopment.client.blackout.gui.clickgui.ClickGui.width;
         state.height = bodevelopment.client.blackout.gui.clickgui.ClickGui.height;
 
-        bodevelopment.client.blackout.gui.clickgui.ClickGui clickGui = 
-            bodevelopment.client.blackout.manager.Managers.CLICK_GUI.CLICK_GUI;
+        bodevelopment.client.blackout.gui.clickgui.ClickGui clickGui =
+                bodevelopment.client.blackout.manager.Managers.CLICK_GUI.CLICK_GUI;
         state.moduleScroll = clickGui.getModuleScroll();
         state.categoryScroll = clickGui.getCategoryScroll();
 
-        for (bodevelopment.client.blackout.gui.clickgui.components.ModuleComponent component : 
-             clickGui.moduleComponents) {
+        for (bodevelopment.client.blackout.gui.clickgui.components.ModuleComponent component :
+                clickGui.moduleComponents) {
             if (component.opened) {
                 state.addOpenedModule(component.module.getFileName());
             }
         }
-        
+
         return state;
     }
-    
+
     /**
      * Applies this state to the current ClickGui instance.
      */
@@ -222,13 +220,13 @@ public class ClickGuiState {
         bodevelopment.client.blackout.gui.clickgui.ClickGui.width = width;
         bodevelopment.client.blackout.gui.clickgui.ClickGui.height = height;
 
-        bodevelopment.client.blackout.gui.clickgui.ClickGui clickGui = 
-            bodevelopment.client.blackout.manager.Managers.CLICK_GUI.CLICK_GUI;
+        bodevelopment.client.blackout.gui.clickgui.ClickGui clickGui =
+                bodevelopment.client.blackout.manager.Managers.CLICK_GUI.CLICK_GUI;
         clickGui.setModuleScroll(moduleScroll);
         clickGui.setCategoryScroll(categoryScroll);
 
-        for (bodevelopment.client.blackout.gui.clickgui.components.ModuleComponent component : 
-             clickGui.moduleComponents) {
+        for (bodevelopment.client.blackout.gui.clickgui.components.ModuleComponent component :
+                clickGui.moduleComponents) {
             component.opened = isModuleOpened(component.module.getFileName());
         }
     }

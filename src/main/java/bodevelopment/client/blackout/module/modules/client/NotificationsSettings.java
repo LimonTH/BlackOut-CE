@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.module.modules.client;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.manager.managers.NotificationManager;
 import bodevelopment.client.blackout.module.SettingsModule;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -10,14 +11,16 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
-import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.ScreenUtils;
+import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
-import java.awt.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.util.Mth;
 
+import java.awt.*;
+
+@PublicAPI
 public class NotificationsSettings extends SettingsModule {
     private static NotificationsSettings INSTANCE;
 
@@ -137,7 +140,7 @@ public class NotificationsSettings extends SettingsModule {
                 Render2DUtils.circle(
                         stack,
                         0.0F,
-                        finalCenterY+1.5F,
+                        finalCenterY + 1.5F,
                         circleRad,
                         c.getRGB()
                 );

@@ -1,6 +1,8 @@
 package bodevelopment.client.blackout.manager.managers;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
+import bodevelopment.client.blackout.annotations.ThreadSafe;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.event.events.RenderEvent;
@@ -13,12 +15,13 @@ import bodevelopment.client.blackout.module.modules.movement.PacketFly;
 import bodevelopment.client.blackout.randomstuff.FloatPairRingBuffer;
 import bodevelopment.client.blackout.util.CompatUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
-import bodevelopment.client.blackout.util.SettingUtils;
 import bodevelopment.client.blackout.util.SharedFeatures;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.util.Mth;
 
+@PublicAPI
+@ThreadSafe
 public class RotationManager extends Manager {
     public final FloatPairRingBuffer rotationHistory = new FloatPairRingBuffer();
     public final FloatPairRingBuffer tickRotationHistory = new FloatPairRingBuffer();

@@ -1,7 +1,8 @@
 package bodevelopment.client.blackout.util.render;
 
-import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 
 import java.util.ArrayDeque;
@@ -10,15 +11,16 @@ import java.util.Deque;
 /**
  * Nested scissor region management. Each push intersects with the parent region.
  * AutoCloseable for automatic cleanup.
- *
+ * <p>
  * Usage:
- *   try (ScissorStack.Region region = ScissorStack.push(x, y, w, h)) {
- *       // draw calls clipped to region
- *       try (ScissorStack.Region inner = ScissorStack.push(ix, iy, iw, ih)) {
- *           // draw calls clipped to intersection of both regions
- *       }
- *   }
+ * try (ScissorStack.Region region = ScissorStack.push(x, y, w, h)) {
+ * // draw calls clipped to region
+ * try (ScissorStack.Region inner = ScissorStack.push(ix, iy, iw, ih)) {
+ * // draw calls clipped to intersection of both regions
+ * }
+ * }
  */
+@Internal
 public class ScissorStack {
     private static final Deque<int[]> stack = new ArrayDeque<>();
 
@@ -114,7 +116,8 @@ public class ScissorStack {
     public static class Region implements AutoCloseable {
         static final Region INSTANCE = new Region();
 
-        private Region() {}
+        private Region() {
+        }
 
         @Override
         public void close() {

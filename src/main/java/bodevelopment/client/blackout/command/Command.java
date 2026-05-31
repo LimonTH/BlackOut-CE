@@ -1,8 +1,11 @@
 package bodevelopment.client.blackout.command;
 
+import bodevelopment.client.blackout.annotations.PublicAPI;
+
 import java.util.Collections;
 import java.util.List;
 
+@PublicAPI
 public class Command {
     public final String name;
     public final String usage;

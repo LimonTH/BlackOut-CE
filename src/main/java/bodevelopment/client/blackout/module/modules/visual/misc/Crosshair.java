@@ -1,7 +1,5 @@
 package bodevelopment.client.blackout.module.modules.visual.misc;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
-import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.module.Module;
@@ -9,6 +7,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;

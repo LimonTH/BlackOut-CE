@@ -56,5 +56,6 @@ public final class Shaders {
                 });
     }
 
-    private Shaders() {}
+    private Shaders() {
+    }
 }

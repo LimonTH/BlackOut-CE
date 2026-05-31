@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.helpers;
 
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.interfaces.functional.RotationCheck;
 import bodevelopment.client.blackout.manager.Managers;
@@ -16,14 +17,16 @@ import bodevelopment.client.blackout.randomstuff.Rotation;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+@PublicAPI
 public class RotationHelper {
     private static final List<Class<? extends Module>> priorities = new ArrayList<>();
 

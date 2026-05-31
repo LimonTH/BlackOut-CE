@@ -33,37 +33,37 @@ public class DevInfo extends HudElement {
     @Override
     public void render() {
         this.components.clear();
-            String text = BlackOut.TYPE + " Build — " + BlackOut.VERSION;
-            this.components.add(new Component(""));
-            this.components.add(new Component(BlackOut.TYPE.name(), this.typeColor.get() ? BlackOut.TYPECOLOR : null, true));
-            this.components.add(new Component(" Build — " + BlackOut.VERSION));
-            this.stack.pushPose();
-            if (this.blur.get()) {
-                Render2DUtils.drawLoadedBlur(
-                        "hudblur",
-                        this.stack,
-                        renderer -> renderer.rounded(0.0F, 0.0F, BlackOut.FONT.getWidth(text), BlackOut.FONT.getHeight(), this.rounded.get() ? 3.0F : 0.0F, 10)
-                );
-                Renderer.onHUDBlur();
+        String text = BlackOut.TYPE + " Build — " + BlackOut.VERSION;
+        this.components.add(new Component(""));
+        this.components.add(new Component(BlackOut.TYPE.name(), this.typeColor.get() ? BlackOut.TYPECOLOR : null, true));
+        this.components.add(new Component(" Build — " + BlackOut.VERSION));
+        this.stack.pushPose();
+        if (this.blur.get()) {
+            Render2DUtils.drawLoadedBlur(
+                    "hudblur",
+                    this.stack,
+                    renderer -> renderer.rounded(0.0F, 0.0F, BlackOut.FONT.getWidth(text), BlackOut.FONT.getHeight(), this.rounded.get() ? 3.0F : 0.0F, 10)
+            );
+            Renderer.onHUDBlur();
+        }
+
+        if (this.bg.get()) {
+            this.background.render(this.stack, 0.0F, 0.0F, BlackOut.FONT.getWidth(text), BlackOut.FONT.getHeight(), this.rounded.get() ? 3.0F : 0.0F, 3.0F);
+        }
+
+        this.setSize(BlackOut.FONT.getWidth(text), BlackOut.FONT.getHeight());
+        this.offset = 0.0F;
+        this.components.forEach(component -> {
+            if (component.color == null) {
+                this.textColor.render(this.stack, component.text, 1.0F, this.offset, 0.0F, false, false, component.bold);
+            } else if (component.bold) {
+                BlackOut.BOLD_FONT.text(this.stack, component.text, 1.0F, this.offset, 0.0F, component.color, false, false);
+            } else {
+                BlackOut.FONT.text(this.stack, component.text, 1.0F, this.offset, 0.0F, component.color, false, false);
             }
 
-            if (this.bg.get()) {
-                this.background.render(this.stack, 0.0F, 0.0F, BlackOut.FONT.getWidth(text), BlackOut.FONT.getHeight(), this.rounded.get() ? 3.0F : 0.0F, 3.0F);
-            }
-
-            this.setSize(BlackOut.FONT.getWidth(text), BlackOut.FONT.getHeight());
-            this.offset = 0.0F;
-            this.components.forEach(component -> {
-                if (component.color == null) {
-                    this.textColor.render(this.stack, component.text, 1.0F, this.offset, 0.0F, false, false, component.bold);
-                } else if (component.bold) {
-                    BlackOut.BOLD_FONT.text(this.stack, component.text, 1.0F, this.offset, 0.0F, component.color, false, false);
-                } else {
-                    BlackOut.FONT.text(this.stack, component.text, 1.0F, this.offset, 0.0F, component.color, false, false);
-                }
-
-                this.offset = this.offset + component.width;
-            });
+            this.offset = this.offset + component.width;
+        });
         this.stack.popPose();
     }
 }

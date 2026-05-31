@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.module.modules.client.BlurSettings;
 import bodevelopment.client.blackout.module.modules.misc.Zoomify;
@@ -11,21 +12,22 @@ import bodevelopment.client.blackout.module.modules.visual.misc.HandESP;
 import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.scores.Objective;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.awt.*;
-import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.TextColor;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.scores.Objective;
 
 @Mixin(Gui.class)
+@Internal
 public class MixinGui {
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void preRender(GuiGraphics context, DeltaTracker tickCounter, CallbackInfo ci) {
@@ -94,7 +96,8 @@ public class MixinGui {
 
         ResourceLocation pumpkinTex = ResourceLocation.withDefaultNamespace("textures/misc/pumpkinblur.png");
 
-        if (noRender.pumpkin.get()       && pumpkinTex.equals(texture)) { ci.cancel();
+        if (noRender.pumpkin.get() && pumpkinTex.equals(texture)) {
+            ci.cancel();
         }
     }
 

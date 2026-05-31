@@ -1,39 +1,68 @@
 package bodevelopment.client.blackout.util.render;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
+@Internal
 public class RenderLayer {
-    /** WORLD */
+    /**
+     * WORLD
+     */
     public static final float WORLD = 0.0F;
 
-    /** Particles */
+    /**
+     * Particles
+     */
     public static final float PARTICLES = 100.0F;
 
-    /** ESP */
+    /**
+     * ESP
+     */
     public static final float ESP = 200.0F;
 
-    /** Nametags */
+    /**
+     * Nametags
+     */
     public static final float NAMETAGS = 300.0F;
 
-    /** HUD */
+    /**
+     * HUD
+     */
     public static final float HUD = 500.0F;
 
-    /** GUI */
+    /**
+     * GUI
+     */
     public static final float GUI = 700.0F;
 
-    /** GUI Elements (buttons, sliders) */
+    /**
+     * GUI Elements (buttons, sliders)
+     */
     public static final float GUI_ELEMENT = 800.0F;
 
-    /** GUI Popups (menus, dialogs) */
+    /**
+     * GUI Popups (menus, dialogs)
+     */
     public static final float GUI_POPUP = 900.0F;
 
-    /** Offset for sorting  */
+    /**
+     * Offset for sorting
+     */
     public static final float OFFSET_LARGE = 10.0F;
-    /** Offset for sorting */
+    /**
+     * Offset for sorting
+     */
     public static final float OFFSET_SMALL = 1.0F;
-    /** Offset for sorting */
+    /**
+     * Offset for sorting
+     */
     public static final float OFFSET_MILI = 0.1F;
-    /** Offset for sorting */
+    /**
+     * Offset for sorting
+     */
     public static final float OFFSET_MICRO = 0.01F;
-    /** Offset for sorting */
+    /**
+     * Offset for sorting
+     */
     public static final float OFFSET_NANO = 0.001F;
 
     public static boolean isStandardLayer(float z) {

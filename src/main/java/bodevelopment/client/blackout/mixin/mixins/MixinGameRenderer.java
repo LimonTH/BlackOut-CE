@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.combat.misc.NoTrace;
@@ -8,22 +9,11 @@ import bodevelopment.client.blackout.module.modules.misc.Reach;
 import bodevelopment.client.blackout.module.modules.visual.misc.*;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.randomstuff.timers.TimerMap;
-import bodevelopment.client.blackout.util.Capes;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
+import bodevelopment.client.blackout.util.Capes;
 import bodevelopment.client.blackout.util.SharedFeatures;
 import com.mojang.blaze3d.vertex.PoseStack;
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.objectweb.asm.Opcodes;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.*;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.util.function.Predicate;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -39,8 +29,22 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.objectweb.asm.Opcodes;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.function.Predicate;
 
 @Mixin(GameRenderer.class)
+@Internal
 public abstract class MixinGameRenderer {
     @Shadow
     public abstract void resetData();
@@ -153,8 +157,8 @@ public abstract class MixinGameRenderer {
             if (freecam.mode.get() == FreeCam.Mode.Simple) {
                 float pitch = net.minecraft.util.Mth.lerp(tickDelta, freecam.lastPitch, freecam.pitch);
                 float yaw = net.minecraft.util.Mth.lerp(tickDelta, freecam.lastYaw, freecam.yaw);
-                float f = pitch * ((float)Math.PI / 180F);
-                float g = -yaw * ((float)Math.PI / 180F);
+                float f = pitch * ((float) Math.PI / 180F);
+                float g = -yaw * ((float) Math.PI / 180F);
                 float h = net.minecraft.util.Mth.cos(g);
                 float i = net.minecraft.util.Mth.sin(g);
                 float j = net.minecraft.util.Mth.cos(f);
@@ -179,8 +183,8 @@ public abstract class MixinGameRenderer {
             if (freecam.mode.get() == FreeCam.Mode.Simple) {
                 float pitch = net.minecraft.util.Mth.lerp(tickDelta, freecam.lastPitch, freecam.pitch);
                 float yaw = net.minecraft.util.Mth.lerp(tickDelta, freecam.lastYaw, freecam.yaw);
-                float f = pitch * ((float)Math.PI / 180F);
-                float g = -yaw * ((float)Math.PI / 180F);
+                float f = pitch * ((float) Math.PI / 180F);
+                float g = -yaw * ((float) Math.PI / 180F);
                 float h = net.minecraft.util.Mth.cos(g);
                 float i = net.minecraft.util.Mth.sin(g);
                 float j = net.minecraft.util.Mth.cos(f);

@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.module.modules.visual.world.Ambience;
 import com.mojang.blaze3d.framegraph.FrameGraphBuilder;
 import net.minecraft.client.Camera;
@@ -10,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LevelRenderer.class)
+@Internal
 public class MixinLevelRenderer {
     @Inject(
             method = "addSkyPass(Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;Lnet/minecraft/client/Camera;FLnet/minecraft/client/renderer/FogParameters;)V",

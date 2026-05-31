@@ -1,7 +1,8 @@
 package bodevelopment.client.blackout.util;
 
-import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.util.Mth;
+
+import java.util.concurrent.ThreadLocalRandom;
 
 public class StringStorage {
     private static final String[] adjectives = new String[]{

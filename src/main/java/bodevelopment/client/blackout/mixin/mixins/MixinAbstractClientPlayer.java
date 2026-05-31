@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.module.modules.misc.Streamer;
 import bodevelopment.client.blackout.module.modules.misc.Zoomify;
 import net.minecraft.client.multiplayer.PlayerInfo;
@@ -14,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(AbstractClientPlayer.class)
+@Internal
 public abstract class MixinAbstractClientPlayer {
     @Shadow
     @Nullable

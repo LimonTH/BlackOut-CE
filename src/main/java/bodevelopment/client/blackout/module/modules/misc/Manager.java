@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.*;
@@ -12,6 +11,7 @@ import bodevelopment.client.blackout.module.modules.client.NotificationsSettings
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.ItemUtils;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -23,20 +23,11 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.AxeItem;
-import net.minecraft.world.item.BowItem;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.PickaxeItem;
-import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.equipment.Equippable;
-import net.minecraft.world.level.block.AbstractChestBlock;
-import net.minecraft.world.level.block.AnvilBlock;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.DispenserBlock;
-import net.minecraft.world.level.block.HopperBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.phys.BlockHitResult;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -177,7 +168,7 @@ public class Manager extends Module {
     private void doChestSwap() {
         this.currentlyElytra = !this.currentlyElytra;
         this.sendNotification(
-                this.getDisplayName() + " " + ChatFormatting.BLUE.toString() + " changed to " + (this.currentlyElytra ? "Elytra" : "Chestplate"),
+                this.getDisplayName() + " " + ChatFormatting.BLUE + " changed to " + (this.currentlyElytra ? "Elytra" : "Chestplate"),
                 this.getDisplayName() + "  changed to " + (this.currentlyElytra ? "Elytra" : "Chestplate"),
                 "Chest Swap",
                 NotificationsSettings.Type.Info,

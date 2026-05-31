@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.manager.managers;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.gui.menu.Account;
@@ -14,10 +15,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import java.util.ArrayList;
-import java.util.List;
 import net.minecraft.client.User;
 
+import java.util.ArrayList;
+import java.util.List;
+
+@PublicAPI
 public class AltManager extends Manager implements Persistable {
     private final List<Account> accounts = new ArrayList<>();
     public Account selected;

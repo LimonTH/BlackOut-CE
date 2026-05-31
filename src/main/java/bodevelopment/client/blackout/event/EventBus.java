@@ -1,7 +1,10 @@
 package bodevelopment.client.blackout.event;
 
 import bodevelopment.client.blackout.annotations.Profile;
+import bodevelopment.client.blackout.annotations.PublicAPI;
+import bodevelopment.client.blackout.annotations.ThreadSafe;
 import bodevelopment.client.blackout.util.BOLogger;
+
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
@@ -10,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@PublicAPI
+@ThreadSafe
 public class EventBus {
     public final Map<Class<?>, List<Listener>> listeners = new ConcurrentHashMap<>();
 
@@ -92,7 +97,9 @@ public class EventBus {
         return object;
     }
 
-    /** Returns a formatted profile report, or null if profiling is disabled. */
+    /**
+     * Returns a formatted profile report, or null if profiling is disabled.
+     */
     public static String getProfileReport() {
         if (!profiling || profileData.isEmpty()) return null;
         StringBuilder sb = new StringBuilder("=== Profile Report (avg μs) ===\n");
@@ -107,7 +114,9 @@ public class EventBus {
         return sb.toString();
     }
 
-    /** Resets all accumulated profile data. */
+    /**
+     * Resets all accumulated profile data.
+     */
     public static void resetProfileData() {
         profileData.clear();
     }

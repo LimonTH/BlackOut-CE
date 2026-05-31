@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine;
 import bodevelopment.client.blackout.module.modules.misc.AntiRotationSync;
@@ -34,6 +36,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(MultiPlayerGameMode.class)
+@Internal
 public abstract class MixinMultiPlayerGameMode {
     @Shadow
     public BlockPos destroyBlockPos;
@@ -233,10 +236,10 @@ public abstract class MixinMultiPlayerGameMode {
             }
 
             return new ServerboundUseItemPacket(
-                hand, 
-                sequence, 
-                Managers.ROTATION.prevYaw, 
-                Managers.ROTATION.prevPitch
+                    hand,
+                    sequence,
+                    Managers.ROTATION.prevYaw,
+                    Managers.ROTATION.prevPitch
             );
         });
     }

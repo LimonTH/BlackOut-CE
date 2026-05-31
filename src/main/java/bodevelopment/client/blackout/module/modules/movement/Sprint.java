@@ -1,7 +1,5 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
-import bodevelopment.client.blackout.util.CompatUtils;
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
@@ -9,6 +7,7 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
+import bodevelopment.client.blackout.util.PlayerUtils;
 
 public class Sprint extends Module {
     private static Sprint INSTANCE;

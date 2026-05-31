@@ -10,12 +10,13 @@ import bodevelopment.client.blackout.module.setting.settings.ListSetting;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
+import net.minecraft.util.Mth;
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import net.minecraft.util.Mth;
 
 public class ListScreen<T> extends ClickGuiScreen {
     private static final float BUTTON_HEIGHT = 30.0F;
@@ -147,7 +148,7 @@ public class ListScreen<T> extends ClickGuiScreen {
     private boolean clickButton() {
         float half = this.width / 2.0F;
         float btnW = half - 30.0F;
-        float scrollOffset = (float) this.scroll.get();
+        float scrollOffset = this.scroll.get();
         float mouseRelY = (float) (my + scrollOffset - 15.0F);
 
         if (mouseRelY < BUTTON_Y || mouseRelY >= BUTTON_Y + BUTTON_HEIGHT) return false;

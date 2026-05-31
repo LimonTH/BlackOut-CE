@@ -22,9 +22,6 @@ import bodevelopment.client.blackout.randomstuff.PlaceData;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket;
@@ -42,6 +39,10 @@ import net.minecraft.world.level.block.AirBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Blocker extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -207,11 +208,11 @@ public class Blocker extends Module {
                 for (Direction dir : Direction.values()) {
                     if (p.type == 1
                             ? (this.surroundSides.get() || !dir.getAxis().isHorizontal())
-                            && (this.surroundTop.get() || dir != Direction.UP)
-                            && (this.surroundBottom.get() || dir != Direction.DOWN)
+                              && (this.surroundTop.get() || dir != Direction.UP)
+                              && (this.surroundBottom.get() || dir != Direction.DOWN)
                             : dir != Direction.UP
-                            && (this.surroundFloor.get() || !dir.getAxis().isHorizontal())
-                            && (this.surroundFloorBottom.get() || dir != Direction.DOWN)) {
+                              && (this.surroundFloor.get() || !dir.getAxis().isHorizontal())
+                              && (this.surroundFloorBottom.get() || dir != Direction.DOWN)) {
                         BlockPos posx = p.pos.relative(dir);
                         if (BlockUtils.replaceable(posx)) {
                             PlaceData datax = SettingUtils.getPlaceData(posx);

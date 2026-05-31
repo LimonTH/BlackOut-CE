@@ -13,7 +13,10 @@ import bodevelopment.client.blackout.module.SettingsModule;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.Rotation;
-import bodevelopment.client.blackout.util.*;
+import bodevelopment.client.blackout.util.BoxUtils;
+import bodevelopment.client.blackout.util.DamageUtils;
+import bodevelopment.client.blackout.util.RotationUtils;
+import bodevelopment.client.blackout.util.SettingUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
@@ -24,6 +27,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
+
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -175,6 +179,7 @@ public class RotationSettings extends SettingsModule {
 
     private int sinceRotated = 0;
     public final Vec3 vec = new Vec3(0.0, 0.0, 0.0);
+
     public RotationSettings() {
         super("Rotate", false, true);
         INSTANCE = this;

@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.randomstuff.timers;
 
+import bodevelopment.client.blackout.annotations.ThreadSafe;
+
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.interfaces.functional.DoublePredicate;
@@ -10,6 +12,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
+@ThreadSafe
 public class TimerMap<E, T> {
     public static final List<TimerMap<?, ?>> updating = new ArrayList<>();
     public final Map<E, Timer<T>> timers = new ConcurrentHashMap<>();

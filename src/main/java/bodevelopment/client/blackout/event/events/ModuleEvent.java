@@ -10,10 +10,14 @@ public class ModuleEvent {
     }
 
     public static class Enable extends ModuleEvent {
-        public Enable(Module module) { super(module); }
+        public Enable(Module module) {
+            super(module);
+        }
     }
 
     public static class Disable extends ModuleEvent {
-        public Disable(Module module) { super(module); }
+        public Disable(Module module) {
+            super(module);
+        }
     }
 }

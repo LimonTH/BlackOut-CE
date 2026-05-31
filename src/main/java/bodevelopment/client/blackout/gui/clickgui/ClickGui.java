@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.gui.clickgui;
 
-import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.KeyEvent;
@@ -24,27 +23,20 @@ import bodevelopment.client.blackout.rendering.framebuffer.GuiAlphaFrameBuffer;
 import bodevelopment.client.blackout.rendering.renderer.ColorRenderer;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
-import bodevelopment.client.blackout.util.render.RenderState;
-import bodevelopment.client.blackout.util.ColorUtils;
-import bodevelopment.client.blackout.util.GuiColorUtils;
-import bodevelopment.client.blackout.util.GuiRenderUtils;
-import bodevelopment.client.blackout.util.SelectedComponent;
-import bodevelopment.client.blackout.util.render.AnimUtils;
-import bodevelopment.client.blackout.util.render.RenderLayer;
-import bodevelopment.client.blackout.util.render.Render2DUtils;
-import bodevelopment.client.blackout.util.render.ScissorStack;
+import bodevelopment.client.blackout.util.*;
+import bodevelopment.client.blackout.util.render.*;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import org.lwjgl.glfw.GLFW;
-
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import org.lwjgl.glfw.GLFW;
+
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ClickGui extends Screen {
     public static float popUpDelta = 0.0F;
@@ -86,7 +78,7 @@ public class ClickGui extends Screen {
     private String lastDescription = null;
     private long hoverTime = 0L;
     private float descAlpha = 0.0F;
-    private boolean guiStateChanged = false;
+    private final boolean guiStateChanged = false;
 
     public ClickGui() {
         super(Component.nullToEmpty("Click GUI"));
@@ -713,8 +705,15 @@ public class ClickGui extends Screen {
             return;
         }
 
-        if (key == GLFW.GLFW_KEY_UP) { upPressed = true; pressTime = System.currentTimeMillis(); return; }
-        if (key == GLFW.GLFW_KEY_DOWN) { downPressed = true; pressTime = System.currentTimeMillis(); }
+        if (key == GLFW.GLFW_KEY_UP) {
+            upPressed = true;
+            pressTime = System.currentTimeMillis();
+            return;
+        }
+        if (key == GLFW.GLFW_KEY_DOWN) {
+            downPressed = true;
+            pressTime = System.currentTimeMillis();
+        }
 
         boolean isWritingText = SelectedComponent.isSelected();
 

@@ -1,10 +1,11 @@
 package bodevelopment.client.blackout.rendering.texture;
 
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.util.FileUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
-import org.apache.commons.lang3.mutable.MutableDouble;
 import net.minecraft.util.ARGB;
+import org.apache.commons.lang3.mutable.MutableDouble;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL13C;
 
@@ -12,6 +13,7 @@ import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+@PublicAPI
 public class BOTextures {
     private static final TextureRenderer logoRenderer = new TextureRenderer("logo");
     private static final TextureRenderer catRenderer = new TextureRenderer("catgirl");

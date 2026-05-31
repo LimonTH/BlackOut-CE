@@ -1,5 +1,10 @@
 package bodevelopment.client.blackout.util;
 
+import bodevelopment.client.blackout.annotations.NoAlloc;
+import bodevelopment.client.blackout.annotations.PublicAPI;
+
+@PublicAPI
+@NoAlloc
 public class MathUtils {
     // Projectile physics constants
     public static final double THROWABLE_GRAVITY = 0.03;

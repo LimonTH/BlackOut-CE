@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.util.render;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.render.consumers.providers.ModelVertexConsumerProvider;
@@ -16,9 +17,9 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.PlayerRenderState;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
@@ -26,6 +27,7 @@ import org.joml.Matrix4f;
 
 import java.util.List;
 
+@Internal
 public class WireframeRenderer extends WireframeContext {
     public static final ModelVertexConsumerProvider provider = new ModelVertexConsumerProvider();
     public static boolean hidden = false;
@@ -117,7 +119,7 @@ public class WireframeRenderer extends WireframeContext {
         state.ageInTicks = data.animationProgress;
 
         state.bodyRot = data.bodyYaw;
-        state.yRot = data.headYaw - data.bodyYaw;;
+        state.yRot = data.headYaw - data.bodyYaw;
         state.xRot = data.pitch;
         state.walkAnimationPos = data.limbPos;
         state.walkAnimationSpeed = data.limbSpeed;
@@ -263,7 +265,9 @@ public class WireframeRenderer extends WireframeContext {
         float len = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
 
         if (len > 0.0001F) {
-            dx /= len; dy /= len; dz /= len;
+            dx /= len;
+            dy /= len;
+            dz /= len;
         } else {
             dy = 1.0f;
         }

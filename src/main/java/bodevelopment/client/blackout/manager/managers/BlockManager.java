@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.manager.managers;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.BlockStateEvent;
 import bodevelopment.client.blackout.manager.Manager;
@@ -10,6 +11,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
+@PublicAPI
 public class BlockManager extends Manager {
     private final TimerMap<BlockPos, SpoofedBlock> timers = new TimerMap<>(true);
 

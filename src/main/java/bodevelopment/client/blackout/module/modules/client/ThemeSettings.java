@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.module.modules.client;
 
+import bodevelopment.client.blackout.annotations.PublicAPI;
+
 import bodevelopment.client.blackout.module.SettingsModule;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -8,6 +10,7 @@ import bodevelopment.client.blackout.theme.Theme;
 import java.util.ArrayList;
 import java.util.List;
 
+@PublicAPI
 public class ThemeSettings extends SettingsModule {
     public static final List<Theme> themes = new ArrayList<>();
     private static ThemeSettings INSTANCE;

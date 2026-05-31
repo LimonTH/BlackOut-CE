@@ -1,14 +1,13 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.interfaces.functional.EpicInterface;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.misc.Simulation;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import java.util.ArrayList;
-import java.util.function.Predicate;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
@@ -20,6 +19,10 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.ArrayList;
+import java.util.function.Predicate;
+
+@PublicAPI
 public class InvUtils {
     public static InteractionHand getHand(Item item) {
         return getHand(stack -> stack.getItem() == item);

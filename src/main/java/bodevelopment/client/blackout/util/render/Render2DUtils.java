@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.util.render;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.NoAlloc;
 import bodevelopment.client.blackout.gui.menu.MainMenu;
 import bodevelopment.client.blackout.hud.HudMergePass;
 import bodevelopment.client.blackout.manager.Managers;
@@ -12,12 +13,7 @@ import bodevelopment.client.blackout.rendering.shader.Shader;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.ScreenUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -32,11 +28,14 @@ import org.joml.Vector4f;
 import java.awt.*;
 import java.util.function.Consumer;
 
+@NoAlloc
 public class Render2DUtils {
     public static final long initTime = System.currentTimeMillis();
     public static final PoseStack emptyStack = new PoseStack();
 
-    /** Extra pixel padding around shader quads for anti-aliasing coverage */
+    /**
+     * Extra pixel padding around shader quads for anti-aliasing coverage
+     */
     private static final float SHADER_QUAD_PADDING = 1.0F;
     private static final Matrix4f lastProjMat = new Matrix4f();
     private static final Matrix4f lastModelViewMat = new Matrix4f();
@@ -184,7 +183,9 @@ public class Render2DUtils {
         renderBufferWithTexture(frameBuffer.getTexture(), shader, setup);
     }
 
-    /** Composite an arbitrary texture (e.g. from a {@link bodevelopment.client.blackout.rendering.framebuffer.StencilFrameBuffer}) onto the current render target. */
+    /**
+     * Composite an arbitrary texture (e.g. from a {@link bodevelopment.client.blackout.rendering.framebuffer.StencilFrameBuffer}) onto the current render target.
+     */
     public static void renderBufferWithTexture(int textureId, Shader shader, ShaderSetup setup) {
         ShaderRenderer renderer = ShaderRenderer.getInstance();
         Renderer.setTexture(textureId, 0);
@@ -288,12 +289,32 @@ public class Render2DUtils {
         float minX = x - ext, maxX = x + w + ext, minY = y - ext, maxY = y + h + ext;
 
         switch (side) {
-            case RIGHT -> { minX = x; innerX = x - radius; innerW = w + radius; }
-            case LEFT -> { maxX = x + w; innerW = w + radius; }
-            case TOP -> { maxY = y + h; innerH = h + radius; }
-            case BOTTOM -> { minY = y; innerY = y - radius; innerH = h + radius; }
-            case BOTTOM_LEFT -> { minY = y - radius; innerY = y - radius; innerW = w + radius; innerH = h + radius; }
-            default -> {}
+            case RIGHT -> {
+                minX = x;
+                innerX = x - radius;
+                innerW = w + radius;
+            }
+            case LEFT -> {
+                maxX = x + w;
+                innerW = w + radius;
+            }
+            case TOP -> {
+                maxY = y + h;
+                innerH = h + radius;
+            }
+            case BOTTOM -> {
+                minY = y;
+                innerY = y - radius;
+                innerH = h + radius;
+            }
+            case BOTTOM_LEFT -> {
+                minY = y - radius;
+                innerY = y - radius;
+                innerW = w + radius;
+                innerH = h + radius;
+            }
+            default -> {
+            }
         }
 
         innerRounded(stack, innerX, innerY, innerW, innerH, radius, shadowRadius, color, shadowColor, minX, maxX, minY, maxY);
@@ -582,11 +603,36 @@ public class Render2DUtils {
 
         float tl, bl, tr, br;
         switch (side) {
-            case RIGHT -> { tl = a; bl = a; tr = 0.0F; br = 0.0F; }
-            case LEFT -> { tl = 0.0F; bl = 0.0F; tr = a; br = a; }
-            case TOP -> { tl = 0.0F; bl = a; tr = 0.0F; br = a; }
-            case BOTTOM -> { tl = a; bl = 0.0F; tr = a; br = 0.0F; }
-            default -> { tl = a; bl = a; tr = a; br = a; }
+            case RIGHT -> {
+                tl = a;
+                bl = a;
+                tr = 0.0F;
+                br = 0.0F;
+            }
+            case LEFT -> {
+                tl = 0.0F;
+                bl = 0.0F;
+                tr = a;
+                br = a;
+            }
+            case TOP -> {
+                tl = 0.0F;
+                bl = a;
+                tr = 0.0F;
+                br = a;
+            }
+            case BOTTOM -> {
+                tl = a;
+                bl = 0.0F;
+                tr = a;
+                br = 0.0F;
+            }
+            default -> {
+                tl = a;
+                bl = a;
+                tr = a;
+                br = a;
+            }
         }
 
         quad(stack, x, y, w, h,

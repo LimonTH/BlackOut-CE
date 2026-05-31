@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.visual.misc;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.event.Event;
@@ -11,17 +10,18 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.BoxUtils;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
-import org.apache.commons.lang3.mutable.MutableDouble;
-
-import java.util.HashMap;
-import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.apache.commons.lang3.mutable.MutableDouble;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class Highlight extends Module {
     private static Highlight INSTANCE;

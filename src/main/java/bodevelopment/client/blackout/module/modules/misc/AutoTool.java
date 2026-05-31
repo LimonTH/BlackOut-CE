@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
@@ -10,6 +9,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.util.BlockUtils;
 import bodevelopment.client.blackout.util.InvUtils;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 

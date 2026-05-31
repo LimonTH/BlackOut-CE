@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.hud.elements;
 
-import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.hud.HudElement;
+import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;

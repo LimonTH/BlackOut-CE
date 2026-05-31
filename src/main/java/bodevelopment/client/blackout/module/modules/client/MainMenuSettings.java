@@ -1,19 +1,21 @@
 package bodevelopment.client.blackout.module.modules.client;
 
+import bodevelopment.client.blackout.gui.menu.types.ColorMainMenu;
+import bodevelopment.client.blackout.gui.menu.types.PanoramaMainMenu;
+import bodevelopment.client.blackout.gui.menu.types.SmokeMainMenu;
 import bodevelopment.client.blackout.module.SettingsModule;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
-import bodevelopment.client.blackout.gui.menu.types.PanoramaMainMenu;
 import bodevelopment.client.blackout.randomstuff.mainmenu.MainMenuRenderer;
-import bodevelopment.client.blackout.gui.menu.types.SmokeMainMenu;
-import bodevelopment.client.blackout.gui.menu.types.ColorMainMenu;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MainMenuSettings extends SettingsModule {
-    /** Registry for addon-provided custom menu renderers. Key = display name, Value = renderer instance. */
+    /**
+     * Registry for addon-provided custom menu renderers. Key = display name, Value = renderer instance.
+     */
     public static final Map<String, MainMenuRenderer> CUSTOM_RENDERERS = new ConcurrentHashMap<>();
 
     private static MainMenuSettings INSTANCE;

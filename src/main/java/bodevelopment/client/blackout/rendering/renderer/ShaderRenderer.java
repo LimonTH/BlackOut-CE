@@ -1,19 +1,20 @@
 package bodevelopment.client.blackout.rendering.renderer;
 
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.randomstuff.ShaderSetup;
-import bodevelopment.client.blackout.util.render.RenderState;
-import net.minecraft.util.ARGB;
 import bodevelopment.client.blackout.rendering.shader.Shader;
+import bodevelopment.client.blackout.util.render.RenderState;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.util.ARGB;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
+@Internal
 public class ShaderRenderer extends Renderer {
     private static final ShaderRenderer INSTANCE = new ShaderRenderer();
 

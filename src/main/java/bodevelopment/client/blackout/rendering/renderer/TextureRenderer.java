@@ -1,17 +1,19 @@
 package bodevelopment.client.blackout.rendering.renderer;
 
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.randomstuff.ShaderSetup;
-import bodevelopment.client.blackout.util.render.RenderState;
-import net.minecraft.util.ARGB;
 import bodevelopment.client.blackout.rendering.shader.Shader;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.rendering.texture.BOTextures;
+import bodevelopment.client.blackout.util.render.RenderState;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.util.ARGB;
 
+@PublicAPI
 public class TextureRenderer extends Renderer {
     private static final TextureRenderer INSTANCE = new TextureRenderer("rur");
     private final String name;

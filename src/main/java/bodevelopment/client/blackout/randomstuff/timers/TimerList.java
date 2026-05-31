@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.randomstuff.timers;
 
+import bodevelopment.client.blackout.annotations.ThreadSafe;
+
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 
@@ -7,6 +9,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+@ThreadSafe
 public class TimerList<T> {
     public static final List<TimerList<?>> updating = new ArrayList<>();
     private final List<Timer<T>> timers = Collections.synchronizedList(new ArrayList<>());

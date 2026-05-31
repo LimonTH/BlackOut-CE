@@ -1,14 +1,17 @@
 package bodevelopment.client.blackout.module.modules.visual.misc;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Experimental;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import java.util.List;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
+import java.util.List;
+
+@Experimental
 public class XRay extends Module {
     private static XRay INSTANCE;
 

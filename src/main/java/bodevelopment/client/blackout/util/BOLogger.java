@@ -1,10 +1,12 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+@PublicAPI
 public class BOLogger {
     private static final Logger LOGGER = LogManager.getLogger(BlackOut.NAME);
 

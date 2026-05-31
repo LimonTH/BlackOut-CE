@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.manager.managers;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.enums.ConfigType;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
@@ -24,6 +25,7 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.function.Predicate;
 
+@PublicAPI
 public class ConfigManager extends Manager {
     private final String[] configs = new String[8];
     private final boolean[] toSave = new boolean[8];

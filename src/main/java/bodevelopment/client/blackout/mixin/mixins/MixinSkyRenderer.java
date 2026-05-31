@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.FogParameters;
@@ -11,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(SkyRenderer.class)
+@Internal
 public class MixinSkyRenderer {
     @Inject(method = "renderSkyDisc", at = @At("HEAD"), cancellable = true)
     private void onRenderSkyDisc(float r, float g, float b, CallbackInfo ci) {

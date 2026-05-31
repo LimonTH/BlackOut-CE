@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.keys.Keys;
 import bodevelopment.client.blackout.util.SharedFeatures;
 import net.minecraft.client.KeyboardHandler;
@@ -13,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(KeyboardHandler.class)
+@Internal
 public class MixinKeyboardHandler {
     @Inject(method = "keyPress", at = @At("HEAD"))
     public void onKeyPressed(long window, int key, int scancode, int action, int modifiers, CallbackInfo ci) {

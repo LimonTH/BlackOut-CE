@@ -9,11 +9,10 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
-import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
+import bodevelopment.client.blackout.util.render.RenderLayer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import java.awt.*;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -23,6 +22,8 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
+
+import java.awt.*;
 
 public class ShulkerViewer extends Module {
     private static ShulkerViewer INSTANCE;
@@ -45,7 +46,8 @@ public class ShulkerViewer extends Module {
 
         ItemStack hoveredStack = getHoveredStack(BlackOut.mc.screen);
         if (hoveredStack == null || hoveredStack.isEmpty()) return;
-        if (!(hoveredStack.getItem() instanceof BlockItem blockItem && blockItem.getBlock() instanceof ShulkerBoxBlock)) return;
+        if (!(hoveredStack.getItem() instanceof BlockItem blockItem && blockItem.getBlock() instanceof ShulkerBoxBlock))
+            return;
 
         ItemContainerContents container = hoveredStack.get(DataComponents.CONTAINER);
         if (container == null) return;
@@ -68,7 +70,8 @@ public class ShulkerViewer extends Module {
         float posY = mouseY - height / 2;
 
         if (posX + width > BlackOut.mc.getWindow().getGuiScaledWidth()) posX = mouseX - width - 12;
-        if (posY + height > BlackOut.mc.getWindow().getGuiScaledHeight()) posY = BlackOut.mc.getWindow().getGuiScaledHeight() - height - 5;
+        if (posY + height > BlackOut.mc.getWindow().getGuiScaledHeight())
+            posY = BlackOut.mc.getWindow().getGuiScaledHeight() - height - 5;
         if (posY < 5) posY = 5;
 
         PoseStack stack = context.pose();

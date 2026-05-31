@@ -2,9 +2,9 @@ package bodevelopment.client.blackout.command.commands;
 
 import bodevelopment.client.blackout.command.Command;
 import bodevelopment.client.blackout.util.FileUtils;
-import java.awt.*;
-import java.io.File;
 import net.minecraft.ChatFormatting;
+
+import java.io.File;
 
 public class FolderCommand extends Command {
     public int fakePlayerID = 0;
@@ -20,7 +20,7 @@ public class FolderCommand extends Command {
             FileUtils.openDirectory(folder);
             return "Opening folder: " + folder.getName();
         } catch (Exception e) {
-            return String.format("Error: Could not open folder: " + e.getMessage(), ChatFormatting.RED.toString());
+            return String.format("Error: Could not open folder: " + e.getMessage(), ChatFormatting.RED);
         }
     }
 

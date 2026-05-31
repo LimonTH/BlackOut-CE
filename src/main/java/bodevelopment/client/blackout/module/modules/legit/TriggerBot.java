@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.legit;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.SwingHand;
 import bodevelopment.client.blackout.event.Event;
@@ -9,7 +8,7 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import java.util.List;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.world.InteractionHand;
@@ -20,6 +19,8 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
+
+import java.util.List;
 
 public class TriggerBot extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");

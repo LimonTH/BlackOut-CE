@@ -11,8 +11,9 @@ import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import java.awt.*;
 import net.minecraft.util.Mth;
+
+import java.awt.*;
 
 public class DoubleSetting extends Setting<Double> {
     private static final Color CLEAR = new Color(255, 255, 255, 0);
@@ -20,7 +21,9 @@ public class DoubleSetting extends Setting<Double> {
     public final double max;
     public final double step;
     private final int decimals;
-    private final TextField textField = new TextField() {{ setMaxLength(16); }};
+    private final TextField textField = new TextField() {{
+        setMaxLength(16);
+    }};
     private final int id = SelectedComponent.nextId();
     private float sliderPos;
     private boolean moving = false;
@@ -61,7 +64,8 @@ public class DoubleSetting extends Setting<Double> {
         if (SelectedComponent.is(this.id)) {
             try {
                 this.setValue(Double.parseDouble(this.textField.getContent().replace(",", ".")));
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException ignored) {
+            }
         } else {
             this.textField.setContent(String.format(java.util.Locale.US, "%." + this.decimals + "f", this.get()));
         }

@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.keys;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.enums.ConfigType;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.util.ColorUtils;
@@ -8,8 +9,10 @@ import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
+
 import java.awt.*;
 
+@PublicAPI
 public class KeyBind {
     public Pressable value;
     private float x;

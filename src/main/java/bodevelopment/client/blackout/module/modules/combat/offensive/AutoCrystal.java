@@ -5,8 +5,8 @@ import bodevelopment.client.blackout.enums.*;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.*;
 import bodevelopment.client.blackout.interfaces.functional.EpicInterface;
-import bodevelopment.client.blackout.interfaces.mixin.IEndCrystal;
 import bodevelopment.client.blackout.interfaces.mixin.IClipContext;
+import bodevelopment.client.blackout.interfaces.mixin.IEndCrystal;
 import bodevelopment.client.blackout.keys.KeyBind;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.mixin.accessors.AccessorServerboundInteractPacket;
@@ -55,6 +55,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
+
 import java.awt.*;
 import java.util.*;
 import java.util.List;
@@ -480,7 +481,7 @@ public class AutoCrystal extends Module {
     }
 
     private void debug(String string, String value) {
-        ChatUtils.addMessage(string + " " + ChatFormatting.AQUA.toString() + value);
+        ChatUtils.addMessage(string + " " + ChatFormatting.AQUA + value);
     }
 
     private void updateAntiWeakness() {
@@ -890,14 +891,14 @@ public class AutoCrystal extends Module {
                         return false;
                     }
                     break;
-            case Normal:
-                if (System.currentTimeMillis() - this.lastAttack <= 1000.0 / this.attackSpeed.get()) {
-                    return false;
-                }
-                break;
-        }
+                case Normal:
+                    if (System.currentTimeMillis() - this.lastAttack <= 1000.0 / this.attackSpeed.get()) {
+                        return false;
+                    }
+                    break;
+            }
 
-        if (this.startAntiWeakness()) {
+            if (this.startAntiWeakness()) {
                 return false;
             } else {
                 this.attack(this.targetCrystal.getId(), this.targetCrystal.position(), false);
@@ -1886,13 +1887,33 @@ public class AutoCrystal extends Module {
         }
     }
 
-    public Setting<Double> getMinPlace() { return minPlace; }
-    public Setting<Double> getMaxSelfPlace() { return maxSelfPlace; }
-    public Setting<Double> getMinSelfRatio() { return minSelfRatio; }
-    public Setting<Boolean> getCheckSelfPlacing() { return checkSelfPlacing; }
-    public Setting<Boolean> getCheckFriendPlacing() { return checkFriendPlacing; }
-    public Setting<Double> getMaxFriendPlace() { return maxFriendPlace; }
-    public Setting<Double> getMinFriendRatio() { return minFriendRatio; }
+    public Setting<Double> getMinPlace() {
+        return minPlace;
+    }
+
+    public Setting<Double> getMaxSelfPlace() {
+        return maxSelfPlace;
+    }
+
+    public Setting<Double> getMinSelfRatio() {
+        return minSelfRatio;
+    }
+
+    public Setting<Boolean> getCheckSelfPlacing() {
+        return checkSelfPlacing;
+    }
+
+    public Setting<Boolean> getCheckFriendPlacing() {
+        return checkFriendPlacing;
+    }
+
+    public Setting<Double> getMaxFriendPlace() {
+        return maxFriendPlace;
+    }
+
+    public Setting<Double> getMinFriendRatio() {
+        return minFriendRatio;
+    }
 
     public enum ActionSpeedMode {
         Sync,

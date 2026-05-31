@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.event.events.InteractBlockEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.interfaces.mixin.IMinecraft;
@@ -22,23 +23,7 @@ import bodevelopment.client.blackout.util.SettingUtils;
 import bodevelopment.client.blackout.util.SharedFeatures;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import org.jetbrains.annotations.Nullable;
-import org.objectweb.asm.Opcodes;
-import org.spongepowered.asm.mixin.*;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.Optional;
-import java.util.UUID;
-import net.minecraft.client.CameraType;
-import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.Options;
-import net.minecraft.client.User;
+import net.minecraft.client.*;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
@@ -51,8 +36,20 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TridentItem;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
+import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.Opcodes;
+import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.Optional;
+import java.util.UUID;
 
 @Mixin(value = Minecraft.class, priority = 500)
+@Internal
 public abstract class MixinMinecraft implements IMinecraft {
     @Shadow
     @Nullable

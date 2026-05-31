@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.rendering.framebuffer;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import com.mojang.blaze3d.platform.GlStateManager;
 import org.lwjgl.opengl.GL30C;
 
@@ -8,6 +9,7 @@ import org.lwjgl.opengl.GL30C;
  * Framebuffer with a packed GL_DEPTH24_STENCIL8 renderbuffer.
  * Used for HUD background merging via stencil-based deduplication.
  */
+@Internal
 public class StencilFrameBuffer {
     private int fboId;
     private int textureId;
@@ -45,7 +47,9 @@ public class StencilFrameBuffer {
         GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, 0);
     }
 
-    /** Bind, clear color to transparent, depth to 1.0, and stencil to 0. Leaves FBO bound. */
+    /**
+     * Bind, clear color to transparent, depth to 1.0, and stencil to 0. Leaves FBO bound.
+     */
     public void clearAndBind() {
         GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, fboId);
         GL30C.glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
@@ -54,17 +58,23 @@ public class StencilFrameBuffer {
         GL30C.glClear(GL30C.GL_COLOR_BUFFER_BIT | GL30C.GL_DEPTH_BUFFER_BIT | GL30C.GL_STENCIL_BUFFER_BIT);
     }
 
-    /** Bind this FBO without clearing. */
+    /**
+     * Bind this FBO without clearing.
+     */
     public void bind() {
         GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, fboId);
     }
 
-    /** Restore the main Minecraft render target. */
+    /**
+     * Restore the main Minecraft render target.
+     */
     public void unbind() {
         BlackOut.mc.getMainRenderTarget().bindWrite(false);
     }
 
-    public int getTexture() { return textureId; }
+    public int getTexture() {
+        return textureId;
+    }
 
     public void delete() {
         GL30C.glDeleteFramebuffers(fboId);
@@ -79,6 +89,6 @@ public class StencilFrameBuffer {
 
     public boolean needsResize() {
         return width != BlackOut.mc.getWindow().getWidth()
-            || height != BlackOut.mc.getWindow().getHeight();
+                || height != BlackOut.mc.getWindow().getHeight();
     }
 }

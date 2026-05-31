@@ -1,10 +1,13 @@
 package bodevelopment.client.blackout.theme;
 
+import bodevelopment.client.blackout.annotations.PublicAPI;
+
 import bodevelopment.client.blackout.module.modules.client.ThemeSettings;
 import bodevelopment.client.blackout.util.ColorUtils;
 
 import java.awt.*;
 
+@PublicAPI
 public enum Theme {
     BLACKOUT("BlackOut", new Color(155, 0, 0), new Color(200, 20, 20)),
     BLAZE_ORANGE("Blaze Orange", new Color(255, 170, 80), new Color(255, 130, 0)),

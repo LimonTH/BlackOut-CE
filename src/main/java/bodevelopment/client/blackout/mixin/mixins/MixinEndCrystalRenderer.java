@@ -1,11 +1,19 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.interfaces.mixin.IEndCrystal;
 import bodevelopment.client.blackout.interfaces.mixin.IEndCrystalRenderState;
 import bodevelopment.client.blackout.module.modules.visual.entities.CrystalChams;
 import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import net.minecraft.client.model.EndCrystalModel;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.EndCrystalRenderer;
+import net.minecraft.client.renderer.entity.EnderDragonRenderer;
+import net.minecraft.client.renderer.entity.state.EndCrystalRenderState;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import org.joml.Quaternionf;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,22 +24,19 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Random;
-import net.minecraft.client.model.EndCrystalModel;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.entity.EndCrystalRenderer;
-import net.minecraft.client.renderer.entity.EnderDragonRenderer;
-import net.minecraft.client.renderer.entity.state.EndCrystalRenderState;
-import net.minecraft.util.Mth;
-import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 
 @Mixin(EndCrystalRenderer.class)
+@Internal
 public abstract class MixinEndCrystalRenderer {
     @Unique
     private final Random random = new Random();
 
-    @Shadow @Final private EndCrystalModel model;
+    @Shadow
+    @Final
+    private EndCrystalModel model;
 
-    @Unique private long seed = 0L;
+    @Unique
+    private long seed = 0L;
 
     @Inject(method = "extractRenderState(Lnet/minecraft/world/entity/boss/enderdragon/EndCrystal;Lnet/minecraft/client/renderer/entity/state/EndCrystalRenderState;F)V", at = @At("RETURN"))
     private void onUpdateState(EndCrystal entity, EndCrystalRenderState state, float f, CallbackInfo ci) {

@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.interfaces.mixin.ITimer;
 import net.minecraft.client.DeltaTracker;
 import org.spongepowered.asm.mixin.Final;
@@ -8,6 +10,7 @@ import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(DeltaTracker.Timer.class)
+@Internal
 public class MixinTimer implements ITimer {
     @Mutable
     @Shadow

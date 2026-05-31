@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.combat.misc;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
@@ -9,6 +8,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.InvUtils;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket;
 import net.minecraft.world.item.Items;
@@ -28,6 +28,7 @@ public class AutoLog extends Module {
     public AutoLog() {
         super("Auto Log", "Automatically disconnects you from the server when your health or totem count is too low.", SubCategory.MISC_COMBAT, true);
     }
+
     @Event
     public void onTick(TickEvent.Pre event) {
         if (PlayerUtils.isInGame()) {

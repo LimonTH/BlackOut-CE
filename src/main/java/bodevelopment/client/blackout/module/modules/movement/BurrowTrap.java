@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.enums.SwitchMode;
@@ -15,11 +14,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.randomstuff.PlaceData;
-import bodevelopment.client.blackout.util.BoxUtils;
-import bodevelopment.client.blackout.util.EntityUtils;
-import bodevelopment.client.blackout.util.InvUtils;
-import bodevelopment.client.blackout.util.SettingUtils;
-import java.util.List;
+import bodevelopment.client.blackout.util.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -30,6 +25,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+
+import java.util.List;
 
 public class BurrowTrap extends Module {
     public final SettingGroup sgGeneral = this.addGroup("General");

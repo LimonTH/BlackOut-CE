@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.interfaces.mixin.IVec3;
 import bodevelopment.client.blackout.module.modules.visual.misc.CameraModifier;
 import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
@@ -21,6 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Camera.class)
+@Internal
 public abstract class MixinCamera {
     @Shadow
     private boolean initialized;

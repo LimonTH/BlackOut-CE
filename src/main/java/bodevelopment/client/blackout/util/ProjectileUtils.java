@@ -2,9 +2,10 @@ package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.randomstuff.Rotation;
-import java.util.function.Consumer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.function.Consumer;
 
 public class ProjectileUtils {
     private static double[] hitPos;

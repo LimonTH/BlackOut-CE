@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.module.modules.visual.entities.Nametags;
 import bodevelopment.client.blackout.module.modules.visual.entities.ShaderESP;
 import bodevelopment.client.blackout.module.modules.visual.misc.XRay;
@@ -19,6 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(EntityRenderer.class)
+@Internal
 public class MixinEntityRenderer {
     @Inject(
             method = "renderNameTag",

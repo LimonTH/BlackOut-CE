@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.rendering.shader;
 
 import bodevelopment.client.blackout.annotations.NoAlloc;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.annotations.ThreadSafe;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.randomstuff.ShaderSetup;
@@ -30,6 +31,7 @@ import java.util.Map;
  * making it safe to set "optional" uniforms without GL errors.
  */
 @ThreadSafe
+@PublicAPI
 public class Shader {
 
     private static int boundProgram;
@@ -64,7 +66,8 @@ public class Shader {
         setIf("uAlpha", Renderer.getAlpha());
 
         var poseStack = Renderer.getMatrices();
-        if (poseStack != null && poseStack.last() != null) {
+        if (poseStack != null) {
+            poseStack.last();
             Matrix4f pose = poseStack.last().pose();
             Matrix3f normal = poseStack.last().normal();
             if (pose != null) setIf("uMatrices", pose);
@@ -113,30 +116,83 @@ public class Shader {
         boundProgram = 0;
     }
 
-    public void set(String uniform, float f)                { getUniform(uniform, 1, UniformType.Float).set(f); }
-    public void set(String uniform, float x, float y)        { getUniform(uniform, 2, UniformType.Float).set(x, y); }
-    public void set(String uniform, float x, float y, float z) { getUniform(uniform, 3, UniformType.Float).set(x, y, z); }
-    public void set(String uniform, float x, float y, float z, float a) { getUniform(uniform, 4, UniformType.Float).set(x, y, z, a); }
-    public void set(String uniform, int i)                   { getUniform(uniform, 1, UniformType.Integer).set(i); }
-    public void set(String uniform, Matrix4f mat)            { getUniform(uniform, 16, UniformType.Matrix).set(mat); }
+    public void set(String uniform, float f) {
+        getUniform(uniform, 1, UniformType.Float).set(f);
+    }
 
-    public void time(long initTime)                          { set("time", (float)(System.currentTimeMillis() - initTime) / 1000f); }
-    public void color(String uniform, int color)             { set(uniform, ARGB.red(color)/255f, ARGB.green(color)/255f, ARGB.blue(color)/255f, ARGB.alpha(color)/255f); }
-    public void color(String uniform, BlackOutColor color)   { set(uniform, color.red/255f, color.green/255f, color.blue/255f, color.alpha/255f); }
+    public void set(String uniform, float x, float y) {
+        getUniform(uniform, 2, UniformType.Float).set(x, y);
+    }
 
-    public void setIf(String uniform, float f)                { if (hasUniform(uniform)) getUniform(uniform, 1, UniformType.Float).set(f); }
-    public void setIf(String uniform, float x, float y)        { if (hasUniform(uniform)) getUniform(uniform, 2, UniformType.Float).set(x, y); }
-    public void setIf(String uniform, float x, float y, float z) { if (hasUniform(uniform)) getUniform(uniform, 3, UniformType.Float).set(x, y, z); }
-    public void setIf(String uniform, float x, float y, float z, float a) { if (hasUniform(uniform)) getUniform(uniform, 4, UniformType.Float).set(x, y, z, a); }
-    public void setIf(String uniform, int i)                   { if (hasUniform(uniform)) getUniform(uniform, 1, UniformType.Integer).set(i); }
-    public void setIf(String uniform, Matrix3f mat)            { if (hasUniform(uniform)) getUniform(uniform, 9, UniformType.Matrix).set(mat); }
-    public void setIf(String uniform, Matrix4f mat)            { if (hasUniform(uniform)) getUniform(uniform, 16, UniformType.Matrix).set(mat); }
+    public void set(String uniform, float x, float y, float z) {
+        getUniform(uniform, 3, UniformType.Float).set(x, y, z);
+    }
 
-    public void timeIf(long initTime)                          { if (hasUniform("time")) time(initTime); }
-    public void colorIf(String uniform, int color)             { setIf(uniform, ARGB.red(color)/255f, ARGB.green(color)/255f, ARGB.blue(color)/255f, ARGB.alpha(color)/255f); }
-    public void colorIf(String uniform, BlackOutColor color)   { setIf(uniform, color.red/255f, color.green/255f, color.blue/255f, color.alpha/255f); }
+    public void set(String uniform, float x, float y, float z, float a) {
+        getUniform(uniform, 4, UniformType.Float).set(x, y, z, a);
+    }
 
-    private enum UniformType { Integer, Float, Matrix }
+    public void set(String uniform, int i) {
+        getUniform(uniform, 1, UniformType.Integer).set(i);
+    }
+
+    public void set(String uniform, Matrix4f mat) {
+        getUniform(uniform, 16, UniformType.Matrix).set(mat);
+    }
+
+    public void time(long initTime) {
+        set("time", (float) (System.currentTimeMillis() - initTime) / 1000f);
+    }
+
+    public void color(String uniform, int color) {
+        set(uniform, ARGB.red(color) / 255f, ARGB.green(color) / 255f, ARGB.blue(color) / 255f, ARGB.alpha(color) / 255f);
+    }
+
+    public void color(String uniform, BlackOutColor color) {
+        set(uniform, color.red / 255f, color.green / 255f, color.blue / 255f, color.alpha / 255f);
+    }
+
+    public void setIf(String uniform, float f) {
+        if (hasUniform(uniform)) getUniform(uniform, 1, UniformType.Float).set(f);
+    }
+
+    public void setIf(String uniform, float x, float y) {
+        if (hasUniform(uniform)) getUniform(uniform, 2, UniformType.Float).set(x, y);
+    }
+
+    public void setIf(String uniform, float x, float y, float z) {
+        if (hasUniform(uniform)) getUniform(uniform, 3, UniformType.Float).set(x, y, z);
+    }
+
+    public void setIf(String uniform, float x, float y, float z, float a) {
+        if (hasUniform(uniform)) getUniform(uniform, 4, UniformType.Float).set(x, y, z, a);
+    }
+
+    public void setIf(String uniform, int i) {
+        if (hasUniform(uniform)) getUniform(uniform, 1, UniformType.Integer).set(i);
+    }
+
+    public void setIf(String uniform, Matrix3f mat) {
+        if (hasUniform(uniform)) getUniform(uniform, 9, UniformType.Matrix).set(mat);
+    }
+
+    public void setIf(String uniform, Matrix4f mat) {
+        if (hasUniform(uniform)) getUniform(uniform, 16, UniformType.Matrix).set(mat);
+    }
+
+    public void timeIf(long initTime) {
+        if (hasUniform("time")) time(initTime);
+    }
+
+    public void colorIf(String uniform, int color) {
+        setIf(uniform, ARGB.red(color) / 255f, ARGB.green(color) / 255f, ARGB.blue(color) / 255f, ARGB.alpha(color) / 255f);
+    }
+
+    public void colorIf(String uniform, BlackOutColor color) {
+        setIf(uniform, color.red / 255f, color.green / 255f, color.blue / 255f, color.alpha / 255f);
+    }
+
+    private enum UniformType {Integer, Float, Matrix}
 
     private static class Uniform {
         private final int location;
@@ -156,10 +212,21 @@ public class Shader {
             }
         }
 
-        void set(float... values)   { System.arraycopy(values, 0, floatData, 0, Math.min(values.length, floatData.length)); }
-        void set(int... values)     { System.arraycopy(values, 0, intData, 0, Math.min(values.length, intData.length)); }
-        void set(Matrix4f mat)      { mat.get(floatData); }
-        void set(Matrix3f mat)      { mat.get(floatData); }
+        void set(float... values) {
+            System.arraycopy(values, 0, floatData, 0, Math.min(values.length, floatData.length));
+        }
+
+        void set(int... values) {
+            System.arraycopy(values, 0, intData, 0, Math.min(values.length, intData.length));
+        }
+
+        void set(Matrix4f mat) {
+            mat.get(floatData);
+        }
+
+        void set(Matrix3f mat) {
+            mat.get(floatData);
+        }
 
         void upload() {
             switch (type) {

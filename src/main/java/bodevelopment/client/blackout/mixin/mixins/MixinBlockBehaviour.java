@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.module.modules.visual.misc.XRay;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.RenderShape;
@@ -11,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BlockBehaviour.class)
+@Internal
 public class MixinBlockBehaviour {
     @Inject(method = "skipRendering", at = @At("HEAD"), cancellable = true)
     private void onSkipRendering(BlockState state, BlockState adjacentState, Direction direction, CallbackInfoReturnable<Boolean> cir) {

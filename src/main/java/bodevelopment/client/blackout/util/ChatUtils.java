@@ -1,9 +1,11 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.interfaces.mixin.IChatComponent;
 import net.minecraft.network.chat.Component;
 
+@PublicAPI
 public class ChatUtils {
     public static void addMessage(Object object) {
         addMessage(object.toString());

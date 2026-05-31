@@ -149,7 +149,6 @@ public class SettingUtils {
     }
 
 
-
     public static boolean startMineRot() {
         return rotation.startMineRot();
     }
@@ -197,11 +196,9 @@ public class SettingUtils {
     }
 
 
-
     public static void swing(SwingState state, SwingType type, InteractionHand hand) {
         swing.swing(state, type, hand);
     }
-
 
 
     public static PlaceData getPlaceData(BlockPos pos) {
@@ -229,7 +226,6 @@ public class SettingUtils {
     }
 
 
-
     public static boolean interactTrace(BlockPos pos) {
         return raytrace.interactTrace(pos);
     }
@@ -245,7 +241,6 @@ public class SettingUtils {
     public static boolean mineTrace(BlockPos pos) {
         return raytrace.mineTrace(pos);
     }
-
 
 
     public static boolean oldCrystals() {

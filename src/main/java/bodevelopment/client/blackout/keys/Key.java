@@ -1,5 +1,8 @@
 package bodevelopment.client.blackout.keys;
 
+import bodevelopment.client.blackout.annotations.PublicAPI;
+
+@PublicAPI
 public class Key extends Pressable {
     public Key(int key) {
         super(key);

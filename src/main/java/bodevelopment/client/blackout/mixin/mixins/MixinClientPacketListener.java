@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.event.events.GameJoinEvent;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.mixin.accessors.AccessorServerboundMovePlayerPacket;
@@ -13,11 +14,11 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBundlePacket;
 import net.minecraft.network.protocol.game.ClientboundLoginPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
@@ -36,6 +37,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 
 @Mixin(ClientPacketListener.class)
+@Internal
 public class MixinClientPacketListener {
     @Unique
     private static float lastServerYaw;
@@ -158,7 +160,7 @@ public class MixinClientPacketListener {
         for (Packet<?> subPacket : bundle.subPackets()) {
             if (BlackOut.EVENT_BUS.post(PacketEvent.Receive.Pre.get(subPacket)).isCancelled()) continue;
             if (BlackOut.EVENT_BUS.post(PacketEvent.Receive.Post.get(subPacket)).isCancelled()) continue;
-            ((Packet<ClientGamePacketListener>) subPacket).handle((ClientGamePacketListener) (Object) this);
+            ((Packet<ClientGamePacketListener>) subPacket).handle((ClientGamePacketListener) this);
             BlackOut.EVENT_BUS.post(PacketEvent.Received.get(subPacket));
         }
         ci.cancel();

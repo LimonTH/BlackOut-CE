@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.module.modules.combat.offensive;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Experimental;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.enums.SwingHand;
@@ -22,10 +23,12 @@ import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
+import net.minecraft.client.multiplayer.prediction.BlockStatePredictionHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
@@ -40,16 +43,16 @@ import net.minecraft.world.level.block.AirBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.client.multiplayer.prediction.BlockStatePredictionHandler;
-import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.List;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+@Experimental
 public class AutoMine extends Module {
     private static AutoMine INSTANCE;
 
@@ -391,9 +394,9 @@ public class AutoMine extends Module {
             return !this.ncpProgress.get()
                     ? this.progress
                     : this.minedFor
-                    / (
+                      / (
                     1.0
-                            / BlockUtils.getBlockBreakingDelta(
+                    / BlockUtils.getBlockBreakingDelta(
                             bestStack, this.ncpState(), this.minePos, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
                     )
             );
@@ -428,14 +431,14 @@ public class AutoMine extends Module {
             target = this.targetCheck(target, this.getCrystalBase(), this.crystalBasePriority);
         }
 
-        return target == null ? new  Target(null, null, null, 0, null) : target;
+        return target == null ? new Target(null, null, null, 0, null) : target;
     }
 
     private int getPriority(Target target) {
         return target == null ? 0 : target.priority;
     }
 
-    private  Target getCev() {
+    private Target getCev() {
         BlockPos best = null;
         Player bestPlayer = null;
         double bestDist = 1000.0;
@@ -444,7 +447,7 @@ public class AutoMine extends Module {
             BlockPos pos = new BlockPos(player.getBlockX(), (int) Math.ceil(player.getBoundingBox().maxY), player.getBlockZ());
             if (!this.invalidCev(pos, player, this.minCevDamage, this.maxCevDamage, this.cevDamageCheck)) {
                 if (pos.equals(this.minePos)) {
-                    return new  Target(pos, pos.above(),  MineType.Cev, this.cevPriority.get().priority, player);
+                    return new Target(pos, pos.above(), MineType.Cev, this.cevPriority.get().priority, player);
                 }
 
                 if (!this.ignored(pos)) {
@@ -493,7 +496,7 @@ public class AutoMine extends Module {
         return new Target(best, bestCrystal, MineType.Cev, this.cevPriority.get().priority, bestPlayer);
     }
 
-    private  Target getTrapCev() {
+    private Target getTrapCev() {
         BlockPos best = null;
         Player bestPlayer = null;
         double bestDist = 1000.0;
@@ -505,7 +508,7 @@ public class AutoMine extends Module {
                 BlockPos pos = eyePos.relative(dir);
                 if (!this.invalidCev(pos, player, this.minTrapCevDamage, this.maxTrapCevDamage, this.trapCevDamageCheck)) {
                     if (pos.equals(this.minePos)) {
-                        return new  Target(pos, pos.above(),  MineType.TrapCev, this.trapCevPriority.get().priority, player);
+                        return new Target(pos, pos.above(), MineType.TrapCev, this.trapCevPriority.get().priority, player);
                     }
 
                     if (!this.ignored(pos)) {
@@ -520,10 +523,10 @@ public class AutoMine extends Module {
             }
         }
 
-        return best == null ? null : new  Target(best, best.above(),  MineType.TrapCev, this.trapCevPriority.get().priority, bestPlayer);
+        return best == null ? null : new Target(best, best.above(), MineType.TrapCev, this.trapCevPriority.get().priority, bestPlayer);
     }
 
-    private  Target getSurroundCev() {
+    private Target getSurroundCev() {
         BlockPos best = null;
         Player bestPlayer = null;
         double bestDist = 1000.0;
@@ -535,7 +538,7 @@ public class AutoMine extends Module {
                 BlockPos pos = feetPos.relative(dir);
                 if (!this.invalidCev(pos, player, this.minSurroundCevDamage, this.maxSurroundCevDamage, this.surroundCevDamageCheck)) {
                     if (pos.equals(this.minePos)) {
-                        return new  Target(pos, pos.above(),  MineType.SurroundCev, this.surroundCevPriority.get().priority, player);
+                        return new Target(pos, pos.above(), MineType.SurroundCev, this.surroundCevPriority.get().priority, player);
                     }
 
                     if (!this.ignored(pos)) {
@@ -552,7 +555,7 @@ public class AutoMine extends Module {
 
         return best == null
                 ? null
-                : new  Target(best, best.above(),  MineType.SurroundCev, this.surroundCevPriority.get().priority, bestPlayer);
+                : new Target(best, best.above(), MineType.SurroundCev, this.surroundCevPriority.get().priority, bestPlayer);
     }
 
     private Target getSurroundMiner() {
@@ -616,7 +619,7 @@ public class AutoMine extends Module {
         return best == null ? null : new Target(best, bestCrystal, MineType.SurroundMiner, this.surroundMinerPriority.get().priority, bestPlayer);
     }
 
-    private  Target getAutoCity() {
+    private Target getAutoCity() {
         BlockPos best = null;
         BlockPos bestCrystal = null;
         Player bestPlayer = null;
@@ -635,7 +638,7 @@ public class AutoMine extends Module {
                         && SettingUtils.inInteractRange(crystal.below())
                         && SettingUtils.inAttackRange(BoxUtils.crystalBox(crystal))) {
                     if (this.isInstant(pos)) {
-                        return new  Target(pos, crystal,  MineType.AutoCity, this.autoCityPriority.get().priority, player);
+                        return new Target(pos, crystal, MineType.AutoCity, this.autoCityPriority.get().priority, player);
                     }
 
                     if (!this.ignored(pos) && BlockUtils.mineable(pos)) {
@@ -660,7 +663,7 @@ public class AutoMine extends Module {
             }
         }
 
-        return best == null ? null : new  Target(best, bestCrystal,  MineType.AutoCity, this.autoCityPriority.get().priority, bestPlayer);
+        return best == null ? null : new Target(best, bestCrystal, MineType.AutoCity, this.autoCityPriority.get().priority, bestPlayer);
     }
 
     private Target getCrystalBase() {
@@ -688,7 +691,7 @@ public class AutoMine extends Module {
             BlockPos pos = new BlockPos(player.getBlockX(), (int) Math.round(player.getY()), player.getBlockZ());
             if (SettingUtils.getPlaceOnDirection(pos) != null && SettingUtils.inMineRange(pos)) {
                 if (this.isInstant(pos)) {
-                    return new  Target(pos, null,  MineType.AntiBurrow, this.antiBurrowPriority.get().priority, player);
+                    return new Target(pos, null, MineType.AntiBurrow, this.antiBurrowPriority.get().priority, player);
                 }
 
                 if (!this.ignored(pos) && BlockUtils.mineable(pos)) {
@@ -702,7 +705,7 @@ public class AutoMine extends Module {
             }
         }
 
-        return best == null ? null : new  Target(best, null,  MineType.AntiBurrow, this.antiBurrowPriority.get().priority, bestPlayer);
+        return best == null ? null : new Target(best, null, MineType.AntiBurrow, this.antiBurrowPriority.get().priority, bestPlayer);
     }
 
     private boolean invalidCev(BlockPos pos, Player player, Setting<Double> minDmg, Setting<Double> maxDmg, Setting<Boolean> dmgCheck) {
@@ -760,7 +763,7 @@ public class AutoMine extends Module {
         return Managers.BLOCK.blockState(pos).getBlock();
     }
 
-    private  Target targetCheck( Target target,  Target newTarget, Setting< Priority> prioritySetting) {
+    private Target targetCheck(Target target, Target newTarget, Setting<Priority> prioritySetting) {
         int priority = prioritySetting.get().priority;
         return priority >= 0 && newTarget != null && priority >= this.getPriority(target) ? newTarget : target;
     }
@@ -1019,7 +1022,7 @@ public class AutoMine extends Module {
                             if (this.shouldInstant()) {
                                 this.prevMined = this.minePos;
                                 this.restoreSwap();
-                            } else if (!this.manualRemine.get() || this.mineType !=  MineType.Manual) {
+                            } else if (!this.manualRemine.get() || this.mineType != MineType.Manual) {
                                 this.prevMined = null;
                                 this.started = false;
                                 this.minePos = null;
@@ -1067,7 +1070,7 @@ public class AutoMine extends Module {
     }
 
     public void onStart(BlockPos pos) {
-        if (this.mineType ==  MineType.Manual && pos.equals(this.minePos)) {
+        if (this.mineType == MineType.Manual && pos.equals(this.minePos)) {
             if (!this.isMining(pos)) {
                 this.started = false;
             }
@@ -1077,7 +1080,7 @@ public class AutoMine extends Module {
             if (this.manualMine.get() && this.getBlock(pos) != Blocks.BEDROCK) {
                 this.started = false;
                 this.minePos = pos;
-                this.mineType =  MineType.Manual;
+                this.mineType = MineType.Manual;
                 this.crystalPos = null;
             }
         }
@@ -1216,9 +1219,9 @@ public class AutoMine extends Module {
         return !this.ncpProgress.get()
                 ? this.progress * this.speed.get() >= 1.0
                 : this.minedFor * this.speed.get()
-                >= Math.ceil(
+                  >= Math.ceil(
                 1.0
-                        / BlockUtils.getBlockBreakingDelta(
+                / BlockUtils.getBlockBreakingDelta(
                         this.minePos, stack, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() || this.onGroundSpoof.get()
                 )
         );
@@ -1249,9 +1252,9 @@ public class AutoMine extends Module {
             return !this.ncpProgress.get()
                     ? this.progress >= 0.9
                     : this.minedFor + 2
-                    >= Math.ceil(
+                      >= Math.ceil(
                     1.0
-                            / BlockUtils.getBlockBreakingDelta(
+                    / BlockUtils.getBlockBreakingDelta(
                             this.minePos, stack, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() || this.onGroundSpoof.get()
                     )
             );
@@ -1367,7 +1370,7 @@ public class AutoMine extends Module {
     }
 
     private record Target(BlockPos pos, BlockPos crystal,
-                           MineType type,
+                          MineType type,
                           int priority, Player target) {
     }
 }

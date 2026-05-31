@@ -1,7 +1,6 @@
 package bodevelopment.client.blackout.hud;
 
 import bodevelopment.client.blackout.BlackOut;
-import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.gui.clickgui.ClickGui;
 import bodevelopment.client.blackout.gui.clickgui.components.ModuleComponent;
 import bodevelopment.client.blackout.module.modules.client.GuiSettings;
@@ -10,14 +9,16 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.settings.EnumSetting;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
-import bodevelopment.client.blackout.util.render.RenderLayer;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
+import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.ScissorStack;
 import com.mojang.blaze3d.vertex.PoseStack;
-import java.awt.*;
-import java.util.List;
 import net.minecraft.util.Mth;
+
+import java.awt.*;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class HudEditorSettings {

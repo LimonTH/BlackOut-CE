@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.visual.entities.PlayerModifier;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
@@ -14,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LivingEntityRenderer.class)
+@Internal
 public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extends LivingEntityRenderState> {
     @Inject(method = "extractRenderState*", at = @At("TAIL"))
     private void onUpdateRenderState(T entity, S state, float tickDelta, CallbackInfo ci) {

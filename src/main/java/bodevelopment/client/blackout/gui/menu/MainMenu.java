@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.gui.menu;
 
-import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.KeyEvent;
@@ -10,19 +9,21 @@ import bodevelopment.client.blackout.gui.clickgui.ClickGui;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.client.MainMenuSettings;
 import bodevelopment.client.blackout.util.FileUtils;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.SoundUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
-import java.awt.*;
-import java.util.Random;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
-import net.fabricmc.loader.api.FabricLoader;
+
+import java.awt.*;
+import java.util.Random;
 
 public class MainMenu {
     public static final int EMPTY_COLOR = new Color(0, 0, 0, 0).getRGB();
@@ -79,7 +80,7 @@ public class MainMenu {
                 "Singleplayer", "Multiplayer", "AltManager", "Options"
         ));
         java.util.List<Runnable> actions = new java.util.ArrayList<>(java.util.List.of(
-                (Runnable) () -> {
+                () -> {
                     Managers.ALT.switchToOriginal();
                     this.startExit(new SelectWorldScreen(this.titleScreen));
                 },

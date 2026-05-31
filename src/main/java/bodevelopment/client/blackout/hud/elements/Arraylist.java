@@ -62,95 +62,95 @@ public class Arraylist extends HudElement {
     @Override
     public void render() {
         Comparator<Module> comparator = Comparator.comparingDouble(
-                    m -> BlackOut.FONT.getWidth(m.getDisplayName() + (m.getInfo() == null ? "" : this.getInfo(m.getInfo())))
-            );
-            List<Module> modules = Managers.MODULES
-                    .getToggleableModules()
-                    .stream()
-                    .filter(module -> this.filterMode.get().shouldAccept(module, this.moduleList.get()) && module.category.parent() != ParentCategory.CLIENT)
-                    .sorted(comparator.reversed())
-                    .toList();
-            if (this.bloomIntensity.get() > 0) {
-                FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("arraylist");
-                FrameBuffer bloomBuffer = Managers.FRAME_BUFFER.getBuffer("arraylist-bloom");
-                buffer.clear(0.0F, 0.0F, 0.0F, 1.0F);
-                buffer.bind(true);
-                this.render(
-                        modules,
-                        module -> {
-                            String text = module.getDisplayName();
-                            this.info = this.getInfo(module.getInfo());
-                            float width = BlackOut.FONT.getWidth(text + this.info);
-                            if (this.rounded.get()) {
-                                Render2DUtils.rounded(
-                                        this.stack,
-                                        -BlackOut.FONT.getWidth(text) - 2.0F - BlackOut.FONT.getWidth(this.info),
-                                        1.5F,
-                                        width - 2.0F,
-                                        BlackOut.FONT.getHeight() - 2.0F,
-                                        2.8F,
-                                        0.0F,
-                                        Color.WHITE.getRGB(),
-                                        Color.WHITE.getRGB()
-                                );
-                            } else {
-                                Render2DUtils.quad(
-                                        this.stack,
-                                        -BlackOut.FONT.getWidth(text) - 4.0F - BlackOut.FONT.getWidth(this.info),
-                                        0.0F,
-                                        width + 2.0F,
-                                        BlackOut.FONT.getHeight() + 2.0F,
-                                        Color.WHITE.getRGB()
-                                );
-                            }
-                        }
-                );
-                buffer.unbind();
-                bloomBuffer.clear(0.0F, 0.0F, 0.0F, 1.0F);
-                bloomBuffer.bind(true);
-                Render2DUtils.renderBufferWith(buffer, Shaders.screentex, new ShaderSetup(setup -> setup.set("alpha", 1.0F)));
-                bloomBuffer.unbind();
-                Render2DUtils.blurBufferBW("arraylist-bloom", this.bloomIntensity.get() + 1);
-                bloomBuffer.bind(true);
-                Renderer.setTexture(buffer.getTexture(), 1);
-                Render2DUtils.renderBufferWith(bloomBuffer, Shaders.subtract, new ShaderSetup(setup -> setup.set("uTexture1", 1)));
-                bloomBuffer.unbind();
-                Render2DUtils.renderBufferWith(bloomBuffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.bloomColor.get().getRGB())));
-            }
-
-            if (this.rounded.get()) {
-                FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("arraylist");
-                buffer.clear(0.0F, 0.0F, 0.0F, 1.0F);
-                buffer.bind(true);
-                this.render(
-                        modules,
-                        module -> {
-                            String text = module.getDisplayName();
-                            this.info = this.getInfo(module.getInfo());
-                            float width = BlackOut.FONT.getWidth(text + this.info) - 2.0F;
+                m -> BlackOut.FONT.getWidth(m.getDisplayName() + (m.getInfo() == null ? "" : this.getInfo(m.getInfo())))
+        );
+        List<Module> modules = Managers.MODULES
+                .getToggleableModules()
+                .stream()
+                .filter(module -> this.filterMode.get().shouldAccept(module, this.moduleList.get()) && module.category.parent() != ParentCategory.CLIENT)
+                .sorted(comparator.reversed())
+                .toList();
+        if (this.bloomIntensity.get() > 0) {
+            FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("arraylist");
+            FrameBuffer bloomBuffer = Managers.FRAME_BUFFER.getBuffer("arraylist-bloom");
+            buffer.clear(0.0F, 0.0F, 0.0F, 1.0F);
+            buffer.bind(true);
+            this.render(
+                    modules,
+                    module -> {
+                        String text = module.getDisplayName();
+                        this.info = this.getInfo(module.getInfo());
+                        float width = BlackOut.FONT.getWidth(text + this.info);
+                        if (this.rounded.get()) {
                             Render2DUtils.rounded(
                                     this.stack,
                                     -BlackOut.FONT.getWidth(text) - 2.0F - BlackOut.FONT.getWidth(this.info),
                                     1.5F,
-                                    width,
+                                    width - 2.0F,
                                     BlackOut.FONT.getHeight() - 2.0F,
-                                    3.0F,
+                                    2.8F,
                                     0.0F,
                                     Color.WHITE.getRGB(),
                                     Color.WHITE.getRGB()
                             );
+                        } else {
+                            Render2DUtils.quad(
+                                    this.stack,
+                                    -BlackOut.FONT.getWidth(text) - 4.0F - BlackOut.FONT.getWidth(this.info),
+                                    0.0F,
+                                    width + 2.0F,
+                                    BlackOut.FONT.getHeight() + 2.0F,
+                                    Color.WHITE.getRGB()
+                            );
                         }
-                );
-                buffer.unbind();
-                if (this.useBlur.get()) {
-                    Render2DUtils.renderBufferOverlay(buffer, Managers.FRAME_BUFFER.getBuffer("hudblur").getTexture());
-                    Renderer.onHUDBlur();
-                }
+                    }
+            );
+            buffer.unbind();
+            bloomBuffer.clear(0.0F, 0.0F, 0.0F, 1.0F);
+            bloomBuffer.bind(true);
+            Render2DUtils.renderBufferWith(buffer, Shaders.screentex, new ShaderSetup(setup -> setup.set("alpha", 1.0F)));
+            bloomBuffer.unbind();
+            Render2DUtils.blurBufferBW("arraylist-bloom", this.bloomIntensity.get() + 1);
+            bloomBuffer.bind(true);
+            Renderer.setTexture(buffer.getTexture(), 1);
+            Render2DUtils.renderBufferWith(bloomBuffer, Shaders.subtract, new ShaderSetup(setup -> setup.set("uTexture1", 1)));
+            bloomBuffer.unbind();
+            Render2DUtils.renderBufferWith(bloomBuffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.bloomColor.get().getRGB())));
+        }
 
-                if (this.bg.get()) {
-                    Render2DUtils.renderBufferWith(buffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.bgColor.get().getRGB())));
-                }
+        if (this.rounded.get()) {
+            FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("arraylist");
+            buffer.clear(0.0F, 0.0F, 0.0F, 1.0F);
+            buffer.bind(true);
+            this.render(
+                    modules,
+                    module -> {
+                        String text = module.getDisplayName();
+                        this.info = this.getInfo(module.getInfo());
+                        float width = BlackOut.FONT.getWidth(text + this.info) - 2.0F;
+                        Render2DUtils.rounded(
+                                this.stack,
+                                -BlackOut.FONT.getWidth(text) - 2.0F - BlackOut.FONT.getWidth(this.info),
+                                1.5F,
+                                width,
+                                BlackOut.FONT.getHeight() - 2.0F,
+                                3.0F,
+                                0.0F,
+                                Color.WHITE.getRGB(),
+                                Color.WHITE.getRGB()
+                        );
+                    }
+            );
+            buffer.unbind();
+            if (this.useBlur.get()) {
+                Render2DUtils.renderBufferOverlay(buffer, Managers.FRAME_BUFFER.getBuffer("hudblur").getTexture());
+                Renderer.onHUDBlur();
             }
+
+            if (this.bg.get()) {
+                Render2DUtils.renderBufferWith(buffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.bgColor.get().getRGB())));
+            }
+        }
 
         this.renderTexts(modules);
     }

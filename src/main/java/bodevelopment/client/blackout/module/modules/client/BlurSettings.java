@@ -12,6 +12,7 @@ public class BlurSettings extends SettingsModule {
             "The intensity of the blur effect applied behind HUD elements. Higher values look smoother but can impact performance.");
     public final Setting<Integer> threeDBlur = this.sgGeneral.intSetting("3D Blur", 5, 1, 20, 1,
             "The strength of the blur shader for in-game 3D menus and background overlays. Great for visual depth.");
+
     public BlurSettings() {
         super("Blur", true, false);
         INSTANCE = this;

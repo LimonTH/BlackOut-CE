@@ -6,10 +6,11 @@ import bodevelopment.client.blackout.module.ObsidianModule;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.util.SettingUtils;
-import java.util.Comparator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
+
+import java.util.Comparator;
 
 public class AutoTrap extends ObsidianModule {
     private final Setting<TrapMode> trapMode = this.sgGeneral.enumSetting("Trap Mode", TrapMode.Both,

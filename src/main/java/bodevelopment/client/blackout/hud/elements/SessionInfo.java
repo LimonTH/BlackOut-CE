@@ -12,8 +12,9 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.TimeUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
-import java.awt.*;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
+
+import java.awt.*;
 
 public class SessionInfo extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -34,6 +35,7 @@ public class SessionInfo extends HudElement {
     private float width = 0.0F;
     private String ip = "";
     private boolean isDead = false;
+
     public SessionInfo() {
         super("Session Info", "Visualizes real-time metrics for the current play session, including uptime, server address, and combat statistics.");
         this.setSize(10.0F, 10.0F);
@@ -56,54 +58,54 @@ public class SessionInfo extends HudElement {
             }
         }
 
-            float num = 0.0F;
-            switch (this.style.get()) {
-                case Blackout:
-                    num = this.bar.get() ? 15.0F : BlackOut.FONT.getHeight() * 1.5F;
-                    this.height = num + BlackOut.FONT.getHeight() * 4.0F;
-                    this.width = BlackOut.FONT.getWidth("Session Info") * 1.5F + 14.0F;
-                    this.setSize(this.width, this.height);
-                    if (this.blur.get()) {
-                        Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, this.width, this.height, 3.0F, 10));
-                        Renderer.onHUDBlur();
-                    }
+        float num = 0.0F;
+        switch (this.style.get()) {
+            case Blackout:
+                num = this.bar.get() ? 15.0F : BlackOut.FONT.getHeight() * 1.5F;
+                this.height = num + BlackOut.FONT.getHeight() * 4.0F;
+                this.width = BlackOut.FONT.getWidth("Session Info") * 1.5F + 14.0F;
+                this.setSize(this.width, this.height);
+                if (this.blur.get()) {
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, this.width, this.height, 3.0F, 10));
+                    Renderer.onHUDBlur();
+                }
 
-                    if (this.bg.get()) {
-                        this.background.render(this.stack, 0.0F, 0.0F, this.width, this.height, 3.0F, 3.0F);
-                    }
+                if (this.bg.get()) {
+                    this.background.render(this.stack, 0.0F, 0.0F, this.width, this.height, 3.0F, 3.0F);
+                }
 
-                    this.textColor.render(this.stack, "Session Info", 1.5F, this.width / 2.0F, 0.0F, true, false);
-                    if (this.bar.get()) {
-                        Render2DUtils.rounded(
-                                this.stack,
-                                2.0F,
-                                BlackOut.FONT.getHeight() * 1.5F,
-                                this.width - 4.0F,
-                                0.1F,
-                                0.5F,
-                                0.0F,
-                                this.barColor.get().getRGB(),
-                                Color.WHITE.getRGB()
-                        );
-                    }
+                this.textColor.render(this.stack, "Session Info", 1.5F, this.width / 2.0F, 0.0F, true, false);
+                if (this.bar.get()) {
+                    Render2DUtils.rounded(
+                            this.stack,
+                            2.0F,
+                            BlackOut.FONT.getHeight() * 1.5F,
+                            this.width - 4.0F,
+                            0.1F,
+                            0.5F,
+                            0.0F,
+                            this.barColor.get().getRGB(),
+                            Color.WHITE.getRGB()
+                    );
+                }
 
-                    this.textColor.render(this.stack, this.ip, 1.0F, 5.0F, num, false, false);
-                    this.textColor.render(this.stack, "Kills: " + this.kills, 1.0F, 5.0F, num + BlackOut.FONT.getHeight(), false, false);
-                    this.textColor.render(this.stack, "Deaths: " + this.deaths, 1.0F, 5.0F, num + BlackOut.FONT.getHeight() * 2.0F, false, false);
-                    this.textColor.render(this.stack, timeString, 1.0F, 5.0F, num + BlackOut.FONT.getHeight() * 3.0F, false, false);
-                    break;
-                case Exhibition:
-                    num = BlackOut.FONT.getHeight();
-                    this.width = BlackOut.FONT.getWidth(this.getLongest(timeString)) + 6.0F;
-                    this.height = BlackOut.FONT.getHeight() * 3.0F + 6.0F;
-                    this.stack.translate(-2.0F, -2.0F, 0.0F);
-                    this.setSize(this.width + 6.0F, this.height + 4.0F);
-                    Render2DUtils.drawSkeetBox(this.stack, 0.0F, 0.0F, this.width + 10.0F, this.height + 8.0F, true);
-                    this.textColor.render(this.stack, this.ip, 1.0F, 4.0F, 4.0F, false, false);
-                    this.textColor.render(this.stack, "Kills: " + this.kills, 1.0F, 4.0F, 4.0F + num, false, false);
-                    this.textColor.render(this.stack, "Deaths: " + this.deaths, 1.0F, 4.0F, 4.0F + num * 2.0F, false, false);
-                    this.textColor.render(this.stack, timeString, 1.0F, 4.0F, 4.0F + num * 3.0F, false, false);
-            }
+                this.textColor.render(this.stack, this.ip, 1.0F, 5.0F, num, false, false);
+                this.textColor.render(this.stack, "Kills: " + this.kills, 1.0F, 5.0F, num + BlackOut.FONT.getHeight(), false, false);
+                this.textColor.render(this.stack, "Deaths: " + this.deaths, 1.0F, 5.0F, num + BlackOut.FONT.getHeight() * 2.0F, false, false);
+                this.textColor.render(this.stack, timeString, 1.0F, 5.0F, num + BlackOut.FONT.getHeight() * 3.0F, false, false);
+                break;
+            case Exhibition:
+                num = BlackOut.FONT.getHeight();
+                this.width = BlackOut.FONT.getWidth(this.getLongest(timeString)) + 6.0F;
+                this.height = BlackOut.FONT.getHeight() * 3.0F + 6.0F;
+                this.stack.translate(-2.0F, -2.0F, 0.0F);
+                this.setSize(this.width + 6.0F, this.height + 4.0F);
+                Render2DUtils.drawSkeetBox(this.stack, 0.0F, 0.0F, this.width + 10.0F, this.height + 8.0F, true);
+                this.textColor.render(this.stack, this.ip, 1.0F, 4.0F, 4.0F, false, false);
+                this.textColor.render(this.stack, "Kills: " + this.kills, 1.0F, 4.0F, 4.0F + num, false, false);
+                this.textColor.render(this.stack, "Deaths: " + this.deaths, 1.0F, 4.0F, 4.0F + num * 2.0F, false, false);
+                this.textColor.render(this.stack, timeString, 1.0F, 4.0F, 4.0F + num * 3.0F, false, false);
+        }
 
         this.stack.popPose();
     }

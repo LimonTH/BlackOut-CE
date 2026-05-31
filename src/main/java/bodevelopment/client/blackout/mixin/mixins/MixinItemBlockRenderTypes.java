@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.module.modules.visual.misc.XRay;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
@@ -11,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ItemBlockRenderTypes.class)
+@Internal
 public class MixinItemBlockRenderTypes {
     @Inject(method = "getChunkRenderType", at = @At("RETURN"), cancellable = true)
     private static void onGetChunkRenderType(BlockState blockState, CallbackInfoReturnable<RenderType> cir) {

@@ -38,56 +38,56 @@ public class Keybinds extends HudElement {
     @Override
     public void render() {
         Comparator<Module> comparator = Comparator.comparingDouble(m -> BlackOut.FONT.getWidth(m.getDisplayName() + m.bind.get().getName()));
-            List<Module> modules = Managers.MODULES
-                    .getToggleableModules()
-                    .stream()
-                    .filter(module -> module.enabled && module.bind.get().value != null)
-                    .sorted(comparator.reversed())
-                    .toList();
-            this.i = 0;
-            this.stack.pushPose();
-            this.checked = false;
-            modules.forEach(
-                    module -> {
-                        String text = module.getDisplayName();
-                        String bind = " [" + module.bind.get().getName() + "]";
-                        if (!this.checked) {
-                            this.width = BlackOut.FONT.getWidth(text + bind);
-                            this.length = ((BlackOut.FONT.getHeight() + 3.0F) * this.i + BlackOut.FONT.getHeight() + 3.0F) * modules.size();
-                            this.checked = true;
-                            if (this.blur.get()) {
-                                Render2DUtils.drawLoadedBlur(
-                                        "hudblur",
-                                        this.stack,
-                                        renderer -> renderer.rounded(
-                                                0.0F, (BlackOut.FONT.getHeight() + 3.0F) * this.i, this.width + 8.0F, this.length + 3.0F, this.rounded.get() ? 3.0F : 0.0F, 10
-                                        )
-                                );
-                                Renderer.onHUDBlur();
-                            }
-
-                            if (this.bg.get()) {
-                                this.background.render(this.stack, 0.0F, 0.0F, this.width + 8.0F, this.length + 3.0F, this.rounded.get() ? 3.0F : 0.0F, 3.0F);
-                            }
-
-                            this.setSize(this.width + 8.0F, this.length + 3.0F);
+        List<Module> modules = Managers.MODULES
+                .getToggleableModules()
+                .stream()
+                .filter(module -> module.enabled && module.bind.get().value != null)
+                .sorted(comparator.reversed())
+                .toList();
+        this.i = 0;
+        this.stack.pushPose();
+        this.checked = false;
+        modules.forEach(
+                module -> {
+                    String text = module.getDisplayName();
+                    String bind = " [" + module.bind.get().getName() + "]";
+                    if (!this.checked) {
+                        this.width = BlackOut.FONT.getWidth(text + bind);
+                        this.length = ((BlackOut.FONT.getHeight() + 3.0F) * this.i + BlackOut.FONT.getHeight() + 3.0F) * modules.size();
+                        this.checked = true;
+                        if (this.blur.get()) {
+                            Render2DUtils.drawLoadedBlur(
+                                    "hudblur",
+                                    this.stack,
+                                    renderer -> renderer.rounded(
+                                            0.0F, (BlackOut.FONT.getHeight() + 3.0F) * this.i, this.width + 8.0F, this.length + 3.0F, this.rounded.get() ? 3.0F : 0.0F, 10
+                                    )
+                            );
+                            Renderer.onHUDBlur();
                         }
 
-                        this.textColor.render(this.stack, text, 1.0F, 4.0F, (BlackOut.FONT.getHeight() + 3.0F) * this.i + 3.0F, false, false);
-                        BlackOut.FONT
-                                .text(
-                                        this.stack,
-                                        bind,
-                                        1.0F,
-                                        4.0F + BlackOut.FONT.getWidth(text),
-                                        (BlackOut.FONT.getHeight() + 3.0F) * this.i + 3.0F,
-                                        this.bindColor.get().getColor(),
-                                        false,
-                                        false
-                                );
-                        this.i++;
+                        if (this.bg.get()) {
+                            this.background.render(this.stack, 0.0F, 0.0F, this.width + 8.0F, this.length + 3.0F, this.rounded.get() ? 3.0F : 0.0F, 3.0F);
+                        }
+
+                        this.setSize(this.width + 8.0F, this.length + 3.0F);
                     }
-            );
+
+                    this.textColor.render(this.stack, text, 1.0F, 4.0F, (BlackOut.FONT.getHeight() + 3.0F) * this.i + 3.0F, false, false);
+                    BlackOut.FONT
+                            .text(
+                                    this.stack,
+                                    bind,
+                                    1.0F,
+                                    4.0F + BlackOut.FONT.getWidth(text),
+                                    (BlackOut.FONT.getHeight() + 3.0F) * this.i + 3.0F,
+                                    this.bindColor.get().getColor(),
+                                    false,
+                                    false
+                            );
+                    this.i++;
+                }
+        );
         this.stack.popPose();
     }
 }

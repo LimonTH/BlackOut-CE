@@ -1,10 +1,12 @@
 package bodevelopment.client.blackout.rendering.framebuffer;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.lwjgl.opengl.GL30C;
 
+@Internal
 public class FrameBuffer {
     private int id;
     private int textureId;

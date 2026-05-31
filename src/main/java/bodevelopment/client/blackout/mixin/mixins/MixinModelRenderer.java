@@ -1,11 +1,14 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.module.modules.visual.world.Brightness;
 import net.minecraft.client.renderer.block.ModelBlockRenderer;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Mixin(ModelBlockRenderer.class)
+@Internal
 public class MixinModelRenderer {
     @ModifyVariable(method = "renderModel", at = @At("HEAD"), ordinal = 0, argsOnly = true)
     private int boostLight(int light) {

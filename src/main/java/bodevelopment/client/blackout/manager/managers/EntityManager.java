@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.manager.managers;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.EntityAddEvent;
 import bodevelopment.client.blackout.event.events.PacketEvent;
@@ -14,6 +15,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 
+@PublicAPI
 public class EntityManager extends Manager {
     private final TimerList<Integer> renderDead = new TimerList<>(true);
     private final TimerList<BlockPos> spawningItems = new TimerList<>(true);

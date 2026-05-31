@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.interfaces.mixin.IAbstractContainerScreen;
 import bodevelopment.client.blackout.module.modules.visual.misc.ShulkerViewer;
 import net.minecraft.client.gui.GuiGraphics;
@@ -13,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(AbstractContainerScreen.class)
+@Internal
 public abstract class MixinAbstractContainerScreen implements IAbstractContainerScreen {
     @Shadow
     @Nullable

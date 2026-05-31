@@ -1,10 +1,13 @@
 package bodevelopment.client.blackout.rendering.framebuffer;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.randomstuff.ShaderSetup;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import org.lwjgl.opengl.GL14;
 
+@Internal
 public class GuiAlphaFrameBuffer extends FrameBuffer {
     public void start() {
         this.clear(0.0F, 0.0F, 0.0F, 0.0F);

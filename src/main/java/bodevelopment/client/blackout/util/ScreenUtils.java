@@ -12,26 +12,50 @@ import net.minecraft.client.Minecraft;
  */
 public final class ScreenUtils {
 
-    private ScreenUtils() {}
+    private ScreenUtils() {
+    }
 
     // Dimensions (raw pixels)
 
-    public static int screenWidth()  { return BlackOut.mc.getWindow().getScreenWidth(); }
-    public static int screenHeight() { return BlackOut.mc.getWindow().getScreenHeight(); }
+    public static int screenWidth() {
+        return BlackOut.mc.getWindow().getScreenWidth();
+    }
 
-    /** GUI-scaled (≈ screen / guiScale). */
-    public static int guiWidth()  { return BlackOut.mc.getWindow().getGuiScaledWidth(); }
-    public static int guiHeight() { return BlackOut.mc.getWindow().getGuiScaledHeight(); }
+    public static int screenHeight() {
+        return BlackOut.mc.getWindow().getScreenHeight();
+    }
 
-    /** Framebuffer (screen × guiScale). */
-    public static int framebufferWidth()  { return BlackOut.mc.getMainRenderTarget().viewWidth; }
-    public static int framebufferHeight() { return BlackOut.mc.getMainRenderTarget().viewHeight; }
+    /**
+     * GUI-scaled (≈ screen / guiScale).
+     */
+    public static int guiWidth() {
+        return BlackOut.mc.getWindow().getGuiScaledWidth();
+    }
 
-    public static double guiScale() { return BlackOut.mc.getWindow().getGuiScale(); }
+    public static int guiHeight() {
+        return BlackOut.mc.getWindow().getGuiScaledHeight();
+    }
+
+    /**
+     * Framebuffer (screen × guiScale).
+     */
+    public static int framebufferWidth() {
+        return BlackOut.mc.getMainRenderTarget().viewWidth;
+    }
+
+    public static int framebufferHeight() {
+        return BlackOut.mc.getMainRenderTarget().viewHeight;
+    }
+
+    public static double guiScale() {
+        return BlackOut.mc.getWindow().getGuiScale();
+    }
 
     // Mouse (raw pixel space)
 
-    /** Raw-pixel mouse X (for rendering after {@link #beginPixelSpace}). */
+    /**
+     * Raw-pixel mouse X (for rendering after {@link #beginPixelSpace}).
+     */
     public static double mouseX() {
         Minecraft mc = BlackOut.mc;
         return mc.mouseHandler.xpos()
@@ -40,7 +64,9 @@ public final class ScreenUtils {
                 * guiScale();
     }
 
-    /** Raw-pixel mouse Y. */
+    /**
+     * Raw-pixel mouse Y.
+     */
     public static double mouseY() {
         Minecraft mc = BlackOut.mc;
         return mc.mouseHandler.ypos()
@@ -51,7 +77,9 @@ public final class ScreenUtils {
 
     // Mouse (GUI-scaled, matches Screen.render parameters)
 
-    /** GUI-scaled mouse X (int-truncated, matches what Screen.render receives). */
+    /**
+     * GUI-scaled mouse X (int-truncated, matches what Screen.render receives).
+     */
     public static int mouseGuiX() {
         Minecraft mc = BlackOut.mc;
         return (int) (mc.mouseHandler.xpos()
@@ -59,7 +87,9 @@ public final class ScreenUtils {
                 / (double) mc.getWindow().getScreenWidth());
     }
 
-    /** GUI-scaled mouse Y. */
+    /**
+     * GUI-scaled mouse Y.
+     */
     public static int mouseGuiY() {
         Minecraft mc = BlackOut.mc;
         return (int) (mc.mouseHandler.ypos()
@@ -69,7 +99,9 @@ public final class ScreenUtils {
 
     // Rendering
 
-    /** Enter pixel-space: push + unGuiScale + disableDepth + depthMask(false). */
+    /**
+     * Enter pixel-space: push + unGuiScale + disableDepth + depthMask(false).
+     */
     public static void beginPixelSpace(PoseStack stack) {
         stack.pushPose();
         float s = (float) guiScale();
@@ -78,7 +110,9 @@ public final class ScreenUtils {
         RenderSystem.depthMask(false);
     }
 
-    /** Exit pixel-space: depthMask(true) + enableDepth + pop. */
+    /**
+     * Exit pixel-space: depthMask(true) + enableDepth + pop.
+     */
     public static void endPixelSpace(PoseStack stack) {
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
@@ -87,7 +121,15 @@ public final class ScreenUtils {
 
     // Helpers
 
-    public static double aspectRatio() { return (double) screenWidth() / screenHeight(); }
-    public static int    minDim()      { return Math.min(screenWidth(), screenHeight()); }
-    public static int    maxDim()      { return Math.max(screenWidth(), screenHeight()); }
+    public static double aspectRatio() {
+        return (double) screenWidth() / screenHeight();
+    }
+
+    public static int minDim() {
+        return Math.min(screenWidth(), screenHeight());
+    }
+
+    public static int maxDim() {
+        return Math.max(screenWidth(), screenHeight());
+    }
 }

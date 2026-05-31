@@ -166,10 +166,22 @@ public class FreeCam extends Module {
                 Vec3 forwardVec = new Vec3(-Math.sin(radS), 0, Math.cos(radS));
                 Vec3 rightVec = new Vec3(-Math.sin(radS + Math.PI / 2), 0, Math.cos(radS + Math.PI / 2));
 
-                if (forwardS) { xS += forwardVec.x * s * this.currentSpeedH; zS += forwardVec.z * s * this.currentSpeedH; }
-                if (backwardS) { xS -= forwardVec.x * s * this.currentSpeedH; zS -= forwardVec.z * s * this.currentSpeedH; }
-                if (rightS) { xS += rightVec.x * s * this.currentSpeedH; zS += rightVec.z * s * this.currentSpeedH; }
-                if (leftS) { xS -= rightVec.x * s * this.currentSpeedH; zS -= rightVec.z * s * this.currentSpeedH; }
+                if (forwardS) {
+                    xS += forwardVec.x * s * this.currentSpeedH;
+                    zS += forwardVec.z * s * this.currentSpeedH;
+                }
+                if (backwardS) {
+                    xS -= forwardVec.x * s * this.currentSpeedH;
+                    zS -= forwardVec.z * s * this.currentSpeedH;
+                }
+                if (rightS) {
+                    xS += rightVec.x * s * this.currentSpeedH;
+                    zS += rightVec.z * s * this.currentSpeedH;
+                }
+                if (leftS) {
+                    xS -= rightVec.x * s * this.currentSpeedH;
+                    zS -= rightVec.z * s * this.currentSpeedH;
+                }
 
                 if (upS) yS += s * this.currentSpeedV;
                 if (downS) yS -= s * this.currentSpeedV;

@@ -1,10 +1,6 @@
 package bodevelopment.client.blackout.annotations;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * Indicates that a class, method, or field is designed for thread-safe access.
@@ -20,5 +16,6 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
+@PublicAPI
 public @interface ThreadSafe {
 }

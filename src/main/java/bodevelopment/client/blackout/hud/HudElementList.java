@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.hud;
 
-import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.ConfigType;
 import bodevelopment.client.blackout.helpers.ScrollHelper;
@@ -11,15 +10,17 @@ import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.ClassUtils;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
+import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import bodevelopment.client.blackout.util.render.ScissorStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.util.Mth;
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.util.Mth;
 
 public class HudElementList {
     private static final int minWidth = 150;

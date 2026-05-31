@@ -1,16 +1,19 @@
 package bodevelopment.client.blackout.manager.managers;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.command.Command;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.util.BOLogger;
 import bodevelopment.client.blackout.util.ClassUtils;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import net.minecraft.ChatFormatting;
 
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+
+@PublicAPI
 public class CommandManager extends Manager {
     private final Map<String, Command> commands = new HashMap<>();
     public String prefix = "-";
@@ -51,16 +54,16 @@ public class CommandManager extends Manager {
             try {
                 if (BlackOut.mc.player == null && !command.canUseOutsideWorld()) {
                     return String.format("[%s]%s This command can only be used in-game!",
-                            command.name, ChatFormatting.RED.toString());
+                            command.name, ChatFormatting.RED);
                 }
 
                 String respond = command.execute(Arrays.copyOfRange(args, 1, args.length));
-                return String.format("[%s]%s %s", command.name, ChatFormatting.GRAY.toString(), respond);
+                return String.format("[%s]%s %s", command.name, ChatFormatting.GRAY, respond);
 
             } catch (Exception e) {
                 BOLogger.warn("An error occurred while executing command " + Arrays.toString(args) + " : " + e);
                 return String.format("[%s]%s Error: %s",
-                        command.name, ChatFormatting.RED.toString(), "An error occurred while executing command.");
+                        command.name, ChatFormatting.RED, "An error occurred while executing command.");
             }
         } else {
             return null;

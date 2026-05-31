@@ -4,12 +4,12 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.keys.Keys;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
-import net.minecraft.util.Mth;
 
 public class TextField {
     private static final Map<String, String> shiftModified = new HashMap<>();
@@ -275,7 +275,7 @@ public class TextField {
                 case GLFW.GLFW_KEY_CAPS_LOCK:
                     this.capsLock = !this.capsLock;
                     return;
-                case GLFW.GLFW_KEY_ESCAPE, GLFW.GLFW_KEY_ENTER :
+                case GLFW.GLFW_KEY_ESCAPE, GLFW.GLFW_KEY_ENTER:
                     return;
                 default:
                     if (key >= 48 && key <= 57) {

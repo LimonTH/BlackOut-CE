@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.combat.misc.NoInterpolation;
 import bodevelopment.client.blackout.module.modules.combat.offensive.BackTrack;
@@ -16,6 +18,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(RemotePlayer.class)
+@Internal
 public class MixinRemotePlayer {
     @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/RemotePlayer;lerpPositionAndRotationStep(IDDDDD)V"))
     private void updatePos(RemotePlayer instance, int steps, double x, double y, double z, double yaw, double pit) {

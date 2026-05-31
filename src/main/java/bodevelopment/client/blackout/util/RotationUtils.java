@@ -1,11 +1,13 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
+@PublicAPI
 public class RotationUtils {
     public static double getYaw(Entity entity) {
         return getYaw(BlackOut.mc.player.getEyePosition(), entity.position(), 0.0);

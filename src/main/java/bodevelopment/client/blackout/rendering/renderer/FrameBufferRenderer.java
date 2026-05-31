@@ -1,9 +1,11 @@
 package bodevelopment.client.blackout.rendering.renderer;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.rendering.framebuffer.FrameBuffer;
 
+@Internal
 public class FrameBufferRenderer {
     public static void renderToBuffer(String buffer, Runnable runnable) {
         renderToBuffer(Managers.FRAME_BUFFER.getBuffer(buffer), runnable);

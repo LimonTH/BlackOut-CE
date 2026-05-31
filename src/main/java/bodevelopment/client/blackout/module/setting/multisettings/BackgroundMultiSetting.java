@@ -3,7 +3,6 @@ package bodevelopment.client.blackout.module.setting.multisettings;
 import bodevelopment.client.blackout.enums.BackgroundType;
 import bodevelopment.client.blackout.hud.HudMergePass;
 import bodevelopment.client.blackout.interfaces.functional.SingleOut;
-import bodevelopment.client.blackout.module.modules.client.ThemeSettings;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;

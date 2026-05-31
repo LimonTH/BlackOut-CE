@@ -1,12 +1,14 @@
 package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import com.google.common.reflect.ClassPath;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.Consumer;
 
+@Internal
 public class ClassUtils {
     private static Constructor<?> constructor = null;
 

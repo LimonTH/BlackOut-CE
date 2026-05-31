@@ -6,10 +6,11 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.vertex.PoseStack;
-import java.awt.*;
-import java.util.UUID;
 import net.minecraft.client.User;
 import net.minecraft.core.UUIDUtil;
+
+import java.awt.*;
+import java.util.UUID;
 
 public class Account {
     public static final float WIDTH = 500.0F;

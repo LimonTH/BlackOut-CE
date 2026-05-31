@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.legit;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.SwingHand;
 import bodevelopment.client.blackout.enums.SwitchMode;
@@ -18,9 +17,7 @@ import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.randomstuff.timers.TimerMap;
 import bodevelopment.client.blackout.util.InvUtils;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Predicate;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
@@ -33,6 +30,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 public class AnchorCharge extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");

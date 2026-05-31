@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.combat.defensive;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.enums.SwingHand;
@@ -18,9 +17,8 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import bodevelopment.client.blackout.util.InvUtils;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
-import java.util.List;
-import java.util.function.Predicate;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
@@ -30,6 +28,9 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+
+import java.util.List;
+import java.util.function.Predicate;
 
 public class Burrow extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");

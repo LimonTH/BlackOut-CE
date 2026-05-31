@@ -37,6 +37,7 @@ import net.minecraft.world.item.consume_effects.ApplyStatusEffectsConsumeEffect;
 import net.minecraft.world.item.consume_effects.ConsumeEffect;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

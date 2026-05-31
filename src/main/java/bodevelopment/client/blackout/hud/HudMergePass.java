@@ -28,7 +28,7 @@ import org.lwjgl.opengl.GL14;
  * eliminating double-alpha and the inner-border artefact between overlapping elements.
  */
 public class HudMergePass {
-    public enum Phase { IDLE, COLLECT, SKIP }
+    public enum Phase {IDLE, COLLECT, SKIP}
 
     private static Phase phase = Phase.IDLE;
     private static StencilFrameBuffer bgFbo;
@@ -72,8 +72,8 @@ public class HudMergePass {
 
         RenderSystem.enableBlend();
         GL14.glBlendFuncSeparate(
-            GL14.GL_SRC_ALPHA, GL14.GL_ONE_MINUS_SRC_ALPHA,
-            GL14.GL_ONE,       GL14.GL_ONE_MINUS_SRC_ALPHA
+                GL14.GL_SRC_ALPHA, GL14.GL_ONE_MINUS_SRC_ALPHA,
+                GL14.GL_ONE, GL14.GL_ONE_MINUS_SRC_ALPHA
         );
 
         renderLogic.run();
@@ -116,25 +116,34 @@ public class HudMergePass {
 
         float savedAlpha = Renderer.getAlpha();
         Render2DUtils.renderBufferWithTexture(
-            bgFbo().getTexture(),
-            Shaders.screentex,
-            new ShaderSetup(s -> s.set("alpha", 1.0F))
+                bgFbo().getTexture(),
+                Shaders.screentex,
+                new ShaderSetup(s -> s.set("alpha", 1.0F))
         );
         Renderer.setAlpha(savedAlpha);
 
         phase = Phase.SKIP;
     }
 
-    /** End the SKIP (content) pass; return to IDLE. */
+    /**
+     * End the SKIP (content) pass; return to IDLE.
+     */
     public static void endSkip() {
         phase = Phase.IDLE;
         RenderSystem.defaultBlendFunc();
     }
 
-    public static boolean isCollecting() { return phase == Phase.COLLECT; }
-    public static boolean isSkipping()   { return phase == Phase.SKIP;    }
+    public static boolean isCollecting() {
+        return phase == Phase.COLLECT;
+    }
 
-    /** Explicit resize hook -- called on window resize events. */
+    public static boolean isSkipping() {
+        return phase == Phase.SKIP;
+    }
+
+    /**
+     * Explicit resize hook -- called on window resize events.
+     */
     public static void onResize() {
         if (bgFbo != null) bgFbo.resize();
     }

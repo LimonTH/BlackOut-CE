@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.movement.ElytraFly;
 import bodevelopment.client.blackout.module.modules.movement.NoJumpDelay;
@@ -20,6 +21,7 @@ import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
+@Internal
 public abstract class MixinLivingEntity {
     @Shadow
     public abstract void remove(Entity.RemovalReason reason);
@@ -52,6 +54,7 @@ public abstract class MixinLivingEntity {
         }
         return Managers.ROTATION.moveLookYaw;
     }
+
     @WrapOperation(
             method = "tick",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getYRot()F", ordinal = 0)

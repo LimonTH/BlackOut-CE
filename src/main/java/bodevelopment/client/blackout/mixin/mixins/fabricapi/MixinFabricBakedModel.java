@@ -1,8 +1,6 @@
 package bodevelopment.client.blackout.mixin.mixins.fabricapi;
 
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-
+import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.module.modules.visual.misc.XRay;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel;
@@ -17,7 +15,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+
 @Mixin(FabricBakedModel.class)
+@Internal
 public interface MixinFabricBakedModel {
     @Inject(method = "emitBlockQuads", at = @At("HEAD"), cancellable = true)
     default void onEmitBlockQuadsHead(

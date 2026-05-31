@@ -11,8 +11,8 @@ import bodevelopment.client.blackout.rendering.framebuffer.FrameBuffer;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.shader.Shaders;
 import bodevelopment.client.blackout.util.ColorUtils;
-import bodevelopment.client.blackout.util.render.misc.FramebufferMultiBufferSource;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
+import bodevelopment.client.blackout.util.render.misc.FramebufferMultiBufferSource;
 
 import java.awt.*;
 

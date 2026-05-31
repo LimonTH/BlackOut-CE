@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.module.modules.visual.misc.XRay;
 import bodevelopment.client.blackout.util.render.consumers.XRayVertexConsumer;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -16,6 +18,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BlockRenderDispatcher.class)
+@Internal
 public class MixinBlockRenderDispatcher {
     @Inject(method = "renderBatched", at = @At("HEAD"), cancellable = true)
     private void onRenderBatched(BlockState state, BlockPos pos, BlockAndTintGetter world, PoseStack matrices, VertexConsumer vertexConsumer, boolean cull, RandomSource random, CallbackInfo ci) {

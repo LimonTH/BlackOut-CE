@@ -1,11 +1,11 @@
 package bodevelopment.client.blackout.module.modules.legit;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
+import bodevelopment.client.blackout.util.PlayerUtils;
 
 public class JumpReset extends Module {
 

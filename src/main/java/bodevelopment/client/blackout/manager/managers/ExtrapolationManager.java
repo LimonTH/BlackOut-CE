@@ -10,11 +10,6 @@ import bodevelopment.client.blackout.module.modules.client.settings.Extrapolatio
 import bodevelopment.client.blackout.randomstuff.MotionData;
 import bodevelopment.client.blackout.randomstuff.timers.TickTimerList;
 import bodevelopment.client.blackout.util.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 import net.minecraft.client.player.RemotePlayer;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
@@ -24,8 +19,14 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+
 public class ExtrapolationManager extends Manager {
-    private Map<Player, ExtrapolationData> dataMap = new ConcurrentHashMap<>();
+    private final Map<Player, ExtrapolationData> dataMap = new ConcurrentHashMap<>();
 
     private static MotionData getMotion(ExtrapolationData data) {
         return HorizontalExtrapolation.getMotion(data).y(data.motions.isEmpty() ? 0.0 : gravityMod(gravityMod(data.motions.getFirst().y)));

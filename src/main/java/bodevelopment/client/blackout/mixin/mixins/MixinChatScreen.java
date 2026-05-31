@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.client.NotificationsSettings;
 import bodevelopment.client.blackout.util.ChatUtils;
@@ -10,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(ChatScreen.class)
+@Internal
 public class MixinChatScreen {
     @Redirect(
             method = "handleChatInput",

@@ -18,12 +18,11 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
 import bodevelopment.client.blackout.util.RotationUtils;
-import bodevelopment.client.blackout.util.render.AnimUtils;
-import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.ScreenUtils;
+import bodevelopment.client.blackout.util.render.AnimUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
+import bodevelopment.client.blackout.util.render.RenderLayer;
 import com.mojang.blaze3d.vertex.PoseStack;
-import java.awt.*;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.resources.ResourceLocation;
@@ -32,6 +31,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
+
+import java.awt.*;
 
 public class TargetHUD extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
@@ -84,17 +85,17 @@ public class TargetHUD extends HudElement {
     @Override
     public void render() {
         this.updateTarget();
-            if (this.target != null) {
-                this.setRendering(this.target);
-            }
+        if (this.target != null) {
+            this.setRendering(this.target);
+        }
 
-            if (this.renderTarget == null) {
-                this.setRendering(BlackOut.mc.player);
-            }
+        if (this.renderTarget == null) {
+            this.setRendering(BlackOut.mc.player);
+        }
 
-            this.setSize(this.getRenderWidth(), this.getRenderHeight());
-            if (this.renderType.get() == RenderType.Hud) {
-                this.renderTargetHUD(false);
+        this.setSize(this.getRenderWidth(), this.getRenderHeight());
+        if (this.renderType.get() == RenderType.Hud) {
+            this.renderTargetHUD(false);
         }
     }
 

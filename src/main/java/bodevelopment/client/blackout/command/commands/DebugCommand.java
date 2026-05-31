@@ -2,9 +2,10 @@ package bodevelopment.client.blackout.command.commands;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.command.Command;
+import net.minecraft.client.multiplayer.ServerData;
+
 import java.util.Collections;
 import java.util.List;
-import net.minecraft.client.multiplayer.ServerData;
 
 public class DebugCommand extends Command {
     public DebugCommand() {

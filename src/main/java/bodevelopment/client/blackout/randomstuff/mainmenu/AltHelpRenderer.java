@@ -3,12 +3,12 @@ package bodevelopment.client.blackout.randomstuff.mainmenu;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.util.Mth;
 
 public class AltHelpRenderer {
     private final List<String> helpLines = new ArrayList<>();
@@ -18,7 +18,7 @@ public class AltHelpRenderer {
     private float targetY = -300.0F;
     private boolean dragging = false;
     private float dragOffsetX, dragOffsetY;
-    private float width = 380.0F;
+    private final float width = 380.0F;
 
     public void init() {
         helpLines.clear();

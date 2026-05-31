@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.mixin.mixins;
 
+import bodevelopment.client.blackout.annotations.Internal;
+
 import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
 import bodevelopment.client.blackout.util.render.WireframeRenderer;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -14,6 +16,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PlayerItemInHandLayer.class)
+@Internal
 public class MixinPlayerItemInHandLayer {
     @Inject(method = "renderArmWithItem*", at = @At("HEAD"), cancellable = true)
     private void onRenderItem(

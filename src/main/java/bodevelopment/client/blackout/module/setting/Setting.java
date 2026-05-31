@@ -1,12 +1,15 @@
 package bodevelopment.client.blackout.module.setting;
 
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.interfaces.functional.SingleOut;
 import bodevelopment.client.blackout.manager.Managers;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.vertex.PoseStack;
+
 import java.util.function.Consumer;
 
+@PublicAPI
 public class Setting<T> {
     public final String name;
     public final String description;

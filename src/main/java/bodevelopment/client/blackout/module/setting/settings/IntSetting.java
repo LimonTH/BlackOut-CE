@@ -11,15 +11,18 @@ import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import java.awt.*;
 import net.minecraft.util.Mth;
+
+import java.awt.*;
 
 public class IntSetting extends Setting<Integer> {
     private static final Color CLEAR = new Color(255, 255, 255, 0);
     public final int min;
     public final int max;
     public final int step;
-    private final TextField textField = new TextField() {{ setMaxLength(10); }};
+    private final TextField textField = new TextField() {{
+        setMaxLength(10);
+    }};
     private final int id = SelectedComponent.nextId();
     private float sliderPos;
     private float sliderAnim = 0.0F;
@@ -38,7 +41,7 @@ public class IntSetting extends Setting<Integer> {
 
         if (this.moving) {
             this.sliderPos = (float) Mth.clamp(Mth.inverseLerp(this.mx, this.x + sliderPadding, this.x + this.width - sliderPadding), 0.0, 1.0);
-            float val = Mth.lerp(this.sliderPos, (float)this.min, (float)this.max);
+            float val = Mth.lerp(this.sliderPos, (float) this.min, (float) this.max);
             this.setValue(Math.round(val / this.step) * this.step);
         } else {
             this.sliderPos = Mth.clamp(Mth.inverseLerp(this.get(), this.min, this.max), 0.0F, 1.0F);
@@ -61,7 +64,8 @@ public class IntSetting extends Setting<Integer> {
             } catch (NumberFormatException e) {
                 try {
                     this.setValue((int) Math.round(Double.parseDouble(this.textField.getContent().replace(",", "."))));
-                } catch (NumberFormatException ignored) {}
+                } catch (NumberFormatException ignored) {
+                }
             }
         } else {
             this.textField.setContent(String.valueOf(this.get()));
@@ -154,7 +158,7 @@ public class IntSetting extends Setting<Integer> {
     @Override
     public void set(JsonElement element) {
         this.setValue(element.getAsInt());
-        this.sliderPos = Mth.clamp(Mth.inverseLerp(this.get(), (float)this.min, (float)this.max), 0.0F, 1.0F);
+        this.sliderPos = Mth.clamp(Mth.inverseLerp(this.get(), (float) this.min, (float) this.max), 0.0F, 1.0F);
         this.sliderAnim = this.sliderPos;
     }
 }

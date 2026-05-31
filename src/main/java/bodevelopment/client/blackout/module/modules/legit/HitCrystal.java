@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.legit;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.SwingHand;
 import bodevelopment.client.blackout.enums.SwitchMode;
@@ -12,6 +11,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.FindResult;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.world.InteractionHand;

@@ -24,13 +24,7 @@ import net.minecraft.client.multiplayer.prediction.PredictiveAction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
-import net.minecraft.network.protocol.game.ServerboundInteractPacket;
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
-import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
-import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
-import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.network.protocol.game.*;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
@@ -40,6 +34,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+
 import java.util.Objects;
 
 public class Module extends AbstractModule {
@@ -100,7 +95,7 @@ public class Module extends AbstractModule {
             ConsoleLog.toggle(this.getDisplayName(), true);
             if (sendNotification) {
                 this.sendNotification(
-                        message == null ? this.getDisplayName() + ChatFormatting.GREEN.toString() + " Enabled" : " " + message,
+                        message == null ? this.getDisplayName() + ChatFormatting.GREEN + " Enabled" : " " + message,
                         message == null ? "Enabled " + this.getDisplayName() : message,
                         "Module Toggle",
                         NotificationsSettings.Type.Enable,
@@ -142,7 +137,7 @@ public class Module extends AbstractModule {
             ConsoleLog.toggle(this.getDisplayName(), false);
             if (sendNotification) {
                 this.sendNotification(
-                        message == null ? this.getDisplayName() + ChatFormatting.RED.toString() + " OFF" : " " + message,
+                        message == null ? this.getDisplayName() + ChatFormatting.RED + " OFF" : " " + message,
                         message == null ? "Disabled " + this.getDisplayName() : message,
                         "Module Toggle",
                         type,

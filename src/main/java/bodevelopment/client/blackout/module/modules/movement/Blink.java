@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.movement;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.event.Event;
@@ -13,6 +12,7 @@ import bodevelopment.client.blackout.module.modules.combat.defensive.Surround;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;

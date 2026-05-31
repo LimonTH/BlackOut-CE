@@ -8,12 +8,13 @@ import bodevelopment.client.blackout.module.setting.multisettings.BackgroundMult
 import bodevelopment.client.blackout.module.setting.multisettings.TextColorMultiSetting;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
 import bodevelopment.client.blackout.util.InvUtils;
-import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
+import bodevelopment.client.blackout.util.render.RenderLayer;
 import com.mojang.blaze3d.systems.RenderSystem;
-import java.util.List;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+
+import java.util.List;
 
 public class GearHUD extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");

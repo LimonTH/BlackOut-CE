@@ -1,6 +1,5 @@
 package bodevelopment.client.blackout.module.modules.visual.misc;
 
-import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.KeyEvent;
@@ -12,15 +11,16 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
+import bodevelopment.client.blackout.util.PlayerUtils;
 import bodevelopment.client.blackout.util.ScreenUtils;
-import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Spectate extends Module {
     private static Spectate INSTANCE;
