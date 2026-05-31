@@ -150,6 +150,7 @@ public class BlockUtils {
     }
 
     public static double getBlockBreakingDelta(ItemStack stack, BlockState state, BlockPos pos, boolean effects, boolean water, boolean onGround) {
+        if (stack == null || stack.isEmpty()) return 0.0;
         float f = state.getDestroySpeed(BlackOut.mc.level, pos);
         if (f == -1.0F) {
             return 0.0;
@@ -160,6 +161,7 @@ public class BlockUtils {
     }
 
     public static double getBlockBreakingSpeed(BlockState state, ItemStack stack, boolean effects, boolean water, boolean onGround) {
+        if (stack == null || stack.isEmpty()) return 1.0;
         float f = stack.getDestroySpeed(state);
 
         if (f > 1.0F) {

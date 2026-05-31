@@ -1,7 +1,6 @@
 package bodevelopment.client.blackout.module.modules.visual.world;
 
 import bodevelopment.client.blackout.BlackOut;
-import bodevelopment.client.blackout.annotations.Experimental;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.BlockStateEvent;
 import bodevelopment.client.blackout.event.events.GameJoinEvent;
@@ -13,6 +12,7 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.BoxMultiSetting;
 import bodevelopment.client.blackout.util.BoxUtils;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.multiplayer.ClientChunkCache;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -26,24 +26,37 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-@Experimental
 public class Search extends Module {
+    private static final Direction[] DIRECTIONS = Direction.values();
+
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRender = this.addGroup("Visuals");
 
     private final Map<BlockPos, AABB> positions = new ConcurrentHashMap<>();
+    private final Map<ChunkPos, Set<BlockPos>> chunkedPositions = new ConcurrentHashMap<>();
     private final Set<ChunkPos> prevChunks = new HashSet<>();
     private final Queue<ChunkPos> toScan = new ConcurrentLinkedQueue<>();
 
-    private final ForkJoinPool pool = new ForkJoinPool();
+    private final ExecutorService scanExecutor = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "BlackOut-Search-Scanner");
+        t.setDaemon(true);
+        t.setPriority(Thread.NORM_PRIORITY - 1);
+        return t;
+    });
 
-    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Target Blocks", "The specific block types to locate.").onChanged(ignored -> refresh());
-    private final Setting<Boolean> dynamicBox = this.sgGeneral.booleanSetting("Voxel Bounds", true, "Adjusts highlight to match the exact block shape.").onChanged(ignored -> refresh());
+    private volatile Set<Block> blockSet = Set.of();
+
+    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Target Blocks", "The specific block types to locate.")
+            .onChanged(ignored -> refresh());
+    private final Setting<Boolean> dynamicBox = this.sgGeneral.booleanSetting("Voxel Bounds", true, "Adjusts highlight to match the exact block shape.")
+            .onChanged(ignored -> refresh());
     private final Setting<Boolean> instantScan = this.sgGeneral.booleanSetting("Force Scan", false, "Scans all loaded chunks immediately.");
     private final Setting<Integer> scanSpeed = this.sgGeneral.intSetting("Iteration Rate", 1, 1, 10, 1, "Chunks per frame during scan.", () -> !this.instantScan.get());
-    private final Setting<Boolean> onlyExposed = this.sgGeneral.booleanSetting("Culling", false, "Only highlights blocks exposed to air.").onChanged(ignored -> refresh());
+    private final Setting<Boolean> onlyExposed = this.sgGeneral.booleanSetting("Culling", false, "Only highlights blocks exposed to air.")
+            .onChanged(ignored -> refresh());
 
     private final BoxMultiSetting rendering = BoxMultiSetting.of(this.sgRender);
 
@@ -71,7 +84,10 @@ public class Search extends Module {
 
     @Event
     public void onRender(RenderEvent.World.Post event) {
-        positions.values().forEach(rendering::render);
+        if (positions.isEmpty()) return;
+        for (AABB box : positions.values()) {
+            rendering.render(box);
+        }
     }
 
     @Event
@@ -85,15 +101,28 @@ public class Search extends Module {
         this.prevChunks.clear();
         this.toScan.clear();
         this.positions.clear();
+        this.chunkedPositions.clear();
+        this.rebuildBlockSet();
     }
 
     private void refresh() {
+        this.rebuildBlockSet();
         if (BlackOut.mc.level == null) return;
         positions.clear();
+        chunkedPositions.clear();
         for (ChunkPos pos : prevChunks) {
             if (!toScan.contains(pos)) {
                 toScan.add(pos);
             }
+        }
+    }
+
+    private void rebuildBlockSet() {
+        List<Block> list = this.blocks.get();
+        if (list.isEmpty()) {
+            this.blockSet = Set.of();
+        } else {
+            this.blockSet = new ObjectOpenHashSet<>(list);
         }
     }
 
@@ -102,10 +131,10 @@ public class Search extends Module {
 
         int limit = instantScan.get() ? toScan.size() : scanSpeed.get();
         for (int i = 0; i < limit; i++) {
-            if (toScan.isEmpty()) break;
-            ChunkPos pos = toScan.remove();
+            ChunkPos pos = toScan.poll();
+            if (pos == null) break;
 
-            pool.execute(() -> this.scan(pos));
+            scanExecutor.execute(() -> this.scan(pos));
         }
     }
 
@@ -115,13 +144,18 @@ public class Search extends Module {
             if (!(chunkView instanceof LevelChunk chunk) || chunk.isEmpty()) {
                 return;
             }
+
+            Set<Block> targets = this.blockSet;
+            if (targets.isEmpty()) return;
+
             LevelChunkSection[] sections = chunk.getSections();
+            List<BlockPos> batch = new ArrayList<>(32);
 
             for (int i = 0; i < sections.length; i++) {
                 LevelChunkSection section = sections[i];
                 if (section == null || section.hasOnlyAir()) continue;
 
-                if (!section.getStates().maybeHas(state -> this.blocks.get().contains(state.getBlock()))) {
+                if (!section.getStates().maybeHas(state -> targets.contains(state.getBlock()))) {
                     continue;
                 }
 
@@ -129,26 +163,24 @@ public class Search extends Module {
                 int startZ = pos.getMinBlockZ();
                 int minY = chunk.getMinY() + (i * 16);
 
-                List<FoundBlock> batch = new ArrayList<>();
-
                 for (int y = 0; y < 16; y++) {
                     for (int x = 0; x < 16; x++) {
                         for (int z = 0; z < 16; z++) {
                             var state = section.getBlockState(x, y, z);
-                            if (this.blocks.get().contains(state.getBlock())) {
-                                batch.add(new FoundBlock(state.getBlock(), new BlockPos(startX + x, minY + y, startZ + z)));
+                            if (targets.contains(state.getBlock())) {
+                                batch.add(new BlockPos(startX + x, minY + y, startZ + z));
                             }
                         }
                     }
                 }
+            }
 
-                if (!batch.isEmpty()) {
-                    BlackOut.mc.execute(() -> {
-                        for (FoundBlock fb : batch) {
-                            this.onBlock(fb.block(), fb.pos, false);
-                        }
-                    });
-                }
+            if (!batch.isEmpty()) {
+                BlackOut.mc.execute(() -> {
+                    for (BlockPos bp : batch) {
+                        this.onBlock(BlackOut.mc.level.getBlockState(bp).getBlock(), bp, false);
+                    }
+                });
             }
         } catch (Exception ignored) {
         }
@@ -156,16 +188,19 @@ public class Search extends Module {
 
     private void checkChunks() {
         ClientChunkCache.Storage map = BlackOut.mc.level.getChunkSource().storage;
+        int length = map.chunks.length();
         Set<ChunkPos> currentChunks = new HashSet<>();
 
-        for (int i = 0; i < map.chunks.length(); i++) {
+        for (int i = 0; i < length; i++) {
             LevelChunk chunk = map.chunks.get(i);
-            if (chunk != null) currentChunks.add(chunk.getPos());
+            if (chunk != null) {
+                currentChunks.add(chunk.getPos());
+            }
         }
 
         for (ChunkPos pos : currentChunks) {
-            if (!prevChunks.contains(pos)) {
-                if (!toScan.contains(pos)) toScan.add(pos);
+            if (!prevChunks.contains(pos) && !toScan.contains(pos)) {
+                toScan.add(pos);
             }
         }
 
@@ -181,18 +216,21 @@ public class Search extends Module {
 
     private void unScan(ChunkPos pos) {
         this.toScan.remove(pos);
-        this.positions.keySet().removeIf(p ->
-                p.getX() >= pos.getMinBlockX() && p.getX() <= pos.getMaxBlockX() &&
-                        p.getZ() >= pos.getMinBlockZ() && p.getZ() <= pos.getMaxBlockZ()
-        );
+        Set<BlockPos> chunkBlocks = this.chunkedPositions.remove(pos);
+        if (chunkBlocks != null) {
+            for (BlockPos bp : chunkBlocks) {
+                this.positions.remove(bp);
+            }
+        }
     }
 
     private void onBlock(Block block, BlockPos pos, boolean updateNeighbors) {
-        boolean valid = this.blocks.get().contains(block);
+        Set<Block> targets = this.blockSet;
+        boolean valid = targets.contains(block);
 
         if (valid && this.onlyExposed.get()) {
             valid = false;
-            for (Direction dir : Direction.values()) {
+            for (Direction dir : DIRECTIONS) {
                 if (!BlackOut.mc.level.getBlockState(pos.relative(dir)).canOcclude()) {
                     valid = true;
                     break;
@@ -203,13 +241,25 @@ public class Search extends Module {
         if (valid) {
             if (!this.positions.containsKey(pos)) {
                 this.positions.put(pos, this.getBox(pos));
+                ChunkPos cp = new ChunkPos(pos);
+                this.chunkedPositions.computeIfAbsent(cp, k -> new ObjectOpenHashSet<>()).add(pos);
             }
         } else {
-            this.positions.remove(pos);
+            AABB removed = this.positions.remove(pos);
+            if (removed != null) {
+                ChunkPos cp = new ChunkPos(pos);
+                Set<BlockPos> set = this.chunkedPositions.get(cp);
+                if (set != null) {
+                    set.remove(pos);
+                    if (set.isEmpty()) {
+                        this.chunkedPositions.remove(cp);
+                    }
+                }
+            }
         }
 
         if (updateNeighbors) {
-            for (Direction dir : Direction.values()) {
+            for (Direction dir : DIRECTIONS) {
                 BlockPos offsetPos = pos.relative(dir);
                 this.onBlock(BlackOut.mc.level.getBlockState(offsetPos).getBlock(), offsetPos, false);
             }
@@ -222,8 +272,5 @@ public class Search extends Module {
             if (!shape.isEmpty()) return shape.bounds().move(pos);
         }
         return BoxUtils.get(pos);
-    }
-
-    private record FoundBlock(Block block, BlockPos pos) {
     }
 }

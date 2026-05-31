@@ -13,9 +13,7 @@ public final class FloatPairRingBuffer {
     private int head = 0;
     private int size = 0;
 
-    /**
-     * Insert a new pair at the front (index 0). O(1), no allocation.
-     */
+    /** Insert a new pair at the front (index 0). O(1), no allocation. */
     public void addFirst(float av, float bv) {
         head = (head - 1) & MASK;
         this.a[head] = av;

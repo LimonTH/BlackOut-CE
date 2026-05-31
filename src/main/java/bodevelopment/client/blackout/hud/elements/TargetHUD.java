@@ -84,6 +84,11 @@ public class TargetHUD extends HudElement {
 
     @Override
     public void render() {
+        if (BlackOut.mc.player == null) {
+            this.setSize(this.getRenderWidth(), this.getRenderHeight());
+            this.renderDummy();
+            return;
+        }
         this.updateTarget();
         if (this.target != null) {
             this.setRendering(this.target);
@@ -97,6 +102,48 @@ public class TargetHUD extends HudElement {
         if (this.renderType.get() == RenderType.Hud) {
             this.renderTargetHUD(false);
         }
+    }
+
+    private void renderDummy() {
+        String dummyName = "Player";
+        float health = 20.0F;
+        float renderHealth = 20.0F;
+
+        this.stack.pushPose();
+        this.stack.translate(this.getRenderWidth() / 2.0F, this.getRenderHeight() / 2.0F, 0.0F);
+        this.stack.translate(this.getRenderWidth() / -2.0F, this.getRenderHeight() / -2.0F, 0.0F);
+
+        switch (this.mode.get()) {
+            case Blackout:
+                if (this.blur.get()) {
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 105.0F, 20.0F, 3.0F, 10));
+                    Renderer.onHUDBlur();
+                }
+                this.background.render(this.stack, 0.0F, 0.0F, 105.0F, 20.0F, 3.0F, 3.0F);
+                BlackOut.FONT.text(this.stack, dummyName, 0.9F, 27.0F, 1.0F, this.textColor.get().getColor(), false, false);
+                this.healthBar.render(this.stack, 27.0F, 15.0F, 70.0F, 1.0F, 2.0F, 3.0F);
+                break;
+            case BlackoutNew:
+                if (this.blur.get()) {
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 100.0F, 20.0F, 3.0F, 10));
+                    Renderer.onHUDBlur();
+                }
+                this.background.render(this.stack, 0.0F, 0.0F, 100.0F, 20.0F, 3.0F, 3.0F);
+                BlackOut.FONT.text(this.stack, dummyName, 0.75F, 27.0F, 1.0F, this.textColor.get().getColor(), false, false);
+                Render2DUtils.rounded(this.stack, 27.0F, 11.0F, 70.0F, 0.1F, 1.0F, 0.0F, SHADOW_100, SHADOW_100);
+                this.healthBar.render(this.stack, 27.0F, 11.0F, 70.0F, 0.1F, 1.0F, 1.0F);
+                break;
+            default:
+                // Generic placeholder for other modes
+                if (this.blur.get()) {
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, this.getRenderWidth(), this.getRenderHeight(), 3.0F, 10));
+                    Renderer.onHUDBlur();
+                }
+                this.background.render(this.stack, 0.0F, 0.0F, this.getRenderWidth(), this.getRenderHeight(), 3.0F, 3.0F);
+                BlackOut.FONT.text(this.stack, dummyName, 1.0F, this.getRenderWidth() / 2.0F, this.getRenderHeight() / 2.0F - BlackOut.FONT.getHeight() / 2.0F, this.textColor.get().getColor(), true, true);
+        }
+
+        ScreenUtils.endPixelSpace(this.stack);
     }
 
     @Override
@@ -500,24 +547,25 @@ public class TargetHUD extends HudElement {
         }
     }
 
+    private static final ResourceLocation DEFAULT_SKIN = ResourceLocation.withDefaultNamespace("textures/entity/player/wide/steve.png");
+
     private void drawFace(PoseStack stack, float scale, float x, float y) {
         float size = scale * 20.0F;
-        if (this.renderSkin != null) {
-            if (this.mode.get() == Mode.Old || this.mode.get() == Mode.Exhibition) {
-                TextureRenderer.renderQuad(
-                        stack, x, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, BlackOut.mc.getTextureManager().getTexture(this.renderSkin).getId()
-                );
-            }
+        ResourceLocation skin = this.renderSkin != null ? this.renderSkin : DEFAULT_SKIN;
+        if (this.mode.get() == Mode.Old || this.mode.get() == Mode.Exhibition) {
+            TextureRenderer.renderQuad(
+                    stack, x, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, BlackOut.mc.getTextureManager().getTexture(skin).getId()
+            );
+        }
 
-            if (this.mode.get() != Mode.Tenacity && this.mode.get() != Mode.Tenacity2) {
-                TextureRenderer.renderFitRounded(
-                        stack, x, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, 5.0F, 40, BlackOut.mc.getTextureManager().getTexture(this.renderSkin).getId()
-                );
-            } else {
-                TextureRenderer.renderFitRounded(
-                        stack, x, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, 12.0F, 40, BlackOut.mc.getTextureManager().getTexture(this.renderSkin).getId()
-                );
-            }
+        if (this.mode.get() != Mode.Tenacity && this.mode.get() != Mode.Tenacity2) {
+            TextureRenderer.renderFitRounded(
+                    stack, x, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, 5.0F, 40, BlackOut.mc.getTextureManager().getTexture(skin).getId()
+            );
+        } else {
+            TextureRenderer.renderFitRounded(
+                    stack, x, y, size, size, 0.125F, 0.125F, 0.25F, 0.25F, 12.0F, 40, BlackOut.mc.getTextureManager().getTexture(skin).getId()
+            );
         }
     }
 

@@ -2,14 +2,13 @@ package bodevelopment.client.blackout.randomstuff;
 
 import bodevelopment.client.blackout.interfaces.functional.EpicInterface;
 import bodevelopment.client.blackout.manager.Managers;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.phys.AABB;
-
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.AABB;
 
 public class ExtrapolationMap {
     private final Map<Entity, AABB> boxMap = new ConcurrentHashMap<>();

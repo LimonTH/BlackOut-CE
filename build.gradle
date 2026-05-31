@@ -69,13 +69,9 @@ dependencies {
 
 test {
 	useJUnitPlatform()
-	// Don't fail the build if tests can't run (e.g., MC not available)
 	ignoreFailures = true
 }
 
-/**
- * ${~} replacer for fabric.mod.json of BlackOut client.
- */
 processResources {
 	inputs.property "id", staticArchivesName
 	inputs.property "version", staticModVersion

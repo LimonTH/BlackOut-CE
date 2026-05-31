@@ -19,7 +19,7 @@ public class SpeedDisplay extends TextElement {
 
     @Override
     public void render() {
-        Vec3 vel = BlackOut.mc.player.getDeltaMovement();
+        Vec3 vel = BlackOut.mc.player != null ? BlackOut.mc.player.getDeltaMovement() : Vec3.ZERO;
         double speed = onlyHorizontal.get() ? vel.horizontalDistance() : vel.length();
         speed *= 20.0;
 
