@@ -103,6 +103,10 @@ public class SettingGroup {
         return this.addSetting(Settings.keySetting(name, description, null));
     }
 
+    public Setting<KeyBind> keySetting(String name, String description, KeyBind defaultBind) {
+        return this.addSetting(Settings.keySetting(name, description, null, defaultBind));
+    }
+
     public Setting<String> stringSetting(String name, String value, String description) {
         return this.addSetting(Settings.stringSetting(name, value, description, null));
     }

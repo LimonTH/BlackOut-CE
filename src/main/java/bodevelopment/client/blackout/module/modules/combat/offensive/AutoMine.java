@@ -76,6 +76,7 @@ public class AutoMine extends Module {
     private final Setting<Boolean> packet = this.sgGeneral.booleanSetting("Packet Mine", true, "Sends mining packets without client-side block removal to prevent desync.");
     private final Setting<Boolean> autoMine = this.sgGeneral.booleanSetting("Auto-Selection", true, "Automatically identifies and targets the most optimal block for mining.");
     private final Setting<Boolean> manualMine = this.sgGeneral.booleanSetting("Manual Selection", true, "Allows the user to manually select a target block by clicking it.");
+    private final Setting<Boolean> queueMine = this.sgGeneral.booleanSetting("Mining Queue", false, "When holding the attack key, blocks you look at are queued and mined in order without resetting progress.", this.manualMine::get);
     private final Setting<Boolean> manualInstant = this.sgGeneral.booleanSetting("Manual Instant-Mine", false, "Enables instant-mining logic for manually selected blocks.", this.manualMine::get);
     private final Setting<Boolean> manualRemine = this.sgGeneral.booleanSetting("Manual Persistence", false, "Automatically restarts mining on the manual block after it is broken.", () -> this.manualMine.get() && !this.manualInstant.get());
     private final Setting<Boolean> fastRemine = this.sgGeneral.booleanSetting("Accelerated Remine", false, "Predicts mining progress based on the last block break timing for faster cycles.", () -> this.manualMine.get() && !this.manualInstant.get() && this.manualRemine.get());
@@ -172,6 +173,8 @@ public class AutoMine extends Module {
     public BlockPos crystalPos = null;
     public MineType mineType = null;
     public boolean started = false;
+    private final List<BlockPos> mineQueue = new ArrayList<>();
+    private boolean queueActive = false;
     private BlockPos prevPos = null;
     private Player target = null;
     private double progress = 0.0;
@@ -230,6 +233,7 @@ public class AutoMine extends Module {
                 }
             });
             this.startedThisTick = false;
+            this.updateQueueState();
             this.updatePos();
             if (this.minePos != null && this.mineType == MineType.Manual) {
                 if (this.manualRangeReset.get() && !SettingUtils.inMineRange(this.minePos)) {
@@ -410,7 +414,34 @@ public class AutoMine extends Module {
                 : BlackOut.mc.level.getBlockState(this.minePos);
     }
 
+    private void updateQueueState() {
+        boolean attackDown = BlackOut.mc.options.keyAttack.isDown();
+        if (this.queueMine.get()) {
+            if (attackDown && !this.queueActive) {
+                this.queueActive = true;
+                this.mineQueue.clear();
+            } else if (!attackDown && this.queueActive) {
+                this.queueActive = false;
+                if (!this.mineQueue.isEmpty()) {
+                    this.abort(this.mineQueue.get(0));
+                }
+                this.mineQueue.clear();
+                this.minePos = null;
+                this.started = false;
+            }
+        } else {
+            this.queueActive = false;
+            this.mineQueue.clear();
+        }
+    }
+
     private void updatePos() {
+        if (this.queueActive && !this.mineQueue.isEmpty()) {
+            this.minePos = this.mineQueue.get(0);
+            this.crystalPos = null;
+            this.mineType = MineType.Manual;
+            return;
+        }
         if (this.minePos == null || this.mineType != MineType.Manual) {
             Target target = this.getTarget();
             this.minePos = target.pos;
@@ -1008,7 +1039,7 @@ public class AutoMine extends Module {
                 if (dir != null) {
                     if (!this.shouldRotateEnd() || this.rotation.rotateBlock(this.minePos, dir, this.getMineEndRotationVec(), RotationType.Mining, "mining")) {
                         boolean switched = false;
-                        if (this.holdingForNcp || holding || (switched = this.pickaxeSwitch.get().swap(slot))) {
+                        if (this.holdingForNcp || holding || (switched = slot >= 0 && this.pickaxeSwitch.get().swap(slot)) || slot < 0) {
                             this.sendSequenced(s -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, this.minePos, dir, s));
                             SwingSettings.getInstance().mineSwing(SwingSettings.MiningSwingState.End);
                             if (this.mineEndSwing.get()) {
@@ -1027,6 +1058,9 @@ public class AutoMine extends Module {
                             } else if (!this.manualRemine.get() || this.mineType != MineType.Manual) {
                                 this.prevMined = null;
                                 this.started = false;
+                                if (this.queueActive && !this.mineQueue.isEmpty()) {
+                                    this.mineQueue.remove(0);
+                                }
                                 this.minePos = null;
                                 this.restoreSwap();
                             } else if (this.fastRemine.get()) {
@@ -1072,6 +1106,13 @@ public class AutoMine extends Module {
     }
 
     public void onStart(BlockPos pos) {
+        if (this.queueActive && this.queueMine.get() && this.manualMine.get() && this.getBlock(pos) != Blocks.BEDROCK) {
+            if (!this.mineQueue.contains(pos)) {
+                this.mineQueue.add(pos);
+            }
+            return;
+        }
+
         if (this.mineType == MineType.Manual && pos.equals(this.minePos)) {
             if (!this.isMining(pos)) {
                 this.started = false;
@@ -1222,7 +1263,9 @@ public class AutoMine extends Module {
 
     private void abort(BlockPos pos) {
         this.restoreSwap();
-        this.sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN, 0));
+        if (this.mineType != MineType.Manual || this.holdingForNcp) {
+            this.sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN, 0));
+        }
         this.started = false;
     }
 

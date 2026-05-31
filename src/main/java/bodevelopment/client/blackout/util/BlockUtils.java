@@ -150,14 +150,16 @@ public class BlockUtils {
     }
 
     public static double getBlockBreakingDelta(ItemStack stack, BlockState state, BlockPos pos, boolean effects, boolean water, boolean onGround) {
-        if (stack == null || stack.isEmpty()) return 0.0;
         float f = state.getDestroySpeed(BlackOut.mc.level, pos);
         if (f == -1.0F) {
             return 0.0;
-        } else {
-            int i = state.requiresCorrectToolForDrops() && !stack.isCorrectToolForDrops(state) ? 100 : 30;
-            return getBlockBreakingSpeed(state, stack, effects, water, onGround) / f / i;
         }
+        if (stack == null || stack.isEmpty()) {
+            int i = state.requiresCorrectToolForDrops() ? 100 : 30;
+            return getBlockBreakingSpeed(state, ItemStack.EMPTY, effects, water, onGround) / f / i;
+        }
+        int i = state.requiresCorrectToolForDrops() && !stack.isCorrectToolForDrops(state) ? 100 : 30;
+        return getBlockBreakingSpeed(state, stack, effects, water, onGround) / f / i;
     }
 
     public static double getBlockBreakingSpeed(BlockState state, ItemStack stack, boolean effects, boolean water, boolean onGround) {

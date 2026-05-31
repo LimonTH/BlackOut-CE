@@ -7,6 +7,7 @@ import bodevelopment.client.blackout.event.events.MouseButtonEvent;
 import bodevelopment.client.blackout.event.events.MouseScrollEvent;
 import bodevelopment.client.blackout.gui.clickgui.ClickGui;
 import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.module.modules.client.HUDSettings;
 import bodevelopment.client.blackout.module.modules.client.MainMenuSettings;
 import bodevelopment.client.blackout.util.FileUtils;
 import bodevelopment.client.blackout.util.ScreenUtils;
@@ -400,7 +401,8 @@ public class MainMenu {
             return;
         }
 
-        if (event.pressed && event.key == 345) {
+        HUDSettings hudSettings = HUDSettings.getInstance();
+        if (event.pressed && hudSettings != null && hudSettings.editorKey.get().isKey(event.key)) {
             if (this.hudEntering || this.hudExiting) return;
 
             if (this.hudEditorVisible) {

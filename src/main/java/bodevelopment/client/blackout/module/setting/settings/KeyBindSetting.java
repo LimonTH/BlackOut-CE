@@ -18,6 +18,10 @@ public class KeyBindSetting extends Setting<KeyBind> {
         super(name, new KeyBind(null), description, visible);
     }
 
+    public KeyBindSetting(String name, String description, SingleOut<Boolean> visible, KeyBind defaultBind) {
+        super(name, defaultBind, description, visible);
+    }
+
     @Override
     public float render() {
         float textScale = 2.0F;

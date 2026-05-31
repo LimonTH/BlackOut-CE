@@ -37,6 +37,10 @@ public class Settings {
         return new KeyBindSetting(name, description, visible);
     }
 
+    public static Setting<KeyBind> keySetting(String name, String description, SingleOut<Boolean> visible, KeyBind defaultBind) {
+        return new KeyBindSetting(name, description, visible, defaultBind);
+    }
+
     public static Setting<String> stringSetting(String name, String value, String description, SingleOut<Boolean> visible) {
         return new StringSetting(name, value, description, visible);
     }

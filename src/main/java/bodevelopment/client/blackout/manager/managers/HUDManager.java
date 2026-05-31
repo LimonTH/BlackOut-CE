@@ -10,6 +10,7 @@ import bodevelopment.client.blackout.hud.HudElement;
 import bodevelopment.client.blackout.hud.HudMergePass;
 import bodevelopment.client.blackout.hud.elements.Arraylist;
 import bodevelopment.client.blackout.manager.Manager;
+import bodevelopment.client.blackout.module.modules.client.HUDSettings;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.randomstuff.Pair;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
@@ -115,9 +116,10 @@ public class HUDManager extends Manager {
         return added;
     }
 
+
     @Event
     public void onKey(KeyEvent event) {
-        if (event.key == 345 && event.pressed && PlayerUtils.isInGame()) {
+        if (event.key == HUDSettings.getInstance().editorKey.get().getKey() && event.pressed && PlayerUtils.isInGame()) {
             if (BlackOut.mc.screen == null || BlackOut.mc.screen instanceof HudEditor) {
                 this.toggle();
                 event.cancel();
