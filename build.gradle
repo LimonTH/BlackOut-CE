@@ -63,7 +63,7 @@ dependencies {
 
 	// Testing
 	testImplementation "org.junit.jupiter:junit-jupiter:5.10.1"
-	testImplementation "org.ow2.asm:asm-tree:9.6"
+	testImplementation "org.ow2.asm:asm-tree:9.10.1"
 	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
