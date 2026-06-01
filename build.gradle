@@ -60,16 +60,6 @@ dependencies {
 	// Other
 	compileOnly "com.google.errorprone:error_prone_annotations:2.49.0"
 	implementation "com.github.LlamaLad7.MixinExtras:mixinextras-common:0.2.2"
-
-	// Testing
-	testImplementation "org.junit.jupiter:junit-jupiter:6.1.0"
-	testImplementation "org.ow2.asm:asm-tree:9.10.1"
-	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
-}
-
-test {
-	useJUnitPlatform()
-	ignoreFailures = true
 }
 
 processResources {

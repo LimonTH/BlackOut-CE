@@ -48,12 +48,10 @@ public class AddonLoader {
                         BOLogger.info(String.format("Found addon: %s (version %s, api %d)",
                                 addon.getName(), addon.getVersion(), addon.getApiVersion()));
 
-                        // --- Tier 1: API contract (primary compatibility gate) ---
                         if (!checkApiCompatibility(addon)) {
                             return;
                         }
 
-                        // --- Tier 2: Client version (optional secondary gate) ---
                         if (!checkClientVersion(addon)) {
                             return;
                         }
@@ -84,9 +82,7 @@ public class AddonLoader {
                         }
 
                         if (addon.guiPath != null) {
-                            scan(addonLoader, addon.guiPath, ClickGuiScreen.class, instance -> {
-                                addon.guiScreens.add(instance);
-                            });
+                            scan(addonLoader, addon.guiPath, ClickGuiScreen.class, addon.guiScreens::add);
                             scan(addonLoader, addon.guiPath, MainMenuRenderer.class, instance -> {
                                 String id = instance.getClass().getSimpleName();
                                 addon.menuRenderers.put(id, instance);
@@ -161,7 +157,6 @@ public class AddonLoader {
                             + "Deprecated APIs may have been removed. "
                             + "If the addon misbehaves, ask the author to update it.",
                     addon.getName(), addonApi, clientApi));
-            // Not a hard rejection — old addons may still work
         }
 
         return true;
@@ -180,7 +175,7 @@ public class AddonLoader {
     private static boolean checkClientVersion(BlackoutAddon addon) {
         String minVersion = addon.getMinClientVersion();
         if (minVersion == null) {
-            return true; // No restriction
+            return true;
         }
 
         if (!isVersionCompatible(minVersion, BlackOut.VERSION)) {
@@ -228,7 +223,6 @@ public class AddonLoader {
             String minPart = i < minParts.length ? minParts[i] : "0";
             String curPart = i < curParts.length ? curParts[i] : "0";
 
-            // Wildcard matches anything at this position
             if ("*".equals(minPart)) {
                 continue;
             }
@@ -239,7 +233,7 @@ public class AddonLoader {
             if (cur > min) return true;
             if (cur < min) return false;
         }
-        return true; // equal or all wildcards matched
+        return true;
     }
 
     private static int parseVersionPart(String part) {
@@ -274,7 +268,6 @@ public class AddonLoader {
         ClassUtils.forEachClass(clazz -> {
             if (type.isAssignableFrom(clazz) && !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())) {
 
-                // Honor @OnlyDev — skip dev-only components on release/beta builds
                 if (!BlackOut.TYPE.isDevBuild() && clazz.isAnnotationPresent(bodevelopment.client.blackout.annotations.OnlyDev.class)) {
                     BOLogger.debug("Skipping @OnlyDev addon component: " + clazz.getName());
                     return;
