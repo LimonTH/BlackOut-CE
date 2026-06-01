@@ -44,6 +44,7 @@ public class InvUtils {
     public static int pickSlot = -1;
     public static int pickPrevSlot = -1;
     public static int prevSlot = -1;
+    public static int silentPrevSlot = -1;
     private static int[] slots;
 
     public static int count(boolean hotbar, boolean inventory, Predicate<ItemStack> predicate) {
@@ -335,6 +336,49 @@ public class InvUtils {
             boolean sent = swapInstantly(prevSlot);
             prevSlot = -1;
             return sent;
+        }
+        return false;
+    }
+
+    /**
+     * Silent swap: updates both PACKET.slot and selected for the START tick.
+     * After START_DESTROY_BLOCK is sent, call {@link #swapSilentRestoreVisual()}
+     * to restore selected to original (PACKET.slot stays on tool for getStack()).
+     */
+    public static boolean swapSilent(int to) {
+        if (to < 0 || to > 8) return false;
+        if (to == Managers.PACKET.slot) return true;
+        silentPrevSlot = Managers.PACKET.slot;
+        Managers.PACKET.slot = to;
+        Managers.PACKET.sendInstantly(new ServerboundSetCarriedItemPacket(to));
+        BlackOut.mc.player.getInventory().selected = to;
+        return true;
+    }
+
+    /**
+     * Restores only the visual selected slot after Silent swap + START.
+     * PACKET.slot stays on the tool for Mining progress calculation via getStack().
+     * carriedIndex is synced to prevent ensureHasSentCarriedItem() from sending a
+     * conflicting SetCarriedItem(original) packet.
+     * Call this AFTER sendSequenced(START_DESTROY_BLOCK).
+     */
+    public static void swapSilentRestoreVisual() {
+        if (silentPrevSlot >= 0) {
+            BlackOut.mc.player.getInventory().selected = silentPrevSlot;
+            BlackOut.mc.gameMode.carriedIndex = silentPrevSlot;
+            // PACKET.slot intentionally NOT restored — must stay on tool for getStack()
+            // Packet is NOT sent — server already has the tool from swapSilent's sendInstantly TODO
+        }
+    }
+
+    /**
+     * Restores the previous slot after a silent swap.
+     */
+    public static boolean swapSilentBack() {
+        if (silentPrevSlot >= 0) {
+            int prev = silentPrevSlot;
+            silentPrevSlot = -1;
+            return swapSilent(prev);
         }
         return false;
     }

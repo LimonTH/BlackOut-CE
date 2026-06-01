@@ -1850,7 +1850,7 @@ public class AutoCrystal extends Module {
         public void swapBack() {
             switch (this) {
                 case Silent:
-                    InvUtils.swapBack();
+                    InvUtils.swapSilentBack();
                     break;
                 case InvSwitch:
                     InvUtils.invSwapBack();
@@ -1862,7 +1862,11 @@ public class AutoCrystal extends Module {
 
         public boolean swap(int slot) {
             return switch (this) {
-                case Silent, Normal, Gapple -> {
+                case Silent -> {
+                    InvUtils.swapSilent(slot);
+                    yield true;
+                }
+                case Normal, Gapple -> {
                     InvUtils.swap(slot);
                     yield true;
                 }

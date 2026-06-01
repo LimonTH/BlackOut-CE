@@ -24,7 +24,7 @@ public enum SwitchMode {
 
     public boolean swapBack() {
         return switch (this) {
-            case Silent -> InvUtils.swapBack();
+            case Silent -> InvUtils.swapSilentBack();
             case InvSwitch -> InvUtils.invSwapBack();
             case PickSilent -> InvUtils.pickSwapBack();
             default -> false;
@@ -33,7 +33,8 @@ public enum SwitchMode {
 
     public boolean swap(int slot) {
         return switch (this) {
-            case Silent, Normal -> InvUtils.swap(slot);
+            case Silent -> InvUtils.swapSilent(slot);
+            case Normal -> InvUtils.swap(slot);
             case InvSwitch -> InvUtils.invSwap(slot);
             case PickSilent -> InvUtils.pickSwap(slot);
             default -> false;
@@ -42,7 +43,7 @@ public enum SwitchMode {
 
     public boolean swapBackInstantly() {
         return switch (this) {
-            case Silent -> InvUtils.swapBackInstantly();
+            case Silent -> InvUtils.swapSilentBack();
             case InvSwitch -> InvUtils.invSwapBackInstantly();
             case PickSilent -> InvUtils.pickSwapBackInstantly();
             default -> false;
@@ -51,7 +52,8 @@ public enum SwitchMode {
 
     public boolean swapInstantly(int slot) {
         return switch (this) {
-            case Silent, Normal -> InvUtils.swapInstantly(slot);
+            case Silent -> InvUtils.swapSilent(slot);
+            case Normal -> InvUtils.swapInstantly(slot);
             case InvSwitch -> InvUtils.invSwapInstantly(slot);
             case PickSilent -> InvUtils.pickSwapInstantly(slot);
             default -> false;

@@ -93,6 +93,44 @@ public class AutoMine extends Module {
 
     private final Setting<Boolean> preSwitch = this.sgSwitch.booleanSetting("Predictive Switch", false, "Swaps to the pickaxe slightly before the block is ready to break.");
     private final Setting<SwitchMode> pickaxeSwitch = this.sgSwitch.enumSetting("Pickaxe Swap Mode", SwitchMode.InvSwitch, "The method used to equip the pickaxe for mining.");
+
+    /**
+     * Checks if AutoMine currently has a Silent swap active.
+     * Used by {@code MixinMinecraft#onItemInteract} to temporarily restore
+     * the server-side item before sending {@code ServerboundUseItemPacket},
+     * ensuring food/potions are processed correctly by the server.
+     */
+    public boolean isSilentSwapActive() {
+        return this.holdingForNcp && this.pickaxeSwitch.get() == SwitchMode.Silent;
+    }
+
+    /**
+     * Begins a temporary item-restore cycle for Silent swap.
+     * <p>
+     * Restores the player's visual item to the server (so the server sees the
+     * correct item for the interaction), and suppresses the {@link #onSent}
+     * reset that would otherwise fire on the {@code SetCarriedItem} packet.
+     * <p>
+     * Must be paired with {@link #endItemRestore()}.
+     */
+    public void beginItemRestore() {
+        this.silentRestoring = true;
+        InvUtils.swapSilentBack();
+    }
+
+    /**
+     * Ends a temporary item-restore cycle for Silent swap.
+     * <p>
+     * Re-applies the Silent swap to the tool slot and restores the visual
+     * selected slot on the client without sending another packet.
+     */
+    public void endItemRestore() {
+        int toolSlot = Managers.PACKET.slot;
+        InvUtils.swapSilent(toolSlot);
+        InvUtils.swapSilentRestoreVisual();
+        this.silentRestoring = false;
+    }
+
     private final Setting<Boolean> allowInventory = this.sgSwitch.booleanSetting("Inventory Mining", false, "Allows using tools located in the inventory rather than just the hotbar.", () -> this.pickaxeSwitch.get().inventory);
     private final Setting<SwitchMode> crystalSwitch = this.sgSwitch.enumSetting("Crystal Swap Mode", SwitchMode.InvSwitch, "The method used to equip crystals for offensive mining.");
 
@@ -187,10 +225,16 @@ public class AutoMine extends Module {
     private long lastAttack = 0L;
     private BlockPos prevMined = null;
     private boolean shouldRestart = false;
-    private boolean holdingForNcp = false;
+    /** Exposed for Silent swap temporary restoration in MixinMinecraft.onItemInteract */
+    boolean holdingForNcp = false;
     private boolean suppressResetOnSwitch = false;
-    private boolean silentSwap = false;
-    private int silentPrevSlot = 0;
+    /**
+     * Set during Silent swap item restore cycles (e.g. eating via
+     * {@code onItemInteract}) to prevent {@link #onSent} from treating
+     * AutoMine's own {@code ServerboundSetCarriedItemPacket} as a
+     * user-initiated slot change.
+     */
+    private boolean silentRestoring = false;
 
     public AutoMine() {
         super("Auto Mine", "Automatically mines enemies' surround blocks to abuse them with crystals.", SubCategory.OFFENSIVE, true);
@@ -203,7 +247,16 @@ public class AutoMine extends Module {
 
     @Event
     public void onSent(PacketEvent.Sent event) {
-        if (this.resetOnSwitch.get() && !this.suppressResetOnSwitch && event.packet instanceof ServerboundSetCarriedItemPacket) {
+        if (this.resetOnSwitch.get()
+                && !this.suppressResetOnSwitch
+                && !this.silentRestoring
+                && event.packet instanceof ServerboundSetCarriedItemPacket) {
+            // When Silent swap is active, the user can freely change slots or TODO: Blocks breaks correctly on server side, but on client this creating ghosts
+            // use items without AutoMine resetting mining progress. The server
+            // still sees the pickaxe from swapSilent(), and PACKET.slot stays
+            // on the tool for progress calculation. Allowing user slot changes
+            // through keeps the client responsive while mining continues.
+            if (this.isSilentSwapActive()) return;
             this.shouldRestart = true;
         }
     }
@@ -1106,6 +1159,12 @@ public class AutoMine extends Module {
     }
 
     public void onStart(BlockPos pos) {
+        /* MultiTask bypasses isUsingItem() in continueAttack, causing
+         * startDestroyBlock() to fire every tick. Skip if already mining. */
+        if (this.started && this.minePos != null && this.minePos.equals(pos) && this.mineType == MineType.Manual) {
+            return;
+        }
+
         if (this.queueActive && this.queueMine.get() && this.manualMine.get() && this.getBlock(pos) != Blocks.BEDROCK) {
             if (!this.mineQueue.contains(pos)) {
                 this.mineQueue.add(pos);
@@ -1218,21 +1277,13 @@ public class AutoMine extends Module {
 
                     if (slot >= 0) {
                         SwitchMode mode = this.pickaxeSwitch.get();
-                        if (mode == SwitchMode.Silent) {
-                            this.silentPrevSlot = BlackOut.mc.player.getInventory().selected;
-                            Managers.PACKET.slot = slot;
-                            Managers.PACKET.sendInstantly(new ServerboundSetCarriedItemPacket(slot));
-                            this.silentSwap = true;
-                            this.holdingForNcp = true;
-                        } else {
-                            this.holdingForNcp = mode.swap(slot);
-                            if (this.holdingForNcp && (mode == SwitchMode.InvSwitch || mode == SwitchMode.PickSilent)) {
-                                int currentSlot = BlackOut.mc.player.getInventory().selected;
-                                ItemStack fromInv = BlackOut.mc.player.getInventory().getItem(slot);
-                                ItemStack fromHotbar = BlackOut.mc.player.getInventory().getItem(currentSlot);
-                                BlackOut.mc.player.getInventory().setItem(slot, fromHotbar);
-                                BlackOut.mc.player.getInventory().setItem(currentSlot, fromInv);
-                            }
+                        this.holdingForNcp = mode.swap(slot);
+                        if (this.holdingForNcp && (mode == SwitchMode.InvSwitch || mode == SwitchMode.PickSilent)) {
+                            int currentSlot = BlackOut.mc.player.getInventory().selected;
+                            ItemStack fromInv = BlackOut.mc.player.getInventory().getItem(slot);
+                            ItemStack fromHotbar = BlackOut.mc.player.getInventory().getItem(currentSlot);
+                            BlackOut.mc.player.getInventory().setItem(slot, fromHotbar);
+                            BlackOut.mc.player.getInventory().setItem(currentSlot, fromInv);
                         }
                     }
 
@@ -1240,6 +1291,16 @@ public class AutoMine extends Module {
                 }
 
                 this.sendSequenced(s -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, dir, s));
+
+                /* Silent exploit: restore selected immediately after START.
+                 * Server already received SetCarriedItem(pickaxe) via swapSilent(),
+                 * and START_DESTROY_BLOCK. NCP/AC records pickaxe from START.
+                 * PACKET.slot stays on pickaxe for getStack() progress calc.
+                 * Player sees original item and can interact freely during mining. */
+                if (this.pickaxeSwitch.get() == SwitchMode.Silent) {
+                    InvUtils.swapSilentRestoreVisual();
+                }
+
                 SwingSettings.getInstance().mineSwing(SwingSettings.MiningSwingState.Start);
                 this.rotation.end("mining");
 
@@ -1251,11 +1312,7 @@ public class AutoMine extends Module {
     }
 
     private void restoreSwap() {
-        if (this.silentSwap) {
-            Managers.PACKET.slot = this.silentPrevSlot;
-            Managers.PACKET.sendPacket(new ServerboundSetCarriedItemPacket(this.silentPrevSlot));
-            this.silentSwap = false;
-        } else if (this.holdingForNcp) {
+        if (this.holdingForNcp) {
             this.pickaxeSwitch.get().swapBack();
         }
         this.holdingForNcp = false;

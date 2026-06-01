@@ -10,6 +10,7 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.combat.misc.FastEat;
 import bodevelopment.client.blackout.module.modules.combat.misc.MultiTask;
 import bodevelopment.client.blackout.module.modules.combat.misc.Quiver;
+import bodevelopment.client.blackout.module.modules.combat.offensive.AutoMine;
 import bodevelopment.client.blackout.module.modules.legit.HitCrystal;
 import bodevelopment.client.blackout.module.modules.misc.FastUse;
 import bodevelopment.client.blackout.module.modules.misc.NoInteract;
@@ -220,7 +221,26 @@ public abstract class MixinMinecraft implements IMinecraft {
     )
     private InteractionResult onItemInteract(MultiPlayerGameMode instance, Player player, InteractionHand hand, Operation<InteractionResult> original) {
         NoInteract noInteract = NoInteract.getInstance();
-        return noInteract.enabled ? noInteract.handleUse(hand, () -> original.call(instance, player, hand)) : original.call(instance, player, hand);
+        if (noInteract.enabled) {
+            return noInteract.handleUse(hand, () -> original.call(instance, player, hand));
+        }
+
+        // When MultiTask is enabled and AutoMine has a Silent swap active,
+        // temporarily restore the server-side item before sending ServerboundUseItemPacket.
+        // This ensures the server correctly processes eating/drinking instead of seeing a pickaxe.
+        if (MultiTask.getInstance().enabled) {
+            AutoMine autoMine = AutoMine.getInstance();
+            if (autoMine.enabled && autoMine.isSilentSwapActive()) {
+                autoMine.beginItemRestore();
+                try {
+                    return original.call(instance, player, hand);
+                } finally {
+                    autoMine.endItemRestore();
+                }
+            }
+        }
+
+        return original.call(instance, player, hand);
     }
 
     @WrapOperation(

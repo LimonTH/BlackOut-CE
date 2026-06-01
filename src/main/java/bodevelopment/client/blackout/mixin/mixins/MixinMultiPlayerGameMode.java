@@ -250,4 +250,30 @@ public abstract class MixinMultiPlayerGameMode {
             instance.attack(target);
         }
     }
+
+    /**
+     * Prevents vanilla {@code continueDestroyBlock} from recalculating mining
+     * progress when {@link AutoMine} is actively mining the target block.
+     * <p>
+     * Without this, changing the main-hand item (e.g. eating food via Silent
+     * swap + MultiTask) would either:
+     * <ul>
+     *   <li>Cause {@code sameDestroyTarget()} to return {@code false} due to
+     *       item mismatch, restarting mining every tick</li>
+     *   <li>If {@code sameDestroyTarget()} is bypassed, calculate progress
+     *       using the food item's destroy speed (near-zero), starving the
+     *       vanilla overlay from ever reaching stage 10</li>
+     * </ul>
+     * By returning {@code true} immediately, we let AutoMine handle all
+     * progress tracking, packet sending, and break completion independently.
+     * The {@code continueAttack} caller still plays particles and hand-swing
+     * animations as normal.
+     */
+    @Inject(method = "continueDestroyBlock", at = @At("HEAD"), cancellable = true)
+    private void onContinueDestroyBlock(BlockPos pos, Direction direction, CallbackInfoReturnable<Boolean> cir) {
+        AutoMine autoMine = AutoMine.getInstance();
+        if (autoMine.enabled && autoMine.started && autoMine.minePos != null && autoMine.minePos.equals(pos)) {
+            cir.setReturnValue(true);
+        }
+    }
 }

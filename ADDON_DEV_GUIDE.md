@@ -31,34 +31,54 @@ How to create an addon for BlackOut Client (1.21.4+, Fabric, Mojang Mappings).
 
 ```groovy
 plugins {
-    id 'fabric-loom' version '1.6-SNAPSHOT'
+    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+    id 'java'
     id 'maven-publish'
+    id 'idea'
 }
 
-group = 'com.example'
-version = '1.0.0'
-
 repositories {
-    maven { url 'https://jitpack.io' }
+    maven { url = "https://api.modrinth.com/maven" }
+    maven { url = "https://repo.spongepowered.org/repository/maven-public/" }
+    maven { url = "https://jitpack.io" }
+    maven { url = "https://maven.fabricmc.net/" }
 }
 
 dependencies {
-    minecraft "com.mojang:minecraft:1.21.4"
+    minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${loader_version}"
 
-    // BlackOut Client — provided by the runtime environment
-    modCompileOnly "com.github.LimonTH:Blackout-CE:${project.blackout_version}"
-}
+    // Compatible Mods (required by BlackOut transitive dependencies)
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+    modImplementation "maven.modrinth:sodium:${sodium_version}-fabric"
+    modImplementation "com.github.cabaletta.baritone:baritone-api:${baritone_api_version}"
 
-loom {
-    accessWidenerPath = file("src/main/resources/myaddon.accesswidener")  // optional
+    // BlackOut Client
+    modImplementation "com.github.LimonTH:BlackOut-CE:${blackout_version}"
 }
 ```
 
 ### `gradle.properties`
 
 ```properties
-blackout_version=1.21.4-SNAPSHOT
+loom_version=1.16-SNAPSHOT
+minecraft_version=1.21.4
+yarn_mappings=1.21.4+build.8
+loader_version=0.19.2
+java_version=21
+
+mod_version=1.0.0
+maven_group=com.example
+archives_base_name=example-addon
+mod_name=Example Addon
+mod_description=An example BlackOut addon.
+
+fabric_api_version=0.119.4+1.21.4
+sodium_version=mc1.21.4-0.6.13
+baritone_api_version=1.2.15
+
+blackout_version=2.2.3
 ```
 
 ### `fabric.mod.json` — `src/main/resources/fabric.mod.json`
@@ -103,9 +123,9 @@ import bodevelopment.client.blackout.addon.BlackoutAddon;
 public class MyAddon extends BlackoutAddon {
     public MyAddon() {
         super("MyAddon",                          // display name
-              "com.example.myaddon.modules",      // modulePath
-              "com.example.myaddon.commands",     // commandPath
-              "com.example.myaddon.hud"           // hudPath
+                "com.example.myaddon.modules",      // modulePath
+                "com.example.myaddon.commands",     // commandPath
+                "com.example.myaddon.hud"           // hudPath
         );
     }
 
@@ -120,13 +140,13 @@ public class MyAddon extends BlackoutAddon {
 
 ```java
 protected BlackoutAddon(
-    String name,         // Display name
-    String modulePath,   // Package scanned for Module subclasses (or null)
-    String commandPath,  // Package scanned for Command subclasses (or null)
-    String hudPath,      // Package scanned for HudElement subclasses (or null)
-    String themePath,    // Ignored — themes are registered manually via registerTheme() (or null)
-    String soundPath,    // Resource prefix for .ogg sounds, e.g. "assets/myaddon/sounds"
-    String guiPath       // Package scanned for ClickGuiScreen & MainMenuRenderer (or null)
+        String name,         // Display name
+        String modulePath,   // Package scanned for Module subclasses (or null)
+        String commandPath,  // Package scanned for Command subclasses (or null)
+        String hudPath,      // Package scanned for HudElement subclasses (or null)
+        String themePath,    // Ignored — themes are registered manually via registerTheme() (or null)
+        String soundPath,    // Resource prefix for .ogg sounds, e.g. "assets/myaddon/sounds"
+        String guiPath       // Package scanned for ClickGuiScreen & MainMenuRenderer (or null)
 )
 ```
 
@@ -152,9 +172,9 @@ import bodevelopment.client.blackout.module.SubCategory;
 public class ExampleModule extends Module {
     public ExampleModule() {
         super("Example",                           // internal name
-              "An example addon module.",          // description
-              SubCategory.MISC,                    // GUI category
-              true);                                // subscribe to EventBus
+                "An example addon module.",          // description
+                SubCategory.MISC,                    // GUI category
+                true);                                // subscribe to EventBus
     }
 
     @Event
@@ -194,11 +214,11 @@ If `subscribe = true` in the constructor, the module is auto-subscribed to `Blac
 ```java
 private final SettingGroup sgGeneral = this.addGroup("General");
 public final Setting<Boolean> myToggle = this.sgGeneral.boolSetting(
-    "My Toggle", true, "Description");
+        "My Toggle", true, "Description");
 public final Setting<Double> mySlider = this.sgGeneral.doubleSetting(
-    "My Slider", 1.0, 0.0, 10.0, 0.1, "Description");
+        "My Slider", 1.0, 0.0, 10.0, 0.1, "Description");
 public final Setting<MyEnum> myEnum = this.sgGeneral.enumSetting(
-    "My Enum", MyEnum.Value1, "Description");
+        "My Enum", MyEnum.Value1, "Description");
 ```
 
 ---
@@ -315,7 +335,7 @@ src/main/resources/assets/myaddon/sounds/my_track.ogg
 @Override
 public void onInitialize() {
     registerMusicTrack("My Chill Beat", () ->
-        getClass().getClassLoader().getResourceAsStream("assets/myaddon/sounds/my_track.ogg")
+            getClass().getClassLoader().getResourceAsStream("assets/myaddon/sounds/my_track.ogg")
     );
 }
 ```
@@ -351,7 +371,7 @@ public class MyMenuBackground implements MainMenuRenderer {
 
     @Override
     public void renderBackground(PoseStack stack, float width, float height,
-                                  float mx, float my) {
+                                 float mx, float my) {
         // Draw the full-screen background (shaders, images, etc.)
     }
 
@@ -391,9 +411,9 @@ For more control, use `SoundUtils` directly:
 
 ```java
 InputStream stream = getClass().getClassLoader()
-    .getResourceAsStream("assets/myaddon/sounds/custom.ogg");
+        .getResourceAsStream("assets/myaddon/sounds/custom.ogg");
 if (stream != null) {
-    SoundUtils.playStream(1.0f, 0.5f, stream);        // pitch, volume, stream
+        SoundUtils.playStream(1.0f, 0.5f, stream);        // pitch, volume, stream
     SoundUtils.playStream(1.0f, 0.5f, stream, true);  // with looping
 }
 ```
@@ -437,8 +457,8 @@ import bodevelopment.client.blackout.module.modules.client.NotificationsSettings
 
 sendNotification(
     "Short text",           // shown in the notification bar
-    "Detailed message",     // shown when hovered
-    3.0,                    // duration in seconds
+            "Detailed message",     // shown when hovered
+            3.0,                    // duration in seconds
     NotificationsSettings.Type.Info  // Info, Warning, Error
 );
 ```
@@ -570,7 +590,7 @@ Handled by Fabric Loader via your addon's `fabric.mod.json`:
 
 ```json
 "depends": {
-    "minecraft": "~1.21.4"
+"minecraft": "~1.21.4"
 }
 ```
 
