@@ -68,21 +68,6 @@ jobs:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
 
-      - name: Generate Changelog
-        if: steps.check.outputs.skip != 'true'
-        id: changelog
-        run: |
-          PREVIOUS_TAG=$(git tag --sort=-v:refname | head -n 2 | tail -n 1 || echo "")
-          if [ -z "$PREVIOUS_TAG" ]; then
-            CHANGELOG="- Initial release ${{ steps.tag.outputs.name }}"
-          else
-            CHANGELOG=$(git log --pretty=format:"- %s (%h)" "$PREVIOUS_TAG..${{ steps.tag.outputs.name }}" --no-merges 2>/dev/null || git log --pretty=format:"- %s (%h)" --no-merges)
-          fi
-          CHANGELOG="${CHANGELOG//'%'/'%25'}"
-          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
-          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
-          echo "log=$CHANGELOG" >> $GITHUB_OUTPUT
-
       - name: Generate Release Timestamp (MSK)
         if: steps.check.outputs.skip != 'true'
         id: timestamp
@@ -101,9 +86,6 @@ jobs:
 
             **Released:** ${{ steps.timestamp.outputs.msk }} MSK (UTC +3:00)
 
-            ### 📋 Changes
-            ${{ steps.changelog.outputs.log }}
-
             ### 📦 Downloads
             - `${{ github.event.repository.name }}-${{ steps.tag.outputs.name }}.jar` — compiled mod
             - `${{ github.event.repository.name }}-${{ steps.tag.outputs.name }}.jar.asc` — GPG signature
@@ -112,6 +94,7 @@ jobs:
           files: |
             build/libs/*.jar
             build/libs/*.jar.asc
+          generate_release_notes: true
           draft: false
           prerelease: ${{ contains(steps.tag.outputs.name, 'beta') || contains(steps.tag.outputs.name, 'alpha') || contains(steps.tag.outputs.name, 'pre') }}
           fail_on_unmatched_files: false
