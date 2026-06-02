@@ -33,12 +33,12 @@ public class Playerlist extends HudElement {
     private final Setting<NameMode> nameMode = this.sgGeneral.enumSetting("Label Protocol", NameMode.EntityName, "Determines whether to show formatted display names or raw entity names.");
     private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Backdrop", true, "Renders a background panel behind the player statistics.");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a real-time blur effect to the backdrop for improved data legibility.");
-    private final Setting<Boolean> dynamic = this.sgGeneral.booleanSetting("Contextual Coloring", false, "Dynamically colors health, ping, and pop values based on their severity.");
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur Effect", true, "Applies a real-time blur effect to the backdrop for improved data legibility.");
+    private final Setting<Boolean> dynamic = this.sgGeneral.booleanSetting("Dynamic Color", false, "Dynamically colors health, ping, and pop values based on their severity.");
     private final Setting<BlackOutColor> good = this.sgGeneral.colorSetting("Positive Threshold", new BlackOutColor(0, 225, 0, 255), "The color assigned to healthy states (High health, low ping).", this.dynamic::get);
     private final Setting<BlackOutColor> bad = this.sgGeneral.colorSetting("Negative Threshold", new BlackOutColor(150, 0, 0, 255), "The color assigned to critical states (Low health, high ping).", this.dynamic::get);
-    private final Setting<Boolean> showPops = this.sgGeneral.booleanSetting("Track Totem Pops", false, "Enables a column to track the number of Totems of Undying used by each player.");
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Header Color");
+    private final Setting<Boolean> showPops = this.sgGeneral.booleanSetting("Show Pops", false, "Enables a column to track the number of Totems of Undying used by each player.");
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Header");
 
     private final List<Entity> players = new ArrayList<>();
     private float currentLongest = 0.0F;

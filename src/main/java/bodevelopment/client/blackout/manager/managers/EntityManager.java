@@ -48,14 +48,7 @@ public class EntityManager extends Manager {
     }
 
     public void removeItems(BlockPos pos) {
-        this.spawningItems.remove(p -> {
-            if (p.value.equals(pos)) {
-                this.waitingToRemoveItem.add(pos, 0.5);
-                return true;
-            } else {
-                return false;
-            }
-        });
+        this.spawningItems.remove(p -> p.value.equals(pos));
     }
 
     public boolean isDead(int id) {

@@ -35,7 +35,9 @@ import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 
 public class ClickGui extends Screen {
@@ -56,6 +58,7 @@ public class ClickGui extends Screen {
     private final ScrollHelper moduleScroll = new SmoothScrollHelper(0.5F, 20.0F, () -> 0.0F, () -> Math.max(this.moduleLength - height + 40.0F, 0.0F))
             .limit(5.0F);
     public ClickGuiScreen openedScreen = null;
+    private final Deque<ClickGuiScreen> screenStack = new ArrayDeque<>();
     private boolean upPressed = false;
     private boolean downPressed = false;
     private long pressTime = 0L;
@@ -324,12 +327,22 @@ public class ClickGui extends Screen {
         this.stack.popPose();
     }
 
+    /**
+     * Opens a new sub-screen, pushing the current one onto the stack.
+     * Call with {@code null} to pop back to the previous screen.
+     */
     public void setScreen(ClickGuiScreen screen) {
-        if (this.openedScreen != null) {
-            this.openedScreen.onClose();
+        if (screen != null) {
+            if (this.openedScreen != null) {
+                this.screenStack.push(this.openedScreen);
+            }
+            this.openedScreen = screen;
+        } else {
+            if (this.openedScreen != null) {
+                this.openedScreen.onClose();
+            }
+            this.openedScreen = this.screenStack.pollFirst();
         }
-
-        this.openedScreen = screen;
     }
 
     private void changeCategory(boolean down) {

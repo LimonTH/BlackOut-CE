@@ -24,16 +24,16 @@ public class Effects extends HudElement {
     public final SettingGroup sgColor = this.addGroup("Color");
 
     public final Setting<Style> style = this.sgGeneral.enumSetting("Visual Theme", Style.Blackout, "The aesthetic layout used to display status effects (Modern 'Blackout' boxes or traditional 'Simple' text).");
-    private final Setting<Double> minWidth = this.sgGeneral.doubleSetting("Minimum Dimensions", 0.0, 0.0, 100.0, 1.0, "The minimum width for the effect background boxes.", () -> this.style.get() == Style.Blackout);
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a real-time blur effect behind each effect container for maximum legibility.", () -> this.style.get() == Style.Blackout);
+    private final Setting<Double> minWidth = this.sgGeneral.doubleSetting("Min Width", 0.0, 0.0, 100.0, 1.0, "The minimum width for the effect background boxes.", () -> this.style.get() == Style.Blackout);
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur Effect", true, "Applies a real-time blur effect behind each effect container for maximum legibility.", () -> this.style.get() == Style.Blackout);
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, () -> this.style.get() == Style.Blackout, null);
-    public final Setting<Side> side = this.sgGeneral.enumSetting("Horizontal Anchor", Side.Left, "Determines whether the effects list aligns to the left or right relative to its origin.");
-    public final Setting<Order> order = this.sgGeneral.enumSetting("Sort Hierarchy", Order.Longest, "The criteria used to organize the sequence of active effects.");
-    private final Setting<Boolean> rn = this.sgGeneral.booleanSetting("Roman Notation", false, "Converts numerical amplifier levels into Roman numerals (e.g., Strength II).");
-    private final Setting<Boolean> up = this.sgGeneral.booleanSetting("Vertical Inversion", false, "Renders the effects list growing upwards from the starting coordinate.");
+    public final Setting<Side> side = this.sgGeneral.enumSetting("Side Align", Side.Left, "Determines whether the effects list aligns to the left or right relative to its origin.");
+    public final Setting<Order> order = this.sgGeneral.enumSetting("Sort Mode", Order.Longest, "The criteria used to organize the sequence of active effects.");
+    private final Setting<Boolean> rn = this.sgGeneral.booleanSetting("Roman Nums", false, "Converts numerical amplifier levels into Roman numerals (e.g., Strength II).");
+    private final Setting<Boolean> up = this.sgGeneral.booleanSetting("Invert Order", false, "Renders the effects list growing upwards from the starting coordinate.");
 
     public final Setting<ColorMode> colorMode = this.sgColor.enumSetting("Color Assignment", ColorMode.Custom, "The logic for text coloring (Manual selection or matching the native Minecraft effect color).");
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, () -> this.colorMode.get() == ColorMode.Custom, "Primary Label");
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, () -> this.colorMode.get() == ColorMode.Custom, "Label");
     private final Setting<BlackOutColor> infoColor = this.sgColor.colorSetting("Metadata Color", new BlackOutColor(200, 200, 200, 255), "The color applied to duration timers and amplifier levels.");
 
     private final String[] romanNumerals = new String[]{"I", "II", "III", "IV", "V"};

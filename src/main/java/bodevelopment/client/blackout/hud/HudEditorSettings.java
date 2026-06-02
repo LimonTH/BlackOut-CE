@@ -22,6 +22,10 @@ import java.util.List;
 
 
 public class HudEditorSettings {
+    private static final float RESET_ICON_SIZE = 20.0F;
+    private static final float RESET_HIT_SIZE = 28.0F;
+    private static final float RESET_HOLD_THRESHOLD = 2.5F;
+
     private final float width = 275.0F;
     private float x;
     private float y;
@@ -43,6 +47,8 @@ public class HudEditorSettings {
     private String lastDescription = null;
     private long hoverTime = 0L;
     private float descAlpha = 0.0F;
+
+    private final bodevelopment.client.blackout.gui.clickgui.SettingsRenderer.ResetState resetState = new bodevelopment.client.blackout.gui.clickgui.SettingsRenderer.ResetState();
 
     public void render(PoseStack stack, float frameTime, int mouseX, int mouseY) {
         if (this.openedElement == null) {
@@ -85,6 +91,8 @@ public class HudEditorSettings {
             }
 
             BlackOut.FONT.text(stack, this.openedElement.name, 2.0F, this.x + 137.5F, this.y + 15.0F, GuiColorUtils.enabled, true, true);
+
+            this.renderResetButton(this.x + width - 22.0F, this.y + 15.0F);
 
             try (ScissorStack.Region ignored = ScissorStack.pushRaw(
                     (int) this.x, (int) (screenH - this.y - this.maxVisibleHeight + 5.0F),
@@ -184,6 +192,12 @@ public class HudEditorSettings {
         }
     }
 
+    private void renderResetButton(float centerX, float centerY) {
+        bodevelopment.client.blackout.gui.clickgui.SettingsRenderer.renderResetButton(
+                this.stack, centerX, centerY, this.mx, this.my, this.frameTime,
+                this.resetState, false);
+    }
+
     public boolean onMouse(int button, boolean pressed) {
         if (this.openedElement == null) {
             this.moving = false;
@@ -210,6 +224,20 @@ public class HudEditorSettings {
             dropdown.onMouse(button, true);
             return true;
         } else if (this.my < this.y + 30.0F) {
+            float centerX = this.x + width - 22.0F;
+            float centerY = this.y + 15.0F;
+            float halfHit = RESET_HIT_SIZE / 2.0F;
+            boolean overReset = this.mx > centerX - halfHit && this.mx < centerX + halfHit
+                    && this.my > centerY - halfHit && this.my < centerY + halfHit;
+
+            if (overReset && this.resetState.holdTime >= bodevelopment.client.blackout.gui.clickgui.SettingsRenderer.RESET_HOLD_THRESHOLD) {
+                this.openedElement.forEachSetting(bodevelopment.client.blackout.module.setting.Setting::reset);
+                bodevelopment.client.blackout.manager.Managers.CONFIG.save(bodevelopment.client.blackout.enums.ConfigType.HUD);
+                this.resetState.holdTime = 0.0F;
+                this.wasPressHandled = true;
+                return true;
+            }
+
             this.wasPressHandled = true;
             this.moving = true;
             return true;

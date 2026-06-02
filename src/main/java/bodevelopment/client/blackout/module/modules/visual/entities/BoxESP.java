@@ -10,6 +10,8 @@ import bodevelopment.client.blackout.module.modules.combat.misc.AntiBot;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.BoxMultiSetting;
+import bodevelopment.client.blackout.module.setting.settings.ListSetting;
+import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.EntityUtils;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.world.entity.Entity;
@@ -17,6 +19,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -29,8 +32,14 @@ public class BoxESP extends Module {
 
     private final List<Entity> entities = new ArrayList<>();
 
+    @SuppressWarnings("unchecked")
     public BoxESP() {
         super("Box ESP", "Renders three-dimensional axis-aligned bounding boxes around entities to grant visual awareness through terrain and obstructions.", SubCategory.ENTITIES, true);
+        ((ListSetting<EntityType<?>>) this.entityTypes).withItemColors(
+                () -> this.rendering.lineColor.get().getColor(),
+                () -> this.rendering.sideColor.get().getColor(),
+                () -> this.rendering.shape.get()
+        ).snapshotDefaults();
     }
 
     @Event
@@ -60,16 +69,30 @@ public class BoxESP extends Module {
 
     private void renderBox(Entity entity, double tickDelta) {
         Vec3 pos = EntityUtils.getLerpedPos(entity, tickDelta);
-        this.rendering
-                .render(
-                        new AABB(
-                                pos.x() - entity.getBoundingBox().getXsize() / 2.0,
-                                pos.y(),
-                                pos.z() - entity.getBoundingBox().getZsize() / 2.0,
-                                pos.x() + entity.getBoundingBox().getXsize() / 2.0,
-                                pos.y() + entity.getBoundingBox().getYsize(),
-                                pos.z() + entity.getBoundingBox().getZsize() / 2.0
-                        )
-                );
+        ListSetting<EntityType<?>> list = (ListSetting<EntityType<?>>) this.entityTypes;
+        Color customLine = list.getItemData(entity.getType(), "lineColor");
+        Color customSide = list.getItemData(entity.getType(), "sideColor");
+
+        BlackOutColor lineOverride = customLine != null
+                ? new BlackOutColor(customLine.getRed(), customLine.getGreen(), customLine.getBlue(), customLine.getAlpha())
+                : null;
+        BlackOutColor sideOverride = customSide != null
+                ? new BlackOutColor(customSide.getRed(), customSide.getGreen(), customSide.getBlue(), customSide.getAlpha())
+                : null;
+
+        AABB box = new AABB(
+                pos.x() - entity.getBoundingBox().getXsize() / 2.0,
+                pos.y(),
+                pos.z() - entity.getBoundingBox().getZsize() / 2.0,
+                pos.x() + entity.getBoundingBox().getXsize() / 2.0,
+                pos.y() + entity.getBoundingBox().getYsize(),
+                pos.z() + entity.getBoundingBox().getZsize() / 2.0
+        );
+
+        if (lineOverride != null || sideOverride != null) {
+            this.rendering.render(box, lineOverride, sideOverride);
+        } else {
+            this.rendering.render(box);
+        }
     }
 }

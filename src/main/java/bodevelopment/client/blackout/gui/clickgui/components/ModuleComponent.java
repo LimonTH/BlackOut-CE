@@ -3,6 +3,7 @@ package bodevelopment.client.blackout.gui.clickgui.components;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.gui.clickgui.ClickGui;
 import bodevelopment.client.blackout.gui.clickgui.Component;
+import bodevelopment.client.blackout.gui.clickgui.SettingsRenderer;
 import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.AbstractModule;
 import bodevelopment.client.blackout.module.Module;
@@ -11,8 +12,6 @@ import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.settings.KeyBindSetting;
 import bodevelopment.client.blackout.rendering.renderer.Renderer;
-import bodevelopment.client.blackout.rendering.renderer.TextureRenderer;
-import bodevelopment.client.blackout.rendering.texture.BOTextures;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.ScreenUtils;
@@ -28,9 +27,6 @@ import java.util.List;
 
 public class ModuleComponent extends Component {
     private static final Color disabledColor = new Color(150, 150, 150, 255);
-    private static final float RESET_ICON_SIZE = 20.0F;
-    private static final float RESET_HIT_SIZE = 28.0F;
-    private static final float RESET_HOLD_THRESHOLD = 2.5F;
 
     public final AbstractModule module;
     public float length;
@@ -40,8 +36,7 @@ public class ModuleComponent extends Component {
     private float openProgress = 0.0F;
     private double toggleProgress = 0.0;
     private long prevTime = 0L;
-    private boolean resetHovered = false;
-    private float resetHoldTime = 0.0F;
+    private final SettingsRenderer.ResetState resetState = new SettingsRenderer.ResetState();
 
     public ModuleComponent(PoseStack stack, AbstractModule module) {
         super(stack);
@@ -49,36 +44,7 @@ public class ModuleComponent extends Component {
     }
 
     public static float getLength(List<SettingGroup> settingGroups) {
-        float fs = GuiSettings.getInstance().fontScale.get().floatValue();
-        float length = switch (GuiSettings.getInstance().settingGroup.get()) {
-            case Line, Shadow, None -> 0.0F;
-            case Quad -> 7.0F * fs;
-        };
-
-        int visible = (int) settingGroups.stream().filter(g -> g.settings.stream().anyMatch(Setting::isVisible)).count();
-        int idx = 0;
-
-        for (SettingGroup group : settingGroups) {
-            if (group.settings.stream().noneMatch(Setting::isVisible)) continue;
-            idx++;
-
-            length += switch (GuiSettings.getInstance().settingGroup.get()) {
-                case Line, None -> 40.0F * fs;
-                case Shadow -> 45.0F * fs;
-                case Quad -> 50.0F * fs;
-            };
-
-            for (Setting<?> setting : group.settings) {
-                if (setting.isVisible()) {
-                    length += setting.getHeight();
-                }
-            }
-
-            if (idx < visible) {
-                length += 5.0F * fs;
-            }
-        }
-        return length;
+        return SettingsRenderer.getLength(settingGroups);
     }
 
     @Override
@@ -132,7 +98,7 @@ public class ModuleComponent extends Component {
         for (int i = 0; i < this.module.settingGroups.size(); i++) {
             SettingGroup settingGroup = this.module.settingGroups.get(i);
 
-            if (!hasVisibleSettings(settingGroup)) continue;
+            if (!SettingsRenderer.hasVisibleSettings(settingGroup)) continue;
 
             if (this.l >= this.maxLength) return;
 
@@ -152,7 +118,7 @@ public class ModuleComponent extends Component {
 
             boolean isReallyLast = true;
             for (int j = i + 1; j < this.module.settingGroups.size(); j++) {
-                if (hasVisibleSettings(this.module.settingGroups.get(j))) {
+                if (SettingsRenderer.hasVisibleSettings(this.module.settingGroups.get(j))) {
                     isReallyLast = false;
                     break;
                 }
@@ -163,19 +129,16 @@ public class ModuleComponent extends Component {
             }
 
             this.l += height;
-            settingGroup.settings.forEach(s -> this.renderSetting(s, currentMx, currentMy));
+            for (Setting<?> setting : settingGroup.settings) {
+                if (setting.isVisible()) {
+                    this.renderSetting(setting, currentMx, currentMy);
+                }
+            }
 
             if (!isReallyLast) {
                 this.l += 5.0F * fs;
             }
         }
-    }
-
-    private boolean hasVisibleSettings(SettingGroup group) {
-        for (Setting<?> setting : group.settings) {
-            if (setting.isVisible()) return true;
-        }
-        return false;
     }
 
     private void renderSetting(Setting<?> setting, float currentMx, float currentMy) {
@@ -298,7 +261,8 @@ public class ModuleComponent extends Component {
         }
 
         if (group == this.module.sgModule) {
-            this.renderResetButton(this.x + this.width - 22.0F, iconCenterY, (float) this.mx, (float) this.my);
+            SettingsRenderer.renderResetButton(this.stack, this.x + this.width - 22.0F, iconCenterY,
+                    (float) this.mx, (float) this.my, this.frameTime, this.resetState, false);
         }
     }
 
@@ -329,38 +293,6 @@ public class ModuleComponent extends Component {
         }
     }
 
-    private void renderResetButton(float centerX, float centerY, float currentMx, float currentMy) {
-        float halfHit = RESET_HIT_SIZE / 2.0F;
-        this.resetHovered = currentMx > centerX - halfHit
-                && currentMx < centerX + halfHit
-                && currentMy > centerY - halfHit
-                && currentMy < centerY + halfHit;
-
-        if (this.resetHovered) {
-            this.resetHoldTime = Math.min(this.resetHoldTime + this.frameTime, RESET_HOLD_THRESHOLD);
-            if (this.resetHoldTime >= RESET_HOLD_THRESHOLD) {
-                ClickGui.hoveredDescription = "Click to revert module settings to stock.";
-            } else {
-                ClickGui.hoveredDescription = "Wait...";
-            }
-        } else {
-            this.resetHoldTime = Math.max(this.resetHoldTime - this.frameTime * 3.0F, 0.0F);
-        }
-
-        float progress = this.resetHoldTime / RESET_HOLD_THRESHOLD;
-        boolean ready = progress >= 1.0F;
-
-        int alpha = ready ? 255 : (int) (80 + progress * 175);
-        int color = ColorUtils.withAlpha(Color.WHITE.getRGB(), alpha);
-        TextureRenderer icon = BOTextures.getResetIconRenderer();
-        float halfIcon = RESET_ICON_SIZE / 2.0F;
-
-        this.stack.pushPose();
-        this.stack.translate(centerX, centerY, 0.0F);
-        this.stack.mulPose(com.mojang.math.Axis.ZP.rotation((float) (progress * Math.PI * 6.0)));
-        icon.quad(this.stack, -halfIcon, -halfIcon, RESET_ICON_SIZE, RESET_ICON_SIZE, color);
-        this.stack.popPose();
-    }
 
     private float getModuleNameOffset() {
         return this.getHeight() / 2.0F;
@@ -374,14 +306,14 @@ public class ModuleComponent extends Component {
             return true;
         }
 
-        if (pressed && button == 0 && this.resetHovered && this.resetHoldTime >= RESET_HOLD_THRESHOLD) {
+        if (pressed && button == 0 && this.resetState.hovered && this.resetState.holdTime >= SettingsRenderer.RESET_HOLD_THRESHOLD) {
             this.module.resetToDefaults();
             Managers.CONFIG.saveModule(this.module);
-            this.resetHoldTime = 0.0F;
+            this.resetState.holdTime = 0.0F;
             return true;
         }
 
-        if (pressed && button == 0 && this.resetHovered) {
+        if (pressed && button == 0 && this.resetState.hovered) {
             return true;
         }
 

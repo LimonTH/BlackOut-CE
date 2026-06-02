@@ -19,14 +19,14 @@ import java.awt.*;
 public class SessionInfo extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    public final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Label Color");
+    public final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Label");
     private final Setting<Style> style = this.sgGeneral.enumSetting("Visual Theme", Style.Blackout, "The aesthetic layout of the session tracker (Modern 'Blackout' vs. legacy 'Exhibition').");
-    private final Setting<Boolean> bar = this.sgGeneral.booleanSetting("Header Separator", true, "Renders a horizontal line beneath the title for structural definition.", () -> this.style.get() == Style.Blackout);
+    private final Setting<Boolean> bar = this.sgGeneral.booleanSetting("Title Bar", true, "Renders a horizontal line beneath the title for structural definition.", () -> this.style.get() == Style.Blackout);
     private final Setting<BlackOutColor> barColor = this.sgGeneral.colorSetting("Separator Color", new BlackOutColor(255, 255, 255, 255), "The color palette for the header separator line.", () -> this.style.get() == Style.Blackout && this.bar.get());
     private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Enable Backdrop", true, "Renders a background panel behind the session statistics.", () -> this.style.get() == Style.Blackout);
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a real-time blur effect to the background for improved contrast.", () -> this.style.get() == Style.Blackout);
-    private final Setting<Mode> mode = this.sgGeneral.enumSetting("Elimination Tracking", Mode.Chat, "The logic used to detect player kills (Parsing chat logs or listening to game events).");
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur Effect", true, "Applies a real-time blur effect to the background for improved contrast.", () -> this.style.get() == Style.Blackout);
+    private final Setting<Mode> mode = this.sgGeneral.enumSetting("Kill Tracker", Mode.Chat, "The logic used to detect player kills (Parsing chat logs or listening to game events).");
 
     private static final long startTime = System.currentTimeMillis();
     private int kills = 0;

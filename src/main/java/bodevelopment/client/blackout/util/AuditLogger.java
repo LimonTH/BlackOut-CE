@@ -52,7 +52,6 @@ public class AuditLogger {
                         LocalDateTime.now().format(FORMATTER), module, action);
             }
         } catch (IOException ignored) {
-            // Silently fail — logging should never crash the client
         }
     }
 
@@ -76,7 +75,6 @@ public class AuditLogger {
      */
     public static void rotate(long maxBytes) {
         if (LOG_FILE.exists() && LOG_FILE.length() > maxBytes) {
-            // Simple rotation: rename old, start fresh
             File rotated = new File(LOG_FILE.getParentFile(), "audit.log.old");
             rotated.delete();
             LOG_FILE.renameTo(rotated);

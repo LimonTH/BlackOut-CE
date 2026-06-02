@@ -72,11 +72,9 @@ public class SeedMapScreen extends ClickGuiScreen {
     private final int fieldZId = SelectedComponent.nextId();
     private boolean showSlimeChunks = false;
 
-    // Selected structure panel (click to open, click again or elsewhere to close)
     private SeedFinder.FoundStructure selectedStructure = null;
     private double mouseDownX, mouseDownY;
 
-    // Map-specific structure search (independent of module's 3D render settings)
     private volatile List<SeedFinder.FoundStructure> mapStructures = new java.util.ArrayList<>();
     private volatile boolean mapSearchRunning = false;
     private float lastSearchCX = Float.MAX_VALUE;
@@ -120,7 +118,6 @@ public class SeedMapScreen extends ClickGuiScreen {
                 lastDim = currentDim;
                 tileCache.values().forEach(MapTile::close);
                 tileCache.clear();
-                // reset structure search so it re-runs for new dimension
                 lastSearchDim = null;
                 this.selectedStructure = null;
 
@@ -155,7 +152,6 @@ public class SeedMapScreen extends ClickGuiScreen {
             this.renderGrid(mapRight, mapBottom);
             this.renderPlayer();
         }
-        // Structures rendered outside scissor so icons near map edges don't get clipped
         this.hoveredStructure = false;
         this.renderStructures();
 
@@ -323,7 +319,7 @@ public class SeedMapScreen extends ClickGuiScreen {
     }
 
     private void renderBiomeTooltip() {
-        if (this.biomeSource == null || this.hoveredStructure) return;
+        if (this.biomeSource == null || this.hoveredStructure || this.selectedStructure != null) return;
         if (this.mx < MAP_X || this.mx > MAP_X + MAP_WIDTH || this.my < MAP_Y || this.my > MAP_Y + MAP_HEIGHT) return;
 
         float worldLeft = this.mapCenterX - (MAP_WIDTH / 2.0F) * this.blocksPerPixel;
@@ -351,6 +347,13 @@ public class SeedMapScreen extends ClickGuiScreen {
     private void renderSelectedStructurePanel() {
         if (this.selectedStructure == null) return;
 
+        // In apple mode: don't show tooltip for non-apple structures
+        SeedFinder sf = Managers.MODULES.getModule(SeedFinder.class);
+        if (sf != null && sf.isEnchantedApplesEnabled() && !this.selectedStructure.extraInfo().contains("(Apple)")) {
+            this.selectedStructure = null;
+            return;
+        }
+
         float worldLeft = this.mapCenterX - (MAP_WIDTH / 2.0F) * this.blocksPerPixel;
         float worldTop = this.mapCenterZ - (MAP_HEIGHT / 2.0F) * this.blocksPerPixel;
 
@@ -360,22 +363,28 @@ public class SeedMapScreen extends ClickGuiScreen {
         if (iconX < MAP_X - ICON_SIZE || iconX > MAP_X + MAP_WIDTH + ICON_SIZE
                 || iconY < MAP_Y - ICON_SIZE || iconY > MAP_Y + MAP_HEIGHT + ICON_SIZE) return;
 
+        boolean hasApple = this.selectedStructure.extraInfo().contains("(Apple)");
         String title = getStructureFullName(this.selectedStructure);
         String coords = "X: " + this.selectedStructure.blockX() + "   Z: " + this.selectedStructure.blockZ();
+        String appleStatus = hasApple ? "\u2714 Apple" : "";
 
         float titleScale = 1.8F;
         float coordScale = 1.5F;
+        float appleScale = 1.6F;
         float titleH = 13.0F;
         float coordH = 11.0F;
+        float appleH = 11.0F;
         float padX = 10.0F;
         float padY = 6.0F;
         float gap = 3.0F;
 
+        float appleW = hasApple ? BlackOut.FONT.getWidth(appleStatus) * appleScale + 4 : 0;
         float panelW = Math.max(
                 BlackOut.FONT.getWidth(title) * titleScale,
-                BlackOut.FONT.getWidth(coords) * coordScale
+                BlackOut.FONT.getWidth(coords) * coordScale + appleW
         ) + padX * 2;
-        float panelH = padY + titleH + gap + coordH + padY;
+        float panelExtraH = hasApple ? appleH + gap : 0;
+        float panelH = padY + titleH + gap + coordH + panelExtraH + padY;
 
         float panelX = iconX - panelW / 2.0F;
         float panelY = iconY - ICON_SIZE / 2.0F - panelH - 6.0F;
@@ -390,6 +399,19 @@ public class SeedMapScreen extends ClickGuiScreen {
 
         this.text(title, titleScale, panelX + panelW / 2.0F, panelY + padY + titleH / 2.0F, true, true, Color.WHITE);
         this.text(coords, coordScale, panelX + panelW / 2.0F, panelY + padY + titleH + gap + coordH / 2.0F, true, true, new Color(160, 160, 185, 255));
+
+        if (hasApple) {
+            float appleY = panelY + padY + titleH + gap + coordH + gap + appleH / 2.0F;
+            int appleGlId = getAppleIconGlId();
+            if (appleGlId != 0) {
+                float iconSize = 14.0F;
+                float textW = BlackOut.FONT.getWidth(appleStatus) * appleScale;
+                float totalW = textW + iconSize + 3;
+                float startX = panelX + (panelW - totalW) / 2.0F;
+                drawStructureIcon(startX, appleY - iconSize / 2.0F, iconSize, appleGlId);
+                this.text(appleStatus, appleScale, startX + iconSize + 3 + textW / 2.0F, appleY, true, true, Color.CYAN);
+            }
+        }
     }
 
     private static String getStructureFullName(SeedFinder.FoundStructure s) {
@@ -428,6 +450,26 @@ public class SeedMapScreen extends ClickGuiScreen {
             case END_CITY -> extra.equals("Ship") ? "End City with Ship" : "End City";
 
             case SPAWN -> "World Spawn Point";
+
+            case DESERT_WELL -> "Desert Well";
+
+            case END_GATEWAY -> "End Gateway";
+
+            case MINESHAFT -> "Mineshaft";
+
+            case BURIED_TREASURE -> "Buried Treasure";
+
+            case NETHER_FOSSIL -> "Nether Fossil";
+
+            case DUNGEON -> "Dungeon";
+
+            case GEODE -> "Geode";
+
+            case LAVA_POOL_SURFACE -> "Lava Pool (Surface)";
+
+            case LAVA_POOL_CAVE -> "Lava Pool (Cave)";
+
+            case RAVINE -> "Ravine";
 
             default -> s.type().displayName;
         };
@@ -504,8 +546,9 @@ public class SeedMapScreen extends ClickGuiScreen {
         generatePool.execute(() -> {
             try {
                 List<SeedFinder.FoundStructure> results = new java.util.ArrayList<>();
+                boolean searchApples = finder.isEnchantedApplesEnabled();
                 SeedFinder.findInArea(results, s, src, dim, cx, cz, radius, false,
-                        t -> finder.isDimensionEnabled(t, dim));
+                        t -> finder.isDimensionEnabled(t, dim), searchApples);
                 mapStructures = results;
             } finally {
                 mapSearchRunning = false;
@@ -525,13 +568,17 @@ public class SeedMapScreen extends ClickGuiScreen {
         float worldBottom = worldTop + MAP_HEIGHT * this.blocksPerPixel;
 
         ResourceKey<Level> dim = this.lastDim;
+        boolean appleMode = seedFinder.isEnchantedApplesEnabled();
 
         for (SeedFinder.FoundStructure s : mapStructures) {
+            if (appleMode && !s.extraInfo().contains("(Apple)")) continue;
+
             if (!seedFinder.isDimensionEnabled(s.type(), dim)) continue;
 
-            // LOD: hide structures at far zoom levels
-            if (this.blocksPerPixel >= 32.0F && !s.type().isAlwaysVisible()) continue;
-            if (this.blocksPerPixel >= 12.0F && s.type().isMinor()) continue;
+            if (!appleMode) {
+                if (this.blocksPerPixel >= 32.0F && !s.type().isAlwaysVisible()) continue;
+                if (this.blocksPerPixel >= 12.0F && s.type().isMinor()) continue;
+            }
 
             if (s.blockX() < worldLeft || s.blockX() > worldRight
                     || s.blockZ() < worldTop || s.blockZ() > worldBottom) continue;
@@ -588,6 +635,24 @@ public class SeedMapScreen extends ClickGuiScreen {
         return tex == null ? 0 : tex.getId();
     }
 
+    private static int getAppleIconGlId() {
+        String path = "textures/map/enchanted_apple.png";
+        DynamicTexture tex = ICON_TEXTURE_CACHE.computeIfAbsent(path, p -> {
+            BufferedImage img = FileUtils.readResourceImage(p);
+            if (img == null) return null;
+            NativeImage ni = new NativeImage(NativeImage.Format.RGBA, img.getWidth(), img.getHeight(), false);
+            for (int iy = 0; iy < img.getHeight(); iy++) {
+                for (int ix = 0; ix < img.getWidth(); ix++) {
+                    ni.setPixel(ix, iy, img.getRGB(ix, iy));
+                }
+            }
+            DynamicTexture dt = new DynamicTexture(ni);
+            dt.upload();
+            return dt;
+        });
+        return tex == null ? 0 : tex.getId();
+    }
+
     private void drawStructureIcon(float sx, float sy, float size, int glId) {
         if (glId == 0) return;
         Matrix4f matrix = this.stack.last().pose();
@@ -603,15 +668,12 @@ public class SeedMapScreen extends ClickGuiScreen {
     }
 
     private void drawMarker(float sx, float sy, float size, String name, Color color, int bx, int bz, SeedFinder.StructureType type, String extraInfo) {
-        // Highlight selected structure with larger icon
         boolean selected = this.selectedStructure != null
                 && this.selectedStructure.blockX() == bx && this.selectedStructure.blockZ() == bz;
         float drawSize = selected ? ICON_SIZE_SELECTED : size;
         float half = drawSize / 2.0F;
 
         drawStructureIcon(sx - half, sy - half, drawSize, getIconGlId(type, extraInfo));
-
-        // Track hovered structure (used to suppress biome tooltip)
         if (this.mx >= sx - half - 2 && this.mx <= sx + half + 2
                 && this.my >= sy - half - 2 && this.my <= sy + half + 2) {
             this.hoveredStructure = true;
@@ -757,10 +819,9 @@ public class SeedMapScreen extends ClickGuiScreen {
             }
         } else if (button == 0) {
             this.dragging = false;
-            // Detect click (not drag) on the map area
             double ddx = this.mx - this.mouseDownX;
             double ddy = this.my - this.mouseDownY;
-            if (ddx * ddx + ddy * ddy < 9.0 // < 3px movement
+            if (ddx * ddx + ddy * ddy < 9.0
                     && this.mx >= MAP_X && this.mx <= MAP_X + MAP_WIDTH
                     && this.my >= MAP_Y && this.my <= MAP_Y + MAP_HEIGHT) {
                 handleMapClick();
@@ -769,16 +830,30 @@ public class SeedMapScreen extends ClickGuiScreen {
     }
 
     private void handleMapClick() {
+        SeedFinder seedFinder = Managers.MODULES.getModule(SeedFinder.class);
+        boolean appleMode = seedFinder != null && seedFinder.isEnchantedApplesEnabled();
         float worldLeft = this.mapCenterX - (MAP_WIDTH / 2.0F) * this.blocksPerPixel;
         float worldTop = this.mapCenterZ - (MAP_HEIGHT / 2.0F) * this.blocksPerPixel;
+        float worldRight = worldLeft + MAP_WIDTH * this.blocksPerPixel;
+        float worldBottom = worldTop + MAP_HEIGHT * this.blocksPerPixel;
         float half = ICON_SIZE / 2.0F;
+        ResourceKey<Level> dim = this.lastDim;
 
         for (SeedFinder.FoundStructure s : mapStructures) {
+            if (appleMode && !s.extraInfo().contains("(Apple)")) continue;
+
+            if (seedFinder != null && !seedFinder.isDimensionEnabled(s.type(), dim)) continue;
+            if (!appleMode) {
+                if (this.blocksPerPixel >= 32.0F && !s.type().isAlwaysVisible()) continue;
+                if (this.blocksPerPixel >= 12.0F && s.type().isMinor()) continue;
+            }
+            if (s.blockX() < worldLeft || s.blockX() > worldRight
+                    || s.blockZ() < worldTop || s.blockZ() > worldBottom) continue;
+
             float sx = MAP_X + (s.blockX() - worldLeft) / this.blocksPerPixel;
             float sy = MAP_Y + (s.blockZ() - worldTop) / this.blocksPerPixel;
             if (this.mx >= sx - half - 2 && this.mx <= sx + half + 2
                     && this.my >= sy - half - 2 && this.my <= sy + half + 2) {
-                // Toggle: click same structure to deselect
                 if (this.selectedStructure != null
                         && this.selectedStructure.blockX() == s.blockX()
                         && this.selectedStructure.blockZ() == s.blockZ()) {
@@ -789,7 +864,6 @@ public class SeedMapScreen extends ClickGuiScreen {
                 return;
             }
         }
-        // Clicked on empty map area — deselect
         this.selectedStructure = null;
     }
 

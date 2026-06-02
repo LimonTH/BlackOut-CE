@@ -34,43 +34,52 @@ public class BoxMultiSetting {
     private float shaderAlpha;
 
     private BoxMultiSetting(SettingGroup sg, String name, BlackOutColor defaultColor, SingleOut<Boolean> visible) {
-        if (name == null) {
-            name = "";
-        } else {
-            name = name + " ";
-        }
-
         this.insideBufferName = "insideBuffer-" + id;
         this.bloomBufferName = "bloomBuffer-" + id;
         id++;
 
-        this.mode = sg.enumSetting(name + "Render Mode", BoxRenderMode.Normal,
+        this.mode = sg.enumSetting(buildName(name, "Render Mode"), BoxRenderMode.Normal,
                 "The rendering method: Normal (classic lines/sides) or Shader (modern glow/blur effects).", visible);
-        this.shape = sg.enumSetting(name + "Shape", RenderShape.Full,
+        this.shape = sg.enumSetting(buildName(name, "Shape"), RenderShape.Full,
                 "Which parts of the box to render: Sides, Outlines, or Both.");
-        this.lineColor = sg.colorSetting(name + "Line Color", defaultColor.withAlpha(255),
+        this.lineColor = sg.colorSetting(buildName(name, "Line Color"), defaultColor.withAlpha(255),
                 "The color of the box edges in Normal mode.",
-                () -> this.mode.get() == BoxRenderMode.Normal && visible.get());
-        this.sideColor = sg.colorSetting(name + "Side Color", defaultColor.withAlpha(50),
+                () -> this.mode.get() == BoxRenderMode.Normal && this.shape.get().outlines && visible.get());
+        this.sideColor = sg.colorSetting(buildName(name, "Side Color"), defaultColor.withAlpha(50),
                 "The color of the box faces in Normal mode.",
-                () -> this.mode.get() == BoxRenderMode.Normal && visible.get());
-        this.bloom = sg.intSetting(name + "Bloom", 3, 0, 10, 1,
+                () -> this.mode.get() == BoxRenderMode.Normal && this.shape.get().sides && visible.get());
+        this.bloom = sg.intSetting(buildName(name, "Bloom"), 3, 0, 10, 1,
                 "The intensity of the glow effect around the box (Shader mode only).",
                 () -> this.mode.get() == BoxRenderMode.Shader && visible.get());
-        this.blur = sg.booleanSetting(name + "Blur", false,
+        this.blur = sg.booleanSetting(buildName(name, "Blur"), false,
                 "Whether to blur the background behind the rendered box.",
                 () -> this.mode.get() == BoxRenderMode.Shader && visible.get());
-        this.insideColor = sg.colorSetting(name + "Inside Color", defaultColor.withAlpha(50),
+        this.insideColor = sg.colorSetting(buildName(name, "Inside Color"), defaultColor.withAlpha(50),
                 "The fill color used for the box faces in Shader mode.",
                 () -> this.mode.get() == BoxRenderMode.Shader && visible.get());
-        this.shaderOutlineColor = sg.colorSetting(name + "Outline Color", defaultColor.withAlpha(255),
+        this.shaderOutlineColor = sg.colorSetting(buildName(name, "Outline Color"), defaultColor.withAlpha(255),
                 "The color of the edges in Shader mode.",
                 () -> this.mode.get() == BoxRenderMode.Shader && this.shape.get().outlines && visible.get());
-        this.bloomColor = sg.colorSetting(name + "Bloom Color", defaultColor.withAlpha(150),
+        this.bloomColor = sg.colorSetting(buildName(name, "Bloom Color"), defaultColor.withAlpha(150),
                 "The color of the glow/bloom aura surrounding the box.",
                 () -> this.mode.get() == BoxRenderMode.Shader && visible.get());
 
+
         BlackOut.EVENT_BUS.subscribe(this, () -> !PlayerUtils.isInGame());
+    }
+
+    private static String buildName(String prefix, String subName) {
+        if (prefix == null || prefix.isEmpty()) return subName;
+        // Avoid duplication: if subName already contains the prefix as a word, don't prepend
+        String lowerSub = subName.toLowerCase();
+        String lowerPrefix = prefix.toLowerCase();
+        // Check each word in subName against the prefix
+        for (String word : lowerSub.split(" ")) {
+            if (word.equals(lowerPrefix)) {
+                return subName;
+            }
+        }
+        return prefix + " " + subName;
     }
 
     public static BoxMultiSetting of(SettingGroup sg) {
@@ -129,6 +138,27 @@ public class BoxMultiSetting {
 
     public void render(AABB box) {
         this.render(box, 1.0F, 1.0F);
+    }
+
+    /**
+     * Renders with optional per-box color overrides.
+     * If both overrides are null, falls back to the setting's own colors.
+     * Shader mode ignores overrides (uses global colors).
+     */
+    public void render(AABB box, BlackOutColor lineColorOverride, BlackOutColor sideColorOverride) {
+        BlackOutColor useLine = lineColorOverride != null ? lineColorOverride : this.lineColor.get();
+        BlackOutColor useSide = sideColorOverride != null ? sideColorOverride : this.sideColor.get();
+
+        switch (this.mode.get()) {
+            case Normal:
+                Render3DUtils.box(box, useSide.alphaMulti(1.0F), useLine.alphaMulti(1.0F), this.shape.get());
+                break;
+            case Shader:
+                // Shader mode with per-block colors would require per-block framebuffers;
+                // fall back to global colors instead.
+                this.render(box);
+                break;
+        }
     }
 
     public void render(AABB box, float alpha, float alphaS) {

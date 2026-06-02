@@ -11,7 +11,14 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.BoxMultiSetting;
+import bodevelopment.client.blackout.module.setting.settings.ListSetting;
+import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.BoxUtils;
+import bodevelopment.client.blackout.util.ScreenUtils;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
+import com.mojang.blaze3d.vertex.PoseStack;
+
+import java.awt.Color;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.multiplayer.ClientChunkCache;
 import net.minecraft.core.BlockPos;
@@ -21,6 +28,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.*;
@@ -36,6 +44,7 @@ public class Search extends Module {
     private final SettingGroup sgRender = this.addGroup("Visuals");
 
     private final Map<BlockPos, AABB> positions = new ConcurrentHashMap<>();
+    private final Map<BlockPos, Block> blockTypes = new ConcurrentHashMap<>();
     private final Map<ChunkPos, Set<BlockPos>> chunkedPositions = new ConcurrentHashMap<>();
     private final Set<ChunkPos> prevChunks = new HashSet<>();
     private final Queue<ChunkPos> toScan = new ConcurrentLinkedQueue<>();
@@ -60,8 +69,19 @@ public class Search extends Module {
 
     private final BoxMultiSetting rendering = BoxMultiSetting.of(this.sgRender);
 
+    private final Setting<Boolean> tracers = this.sgGeneral.booleanSetting("Tracers", false, "Draws 2D tracer lines from the center of the screen to each found block.");
+    private final Setting<Integer> tracerWidth = this.sgGeneral.intSetting("Tracer Width", 2, 1, 10, 1, "Thickness of the tracer lines.", () -> this.tracers.get());
+    private final Setting<BlackOutColor> tracerColor = this.sgGeneral.colorSetting("Tracer Color", new BlackOutColor(255, 255, 255, 100), "Default tracer color when no per-block color is set.", () -> this.tracers.get());
+
+    private final PoseStack stack = new PoseStack();
+
     public Search() {
         super("Search", "Locates blocks using all CPU cores and advanced palette culling.", SubCategory.WORLD, true);
+        ((ListSetting<Block>) this.blocks).withItemColors(
+                () -> this.rendering.lineColor.get().getColor(),
+                () -> this.rendering.sideColor.get().getColor(),
+                this.rendering.shape::get
+        ).snapshotDefaults();
     }
 
     @Override
@@ -85,8 +105,81 @@ public class Search extends Module {
     @Event
     public void onRender(RenderEvent.World.Post event) {
         if (positions.isEmpty()) return;
-        for (AABB box : positions.values()) {
+        for (Map.Entry<BlockPos, AABB> entry : positions.entrySet()) {
+            BlockPos pos = entry.getKey();
+            AABB box = entry.getValue();
+            Block block = blockTypes.get(pos);
+
+            if (block != null) {
+                ListSetting<Block> listBlocks = (ListSetting<Block>) this.blocks;
+                Color lineCol = listBlocks.getItemData(block, "lineColor");
+                Color sideCol = listBlocks.getItemData(block, "sideColor");
+                BlackOutColor lineBC = lineCol != null ? new BlackOutColor(lineCol.getRed(), lineCol.getGreen(), lineCol.getBlue(), lineCol.getAlpha()) : null;
+                BlackOutColor sideBC = sideCol != null ? new BlackOutColor(sideCol.getRed(), sideCol.getGreen(), sideCol.getBlue(), sideCol.getAlpha()) : null;
+                if (lineBC != null || sideBC != null) {
+                    rendering.render(box, lineBC, sideBC);
+                    continue;
+                }
+            }
+
             rendering.render(box);
+        }
+    }
+
+    @Event
+    public void onRender(RenderEvent.Hud.Post event) {
+        if (!this.tracers.get() || BlackOut.mc.level == null || BlackOut.mc.player == null || positions.isEmpty()) return;
+
+        PoseStack poseStack = event.context.pose();
+        ScreenUtils.beginPixelSpace(poseStack);
+
+        for (BlockPos pos : positions.keySet()) {
+            Block block = blockTypes.get(pos);
+            Color color = null;
+
+            if (block != null) {
+                Color customColor = ((ListSetting<Block>) this.blocks).getItemData(block, "color");
+                if (customColor != null) {
+                    color = customColor;
+                }
+            }
+
+            if (color == null) {
+                color = this.tracerColor.get().getColor();
+            }
+
+            this.renderTracer(poseStack, pos, color);
+        }
+
+        ScreenUtils.endPixelSpace(poseStack);
+    }
+
+    private void renderTracer(PoseStack poseStack, BlockPos pos, Color color) {
+        double x = pos.getX() + 0.5;
+        double y = pos.getY() + 0.5;
+        double z = pos.getZ() + 0.5;
+
+        Vec2 screenPos = Render2DUtils.getCoords(x, y, z, false);
+        if (screenPos == null) return;
+
+        int width = this.tracerWidth.get();
+        if (width <= 1) {
+            Render2DUtils.line(poseStack,
+                    ScreenUtils.screenWidth() / 2.0F,
+                    ScreenUtils.screenHeight() / 2.0F,
+                    screenPos.x,
+                    screenPos.y,
+                    color.getRGB()
+            );
+        } else {
+            Render2DUtils.line(poseStack,
+                    ScreenUtils.screenWidth() / 2.0F,
+                    ScreenUtils.screenHeight() / 2.0F,
+                    screenPos.x,
+                    screenPos.y,
+                    color.getRGB(),
+                    width
+            );
         }
     }
 
@@ -101,6 +194,7 @@ public class Search extends Module {
         this.prevChunks.clear();
         this.toScan.clear();
         this.positions.clear();
+        this.blockTypes.clear();
         this.chunkedPositions.clear();
         this.rebuildBlockSet();
     }
@@ -109,6 +203,7 @@ public class Search extends Module {
         this.rebuildBlockSet();
         if (BlackOut.mc.level == null) return;
         positions.clear();
+        blockTypes.clear();
         chunkedPositions.clear();
         for (ChunkPos pos : prevChunks) {
             if (!toScan.contains(pos)) {
@@ -220,6 +315,7 @@ public class Search extends Module {
         if (chunkBlocks != null) {
             for (BlockPos bp : chunkBlocks) {
                 this.positions.remove(bp);
+                this.blockTypes.remove(bp);
             }
         }
     }
@@ -241,12 +337,14 @@ public class Search extends Module {
         if (valid) {
             if (!this.positions.containsKey(pos)) {
                 this.positions.put(pos, this.getBox(pos));
+                this.blockTypes.put(pos, block);
                 ChunkPos cp = new ChunkPos(pos);
                 this.chunkedPositions.computeIfAbsent(cp, k -> new ObjectOpenHashSet<>()).add(pos);
             }
         } else {
             AABB removed = this.positions.remove(pos);
             if (removed != null) {
+                this.blockTypes.remove(pos);
                 ChunkPos cp = new ChunkPos(pos);
                 Set<BlockPos> set = this.chunkedPositions.get(cp);
                 if (set != null) {

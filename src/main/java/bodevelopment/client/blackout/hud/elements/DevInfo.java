@@ -15,12 +15,12 @@ import java.util.List;
 public class DevInfo extends HudElement {
     public final SettingGroup sgGeneral = this.addGroup("General");
 
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Label Color");
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Label");
     private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Backdrop", true, "Renders a background panel behind the version information.");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a real-time blur effect to the backdrop for improved clarity.");
-    private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Bezel Rounding", true, "Smooths the corners of the background and blur layers.", () -> this.bg.get() || this.blur.get());
-    private final Setting<Boolean> typeColor = this.sgGeneral.booleanSetting("Thematic Coloring", false, "Uses a unique color palette based on the specific build type (e.g., Release, Beta, or Debug).");
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur Effect", true, "Applies a real-time blur effect to the backdrop for improved clarity.");
+    private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Rounded Corners", true, "Smooths the corners of the background and blur layers.", () -> this.bg.get() || this.blur.get());
+    private final Setting<Boolean> typeColor = this.sgGeneral.booleanSetting("Thematic Color", false, "Uses a unique color palette based on the specific build type (e.g., Release, Beta, or Debug).");
 
     private final List<Component> components = new ArrayList<>();
     private float offset = 0.0F;

@@ -19,14 +19,14 @@ public class Coordinates extends HudElement {
     public final SettingGroup sgGeneral = this.addGroup("General");
     public final SettingGroup sgColor = this.addGroup("Color");
 
-    private final Setting<Boolean> otherWorld = this.sgGeneral.booleanSetting("Cross-Dimension Tracking", true, "Calculates and displays relative coordinates for the corresponding dimension (Nether/Overworld ratio).");
+    private final Setting<Boolean> otherWorld = this.sgGeneral.booleanSetting("Dimension Sync", true, "Calculates and displays relative coordinates for the corresponding dimension (Nether/Overworld ratio).");
     private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Backdrop", true, "Renders a background panel behind the coordinate text.");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a real-time blur effect to the background for improved legibility.");
-    private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Bezel Rounding", true, "Smooths the corners of the background and blur layers.", () -> this.bg.get() || this.blur.get());
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur Effect", true, "Applies a real-time blur effect to the background for improved legibility.");
+    private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Rounded Corners", true, "Smooths the corners of the background and blur layers.", () -> this.bg.get() || this.blur.get());
 
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Value Color");
-    private final TextColorMultiSetting infoColor = TextColorMultiSetting.of(this.sgColor, "Label Color");
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Value");
+    private final TextColorMultiSetting infoColor = TextColorMultiSetting.of(this.sgColor, "Label");
 
     private final List<Component> components = new ArrayList<>();
     private float offset = 0.0F;

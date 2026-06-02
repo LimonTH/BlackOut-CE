@@ -13,7 +13,7 @@ import java.awt.*;
 public class ThemeTest extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    private final Setting<Boolean> useBlur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a real-time blur effect behind the theme samples for visual depth.");
+    private final Setting<Boolean> useBlur = this.sgGeneral.booleanSetting("Blur Effect", true, "Applies a real-time blur effect behind the theme samples for visual depth.");
     private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Drop Shadow", true, "Renders a subtle shadow effect around the theme containers.");
 
     private int i = 0;

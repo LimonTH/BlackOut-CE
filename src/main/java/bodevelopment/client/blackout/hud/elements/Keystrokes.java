@@ -13,8 +13,8 @@ import net.minecraft.client.KeyMapping;
 public class Keystrokes extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    private final Setting<Boolean> useBlur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a real-time blur effect behind the keys for visual depth.");
-    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Structural Shadow", true, "Adds a subtle shadow around each key to simulate elevation.");
+    private final Setting<Boolean> useBlur = this.sgGeneral.booleanSetting("Blur Effect", true, "Applies a real-time blur effect behind the keys for visual depth.");
+    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Drop Shadow", true, "Adds a subtle shadow around each key to simulate elevation.");
     private final Setting<BlackOutColor> shadowColor = this.sgGeneral.colorSetting("Idle Shadow", new BlackOutColor(0, 0, 0, 100), "The shadow color when a key is not being pressed.");
     private final Setting<BlackOutColor> pressedShadow = this.sgGeneral.colorSetting("Active Shadow", new BlackOutColor(255, 255, 255, 100), "The shadow color when a key is actively held down.");
     private final Setting<BlackOutColor> txtdColor = this.sgGeneral.colorSetting("Idle Text", new BlackOutColor(255, 255, 255, 255), "The color of the key labels in their default state.");

@@ -41,8 +41,8 @@ public class TargetHUD extends HudElement {
     public final Setting<Mode> mode = this.sgGeneral.enumSetting("Visual Interface", Mode.Blackout, "The aesthetic layout and theme used for target visualization.");
     public final Setting<ArmorCount> countMode = this.sgGeneral.enumSetting("Durability Logic", ArmorCount.Average, "Determines whether to display the average armor integrity or highlight the weakest piece.", () -> this.mode.get() == Mode.BlackoutNew);
     private final Setting<Boolean> hp = this.sgGeneral.booleanSetting("Value Readout", false, "Renders numeric health values alongside the health bar.", () -> this.mode.get() == Mode.Blackout);
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a real-time blur effect to the background panel for depth.", () -> this.mode.get() != Mode.Exhibition);
-    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Structural Shadow", true, "Adds a subtle shadow around the element to simulate elevation.", () -> this.mode.get() != Mode.Exhibition);
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur Effect", true, "Applies a real-time blur effect to the background panel for depth.", () -> this.mode.get() != Mode.Exhibition);
+    private final Setting<Boolean> shadow = this.sgGeneral.booleanSetting("Drop Shadow", true, "Adds a subtle shadow around the element to simulate elevation.", () -> this.mode.get() != Mode.Exhibition);
     private final Setting<TargetMode> targetMode = this.sgGeneral.enumSetting("Acquisition Logic", TargetMode.ModuleTarget, "Determines how the element selects which player to track.");
     private final Setting<Double> targetRange = this.sgGeneral.doubleSetting("Scanning Radius", 20.0, 0.0, 200.0, 2.0, "The maximum distance to search for a target when using Closest mode.", () -> this.targetMode.get() == TargetMode.Closest);
     private final Setting<RenderType> renderType = this.sgGeneral.enumSetting("Projection Type", RenderType.Hud, "Determines if the HUD is pinned to the screen or projected into the 3D world near the player.");
@@ -113,6 +113,8 @@ public class TargetHUD extends HudElement {
         this.stack.translate(this.getRenderWidth() / 2.0F, this.getRenderHeight() / 2.0F, 0.0F);
         this.stack.translate(this.getRenderWidth() / -2.0F, this.getRenderHeight() / -2.0F, 0.0F);
 
+        this.renderSkin = this.renderSkin != null ? this.renderSkin : DEFAULT_SKIN;
+
         switch (this.mode.get()) {
             case Blackout:
                 if (this.blur.get()) {
@@ -122,6 +124,7 @@ public class TargetHUD extends HudElement {
                 this.background.render(this.stack, 0.0F, 0.0F, 105.0F, 20.0F, 3.0F, 3.0F);
                 BlackOut.FONT.text(this.stack, dummyName, 0.9F, 27.0F, 1.0F, this.textColor.get().getColor(), false, false);
                 this.healthBar.render(this.stack, 27.0F, 15.0F, 70.0F, 1.0F, 2.0F, 3.0F);
+                this.drawFace(this.stack, 1.1F, -1.0F, -1.0F);
                 break;
             case BlackoutNew:
                 if (this.blur.get()) {
@@ -132,15 +135,73 @@ public class TargetHUD extends HudElement {
                 BlackOut.FONT.text(this.stack, dummyName, 0.75F, 27.0F, 1.0F, this.textColor.get().getColor(), false, false);
                 Render2DUtils.rounded(this.stack, 27.0F, 11.0F, 70.0F, 0.1F, 1.0F, 0.0F, SHADOW_100, SHADOW_100);
                 this.healthBar.render(this.stack, 27.0F, 11.0F, 70.0F, 0.1F, 1.0F, 1.0F);
+                this.drawFace(this.stack, 1.1F, -1.0F, -1.0F);
                 break;
-            default:
-                // Generic placeholder for other modes
+            case ExhibitionNew:
                 if (this.blur.get()) {
-                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, this.getRenderWidth(), this.getRenderHeight(), 3.0F, 10));
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 105.0F, 28.0F, 3.0F, 10));
                     Renderer.onHUDBlur();
                 }
-                this.background.render(this.stack, 0.0F, 0.0F, this.getRenderWidth(), this.getRenderHeight(), 3.0F, 3.0F);
-                BlackOut.FONT.text(this.stack, dummyName, 1.0F, this.getRenderWidth() / 2.0F, this.getRenderHeight() / 2.0F - BlackOut.FONT.getHeight() / 2.0F, this.textColor.get().getColor(), true, true);
+                this.background.render(this.stack, 0.0F, 0.0F, 105.0F, 28.0F, 3.0F, 3.0F);
+                BlackOut.FONT.text(this.stack, dummyName, 0.7F, 27.0F, 1.0F, this.textColor.get().getColor(), false, false);
+                Render2DUtils.rounded(this.stack, 28.0F, 11.0F, 72.0F, 1.0F, 2.0F, 0.0F, GOLD_BAR, 0);
+                Render2DUtils.rounded(this.stack, 28.0F, 11.0F, 72.0F, 1.0F, 1.0F, 0.0F, YELLOW_BAR, 0);
+                Render2DUtils.rounded(this.stack, 6.0F, 8.0F, 12.0F, 12.0F, 5.0F, 0.0F, BG_45, 0);
+                this.drawFace(this.stack, 1.1F, 1.0F, 3.0F);
+                break;
+            case BlackoutInfo:
+                if (this.blur.get()) {
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 120.0F, 50.0F, 3.0F, 10));
+                    Renderer.onHUDBlur();
+                }
+                this.background.render(this.stack, 0.0F, 0.0F, 120.0F, 50.0F, 3.0F, 3.0F);
+                BlackOut.FONT.text(this.stack, dummyName, 1.0F, 60.0F, 5.0F, this.textColor.get().getColor(), true, true);
+                Render2DUtils.quad(this.stack, 5.0F, 3.0F + BlackOut.FONT.getHeight(), 110.0F, 1.0F, SHADOW_100);
+                this.healthBar.render(this.stack, 5.0F, 3.0F + BlackOut.FONT.getHeight(), 110.0F, 1.0F, 0.0F, 0.0F);
+                BlackOut.FONT.text(this.stack, "HP: 20 Ping: 0ms Pops: 0", 0.8F, 60.0F, 12.0F + BlackOut.FONT.getHeight(), this.textColor.get().getColor(), true, true);
+                this.drawFace(this.stack, 1.1F, -1.0F, -1.0F);
+                break;
+            case Old:
+                if (this.blur.get()) {
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 108.0F, 24.0F, 0.0F, 10));
+                    Renderer.onHUDBlur();
+                }
+                this.background.render(this.stack, 0.0F, 0.0F, 108.0F, 24.0F, 0.0F, 3.0F);
+                this.healthBar.render(this.stack, 25.0F, 14.0F, 80.0F, 8.0F, 0.0F, 0.0F);
+                BlackOut.FONT.text(this.stack, dummyName, 1.0F, 25.0F, 4.0F, Color.WHITE, false, false);
+                BlackOut.FONT.text(this.stack, "HP: 20", 0.8F, 65.0F, 18.0F, Color.WHITE, true, true);
+                this.drawFace(this.stack, 1.0F, 2.0F, 2.0F);
+                break;
+            case Tenacity:
+            case Tenacity2:
+                if (this.blur.get()) {
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, this.getRenderWidth(), 26.0F, 6.0F, 10));
+                    Renderer.onHUDBlur();
+                }
+                this.background.render(this.stack, 0.0F, 0.0F, this.getRenderWidth(), 26.0F, 6.0F, 3.0F);
+                BlackOut.FONT.text(this.stack, dummyName, 1.0F, 70.0F, 0.0F, this.textColor.get().getColor(), true, false);
+                this.healthBar.render(this.stack, 32.0F, 25.0F, 80.0F, 0.2F, 1.0F, 0.0F);
+                this.drawFace(this.stack, 1.2F, 0.0F, 1.0F);
+                break;
+            case Arsenic:
+                if (this.blur.get()) {
+                    Render2DUtils.drawLoadedBlur("hudblur", this.stack, renderer -> renderer.rounded(0.0F, 0.0F, 50.0F, 18.0F, 0.0F, 10));
+                    Renderer.onHUDBlur();
+                }
+                this.background.render(this.stack, 0.0F, 0.0F, 50.0F, 18.0F, 0.0F, 3.0F);
+                this.healthBar.render(this.stack, 0.0F, -1.0F, 50.0F, 1.0F, 0.0F, 0.0F);
+                BlackOut.FONT.text(this.stack, "Name: Player", 1.0F, 0.0F, 1.0F, this.secondaryColor.get().getColor(), false, false);
+                BlackOut.FONT.text(this.stack, "HP: 20", 1.0F, 0.0F, BlackOut.FONT.getHeight() + 1.0F, this.textColor.get().getColor(), false, false);
+                break;
+            case Exhibition:
+                Render2DUtils.quad(this.stack, 0.0F, 0.0F, 114.0F, 32.0F, OVERLAY_150);
+                Render2DUtils.quad(this.stack, 1.0F, 1.0F, 30.0F, 30.0F, LIGHT_200);
+                this.drawFace(this.stack, 1.4F, 2.0F, 2.0F);
+                BlackOut.FONT.text(this.stack, dummyName, 1.0F, 34.0F, 2.0F, this.textColor.get().getRGB(), false, false);
+                Render2DUtils.quad(this.stack, 34.0F, 3.0F + BlackOut.FONT.getHeight(), 74.0F, 3.0F, YELLOW_220);
+                Render2DUtils.quad(this.stack, 34.0F, 3.0F + BlackOut.FONT.getHeight(), 3.7F * health, 3.0F, Color.WHITE.getRGB());
+                BlackOut.FONT.text(this.stack, "HP: 20 Dist: 0", 0.6F, 34.0F, 16.0F, this.textColor.get().getRGB(), false, false);
+                break;
         }
 
         ScreenUtils.endPixelSpace(this.stack);

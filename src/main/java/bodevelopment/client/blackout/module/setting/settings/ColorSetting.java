@@ -21,11 +21,14 @@ public class ColorSetting extends Setting<BlackOutColor> {
     public int theme = 0;
     public float saturation = 0.0F;
     public float brightness = 0.0F;
+    public float hue = 0.0F;
     public int alpha = 255;
     public BlackOutColor actual = this.value.copy();
 
     public ColorSetting(String name, BlackOutColor val, String description, SingleOut<Boolean> visible) {
         super(name, val, description, visible);
+        float[] hsb = Color.RGBtoHSB(val.red, val.green, val.blue, new float[3]);
+        this.hue = hsb[0];
     }
 
     @Override
@@ -40,9 +43,13 @@ public class ColorSetting extends Setting<BlackOutColor> {
         float rectHeight = 8.0F;
         float rectX = this.x + this.width - rectWidth - 5.0F;
 
-        float rectRenderY = middleY - (rectHeight / 2.0F) - 5.5F;
+        float rectRenderY = middleY - (rectHeight / 2.0F);
 
-        int color = this.get().withAlpha(255).getRGB();
+        int color = this.get().alphaMulti(1.0F).getRGB();
+        // Ensure minimum visibility: at least 30 alpha for the preview rect
+        if ((color >> 24 & 0xFF) < 30) {
+            color = color & 0x00FFFFFF | (30 << 24);
+        }
 
         Render2DUtils.rounded(
                 this.stack,
@@ -104,34 +111,54 @@ public class ColorSetting extends Setting<BlackOutColor> {
 
     @Override
     public void write(JsonObject jsonObject) {
-        jsonObject.addProperty(this.name, this.theme + "§" + this.alpha + "§" + this.saturation + "§" + this.brightness + "§" + this.actual.getRGB());
+        jsonObject.addProperty(this.name, this.theme + "§" + this.alpha + "§" + this.saturation + "§" + this.brightness + "§" + this.actual.getRGB() + "§" + this.hue);
     }
 
     @Override
     public void set(JsonElement element) {
         String[] strings = element.getAsString().split("§");
-        if (strings.length != 5) {
-            this.theme = 0;
-            this.alpha = 255;
-            this.brightness = 0.0F;
-            this.saturation = 0.0F;
-            this.reset();
-        } else {
+        if (strings.length == 6) {
+            // New format with hue
             this.theme = Integer.parseInt(strings[0]);
             this.alpha = Integer.parseInt(strings[1]);
             this.saturation = Mth.clamp(Float.parseFloat(strings[2]), -1.0F, 1.0F);
             this.brightness = Mth.clamp(Float.parseFloat(strings[3]), -1.0F, 1.0F);
             this.actual = BlackOutColor.from(Integer.parseInt(strings[4]));
+            this.hue = Float.parseFloat(strings[5]);
+        } else if (strings.length == 5) {
+            // Legacy format, extract hue from RGB
+            this.theme = Integer.parseInt(strings[0]);
+            this.alpha = Integer.parseInt(strings[1]);
+            this.saturation = Mth.clamp(Float.parseFloat(strings[2]), -1.0F, 1.0F);
+            this.brightness = Mth.clamp(Float.parseFloat(strings[3]), -1.0F, 1.0F);
+            this.actual = BlackOutColor.from(Integer.parseInt(strings[4]));
+            float[] hsb = Color.RGBtoHSB(this.actual.red, this.actual.green, this.actual.blue, new float[3]);
+            this.hue = hsb[0];
+        } else {
+            this.theme = 0;
+            this.alpha = 255;
+            this.brightness = 0.0F;
+            this.saturation = 0.0F;
+            this.hue = 0.0F;
+            this.reset();
         }
     }
 
     @Override
     public void reset() {
         super.reset();
+        this.theme = 0;
+        this.saturation = 0.0F;
+        this.brightness = 0.0F;
+        this.alpha = 255;
         this.actual = this.defaultValue.copy();
+        float[] hsb = Color.RGBtoHSB(this.actual.red, this.actual.green, this.actual.blue, new float[3]);
+        this.hue = hsb[0];
     }
 
     public void setValue(BlackOutColor color) {
         super.setValue(color);
+        float[] hsb = Color.RGBtoHSB(color.red, color.green, color.blue, new float[3]);
+        this.hue = hsb[0];
     }
 }

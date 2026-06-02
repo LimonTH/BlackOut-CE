@@ -10,6 +10,7 @@ import bodevelopment.client.blackout.module.modules.combat.misc.AntiBot;
 import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
+import bodevelopment.client.blackout.module.setting.settings.ListSetting;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.randomstuff.ShaderSetup;
 import bodevelopment.client.blackout.rendering.framebuffer.FrameBuffer;
@@ -23,9 +24,12 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 
+import java.awt.*;
+import java.util.*;
 import java.util.List;
 
 public class ShaderESP extends Module {
@@ -43,13 +47,36 @@ public class ShaderESP extends Module {
 
     private final FramebufferMultiBufferSource fboSource = new FramebufferMultiBufferSource();
 
+    private static final String MAIN_FBO = "shaderESP";
+    private static final String CONVERT_FBO = "shaderESP-convert";
+    private static final String BLOOM_FBO = "shaderESP-bloom";
+
+    /**
+     * Per-entity-type custom color overrides discovered during the current frame.
+     * Keyed by {@link ResourceLocation#toString()} of the entity type.
+     */
+    private final Map<String, CustomColorData> customOverrides = new HashMap<>();
+
+    @SuppressWarnings("unchecked")
     public ShaderESP() {
         super("Shader ESP", "Utilizes post-processing framebuffers and GLSL shaders to render glowing silhouettes around entities.", SubCategory.ENTITIES, true);
         INSTANCE = this;
+        ((ListSetting<EntityType<?>>) this.entities).withItemColors(
+                () -> this.outsideColor.get().getColor(),
+                () -> this.insideColor.get().getColor()
+        ).snapshotDefaults();
     }
 
     public static ShaderESP getInstance() {
         return INSTANCE;
+    }
+
+    private static String typeKey(EntityType<?> type) {
+        return EntityType.getKey(type).toString(); // e.g. "minecraft:zombie"
+    }
+
+    private static String customFboName(String typeKey) {
+        return "shaderESP-" + typeKey.replace(':', '_');
     }
 
     public <T extends Entity, S extends EntityRenderState> void onRender(
@@ -64,13 +91,30 @@ public class ShaderESP extends Module {
 
         if (!this.shouldRender(entity)) return;
 
-        FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("shaderESP");
+        ListSetting<EntityType<?>> list = (ListSetting<EntityType<?>>) this.entities;
+        Color customLine = list.getItemData(entity.getType(), "lineColor");
+        Color customSide = list.getItemData(entity.getType(), "sideColor");
 
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(true);
+        if (customLine != null || customSide != null) {
+            String key = typeKey(entity.getType());
+            String fboName = customFboName(key);
+            FrameBuffer typeFbo = Managers.FRAME_BUFFER.getBuffer(fboName);
 
-        instance.render(state, matrices, this.fboSource, light);
-        this.fboSource.drawToFramebuffer(buffer);
+            customOverrides.put(key, new CustomColorData(customLine, customSide));
+
+            RenderSystem.enableDepthTest();
+            RenderSystem.depthMask(true);
+            instance.render(state, matrices, this.fboSource, light);
+            this.fboSource.drawToFramebuffer(typeFbo);
+        } else {
+            FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer(MAIN_FBO);
+
+            RenderSystem.enableDepthTest();
+            RenderSystem.depthMask(true);
+
+            instance.render(state, matrices, this.fboSource, light);
+            this.fboSource.drawToFramebuffer(buffer);
+        }
     }
 
     private <S extends EntityRenderState> boolean shouldRenderLabel(Entity entity, S state) {
@@ -85,38 +129,68 @@ public class ShaderESP extends Module {
 
     @Event
     public void onRenderPre(RenderEvent.World.Pre event) {
-        Managers.FRAME_BUFFER.getBuffer("shaderESP").clear(0.0F, 0.0F, 0.0F, 0.0F);
+        Managers.FRAME_BUFFER.getBuffer(MAIN_FBO).clear(0.0F, 0.0F, 0.0F, 0.0F);
+
+        for (String key : customOverrides.keySet()) {
+            String fboName = customFboName(key);
+            Managers.FRAME_BUFFER.getBuffer(fboName).clear(0.0F, 0.0F, 0.0F, 0.0F);
+            Managers.FRAME_BUFFER.getBuffer(fboName + "-bloom").clear(0.0F, 0.0F, 0.0F, 1.0F);
+        }
     }
 
     public void onRenderHud() {
-        FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("shaderESP");
-        FrameBuffer convertBuffer = Managers.FRAME_BUFFER.getBuffer("shaderESP-convert");
-        FrameBuffer bloomBuffer = Managers.FRAME_BUFFER.getBuffer("shaderESP-bloom");
+        FrameBuffer convertBuffer = Managers.FRAME_BUFFER.getBuffer(CONVERT_FBO);
+        FrameBuffer bloomBuffer = Managers.FRAME_BUFFER.getBuffer(BLOOM_FBO);
+
+        processFbo(MAIN_FBO, convertBuffer, bloomBuffer,
+                this.insideColor.get().getRGB(),
+                this.outsideColor.get().getRGB());
+
+        for (Map.Entry<String, CustomColorData> entry : customOverrides.entrySet()) {
+            String fboName = customFboName(entry.getKey());
+            CustomColorData data = entry.getValue();
+
+            int insideRgb = data.sideColor != null
+                    ? data.sideColor.getRGB()
+                    : this.insideColor.get().getRGB();
+            int outsideRgb = data.lineColor != null
+                    ? data.lineColor.getRGB()
+                    : this.outsideColor.get().getRGB();
+
+            processFbo(fboName, convertBuffer, bloomBuffer, insideRgb, outsideRgb);
+        }
+    }
+
+    private void processFbo(String fboName, FrameBuffer convertBuffer, FrameBuffer bloomBuffer, int insideRgb, int outsideRgb) {
+        FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer(fboName);
 
         convertBuffer.clear(0.0F, 0.0F, 0.0F, 0.0F);
         convertBuffer.bind(true);
         Render2DUtils.renderBufferWith(buffer, Shaders.convert, new ShaderSetup());
         convertBuffer.unbind();
 
-        Render2DUtils.renderBufferWith(convertBuffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.insideColor.get().getRGB())));
+        Render2DUtils.renderBufferWith(convertBuffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", insideRgb)));
 
         if (this.bloom.get() > 0) {
-            bloomBuffer.clear(0.0F, 0.0F, 0.0F, 1.0F);
-            bloomBuffer.bind(true);
+            String bloomBufferName = fboName + "-bloom";
+            FrameBuffer customBloom = Managers.FRAME_BUFFER.getBuffer(bloomBufferName);
+
+            customBloom.clear(0.0F, 0.0F, 0.0F, 1.0F);
+            customBloom.bind(true);
             Render2DUtils.renderBufferWith(convertBuffer, Shaders.screentex, new ShaderSetup(setup -> setup.set("alpha", 1.0F)));
-            bloomBuffer.unbind();
+            customBloom.unbind();
 
-            Render2DUtils.blurBufferBW("shaderESP-bloom", this.bloom.get() + 1);
+            Render2DUtils.blurBufferBW(bloomBufferName, this.bloom.get() + 1);
 
-            bloomBuffer.bind(true);
+            customBloom.bind(true);
             Renderer.setTexture(convertBuffer.getTexture(), 1);
-            Render2DUtils.renderBufferWith(bloomBuffer, Shaders.subtract, new ShaderSetup(setup -> {
+            Render2DUtils.renderBufferWith(customBloom, Shaders.subtract, new ShaderSetup(setup -> {
                 setup.set("uTexture0", 0);
                 setup.set("uTexture1", 1);
             }));
-            bloomBuffer.unbind();
+            customBloom.unbind();
 
-            Render2DUtils.renderBufferWith(bloomBuffer, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", this.outsideColor.get().getRGB())));
+            Render2DUtils.renderBufferWith(customBloom, Shaders.shaderbloom, new ShaderSetup(setup -> setup.color("clr", outsideRgb)));
         }
     }
 
@@ -126,4 +200,6 @@ public class ShaderESP extends Module {
         AntiBot antiBot = AntiBot.getInstance();
         return (!antiBot.enabled || antiBot.mode.get() != AntiBot.HandlingMode.Ignore || !(entity instanceof AbstractClientPlayer player) || !antiBot.getBots().contains(player)) && this.entities.get().contains(entity.getType());
     }
+
+    private record CustomColorData(Color lineColor, Color sideColor) {}
 }
