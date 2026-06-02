@@ -51,7 +51,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: false
-          gradle-home-cache-cleanup: true
+          cache-cleanup: on-success
 
       - name: Build with Gradle
         run: ./gradlew build --no-daemon --stacktrace
