@@ -34,6 +34,7 @@ public class ColorScreen extends ClickGuiScreen {
     private static final Color TRANSPARENT = new Color(0, 0, 0, 0);
     private static final Color WHITE_TRANSPARENT = new Color(255, 255, 255, 0);
     private final ColorSetting colorSetting;
+    public Runnable onChange;
     private final float[] colorX = new float[7];
     private final float[] themeX = new float[3];
     private final ColorField[] themeFields = new ColorField[3];
@@ -134,41 +135,49 @@ public class ColorScreen extends ClickGuiScreen {
                 float clickSat = (float) Mth.clamp(Mth.inverseLerp(this.mx, 0.0, 500.0), 0.0, 1.0);
                 float clickBri = (float) (1.0 - Mth.clamp(Mth.inverseLerp(this.my, 10.0, 210.0), 0.0, 1.0));
                 float[] HSB = this.getHSB(false);
+                this.colorSetting.hue = HSB[0];
                 int rgb = Color.HSBtoRGB(HSB[0], clickSat, clickBri);
                 int red = ARGB.red(rgb);
                 int green = ARGB.green(rgb);
                 int blue = ARGB.blue(rgb);
                 this.colorSetting.get().set(red, green, blue);
+                this.fireOnChange();
                 break;
             }
             case 2: {
                 float clickHue = (float) Mth.clamp(Mth.inverseLerp(this.mx, 0.0, 500.0), 0.0, 1.0);
+                this.colorSetting.hue = clickHue;
                 float[] HSB = this.getHSB(false);
                 int rgb = Color.HSBtoRGB(clickHue, HSB[1], HSB[2]);
                 int red = ARGB.red(rgb);
                 int green = ARGB.green(rgb);
                 int blue = ARGB.blue(rgb);
                 this.colorSetting.get().set(red, green, blue);
+                this.fireOnChange();
                 break;
             }
             case 3: {
                 float progress = (float) Mth.clamp(Mth.inverseLerp(this.mx, 255.0, 500.0), 0.0, 1.0) * 255.0F;
                 this.colorSetting.get().setRed((int) progress);
+                this.fireOnChange();
                 break;
             }
             case 4: {
                 float progress = (float) Mth.clamp(Mth.inverseLerp(this.mx, 255.0, 500.0), 0.0, 1.0) * 255.0F;
                 this.colorSetting.get().setGreen((int) progress);
+                this.fireOnChange();
                 break;
             }
             case 5: {
                 float progress = (float) Mth.clamp(Mth.inverseLerp(this.mx, 255.0, 500.0), 0.0, 1.0) * 255.0F;
                 this.colorSetting.get().setBlue((int) progress);
+                this.fireOnChange();
                 break;
             }
             case 6: {
                 float progress = (float) Mth.clamp(Mth.inverseLerp(this.mx, 0.0, 245.0), 0.0, 1.0) * 255.0F;
                 this.colorSetting.get().setAlpha((int) progress);
+                this.fireOnChange();
                 break;
             }
             case 7: {
@@ -179,6 +188,7 @@ public class ColorScreen extends ClickGuiScreen {
                 int green = ARGB.green(rgb);
                 int blue = ARGB.blue(rgb);
                 this.colorSetting.get().set(red, green, blue);
+                this.fireOnChange();
                 break;
             }
             case 8: {
@@ -189,6 +199,7 @@ public class ColorScreen extends ClickGuiScreen {
                 int green = ARGB.green(rgb);
                 int blue = ARGB.blue(rgb);
                 this.colorSetting.get().set(red, green, blue);
+                this.fireOnChange();
             }
         }
     }
@@ -197,16 +208,20 @@ public class ColorScreen extends ClickGuiScreen {
         switch (this.selecting) {
             case 1:
                 this.colorSetting.saturation = (float) Mth.clamp(Mth.inverseLerp(this.mx, 0.0, 500.0), 0.0, 1.0) * 2.0F - 1.0F;
+                this.fireOnChange();
                 break;
             case 2:
                 this.colorSetting.brightness = (float) Mth.clamp(Mth.inverseLerp(this.mx, 0.0, 500.0), 0.0, 1.0) * 2.0F - 1.0F;
+                this.fireOnChange();
                 break;
             case 3:
                 this.colorSetting.alpha = (int) (Mth.clamp(Mth.inverseLerp(this.mx, 0.0, 500.0), 0.0, 1.0) * 255.0);
+                this.fireOnChange();
                 break;
             case 4:
                 this.colorSetting.saturation = (float) Mth.clamp(Mth.inverseLerp(this.mx, 0.0, 500.0), 0.0, 1.0) * 2.0F - 1.0F;
                 this.colorSetting.brightness = (float) (1.0 - Mth.clamp(Mth.inverseLerp(this.my, 10.0, 210.0), 0.0, 1.0)) * 2.0F - 1.0F;
+                this.fireOnChange();
                 break;
         }
     }
@@ -266,6 +281,20 @@ public class ColorScreen extends ClickGuiScreen {
                 }
                 this.selecting = 0;
             }
+        }
+    }
+
+    /** Called when a slider value changes, to propagate the color live. */
+    private void fireOnChange() {
+        if (this.onChange != null) {
+            this.onChange.run();
+        }
+    }
+
+    @Override
+    public void onClose() {
+        if (this.onChange != null) {
+            this.onChange.run();
         }
     }
 
@@ -603,13 +632,14 @@ public class ColorScreen extends ClickGuiScreen {
             }
         } else {
             if (this.selecting == 1) {
-                circleX = (float) Mth.clamp(this.mx, 0.0, 500.0);
-                circleY = (float) Mth.clamp(this.my, 10.0, 210.0);
+            circleX = (float) Mth.clamp(this.mx, 0.0, 500.0);
+            circleY = (float) Mth.clamp(this.my, 10.0, 210.0);
             } else {
-                float[] HSB = this.getHSB(false);
-                circleX = HSB[1] * 500.0F;
+            float[] HSB = this.getHSB(false);
+            this.colorSetting.hue = HSB[0];
+            circleX = HSB[1] * 500.0F;
                 circleY = Mth.lerpInt(HSB[2], 210, 10);
-            }
+                }
         }
 
         this.prevCircleX = Mth.clampedLerp(this.prevCircleX, circleX, this.frameTime * 20.0F);
@@ -640,7 +670,11 @@ public class ColorScreen extends ClickGuiScreen {
 
     private float[] getHSB(boolean unmodified) {
         BlackOutColor value = unmodified ? this.colorSetting.getUnmodified() : this.colorSetting.get();
-        return Color.RGBtoHSB(value.red, value.green, value.blue, new float[3]);
+        float[] hsb = Color.RGBtoHSB(value.red, value.green, value.blue, new float[3]);
+        if (hsb[1] < 0.001f || (value.red == value.green && value.green == value.blue)) {
+            hsb[0] = this.colorSetting.hue;
+        }
+        return hsb;
     }
 
     private static class ColorField {

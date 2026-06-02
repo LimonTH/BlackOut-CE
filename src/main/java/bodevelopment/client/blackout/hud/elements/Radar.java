@@ -28,7 +28,7 @@ public class Radar extends HudElement {
     private final Setting<Style> style = this.sgGeneral.enumSetting("Visual Theme", Style.Blackout, "The aesthetic layout of the radar (Modern 'Blackout' or retro 'Exhibition').");
     private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Enable Backdrop", true, "Renders a background surface for the radar interface.", () -> this.style.get() == Style.Blackout);
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, () -> this.bg.get() && this.style.get() == Style.Blackout, "Radar");
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a blur effect to the radar backdrop for improved clarity.", () -> this.style.get() == Style.Blackout);
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur Effect", true, "Applies a blur effect to the radar backdrop for improved clarity.", () -> this.style.get() == Style.Blackout);
     private final Setting<Boolean> fadeLines = this.sgGeneral.booleanSetting("Gradient Axis", false, "Uses a fading gradient for the radar's X and Y axis lines.");
     private final Setting<BlackOutColor> lineColor = this.sgGeneral.colorSetting("Axis Color", new BlackOutColor(255, 255, 255, 80), "The color palette for the crosshair axis lines.");
     private final Setting<BlackOutColor> enemyColor = this.sgGeneral.colorSetting("Hostile Marker", new BlackOutColor(255, 255, 255, 80), "The color assigned to non-allied player markers.");

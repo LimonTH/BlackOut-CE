@@ -17,12 +17,12 @@ import java.util.Date;
 public class Clock extends HudElement {
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    private final Setting<Mode> mode = this.sgGeneral.enumSetting("Chronological Format", Mode.Normal, "The nomenclature used for displaying the system time (24-hour vs. 12-hour AM/PM).");
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Time Color");
+    private final Setting<Mode> mode = this.sgGeneral.enumSetting("Time Format", Mode.Normal, "The nomenclature used for displaying the system time (24-hour vs. 12-hour AM/PM).");
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Time");
     private final Setting<Boolean> bg = this.sgGeneral.booleanSetting("Backdrop", true, "Renders a background panel behind the time string.");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, this.bg::get, null);
-    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Gaussian Diffusion", true, "Applies a blur shader to the background for enhanced contrast.");
-    private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Bezel Rounding", true, "Smooths the corners of the background and blur layers.", () -> this.bg.get() || this.blur.get());
+    private final Setting<Boolean> blur = this.sgGeneral.booleanSetting("Blur Effect", true, "Applies a blur shader to the background for enhanced contrast.");
+    private final Setting<Boolean> rounded = this.sgGeneral.booleanSetting("Rounded Corners", true, "Smooths the corners of the background and blur layers.", () -> this.bg.get() || this.blur.get());
 
     private float textWidth = 0.0F;
 

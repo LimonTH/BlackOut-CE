@@ -11,6 +11,7 @@ import bodevelopment.client.blackout.module.modules.combat.misc.AntiBot;
 import bodevelopment.client.blackout.module.modules.visual.misc.FreeCam;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
+import bodevelopment.client.blackout.module.setting.settings.ListSetting;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
@@ -37,8 +38,13 @@ public class Tracers extends Module {
     private final PoseStack stack = new PoseStack();
     private final List<Entity> entities = new ArrayList<>();
 
+    @SuppressWarnings("unchecked")
     public Tracers() {
         super("Tracers", "Draws directional lines from the center of the screen to entities to provide spatial awareness of their locations.", SubCategory.ENTITIES, true);
+        ((ListSetting<EntityType<?>>) this.entityTypes).withItemColors(
+                () -> this.line.get().getColor(),
+                null
+        ).snapshotDefaults();
     }
 
     @Event
@@ -72,7 +78,8 @@ public class Tracers extends Module {
         if (entity instanceof Player && Managers.FRIENDS.isFriend((Player) entity)) {
             color = this.friendLine.get().getColor();
         } else {
-            color = this.line.get().getColor();
+            Color customColor = ((ListSetting<EntityType<?>>) this.entityTypes).getItemData(entity.getType(), "lineColor");
+            color = customColor != null ? customColor : this.line.get().getColor();
         }
 
         Vec2 f = Render2DUtils.getCoords(x, y + entity.getBoundingBox().getYsize() / 2.0, z, false);

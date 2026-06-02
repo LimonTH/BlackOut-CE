@@ -8,6 +8,7 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
+import bodevelopment.client.blackout.module.setting.settings.ListSetting;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import bodevelopment.client.blackout.util.render.RenderState;
@@ -15,6 +16,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+import java.awt.*;
 import java.util.List;
 
 public class FeetESP extends Module {
@@ -25,8 +27,13 @@ public class FeetESP extends Module {
     private final Setting<BlackOutColor> fill = this.sgGeneral.colorSetting("Interior Color", new BlackOutColor(255, 255, 255, 80), "The color and transparency of the polygon faces at the entity's feet.");
     private final Setting<BlackOutColor> line = this.sgGeneral.colorSetting("Outline Color", new BlackOutColor(255, 255, 255, 120), "The color and transparency of the wireframe edges at the entity's feet.");
 
+    @SuppressWarnings("unchecked")
     public FeetESP() {
         super("Feet ESP", "Renders a discrete bounding box at the base of entities to highlight their exact ground position and collision footprint.", SubCategory.ENTITIES, true);
+        ((ListSetting<EntityType<?>>) this.entities).withItemColors(
+                () -> this.line.get().getColor(),
+                () -> this.fill.get().getColor()
+        ).snapshotDefaults();
     }
 
     @Event
@@ -47,7 +54,17 @@ public class FeetESP extends Module {
                             pos.x + halfWidth, pos.y + 0.01, pos.z + halfDepth
                     );
 
-                    Render3DUtils.box(feetBox, fill.get(), line.get(), renderShape.get());
+                    ListSetting<EntityType<?>> listSetting = (ListSetting<EntityType<?>>) this.entities;
+                    Color customLine = listSetting.getItemData(entity.getType(), "lineColor");
+                    Color customFill = listSetting.getItemData(entity.getType(), "sideColor");
+                    BlackOutColor useLine = customLine != null
+                            ? new BlackOutColor(customLine.getRed(), customLine.getGreen(), customLine.getBlue(), customLine.getAlpha())
+                            : this.line.get();
+                    BlackOutColor useFill = customFill != null
+                            ? new BlackOutColor(customFill.getRed(), customFill.getGreen(), customFill.getBlue(), customFill.getAlpha())
+                            : this.fill.get();
+
+                    Render3DUtils.box(feetBox, useFill, useLine, renderShape.get());
                 }
             });
         }

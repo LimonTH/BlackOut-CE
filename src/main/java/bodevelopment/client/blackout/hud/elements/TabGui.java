@@ -36,7 +36,7 @@ public class TabGui extends HudElement {
     public final Setting<BlackOutColor> textDisabled = this.sgGeneral.colorSetting("Inactive Color", new BlackOutColor(150, 150, 150, 255), "The text color used for modules that are currently disabled.");
     private final BackgroundMultiSetting background = BackgroundMultiSetting.of(this.sgGeneral, null);
     private final Setting<Integer> bloomIntensity = this.sgGeneral.intSetting("Selection Glow", 1, 0, 2, 1, "The strength of the bloom/glow effect surrounding the active selector.");
-    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Active Color");
+    private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgGeneral, "Active");
 
     private final Map<Module, MutableDouble> moduleMap = new HashMap<>();
     private int selectedModule = 0;

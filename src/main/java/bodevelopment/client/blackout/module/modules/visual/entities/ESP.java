@@ -9,6 +9,7 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.combat.misc.AntiBot;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
+import bodevelopment.client.blackout.module.setting.settings.ListSetting;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.ColorUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
@@ -54,9 +55,14 @@ public class ESP extends Module {
     private final List<Entity> entities = new ArrayList<>();
     private float progress = 0.0F;
 
+    @SuppressWarnings("unchecked")
     public ESP() {
         super("ESP", "Provides enhanced visual feedback by rendering informative 2D overlays and bounding boxes around entities through obstacles.", SubCategory.ENTITIES, true);
         INSTANCE = this;
+        ((ListSetting<EntityType<?>>) this.entityTypes).withItemColors(
+                () -> this.lineColor.get().getColor(),
+                () -> this.fadeColor.get().getColor()
+        ).snapshotDefaults();
     }
 
     public static ESP getInstance() {
@@ -97,6 +103,12 @@ public class ESP extends Module {
     }
 
     public void render2D(double tickDelta, Vec3 cameraPos, Entity entity) {
+        ListSetting<EntityType<?>> list = (ListSetting<EntityType<?>>) this.entityTypes;
+        Color customLine = list.getItemData(entity.getType(), "lineColor");
+        Color customFade = list.getItemData(entity.getType(), "sideColor");
+        int useLineRgb = customLine != null ? customLine.getRGB() : this.lineColor.get().getRGB();
+        int useFadeRgb = customFade != null ? customFade.getRGB() : this.fadeColor.get().getRGB();
+
         double x = Mth.lerp(tickDelta, entity.xo, entity.getX()) - cameraPos.x;
         double y = Mth.lerp(tickDelta, entity.yo, entity.getY()) - cameraPos.y + entity.getBbHeight() / 2.0F;
         double z = Mth.lerp(tickDelta, entity.zo, entity.getZ()) - cameraPos.z;
@@ -153,10 +165,10 @@ public class ESP extends Module {
         }
 
         if (this.box.get()) {
-            Render2DUtils.line(this.stack, -width / 2.0F, -height / 2.0F, -width / 2.0F, height / 2.0F, this.lineColor.get().getRGB(), this.fadeColor.get().getRGB());
-            Render2DUtils.line(this.stack, width / 2.0F, -height / 2.0F, width / 2.0F, height / 2.0F, this.lineColor.get().getRGB(), this.fadeColor.get().getRGB());
-            Render2DUtils.line(this.stack, -width / 2.0F, -height / 2.0F, width / 2.0F, -height / 2.0F, this.lineColor.get().getRGB());
-            Render2DUtils.line(this.stack, -width / 2.0F, height / 2.0F, width / 2.0F, height / 2.0F, this.fadeColor.get().getRGB());
+            Render2DUtils.line(this.stack, -width / 2.0F, -height / 2.0F, -width / 2.0F, height / 2.0F, useLineRgb, useFadeRgb);
+            Render2DUtils.line(this.stack, width / 2.0F, -height / 2.0F, width / 2.0F, height / 2.0F, useLineRgb, useFadeRgb);
+            Render2DUtils.line(this.stack, -width / 2.0F, -height / 2.0F, width / 2.0F, -height / 2.0F, useLineRgb);
+            Render2DUtils.line(this.stack, -width / 2.0F, height / 2.0F, width / 2.0F, height / 2.0F, useFadeRgb);
         }
 
         if (this.fill.get() && !this.fadeFill.get()) {

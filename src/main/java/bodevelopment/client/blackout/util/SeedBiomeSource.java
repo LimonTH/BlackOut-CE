@@ -101,18 +101,36 @@ public class SeedBiomeSource {
     }
 
     /**
-     * Returns true if End terrain at (blockX, blockZ) has a solid block at Y=60.
-     * Uses the vanilla finalDensity function via SinglePointContext — exact same check
-     * as vanilla EndCityStructure.findGenerationPoint (getFirstOccupiedHeight >= 60).
-     * Since all End noise functions are seed-independent (endIslands uses fixed seed 0L,
-     * BASE_3D_NOISE_END is unseeded), this works correctly for any world seed.
-     * TODO: ???. This is the original code, but individual cities are cut off correctly.
+     * Returns the first occupied height (WORLD_SURFACE_WG) at the given block coordinates
+     * using the End dimension's density functions.
+     * Mirrors vanilla ChunkGenerator.getFirstOccupiedHeight for End terrain.
+     * Scans from the max build height downward, finding the first Y where finalDensity > 0.
+     * This is the exact same algorithm as vanilla's getFirstOccupiedHeight with WORLD_SURFACE_WG.
+     *
+     * @since End noise is seed-independent (endIslands uses fixed seed 0L), this works for any world seed.
      */
+    public int getFirstOccupiedHeight(int blockX, int blockZ) {
+        if (!isEnd) return Integer.MIN_VALUE;
+        var density = this.randomState.router().finalDensity();
+        for (int y = 256; y >= 0; y--) {
+            if (density.compute(new DensityFunction.SinglePointContext(blockX, y, blockZ)) > 0.0) {
+                return y;
+            }
+        }
+        return Integer.MIN_VALUE;
+    }
+
+    /**
+     * Returns true if the terrain surface at (blockX, blockZ) is at or above Y=60.
+     * Uses proper height scanning (same as vanilla getFirstOccupiedHeight >= 60),
+     * NOT just checking density at Y=60.
+     */
+    public boolean hasTerrainAtOrAbove60(int blockX, int blockZ) {
+        return getFirstOccupiedHeight(blockX, blockZ) >= 60;
+    }
+
     public boolean hasSolidTerrainAtY60(int blockX, int blockZ) {
-        if (!isEnd) return false;
-        double density = this.randomState.router().finalDensity()
-                .compute(new DensityFunction.SinglePointContext(blockX, 60, blockZ));
-        return density > 0.0;
+        return hasTerrainAtOrAbove60(blockX, blockZ);
     }
 
     public int getHeight(int blockX, int blockZ) {
@@ -132,23 +150,48 @@ public class SeedBiomeSource {
      * and returns its chunk coordinates [chunkX, chunkZ].
      * If the theoretical position itself is valid, it is returned unchanged (fast path).
      */
+    private static final Set<ResourceKey<Biome>> STRONGHOLD_BIASED_TO = Set.of(
+            Biomes.PLAINS, Biomes.SUNFLOWER_PLAINS, Biomes.SNOWY_PLAINS, Biomes.ICE_SPIKES,
+            Biomes.DESERT, Biomes.FOREST, Biomes.FLOWER_FOREST, Biomes.BIRCH_FOREST,
+            Biomes.DARK_FOREST, Biomes.PALE_GARDEN, Biomes.OLD_GROWTH_BIRCH_FOREST,
+            Biomes.OLD_GROWTH_PINE_TAIGA, Biomes.OLD_GROWTH_SPRUCE_TAIGA, Biomes.TAIGA,
+            Biomes.SNOWY_TAIGA, Biomes.SAVANNA, Biomes.SAVANNA_PLATEAU,
+            Biomes.WINDSWEPT_HILLS, Biomes.WINDSWEPT_GRAVELLY_HILLS, Biomes.WINDSWEPT_FOREST,
+            Biomes.WINDSWEPT_SAVANNA, Biomes.JUNGLE, Biomes.SPARSE_JUNGLE, Biomes.BAMBOO_JUNGLE,
+            Biomes.BADLANDS, Biomes.ERODED_BADLANDS, Biomes.WOODED_BADLANDS,
+            Biomes.MEADOW, Biomes.GROVE, Biomes.SNOWY_SLOPES,
+            Biomes.FROZEN_PEAKS, Biomes.JAGGED_PEAKS, Biomes.STONY_PEAKS,
+            Biomes.MUSHROOM_FIELDS, Biomes.DRIPSTONE_CAVES, Biomes.LUSH_CAVES
+    );
+
+    /**
+     * Mirrors vanilla {@code ChunkGeneratorStructureState.trySnapToPreferredBiomes}.
+     * Searches within 112 blocks (28 quart units) for a chunk whose center biome
+     * is in the {@code #minecraft:stronghold_biased_to} tag.
+     * Uses the exact same expansion search as vanilla (square rings in quart space).
+     */
     public int[] findNearestStrongholdChunk(int chunkX, int chunkZ) {
         int blockX = (chunkX << 4) + 8;
         int blockZ = (chunkZ << 4) + 8;
         int quartX = QuartPos.fromBlock(blockX);
         int quartZ = QuartPos.fromBlock(blockZ);
-        int quartRadius = QuartPos.fromBlock(112); // 112 blocks = 28 quart units
+        int quartRadius = QuartPos.fromBlock(112);
+
+        ResourceKey<Biome> rawBiome = getBiomeAt(blockX, OPTIMAL_Y, blockZ);
+        if (STRONGHOLD_BIASED_TO.contains(rawBiome)) {
+            return new int[]{chunkX, chunkZ};
+        }
 
         for (int dq = 0; dq <= quartRadius; dq++) {
             for (int dqz = -dq; dqz <= dq; dqz++) {
                 boolean edgeZ = Math.abs(dqz) == dq;
                 for (int dqx = -dq; dqx <= dq; dqx++) {
                     boolean edgeX = Math.abs(dqx) == dq;
-                    if (!edgeX && !edgeZ) continue; // only check the border of each ring
+                    if (!edgeX && !edgeZ) continue;
                     ResourceKey<Biome> biome = getBiomeAt(
                             QuartPos.toBlock(quartX + dqx), OPTIMAL_Y, QuartPos.toBlock(quartZ + dqz)
                     );
-                    if (!OCEAN_BIOMES.contains(biome)) {
+                    if (STRONGHOLD_BIASED_TO.contains(biome)) {
                         int foundBlock = QuartPos.toBlock(quartX + dqx);
                         int foundBlockZ = QuartPos.toBlock(quartZ + dqz);
                         return new int[]{foundBlock >> 4, foundBlockZ >> 4};
