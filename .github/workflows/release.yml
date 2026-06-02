@@ -2,9 +2,7 @@ name: Release
 
 on:
   push:
-    branches: [ "main" ]
-    paths:
-      - 'gradle.properties'
+    branches: [ "1.21.4" ]
     tags:
       - '[0-9]+.[0-9]+.[0-9]+*'
 
@@ -39,45 +37,47 @@ jobs:
           fi
           echo "name=$TAG" >> $GITHUB_OUTPUT
 
+      - name: Check if release already exists
+        id: check
+        run: |
+          if git tag -l "${{ steps.tag.outputs.name }}" | grep -q .; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Tag ${{ steps.tag.outputs.name }} already exists — skipping"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Setup JDK 21
+        if: steps.check.outputs.skip != 'true'
         uses: actions/setup-java@v5
         with:
           java-version: 21
           distribution: temurin
 
       - name: Setup Gradle
+        if: steps.check.outputs.skip != 'true'
         uses: gradle/actions/setup-gradle@v6
         with:
+          cache-cleanup: on-success
           cache-read-only: true
 
       - name: Build Release
+        if: steps.check.outputs.skip != 'true'
         run: ./gradlew build --no-daemon --stacktrace
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
 
-      - name: Generate Changelog
-        id: changelog
-        run: |
-          PREVIOUS_TAG=$(git tag --sort=-v:refname | head -n 2 | tail -n 1 || echo "")
-          if [ -z "$PREVIOUS_TAG" ]; then
-            CHANGELOG="- Initial release ${{ steps.tag.outputs.name }}"
-          else
-            CHANGELOG=$(git log --pretty=format:"- %s (%h)" "$PREVIOUS_TAG..${{ steps.tag.outputs.name }}" --no-merges)
-          fi
-          CHANGELOG="${CHANGELOG//'%'/'%25'}"
-          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
-          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
-          echo "log=$CHANGELOG" >> $GITHUB_OUTPUT
-
       - name: Generate Release Timestamp (MSK)
+        if: steps.check.outputs.skip != 'true'
         id: timestamp
         run: |
           TIMESTAMP=$(TZ='Europe/Moscow' date +'%d.%m.%Y %H:%M')
           echo "msk=$TIMESTAMP" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        if: steps.check.outputs.skip != 'true'
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.tag.outputs.name }}
           name: "update: ${{ steps.timestamp.outputs.msk }} (UTC +3:00)"
@@ -85,9 +85,6 @@ jobs:
             ## BlackOut ${{ steps.tag.outputs.name }}
 
             **Released:** ${{ steps.timestamp.outputs.msk }} MSK (UTC +3:00)
-
-            ### 📋 Changes
-            ${{ steps.changelog.outputs.log }}
 
             ### 📦 Downloads
             - `${{ github.event.repository.name }}-${{ steps.tag.outputs.name }}.jar` — compiled mod
@@ -97,6 +94,7 @@ jobs:
           files: |
             build/libs/*.jar
             build/libs/*.jar.asc
+          generate_release_notes: true
           draft: false
           prerelease: ${{ contains(steps.tag.outputs.name, 'beta') || contains(steps.tag.outputs.name, 'alpha') || contains(steps.tag.outputs.name, 'pre') }}
           fail_on_unmatched_files: false
