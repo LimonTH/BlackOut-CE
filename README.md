@@ -12,7 +12,7 @@
 
 [Features](#-features) ·
 [Build](#-build) ·
-[Addons](ADDON_DEV_GUIDE.md) ·
+[Addons](docs/api/ADDON_API.md) ·
 [Discord](https://discord.gg/GnNBwTMUXp)
 
 </div>
@@ -35,7 +35,7 @@
 - **ClickGUI** — Press `Right Shift`
 - **HUD Editor** — Fully customizable overlay
 - **Config System** — Local & cloud configs
-- **Addon API** — Extend via [guide](ADDON_DEV_GUIDE.md)
+- **Addon API** — Extend via [guide](docs/api/ADDON_API.md)
 - **Baritone & Sodium** — First-class compatibility
 
 </td></tr>
