@@ -58,7 +58,7 @@ jobs:
         if: steps.check.outputs.skip != 'true'
         uses: gradle/actions/setup-gradle@v6
         with:
-          cache-cleanup: true
+          cache-cleanup: on-success
           cache-read-only: true
 
       - name: Build Release
