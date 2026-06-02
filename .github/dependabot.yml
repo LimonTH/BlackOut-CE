@@ -5,10 +5,16 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-    open-pull-requests-limit: 5
+      time: "09:00"
+      timezone: "Europe/Moscow"
+    open-pull-requests-limit: 10
     labels:
       - "dependencies"
       - "automated"
+    reviewers:
+      - "LimonTH"
+    assignees:
+      - "LimonTH"
     ignore:
       - dependency-name: "com.github.cabaletta.baritone:baritone-api"
         update-types: [ "version-update:semver-major" ]
@@ -17,6 +23,13 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Moscow"
     labels:
       - "ci"
       - "automated"
+    reviewers:
+      - "LimonTH"
+    assignees:
+      - "LimonTH"

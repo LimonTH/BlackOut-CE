@@ -1,9 +1,36 @@
+import java.nio.charset.StandardCharsets
+
 plugins {
 	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
 	id 'java'
 	id 'maven-publish'
 	id 'signing'
 	id 'idea'
+}
+
+def envFile = new File(rootProject.projectDir, ".env")
+if (envFile.exists()) {
+	envFile.readLines().each { line ->
+		def trimmed = line.trim()
+		if (trimmed && !trimmed.startsWith("#")) {
+			def eqIdx = trimmed.indexOf('=')
+			if (eqIdx > 0) {
+				def key = trimmed.substring(0, eqIdx)
+				def value = trimmed.substring(eqIdx + 1)
+				if (System.getenv(key) == null) {
+					System.setProperty(key, value)
+				}
+			}
+		}
+	}
+}
+
+static def envOrProperty(String name) {
+	def env = System.getenv(name)
+	if (env != null && !env.isEmpty()) return env
+	def prop = System.getProperty(name)
+	if (prop != null && !prop.isEmpty()) return prop
+	return null
 }
 
 idea {
@@ -127,15 +154,14 @@ publishing {
 }
 
 signing {
-	def signingKey = System.getenv("SIGNING_KEY")
-	if (signingKey == null || signingKey.isEmpty()) {
-		def keyFile = rootProject.file("private_key_base64.txt")
-		if (keyFile.exists()) {
-			signingKey = keyFile.text.trim()
-		}
-	}
+	def signingKey = envOrProperty("SIGNING_KEY")
 	if (signingKey != null && !signingKey.isEmpty()) {
-		useInMemoryPgpKeys(signingKey, "")
+		def signingKeyPassword = envOrProperty("SIGNING_KEY_PASSWORD")
+		if (signingKeyPassword == null || signingKeyPassword.isEmpty()) {
+			signingKeyPassword = ""
+		}
+		def decodedKey = new String(Base64.getDecoder().decode(signingKey), StandardCharsets.UTF_8)
+		useInMemoryPgpKeys(decodedKey, signingKeyPassword)
 		sign publishing.publications.mavenJava
 	}
 }
@@ -178,4 +204,9 @@ afterEvaluate {
 
 tasks.named('sourcesJar') {
 	dependsOn(tasks.named('generateBlackOutInfo'))
+}
+
+def signingKey = envOrProperty("SIGNING_KEY")
+if (signingKey != null && !signingKey.isEmpty()) {
+	tasks.named('build') { dependsOn('signMavenJavaPublication') }
 }

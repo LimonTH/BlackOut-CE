@@ -548,11 +548,11 @@ public int getApiVersion() { return BlackOut.API_VERSION; }
 
 **How the loader interprets it:**
 
-| Condition | Result |
-|-----------|--------|
-| `addon.api > client.api` | **HARD REJECT** — addon needs a newer BlackOut |
-| `addon.api < client.api` | **SOFT WARN** — deprecated APIs may have been removed; addon may still work |
-| `addon.api == client.api` | **OK** — exact match, guaranteed compatible |
+| Condition                 | Result                                                                      |
+|---------------------------|-----------------------------------------------------------------------------|
+| `addon.api > client.api`  | **HARD REJECT** — addon needs a newer BlackOut                              |
+| `addon.api < client.api`  | **SOFT WARN** — deprecated APIs may have been removed; addon may still work |
+| `addon.api == client.api` | **OK** — exact match, guaranteed compatible                                 |
 
 > **For addon devs:** you don't need to do anything. The API version is embedded at compile time via `BlackOutInfo.API_VERSION` (sourced from `gradle.properties → api_version`).
 
@@ -574,11 +574,11 @@ Format: dot-separated numeric (`"2.2"`, `"2.3.1"`). Comparison is numeric per se
 
 **Wildcards:** use `*` to match any value at a position:
 
-| Min version | Meaning | Matches |
-|-------------|---------|---------|
-| `"2.*"` | Any 2.x | `2.0`, `2.2`, `2.99` — but NOT `3.0` |
-| `"2.2.*"` | Any 2.2.x patch | `2.2.0`, `2.2.5` — but NOT `2.3.0` |
-| `"*"` | Any version at all | Everything (same as `null`) |
+| Min version | Meaning            | Matches                              |
+|-------------|--------------------|--------------------------------------|
+| `"2.*"`     | Any 2.x            | `2.0`, `2.2`, `2.99` — but NOT `3.0` |
+| `"2.2.*"`   | Any 2.2.x patch    | `2.2.0`, `2.2.5` — but NOT `2.3.0`   |
+| `"*"`       | Any version at all | Everything (same as `null`)          |
 
 > **Rule of thumb:** if your addon only uses `@PublicAPI` classes and methods,
 > you should **not** override `getMinClientVersion()`. Leave it at the default (`null`).
