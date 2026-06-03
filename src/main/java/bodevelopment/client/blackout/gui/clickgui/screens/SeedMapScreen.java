@@ -4,12 +4,16 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.gui.TextField;
 import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
 import bodevelopment.client.blackout.manager.Managers;
-import bodevelopment.client.blackout.module.modules.visual.world.SeedFinder;
+import bodevelopment.client.blackout.module.modules.visual.world.SeedSearcher.FoundStructure;
+import bodevelopment.client.blackout.module.modules.visual.world.SeedSearcher.SeedSearcher;
+import bodevelopment.client.blackout.module.modules.visual.world.SeedSearcher.StructureType;
 import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.ScissorStack;
+import bodevelopment.client.blackout.util.world.SeedSourceUtils;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceKey;
@@ -51,7 +55,7 @@ public class SeedMapScreen extends ClickGuiScreen {
     private static final Map<String, DynamicTexture> ICON_TEXTURE_CACHE = new java.util.HashMap<>();
 
     private final String seedString;
-    private SeedBiomeSource biomeSource;
+    private SeedSourceUtils biomeSource;
     private ResourceKey<Level> lastDim = null;
 
     private final long seed;
@@ -72,10 +76,10 @@ public class SeedMapScreen extends ClickGuiScreen {
     private final int fieldZId = SelectedComponent.nextId();
     private boolean showSlimeChunks = false;
 
-    private SeedFinder.FoundStructure selectedStructure = null;
+    private FoundStructure selectedStructure = null;
     private double mouseDownX, mouseDownY;
 
-    private volatile List<SeedFinder.FoundStructure> mapStructures = new java.util.ArrayList<>();
+    private volatile List<FoundStructure> mapStructures = new java.util.ArrayList<>();
     private volatile boolean mapSearchRunning = false;
     private float lastSearchCX = Float.MAX_VALUE;
     private float lastSearchCZ = Float.MAX_VALUE;
@@ -85,7 +89,7 @@ public class SeedMapScreen extends ClickGuiScreen {
     private static final float ICON_SIZE = 20.0F;
     private static final float ICON_SIZE_SELECTED = 26.0F;
 
-    public SeedMapScreen(String seedString, long seed, SeedBiomeSource biomeSource) {
+    public SeedMapScreen(String seedString, long seed, SeedSourceUtils biomeSource) {
         super("Seed Map", MAP_WIDTH + 20.0F, MAP_HEIGHT + FOOTER_HEIGHT + 10.0F, false);
         this.seedString = seedString;
         this.seed = seed;
@@ -121,9 +125,9 @@ public class SeedMapScreen extends ClickGuiScreen {
                 lastSearchDim = null;
                 this.selectedStructure = null;
 
-                SeedFinder finder = Managers.MODULES.getModule(SeedFinder.class);
+                SeedSearcher finder = Managers.MODULES.getModule(SeedSearcher.class);
                 if (finder != null) {
-                    this.biomeSource = new SeedBiomeSource(this.seed, currentDim);
+                    this.biomeSource = new SeedSourceUtils(this.seed, currentDim);
                 }
             }
         }
@@ -347,8 +351,7 @@ public class SeedMapScreen extends ClickGuiScreen {
     private void renderSelectedStructurePanel() {
         if (this.selectedStructure == null) return;
 
-        // In apple mode: don't show tooltip for non-apple structures
-        SeedFinder sf = Managers.MODULES.getModule(SeedFinder.class);
+        SeedSearcher sf = Managers.MODULES.getModule(SeedSearcher.class);
         if (sf != null && sf.isEnchantedApplesEnabled() && !this.selectedStructure.extraInfo().contains("(Apple)")) {
             this.selectedStructure = null;
             return;
@@ -414,7 +417,7 @@ public class SeedMapScreen extends ClickGuiScreen {
         }
     }
 
-    private static String getStructureFullName(SeedFinder.FoundStructure s) {
+    private static String getStructureFullName(FoundStructure s) {
         String extra = s.extraInfo().trim();
 
         return switch (s.type()) {
@@ -520,7 +523,7 @@ public class SeedMapScreen extends ClickGuiScreen {
         }
     }
 
-    private void triggerStructureSearch(SeedFinder finder) {
+    private void triggerStructureSearch(SeedSearcher finder) {
         if (this.biomeSource == null || mapSearchRunning) return;
 
         float viewHalf = Math.max(MAP_WIDTH, MAP_HEIGHT) * this.blocksPerPixel * 0.6f;
@@ -539,16 +542,17 @@ public class SeedMapScreen extends ClickGuiScreen {
         int cz = (int) mapCenterZ;
         int radius = (int) viewHalf + 512;
         long s = this.seed;
-        SeedBiomeSource src = this.biomeSource;
+        SeedSourceUtils src = this.biomeSource;
         ResourceKey<Level> dim = this.lastDim;
 
         mapSearchRunning = true;
         generatePool.execute(() -> {
             try {
-                List<SeedFinder.FoundStructure> results = new java.util.ArrayList<>();
+                List<FoundStructure> results = new java.util.ArrayList<>();
                 boolean searchApples = finder.isEnchantedApplesEnabled();
-                SeedFinder.findInArea(results, s, src, dim, cx, cz, radius, false,
-                        t -> finder.isDimensionEnabled(t, dim), searchApples);
+                SeedSearcher.findInArea(results, s, src, dim, cx, cz, radius, false,
+                        t -> finder.isDimensionEnabled(t, dim), searchApples,
+                        t -> finder.isAppleStructureEnabled(t));
                 mapStructures = results;
             } finally {
                 mapSearchRunning = false;
@@ -557,10 +561,10 @@ public class SeedMapScreen extends ClickGuiScreen {
     }
 
     private void renderStructures() {
-        SeedFinder seedFinder = Managers.MODULES.getModule(SeedFinder.class);
-        if (seedFinder == null || this.biomeSource == null) return;
+        SeedSearcher seedSearcher = Managers.MODULES.getModule(SeedSearcher.class);
+        if (seedSearcher == null || this.biomeSource == null) return;
 
-        triggerStructureSearch(seedFinder);
+        triggerStructureSearch(seedSearcher);
 
         float worldLeft = this.mapCenterX - (MAP_WIDTH / 2.0F) * this.blocksPerPixel;
         float worldTop = this.mapCenterZ - (MAP_HEIGHT / 2.0F) * this.blocksPerPixel;
@@ -568,12 +572,12 @@ public class SeedMapScreen extends ClickGuiScreen {
         float worldBottom = worldTop + MAP_HEIGHT * this.blocksPerPixel;
 
         ResourceKey<Level> dim = this.lastDim;
-        boolean appleMode = seedFinder.isEnchantedApplesEnabled();
+        boolean appleMode = seedSearcher.isEnchantedApplesEnabled();
 
-        for (SeedFinder.FoundStructure s : mapStructures) {
+        for (FoundStructure s : mapStructures) {
             if (appleMode && !s.extraInfo().contains("(Apple)")) continue;
 
-            if (!seedFinder.isDimensionEnabled(s.type(), dim)) continue;
+            if (!seedSearcher.isDimensionEnabled(s.type(), dim)) continue;
 
             if (!appleMode) {
                 if (this.blocksPerPixel >= 32.0F && !s.type().isAlwaysVisible()) continue;
@@ -590,7 +594,7 @@ public class SeedMapScreen extends ClickGuiScreen {
         }
     }
 
-    private static int getIconGlId(SeedFinder.StructureType type, String extraInfo) {
+    private static int getIconGlId(StructureType type, String extraInfo) {
         String extra = extraInfo.trim();
 
         String path = switch (type) {
@@ -667,7 +671,7 @@ public class SeedMapScreen extends ClickGuiScreen {
         BufferUploader.drawWithShader(buf.buildOrThrow());
     }
 
-    private void drawMarker(float sx, float sy, float size, String name, Color color, int bx, int bz, SeedFinder.StructureType type, String extraInfo) {
+    private void drawMarker(float sx, float sy, float size, String name, Color color, int bx, int bz, StructureType type, String extraInfo) {
         boolean selected = this.selectedStructure != null
                 && this.selectedStructure.blockX() == bx && this.selectedStructure.blockZ() == bz;
         float drawSize = selected ? ICON_SIZE_SELECTED : size;
@@ -803,8 +807,12 @@ public class SeedMapScreen extends ClickGuiScreen {
             float btnY = footerY + (footerH - btnH) / 2.0F;
             if (this.mx >= btnX && this.mx <= btnX + btnW && this.my >= btnY && this.my <= btnY + btnH) {
                 String dim = this.lastDim == Level.NETHER ? "nether" : this.lastDim == Level.END ? "end" : "overworld";
-                String url = "https://www.chunkbase.com/apps/seed-map#seed=" + this.seedString + "&platform=java_1_21_4&dimension=" + dim + "&x=" + (int) this.mapCenterX + "&z=" + (int) this.mapCenterZ;
-                FileUtils.openLink(url);
+                var mcContainer = FabricLoader.getInstance().getModContainer("minecraft");
+                if (mcContainer.isPresent()) {
+                    String mcVersion = mcContainer.get().getMetadata().getVersion().getFriendlyString();
+                    String url = "https://www.chunkbase.com/apps/seed-map#seed=" + this.seedString + String.format("&platform=java_%s&dimension=", mcVersion.replaceAll("\\.", "_")) + dim + "&x=" + (int) this.mapCenterX + "&z=" + (int) this.mapCenterZ;
+                    FileUtils.openLink(url);
+                }
                 return;
             }
 
@@ -830,8 +838,8 @@ public class SeedMapScreen extends ClickGuiScreen {
     }
 
     private void handleMapClick() {
-        SeedFinder seedFinder = Managers.MODULES.getModule(SeedFinder.class);
-        boolean appleMode = seedFinder != null && seedFinder.isEnchantedApplesEnabled();
+        SeedSearcher seedSearcher = Managers.MODULES.getModule(SeedSearcher.class);
+        boolean appleMode = seedSearcher != null && seedSearcher.isEnchantedApplesEnabled();
         float worldLeft = this.mapCenterX - (MAP_WIDTH / 2.0F) * this.blocksPerPixel;
         float worldTop = this.mapCenterZ - (MAP_HEIGHT / 2.0F) * this.blocksPerPixel;
         float worldRight = worldLeft + MAP_WIDTH * this.blocksPerPixel;
@@ -839,10 +847,10 @@ public class SeedMapScreen extends ClickGuiScreen {
         float half = ICON_SIZE / 2.0F;
         ResourceKey<Level> dim = this.lastDim;
 
-        for (SeedFinder.FoundStructure s : mapStructures) {
+        for (FoundStructure s : mapStructures) {
             if (appleMode && !s.extraInfo().contains("(Apple)")) continue;
 
-            if (seedFinder != null && !seedFinder.isDimensionEnabled(s.type(), dim)) continue;
+            if (seedSearcher != null && !seedSearcher.isDimensionEnabled(s.type(), dim)) continue;
             if (!appleMode) {
                 if (this.blocksPerPixel >= 32.0F && !s.type().isAlwaysVisible()) continue;
                 if (this.blocksPerPixel >= 12.0F && s.type().isMinor()) continue;
