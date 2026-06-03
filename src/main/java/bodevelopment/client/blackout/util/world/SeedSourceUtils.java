@@ -1,5 +1,6 @@
-package bodevelopment.client.blackout.util;
+package bodevelopment.client.blackout.util.world;
 
+import bodevelopment.client.blackout.util.BiomeColorMap;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderGetter;
 import net.minecraft.core.HolderLookup;
@@ -15,7 +16,7 @@ import net.minecraft.world.level.levelgen.RandomState;
 
 import java.util.Set;
 
-public class SeedBiomeSource {
+public class SeedSourceUtils {
     private static final Set<ResourceKey<Biome>> OCEAN_BIOMES = Set.of(
             Biomes.OCEAN, Biomes.DEEP_OCEAN,
             Biomes.COLD_OCEAN, Biomes.DEEP_COLD_OCEAN,
@@ -36,7 +37,7 @@ public class SeedBiomeSource {
 
     public static final int OPTIMAL_Y = 64;
 
-    public SeedBiomeSource(long seed, ResourceKey<Level> dimension) {
+    public SeedSourceUtils(long seed, ResourceKey<Level> dimension) {
         this.isEnd = dimension == Level.END;
         this.isNether = dimension == Level.NETHER;
 
@@ -131,6 +132,63 @@ public class SeedBiomeSource {
 
     public boolean hasSolidTerrainAtY60(int blockX, int blockZ) {
         return hasTerrainAtOrAbove60(blockX, blockZ);
+    }
+
+    /**
+     * Checks if there is solid terrain above sea level (Y >= 64) at the given block position
+     * using the overworld noise density function. This mirrors vanilla's getLowestY check
+     * used by SinglePieceStructure.findGenerationPoint.
+     * <p>
+     * Samples the final density at (blockX, 64, blockZ). If density > 0, the terrain exists
+     * at or above Y=64, meaning the structure can generate on solid ground.
+     * Returns true for Nether/End dimensions where this check doesn't apply.
+     */
+    public boolean hasSolidTerrainAboveSeaLevel(int blockX, int blockZ) {
+        if (isNether || isEnd) return true;
+        if (this.randomState == null) return true;
+        try {
+            var density = this.randomState.router().finalDensity();
+            double d = density.compute(new DensityFunction.SinglePointContext(blockX, 64, blockZ));
+            return d > 0.0;
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    /**
+     * Checks if a bounding box area has terrain above sea level.
+     * Samples the center + 4 corners to catch edge cases near water bodies.
+     */
+    public boolean hasAreaAboveSeaLevel(int centerX, int centerZ, int halfWidth) {
+        int[][] points = {{0, 0}, {halfWidth, halfWidth}, {halfWidth, -halfWidth},
+                          {-halfWidth, halfWidth}, {-halfWidth, -halfWidth}};
+        for (int[] pt : points) {
+            if (hasSolidTerrainAboveSeaLevel(centerX + pt[0], centerZ + pt[1]))
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * Finds the surface Y (first solid block from top) at the given block position
+     * using the overworld noise density function. Scans from Y=90 downward to Y=40.
+     * Returns the highest Y where density > 0, or Integer.MIN_VALUE if no terrain found.
+     * This is used to determine the exact chest Y for structures placed on the surface.
+     */
+    public int getSurfaceY(int blockX, int blockZ) {
+        if (isNether || isEnd) return 64;
+        if (this.randomState == null) return 64;
+        try {
+            var density = this.randomState.router().finalDensity();
+            for (int y = 90; y >= 40; y--) {
+                if (density.compute(new DensityFunction.SinglePointContext(blockX, y, blockZ)) > 0.0) {
+                    return y;
+                }
+            }
+            return Integer.MIN_VALUE;
+        } catch (Exception e) {
+            return 64;
+        }
     }
 
     public int getHeight(int blockX, int blockZ) {

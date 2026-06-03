@@ -149,7 +149,7 @@ public class ExtrapolationManager extends Manager {
             this.prevPos = currentPos;
             this.prevYaw = this.entity.getYRot();
             this.prevPitch = this.entity.getXRot();
-            this.onGrounds.addFirst(Simulator.isOnGround(this.getEntity(), this.getEntity().getBoundingBox()));
+            this.onGrounds.addFirst(MotionSimulator.isOnGround(this.getEntity(), this.getEntity().getBoundingBox()));
             CollectionUtils.limitSize(this.onGrounds, 3);
             boolean offGround = this.isOffGround();
             if (offGround && !this.prevOffGround) {
@@ -225,7 +225,7 @@ public class ExtrapolationManager extends Manager {
                 this.addMotion(new Vec3(0.0, 0.0, 0.0));
                 return true;
             } else {
-                if (motion.y >= 0.45 && motion.y <= 4.0 && Simulator.isOnGround(entity, entity.getBoundingBox())) {
+                if (motion.y >= 0.45 && motion.y <= 4.0 && MotionSimulator.isOnGround(entity, entity.getBoundingBox())) {
                     ExtrapolationSettings extSettings = ExtrapolationSettings.getInstance();
                     if (extSettings.stepPredict.get()) {
                         this.step.add(motion.y, extSettings.stepTicks.get());
@@ -233,7 +233,7 @@ public class ExtrapolationManager extends Manager {
                         this.addMotion(new Vec3(motion.x, 0.0, motion.z));
                         return true;
                     }
-                } else if (motion.y <= -0.45 && motion.y >= -6.0 && Simulator.isOnGround(entity, entity.getBoundingBox())) {
+                } else if (motion.y <= -0.45 && motion.y >= -6.0 && MotionSimulator.isOnGround(entity, entity.getBoundingBox())) {
                     ExtrapolationSettings extSettings = ExtrapolationSettings.getInstance();
                     if (extSettings.reverseStepPredict.get()) {
                         this.reverseStep.add(-motion.y, extSettings.reverseStepTicks.get());
@@ -241,7 +241,7 @@ public class ExtrapolationManager extends Manager {
                         this.addMotion(new Vec3(motion.x, 0.0, motion.z));
                         return true;
                     }
-                } else if (motion.y > 0.35 && motion.y < 0.45 && !Simulator.isOnGround(entity, entity.getBoundingBox())) {
+                } else if (motion.y > 0.35 && motion.y < 0.45 && !MotionSimulator.isOnGround(entity, entity.getBoundingBox())) {
                     this.jumpHeight = motion.y;
                 }
 
@@ -268,7 +268,7 @@ public class ExtrapolationManager extends Manager {
                 context.jump = this.goingToJump;
                 context.reverseStep = this.reverseHeight;
                 context.step = this.stepHeight;
-                return Simulator.extrapolate(context);
+                return MotionSimulator.extrapolate(context);
             }
         }
 

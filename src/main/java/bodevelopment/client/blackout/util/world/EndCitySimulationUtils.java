@@ -1,6 +1,7 @@
-package bodevelopment.client.blackout.util;
+package bodevelopment.client.blackout.util.world;
 
-import bodevelopment.client.blackout.module.modules.visual.world.SeedFinder;
+
+import bodevelopment.client.blackout.module.modules.visual.world.SeedSearcher.SeedSearcher;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,11 +10,11 @@ import java.util.Random;
 /**
  * Vanilla-accurate End City piece simulation for ship detection.
  * <p>
- * Extracted from {@link SeedFinder} for OOP clarity (пункт 1.8).
+ * Extracted from {@link SeedSearcher} for OOP clarity (пункт 1.8).
  * Replicates {@code EndCityPieces.startHouseTower()} + {@code recursiveChildren()}
  * exactly as in vanilla 1.21.4 MojMap, using only Random (seed-deterministic).
  */
-public final class EndCitySimulator {
+public final class EndCitySimulationUtils {
 
     private static final long REGION_X_MULT = 341873128712L;
     private static final long REGION_Z_MULT = 132897987541L;
@@ -34,7 +35,7 @@ public final class EndCitySimulator {
     private static final int[][] TOWER_BD = {{0, 1, -1, 0}, {1, 6, -1, 1}, {3, 0, -1, 5}, {2, 5, -1, 6}};
     private static final int[][] FAT_BD = {{0, 4, -1, 0}, {1, 12, -1, 4}, {3, 0, -1, 8}, {2, 8, -1, 12}};
 
-    private EndCitySimulator() {}
+    private EndCitySimulationUtils() {}
 
     private static int rx(int x, int z, int r) {
         return switch (r) {

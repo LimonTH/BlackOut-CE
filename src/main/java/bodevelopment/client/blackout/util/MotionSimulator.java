@@ -5,7 +5,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-public class Simulator {
+public class MotionSimulator {
     private static final double MAX_WATER_SPEED = 0.197;
     private static final double MAX_LAVA_SPEED = 0.0753;
 

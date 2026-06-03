@@ -59,7 +59,7 @@ public class SimulationContext {
     }
 
     public boolean isOnGround() {
-        return Simulator.isOnGround(this.entity, this.box) && this.motionY < 0.0;
+        return MotionSimulator.isOnGround(this.entity, this.box) && this.motionY < 0.0;
     }
 
     public void setOnGround(boolean onGround) {
