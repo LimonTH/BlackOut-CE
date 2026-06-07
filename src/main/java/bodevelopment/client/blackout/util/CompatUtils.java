@@ -5,7 +5,6 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.annotations.Internal;
 import bodevelopment.client.blackout.module.modules.movement.ElytraFly;
 import bodevelopment.client.blackout.util.render.CapeRenderContext;
-import bodevelopment.client.blackout.util.render.consumers.CapeVertexConsumer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screens.Screen;
 

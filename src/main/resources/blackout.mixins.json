@@ -67,7 +67,6 @@
     "mixins.fabricapi.MixinFabricBakedModel",
     "mixins.MixinJoinMultiplayerScreen",
     "mixins.MixinAddressCheck",
-    "mixins.MixinVanillaCapeRenderer"
   ],
   "injectors": {
     "defaultRequire": 1

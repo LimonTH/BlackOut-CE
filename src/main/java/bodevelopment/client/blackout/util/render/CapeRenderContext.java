@@ -24,7 +24,6 @@ public class CapeRenderContext {
         return CURRENT_CAPE.get();
     }
 
-    /** Returns {texWidth, texHeight} or null if not available. */
     public static float[] getDimensions() {
         return CURRENT_DIMENSIONS.get();
     }
