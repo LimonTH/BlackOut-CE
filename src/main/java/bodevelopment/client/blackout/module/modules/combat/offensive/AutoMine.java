@@ -69,11 +69,11 @@ public class AutoMine extends Module {
     private final SettingGroup sgCrystalBase = this.addGroup("Crystal Base");
     private final SettingGroup sgRender = this.addGroup("Render");
 
-    private final Setting<Boolean> pauseEat = this.sgGeneral.booleanSetting("Pause on Consume", false, "Stops mining operations while eating or drinking.");
-    private final Setting<Boolean> pauseEatPlacing = this.sgGeneral.booleanSetting("Pause Placement on Consume", false, "Prevents crystal placement while eating.");
-    private final Setting<Boolean> pauseSword = this.sgGeneral.booleanSetting("Sword Safety", false, "Disables mining while holding a sword to prevent accidental durability loss.");
+    public final Setting<Boolean> pauseEat = this.sgGeneral.booleanSetting("Pause on Consume", false, "Stops mining operations while eating or drinking.");
+    public final Setting<Boolean> pauseEatPlacing = this.sgGeneral.booleanSetting("Pause Placement on Consume", false, "Prevents crystal placement while eating.");
+    public final Setting<Boolean> pauseSword = this.sgGeneral.booleanSetting("Sword Safety", false, "Disables mining while holding a sword to prevent accidental durability loss.");
     private final Setting<Boolean> packet = this.sgGeneral.booleanSetting("Packet Mine", true, "Sends mining packets without client-side block removal to prevent desync.");
-    private final Setting<Boolean> autoMine = this.sgGeneral.booleanSetting("Auto-Selection", true, "Automatically identifies and targets the most optimal block for mining.");
+    public final Setting<Boolean> autoMine = this.sgGeneral.booleanSetting("Auto-Selection", true, "Automatically identifies and targets the most optimal block for mining.");
     private final Setting<Boolean> manualMine = this.sgGeneral.booleanSetting("Manual Selection", true, "Allows the user to manually select a target block by clicking it.");
     private final Setting<Boolean> queueMine = this.sgGeneral.booleanSetting("Mining Queue", false, "When holding the attack key, blocks you look at are queued and mined in order without resetting progress.", this.manualMine::get);
     private final Setting<Boolean> manualInstant = this.sgGeneral.booleanSetting("Manual Instant-Mine", false, "Enables instant-mining logic for manually selected blocks.", this.manualMine::get);
@@ -81,25 +81,25 @@ public class AutoMine extends Module {
     private final Setting<Boolean> fastRemine = this.sgGeneral.booleanSetting("Accelerated Remine", false, "Predicts mining progress based on the last block break timing for faster cycles.", () -> this.manualMine.get() && !this.manualInstant.get() && this.manualRemine.get());
     private final Setting<Boolean> manualRangeReset = this.sgGeneral.booleanSetting("Range Reset", true, "Cancels manual mining if the target block moves out of reach.", this.manualMine::get);
     private final Setting<Boolean> resetOnSwitch = this.sgGeneral.booleanSetting("Switch Reset", true, "Aborts mining progress if the player changes their held item.");
-    private final Setting<Boolean> ncpProgress = this.sgGeneral.booleanSetting("NCP Validation", true, "Calculates mining speed based on NoCheatPlus-compatible progress thresholds.");
+    public final Setting<Boolean> ncpProgress = this.sgGeneral.booleanSetting("NCP Validation", true, "Calculates mining speed based on NoCheatPlus-compatible progress thresholds.");
     private final Setting<Boolean> damageSync = this.sgGeneral.booleanSetting("Damage Synchronization", false, "Delays block breaks to synchronize with the target's invulnerability frames.");
     private final Setting<Integer> syncPredict = this.sgGeneral.intSetting("Sync Prediction Ticks", 0, 0, 10, 1, "The number of ticks to look ahead for damage synchronization.", this.damageSync::get);
     private final Setting<Integer> syncLength = this.sgGeneral.intSetting("Sync Window", 2, 0, 10, 1, "The duration of the synchronization window in ticks.", this.damageSync::get);
     private final Setting<Boolean> useMineBind = this.sgGeneral.booleanSetting("Manual Trigger", false, "Requires a specific keypress to execute the final block break.");
     private final Setting<KeyBind> mineBind = this.sgGeneral.keySetting("Mining Hotkey", "Keybind used for manual block breaking.", this.useMineBind::get);
-    private final Setting<List<Block>> ignore = this.sgGeneral.blockListSetting("Exclusion List", "Blocks that will never be automatically targeted for mining.");
+    public final Setting<List<Block>> ignore = this.sgGeneral.blockListSetting("Exclusion List", "Blocks that will never be automatically targeted for mining.");
     private final Setting<RotationMode> rotationMode = this.sgGeneral.enumSetting("Rotation Mode", RotationMode.Both, "When to rotate head towards block during mining.");
 
     private final Setting<Boolean> preSwitch = this.sgSwitch.booleanSetting("Predictive Switch", false, "Swaps to the pickaxe slightly before the block is ready to break.");
-    private final Setting<SwitchMode> pickaxeSwitch = this.sgSwitch.enumSetting("Pickaxe Swap Mode", SwitchMode.InvSwitch, "The method used to equip the pickaxe for mining.");
-    private final Setting<Boolean> allowInventory = this.sgSwitch.booleanSetting("Inventory Mining", false, "Allows using tools located in the inventory rather than just the hotbar.", () -> this.pickaxeSwitch.get().inventory);
+    public final Setting<SwitchMode> pickaxeSwitch = this.sgSwitch.enumSetting("Pickaxe Swap Mode", SwitchMode.InvSwitch, "The method used to equip the pickaxe for mining.");
+    public final Setting<Boolean> allowInventory = this.sgSwitch.booleanSetting("Inventory Mining", false, "Allows using tools located in the inventory rather than just the hotbar.", () -> this.pickaxeSwitch.get().inventory);
     private final Setting<SwitchMode> crystalSwitch = this.sgSwitch.enumSetting("Crystal Swap Mode", SwitchMode.InvSwitch, "The method used to equip crystals for offensive mining.");
 
-    private final Setting<Double> speed = this.sgSpeed.doubleSetting("Mining Speed Multiplier", 1.0, 0.0, 2.0, 0.05, "Global multiplier for block breaking speed.");
-    private final Setting<Boolean> onGroundSpoof = this.sgSpeed.booleanSetting("Ground Spoofing", false, "Fakes the 'on ground' status to maintain mining speed while airborne.");
-    private final Setting<Boolean> onGroundCheck = this.sgSpeed.booleanSetting("Ground Penalty Check", true, "Applies the vanilla 5x mining slowdown if not standing on solid ground.", () -> !this.onGroundSpoof.get());
-    private final Setting<Boolean> effectCheck = this.sgSpeed.booleanSetting("Status Effect Scaling", true, "Adjusts mining speed based on Haste and Mining Fatigue effects.");
-    private final Setting<Boolean> waterCheck = this.sgSpeed.booleanSetting("Fluid Penalty Check", true, "Applies the vanilla 5x mining slowdown while submerged in water.");
+    public final Setting<Double> speed = this.sgSpeed.doubleSetting("Mining Speed Multiplier", 1.0, 0.0, 2.0, 0.05, "Global multiplier for block breaking speed.");
+    public final Setting<Boolean> onGroundSpoof = this.sgSpeed.booleanSetting("Ground Spoofing", false, "Fakes the 'on ground' status to maintain mining speed while airborne.");
+    public final Setting<Boolean> onGroundCheck = this.sgSpeed.booleanSetting("Ground Penalty Check", true, "Applies the vanilla 5x mining slowdown if not standing on solid ground.", () -> !this.onGroundSpoof.get());
+    public final Setting<Boolean> effectCheck = this.sgSpeed.booleanSetting("Status Effect Scaling", true, "Adjusts mining speed based on Haste and Mining Fatigue effects.");
+    public final Setting<Boolean> waterCheck = this.sgSpeed.booleanSetting("Fluid Penalty Check", true, "Applies the vanilla 5x mining slowdown while submerged in water.");
 
     private final Setting<Double> placeSpeed = this.sgCrystals.doubleSetting("Crystal Placement Rate", 2.0, 0.0, 20.0, 0.1, "The frequency of crystal placements per second during mining.");
     private final Setting<Double> attackSpeed = this.sgCrystals.doubleSetting("Crystal Attack Rate", 2.0, 0.0, 20.0, 0.1, "The frequency of crystal detonations per second.");
@@ -753,17 +753,33 @@ public class AutoMine extends Module {
     private Target getCrystalBase() {
         AutoCrystalBase crystalBase = AutoCrystalBase.getInstance();
 
-        if (crystalBase == null || !crystalBase.enabled || crystalBase.minePos == null) {
+        if (crystalBase == null || !crystalBase.enabled || crystalBase.bestBasePos == null) {
             return null;
         }
 
+        BlockPos obstacle = getObstacle(crystalBase.bestBasePos);
+        if (obstacle == null) return null;
+
         return new Target(
-                crystalBase.minePos,
+                obstacle,
                 null,
                 MineType.CrystalBase,
                 this.crystalBasePriority.get().priority,
                 crystalBase.target
         );
+    }
+
+    public BlockPos getObstacle(BlockPos pos) {
+        BlockPos crystalPos = pos.above();
+        if (!BlackOut.mc.level.getBlockState(crystalPos).isAir() && !BlockUtils.replaceable(crystalPos)) {
+            return crystalPos;
+        }
+        if (!BlackOut.mc.level.getBlockState(pos).is(Blocks.OBSIDIAN) && !BlackOut.mc.level.getBlockState(pos).is(Blocks.BEDROCK)) {
+            if (!BlockUtils.replaceable(pos)) {
+                return pos;
+            }
+        }
+        return null;
     }
 
     private Target getAntiBurrow() {
@@ -927,7 +943,7 @@ public class AutoMine extends Module {
         }
     }
 
-    private FindResult findBestSlot(EpicInterface<ItemStack, Double> test) {
+    public FindResult findBestSlot(EpicInterface<ItemStack, Double> test) {
         return InvUtils.findBest(this.pickaxeSwitch.get().hotbar, this.pickaxeSwitch.get().inventory && this.allowInventory.get(), test);
     }
 
