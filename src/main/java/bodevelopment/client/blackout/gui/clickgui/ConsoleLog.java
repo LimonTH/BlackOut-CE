@@ -67,10 +67,10 @@ public class ConsoleLog {
         listeners.remove(listener);
     }
 
-    public record Entry(String text, String time, int color, long timestamp) {
-    }
-
     public interface Listener {
         void onEntry(Entry entry);
+    }
+
+    public record Entry(String text, String time, int color, long timestamp) {
     }
 }

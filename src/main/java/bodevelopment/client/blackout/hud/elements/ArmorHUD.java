@@ -29,21 +29,22 @@ public class ArmorHUD extends HudElement {
     private final Setting<Boolean> bar = this.sgGeneral.booleanSetting("Durability", false, "Visualizes remaining durability as a bar.");
     private final Setting<Boolean> text = this.sgGeneral.booleanSetting("Show Percent", true, "Displays durability as percentage.");
     private final Setting<Boolean> centerText = this.sgGeneral.booleanSetting("Align Center", true, "Centers the durability text.");
-    private static final int BAR_BG = new Color(0, 0, 0, 120).getRGB();
     private final RoundedColorMultiSetting armorBar = RoundedColorMultiSetting.of(this.sgGeneral, "Bar");
+
     private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, "Text");
 
-    public ArmorHUD() {
-        super("Armor HUD", "Displays a live overview of your equipped armor pieces.");
-        this.setSize(88.0F, 18.0F);
-    }
-
+    private static final int BAR_BG = new Color(0, 0, 0, 120).getRGB();
     private static final ItemStack[] PLACEHOLDER_ARMOR = {
             new ItemStack(Items.NETHERITE_BOOTS),
             new ItemStack(Items.NETHERITE_LEGGINGS),
             new ItemStack(Items.NETHERITE_CHESTPLATE),
             new ItemStack(Items.NETHERITE_HELMET)
     };
+
+    public ArmorHUD() {
+        super("Armor HUD", "Displays a live overview of your equipped armor pieces.");
+        this.setSize(88.0F, 18.0F);
+    }
 
     @Override
     public void render() {

@@ -32,9 +32,9 @@ public class Effects extends HudElement {
     private final Setting<Boolean> rn = this.sgGeneral.booleanSetting("Roman Nums", false, "Converts numerical amplifier levels into Roman numerals (e.g., Strength II).");
     private final Setting<Boolean> up = this.sgGeneral.booleanSetting("Invert Order", false, "Renders the effects list growing upwards from the starting coordinate.");
 
+    private final Setting<BlackOutColor> infoColor = this.sgColor.colorSetting("Metadata Color", new BlackOutColor(200, 200, 200, 255), "The color applied to duration timers and amplifier levels.");
     public final Setting<ColorMode> colorMode = this.sgColor.enumSetting("Color Assignment", ColorMode.Custom, "The logic for text coloring (Manual selection or matching the native Minecraft effect color).");
     private final TextColorMultiSetting textColor = TextColorMultiSetting.of(this.sgColor, () -> this.colorMode.get() == ColorMode.Custom, "Label");
-    private final Setting<BlackOutColor> infoColor = this.sgColor.colorSetting("Metadata Color", new BlackOutColor(200, 200, 200, 255), "The color applied to duration timers and amplifier levels.");
 
     private final String[] romanNumerals = new String[]{"I", "II", "III", "IV", "V"};
     private final List<Component> components = new ArrayList<>();

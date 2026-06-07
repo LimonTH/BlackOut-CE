@@ -16,7 +16,33 @@ import java.util.concurrent.ConcurrentHashMap;
 @PublicAPI
 @ThreadSafe
 public class EventBus {
+    public static final ConcurrentHashMap<String, long[]> profileData = new ConcurrentHashMap<>();
+    public static volatile boolean profiling = false;
     public final Map<Class<?>, List<Listener>> listeners = new ConcurrentHashMap<>();
+
+    /**
+     * Returns a formatted profile report, or null if profiling is disabled.
+     */
+    public static String getProfileReport() {
+        if (!profiling || profileData.isEmpty()) return null;
+        StringBuilder sb = new StringBuilder("=== Profile Report (avg μs) ===\n");
+        profileData.entrySet().stream()
+                .sorted((a, b) -> Long.compare(b.getValue()[0], a.getValue()[0]))
+                .forEach(e -> {
+                    long[] data = e.getValue();
+                    double avgUs = (data[0] / (double) data[1]) / 1000.0;
+                    sb.append(String.format("  %-50s %8.1f μs  (%d calls)%n",
+                            e.getKey(), avgUs, data[1]));
+                });
+        return sb.toString();
+    }
+
+    /**
+     * Resets all accumulated profile data.
+     */
+    public static void resetProfileData() {
+        profileData.clear();
+    }
 
     /**
      * Subscribes all listener methods found in the provided object.
@@ -62,9 +88,6 @@ public class EventBus {
         return list;
     }
 
-    public static volatile boolean profiling = false;
-    public static final ConcurrentHashMap<String, long[]> profileData = new ConcurrentHashMap<>();
-
     public <T> T post(T object) {
         List<Listener> eventListeners = this.listeners.get(object.getClass());
         if (eventListeners != null) {
@@ -95,30 +118,6 @@ public class EventBus {
         }
 
         return object;
-    }
-
-    /**
-     * Returns a formatted profile report, or null if profiling is disabled.
-     */
-    public static String getProfileReport() {
-        if (!profiling || profileData.isEmpty()) return null;
-        StringBuilder sb = new StringBuilder("=== Profile Report (avg μs) ===\n");
-        profileData.entrySet().stream()
-                .sorted((a, b) -> Long.compare(b.getValue()[0], a.getValue()[0]))
-                .forEach(e -> {
-                    long[] data = e.getValue();
-                    double avgUs = (data[0] / (double) data[1]) / 1000.0;
-                    sb.append(String.format("  %-50s %8.1f μs  (%d calls)%n",
-                            e.getKey(), avgUs, data[1]));
-                });
-        return sb.toString();
-    }
-
-    /**
-     * Resets all accumulated profile data.
-     */
-    public static void resetProfileData() {
-        profileData.clear();
     }
 
     private int getIndex(List<Listener> l, int priority) {

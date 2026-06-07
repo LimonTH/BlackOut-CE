@@ -22,13 +22,11 @@ public class Notifier extends Module {
     private static Notifier INSTANCE;
 
     private final SettingGroup sgGeneral = this.addGroup("General");
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Notify mode", Mode.Hud,
+            "Where the alerts appear. 'Hud' uses the client's notification system, 'Chat' sends messages only you can see.");
     private final SettingGroup sgWeakness = this.addGroup("Weakness");
     private final SettingGroup sgVisualRange = this.addGroup("Visual Range");
     private final SettingGroup sgPops = this.addGroup("Pops");
-
-    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Notify mode", Mode.Hud,
-            "Where the alerts appear. 'Hud' uses the client's notification system, 'Chat' sends messages only you can see.");
-
     private final Setting<Boolean> pops = this.sgPops.booleanSetting("Pop Counter", true,
             "Tracks and displays how many totems a player has used.");
     private final Setting<Boolean> iOwn = this.sgPops.booleanSetting("Ignore Own", true,
@@ -49,10 +47,9 @@ public class Notifier extends Module {
             "Only sends one notification when you get weakness, rather than spamming.");
     private final Setting<Double> delay = this.sgWeakness.doubleSetting("Delay", 5.0, 0.0, 100.0, 1.0,
             "The time (in seconds) between repeated weakness alerts if 'Single' is off.");
-
+    private final List<AbstractClientPlayer> knownPlayers = new ArrayList<>();
     private double timer = 0.0;
     private boolean last = false;
-    private final List<AbstractClientPlayer> knownPlayers = new ArrayList<>();
 
     public Notifier() {
         super("Notifier", "Notifies you about events like effects or totems.", SubCategory.MISC_COMBAT, true);

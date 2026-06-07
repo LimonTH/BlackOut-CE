@@ -13,15 +13,16 @@ import net.minecraft.util.Mth;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class PingSpoof extends Module {
-    private static final int MAX_SAFE_DELAY_MS = 15000;
     private static PingSpoof INSTANCE;
 
     private final SettingGroup sgGeneral = this.addGroup("General");
 
     private final Setting<SpoofMode> mode = this.sgGeneral.enumSetting("Latency Mode", SpoofMode.Fake, "Fake: Only modifies the ping value displayed in the tab list. Real: Delays packets to physically increase latency.");
+    private final Setting<Integer> jitterInterval = this.sgGeneral.intSetting("Refresh Rate", 5, 0, 20, 1, "The interval in ticks at which the jitter value is recalculated for Real mode.", () -> this.mode.get() == SpoofMode.Real);
     private final Setting<Integer> extra = this.sgGeneral.intSetting("Additional Ping", 50, 0, 1000, 10, "The base amount of extra latency added to your connection in milliseconds.");
     private final Setting<Integer> jitter = this.sgGeneral.intSetting("Jitter Magnitude", 5, 0, 1000, 10, "The maximum random variance added to the extra ping to simulate a natural connection.");
-    private final Setting<Integer> jitterInterval = this.sgGeneral.intSetting("Refresh Rate", 5, 0, 20, 1, "The interval in ticks at which the jitter value is recalculated for Real mode.", () -> this.mode.get() == SpoofMode.Real);
+
+    private static final int MAX_SAFE_DELAY_MS = 15000;
     private boolean warnedCap = false;
 
     private int ji = 0;

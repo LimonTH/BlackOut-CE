@@ -34,16 +34,15 @@ public abstract class MixinChatComponent implements IChatComponent {
     @Shadow
     @Final
     private List<GuiMessage.Line> trimmedMessages;
-
-    @Shadow
-    public abstract void addMessage(Component text);
-
     @Unique
     private int addedId = -1;
     @Unique
     private int lastSpamCount = 1;
     @Unique
     private Component originalContent = null;
+
+    @Shadow
+    public abstract void addMessage(Component text);
 
     @Override
     public void blackout_Client$addMessageToChat(Component text, int id) {

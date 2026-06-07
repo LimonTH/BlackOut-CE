@@ -39,11 +39,11 @@ public class Render2DUtils {
     private static final float SHADER_QUAD_PADDING = 1.0F;
     private static final Matrix4f lastProjMat = new Matrix4f();
     private static final Matrix4f lastModelViewMat = new Matrix4f();
-    private static Vec3 lastCamPos = Vec3.ZERO;
-
     private static final int SKEET_LIGHT = new Color(30, 30, 30, 255).getRGB();
     private static final int SKEET_MID = new Color(20, 20, 20, 255).getRGB();
     private static final int SKEET_BG = new Color(10, 10, 10, 255).getRGB();
+    private static final Vector4f TEMP_COORDS = new Vector4f();
+    private static Vec3 lastCamPos = Vec3.ZERO;
 
     public static boolean insideRounded(double mx, double my, double x, double y, double width, double height, double rad) {
         double offsetX = mx - x;
@@ -63,8 +63,6 @@ public class Render2DUtils {
         float fov = mc.gameRenderer.getFov(camera, tickDelta, true);
         lastProjMat.set(mc.gameRenderer.getProjectionMatrix(fov));
     }
-
-    private static final Vector4f TEMP_COORDS = new Vector4f();
 
     public static Vec2 getCoords(double x, double y, double z, boolean checkVisible) {
         Minecraft mc = BlackOut.mc;

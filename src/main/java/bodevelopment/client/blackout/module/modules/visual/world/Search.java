@@ -17,8 +17,6 @@ import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.ScreenUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
-
-import java.awt.Color;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.multiplayer.ClientChunkCache;
 import net.minecraft.core.BlockPos;
@@ -31,49 +29,44 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Search extends Module {
-    private static final Direction[] DIRECTIONS = Direction.values();
-
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgRender = this.addGroup("Visuals");
 
+    private final Setting<Boolean> instantScan = this.sgGeneral.booleanSetting("Force Scan", false, "Scans all loaded chunks immediately.");
+    private final Setting<Integer> scanSpeed = this.sgGeneral.intSetting("Iteration Rate", 1, 1, 10, 1, "Chunks per frame during scan.", () -> !this.instantScan.get());
+    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Target Blocks", "The specific block types to locate.").onChanged(ignored -> refresh());
+    private final Setting<Boolean> dynamicBox = this.sgGeneral.booleanSetting("Voxel Bounds", true, "Adjusts highlight to match the exact block shape.").onChanged(ignored -> refresh());
+    private final Setting<Boolean> tracers = this.sgGeneral.booleanSetting("Tracers", false, "Draws 2D tracer lines from the center of the screen to each found block.");
+    private final Setting<Integer> tracerWidth = this.sgGeneral.intSetting("Tracer Width", 2, 1, 10, 1, "Thickness of the tracer lines.", () -> this.tracers.get());
+    private final Setting<BlackOutColor> tracerColor = this.sgGeneral.colorSetting("Tracer Color", new BlackOutColor(255, 255, 255, 100), "Default tracer color when no per-block color is set.", () -> this.tracers.get());
+    private final Setting<Boolean> onlyExposed = this.sgGeneral.booleanSetting("Culling", false, "Only highlights blocks exposed to air.").onChanged(ignored -> refresh());
+
+    private final BoxMultiSetting rendering = BoxMultiSetting.of(this.sgRender);
+
+    private final PoseStack stack = new PoseStack();
+    private volatile Set<Block> blockSet = Set.of();
+    private static final Direction[] DIRECTIONS = Direction.values();
     private final Map<BlockPos, AABB> positions = new ConcurrentHashMap<>();
     private final Map<BlockPos, Block> blockTypes = new ConcurrentHashMap<>();
     private final Map<ChunkPos, Set<BlockPos>> chunkedPositions = new ConcurrentHashMap<>();
     private final Set<ChunkPos> prevChunks = new HashSet<>();
     private final Queue<ChunkPos> toScan = new ConcurrentLinkedQueue<>();
-
     private final ExecutorService scanExecutor = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "BlackOut-Search-Scanner");
         t.setDaemon(true);
         t.setPriority(Thread.NORM_PRIORITY - 1);
         return t;
     });
-
-    private volatile Set<Block> blockSet = Set.of();
-
-    private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Target Blocks", "The specific block types to locate.")
-            .onChanged(ignored -> refresh());
-    private final Setting<Boolean> dynamicBox = this.sgGeneral.booleanSetting("Voxel Bounds", true, "Adjusts highlight to match the exact block shape.")
-            .onChanged(ignored -> refresh());
-    private final Setting<Boolean> instantScan = this.sgGeneral.booleanSetting("Force Scan", false, "Scans all loaded chunks immediately.");
-    private final Setting<Integer> scanSpeed = this.sgGeneral.intSetting("Iteration Rate", 1, 1, 10, 1, "Chunks per frame during scan.", () -> !this.instantScan.get());
-    private final Setting<Boolean> onlyExposed = this.sgGeneral.booleanSetting("Culling", false, "Only highlights blocks exposed to air.")
-            .onChanged(ignored -> refresh());
-
-    private final BoxMultiSetting rendering = BoxMultiSetting.of(this.sgRender);
-
-    private final Setting<Boolean> tracers = this.sgGeneral.booleanSetting("Tracers", false, "Draws 2D tracer lines from the center of the screen to each found block.");
-    private final Setting<Integer> tracerWidth = this.sgGeneral.intSetting("Tracer Width", 2, 1, 10, 1, "Thickness of the tracer lines.", () -> this.tracers.get());
-    private final Setting<BlackOutColor> tracerColor = this.sgGeneral.colorSetting("Tracer Color", new BlackOutColor(255, 255, 255, 100), "Default tracer color when no per-block color is set.", () -> this.tracers.get());
-
-    private final PoseStack stack = new PoseStack();
 
     public Search() {
         super("Search", "Locates blocks using all CPU cores and advanced palette culling.", SubCategory.WORLD, true);
@@ -128,7 +121,8 @@ public class Search extends Module {
 
     @Event
     public void onRender(RenderEvent.Hud.Post event) {
-        if (!this.tracers.get() || BlackOut.mc.level == null || BlackOut.mc.player == null || positions.isEmpty()) return;
+        if (!this.tracers.get() || BlackOut.mc.level == null || BlackOut.mc.player == null || positions.isEmpty())
+            return;
 
         PoseStack poseStack = event.context.pose();
         ScreenUtils.beginPixelSpace(poseStack);
@@ -371,4 +365,10 @@ public class Search extends Module {
         }
         return BoxUtils.get(pos);
     }
+
+
+
+
+
+
 }

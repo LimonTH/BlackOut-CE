@@ -56,7 +56,6 @@ public class MainMenuSettings extends SettingsModule {
             String name = this.customRenderer.get();
             MainMenuRenderer custom = CUSTOM_RENDERERS.get(name);
             if (custom != null) return custom;
-            // Fall back to Smoke if the named custom renderer is unavailable
             return MenuMode.Smoke.renderer;
         }
         return this.mode.get().renderer;
@@ -66,7 +65,7 @@ public class MainMenuSettings extends SettingsModule {
         Smoke(new SmokeMainMenu()),
         Color(new ColorMainMenu()),
         Panorama(new PanoramaMainMenu()),
-        Custom(null);  // resolved dynamically via CUSTOM_RENDERERS
+        Custom(null);
 
         private final MainMenuRenderer renderer;
 

@@ -34,6 +34,7 @@ import java.util.function.Function;
 
 public class ESP extends Module {
     private static ESP INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
 
     public final Setting<Boolean> renderName = this.sgGeneral.booleanSetting("Entity Labels", false, "Renders the name or display tag of the entity above their position.");

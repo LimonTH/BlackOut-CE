@@ -374,13 +374,6 @@ public class Render3DUtils {
         }
     }
 
-    public enum Orientation {
-        XY,
-        XZ,
-        YZ
-    }
-
-
     public static void setRotation(PoseStack stack) {
         stack.mulPose(Axis.XP.rotationDegrees(BlackOut.mc.gameRenderer.getMainCamera().getXRot()));
         stack.mulPose(Axis.YP.rotationDegrees(BlackOut.mc.gameRenderer.getMainCamera().getYRot() + 180.0F));
@@ -411,5 +404,11 @@ public class Render3DUtils {
             BlackOut.FONT.text(stack, string, 1.0F, 0.0F, 0.0F, color, true, true);
         }
         stack.popPose();
+    }
+
+    public enum Orientation {
+        XY,
+        XZ,
+        YZ
     }
 }

@@ -34,6 +34,10 @@ public class Zoomify extends Module {
         INSTANCE = this;
     }
 
+    public static Zoomify getInstance() {
+        return INSTANCE;
+    }
+
     @Override
     public void onEnable() {
         this.currentZoom = 1.0;
@@ -96,9 +100,5 @@ public class Zoomify extends Module {
 
     public boolean isCleanScreen() {
         return this.enabled && cleanScreen.get() && currentZoom > 1.1;
-    }
-
-    public static Zoomify getInstance() {
-        return INSTANCE;
     }
 }

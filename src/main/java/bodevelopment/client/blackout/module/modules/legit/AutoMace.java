@@ -11,7 +11,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 public class AutoMace extends Module {
-
     private final SettingGroup sgGeneral = this.addGroup("General");
 
     private final Setting<Double> fallThreshold = sgGeneral.doubleSetting("Fall Threshold", 3.0, 0.5, 20.0, 0.5,

@@ -67,7 +67,7 @@ public class TargetHUD extends HudElement {
     private static final int GOLD_BAR = new Color(255, 202, 24, 255).getRGB();
     private static final int YELLOW_BAR = new Color(255, 242, 0, 255).getRGB();
     private static final int YELLOW_220 = new Color(220, 220, 0, 255).getRGB();
-
+    private static final ResourceLocation DEFAULT_SKIN = ResourceLocation.withDefaultNamespace("textures/entity/player/wide/steve.png");
     private float delta = 0.0F;
     private float progress = 0.0F;
     private float armorProgress = 0.0F;
@@ -607,8 +607,6 @@ public class TargetHUD extends HudElement {
             }
         }
     }
-
-    private static final ResourceLocation DEFAULT_SKIN = ResourceLocation.withDefaultNamespace("textures/entity/player/wide/steve.png");
 
     private void drawFace(PoseStack stack, float scale, float x, float y) {
         float size = scale * 20.0F;

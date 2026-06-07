@@ -31,6 +31,7 @@ public class Capes {
     private static final Map<String, ResourceLocation> capes = new ConcurrentHashMap<>();
     private static final List<ResourceLocation> loaded = new CopyOnWriteArrayList<>();
     private static final List<Tuple<String, ResourceLocation>> toLoad = new CopyOnWriteArrayList<>();
+    private static final int HTTP_TIMEOUT_MS = 5000;
     private static volatile boolean loading = false;
 
     public static ResourceLocation getCape(PlayerRenderState state) {
@@ -50,8 +51,6 @@ public class Capes {
         }
         return identifier;
     }
-
-    private static final int HTTP_TIMEOUT_MS = 5000;
 
     public static void requestCapes() {
         CompletableFuture.runAsync(() -> {

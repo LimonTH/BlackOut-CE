@@ -32,12 +32,12 @@ public class Breadcrumbs extends Module {
     private final Setting<Double> delay = this.sgGeneral.doubleSetting("Sampling Interval", 0.1, 0.0, 3.0, 0.01, "The time frequency (in seconds) for dropping a new position marker.");
     private final Setting<Double> renderTime = this.sgGeneral.doubleSetting("Persistence Duration", 3.0, 0.001, 20.0, 0.05, "The total lifespan of each particle before it is culled from the buffer.");
 
-    private final Setting<BlackOutColor> clr = this.sgColor.colorSetting("Core Color", new BlackOutColor(255, 255, 255, 100), "The primary color applied to the particle center.");
-    private final Setting<BlackOutColor> clr1 = this.sgColor.colorSetting("Aura Color", new BlackOutColor(175, 175, 175, 100), "The secondary color applied to the particle boundary.");
     public final Setting<ColorMode> colorMode = this.sgColor.enumSetting("Chroma Mode", ColorMode.Custom, "The color distribution algorithm used for the trail particles.");
     private final Setting<Double> saturation = this.sgColor.doubleSetting("Rainbow Saturation", 0.8, 0.0, 1.0, 0.1, "The intensity of the color palette when using Rainbow mode.", () -> this.colorMode.get() == ColorMode.Rainbow);
     private final Setting<Integer> iAlpha = this.sgColor.intSetting("Core Opacity", 150, 0, 255, 1, "The transparency level of the inner particle dot.", () -> this.colorMode.get() == ColorMode.Rainbow);
     private final Setting<Integer> oAlpha = this.sgColor.intSetting("Aura Opacity", 50, 0, 255, 1, "The transparency level of the outer particle glow.", () -> this.colorMode.get() == ColorMode.Rainbow);
+    private final Setting<BlackOutColor> clr = this.sgColor.colorSetting("Core Color", new BlackOutColor(255, 255, 255, 100), "The primary color applied to the particle center.");
+    private final Setting<BlackOutColor> clr1 = this.sgColor.colorSetting("Aura Color", new BlackOutColor(175, 175, 175, 100), "The secondary color applied to the particle boundary.");
 
     private final PoseStack stack = new PoseStack();
     private final RenderList<Vec3> list = RenderList.getList(true);

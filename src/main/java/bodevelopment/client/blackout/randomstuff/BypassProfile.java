@@ -1,7 +1,7 @@
 package bodevelopment.client.blackout.randomstuff;
 
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,9 +23,24 @@ public class BypassProfile {
         this.name = name;
     }
 
-    public String getName() { return name; }
+    public static BypassProfile fromJson(JsonObject obj) {
+        BypassProfile profile = new BypassProfile(obj.get("name").getAsString());
+        if (obj.has("settings")) {
+            JsonObject settingsObj = obj.getAsJsonObject("settings");
+            settingsObj.entrySet().forEach(e ->
+                    profile.set(e.getKey(), e.getValue().getAsString()));
+        }
+        return profile;
+    }
 
-    public void set(String key, String value) { settings.put(key, value); }
+    public String getName() {
+        return name;
+    }
+
+    public void set(String key, String value) {
+        settings.put(key, value);
+    }
+
     public String get(String key, String defaultValue) {
         return settings.getOrDefault(key, defaultValue);
     }
@@ -37,15 +52,5 @@ public class BypassProfile {
         settings.forEach(settingsObj::addProperty);
         obj.add("settings", settingsObj);
         return obj;
-    }
-
-    public static BypassProfile fromJson(JsonObject obj) {
-        BypassProfile profile = new BypassProfile(obj.get("name").getAsString());
-        if (obj.has("settings")) {
-            JsonObject settingsObj = obj.getAsJsonObject("settings");
-            settingsObj.entrySet().forEach(e ->
-                profile.set(e.getKey(), e.getValue().getAsString()));
-        }
-        return profile;
     }
 }

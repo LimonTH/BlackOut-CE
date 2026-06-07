@@ -42,13 +42,12 @@ public class ConfigScreen extends ClickGuiScreen {
     private final TextField textField = new TextField();
     private final int id = SelectedComponent.nextId();
     private final List<CloudConfig> cloudConfigs = new ArrayList<>();
+    private final Map<String, MutableDouble> slotAnims = new HashMap<>();
     private float prevLength = 300.0F;
     private long prevUpdate = 0L;
     private boolean first;
     private boolean typing = false;
     private boolean isCloud = false;
-
-    private final Map<String, MutableDouble> slotAnims = new HashMap<>();
 
     public ConfigScreen() {
         super("Configs", 800.0F, 500.0F, true);

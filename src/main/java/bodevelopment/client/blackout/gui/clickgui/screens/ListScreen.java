@@ -31,8 +31,8 @@ public class ListScreen<T> extends ClickGuiScreen {
     private final Map<T, Float> hoverAnims = new HashMap<>();
     private final ListSetting<T> setting;
     private final EpicInterface<T, String> getName;
-    private double progress = 0.0;
     private final float itemHeight = 35.0F;
+    private double progress = 0.0;
     private float addAllHover = 0.0F;
     private float clearAllHover = 0.0F;
 
@@ -244,12 +244,6 @@ public class ListScreen<T> extends ClickGuiScreen {
         }
     }
 
-    private class ColorRectHit {
-        final T item;
-        final String key;
-        ColorRectHit(T item, String key) { this.item = item; this.key = key; }
-    }
-
     private ColorRectHit findColorClick() {
         float mouseRelY = (float) (my + scroll.get() - 15.0F);
         float half = this.width / 2.0F;
@@ -281,7 +275,8 @@ public class ListScreen<T> extends ClickGuiScreen {
                 return new ColorRectHit(item, "sideColor");
             }
 
-            if (selected) rY += itemHeight; else lY += itemHeight;
+            if (selected) rY += itemHeight;
+            else lY += itemHeight;
         }
         return null;
     }
@@ -420,6 +415,16 @@ public class ListScreen<T> extends ClickGuiScreen {
         if (state) {
             if (key == 256) return;
             textField.type(key, state);
+        }
+    }
+
+    private class ColorRectHit {
+        final T item;
+        final String key;
+
+        ColorRectHit(T item, String key) {
+            this.item = item;
+            this.key = key;
         }
     }
 }

@@ -28,9 +28,9 @@ public class ElytraFly extends Module {
     private final SettingGroup sgAutomation = this.addGroup("Automation");
 
     public final Setting<Mode> mode = this.sgGeneral.enumSetting("Flight Model", Mode.Control, "The mathematical logic used to calculate aerial velocity and trajectory.");
+    private final Setting<Integer> bounceDelay = this.sgGeneral.intSetting("Deployment Delay", 1, 0, 20, 1, "Tick interval between ground contact and re-initiating fall-flying state.", () -> mode.get() == Mode.Bounce);
     private final Setting<Boolean> autoStop = this.sgGeneral.booleanSetting("Durability Guard", true, "Emergency deactivation to prevent elytra breakage when durability is critical.");
     private final Setting<Integer> minDurability = this.sgGeneral.intSetting("Structural Threshold", 5, 1, 50, 1, "The minimum durability value required to maintain flight operations.", autoStop::get);
-    private final Setting<Integer> bounceDelay = this.sgGeneral.intSetting("Deployment Delay", 1, 0, 20, 1, "Tick interval between ground contact and re-initiating fall-flying state.", () -> mode.get() == Mode.Bounce);
 
     private final Setting<Double> horizontalSpeed = this.sgSpeed.doubleSetting("Lateral Velocity", 1.0, 0.0, 5.0, 0.05, "Maximum travel speed along the X and Z axes.", () -> mode.get() != Mode.Glide);
     private final Setting<Double> verticalSpeed = this.sgSpeed.doubleSetting("Vertical Thrust", 1.0, 0.0, 5.0, 0.05, "Ascent and descent velocity applied during manual maneuvering.", () -> mode.get() == Mode.Control || mode.get() == Mode.Wasp || mode.get() == Mode.Rotation);
@@ -54,18 +54,16 @@ public class ElytraFly extends Module {
     private final Setting<SwitchMode> rocketSwitchMode = this.sgAutomation.enumSetting("Rocket Switch Mode", SwitchMode.Silent, "How the client switches to fireworks.", () -> autoRocket.get() && mode.get() == Mode.Glide);
     private final Setting<Integer> rocketCooldown = this.sgAutomation.intSetting("Propulsion Interval", 3500, 500, 10000, 100, "The minimum time in milliseconds between automated rocket deployments.", () -> (autoRocket.get() && mode.get() == Mode.Glide));
     private final Setting<Boolean> showRockets = this.sgAutomation.booleanSetting("Show Rocket Count", true, "Displays remaining fireworks in the module info.");
+
+    private final double[] speedSamples = new double[25];
     private boolean moving;
     private float yaw, lerpedPitch;
     private int sinceFalling, sinceJump;
     private boolean sus;
-
-    private enum GlideState {DIVE, CRUISE, CLIMB}
-
     private GlideState glideState = GlideState.CRUISE;
     private boolean climbingToTarget = false;
     private double cruisePhase = 0;
     private double currentSpeedAvg = 0;
-    private final double[] speedSamples = new double[25];
     private int speedSampleIndex = 0;
     private long lastRocketTime, lastHoverTime;
     private boolean hoverB = true;
@@ -304,6 +302,8 @@ public class ElytraFly extends Module {
         }
         this.yaw = y;
     }
+
+    private enum GlideState {DIVE, CRUISE, CLIMB}
 
     public enum Mode {Wasp, Control, Bounce, Glide, Rotation}
 }

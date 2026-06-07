@@ -46,10 +46,12 @@ public class ExtrapolationSettings extends SettingsModule {
             "The number of ticks to look ahead during downward movement.");
     public final Setting<Boolean> jumpPredict = this.sgGeneral.booleanSetting("Jump Predict", true,
             "Calculates the target's jump arc. Required for accurate aim while the target is airborne.");
+
     public final Setting<Integer> maxLag = this.sgLag.intSetting("Max Lag", 5, 0, 10, 1,
             "How long (in seconds) the client continues to predict movement after the server stops sending updates.");
     public final Setting<Boolean> extraExtrapolation = this.sgLag.booleanSetting("Extra Extrapolation", true,
             "Enables more aggressive calculation methods. Helps on low-TPS servers but may reduce visual smoothness.");
+
     private final Setting<Boolean> renderExtrapolation = this.sgRender.booleanSetting("Render Extrapolation", false,
             "Renders a line showing the predicted path in the world. Useful for debugging and fine-tuning your config.");
     private final Setting<Boolean> dashedLine = this.sgRender.booleanSetting("Dashed Line", false,

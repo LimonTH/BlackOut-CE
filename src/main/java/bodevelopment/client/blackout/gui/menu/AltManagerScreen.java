@@ -23,6 +23,7 @@ public class AltManagerScreen extends Screen {
     private final TextField textField = new TextField() {{
         setMaxLength(32);
     }};
+    private final AltHelpRenderer helpRenderer = new AltHelpRenderer();
     private float windowHeight;
     private float scale;
     private float mx;
@@ -30,15 +31,13 @@ public class AltManagerScreen extends Screen {
     private float progress = 0.0F;
     private float delta;
     private float altLength = 0.0F;
-    private boolean isExiting = false;
-    private final AltHelpRenderer helpRenderer = new AltHelpRenderer();
-
     private final ScrollHelper scroll = new ScrollHelper(
             0.5F,
             5.5F,
             () -> 0.0F,
             () -> Math.max(this.altLength - 600.0F, 0.0F)
     ).limit(3.0F);
+    private boolean isExiting = false;
 
     public AltManagerScreen(Screen parent) {
         super(Component.nullToEmpty("Alt Manager"));

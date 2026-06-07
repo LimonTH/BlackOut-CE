@@ -18,11 +18,11 @@ import net.minecraft.util.Mth;
 import java.awt.*;
 
 public class ClickGuiScreen {
+    public final long openTime;
     protected final PoseStack stack;
     protected final float width;
     protected final float height;
     protected final ScrollHelper scroll;
-    public final long openTime;
     private final String label;
     protected float x = 0;
     protected float y = 0;

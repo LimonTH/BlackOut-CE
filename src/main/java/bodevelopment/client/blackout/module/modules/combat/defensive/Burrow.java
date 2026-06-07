@@ -41,6 +41,7 @@ public class Burrow extends Module {
             "Method of switching to the burrow block. Silent is recommended to avoid desync.");
     private final Setting<List<Block>> blocks = this.sgGeneral.blockListSetting("Blocks",
             "The blocks to use for burrowing. Obsidian or Ender Chests are standard.", Blocks.OBSIDIAN, Blocks.ENDER_CHEST);
+    private final Predicate<ItemStack> predicate = itemStack -> itemStack.getItem() instanceof BlockItem block && this.blocks.get().contains(block.getBlock());
     private final Setting<Boolean> instaRot = this.sgGeneral.booleanSetting("Insta Rotation", false,
             "Immediately snaps your rotation to look down without transition.");
     private final Setting<Boolean> pFly = this.sgGeneral.booleanSetting("Packet Fly", false,
@@ -61,8 +62,6 @@ public class Burrow extends Module {
             "Shows the arm swing animation when placing the burrow block.");
     private final Setting<SwingHand> swingHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand,
             "Which hand to animate for the block placement.");
-
-    private final Predicate<ItemStack> predicate = itemStack -> itemStack.getItem() instanceof BlockItem block && this.blocks.get().contains(block.getBlock());
     private boolean success = false;
     private boolean enabledPFly = false;
     private boolean enabledScaffold = false;

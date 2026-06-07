@@ -53,7 +53,7 @@ public class Trajectories extends Module {
     private final Setting<Double> saturation = this.sgColor.doubleSetting("Rainbow Saturation", 0.8, 0.0, 1.0, 0.1, "The color richness of the rainbow cycle.", () -> this.colorMode.get() == Trails.ColorMode.Rainbow);
     private final Setting<BlackOutColor> clr = this.sgColor.colorSetting("Primary Color", new BlackOutColor(255, 255, 255, 255), "The main color of the trajectory path.", () -> this.colorMode.get() != Trails.ColorMode.Rainbow);
     private final Setting<BlackOutColor> clr1 = this.sgColor.colorSetting("Wave Secondary", new BlackOutColor(175, 175, 175, 255), "The secondary color used for wave interpolation.", () -> this.colorMode.get() != Trails.ColorMode.Rainbow);
-    private final Setting<Double> fadeLength = this.sgColor.doubleSetting("Start Fade Distance", 1.0, 0.0, 10.0, 0.1, "The distance from the player where the trajectory line begins to fade into full opacity.");
+     private final Setting<Double> fadeLength = this.sgColor.doubleSetting("Start Fade Distance", 1.0, 0.0, 10.0, 0.1, "The distance from the player where the trajectory line begins to fade into full opacity.");
 
     private final Map<Item, SimulationData> dataMap = new HashMap<>();
 
@@ -388,15 +388,6 @@ public class Trajectories extends Module {
         }
     }
 
-    private record SimulationData(
-            double width,
-            double height,
-            DoubleFunction<ItemStack, Float, Vec3> startPos,
-            Function<ItemStack, double[]> speed,
-            DoubleConsumer<AABB, double[]> physics
-    ) {
-    }
-
     private boolean isChargedWith(ItemStack crossbowStack, Item projectileItem) {
         if (!(crossbowStack.getItem() instanceof CrossbowItem)) return false;
         ChargedProjectiles charged = crossbowStack.get(DataComponents.CHARGED_PROJECTILES);
@@ -409,5 +400,14 @@ public class Trajectories extends Module {
         }
 
         return false;
+    }
+
+    private record SimulationData(
+            double width,
+            double height,
+            DoubleFunction<ItemStack, Float, Vec3> startPos,
+            Function<ItemStack, double[]> speed,
+            DoubleConsumer<AABB, double[]> physics
+    ) {
     }
 }

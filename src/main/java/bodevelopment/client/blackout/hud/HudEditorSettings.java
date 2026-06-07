@@ -27,6 +27,7 @@ public class HudEditorSettings {
     private static final float RESET_HOLD_THRESHOLD = 2.5F;
 
     private final float width = 275.0F;
+    private final bodevelopment.client.blackout.gui.clickgui.SettingsRenderer.ResetState resetState = new bodevelopment.client.blackout.gui.clickgui.SettingsRenderer.ResetState();
     private float x;
     private float y;
     private HudElement openedElement = null;
@@ -40,15 +41,11 @@ public class HudEditorSettings {
     private boolean moving;
     private boolean wasPressHandled;
     private float animDelta = 0.0F;
-
     private float scrollOffset = 0.0F;
     private float maxVisibleHeight = 0.0F;
-
     private String lastDescription = null;
     private long hoverTime = 0L;
     private float descAlpha = 0.0F;
-
-    private final bodevelopment.client.blackout.gui.clickgui.SettingsRenderer.ResetState resetState = new bodevelopment.client.blackout.gui.clickgui.SettingsRenderer.ResetState();
 
     public void render(PoseStack stack, float frameTime, int mouseX, int mouseY) {
         if (this.openedElement == null) {

@@ -44,11 +44,6 @@ public class MixinClientPacketListener {
     @Unique
     private static float lastServerPitch;
 
-    @Inject(method = "handleLogin", at = @At("TAIL"))
-    private void onJoin(ClientboundLoginPacket packet, CallbackInfo ci) {
-        BlackOut.EVENT_BUS.post(GameJoinEvent.get(packet));
-    }
-
     @WrapOperation(
             method = "setValuesFromPositionPacket",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;setYRot(F)V")
@@ -87,6 +82,11 @@ public class MixinClientPacketListener {
             original.call(entity, pitch);
         }
         lastServerPitch = pitch;
+    }
+
+    @Inject(method = "handleLogin", at = @At("TAIL"))
+    private void onJoin(ClientboundLoginPacket packet, CallbackInfo ci) {
+        BlackOut.EVENT_BUS.post(GameJoinEvent.get(packet));
     }
 
     @WrapOperation(

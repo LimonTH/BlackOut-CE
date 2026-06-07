@@ -68,6 +68,7 @@ public class BedAura extends Module {
     private final Setting<RotationMode> rotationMode = this.sgPlace.enumSetting("Rotation Logic", RotationMode.Instant, "The mathematical approach used to handle player head movements.", () -> !this.serverDir.get() || this.rotate.get());
     private final Setting<Boolean> pauseOffGround = this.sgPlace.booleanSetting("Airborne Safety", true, "Disables placement while jumping or falling to maintain accuracy.");
     private final Setting<SwitchMode> switchMode = this.sgPlace.enumSetting("Switch Mode", SwitchMode.Silent, "The inventory interaction method used to equip beds.");
+
     private final Setting<Boolean> pauseEatExplode = this.sgExplode.booleanSetting("Pause Detonation on Consume", false, "Suspends bed detonation while the player is eating or drinking.");
     private final Setting<AutoCrystal.DelayMode> existedMode = this.sgExplode.enumSetting("Delay Unit", AutoCrystal.DelayMode.Ticks, "Determines if detonation delays are calculated in seconds or game ticks.");
     private final Setting<Double> existed = this.sgExplode.doubleSetting("Detonation Delay (s)", 0.0, 0.0, 1.0, 0.01, "Seconds to wait after placement before detonating.", () -> this.existedMode.get() == AutoCrystal.DelayMode.Seconds);
@@ -77,14 +78,17 @@ public class BedAura extends Module {
     private final Setting<Double> constantExplodeSpeed = this.sgExplode.doubleSetting("Static Explode Speed", 10.0, 0.0, 20.0, 0.1, "Fixed rate for detonations when using Sync mode.", () -> this.explodeSpeedMode.get() == AutoCrystal.ActionSpeedMode.Sync);
     private final Setting<Double> explodeSpeed = this.sgExplode.doubleSetting("Dynamic Explode Speed", 20.0, 0.0, 20.0, 0.1, "Variable detonation rate for standard modes.", () -> this.explodeSpeedMode.get() == AutoCrystal.ActionSpeedMode.Normal);
     private final Setting<Double> rotationHeight = this.sgExplode.doubleSetting("Interact Vector Height", 0.25, 0.0, 0.5, 0.01, "The vertical offset for the explosion interaction point.");
+
     private final Setting<Double> slowDamage = this.sgSlow.doubleSetting("Throttling Threshold", 3.0, 0.0, 20.0, 0.1, "Reduces speed when target damage falls below this value.");
     private final Setting<Double> slowSpeed = this.sgSlow.doubleSetting("Throttled Speed", 2.0, 0.0, 20.0, 0.1, "The placement speed applied when the Throttling Threshold is active.");
     private final Setting<Double> slowHealth = this.sgSlow.doubleSetting("Health Safety Margin", 10.0, 0.0, 20.0, 0.5, "Only applies throttled speed if the target's health is above this value.");
+
     private final Setting<KeyBind> holdFacePlace = this.sgFacePlace.keySetting("Face-Place Hotkey", "Forces high-speed placement at the target's head while held.");
     private final Setting<Double> facePlaceHealth = this.sgFacePlace.doubleSetting("Face-Place Health", 0.0, 0.0, 10.0, 0.1, "Automatically prioritizes head-level placement if target health is below this.");
     private final Setting<Double> armorFacePlace = this.sgFacePlace.doubleSetting("Armor Durability Trigger", 10.0, 0.0, 100.0, 1.0, "Face-places if any armor piece falls below this durability percentage.");
     private final Setting<Double> facePlaceDamage = this.sgFacePlace.doubleSetting("Face-Place Min Damage", 0.0, 0.0, 10.0, 0.1, "Overrides minimum damage requirements during face-place operations.");
     private final Setting<Boolean> ignoreSlow = this.sgFacePlace.booleanSetting("Disable Throttling", true, "Ignores 'Slow' settings during face-place operations.");
+
     private final Setting<Double> minPlace = this.sgDamage.doubleSetting("Min Target Damage", 5.0, 0.0, 20.0, 0.1, "Minimum damage the target must receive for placement to occur.");
     private final Setting<Boolean> checkSelfPlacing = this.sgDamage.booleanSetting("Self-Damage Safety", true, "Calculates potential self-harm before placing a bed.");
     private final Setting<Double> maxSelfPlace = this.sgDamage.doubleSetting("Max Self-Damage", 10.0, 0.0, 20.0, 0.1, "Maximum damage the player can take from their own placement.", this.checkSelfPlacing::get);
@@ -103,14 +107,17 @@ public class BedAura extends Module {
     private final Setting<Double> forcePop = this.sgDamage.doubleSetting("Lethal Threshold", 0.0, 0.0, 5.0, 0.25, "Ignores damage constraints if the hit is guaranteed to pop a Totem.");
     private final Setting<Double> selfPop = this.sgDamage.doubleSetting("Totem Preservation", 1.0, 0.0, 5.0, 0.25, "Restricts damage if it risks popping the player's own Totem.");
     private final Setting<Double> friendPop = this.sgDamage.doubleSetting("Friend Totem Preservation", 0.0, 0.0, 5.0, 0.25, "Restricts damage if it risks popping a friend's Totem.");
+
     private final Setting<Integer> extrapolation = this.sgExtrapolation.intSetting("Target Prediction", 0, 0, 20, 1, "Predicts target movement in ticks for accurate damage calculation.");
     private final Setting<Integer> selfExt = this.sgExtrapolation.intSetting("Self Prediction", 0, 0, 20, 1, "Predicts player movement in ticks for self-damage calculation.");
     private final Setting<Integer> hitboxExt = this.sgExtrapolation.intSetting("Hitbox Prediction", 0, 0, 20, 1, "Predicts entity hitbox positions to prevent placement obstruction.");
     private final Setting<Boolean> damageWait = this.sgExtrapolation.booleanSetting("Latent Calculation", false, "Wait for client-server sync before final damage check.");
+
     private final Setting<Boolean> placeSwing = this.sgRender.booleanSetting("Placement Animation", false, "Visualizes the arm swing during bed placement.");
     private final Setting<SwingHand> placeHand = this.sgRender.enumSetting("Placement Arm", SwingHand.RealHand, "The arm used for placement animations.");
     private final Setting<Boolean> explodeSwing = this.sgRender.booleanSetting("Detonation Animation", false, "Visualizes the arm swing during bed detonation.");
     private final Setting<SwingHand> explodeHand = this.sgRender.enumSetting("Detonation Arm", SwingHand.RealHand, "The arm used for detonation animations.");
+
     private final Setting<Boolean> renderBox = this.sgBoxRender.booleanSetting("Placement Highlight", true, "Renders a highlight box at the placement location.");
     private final Setting<Double> renderTime = this.sgBoxRender.doubleSetting("Highlight Duration", 0.3, 0.0, 10.0, 0.1, "Duration the box stays at full opacity.", this.renderBox::get);
     private final Setting<Double> fadeTime = this.sgBoxRender.doubleSetting("Highlight Fade", 1.0, 0.0, 10.0, 0.1, "Duration of the opacity decay animation.", this.renderBox::get);
@@ -124,6 +131,7 @@ public class BedAura extends Module {
     private final Setting<BlackOutColor> headLineColor = this.sgBoxRender.colorSetting("Head Outline Color", new BlackOutColor(255, 255, 255, 255), "Outline color for the bed's head section.", () -> this.renderBox.get() && this.separateBox.get());
     private final Setting<BlackOutColor> headSideColor = this.sgBoxRender.colorSetting("Head Fill Color", new BlackOutColor(255, 255, 255, 50), "Fill color for the bed's head section.", () -> this.renderBox.get() && this.separateBox.get());
     private final Setting<Boolean> renderDamage = this.sgBoxRender.booleanSetting("Display Damage", true, "Renders floating damage values at the placement site.", this.renderBox::get);
+
     private final Setting<Boolean> renderExplode = this.sgExplodeRender.booleanSetting("Explosion Highlight", true, "Renders a highlight box during detonation.");
     private final Setting<Double> explodeRenderTime = this.sgExplodeRender.doubleSetting("Explosion Duration", 0.3, 0.0, 10.0, 0.1, "Duration of the explosion highlight.", this.renderExplode::get);
     private final Setting<Double> explodeFadeTime = this.sgExplodeRender.doubleSetting("Explosion Fade", 1.0, 0.0, 10.0, 0.1, "Duration of the explosion highlight decay.", this.renderExplode::get);
@@ -134,6 +142,7 @@ public class BedAura extends Module {
     private final Setting<RenderShape> explodeHeadShape = this.sgExplodeRender.enumSetting("Explode Head Geometry", RenderShape.Full, "Geometry for the head during detonation.", () -> this.renderExplode.get() && this.separateExplode.get());
     private final Setting<BlackOutColor> explodeHeadLineColor = this.sgExplodeRender.colorSetting("Explode Head Outline Color", new BlackOutColor(255, 255, 255, 255), "Outline color for the head during detonation.", () -> this.renderExplode.get() && this.separateExplode.get());
     private final Setting<BlackOutColor> explodeHeadSideColor = this.sgExplodeRender.colorSetting("Explode Head Fill Color", new BlackOutColor(255, 255, 255, 50), "Fill color for the head during detonation.", () -> this.renderExplode.get() && this.separateExplode.get());
+
     private final Setting<Double> damageValue = this.sgCalculation.doubleSetting("Damage Weight", 1.0, -2.0, 2.0, 0.05, "Importance of target damage in target selection.");
     private final Setting<Double> selfDmgValue = this.sgCalculation.doubleSetting("Self-Damage Weight", -1.0, -2.0, 2.0, 0.05, "Importance of self-preservation in target selection.");
     private final Setting<Double> friendDmgValue = this.sgCalculation.doubleSetting("Friend Damage Weight", 0.0, -2.0, 2.0, 0.05, "Importance of friend safety in target selection.");

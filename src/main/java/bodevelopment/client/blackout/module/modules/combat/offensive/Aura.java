@@ -139,6 +139,7 @@ public class Aura extends MoveUpdateModule {
     private final RenderList<AABB> renderBoxes = RenderList.getList(false);
     private final ExtrapolationMap extrapolationMap = new ExtrapolationMap();
     private final java.util.Map<Integer, Pair<Vec3, AABB>> expandCache = new java.util.HashMap<>();
+    private final List<Entity> targets = new ArrayList<>();
     public boolean isBlocking = false;
     public boolean isAttacking = false;
     private boolean shouldRender = false;
@@ -150,7 +151,6 @@ public class Aura extends MoveUpdateModule {
     private int fatigue = 0;
     private int timeOG = 0;
     private double random;
-    private final List<Entity> targets = new ArrayList<>();
     private Entity target = null;
     private AABB renderBox = new AABB(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 

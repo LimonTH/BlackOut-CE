@@ -83,13 +83,6 @@ public class AutoCrystal extends Module {
     private final SettingGroup sgCompatibility = this.addGroup("Compatibility");
     private final SettingGroup sgDebug = this.addGroup("Debug");
 
-    public final Setting<Boolean> raytraceBypass = this.sgRaytraceBypass.booleanSetting("Raytrace Bypass", false, "Allows crystals to be placed or hit through obstacles using bypass logic.");
-    public final Setting<Integer> raytraceDelay = this.sgRaytraceBypass.intSetting("Bypass Delay", 10, 0, 100, 1, "The interval between attempts when raytrace bypass is active.", this.raytraceBypass::get);
-    public final Setting<Integer> raytraceTime = this.sgRaytraceBypass.intSetting("Bypass Duration", 15, 0, 100, 1, "How long the bypass remains active after a successful raytrace check.", this.raytraceBypass::get);
-    public final Setting<Integer> raytraceAngle = this.sgRaytraceBypass.intSetting("Minimum Angle", 45, 0, 100, 1, "The minimum required angle for the bypass logic to engage.", this.raytraceBypass::get);
-
-    private final Setting<Double> raytraceBypassValue = this.sgCalculation.doubleSetting("Bypass Score Multiplier", -4.0, -5.0, 5.0, 0.1, "Weighting factor applied to the calculation score when bypass is active.", this.raytraceBypass::get);
-
     private final Setting<Boolean> place = this.sgPlace.booleanSetting("Crystal Placing", true, "Enables the automatic placement of End Crystals.");
     private final Setting<Boolean> pauseEatPlace = this.sgPlace.booleanSetting("Pause on Consume", false, "Stops crystal placement while the player is eating or drinking.");
     private final Setting<ActionSpeedMode> placeSpeedMode = this.sgPlace.enumSetting("Placement Logic", ActionSpeedMode.Sync, "Determines the timing algorithm used for placing crystals.");
@@ -145,6 +138,12 @@ public class AutoCrystal extends Module {
     private final Setting<Double> armorFacePlace = this.sgFacePlace.doubleSetting("Armor Durability Trigger", 10.0, 0.0, 100.0, 1.0, "Face-places if any target armor piece's durability percentage is below this.");
     private final Setting<Double> facePlaceDamage = this.sgFacePlace.doubleSetting("Face-Place Damage Min", 0.0, 0.0, 10.0, 0.1, "Overrides minimum damage requirements when face-placing.");
     private final Setting<Boolean> ignoreSlow = this.sgFacePlace.booleanSetting("Face-Place Speed Override", true, "Ignores the slow placement logic while face-placing is active.");
+
+    public final Setting<Boolean> raytraceBypass = this.sgRaytraceBypass.booleanSetting("Raytrace Bypass", false, "Allows crystals to be placed or hit through obstacles using bypass logic.");
+    private final Setting<Double> raytraceBypassValue = this.sgRaytraceBypass.doubleSetting("Score Multiplier", -4.0, -5.0, 5.0, 0.1, "Weighting factor applied to the calculation score when bypass is active.", this.raytraceBypass::get);
+    public final Setting<Integer> raytraceDelay = this.sgRaytraceBypass.intSetting("Bypass Delay", 10, 0, 100, 1, "The interval between attempts when raytrace bypass is active.", this.raytraceBypass::get);
+    public final Setting<Integer> raytraceTime = this.sgRaytraceBypass.intSetting("Bypass Duration", 15, 0, 100, 1, "How long the bypass remains active after a successful raytrace check.", this.raytraceBypass::get);
+    public final Setting<Integer> raytraceAngle = this.sgRaytraceBypass.intSetting("Minimum Angle", 45, 0, 100, 1, "The minimum required angle for the bypass logic to engage.", this.raytraceBypass::get);
 
     private final Setting<Boolean> moveOffset = this.sgRotation.booleanSetting("Prediction Offset", true, "Adjusts rotations based on the target's movement velocity.");
     private final Setting<Double> placeHeight = this.sgRotation.doubleSetting("Placement Pitch Offset", 1.0, 0.0, 1.0, 0.01, "The vertical height target for placement rotations.");
@@ -1831,6 +1830,34 @@ public class AutoCrystal extends Module {
         }
     }
 
+    public Setting<Double> getMinPlace() {
+        return minPlace;
+    }
+
+    public Setting<Double> getMaxSelfPlace() {
+        return maxSelfPlace;
+    }
+
+    public Setting<Double> getMinSelfRatio() {
+        return minSelfRatio;
+    }
+
+    public Setting<Boolean> getCheckSelfPlacing() {
+        return checkSelfPlacing;
+    }
+
+    public Setting<Boolean> getCheckFriendPlacing() {
+        return checkFriendPlacing;
+    }
+
+    public Setting<Double> getMaxFriendPlace() {
+        return maxFriendPlace;
+    }
+
+    public Setting<Double> getMinFriendRatio() {
+        return minFriendRatio;
+    }
+
     public enum ACSwitchMode {
         Disabled(false, false),
         Normal(true, false),
@@ -1889,34 +1916,6 @@ public class AutoCrystal extends Module {
         public FindResult find(Item item) {
             return InvUtils.find(this.hotbar, this.inventory, item);
         }
-    }
-
-    public Setting<Double> getMinPlace() {
-        return minPlace;
-    }
-
-    public Setting<Double> getMaxSelfPlace() {
-        return maxSelfPlace;
-    }
-
-    public Setting<Double> getMinSelfRatio() {
-        return minSelfRatio;
-    }
-
-    public Setting<Boolean> getCheckSelfPlacing() {
-        return checkSelfPlacing;
-    }
-
-    public Setting<Boolean> getCheckFriendPlacing() {
-        return checkFriendPlacing;
-    }
-
-    public Setting<Double> getMaxFriendPlace() {
-        return maxFriendPlace;
-    }
-
-    public Setting<Double> getMinFriendRatio() {
-        return minFriendRatio;
     }
 
     public enum ActionSpeedMode {

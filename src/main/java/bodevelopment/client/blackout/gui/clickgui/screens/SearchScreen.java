@@ -22,11 +22,10 @@ import java.util.stream.Collectors;
 
 public class SearchScreen extends ClickGuiScreen {
     private final TextField textField = new TextField();
-    private List<AbstractModule> results = new ArrayList<>();
-
     private final float RADIUS = 6.0F;
     private final float SHADOW = 2.0F;
     private final float SHADER_PADDING = RADIUS + SHADOW;
+    private List<AbstractModule> results = new ArrayList<>();
 
     public SearchScreen(int key) {
         super("Search", 400, 500, true);

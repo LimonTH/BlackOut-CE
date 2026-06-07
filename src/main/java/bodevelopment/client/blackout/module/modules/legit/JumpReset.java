@@ -8,7 +8,6 @@ import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.util.PlayerUtils;
 
 public class JumpReset extends Module {
-
     public JumpReset() {
         super("Jump Reset", "Reduces incoming horizontal knockback by automatically jumping the moment damage is received.", SubCategory.LEGIT, true);
     }

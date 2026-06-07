@@ -21,19 +21,16 @@ import java.util.Random;
 
 public class Insults extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
-    private final SettingGroup sgKill = this.addGroup("Kill");
-    private final SettingGroup sgPop = this.addGroup("Pop");
-
     public final Setting<Integer> range = this.sgGeneral.intSetting("Range", 25, 0, 50, 1,
             "The radius around you to look for deaths or totem pops.");
     public final Setting<Integer> tickDelay = this.sgGeneral.intSetting("Tick Delay", 50, 0, 100, 1,
             "How long to wait between sending messages to avoid being kicked for spam.");
-
+    private final SettingGroup sgKill = this.addGroup("Kill");
     public final Setting<Boolean> kill = this.sgKill.booleanSetting("Kill", true,
             "Automatically sends an insult message when a nearby enemy dies.");
     public final Setting<MessageMode> killMsgMode = this.sgKill.enumSetting("Kill Message Mode", MessageMode.Exhibition,
             "Selects the style of insult (Blackout, Exhibition, NoClue, or Nostalgia).");
-
+    private final SettingGroup sgPop = this.addGroup("Pop");
     public final Setting<Boolean> pop = this.sgPop.booleanSetting("Pop", true,
             "Sends a message when an enemy uses (pops) a Totem of Undying.");
 

@@ -29,15 +29,13 @@ public class ConsoleScreen extends ClickGuiScreen {
     private final TextField filterField = new TextField();
     private final int id = SelectedComponent.nextId();
     private final int filterId = SelectedComponent.nextId();
+    private final List<String> commandHistory = new ArrayList<>();
+    private final List<String> suggestions = new ArrayList<>();
     private boolean typing = false;
     private boolean filterActive = false;
     private String filterText = "";
-
-    private final List<String> commandHistory = new ArrayList<>();
     private int historyIndex = -1;
     private String savedInput = "";
-
-    private final List<String> suggestions = new ArrayList<>();
     private int suggestionIndex = -1;
 
     public ConsoleScreen() {
@@ -54,6 +52,10 @@ public class ConsoleScreen extends ClickGuiScreen {
             this.lines.addFirst(new Line(this.split(entry.text(), ""), "", entry.color()));
             CollectionUtils.limitSize(this.lines, 200);
         });
+    }
+
+    private static String stripFormatting(String text) {
+        return text.replaceAll("§.", "");
     }
 
     @Override
@@ -339,10 +341,6 @@ public class ConsoleScreen extends ClickGuiScreen {
             }
         }
         return filtered;
-    }
-
-    private static String stripFormatting(String text) {
-        return text.replaceAll("§.", "");
     }
 
     private void renderBottomBG() {

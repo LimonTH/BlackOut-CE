@@ -6,6 +6,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 
 public class BlurSettings extends SettingsModule {
     private static BlurSettings INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
 
     public final Setting<Integer> hudBlur = this.sgGeneral.intSetting("HUD Blur", 5, 1, 20, 1,

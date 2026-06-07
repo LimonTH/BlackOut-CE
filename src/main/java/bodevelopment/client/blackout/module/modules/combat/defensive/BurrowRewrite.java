@@ -39,6 +39,8 @@ public class BurrowRewrite extends Module {
     private final SettingGroup sgRubberband = this.addGroup("Rubberband");
 
     private final Setting<BurrowMode> mode = this.sgGeneral.enumSetting("Execution Mode", BurrowMode.Offset, "The method used to force the server to desync the player's position after block placement.");
+    private final Setting<Double> offset = this.sgRubberband.doubleSetting("Teleport Offset", 1.0, -10.0, 10.0, 0.2, "The vertical distance used to trigger a server-side rubberband effect.", () -> this.mode.get() == BurrowMode.Offset);
+    private final Setting<Integer> packets = this.sgRubberband.intSetting("Packet Burst", 1, 1, 20, 1, "The number of redundant position packets sent to ensure desynchronization.", () -> this.mode.get() == BurrowMode.Offset);
     private final Setting<Boolean> checkCollisions = this.sgGeneral.booleanSetting("Collision Check", true, "Prevents activation if entities are obstructing the target coordinates.");
     private final Setting<Boolean> attack = this.sgGeneral.booleanSetting("Auto Attack", true, "Attempts to clear obstructing entities like End Crystals before initiating the burrow.");
     private final Setting<SwitchMode> switchMode = this.sgGeneral.enumSetting("Swap Logic", SwitchMode.Silent, "The inventory management method used to select the required block.");
@@ -52,18 +54,15 @@ public class BurrowRewrite extends Module {
     private final Setting<Double> cooldown = this.sgGeneral.doubleSetting("Activation Cooldown", 1.0, 0.0, 5.0, 0.05, "Minimum delay between consecutive burrow attempts.");
     private final Setting<Boolean> autoDisable = this.sgGeneral.booleanSetting("Auto Disable", true, "Automatically disables the module after successful burrow placement.");
 
-    private final Setting<Double> offset = this.sgRubberband.doubleSetting("Teleport Offset", 1.0, -10.0, 10.0, 0.2, "The vertical distance used to trigger a server-side rubberband effect.", () -> this.mode.get() == BurrowMode.Offset);
-    private final Setting<Integer> packets = this.sgRubberband.intSetting("Packet Burst", 1, 1, 20, 1, "The number of redundant position packets sent to ensure desynchronization.", () -> this.mode.get() == BurrowMode.Offset);
     private final Setting<Boolean> smooth = this.sgRubberband.booleanSetting("Kinetic Smoothing", false, "Maintains movement momentum post-burrow to avoid immediate velocity resets.");
     private final Setting<Boolean> syncPacket = this.sgRubberband.booleanSetting("State Synchronization", false, "Sends an additional full movement packet to align client and server states.", this.smooth::get);
-
-    private final Direction[] burrowDirections = new Direction[]{
-            Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST
-    };
 
     private final Predicate<ItemStack> predicate = stack -> stack.getItem() instanceof BlockItem blockItem
             && this.blocks.get().contains(blockItem.getBlock());
 
+    private final Direction[] burrowDirections = new Direction[]{
+            Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST
+    };
     private boolean shouldCancel = true;
     private int tick = 0;
     private Vec3 startPos = Vec3.ZERO;

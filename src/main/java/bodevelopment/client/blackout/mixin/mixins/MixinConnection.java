@@ -35,6 +35,8 @@ public abstract class MixinConnection {
     @Shadow
     @Final
     private static Logger LOGGER;
+    @Unique
+    private final ThreadLocal<Boolean> cancelled = ThreadLocal.withInitial(() -> false);
     @Shadow
     @Final
     private PacketFlow receiving;
@@ -42,8 +44,6 @@ public abstract class MixinConnection {
     private Channel channel;
     @Unique
     private volatile Packet<?> currentPacket = null;
-    @Unique
-    private final ThreadLocal<Boolean> cancelled = ThreadLocal.withInitial(() -> false);
 
     @Inject(method = "genericsFtw", at = @At("HEAD"), cancellable = true)
     private static void preReceivePacket(Packet<?> packet, PacketListener listener, CallbackInfo ci) {

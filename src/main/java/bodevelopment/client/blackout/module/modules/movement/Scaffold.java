@@ -47,6 +47,7 @@ import java.util.List;
 
 public class Scaffold extends MoveUpdateModule {
     private static Scaffold INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgPlacing = this.addGroup("Placing");
     private final SettingGroup sgAttack = this.addGroup("Attack");

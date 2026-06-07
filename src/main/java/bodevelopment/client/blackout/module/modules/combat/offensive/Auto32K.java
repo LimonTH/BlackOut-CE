@@ -52,6 +52,7 @@ public class Auto32K extends Module {
     private final Setting<Boolean> currentSlot = this.sgGeneral.booleanSetting("Use Selected Slot", true, "Attempts to move the 32k sword into your currently selected hotbar slot.");
     private final Setting<Integer> swordSlot = this.sgGeneral.intSetting("Target Hotbar Slot", 1, 1, 9, 1, "The specific hotbar slot to move the sword into.", () -> !this.currentSlot.get());
     private final Setting<Boolean> silent = this.sgGeneral.booleanSetting("Silent GUI", true, "Attempts to process container interactions without showing the GUI on your screen.");
+
     private final Setting<RenderShape> renderShapeHopper = this.sgRender.enumSetting("Hopper Shape", RenderShape.Full, "Visual style for the hopper placement highlight.");
     private final Setting<BlackOutColor> lineColorHopper = this.sgRender.colorSetting("Hopper Line", new BlackOutColor(255, 255, 255, 255), "Outline color for the hopper block.");
     private final Setting<BlackOutColor> sideColorHopper = this.sgRender.colorSetting("Hopper Fill", new BlackOutColor(255, 255, 255, 50), "Face color for the hopper block.");
