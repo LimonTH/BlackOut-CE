@@ -49,8 +49,16 @@ public class ConsoleScreen extends ClickGuiScreen {
         }
 
         ConsoleLog.addListener(entry -> {
+            float prevLen = this.getLength();
+            float contentH = this.height - 40.0F;
+            float prevMax = Math.max(prevLen - contentH, 0.0F);
+            boolean atBottom = this.scroll.get() >= prevMax - 1.0F;
             this.lines.addFirst(new Line(this.split(entry.text(), ""), "", entry.color()));
             CollectionUtils.limitSize(this.lines, 200);
+            if (atBottom) {
+                float newMax = Math.max(this.getLength() - contentH, 0.0F);
+                this.scroll.set(newMax);
+            }
         });
     }
 
