@@ -776,11 +776,11 @@ public class AutoCrystal extends Module {
                 return false;
             }
 
-            if (crystalBasePos.equals(base.minePos)) {
+            if (crystalBasePos.equals(base.bestBasePos)) {
                 return false;
             }
 
-            if (this.placePos.equals(base.minePos)) {
+            if (this.placePos.equals(base.bestBasePos)) {
                 return false;
             }
         }
