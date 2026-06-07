@@ -77,6 +77,9 @@ public class Capes {
                     Map<String, ResourceLocation> identifiers = new HashMap<>();
                     read.lines().forEach(line -> readLine(line, identifiers));
                 }
+                if (!toLoad.isEmpty()) {
+                    startLoad();
+                }
             } catch (IOException e) {
                 System.err.println("[BlackOut] Failed to fetch capes list (server unreachable or timeout)");
             }
