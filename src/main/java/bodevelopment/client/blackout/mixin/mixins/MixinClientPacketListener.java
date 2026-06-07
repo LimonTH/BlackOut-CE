@@ -94,7 +94,7 @@ public class MixinClientPacketListener {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Connection;send(Lnet/minecraft/network/protocol/Packet;)V", ordinal = 1)
     )
     private void sendFull(Connection instance, Packet<?> packet, Operation<Void> original) {
-        if (CompatUtils.isBaritonePathing()) {
+        if (CompatUtils.Baritone.isPathing()) {
             original.call(instance, packet);
             return;
         }

@@ -76,7 +76,7 @@ public abstract class MixinLocalPlayer {
 
     @Inject(method = "sendPosition", at = @At("TAIL"))
     private void sendPacketsTail(CallbackInfo ci) {
-        if (!CompatUtils.shouldBypassRotations()
+        if (!CompatUtils.Baritone.shouldBypassRotations()
                 && !sent
                 && Managers.ROTATION.rotated()
                 && (Managers.ROTATION.rotatingYaw != RotationManager.RotatePhase.Inactive || Managers.ROTATION.rotatingPitch != RotationManager.RotatePhase.Inactive)) {
@@ -105,7 +105,7 @@ public abstract class MixinLocalPlayer {
 
     @WrapOperation(method = "sendPosition", at = @At(value = "FIELD", target = "Lnet/minecraft/client/player/LocalPlayer;yRotLast:F", opcode = 180))
     private float prevYaw(LocalPlayer instance, Operation<Float> original) {
-        if (instance == BlackOut.mc.player && !CompatUtils.shouldBypassRotations()) {
+        if (instance == BlackOut.mc.player && !CompatUtils.Baritone.shouldBypassRotations()) {
             return Managers.ROTATION.prevYaw;
         }
         return original.call(instance);
@@ -113,7 +113,7 @@ public abstract class MixinLocalPlayer {
 
     @WrapOperation(method = "sendPosition", at = @At(value = "FIELD", target = "Lnet/minecraft/client/player/LocalPlayer;xRotLast:F", opcode = 180))
     private float prevPitch(LocalPlayer instance, Operation<Float> original) {
-        if (instance == BlackOut.mc.player && !CompatUtils.shouldBypassRotations()) {
+        if (instance == BlackOut.mc.player && !CompatUtils.Baritone.shouldBypassRotations()) {
             return Managers.ROTATION.prevPitch;
         }
         return original.call(instance);
@@ -129,7 +129,7 @@ public abstract class MixinLocalPlayer {
 
     @WrapOperation(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;onGround()Z"))
     private boolean isOnGround(LocalPlayer instance, Operation<Boolean> original) {
-        if (instance == BlackOut.mc.player && !CompatUtils.isBaritonePathing()) {
+        if (instance == BlackOut.mc.player && !CompatUtils.Baritone.isPathing()) {
             AntiHunger antiHunger = AntiHunger.getInstance();
             if (antiHunger.enabled && antiHunger.moving.get()) {
                 return false;
@@ -140,7 +140,7 @@ public abstract class MixinLocalPlayer {
 
     @WrapOperation(method = "sendIsSprintingIfNeeded", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isSprinting()Z"))
     private boolean sprinting(LocalPlayer instance, Operation<Boolean> original) {
-        if (instance == BlackOut.mc.player && !CompatUtils.isBaritonePathing()) {
+        if (instance == BlackOut.mc.player && !CompatUtils.Baritone.isPathing()) {
             AntiHunger antiHunger = AntiHunger.getInstance();
             if (antiHunger.enabled && antiHunger.sprint.get()) {
                 return false;
@@ -162,7 +162,7 @@ public abstract class MixinLocalPlayer {
 
     @WrapOperation(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isSprinting()Z"))
     private boolean forwardMovement(LocalPlayer value, Operation<Boolean> original) {
-        if ((Object) this != BlackOut.mc.player || CompatUtils.isBaritonePathing()) {
+        if ((Object) this != BlackOut.mc.player || CompatUtils.Baritone.isPathing()) {
             return value.isSprinting();
         }
 

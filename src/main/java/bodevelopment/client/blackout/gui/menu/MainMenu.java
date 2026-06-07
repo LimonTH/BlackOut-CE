@@ -15,7 +15,6 @@ import bodevelopment.client.blackout.util.SelectedComponent;
 import bodevelopment.client.blackout.util.SoundUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -28,7 +27,6 @@ import java.util.Random;
 
 public class MainMenu {
     public static final int EMPTY_COLOR = new Color(0, 0, 0, 0).getRGB();
-    private static final boolean MOD_MENU_LOADED = FabricLoader.getInstance().isModLoaded("modmenu");
     private static final MainMenu INSTANCE = new MainMenu();
     private static final long SPLASH_DELAY = 10000L;
     public static float globalFade = 0.0F;
@@ -90,17 +88,12 @@ public class MainMenu {
                 () -> this.startExit(new OptionsScreen(this.titleScreen, BlackOut.mc.options))
         ));
 
-        if (MOD_MENU_LOADED) {
+        if (bodevelopment.client.blackout.util.CompatUtils.ModMenu.isLoaded()) {
             names.add("Mods");
             actions.add(() -> {
-                try {
-                    Class<?> modsScreenClass = Class.forName("com.terraformersmc.modmenu.gui.ModsScreen");
-                    Screen modsScreen = (Screen) modsScreenClass
-                            .getConstructor(Screen.class)
-                            .newInstance(this.titleScreen);
+                Screen modsScreen = bodevelopment.client.blackout.util.CompatUtils.ModMenu.createScreen(this.titleScreen);
+                if (modsScreen != null) {
                     this.startExit(modsScreen);
-                } catch (Exception e) {
-                    bodevelopment.client.blackout.util.BOLogger.error("Failed to open Mod Menu screen", e);
                 }
             });
         }

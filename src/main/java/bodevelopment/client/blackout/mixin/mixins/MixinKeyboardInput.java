@@ -33,7 +33,7 @@ public abstract class MixinKeyboardInput {
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void onMovement(CallbackInfo ci) {
-        if (CompatUtils.shouldBypassRotations()) {
+        if (CompatUtils.Baritone.shouldBypassRotations()) {
             this.grim = false;
             this.move = false;
             return;

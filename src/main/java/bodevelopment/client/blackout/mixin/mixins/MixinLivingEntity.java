@@ -49,7 +49,7 @@ public abstract class MixinLivingEntity {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getYRot()F")
     )
     private float wrapSprintJumpYaw(LivingEntity instance, Operation<Float> original) {
-        if (instance != BlackOut.mc.player || !SettingUtils.grimMovement() || CompatUtils.isBaritonePathing()) {
+        if (instance != BlackOut.mc.player || !SettingUtils.grimMovement() || CompatUtils.Baritone.isPathing()) {
             return original.call(instance);
         }
         return Managers.ROTATION.moveLookYaw;
@@ -93,7 +93,7 @@ public abstract class MixinLivingEntity {
 
     @Redirect(method = "updateFallFlyingMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getXRot()F"))
     private float redirectElytraPitch(LivingEntity instance) {
-        if ((Object) this == BlackOut.mc.player && !CompatUtils.shouldBypassRotations()) {
+        if ((Object) this == BlackOut.mc.player && !CompatUtils.Baritone.shouldBypassRotations()) {
             if (SettingUtils.grimMovement()) {
                 return Managers.ROTATION.nextPitch;
             }
@@ -119,7 +119,7 @@ public abstract class MixinLivingEntity {
 
     @Unique
     private float getModifiedYaw(LivingEntity livingEntity, Operation<Float> original) {
-        if (livingEntity == BlackOut.mc.player && !CompatUtils.isBaritonePathing() && Managers.ROTATION.yawActive()) {
+        if (livingEntity == BlackOut.mc.player && !CompatUtils.Baritone.isPathing() && Managers.ROTATION.yawActive()) {
             return Managers.ROTATION.renderYaw;
         }
         return original.call(livingEntity);
