@@ -29,6 +29,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @SuppressWarnings("resource")
 public class Capes {
     private static final Map<String, ResourceLocation> capes = new ConcurrentHashMap<>();
+    private static final Map<String, float[]> capeDimensions = new ConcurrentHashMap<>();
     private static final List<ResourceLocation> loaded = new CopyOnWriteArrayList<>();
     private static final List<Tuple<String, ResourceLocation>> toLoad = new CopyOnWriteArrayList<>();
     private static final int HTTP_TIMEOUT_MS = 5000;
@@ -50,6 +51,18 @@ public class Capes {
             return null;
         }
         return identifier;
+    }
+
+    public static float[] getCapeDimensions(String uuid) {
+        return capeDimensions.get(uuid);
+    }
+
+    public static float[] getCapeDimensions(ResourceLocation identifier) {
+        for (Map.Entry<String, float[]> entry : capeDimensions.entrySet()) {
+            ResourceLocation loc = capes.get(entry.getKey());
+            if (identifier.equals(loc)) return entry.getValue();
+        }
+        return null;
     }
 
     public static void requestCapes() {
@@ -95,6 +108,15 @@ public class Capes {
         }
     }
 
+    public static float[] getDimensionsFor(ResourceLocation identifier) {
+        for (Map.Entry<String, ResourceLocation> entry : capes.entrySet()) {
+            if (identifier.equals(entry.getValue())) {
+                return capeDimensions.get(entry.getKey());
+            }
+        }
+        return null;
+    }
+
     private static class CapeTexture extends AbstractTexture {
         public CapeTexture(String name, ResourceLocation identifier) {
             try {
@@ -119,6 +141,13 @@ public class Capes {
 
                 TextureManager manager = BlackOut.mc.getTextureManager();
                 manager.register(identifier, this);
+
+                for (Map.Entry<String, ResourceLocation> entry : capes.entrySet()) {
+                    if (identifier.equals(entry.getValue())) {
+                        capeDimensions.put(entry.getKey(), new float[] { image.getWidth(), image.getHeight() });
+                        break;
+                    }
+                }
 
                 Capes.loaded.add(identifier);
                 Capes.loading = false;

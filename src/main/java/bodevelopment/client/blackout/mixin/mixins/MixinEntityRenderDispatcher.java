@@ -9,6 +9,9 @@ import bodevelopment.client.blackout.module.modules.visual.misc.HandESP;
 import bodevelopment.client.blackout.module.modules.visual.misc.NoRender;
 import bodevelopment.client.blackout.module.modules.visual.world.Brightness;
 import bodevelopment.client.blackout.rendering.framebuffer.FrameBuffer;
+import bodevelopment.client.blackout.util.render.CapeRenderContext;
+import bodevelopment.client.blackout.util.Capes;
+import bodevelopment.client.blackout.util.CompatUtils;
 import bodevelopment.client.blackout.util.render.consumers.DualVertexConsumer;
 import bodevelopment.client.blackout.util.render.misc.FramebufferMultiBufferSource;
 import bodevelopment.client.blackout.util.render.misc.RenderEntityCapture;
@@ -19,6 +22,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -95,9 +99,22 @@ public class MixinEntityRenderDispatcher {
             return;
         }
 
-        // HandESP compat for FirstPersonModel mod
+        if (state instanceof net.minecraft.client.renderer.entity.state.PlayerRenderState playerState) {
+            ResourceLocation cape = Capes.getCape(playerState);
+            if (cape != null) {
+                float[] dims = Capes.getDimensionsFor(cape);
+                if (dims != null) {
+                    CapeRenderContext.set(cape, dims[0], dims[1]);
+                } else {
+                    CapeRenderContext.set(cape);
+                }
+            } else {
+                CapeRenderContext.clear();
+            }
+        }
+
         HandESP handESP = HandESP.getInstance();
-        if (handESP.enabled && entity == BlackOut.mc.player
+        if (CompatUtils.FirstPersonModel.isLoaded() && handESP.enabled && entity == BlackOut.mc.player
                 && BlackOut.mc.options.getCameraType() == CameraType.FIRST_PERSON && !FreeCam.getInstance().enabled) {
             FramebufferMultiBufferSource fboSource = this.blackout$handEspFboSource;
 
@@ -114,9 +131,11 @@ public class MixinEntityRenderDispatcher {
             RenderSystem.depthMask(true);
             FrameBuffer buffer = Managers.FRAME_BUFFER.getBuffer("handESP");
             fboSource.drawToFramebuffer(buffer);
+            CapeRenderContext.clear();
             return;
         }
 
         instance.render(state, matrices, vertexConsumers, light);
+        CapeRenderContext.clear();
     }
 }

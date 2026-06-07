@@ -63,7 +63,7 @@ public class RotationManager extends Manager {
 
     @Event
     public void onRender(RenderEvent.World.Pre event) {
-        if (CompatUtils.shouldBypassRotations()) return;
+        if (CompatUtils.Baritone.shouldBypassRotations()) return;
 
         if (this.rotatingYaw == RotatePhase.Rotating && RotationSettings.getInstance().vanillaRotation.get()) {
             BlackOut.mc.player.setYRot(Mth.lerp(event.tickDelta, this.prevRenderYaw, this.renderYaw));
@@ -126,12 +126,12 @@ public class RotationManager extends Manager {
     }
 
     public float getNextYaw() {
-        if (CompatUtils.shouldBypassRotations()) return BlackOut.mc.player.getYRot();
+        if (CompatUtils.Baritone.shouldBypassRotations()) return BlackOut.mc.player.getYRot();
         return this.rotated() ? this.nextYaw : this.prevYaw;
     }
 
     public float getNextPitch() {
-        if (CompatUtils.shouldBypassRotations()) return BlackOut.mc.player.getXRot();
+        if (CompatUtils.Baritone.shouldBypassRotations()) return BlackOut.mc.player.getXRot();
         return this.rotated() ? this.nextPitch : this.prevPitch;
     }
 
@@ -196,17 +196,17 @@ public class RotationManager extends Manager {
     }
 
     public boolean rotated() {
-        if (CompatUtils.shouldBypassRotations()) return false;
+        if (CompatUtils.Baritone.shouldBypassRotations()) return false;
         return !SharedFeatures.shouldPauseRotations() && (this.nextYaw != this.prevYaw || this.nextPitch != this.prevPitch);
     }
 
     public boolean yawActive() {
-        if (CompatUtils.shouldBypassRotations()) return false;
+        if (CompatUtils.Baritone.shouldBypassRotations()) return false;
         return Managers.ROTATION.rotatingYaw != RotatePhase.Inactive || SharedFeatures.shouldPauseRotations() || PacketFly.getInstance().enabled;
     }
 
     public boolean pitchActive() {
-        if (CompatUtils.shouldBypassRotations()) return false;
+        if (CompatUtils.Baritone.shouldBypassRotations()) return false;
         return Managers.ROTATION.rotatingPitch != RotatePhase.Inactive
                 || SharedFeatures.shouldPauseRotations()
                 || PacketFly.getInstance().enabled;

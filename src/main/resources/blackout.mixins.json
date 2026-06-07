@@ -54,6 +54,7 @@
     "mixins.MixinPlayerItemInHandLayer",
     "mixins.MixinPlayerRenderer",
     "mixins.MixinPlayerRenderState",
+    "mixins.MixinPlayerSkin",
     "mixins.MixinRemotePlayer",
     "mixins.MixinRenderSection",
     "mixins.MixinScreen",
@@ -65,7 +66,8 @@
     "mixins.MixinWeatherEffectRenderer",
     "mixins.fabricapi.MixinFabricBakedModel",
     "mixins.MixinJoinMultiplayerScreen",
-    "mixins.MixinAddressCheck"
+    "mixins.MixinAddressCheck",
+    "mixins.MixinVanillaCapeRenderer"
   ],
   "injectors": {
     "defaultRequire": 1
