@@ -40,6 +40,7 @@ import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 public class FakePlayerEntity extends AbstractClientPlayer {
     private final List<PlayerPos> positions = new ArrayList<>();
@@ -52,7 +53,7 @@ public class FakePlayerEntity extends AbstractClientPlayer {
     private int sinceEat = 0;
 
     public FakePlayerEntity(String name, List<PlayerPos> recordedPositions) {
-        super(BlackOut.mc.level, new GameProfile(UUIDUtil.createOfflinePlayerUUID(name), name));
+        super(BlackOut.mc.level, new GameProfile(UUID.randomUUID(), name));
 
         this.positions.addAll(recordedPositions);
         this.progress = 0;

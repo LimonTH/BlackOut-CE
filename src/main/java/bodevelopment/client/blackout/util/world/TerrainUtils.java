@@ -1,11 +1,13 @@
 package bodevelopment.client.blackout.util.world;
 
+import bodevelopment.client.blackout.annotations.PublicAPI;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.DensityFunction;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.RandomState;
 
+@PublicAPI
 public final class TerrainUtils {
     private TerrainUtils() {
     }

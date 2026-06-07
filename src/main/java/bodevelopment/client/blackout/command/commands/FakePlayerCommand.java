@@ -8,8 +8,6 @@ import java.util.Collections;
 import java.util.List;
 
 public class FakePlayerCommand extends Command {
-    public int fakePlayerID = 0;
-
     public FakePlayerCommand() {
         super("fakeplayer", "Usage: fakeplayer [add, record, restart, heal, clear]");
     }
@@ -26,8 +24,7 @@ public class FakePlayerCommand extends Command {
                     Managers.FAKE_PLAYER.startRecording();
                     return "Started recording movement";
                 case "add":
-                    Managers.FAKE_PLAYER.add(FakeplayerSettings.getInstance().fakePlayerName.get() + this.fakePlayerID);
-                    this.fakePlayerID++;
+                    Managers.FAKE_PLAYER.add(FakeplayerSettings.getInstance().fakePlayerName.get());
                     return "Added a fake player";
                 case "heal":
                     Managers.FAKE_PLAYER.fakePlayers.forEach(entity -> {

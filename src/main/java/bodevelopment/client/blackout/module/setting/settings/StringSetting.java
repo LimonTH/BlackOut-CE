@@ -14,12 +14,19 @@ import java.awt.*;
 
 public class StringSetting extends Setting<String> {
     private final TextField textField = new TextField() {{
-        setMaxLength(64);
+        setMaxLength(256);
     }};
     private final int id = SelectedComponent.nextId();
 
     public StringSetting(String name, String val, String description, SingleOut<Boolean> visible) {
         super(name, val, description, visible);
+        this.textField.setContent(val);
+    }
+
+    @Override
+    public void reset() {
+        super.reset();
+        this.textField.setContent(this.get());
     }
 
     @Override
@@ -37,13 +44,13 @@ public class StringSetting extends Setting<String> {
         this.textField.setActive(SelectedComponent.is(this.id));
         this.textField.render(
                 this.stack,
-                1.8F,
+                2.0F,
                 this.mx,
                 this.my,
                 fieldX,
                 fieldY,
                 fieldWidth,
-                15.0F,
+                18.0F,
                 4.0F,
                 6.0F,
                 Color.WHITE,
@@ -80,7 +87,7 @@ public class StringSetting extends Setting<String> {
 
     @Override
     public float getHeight() {
-        return 55.0F;
+        return 60.0F;
     }
 
     @Override

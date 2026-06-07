@@ -22,7 +22,7 @@ public class DoubleSetting extends Setting<Double> {
     public final double step;
     private final int decimals;
     private final TextField textField = new TextField() {{
-        setMaxLength(16);
+        setMaxLength(24);
     }};
     private final int id = SelectedComponent.nextId();
     private float sliderPos;

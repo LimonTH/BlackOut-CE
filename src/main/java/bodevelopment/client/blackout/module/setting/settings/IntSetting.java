@@ -21,7 +21,7 @@ public class IntSetting extends Setting<Integer> {
     public final int max;
     public final int step;
     private final TextField textField = new TextField() {{
-        setMaxLength(10);
+        setMaxLength(24);
     }};
     private final int id = SelectedComponent.nextId();
     private float sliderPos;

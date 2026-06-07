@@ -1,5 +1,6 @@
 package bodevelopment.client.blackout.util.world;
 
+import bodevelopment.client.blackout.annotations.Internal;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
@@ -7,6 +8,7 @@ import net.minecraft.world.level.biome.Biomes;
 import java.util.HashMap;
 import java.util.Map;
 
+@Internal
 public final class BiomeColorMap {
     private static final Map<ResourceKey<Biome>, Integer> COLORS = new HashMap<>();
     private static final int DEFAULT_COLOR = 0xFF3B7A3B;
