@@ -35,9 +35,6 @@ public class Strafe extends Module {
     private final SettingGroup sgDamageBoost = this.addGroup("Damage Boost");
     private final SettingGroup sgPause = this.addGroup("Pause");
 
-    public final Setting<Speed.LiquidMode> pauseWater = this.sgPause.enumSetting("Water Interaction", Speed.LiquidMode.Touching, "Behavioral state when in contact with water.");
-    public final Setting<Speed.LiquidMode> pauseLava = this.sgPause.enumSetting("Lava Interaction", Speed.LiquidMode.Touching, "Behavioral state when in contact with lava.");
-
     private final Setting<Boolean> useOffsets = this.sgGeneral.booleanSetting("Coordinate Offsets", false, "Applies pre-defined movement values from the external strafe-offsets.txt configuration.");
     private final Setting<Boolean> offsetEffects = this.sgGeneral.booleanSetting("Scale Offsets", true, "Multiplies configured offsets based on active status effects like Speed or Slowness.", this.useOffsets::get);
     private final Setting<Boolean> strictCollisions = this.sgGeneral.booleanSetting("Collision Reset", true, "Immediately recalculates velocity vectors upon making contact with a horizontal block face.");
@@ -84,6 +81,8 @@ public class Strafe extends Module {
     private final Setting<Double> boostTime = this.sgDamageBoost.doubleSetting("Impulse Duration", 0.5, 0.0, 2.0, 0.02, "The time window during which a damage boost remains active.");
     private final Setting<Integer> latencyTicks = this.sgDamageBoost.intSetting("Velocity Buffer", 0, 0, 10, 1, "Compensates for network latency by using historical velocity data for boost calculation.");
 
+    public final Setting<Speed.LiquidMode> pauseWater = this.sgPause.enumSetting("Water Interaction", Speed.LiquidMode.Touching, "Behavioral state when in contact with water.");
+    public final Setting<Speed.LiquidMode> pauseLava = this.sgPause.enumSetting("Lava Interaction", Speed.LiquidMode.Touching, "Behavioral state when in contact with lava.");
     private final Setting<Boolean> pauseSneak = this.sgPause.booleanSetting("Inhibit on Sneak", true, "Suspends movement logic while sneaking.");
     private final Setting<Boolean> pauseElytra = this.sgPause.booleanSetting("Inhibit on Flight", true, "Suspends movement logic while flying with an Elytra.");
     private final Setting<Boolean> pauseFly = this.sgPause.booleanSetting("Inhibit on Creative", true, "Suspends movement logic while in creative flight.");

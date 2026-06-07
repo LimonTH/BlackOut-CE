@@ -28,8 +28,6 @@ import org.lwjgl.opengl.GL14;
  * eliminating double-alpha and the inner-border artefact between overlapping elements.
  */
 public class HudMergePass {
-    public enum Phase {IDLE, COLLECT, SKIP}
-
     private static Phase phase = Phase.IDLE;
     private static StencilFrameBuffer bgFbo;
 
@@ -147,4 +145,6 @@ public class HudMergePass {
     public static void onResize() {
         if (bgFbo != null) bgFbo.resize();
     }
+
+    public enum Phase {IDLE, COLLECT, SKIP}
 }

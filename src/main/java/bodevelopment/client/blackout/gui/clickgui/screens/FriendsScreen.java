@@ -20,8 +20,8 @@ import java.util.Map;
 
 public class FriendsScreen extends ClickGuiScreen {
     private static final float ITEM_HEIGHT = 75.0F;
-    private boolean first;
     private final Map<String, ResourceLocation> skinCache = new HashMap<>();
+    private boolean first;
 
     public FriendsScreen() {
         super("Friends", 800.0F, 500.0F, true);

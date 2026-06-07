@@ -29,6 +29,7 @@ public class ModuleComponent extends Component {
     private static final Color disabledColor = new Color(150, 150, 150, 255);
 
     public final AbstractModule module;
+    private final SettingsRenderer.ResetState resetState = new SettingsRenderer.ResetState();
     public float length;
     public float l;
     public float maxLength = -1.0F;
@@ -36,7 +37,6 @@ public class ModuleComponent extends Component {
     private float openProgress = 0.0F;
     private double toggleProgress = 0.0;
     private long prevTime = 0L;
-    private final SettingsRenderer.ResetState resetState = new SettingsRenderer.ResetState();
 
     public ModuleComponent(PoseStack stack, AbstractModule module) {
         super(stack);

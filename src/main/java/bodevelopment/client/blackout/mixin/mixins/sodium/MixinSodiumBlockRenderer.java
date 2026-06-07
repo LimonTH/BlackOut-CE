@@ -19,12 +19,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(targets = "net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer", remap = false)
 @Internal
 public class MixinSodiumBlockRenderer {
+    @Unique
+    private static final ThreadLocal<Integer> XRAY_ALPHA = ThreadLocal.withInitial(() -> -1);
     @Final
     @Shadow
     private ChunkVertexEncoder.Vertex[] vertices;
-
-    @Unique
-    private static final ThreadLocal<Integer> XRAY_ALPHA = ThreadLocal.withInitial(() -> -1);
 
     @Inject(method = "renderModel", at = @At("HEAD"), cancellable = true, remap = false, require = 0)
     private void onRenderModelHead(

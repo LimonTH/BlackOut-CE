@@ -7,8 +7,15 @@ import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.visual.world.SeedSearcher.FoundStructure;
 import bodevelopment.client.blackout.module.modules.visual.world.SeedSearcher.SeedSearcher;
 import bodevelopment.client.blackout.module.modules.visual.world.SeedSearcher.StructureType;
-import bodevelopment.client.blackout.util.*;
+import bodevelopment.client.blackout.util.ColorUtils;
+import bodevelopment.client.blackout.util.FileUtils;
+import bodevelopment.client.blackout.util.GuiColorUtils;
+import bodevelopment.client.blackout.util.SelectedComponent;
+import bodevelopment.client.blackout.util.render.Render2DUtils;
+import bodevelopment.client.blackout.util.render.RenderLayer;
 import bodevelopment.client.blackout.util.render.ScissorStack;
+import bodevelopment.client.blackout.util.world.LootSimulationEngine;
+import bodevelopment.client.blackout.util.world.LootTableData;
 import bodevelopment.client.blackout.util.world.SeedSourceUtils;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -28,22 +35,18 @@ import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class SeedMapScreen extends ClickGuiScreen {
     private static final int TILE_SIZE = 256;
-
-    private final Map<Long, MapTile> tileCache = new ConcurrentHashMap<>();
-    private final ExecutorService generatePool = Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors() - 1));
-
     private static final float MAP_WIDTH = 860.0F;
     private static final float MAP_HEIGHT = 500.0F;
     private static final float FOOTER_HEIGHT = 40.0F;
     private static final float MAP_X = 10.0F;
     private static final float MAP_Y = 5.0F;
-
     private static final Color GRID_COLOR = new Color(50, 55, 60, 120);
     private static final Color GRID_ORIGIN = new Color(120, 120, 130, 180);
     private static final Color PLAYER_COLOR = new Color(50, 255, 50, 255);
@@ -53,41 +56,39 @@ public class SeedMapScreen extends ClickGuiScreen {
     private static final Color SLIME_BORDER = new Color(100, 200, 50, 120);
     private static final Color COORD_LABEL_COLOR = new Color(200, 200, 210, 180);
     private static final Map<String, DynamicTexture> ICON_TEXTURE_CACHE = new java.util.HashMap<>();
-
+    private static final float ICON_SIZE = 20.0F;
+    private static final float ICON_SIZE_SELECTED = 26.0F;
+    private final Map<Long, MapTile> tileCache = new ConcurrentHashMap<>();
+    private final ExecutorService generatePool = Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors() - 1));
     private final String seedString;
+    private final long seed;
+    private final TextField fieldX = new TextField();
+    private final TextField fieldZ = new TextField();
+    private final int fieldXId = SelectedComponent.nextId();
+    private final int fieldZId = SelectedComponent.nextId();
     private SeedSourceUtils biomeSource;
     private ResourceKey<Level> lastDim = null;
-
-    private final long seed;
     private float mapCenterX;
     private float mapCenterZ;
     private float blocksPerPixel = 8.0F;
-
     private boolean dragging = false;
     private double dragStartMx;
     private double dragStartMy;
     private float dragStartCenterX;
     private float dragStartCenterZ;
     private boolean hoveredStructure = false;
-
-    private final TextField fieldX = new TextField();
-    private final TextField fieldZ = new TextField();
-    private final int fieldXId = SelectedComponent.nextId();
-    private final int fieldZId = SelectedComponent.nextId();
+    private boolean hoveredCopyBtn = false;
+    private float copyBtnX, copyBtnY, copyBtnW, copyBtnH;
+    private String copyTooltip = null;
     private boolean showSlimeChunks = false;
-
     private FoundStructure selectedStructure = null;
     private double mouseDownX, mouseDownY;
-
     private volatile List<FoundStructure> mapStructures = new java.util.ArrayList<>();
     private volatile boolean mapSearchRunning = false;
     private float lastSearchCX = Float.MAX_VALUE;
     private float lastSearchCZ = Float.MAX_VALUE;
     private float lastSearchBpp = -1.0F;
     private ResourceKey<Level> lastSearchDim;
-
-    private static final float ICON_SIZE = 20.0F;
-    private static final float ICON_SIZE_SELECTED = 26.0F;
 
     public SeedMapScreen(String seedString, long seed, SeedSourceUtils biomeSource) {
         super("Seed Map", MAP_WIDTH + 20.0F, MAP_HEIGHT + FOOTER_HEIGHT + 10.0F, false);
@@ -99,6 +100,159 @@ public class SeedMapScreen extends ClickGuiScreen {
             this.mapCenterX = (float) BlackOut.mc.player.getX();
             this.mapCenterZ = (float) BlackOut.mc.player.getZ();
         }
+    }
+
+    private static String getStructureFullName(FoundStructure s) {
+        String extra = s.extraInfo().trim();
+
+        return switch (s.type()) {
+            case VILLAGE -> {
+                String biome = extra.startsWith("zombie_") ? extra.substring(7) : extra;
+                String prefix = extra.startsWith("zombie_") ? "Zombie " : "";
+                yield prefix + switch (biome) {
+                    case "plains", "meadow", "sunflower_plains" -> "Plains Village";
+                    case "desert" -> "Desert Village";
+                    case "savanna", "savanna_plateau", "windswept_savanna" -> "Savanna Village";
+                    case "snowy_plains" -> "Snowy Village";
+                    case "taiga", "old_growth_pine_taiga", "old_growth_spruce_taiga" -> "Taiga Village";
+                    default -> "Village";
+                };
+            }
+
+            case BASTION_REMNANT -> switch (extra) {
+                case "hoglin" -> "Bastion Hoglin Stables";
+                case "housing" -> "Bastion Housing Units";
+                case "bridges" -> "Bastion Bridge";
+                case "treasure" -> "Bastion Treasure Room";
+                default -> "Bastion Remnant";
+            };
+
+            case IGLOO -> extra.equals("Laboratory") ? "Igloo with Basement" : "Igloo";
+
+            case OCEAN_RUIN -> {
+                String size = extra.contains("Big") ? "Big " : "Small ";
+                String temp = (extra.contains("warm") || extra.contains("lukewarm")) ? "Warm " : "Cold ";
+                yield size + temp + "Ocean Ruin";
+            }
+
+            case END_CITY -> extra.equals("Ship") ? "End City with Ship" : "End City";
+
+            case SPAWN -> "World Spawn Point";
+
+            case DESERT_WELL -> "Desert Well";
+
+            case END_GATEWAY -> "End Gateway";
+
+            case MINESHAFT -> "Mineshaft";
+
+            case BURIED_TREASURE -> "Buried Treasure";
+
+            case NETHER_FOSSIL -> "Nether Fossil";
+
+            case DUNGEON -> "Dungeon";
+
+            case GEODE -> "Geode";
+
+            case LAVA_POOL_SURFACE -> "Lava Pool (Surface)";
+
+            case LAVA_POOL_CAVE -> "Lava Pool (Cave)";
+
+            case RAVINE -> "Ravine";
+
+            default -> s.type().displayName;
+        };
+    }
+
+    private static int getIconGlId(StructureType type, String extraInfo) {
+        String extra = extraInfo.trim();
+
+        String path = switch (type) {
+            case BASTION_REMNANT -> "textures/map/structures/bastion/bastion_" + extra.trim().toLowerCase() + ".png";
+
+            case IGLOO -> extra.equals("Laboratory")
+                    ? "textures/map/structures/igloo/igloo_with_basement.png"
+                    : "textures/map/structures/igloo/igloo_without_basement.png";
+
+            case OCEAN_RUIN -> extra.contains("Big")
+                    ? "textures/map/structures/ocean_ruins/ocean_ruins_large.png"
+                    : "textures/map/structures/ocean_ruins/ocean_ruins_small.png";
+
+            case END_CITY -> extra.equals("Ship")
+                    ? "textures/map/structures/end_city/end_city_with_ship.png"
+                    : "textures/map/structures/end_city/end_city_without_ship.png";
+
+            case VILLAGE -> extra.startsWith("zombie_")
+                    ? "textures/map/structures/village/village_zombie.png"
+                    : "textures/map/structures/village/village_normal.png";
+
+            default -> type.iconPath;
+        };
+
+        DynamicTexture tex = ICON_TEXTURE_CACHE.computeIfAbsent(path, p -> {
+            BufferedImage img = FileUtils.readResourceImage(p);
+            if (img == null) {
+                if (!p.equals(type.iconPath)) return ICON_TEXTURE_CACHE.get(type.iconPath);
+                return null;
+            }
+            NativeImage ni = new NativeImage(NativeImage.Format.RGBA, img.getWidth(), img.getHeight(), false);
+            for (int iy = 0; iy < img.getHeight(); iy++) {
+                for (int ix = 0; ix < img.getWidth(); ix++) {
+                    ni.setPixel(ix, iy, img.getRGB(ix, iy));
+                }
+            }
+            DynamicTexture dt = new DynamicTexture(ni);
+            dt.upload();
+            return dt;
+        });
+
+        return tex == null ? 0 : tex.getId();
+    }
+
+    private static int getAppleIconGlId() {
+        String path = "textures/map/enchanted_apple.png";
+        DynamicTexture tex = ICON_TEXTURE_CACHE.computeIfAbsent(path, p -> {
+            BufferedImage img = FileUtils.readResourceImage(p);
+            if (img == null) return null;
+            NativeImage ni = new NativeImage(NativeImage.Format.RGBA, img.getWidth(), img.getHeight(), false);
+            for (int iy = 0; iy < img.getHeight(); iy++) {
+                for (int ix = 0; ix < img.getWidth(); ix++) {
+                    ni.setPixel(ix, iy, img.getRGB(ix, iy));
+                }
+            }
+            DynamicTexture dt = new DynamicTexture(ni);
+            dt.upload();
+            return dt;
+        });
+        return tex == null ? 0 : tex.getId();
+    }
+
+    private static int getCopyIconGlId() {
+        String path = "textures/copy.png";
+        DynamicTexture tex = ICON_TEXTURE_CACHE.computeIfAbsent(path, p -> {
+            BufferedImage img = FileUtils.readResourceImage(p);
+            if (img == null) return null;
+            NativeImage ni = new NativeImage(NativeImage.Format.RGBA, img.getWidth(), img.getHeight(), false);
+            for (int iy = 0; iy < img.getHeight(); iy++) {
+                for (int ix = 0; ix < img.getWidth(); ix++) {
+                    ni.setPixel(ix, iy, img.getRGB(ix, iy));
+                }
+            }
+            DynamicTexture dt = new DynamicTexture(ni);
+            dt.upload();
+            return dt;
+        });
+        return tex == null ? 0 : tex.getId();
+    }
+
+    private static boolean isSlimeChunk(long seed, int chunkX, int chunkZ) {
+        return new Random(
+                seed
+                        + ((long) chunkX * chunkX * 0x4c1906)
+                        + (chunkX * 0x5ac0dbL)
+                        + (long) chunkZ * chunkZ * 0x4307a7L
+                        + (chunkZ * 0x5f24fL)
+                        ^ 0x3ad8025fL
+        ).nextInt(10) == 0;
     }
 
     @Override
@@ -222,9 +376,48 @@ public class SeedMapScreen extends ClickGuiScreen {
         this.rounded(btnX, btnY, btnW, btnH, 4.0F, 0.0F, hovered ? BUTTON_HOVER : BUTTON_COLOR, ColorUtils.SHADOW100);
         this.text("Open Chunkbase", 2.0F, btnX + btnW / 2.0F, btnY + btnH / 2.0F, true, true, Color.WHITE);
 
+        this.copyTooltip = null;
+
         this.renderBiomeTooltip();
         renderSelectedStructurePanel();
         renderControlsHint();
+
+        // Render copy tooltip manually (ClickGui's hoveredDescription is not rendered while openedScreen is active)
+        if (this.copyTooltip != null) {
+            float textScale = 1.6F;
+            float maxBoxWidth = 350.0F;
+            List<String> lines = wrapTooltipText(this.copyTooltip, maxBoxWidth / textScale);
+
+            float finalWidth = 0;
+            for (String line : lines) {
+                finalWidth = Math.max(finalWidth, BlackOut.FONT.getWidth(line) * textScale);
+            }
+
+            float lineHeight = BlackOut.FONT.getHeight() * textScale;
+            float spacing = 2.0F;
+            float finalHeight = lines.size() * lineHeight + (lines.size() - 1) * spacing;
+
+            float rectX = (float) this.mx + 15;
+            float rectY = (float) this.my + 15;
+
+            if (rectX + finalWidth + 25 > this.width) rectX = (float) this.mx - finalWidth - 25;
+            if (rectY + finalHeight + 25 > this.height) rectY = (float) this.my - finalHeight - 25;
+
+            this.stack.translate(0, 0, RenderLayer.GUI_POPUP);
+
+            int bgColor = ColorUtils.withAlpha(GuiColorUtils.bg2.getRGB(), 235);
+            int textColor = ColorUtils.withAlpha(Color.WHITE.getRGB(), 255);
+
+            Render2DUtils.rounded(this.stack, rectX, rectY, finalWidth + 12, finalHeight + 10, 5.0F, 5.0F, bgColor, ColorUtils.SHADOW100I);
+
+            float currentY = rectY + 3.0F;
+            for (String line : lines) {
+                BlackOut.FONT.text(this.stack, line, textScale, rectX + 6, currentY, textColor, false, false);
+                currentY += lineHeight + spacing;
+            }
+
+            this.stack.translate(0, 0, -RenderLayer.GUI_POPUP);
+        }
     }
 
     private void renderBiomeTexture() {
@@ -352,7 +545,7 @@ public class SeedMapScreen extends ClickGuiScreen {
         if (this.selectedStructure == null) return;
 
         SeedSearcher sf = Managers.MODULES.getModule(SeedSearcher.class);
-        if (sf != null && sf.isEnchantedApplesEnabled() && !this.selectedStructure.extraInfo().contains("(Apple)")) {
+        if (sf == null) {
             this.selectedStructure = null;
             return;
         }
@@ -400,6 +593,26 @@ public class SeedMapScreen extends ClickGuiScreen {
         this.rounded(panelX, panelY, panelW, panelH, 4.0F, 0.0F, new Color(18, 18, 22, 240), ColorUtils.SHADOW100);
         this.quad(panelX + 4, panelY, panelW - 8, 2.0F, accent);
 
+        // Copy to clipboard icon (top-right corner, below accent line)
+        int copyIconGlId = getCopyIconGlId();
+        if (copyIconGlId != 0) {
+            float copyIconSize = 14.0F;
+            this.copyBtnX = panelX + panelW - padX - copyIconSize;
+            this.copyBtnY = panelY + 4.0F;
+            this.copyBtnW = copyIconSize;
+            this.copyBtnH = copyIconSize;
+            this.hoveredCopyBtn = this.mx >= this.copyBtnX && this.mx <= this.copyBtnX + this.copyBtnW && this.my >= this.copyBtnY && this.my <= this.copyBtnY + this.copyBtnH;
+
+            if (this.hoveredCopyBtn) {
+                this.copyTooltip = "Click to copy: " + this.selectedStructure.blockX() + " ~ " + this.selectedStructure.blockZ();
+            }
+
+            int iconAlpha = this.hoveredCopyBtn ? 255 : 180;
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, iconAlpha / 255.0F);
+            drawStructureIcon(this.copyBtnX, this.copyBtnY, copyIconSize, copyIconGlId);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        }
+
         this.text(title, titleScale, panelX + panelW / 2.0F, panelY + padY + titleH / 2.0F, true, true, Color.WHITE);
         this.text(coords, coordScale, panelX + panelW / 2.0F, panelY + padY + titleH + gap + coordH / 2.0F, true, true, new Color(160, 160, 185, 255));
 
@@ -415,67 +628,7 @@ public class SeedMapScreen extends ClickGuiScreen {
                 this.text(appleStatus, appleScale, startX + iconSize + 3 + textW / 2.0F, appleY, true, true, Color.CYAN);
             }
         }
-    }
 
-    private static String getStructureFullName(FoundStructure s) {
-        String extra = s.extraInfo().trim();
-
-        return switch (s.type()) {
-            case VILLAGE -> {
-                String biome = extra.startsWith("zombie_") ? extra.substring(7) : extra;
-                String prefix = extra.startsWith("zombie_") ? "Zombie " : "";
-                yield prefix + switch (biome) {
-                    case "plains", "meadow", "sunflower_plains" -> "Plains Village";
-                    case "desert" -> "Desert Village";
-                    case "savanna", "savanna_plateau", "windswept_savanna" -> "Savanna Village";
-                    case "snowy_plains" -> "Snowy Village";
-                    case "taiga", "old_growth_pine_taiga", "old_growth_spruce_taiga" -> "Taiga Village";
-                    default -> "Village";
-                };
-            }
-
-            case BASTION_REMNANT -> switch (extra) {
-                case "hoglin" -> "Bastion Hoglin Stables";
-                case "housing" -> "Bastion Housing Units";
-                case "bridges" -> "Bastion Bridge";
-                case "treasure" -> "Bastion Treasure Room";
-                default -> "Bastion Remnant";
-            };
-
-            case IGLOO -> extra.equals("Laboratory") ? "Igloo with Basement" : "Igloo";
-
-            case OCEAN_RUIN -> {
-                String size = extra.contains("Big") ? "Big " : "Small ";
-                String temp = (extra.contains("warm") || extra.contains("lukewarm")) ? "Warm " : "Cold ";
-                yield size + temp + "Ocean Ruin";
-            }
-
-            case END_CITY -> extra.equals("Ship") ? "End City with Ship" : "End City";
-
-            case SPAWN -> "World Spawn Point";
-
-            case DESERT_WELL -> "Desert Well";
-
-            case END_GATEWAY -> "End Gateway";
-
-            case MINESHAFT -> "Mineshaft";
-
-            case BURIED_TREASURE -> "Buried Treasure";
-
-            case NETHER_FOSSIL -> "Nether Fossil";
-
-            case DUNGEON -> "Dungeon";
-
-            case GEODE -> "Geode";
-
-            case LAVA_POOL_SURFACE -> "Lava Pool (Surface)";
-
-            case LAVA_POOL_CAVE -> "Lava Pool (Cave)";
-
-            case RAVINE -> "Ravine";
-
-            default -> s.type().displayName;
-        };
     }
 
     private void renderControlsHint() {
@@ -544,15 +697,46 @@ public class SeedMapScreen extends ClickGuiScreen {
         long s = this.seed;
         SeedSourceUtils src = this.biomeSource;
         ResourceKey<Level> dim = this.lastDim;
+        boolean lootMode = finder.isLootSimulationEnabled();
 
         mapSearchRunning = true;
         generatePool.execute(() -> {
             try {
                 List<FoundStructure> results = new java.util.ArrayList<>();
-                boolean searchApples = finder.isEnchantedApplesEnabled();
-                SeedSearcher.findInArea(results, s, src, dim, cx, cz, radius, false,
-                        t -> finder.isDimensionEnabled(t, dim), searchApples,
-                        t -> finder.isAppleStructureEnabled(t));
+                java.util.function.Predicate<StructureType> searchFilter = lootMode
+                        ? t -> finder.isLootStructureEnabled(t) && finder.isDimensionEnabled(t, dim)
+                        : t -> finder.isDimensionEnabled(t, dim);
+                SeedSearcher.findInArea(results, s, src, dim, cx, cz, radius, false, searchFilter);
+
+                if (lootMode) {
+                    // Run loot simulation for each found structure, keep only those with target items
+                    boolean appleOnly = finder.isAppleOnly();
+                    for (int i = 0; i < results.size(); i++) {
+                        FoundStructure fs = results.get(i);
+                        String tablePath = LootTableData.getLootTablePath(fs.type());
+                        if (tablePath == null) {
+                            results.set(i, null);
+                            continue;
+                        }
+
+                        Set<String> targetItems = appleOnly
+                                ? java.util.Set.of("minecraft:enchanted_golden_apple")
+                                : java.util.Set.of(); // map doesn't have custom items; skip
+                        var lootResult = LootSimulationEngine.simulateForItems(fs, s, src, targetItems);
+                        if (!lootResult.itemFound()) {
+                            results.set(i, null);
+                        } else {
+                            String extra = fs.extraInfo();
+                            String itemLabel = appleOnly ? "(Apple)" : "($" + lootResult.foundItemIds().size() + ")";
+                            extra = extra.isEmpty() ? itemLabel : extra + " " + itemLabel;
+                            results.set(i, new FoundStructure(fs.type(), fs.blockX(), fs.blockY(), fs.blockZ(),
+                                    extra, lootResult.chestPositions(), lootResult.foundItemIds(),
+                                    lootResult.allCheckedPositions()));
+                        }
+                    }
+                    results.removeIf(java.util.Objects::isNull);
+                }
+
                 mapStructures = results;
             } finally {
                 mapSearchRunning = false;
@@ -572,14 +756,17 @@ public class SeedMapScreen extends ClickGuiScreen {
         float worldBottom = worldTop + MAP_HEIGHT * this.blocksPerPixel;
 
         ResourceKey<Level> dim = this.lastDim;
-        boolean appleMode = seedSearcher.isEnchantedApplesEnabled();
 
         for (FoundStructure s : mapStructures) {
-            if (appleMode && !s.extraInfo().contains("(Apple)")) continue;
+            boolean lootMode = seedSearcher.isLootSimulationEnabled();
+            boolean typeEnabled = lootMode
+                    ? seedSearcher.isLootStructureEnabled(s.type()) && seedSearcher.isDimensionEnabled(s.type(), dim)
+                    : seedSearcher.isDimensionEnabled(s.type(), dim);
+            if (!typeEnabled) continue;
 
-            if (!seedSearcher.isDimensionEnabled(s.type(), dim)) continue;
-
-            if (!appleMode) {
+            // Structures with found loot items are always visible regardless of zoom
+            boolean hasLoot = !s.foundItems().isEmpty();
+            if (!hasLoot) {
                 if (this.blocksPerPixel >= 32.0F && !s.type().isAlwaysVisible()) continue;
                 if (this.blocksPerPixel >= 12.0F && s.type().isMinor()) continue;
             }
@@ -592,69 +779,6 @@ public class SeedMapScreen extends ClickGuiScreen {
             drawMarker(sx, sy, ICON_SIZE, s.type().displayName + s.extraInfo(),
                     s.type().mapColor, s.blockX(), s.blockZ(), s.type(), s.extraInfo());
         }
-    }
-
-    private static int getIconGlId(StructureType type, String extraInfo) {
-        String extra = extraInfo.trim();
-
-        String path = switch (type) {
-            case BASTION_REMNANT -> "textures/map/structures/bastion/bastion_" + extra.trim().toLowerCase() + ".png";
-
-            case IGLOO -> extra.equals("Laboratory")
-                    ? "textures/map/structures/igloo/igloo_with_basement.png"
-                    : "textures/map/structures/igloo/igloo_without_basement.png";
-
-            case OCEAN_RUIN -> extra.contains("Big")
-                    ? "textures/map/structures/ocean_ruins/ocean_ruins_large.png"
-                    : "textures/map/structures/ocean_ruins/ocean_ruins_small.png";
-
-            case END_CITY -> extra.equals("Ship")
-                    ? "textures/map/structures/end_city/end_city_with_ship.png"
-                    : "textures/map/structures/end_city/end_city_without_ship.png";
-
-            case VILLAGE -> extra.startsWith("zombie_")
-                    ? "textures/map/structures/village/village_zombie.png"
-                    : "textures/map/structures/village/village_normal.png";
-
-            default -> type.iconPath;
-        };
-
-        DynamicTexture tex = ICON_TEXTURE_CACHE.computeIfAbsent(path, p -> {
-            BufferedImage img = FileUtils.readResourceImage(p);
-            if (img == null) {
-                if (!p.equals(type.iconPath)) return ICON_TEXTURE_CACHE.get(type.iconPath);
-                return null;
-            }
-            NativeImage ni = new NativeImage(NativeImage.Format.RGBA, img.getWidth(), img.getHeight(), false);
-            for (int iy = 0; iy < img.getHeight(); iy++) {
-                for (int ix = 0; ix < img.getWidth(); ix++) {
-                    ni.setPixel(ix, iy, img.getRGB(ix, iy));
-                }
-            }
-            DynamicTexture dt = new DynamicTexture(ni);
-            dt.upload();
-            return dt;
-        });
-
-        return tex == null ? 0 : tex.getId();
-    }
-
-    private static int getAppleIconGlId() {
-        String path = "textures/map/enchanted_apple.png";
-        DynamicTexture tex = ICON_TEXTURE_CACHE.computeIfAbsent(path, p -> {
-            BufferedImage img = FileUtils.readResourceImage(p);
-            if (img == null) return null;
-            NativeImage ni = new NativeImage(NativeImage.Format.RGBA, img.getWidth(), img.getHeight(), false);
-            for (int iy = 0; iy < img.getHeight(); iy++) {
-                for (int ix = 0; ix < img.getWidth(); ix++) {
-                    ni.setPixel(ix, iy, img.getRGB(ix, iy));
-                }
-            }
-            DynamicTexture dt = new DynamicTexture(ni);
-            dt.upload();
-            return dt;
-        });
-        return tex == null ? 0 : tex.getId();
     }
 
     private void drawStructureIcon(float sx, float sy, float size, int glId) {
@@ -713,17 +837,6 @@ public class SeedMapScreen extends ClickGuiScreen {
                 this.line(x1 + chunkPx, z1, x1 + chunkPx, z1 + chunkPx, SLIME_BORDER);
             }
         }
-    }
-
-    private static boolean isSlimeChunk(long seed, int chunkX, int chunkZ) {
-        return new Random(
-                seed
-                        + ((long) chunkX * chunkX * 0x4c1906)
-                        + (chunkX * 0x5ac0dbL)
-                        + (long) chunkZ * chunkZ * 0x4307a7L
-                        + (chunkZ * 0x5f24fL)
-                        ^ 0x3ad8025fL
-        ).nextInt(10) == 0;
     }
 
     private void renderPlayer() {
@@ -816,6 +929,14 @@ public class SeedMapScreen extends ClickGuiScreen {
                 return;
             }
 
+            // Copy button in selected structure panel
+            if (this.selectedStructure != null && this.mx >= this.copyBtnX && this.mx <= this.copyBtnX + this.copyBtnW && this.my >= this.copyBtnY && this.my <= this.copyBtnY + this.copyBtnH) {
+                long window = BlackOut.mc.getWindow().getWindow();
+                String coords = this.selectedStructure.blockX() + " ~ " + this.selectedStructure.blockZ();
+                GLFW.glfwSetClipboardString(window, coords);
+                return;
+            }
+
             if (this.mx >= MAP_X && this.mx <= MAP_X + MAP_WIDTH && this.my >= MAP_Y && this.my <= MAP_Y + MAP_HEIGHT) {
                 this.dragging = true;
                 this.mouseDownX = this.mx;
@@ -839,7 +960,6 @@ public class SeedMapScreen extends ClickGuiScreen {
 
     private void handleMapClick() {
         SeedSearcher seedSearcher = Managers.MODULES.getModule(SeedSearcher.class);
-        boolean appleMode = seedSearcher != null && seedSearcher.isEnchantedApplesEnabled();
         float worldLeft = this.mapCenterX - (MAP_WIDTH / 2.0F) * this.blocksPerPixel;
         float worldTop = this.mapCenterZ - (MAP_HEIGHT / 2.0F) * this.blocksPerPixel;
         float worldRight = worldLeft + MAP_WIDTH * this.blocksPerPixel;
@@ -848,10 +968,15 @@ public class SeedMapScreen extends ClickGuiScreen {
         ResourceKey<Level> dim = this.lastDim;
 
         for (FoundStructure s : mapStructures) {
-            if (appleMode && !s.extraInfo().contains("(Apple)")) continue;
-
-            if (seedSearcher != null && !seedSearcher.isDimensionEnabled(s.type(), dim)) continue;
-            if (!appleMode) {
+            if (seedSearcher != null) {
+                boolean clickLootMode = seedSearcher.isLootSimulationEnabled();
+                boolean clickTypeEnabled = clickLootMode
+                        ? seedSearcher.isLootStructureEnabled(s.type()) && seedSearcher.isDimensionEnabled(s.type(), dim)
+                        : seedSearcher.isDimensionEnabled(s.type(), dim);
+                if (!clickTypeEnabled) continue;
+            }
+            boolean hasLoot = !s.foundItems().isEmpty();
+            if (!hasLoot) {
                 if (this.blocksPerPixel >= 32.0F && !s.type().isAlwaysVisible()) continue;
                 if (this.blocksPerPixel >= 12.0F && s.type().isMinor()) continue;
             }
@@ -926,23 +1051,23 @@ public class SeedMapScreen extends ClickGuiScreen {
 
     @Override
     public boolean handleScroll(double horizontal, double vertical) {
-        if (!this.insideBounds() || this.mx < MAP_X || this.mx > MAP_X + MAP_WIDTH || this.my < MAP_Y || this.my > MAP_Y + MAP_HEIGHT)
-            return super.handleScroll(horizontal, vertical);
+        // Always consume scroll when inside map area, regardless of ClickGUI bounds
+        if (this.mx >= MAP_X && this.mx <= MAP_X + MAP_WIDTH && this.my >= MAP_Y && this.my <= MAP_Y + MAP_HEIGHT) {
+            float oldBpp = this.blocksPerPixel;
+            if (vertical > 0) this.blocksPerPixel = Math.max(0.5F, this.blocksPerPixel * 0.8F);
+            else if (vertical < 0) this.blocksPerPixel = Math.min(64.0F, this.blocksPerPixel * 1.25F);
 
-        float oldBpp = this.blocksPerPixel;
-        if (vertical > 0) this.blocksPerPixel = Math.max(0.5F, this.blocksPerPixel * 0.8F);
-        else if (vertical < 0) this.blocksPerPixel = Math.min(64.0F, this.blocksPerPixel * 1.25F);
-
-        if (oldBpp != this.blocksPerPixel) {
-            float relX = ((float) this.mx - MAP_X) / MAP_WIDTH - 0.5F;
-            float relZ = ((float) this.my - MAP_Y) / MAP_HEIGHT - 0.5F;
-            this.mapCenterX += relX * MAP_WIDTH * (oldBpp - this.blocksPerPixel);
-            this.mapCenterZ += relZ * MAP_HEIGHT * (oldBpp - this.blocksPerPixel);
-            tileCache.values().forEach(MapTile::close);
-            tileCache.clear();
-            return true;
+            if (oldBpp != this.blocksPerPixel) {
+                float relX = ((float) this.mx - MAP_X) / MAP_WIDTH - 0.5F;
+                float relZ = ((float) this.my - MAP_Y) / MAP_HEIGHT - 0.5F;
+                this.mapCenterX += relX * MAP_WIDTH * (oldBpp - this.blocksPerPixel);
+                this.mapCenterZ += relZ * MAP_HEIGHT * (oldBpp - this.blocksPerPixel);
+                tileCache.values().forEach(MapTile::close);
+                tileCache.clear();
+            }
+            return true; // Always consume scroll when inside map area
         }
-        return false;
+        return super.handleScroll(horizontal, vertical);
     }
 
     public void updateDrag() {
@@ -969,6 +1094,23 @@ public class SeedMapScreen extends ClickGuiScreen {
         if (viewWidth > 500) return 100;
         if (viewWidth > 100) return 16;
         return 16;
+    }
+
+    private List<String> wrapTooltipText(String text, float maxWidth) {
+        List<String> lines = new java.util.ArrayList<>();
+        String[] words = text.split(" ");
+        StringBuilder currentLine = new StringBuilder();
+
+        for (String word : words) {
+            if (BlackOut.FONT.getWidth(currentLine + word) > maxWidth) {
+                lines.add(currentLine.toString().trim());
+                currentLine = new StringBuilder(word + " ");
+            } else {
+                currentLine.append(word).append(" ");
+            }
+        }
+        if (!currentLine.isEmpty()) lines.add(currentLine.toString().trim());
+        return lines;
     }
 
     private static class MapTile {

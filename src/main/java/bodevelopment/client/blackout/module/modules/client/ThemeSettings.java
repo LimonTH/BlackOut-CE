@@ -12,8 +12,8 @@ import java.util.List;
 
 @PublicAPI
 public class ThemeSettings extends SettingsModule {
-    public static final List<Theme> themes = new ArrayList<>();
     private static ThemeSettings INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
 
     public final Setting<Theme> theme = this.sgGeneral.enumSetting("Theme", Theme.BLACKOUT,
@@ -22,6 +22,8 @@ public class ThemeSettings extends SettingsModule {
             "The primary transparency level for main background elements. Lower values create a more translucent, glass-like effect.");
     public final Setting<Integer> lowAlpha = this.sgGeneral.intSetting("Low Alpha", 50, 0, 255, 1,
             "A secondary, lower transparency level used for subtle overlays, disabled states, and accent backgrounds.");
+
+    public static final List<Theme> themes = new ArrayList<>();
 
     public ThemeSettings() {
         super("Theme", true, false);

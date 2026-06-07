@@ -27,7 +27,10 @@ import java.util.Map;
 
 @PublicAPI
 public abstract class BlackoutAddon {
-    private final String name;
+    /**
+     * Current addon API version, sourced from {@code gradle.properties → api_version}.
+     */
+    public static final int API_VERSION = BlackOut.API_VERSION;
     public final String modulePath;
     public final String commandPath;
     public final String hudPath;
@@ -42,7 +45,7 @@ public abstract class BlackoutAddon {
     public final Map<String, MainMenuRenderer> menuRenderers = new LinkedHashMap<>();
     public final Map<String, MenuMusicSettings.TrackProvider> musicTracks = new LinkedHashMap<>();
     public final List<ClickGuiScreen> guiScreens = new ArrayList<>();
-
+    private final String name;
     private TextureRenderer iconRenderer;
     private BufferedImage pendingIcon;
 
@@ -170,11 +173,6 @@ public abstract class BlackoutAddon {
     public int getApiVersion() {
         return BlackOut.API_VERSION;
     }
-
-    /**
-     * Current addon API version, sourced from {@code gradle.properties → api_version}.
-     */
-    public static final int API_VERSION = BlackOut.API_VERSION;
 
     void loadIconFromMod(BufferedImage image) {
         this.pendingIcon = image;

@@ -226,6 +226,14 @@ public class HudElementList {
         );
     }
 
+    public boolean isOpen() {
+        return this.open;
+    }
+
+    public void setOpen(boolean open) {
+        this.open = open;
+    }
+
     private static class HudListEntry {
         private final Class<? extends HudElement> hudElement;
         private final String displayName;
@@ -243,13 +251,5 @@ public class HudElementList {
                 this.progress = Math.max(this.progress - frameTime, 0.0F);
             }
         }
-    }
-
-    public boolean isOpen() {
-        return this.open;
-    }
-
-    public void setOpen(boolean open) {
-        this.open = open;
     }
 }

@@ -51,9 +51,11 @@ public class Manager extends Module {
     private final Setting<Boolean> tpDisable = this.sgGeneral.booleanSetting("Teleport Disable", false, "Automatically deactivates the module upon changing dimensions or teleporting.");
     private final Setting<Boolean> pauseCombat = this.sgGeneral.booleanSetting("Pause in Combat", false, "Suspends inventory management while the player is taking damage.");
     private final Setting<Boolean> stopRotations = this.sgGeneral.booleanSetting("Lock Rotations", true, "Prevents head movement during automated item transfers to avoid desync.");
+
     private final Setting<Boolean> autoArmor = this.sgAutoArmor.booleanSetting("Auto Armor", true, "Automatically equips the most protective armor pieces found in the inventory.");
     private final Setting<KeyBind> chestSwap = this.sgAutoArmor.keySetting("Elytra Switch", "A hotkey to toggle between prioritizing a Chestplate or an Elytra.");
     private final Setting<Boolean> elytra = this.sgAutoArmor.booleanSetting("Elytra Priority", false, "Gives the Elytra higher priority than chestplates during automatic equipping.", () -> this.chestSwap.get().value == null || this.chestSwap.get().value.key >= 0);
+
     private final Setting<Integer> weaponSlot = this.sgHotbar.intSetting("Primary Weapon Slot", 0, 0, 9, 1, "The designated hotbar slot for your main weapon.");
     private final Setting<List<Item>> slot1 = this.sgHotbar.itemListSetting("Slot 1 Filter", "The items allowed to occupy hotbar slot 1.", () -> this.weaponSlot.get() != 1);
     private final Setting<List<Item>> slot2 = this.sgHotbar.itemListSetting("Slot 2 Filter", "The items allowed to occupy hotbar slot 2.", () -> this.weaponSlot.get() != 2);
@@ -64,15 +66,13 @@ public class Manager extends Module {
     private final Setting<List<Item>> slot7 = this.sgHotbar.itemListSetting("Slot 7 Filter", "The items allowed to occupy hotbar slot 7.", () -> this.weaponSlot.get() != 7);
     private final Setting<List<Item>> slot8 = this.sgHotbar.itemListSetting("Slot 8 Filter", "The items allowed to occupy hotbar slot 8.", () -> this.weaponSlot.get() != 8);
     private final Setting<List<Item>> slot9 = this.sgHotbar.itemListSetting("Slot 9 Filter", "The items allowed to occupy hotbar slot 9.", () -> this.weaponSlot.get() != 9);
-    @SuppressWarnings("unchecked")
-    private final Setting<List<Item>>[] slotSettings = (Setting<List<Item>>[]) new Setting<?>[]{
-            this.slot1, this.slot2, this.slot3, this.slot4, this.slot5, this.slot6, this.slot7, this.slot8, this.slot9
-    };
     private final Setting<WeaponMode> weaponMode = this.sgHotbar.enumSetting("Preferred Weapon", WeaponMode.Sword, "The type of weapon to prioritize for the primary weapon slot.");
+
     private final Setting<Boolean> replenish = this.sgReplenish.booleanSetting("Auto Replenish", false, "Refills hotbar stacks from the inventory when they drop below a certain threshold.");
     private final Setting<Boolean> unstackableReplenish = this.sgReplenish.booleanSetting("Replenish Unstackable", true, "Automatically replaces spent single-use items like soups or potions.");
     private final Setting<Integer> percetageLeft = this.sgReplenish.intSetting("Refill Threshold %", 25, 0, 100, 1, "The percentage of a stack remaining before it is automatically replenished.");
     private final Setting<Double> replenishMemory = this.sgReplenish.doubleSetting("Slot Memory", 1.0, 0.0, 5.0, 0.05, "The time in seconds the module remembers which item previously occupied an empty slot.");
+
     private final Setting<List<Item>> cleanerItems = this.sgCleaner.itemListSetting("Trash Items", "Items that will be automatically dropped from the inventory.");
     private final Setting<Boolean> badArmor = this.sgCleaner.booleanSetting("Drop Inferior Armor", false, "Discards armor pieces that are statistically worse than what is currently equipped.");
     private final Setting<Boolean> badSwords = this.sgCleaner.booleanSetting("Drop Inferior Swords", false, "Discards swords with lower damage values than the primary weapon.");
@@ -81,6 +81,10 @@ public class Manager extends Module {
     private final Setting<Boolean> badPickaxes = this.sgCleaner.booleanSetting("Drop Inferior Pickaxes", false, "Discards pickaxes with lower mining speeds than the best one available.");
     private final Setting<Boolean> badBows = this.sgCleaner.booleanSetting("Drop Inferior Bows", false, "Discards bows with lower damage or enchantments than the best one available.");
 
+    @SuppressWarnings("unchecked")
+    private final Setting<List<Item>>[] slotSettings = (Setting<List<Item>>[]) new Setting<?>[]{
+            this.slot1, this.slot2, this.slot3, this.slot4, this.slot5, this.slot6, this.slot7, this.slot8, this.slot9
+    };
     private final ReplenishSlot[] replenishItems = new ReplenishSlot[]{
             new ReplenishSlot(),
             new ReplenishSlot(),

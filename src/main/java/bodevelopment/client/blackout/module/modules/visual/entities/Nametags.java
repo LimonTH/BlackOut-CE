@@ -54,7 +54,6 @@ public class Nametags extends Module {
     private final SettingGroup sgEnchantments = this.addGroup("Enchantments");
     private final SettingGroup sgColor = this.addGroup("Color");
 
-
     public final Setting<Boolean> ping = this.sgGeneral.booleanSetting("Network Latency", true, "Displays the player's current ping in milliseconds.");
     public final Setting<Boolean> pops = this.sgGeneral.booleanSetting("Totem Pops", true, "Tracks and displays how many Totems of Undying the player has consumed in combat.");
     public final Setting<Boolean> showId = this.sgGeneral.booleanSetting("Entity Index", false, "Renders the internal Minecraft entity ID.");
@@ -88,7 +87,6 @@ public class Nametags extends Module {
     private final Setting<BlackOutColor> hp = this.sgColor.colorSetting("Health Accent", new BlackOutColor(150, 150, 150, 255), "The color used for health indicators when using a fixed palette.", () -> this.colorMode.get() == ColorMode.Custom);
     private final Setting<BlackOutColor> txt = this.sgColor.colorSetting("Primary Text Color", new BlackOutColor(255, 255, 255, 255), "The default color for names and info.");
     private final Setting<BlackOutColor> friendColor = this.sgColor.colorSetting("Friendship Color", new BlackOutColor(150, 150, 255, 255), "The color applied to entities identified as friends.");
-
 
     private final PoseStack stack = new PoseStack();
     private final List<Entity> entities = new ArrayList<>();

@@ -11,10 +11,9 @@ import java.util.List;
 
 public class ModelVertexConsumer implements VertexConsumer {
     public final List<List<Vec3>> parts = new ArrayList<>();
-    private List<Vec3> currentPart = new ArrayList<>();
-    private final List<Vec3> currentPolygon = new ArrayList<>();
-
     public final List<Vec3> vertices = new ArrayList<>();
+    private final List<Vec3> currentPolygon = new ArrayList<>();
+    private List<Vec3> currentPart = new ArrayList<>();
 
     public void start() {
         this.parts.clear();

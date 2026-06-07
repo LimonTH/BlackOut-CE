@@ -50,6 +50,11 @@ public class AttackController {
         this.valids = valids;
     }
 
+    public static boolean validEntity(Entity entity, long lastAttackTime) {
+        if (entity instanceof EndCrystal && System.currentTimeMillis() - lastAttackTime < 100L) return false;
+        return !(entity instanceof ItemEntity);
+    }
+
     public void updateAttack() {
         if (!attackSetting.get()) return;
         if (System.currentTimeMillis() - lastAttack < 1000.0 / attackSpeed.get()) return;
@@ -70,9 +75,6 @@ public class AttackController {
         if (SettingUtils.shouldRotate(RotationType.Attacking)) {
             rotation.end("attacking");
         }
-
-        // Note: clientSwing() is called by the owning Module after updateAttack() returns,
-        // since it requires Module-level access (not available in this extracted class).
 
         lastAttack = System.currentTimeMillis();
     }
@@ -107,10 +109,5 @@ public class AttackController {
             }
         }
         return false;
-    }
-
-    public static boolean validEntity(Entity entity, long lastAttackTime) {
-        if (entity instanceof EndCrystal && System.currentTimeMillis() - lastAttackTime < 100L) return false;
-        return !(entity instanceof ItemEntity);
     }
 }

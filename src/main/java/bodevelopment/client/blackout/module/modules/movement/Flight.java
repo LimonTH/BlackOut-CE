@@ -19,15 +19,6 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.world.InteractionHand;
 
 public class Flight extends Module {
-    /**
-     * Vanilla anti-kick offset: the minimal downward velocity to satisfy the server's movement check.
-     */
-    private static final double ANTI_KICK_OFFSET = -0.0315;
-    /**
-     * Vanilla walking speed constant (blocks/tick).
-     */
-    private static final double VANILLA_WALK_SPEED = 0.2873;
-
     private final SettingGroup sgGeneral = this.addGroup("General");
 
     public final Setting<Mode> mode = this.sgGeneral.enumSetting("Flight Mode", Mode.Motion, "The bypass logic used to maintain altitude.");
@@ -45,6 +36,14 @@ public class Flight extends Module {
     private final Setting<Double> verusDMGheight = this.sgGeneral.doubleSetting("Packet Height", 3.05, 3.05, 10.0, 0.05, "The simulated height used to trigger self-damage via packets.", () -> this.mode.get() == Mode.VerusDMG);
     private final Setting<Double> verusDMGLimit = this.sgGeneral.doubleSetting("Sustain Ticks", 20.0, 0.0, 100.0, 1.0, "The duration of the damage-based flight.", () -> this.mode.get() == Mode.VerusDMG);
 
+    /**
+     * Vanilla anti-kick offset: the minimal downward velocity to satisfy the server's movement check.
+     */
+    private static final double ANTI_KICK_OFFSET = -0.0315;
+    /**
+     * Vanilla walking speed constant (blocks/tick).
+     */
+    private static final double VANILLA_WALK_SPEED = 0.2873;
     private double startY = 0.0;
     private boolean changedTimer = false;
     private boolean damaged = false;

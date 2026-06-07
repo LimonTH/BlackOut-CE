@@ -52,7 +52,7 @@ public class RangeSettings extends SettingsModule {
             "Vertical size of the target block box for distance checks.", () -> this.placeRangeMode.get() == BlockRangeMode.CustomBox);
     public final Setting<Double> placeHeight = this.sgPlace.doubleSetting("Place Height", 0.5, 0.0, 1.0, 0.05,
             "Manual vertical offset for placement range calculations.", () -> this.placeRangeMode.get() == BlockRangeMode.Height);
-    // TODO : closestAttackWidth и closestAttackHeight нигде не используются
+
     public final Setting<Double> attackRange = this.sgAttack.doubleSetting("Attack Range", 4.8, 0.0, 6.0, 0.05,
             "Standard reach for attacking entities within line of sight.");
     public final Setting<AttackRangeMode> attackRangeMode = this.sgAttack.enumSetting("Attack Range Mode", AttackRangeMode.NCP,

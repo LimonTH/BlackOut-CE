@@ -79,6 +79,10 @@ public class MenuMusicSettings extends SettingsModule {
         return INSTANCE;
     }
 
+    private static double now() {
+        return System.currentTimeMillis() / 1000.0;
+    }
+
     @Event
     public void onTick(TickEvent.Pre event) {
         if (this.mode.get() == Mode.Vanilla) {
@@ -156,10 +160,6 @@ public class MenuMusicSettings extends SettingsModule {
         if (path.startsWith("music.")) {
             event.setCancelled(true);
         }
-    }
-
-    private static double now() {
-        return System.currentTimeMillis() / 1000.0;
     }
 
     private void enterState(State newState, double now, boolean restartAfter) {

@@ -58,6 +58,7 @@ public class Stealer extends Module {
     private final Setting<Boolean> bestWeapon = this.sgBest.booleanSetting("Filter Best Weapon", true, "Prioritizes keeping only the highest damage weapons.");
     private final Setting<Boolean> swords = this.sgBest.booleanSetting("Include Swords", true, "Includes swords in the weapon filter.");
     private final Setting<Boolean> axes = this.sgBest.booleanSetting("Include Axes", true, "Includes axes in the weapon filter.");
+    private final Predicate<ItemStack> weaponPredicate = stack -> stack != null && (this.swords.get() && stack.getItem() instanceof SwordItem || this.axes.get() && stack.getItem() instanceof AxeItem);
     private final Setting<Boolean> bestPickaxe = this.sgBest.booleanSetting("Filter Best Pickaxe", true, "Prioritizes keeping only the most efficient pickaxe.");
     private final Setting<Boolean> tools = this.sgBest.booleanSetting("Steal All Tools", false, "Steals all tools regardless of their quality.");
     private final Setting<Boolean> chestCheck = this.sgBest.booleanSetting("Name Check (Chest)", true, "Only interacts with containers that have 'Chest' in their name.");
@@ -68,8 +69,6 @@ public class Stealer extends Module {
     private final Setting<Double> fadeTime = this.sgRender.doubleSetting("Fade Out Time", 3.0, 0.0, 10.0, 0.1, "The duration of the fading effect for the highlight.");
     private final BoxMultiSetting renderSetting = BoxMultiSetting.of(this.sgRender);
 
-    private final Predicate<ItemStack> weaponPredicate = stack -> stack != null
-            && (this.swords.get() && stack.getItem() instanceof SwordItem || this.axes.get() && stack.getItem() instanceof AxeItem);
     private final List<Slot> movable = new ArrayList<>();
     private final List<Slot> container = new ArrayList<>();
     private final List<Slot> inventory = new ArrayList<>();

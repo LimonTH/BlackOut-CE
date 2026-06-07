@@ -15,10 +15,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 
 public class ColorMainMenu implements MainMenuRenderer { // (ThemeMainMenu)
-    private final ChangelogRenderer changelogRenderer = new ChangelogRenderer();
     private static final float BUTTON_WIDTH = 360.0F;
     private static final float BUTTON_HEIGHT = 10.0F;
     private static final float BUTTON_RADIUS = 25.0F;
+    private final ChangelogRenderer changelogRenderer = new ChangelogRenderer();
 
     @Override
     public void render(PoseStack stack, float height, float mx, float my, String text1, String text2, float progress) {

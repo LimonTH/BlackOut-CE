@@ -2,7 +2,6 @@ package bodevelopment.client.blackout.module.modules.combat.offensive;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.annotations.Experimental;
-import bodevelopment.client.blackout.annotations.Profile;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.enums.RotationType;
 import bodevelopment.client.blackout.enums.SwingHand;
@@ -93,44 +92,6 @@ public class AutoMine extends Module {
 
     private final Setting<Boolean> preSwitch = this.sgSwitch.booleanSetting("Predictive Switch", false, "Swaps to the pickaxe slightly before the block is ready to break.");
     private final Setting<SwitchMode> pickaxeSwitch = this.sgSwitch.enumSetting("Pickaxe Swap Mode", SwitchMode.InvSwitch, "The method used to equip the pickaxe for mining.");
-
-    /**
-     * Checks if AutoMine currently has a Silent swap active.
-     * Used by {@code MixinMinecraft#onItemInteract} to temporarily restore
-     * the server-side item before sending {@code ServerboundUseItemPacket},
-     * ensuring food/potions are processed correctly by the server.
-     */
-    public boolean isSilentSwapActive() {
-        return this.holdingForNcp && this.pickaxeSwitch.get() == SwitchMode.Silent;
-    }
-
-    /**
-     * Begins a temporary item-restore cycle for Silent swap.
-     * <p>
-     * Restores the player's visual item to the server (so the server sees the
-     * correct item for the interaction), and suppresses the {@link #onSent}
-     * reset that would otherwise fire on the {@code SetCarriedItem} packet.
-     * <p>
-     * Must be paired with {@link #endItemRestore()}.
-     */
-    public void beginItemRestore() {
-        this.silentRestoring = true;
-        InvUtils.swapSilentBack();
-    }
-
-    /**
-     * Ends a temporary item-restore cycle for Silent swap.
-     * <p>
-     * Re-applies the Silent swap to the tool slot and restores the visual
-     * selected slot on the client without sending another packet.
-     */
-    public void endItemRestore() {
-        int toolSlot = Managers.PACKET.slot;
-        InvUtils.swapSilent(toolSlot);
-        InvUtils.swapSilentRestoreVisual();
-        this.silentRestoring = false;
-    }
-
     private final Setting<Boolean> allowInventory = this.sgSwitch.booleanSetting("Inventory Mining", false, "Allows using tools located in the inventory rather than just the hotbar.", () -> this.pickaxeSwitch.get().inventory);
     private final Setting<SwitchMode> crystalSwitch = this.sgSwitch.enumSetting("Crystal Swap Mode", SwitchMode.InvSwitch, "The method used to equip crystals for offensive mining.");
 
@@ -207,11 +168,15 @@ public class AutoMine extends Module {
 
     private final TimerList<BlockPos> crystals = new TimerList<>(false);
     private final List<Player> enemies = new ArrayList<>();
+    private final List<BlockPos> mineQueue = new ArrayList<>();
     public BlockPos minePos = null;
     public BlockPos crystalPos = null;
     public MineType mineType = null;
     public boolean started = false;
-    private final List<BlockPos> mineQueue = new ArrayList<>();
+    /**
+     * Exposed for Silent swap temporary restoration in MixinMinecraft.onItemInteract
+     */
+    boolean holdingForNcp = false;
     private boolean queueActive = false;
     private BlockPos prevPos = null;
     private Player target = null;
@@ -225,8 +190,6 @@ public class AutoMine extends Module {
     private long lastAttack = 0L;
     private BlockPos prevMined = null;
     private boolean shouldRestart = false;
-    /** Exposed for Silent swap temporary restoration in MixinMinecraft.onItemInteract */
-    boolean holdingForNcp = false;
     private boolean suppressResetOnSwitch = false;
     /**
      * Set during Silent swap item restore cycles (e.g. eating via
@@ -235,7 +198,6 @@ public class AutoMine extends Module {
      * user-initiated slot change.
      */
     private boolean silentRestoring = false;
-
     public AutoMine() {
         super("Auto Mine", "Automatically mines enemies' surround blocks to abuse them with crystals.", SubCategory.OFFENSIVE, true);
         INSTANCE = this;
@@ -243,6 +205,43 @@ public class AutoMine extends Module {
 
     public static AutoMine getInstance() {
         return INSTANCE;
+    }
+
+    /**
+     * Checks if AutoMine currently has a Silent swap active.
+     * Used by {@code MixinMinecraft#onItemInteract} to temporarily restore
+     * the server-side item before sending {@code ServerboundUseItemPacket},
+     * ensuring food/potions are processed correctly by the server.
+     */
+    public boolean isSilentSwapActive() {
+        return this.holdingForNcp && this.pickaxeSwitch.get() == SwitchMode.Silent;
+    }
+
+    /**
+     * Begins a temporary item-restore cycle for Silent swap.
+     * <p>
+     * Restores the player's visual item to the server (so the server sees the
+     * correct item for the interaction), and suppresses the {@link #onSent}
+     * reset that would otherwise fire on the {@code SetCarriedItem} packet.
+     * <p>
+     * Must be paired with {@link #endItemRestore()}.
+     */
+    public void beginItemRestore() {
+        this.silentRestoring = true;
+        InvUtils.swapSilentBack();
+    }
+
+    /**
+     * Ends a temporary item-restore cycle for Silent swap.
+     * <p>
+     * Re-applies the Silent swap to the tool slot and restores the visual
+     * selected slot on the client without sending another packet.
+     */
+    public void endItemRestore() {
+        int toolSlot = Managers.PACKET.slot;
+        InvUtils.swapSilent(toolSlot);
+        InvUtils.swapSilentRestoreVisual();
+        this.silentRestoring = false;
     }
 
     @Event

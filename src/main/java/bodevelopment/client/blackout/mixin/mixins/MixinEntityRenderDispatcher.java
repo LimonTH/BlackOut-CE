@@ -32,11 +32,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(EntityRenderDispatcher.class)
 @Internal
 public class MixinEntityRenderDispatcher {
+    @Unique
+    private final FramebufferMultiBufferSource blackout$handEspFboSource = new FramebufferMultiBufferSource();
     @Shadow
     private boolean shouldRenderShadow;
 
-    @Unique
-    private final FramebufferMultiBufferSource blackout$handEspFboSource = new FramebufferMultiBufferSource();
+    @ModifyVariable(
+            method = "renderShadow",
+            at = @At("HEAD"),
+            argsOnly = true,
+            ordinal = 0
+    )
+    private static float noShadow(float shadowRadius) {
+        NoRender noRender = NoRender.getInstance();
+        if (noRender != null && noRender.enabled && noRender.shadows.get()) return 0.0f;
+        return shadowRadius;
+    }
 
     @Inject(
             method = "render*",
@@ -107,17 +118,5 @@ public class MixinEntityRenderDispatcher {
         }
 
         instance.render(state, matrices, vertexConsumers, light);
-    }
-
-    @ModifyVariable(
-            method = "renderShadow",
-            at = @At("HEAD"),
-            argsOnly = true,
-            ordinal = 0
-    )
-    private static float noShadow(float shadowRadius) {
-        NoRender noRender = NoRender.getInstance();
-        if (noRender != null && noRender.enabled && noRender.shadows.get()) return 0.0f;
-        return shadowRadius;
     }
 }

@@ -34,11 +34,11 @@ public class ColorScreen extends ClickGuiScreen {
     private static final Color TRANSPARENT = new Color(0, 0, 0, 0);
     private static final Color WHITE_TRANSPARENT = new Color(255, 255, 255, 0);
     private final ColorSetting colorSetting;
-    public Runnable onChange;
     private final float[] colorX = new float[7];
     private final float[] themeX = new float[3];
     private final ColorField[] themeFields = new ColorField[3];
     private final ColorField[] textFields = new ColorField[6];
+    public Runnable onChange;
     private int selecting = 0;
     private float prevCircleX = 0.0F;
     private float prevCircleY = 0.0F;
@@ -284,7 +284,9 @@ public class ColorScreen extends ClickGuiScreen {
         }
     }
 
-    /** Called when a slider value changes, to propagate the color live. */
+    /**
+     * Called when a slider value changes, to propagate the color live.
+     */
     private void fireOnChange() {
         if (this.onChange != null) {
             this.onChange.run();
@@ -632,14 +634,14 @@ public class ColorScreen extends ClickGuiScreen {
             }
         } else {
             if (this.selecting == 1) {
-            circleX = (float) Mth.clamp(this.mx, 0.0, 500.0);
-            circleY = (float) Mth.clamp(this.my, 10.0, 210.0);
+                circleX = (float) Mth.clamp(this.mx, 0.0, 500.0);
+                circleY = (float) Mth.clamp(this.my, 10.0, 210.0);
             } else {
-            float[] HSB = this.getHSB(false);
-            this.colorSetting.hue = HSB[0];
-            circleX = HSB[1] * 500.0F;
+                float[] HSB = this.getHSB(false);
+                this.colorSetting.hue = HSB[0];
+                circleX = HSB[1] * 500.0F;
                 circleY = Mth.lerpInt(HSB[2], 210, 10);
-                }
+            }
         }
 
         this.prevCircleX = Mth.clampedLerp(this.prevCircleX, circleX, this.frameTime * 20.0F);

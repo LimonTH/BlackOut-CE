@@ -29,3 +29,4 @@ accessible field  net/minecraft/client/multiplayer/MultiPlayerGameMode      dest
 accessible field  net/minecraft/client/multiplayer/ClientChunkCache$Storage chunks                         Ljava/util/concurrent/atomic/AtomicReferenceArray;
 accessible field  net/minecraft/client/multiplayer/ClientChunkCache         storage                        Lnet/minecraft/client/multiplayer/ClientChunkCache$Storage;
 accessible field  com/mojang/blaze3d/platform/GlStateManager                activeTexture                  I
+accessible method net/minecraft/world/level/biome/MultiNoiseBiomeSource     <init>                         (Lcom/mojang/datafixers/util/Either;)V

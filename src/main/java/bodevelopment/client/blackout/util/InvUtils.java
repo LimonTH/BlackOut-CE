@@ -24,6 +24,12 @@ import java.util.function.Predicate;
 
 @PublicAPI
 public class InvUtils {
+    public static int pickSlot = -1;
+    public static int pickPrevSlot = -1;
+    public static int prevSlot = -1;
+    public static int silentPrevSlot = -1;
+    private static int[] slots;
+
     public static InteractionHand getHand(Item item) {
         return getHand(stack -> stack.getItem() == item);
     }
@@ -40,12 +46,6 @@ public class InvUtils {
         return hand == InteractionHand.MAIN_HAND ? Managers.PACKET.getStack()
                 : (hand == InteractionHand.OFF_HAND ? BlackOut.mc.player.getOffhandItem() : null);
     }
-
-    public static int pickSlot = -1;
-    public static int pickPrevSlot = -1;
-    public static int prevSlot = -1;
-    public static int silentPrevSlot = -1;
-    private static int[] slots;
 
     public static int count(boolean hotbar, boolean inventory, Predicate<ItemStack> predicate) {
         if (BlackOut.mc.player == null) return 0;

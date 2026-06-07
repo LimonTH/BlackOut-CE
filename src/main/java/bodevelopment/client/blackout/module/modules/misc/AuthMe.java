@@ -27,22 +27,18 @@ public class AuthMe extends Module {
     private final Setting<Double> delay = this.sgGeneral.doubleSetting("Authentication Delay", 2.5, 0.0, 5.0, 0.1, "The delay in seconds between detecting an authentication prompt and sending the response.");
     private final Setting<Boolean> passwordConfirm = this.sgGeneral.booleanSetting("Double Entry", true, "Repeats the password during registration to satisfy confirmation requirements.");
 
-    private final List<Setting<String>> nicks = new ArrayList<>();
-    private final List<Setting<String>> passes = new ArrayList<>();
-
     private static final String[] REGISTER_KEYWORDS = {
             "/register", "/reg", "register", "зарегистрируйтесь", "/рег", "создайте пароль"
     };
-
     private static final String[] LOGIN_KEYWORDS = {
             "/login", "/l ", "login", "авторизуйтесь", "войдите", "/логин", "пароль"
     };
-
     private static final String[] AUTH_PROMPT_INDICATORS = {
             "please", "type", "use", "welcome", "введите", "используйте"
     };
-
     private static final String AUTHME_DATA_FILE = "authme_data.dat";
+    private final List<Setting<String>> nicks = new ArrayList<>();
+    private final List<Setting<String>> passes = new ArrayList<>();
     private long time = -1L;
     private boolean register = false;
 

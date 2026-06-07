@@ -47,18 +47,20 @@ public class AutoCrystalBase extends ObsidianModule {
     private final Setting<Boolean> waterCheck = this.sgAutoMine.booleanSetting("Fluid Penalty Check", true, "Applies vanilla slowdown in water.", this.autoMineToggle::get);
 
     public Player target = null;
+    public BlockPos minePos = null;
     BlockPos lastBestPos = null;
     private int internalTicks = 0;
-
     private int cachedSurroundState = 0;
     private boolean cachedIsFar = false;
-
-    public BlockPos minePos = null;
 
     public AutoCrystalBase() {
         super("Auto Crystal Base", "Dynamic obsidian placement and mining for crystals.", SubCategory.OFFENSIVE);
         INSTANCE = this;
         this.attack.hide(false);
+    }
+
+    public static AutoCrystalBase getInstance() {
+        return INSTANCE;
     }
 
     @Override
@@ -356,9 +358,5 @@ public class AutoCrystalBase extends ObsidianModule {
     @Override
     protected double getCooldown() {
         return 0.1 * updateDelay.get();
-    }
-
-    public static AutoCrystalBase getInstance() {
-        return INSTANCE;
     }
 }

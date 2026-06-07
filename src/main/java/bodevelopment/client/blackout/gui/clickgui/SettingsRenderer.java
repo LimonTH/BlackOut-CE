@@ -13,7 +13,7 @@ import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.render.Render2DUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.List;
 
 /**
@@ -25,11 +25,6 @@ public class SettingsRenderer {
     public static final float RESET_ICON_SIZE = 20.0F;
     public static final float RESET_HIT_SIZE = 28.0F;
     public static final float RESET_HOLD_THRESHOLD = 2.5F;
-
-    public static class ResetState {
-        public boolean hovered = false;
-        public float holdTime = 0.0F;
-    }
 
     public static boolean hasVisibleSettings(SettingGroup group) {
         for (Setting<?> setting : group.settings) {
@@ -78,8 +73,8 @@ public class SettingsRenderer {
      * Renders the hold-to-confirm reset button icon and returns the updated ResetState.
      */
     public static void renderResetButton(PoseStack stack, float centerX, float centerY,
-                                          float mx, float my, float frameTime,
-                                          ResetState state, boolean ready) {
+                                         float mx, float my, float frameTime,
+                                         ResetState state, boolean ready) {
         float halfHit = RESET_HIT_SIZE / 2.0F;
         state.hovered = mx > centerX - halfHit
                 && mx < centerX + halfHit
@@ -118,8 +113,8 @@ public class SettingsRenderer {
      * @return the height consumed by this group
      */
     public static float renderSettingGroup(PoseStack stack, SettingGroup group, boolean last,
-                                            float x, float y, float width,
-                                            float frameTime, double mx, double my) {
+                                           float x, float y, float width,
+                                           float frameTime, double mx, double my) {
         float fs = GuiSettings.getInstance().fontScale.get().floatValue();
         float groupScale = fs * 2.0F;
 
@@ -215,5 +210,10 @@ public class SettingsRenderer {
         if (lastOpened != null && lastOpened.isChoosing()) {
             lastOpened.renderDropdown();
         }
+    }
+
+    public static class ResetState {
+        public boolean hovered = false;
+        public float holdTime = 0.0F;
     }
 }

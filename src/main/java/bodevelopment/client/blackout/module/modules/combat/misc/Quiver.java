@@ -32,8 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Quiver extends Module {
+    public static boolean charging = false;
     private final SettingGroup sgGeneral = this.addGroup("General");
-
     public final Setting<Integer> charge = this.sgGeneral.intSetting("Charge Ticks", 5, 0, 20, 1,
             "How many ticks to draw the bow. 3-5 is usually enough for self-buffing.");
     public final Setting<Integer> delay = this.sgGeneral.intSetting("Shot Delay", 0, 0, 20, 1,
@@ -50,8 +50,6 @@ public class Quiver extends Module {
             "Ticks to wait before retrying a failed effect application.");
     private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotate", true,
             "Forces the pitch to -90 instantly for the shot.");
-
-    public static boolean charging = false;
     private final List<Pair<MobEffectInstance, Integer>> arrows = new ArrayList<>();
     private final List<Integer> actions = new ArrayList<>();
     private final TickTimerList<MobEffect> shot = new TickTimerList<>(false);

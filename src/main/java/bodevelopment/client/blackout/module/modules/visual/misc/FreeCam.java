@@ -25,12 +25,12 @@ public class FreeCam extends Module {
 
     public final Vec3 velocity = new Vec3(0.0, 0.0, 0.0);
     public Vec3 pos = Vec3.ZERO;
-    private float moveYaw;
-    private float vertical;
-    private boolean move;
     public float yaw, pitch, lastYaw, lastPitch;
     public double currentSpeedH;
     public double currentSpeedV;
+    private float moveYaw;
+    private float vertical;
+    private boolean move;
 
     public FreeCam() {
         super("Freecam", "Detaches the camera from the player entity, allowing independent exploration of the environment while maintaining the player's position.", SubCategory.MISC_VISUAL, true);

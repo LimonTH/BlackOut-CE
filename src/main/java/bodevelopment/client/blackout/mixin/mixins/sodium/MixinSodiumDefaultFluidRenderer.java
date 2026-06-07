@@ -23,20 +23,17 @@ import java.util.Arrays;
 @Mixin(targets = "net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.DefaultFluidRenderer", remap = false)
 @Internal
 public class MixinSodiumDefaultFluidRenderer {
+    @Unique
+    private static final ThreadLocal<Integer> XRAY_FLUID_ALPHA = ThreadLocal.withInitial(() -> -1);
     @Final
     @Shadow
     private QuadLightData quadLightData;
-
     @Final
     @Shadow
     private float[] brightness;
-
     @Final
     @Shadow
     private int[] quadColors;
-
-    @Unique
-    private static final ThreadLocal<Integer> XRAY_FLUID_ALPHA = ThreadLocal.withInitial(() -> -1);
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true, remap = false, require = 0)
     private void onRenderHead(

@@ -30,30 +30,11 @@ public class MainMenu {
     public static final int EMPTY_COLOR = new Color(0, 0, 0, 0).getRGB();
     private static final boolean MOD_MENU_LOADED = FabricLoader.getInstance().isModLoaded("modmenu");
     private static final MainMenu INSTANCE = new MainMenu();
-    public final String[] buttonNames;
-    private final PoseStack stack = new PoseStack();
-    private final ClickGui clickGui = Managers.CLICK_GUI.CLICK_GUI;
-    private TitleScreen titleScreen;
-    private float windowHeight;
-    private float scale;
-    private boolean isClickStartedHere = false;
-    private float mx;
-    private float my;
+    private static final long SPLASH_DELAY = 10000L;
     public static float globalFade = 0.0F;
     private static Screen screenToSet = null;
     private static boolean isExiting = false;
-    private float delta;
-    private boolean playedStartup = false;
-    public boolean hudEditorVisible = false;
-    private boolean hudEntering = false;
-    private boolean hudExiting = false;
-
-    private String currentSplash = "";
-    private String nextSplash = "";
-    private long lastSplashChange = System.currentTimeMillis();
-    private float splashProgress = 1.0F;
-    private static final long SPLASH_DELAY = 10000L;
-
+    public final String[] buttonNames;
     public final String[] SPLASHES = {
             "The best in the business",
             "The real opp stoppa",
@@ -73,8 +54,24 @@ public class MainMenu {
             "Better than your average cheat",
             "Once you go black, you can never go back"
     };
-
+    private final PoseStack stack = new PoseStack();
+    private final ClickGui clickGui = Managers.CLICK_GUI.CLICK_GUI;
     private final Runnable[] runnables;
+    public boolean hudEditorVisible = false;
+    private TitleScreen titleScreen;
+    private float windowHeight;
+    private float scale;
+    private boolean isClickStartedHere = false;
+    private float mx;
+    private float my;
+    private float delta;
+    private boolean playedStartup = false;
+    private boolean hudEntering = false;
+    private boolean hudExiting = false;
+    private String currentSplash = "";
+    private String nextSplash = "";
+    private long lastSplashChange = System.currentTimeMillis();
+    private float splashProgress = 1.0F;
 
     {
         java.util.List<String> names = new java.util.ArrayList<>(java.util.List.of(
@@ -115,17 +112,17 @@ public class MainMenu {
         this.runnables = actions.toArray(new Runnable[0]);
     }
 
-    private void startExit(Screen screen) {
-        screenToSet = screen;
-        isExiting = true;
-    }
-
     public static void init() {
         BlackOut.EVENT_BUS.subscribe(INSTANCE, () -> !(BlackOut.mc.screen instanceof TitleScreen));
     }
 
     public static MainMenu getInstance() {
         return INSTANCE;
+    }
+
+    private void startExit(Screen screen) {
+        screenToSet = screen;
+        isExiting = true;
     }
 
     public void set(TitleScreen screen) {

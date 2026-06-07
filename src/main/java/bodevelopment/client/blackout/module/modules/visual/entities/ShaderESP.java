@@ -29,8 +29,9 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 
 import java.awt.*;
-import java.util.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ShaderESP extends Module {
     private static ShaderESP INSTANCE;
@@ -43,14 +44,11 @@ public class ShaderESP extends Module {
     private final Setting<BlackOutColor> outsideColor = this.sgGeneral.colorSetting("Outline Color", new BlackOutColor(255, 0, 0, 255), "The color of the outer glowing silhouette.");
     private final Setting<BlackOutColor> insideColor = this.sgGeneral.colorSetting("Interior Color", new BlackOutColor(255, 0, 0, 50), "The color applied to the entity's model body.");
 
-    public static boolean ignore = false;
-
-    private final FramebufferMultiBufferSource fboSource = new FramebufferMultiBufferSource();
-
     private static final String MAIN_FBO = "shaderESP";
     private static final String CONVERT_FBO = "shaderESP-convert";
     private static final String BLOOM_FBO = "shaderESP-bloom";
-
+    public static boolean ignore = false;
+    private final FramebufferMultiBufferSource fboSource = new FramebufferMultiBufferSource();
     /**
      * Per-entity-type custom color overrides discovered during the current frame.
      * Keyed by {@link ResourceLocation#toString()} of the entity type.
@@ -201,5 +199,6 @@ public class ShaderESP extends Module {
         return (!antiBot.enabled || antiBot.mode.get() != AntiBot.HandlingMode.Ignore || !(entity instanceof AbstractClientPlayer player) || !antiBot.getBots().contains(player)) && this.entities.get().contains(entity.getType());
     }
 
-    private record CustomColorData(Color lineColor, Color sideColor) {}
+    private record CustomColorData(Color lineColor, Color sideColor) {
+    }
 }

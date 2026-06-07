@@ -17,7 +17,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AimAssist extends Module {
-
     private final SettingGroup sgGeneral = this.addGroup("General");
 
     private final Setting<Double> range = sgGeneral.doubleSetting("Range", 6.0, 1.0, 10.0, 0.1, "Maximum range to target players.");

@@ -33,12 +33,15 @@ public class HitEffects extends Module {
 
 
     private final Setting<List<EntityType<?>>> entities = this.sgEntities.entityFilterdListSetting("Target Entities", "The entity types that will trigger effects when struck.", type -> type != EntityType.ITEM && type != EntityType.EXPERIENCE_ORB && type != EntityType.AREA_EFFECT_CLOUD && type != EntityType.MARKER && type != EntityType.POTION && type != EntityType.LLAMA_SPIT && type != EntityType.EYE_OF_ENDER && type != EntityType.DRAGON_FIREBALL && type != EntityType.FIREWORK_ROCKET && type != EntityType.ENDER_PEARL && type != EntityType.FISHING_BOBBER && type != EntityType.ARROW && type != EntityType.SPECTRAL_ARROW && type != EntityType.SNOWBALL && type != EntityType.SMALL_FIREBALL && type != EntityType.WITHER_SKULL && type != EntityType.FALLING_BLOCK && type != EntityType.TNT && type != EntityType.EVOKER_FANGS && type != EntityType.LIGHTNING_BOLT && type != EntityType.WIND_CHARGE && type != EntityType.BREEZE_WIND_CHARGE && !type.toString().contains("display"));
+
     private final Setting<Boolean> particle = this.sgParticles.booleanSetting("Enable Particles", false, "Spawns visual particles at the target's location upon a successful hit.");
     private final ParticleMultiSetting particles = ParticleMultiSetting.of(this.sgParticles, null, this.particle::get);
+
     private final Setting<Boolean> hitSound = this.sgHitSounds.booleanSetting("Enable Audio", false, "Plays a specific sound effect when an attack packet is sent.");
     public final Setting<Sound> sound = this.sgHitSounds.enumSetting("Audio Clip", Sound.NeverLose, "The sound profile to play upon hitting a target.", this.hitSound::get);
     private final Setting<Double> volume = this.sgHitSounds.doubleSetting("Audio Volume", 1.0, 0.0, 10.0, 0.1, "The playback intensity of the hit sound.", this.hitSound::get);
     private final Setting<Double> pitch = this.sgHitSounds.doubleSetting("Audio Pitch", 1.0, 0.0, 10.0, 0.1, "The frequency modulation of the hit sound.", this.hitSound::get);
+
     private final Setting<Boolean> hitMarker = this.sgHitMarker.booleanSetting("Enable Crosshair Marker", false, "Displays a visual hitmarker on the HUD when damage is dealt.");
     private final Setting<Integer> start = this.sgHitMarker.intSetting("Inner Offset", 5, 0, 25, 1, "The distance from the center of the screen where the marker lines begin.", this.hitMarker::get);
     private final Setting<Integer> end = this.sgHitMarker.intSetting("Outer Length", 15, 0, 50, 1, "The distance from the center where the marker lines terminate.", this.hitMarker::get);

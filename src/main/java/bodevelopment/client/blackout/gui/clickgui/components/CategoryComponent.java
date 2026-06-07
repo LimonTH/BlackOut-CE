@@ -20,10 +20,9 @@ import java.awt.*;
 
 public class CategoryComponent extends Component {
     public final SubCategory category;
+    private final float EXPANSION_AMOUNT = 8.0f;
     private float animation = 0f;
     private float textOffset = 0f;
-
-    private final float EXPANSION_AMOUNT = 8.0f;
 
     public CategoryComponent(PoseStack stack, SubCategory category) {
         super(stack);

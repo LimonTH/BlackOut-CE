@@ -15,6 +15,7 @@ import net.minecraft.world.item.Items;
 
 public class BowSpam extends Module {
     private static BowSpam INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
 
     public final Setting<Integer> charge = this.sgGeneral.intSetting("Charge Duration", 3, 3, 20, 1, "The number of ticks to charge the bow before releasing the arrow.");

@@ -21,11 +21,6 @@ public class RenderState implements AutoCloseable {
         this.restore = restore;
     }
 
-    @Override
-    public void close() {
-        this.restore.run();
-    }
-
     /**
      * Creates a RenderState from an arbitrary cleanup action.
      * Used by renderers to wrap startRender/endRender in try-with-resources.
@@ -115,5 +110,10 @@ public class RenderState implements AutoCloseable {
             RenderSystem.enableDepthTest();
             RenderSystem.disableBlend();
         });
+    }
+
+    @Override
+    public void close() {
+        this.restore.run();
     }
 }

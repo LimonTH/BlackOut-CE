@@ -23,6 +23,7 @@ public class FastProjectile extends Module {
     private static FastProjectile INSTANCE;
 
     private final SettingGroup sgGeneral = this.addGroup("General");
+
     private final Setting<Boolean> posRot = this.sgGeneral.booleanSetting("Sync Rotation", true, "Includes rotation data in the spoofed movement packets.");
     private final Setting<Boolean> blink = this.sgGeneral.booleanSetting("Blink Integration", false, "Buffers packets and releases them simultaneously to bypass strict velocity checks.");
     private final Setting<Double> timer = this.sgGeneral.doubleSetting("Blink Speed", 1.0, 1.0, 10.0, 0.1, "The speed multiplier for packet release when using Blink mode.", this.blink::get);

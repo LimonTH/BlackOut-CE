@@ -49,16 +49,18 @@ public class ClickGui extends Screen {
     public static float width = 1000.0F;
     public static float height = 700.0F;
     public static SubCategory selectedCategory = SubCategory.OFFENSIVE;
+    public static String hoveredDescription = null;
     public final List<ModuleComponent> moduleComponents = new ArrayList<>();
     public final List<CategoryComponent> categoryComponents = new ArrayList<>();
     private final PoseStack stack = new PoseStack();
     private final ClickGuiButtons buttons = new ClickGuiButtons();
+    private final Deque<ClickGuiScreen> screenStack = new ArrayDeque<>();
+    private final boolean guiStateChanged = false;
     public long toggleTime = 0L;
     public float moduleLength = 0.0F;
     private final ScrollHelper moduleScroll = new SmoothScrollHelper(0.5F, 20.0F, () -> 0.0F, () -> Math.max(this.moduleLength - height + 40.0F, 0.0F))
             .limit(5.0F);
     public ClickGuiScreen openedScreen = null;
-    private final Deque<ClickGuiScreen> screenStack = new ArrayDeque<>();
     private boolean upPressed = false;
     private boolean downPressed = false;
     private long pressTime = 0L;
@@ -77,11 +79,9 @@ public class ClickGui extends Screen {
     private boolean open = false;
     private float frameTime;
     private float scaleDelta;
-    public static String hoveredDescription = null;
     private String lastDescription = null;
     private long hoverTime = 0L;
     private float descAlpha = 0.0F;
-    private final boolean guiStateChanged = false;
 
     public ClickGui() {
         super(Component.nullToEmpty("Click GUI"));

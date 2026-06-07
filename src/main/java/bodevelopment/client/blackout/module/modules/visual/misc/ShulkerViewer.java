@@ -41,6 +41,10 @@ public class ShulkerViewer extends Module {
         INSTANCE = this;
     }
 
+    public static ShulkerViewer getInstance() {
+        return INSTANCE;
+    }
+
     public void renderOnTop(GuiGraphics context, int mouseX, int mouseY) {
         if (BlackOut.mc.player == null || BlackOut.mc.screen == null) return;
 
@@ -123,9 +127,5 @@ public class ShulkerViewer extends Module {
         return stack != null && !stack.isEmpty() &&
                 stack.getItem() instanceof BlockItem bi &&
                 bi.getBlock() instanceof ShulkerBoxBlock;
-    }
-
-    public static ShulkerViewer getInstance() {
-        return INSTANCE;
     }
 }

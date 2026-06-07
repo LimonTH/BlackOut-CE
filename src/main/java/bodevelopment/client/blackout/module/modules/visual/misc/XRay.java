@@ -16,6 +16,7 @@ public class XRay extends Module {
     private static XRay INSTANCE;
 
     private final SettingGroup sgGeneral = this.addGroup("General");
+
     public final Setting<Integer> opacity = this.sgGeneral.intSetting("Opacity", 0, 0, 255, 1, "The alpha transparency level applied to non-target blocks during world rendering.").onChanged(v -> {
         if (this.enabled) {
             BlackOut.mc.levelRenderer.allChanged();
@@ -50,6 +51,10 @@ public class XRay extends Module {
         INSTANCE = this;
     }
 
+    public static XRay getInstance() {
+        return INSTANCE;
+    }
+
     @Override
     public void onEnable() {
         BlackOut.mc.levelRenderer.allChanged();
@@ -58,10 +63,6 @@ public class XRay extends Module {
     @Override
     public void onDisable() {
         BlackOut.mc.levelRenderer.allChanged();
-    }
-
-    public static XRay getInstance() {
-        return INSTANCE;
     }
 
     public boolean isTarget(Block block) {

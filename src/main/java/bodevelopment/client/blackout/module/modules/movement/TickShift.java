@@ -19,10 +19,10 @@ public class TickShift extends Module {
     public final Setting<SmoothMode> smooth = this.sgGeneral.enumSetting("Interpolation Mode", SmoothMode.Exponent, "The mathematical curve used to transition the timer back to its base value.");
     public final Setting<Integer> packets = this.sgGeneral.intSetting("Packet Capacity", 20, 0, 100, 1, "The maximum number of game ticks that can be stored while stationary.");
     public final Setting<Double> timer = this.sgGeneral.doubleSetting("Shift Intensity", 2.0, 0.0, 10.0, 0.1, "The clock speed multiplier applied when discharging stored packets.");
-    private final Setting<Boolean> step = this.sgGeneral.booleanSetting("Synchronize Step", false, "Allows the Step module to utilize the accelerated timer for faster elevation changes.");
 
     public final Setting<ChargeMode> chargeMode = this.sgCharge.enumSetting("Accumulation Logic", ChargeMode.Strict, "Defines the conditions required to begin storing game ticks.");
     public final Setting<Double> chargeSpeed = this.sgCharge.doubleSetting("Charge Velocity", 1.0, 0.0, 5.0, 0.05, "The rate at which the packet buffer is filled.");
+    private final Setting<Boolean> step = this.sgGeneral.booleanSetting("Synchronize Step", false, "Allows the Step module to utilize the accelerated timer for faster elevation changes.");
 
     public double unSent = 0.0;
     private boolean lastMoving = false;

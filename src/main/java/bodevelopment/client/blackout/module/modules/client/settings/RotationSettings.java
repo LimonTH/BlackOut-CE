@@ -177,8 +177,8 @@ public class RotationSettings extends SettingsModule {
     public final Setting<Double> interactXZExpand = this.hzExpandSetting(
             "Interact", this.sgInteract, () -> this.interactMode.get() == BlockRotationCheckMode.Raytrace);
 
-    private int sinceRotated = 0;
     public final Vec3 vec = new Vec3(0.0, 0.0, 0.0);
+    private int sinceRotated = 0;
 
     public RotationSettings() {
         super("Rotate", false, true);

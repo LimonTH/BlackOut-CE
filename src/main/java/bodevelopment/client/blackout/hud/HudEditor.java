@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Map.Entry;
 
 public class HudEditor extends Screen {
+    private static boolean isOpen = false;
+    private static boolean isOverlayOpen = false;
     private final PoseStack stack = new PoseStack();
     private final List<HudElement> selectedElements = new ArrayList<>();
     private final List<HudElement> picked = new ArrayList<>();
@@ -48,8 +50,6 @@ public class HudEditor extends Screen {
     private float screenHeight;
     private float screenWidth;
     private boolean wasList = false;
-    private static boolean isOpen = false;
-    private static boolean isOverlayOpen = false;
     private float menuMx = 0.0F;
     private float menuMy = 0.0F;
     private float menuScale = 1.0F;
@@ -58,6 +58,18 @@ public class HudEditor extends Screen {
     public HudEditor() {
         super(Component.nullToEmpty("HUD Editor"));
         BlackOut.EVENT_BUS.subscribe(this, () -> !(HudEditor.isEditing()));
+    }
+
+    public static boolean isOpen() {
+        return isOpen;
+    }
+
+    public static boolean isOverlayOpen() {
+        return isOverlayOpen;
+    }
+
+    public static boolean isEditing() {
+        return isOpen || isOverlayOpen;
     }
 
     public void initElements() {
@@ -439,18 +451,6 @@ public class HudEditor extends Screen {
     @Override
     public boolean isPauseScreen() {
         return false;
-    }
-
-    public static boolean isOpen() {
-        return isOpen;
-    }
-
-    public static boolean isOverlayOpen() {
-        return isOverlayOpen;
-    }
-
-    public static boolean isEditing() {
-        return isOpen || isOverlayOpen;
     }
 
     private enum State {

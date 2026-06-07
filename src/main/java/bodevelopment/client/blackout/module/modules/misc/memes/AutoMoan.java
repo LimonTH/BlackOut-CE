@@ -15,12 +15,6 @@ import net.minecraft.world.entity.player.Player;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class AutoMoan extends Module {
-    private final SettingGroup sgGeneral = this.addGroup("General");
-
-    private final Setting<MoanMode> moanmode = this.sgGeneral.enumSetting("Interpersonal Dynamic", MoanMode.Submissive, "The thematic style of the automated chat messages.");
-    private final Setting<Boolean> ignoreFriends = this.sgGeneral.booleanSetting("Exclude Friends", true, "Prevents targeting players on your friend list with these messages.");
-    private final Setting<Integer> delay = this.sgGeneral.intSetting("Message Frequency", 100, 10, 500, 1, "The number of ticks to wait between each automated message.");
-
     private static final String[] submissive = new String[]{
             "fuck me harder daddy",
             "deeper! daddy deeper!",
@@ -51,7 +45,6 @@ public class AutoMoan extends Module {
             "I'll do anything for you daddy %s!",
             "Put your leash on me and take me home %s..."
     };
-
     private static final String[] dominant = new String[]{
             "Be a good boy for daddy",
             "I love pounding your ass %s!",
@@ -79,6 +72,10 @@ public class AutoMoan extends Module {
             "Cry for me %s, I love those sounds...",
             "I own every inch of your body %s, never forget it."
     };
+    private final SettingGroup sgGeneral = this.addGroup("General");
+    private final Setting<MoanMode> moanmode = this.sgGeneral.enumSetting("Interpersonal Dynamic", MoanMode.Submissive, "The thematic style of the automated chat messages.");
+    private final Setting<Boolean> ignoreFriends = this.sgGeneral.booleanSetting("Exclude Friends", true, "Prevents targeting players on your friend list with these messages.");
+    private final Setting<Integer> delay = this.sgGeneral.intSetting("Message Frequency", 100, 10, 500, 1, "The number of ticks to wait between each automated message.");
     private int timer = 0;
 
     public AutoMoan() {

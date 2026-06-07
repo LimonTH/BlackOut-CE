@@ -78,8 +78,8 @@ public class Offhand extends Module {
     private final TimerMap<Integer, BlockPos> mining = new TimerMap<>(true);
     private final List<AABB> prevPositions = new ArrayList<>();
     private final TimerMap<Integer, Long> movedFrom = new TimerMap<>(true);
-    private long prevSwitch = 0L;
     boolean lookingAtInteractive = false;
+    private long prevSwitch = 0L;
 
     public Offhand() {
         super("Offhand", "Manages totems and items with advanced damage prediction.", SubCategory.DEFENSIVE, true);

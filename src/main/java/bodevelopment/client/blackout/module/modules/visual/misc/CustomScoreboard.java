@@ -36,7 +36,6 @@ public class CustomScoreboard extends Module {
     public final Setting<BlackOutColor> bgColor = this.sgColor.colorSetting("Plate Color", new BlackOutColor(0, 0, 0, 50), "The base color of the scoreboard background.", () -> this.background.get() && !this.remove.get());
     public final Setting<BlackOutColor> shadowColor = this.sgColor.colorSetting("Shadow Tint", new BlackOutColor(0, 0, 0, 100), "The color applied to the background's drop shadow.", () -> this.background.get() && this.shadow.get() && !this.remove.get());
 
-
     private final PoseStack stack = new PoseStack();
     public String objectiveName;
     public Color objectiveColor;

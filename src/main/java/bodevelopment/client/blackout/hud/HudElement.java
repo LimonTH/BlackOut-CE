@@ -22,13 +22,10 @@ import java.util.function.Consumer;
 @PublicAPI
 public class HudElement {
     public final List<SettingGroup> settingGroups = new ArrayList<>();
-
-    protected final SettingGroup sgScale = this.addGroup("Sizing");
-
-    private final Setting<Double> scale = this.sgScale.doubleSetting("Master Scale", 1.0, 0.1, 10.0, 0.1, "The global scale multiplier applied to this interface element.");
-
     public final String name;
     public final String description;
+    protected final SettingGroup sgScale = this.addGroup("Sizing");
+    private final Setting<Double> scale = this.sgScale.doubleSetting("Master Scale", 1.0, 0.1, 10.0, 0.1, "The global scale multiplier applied to this interface element.");
     public float x = 0.0F;
     public float y = 0.0F;
     public int id;
@@ -38,6 +35,7 @@ public class HudElement {
     protected PoseStack stack;
     private float width = 0.0F;
     private float height = 0.0F;
+    private boolean sizeChangedInRender = false;
 
     public HudElement(String name, String description) {
         this.name = name;
@@ -52,8 +50,6 @@ public class HudElement {
         Managers.CONFIG.save(ConfigType.HUD);
         this.enabled = !this.enabled;
     }
-
-    private boolean sizeChangedInRender = false;
 
     protected void setSize(float width, float height) {
         this.width = width;
