@@ -2,14 +2,13 @@ package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.annotations.PublicAPI;
+import bodevelopment.client.blackout.enums.SwitchMode;
 import bodevelopment.client.blackout.interfaces.functional.EpicInterface;
 import bodevelopment.client.blackout.manager.Managers;
-import bodevelopment.client.blackout.module.modules.misc.Simulation;
 import bodevelopment.client.blackout.randomstuff.FindResult;
 import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.core.NonNullList;
-import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.world.InteractionHand;
@@ -22,13 +21,28 @@ import net.minecraft.world.item.ItemStack;
 import java.util.ArrayList;
 import java.util.function.Predicate;
 
+/**
+ * Inventory utility class for item searching, counting, and swapping.
+ * <p>
+ * All swap methods now delegate to {@link SwapProtocol} internally.
+ * Per-mode handle tracking replaces the old static field state.
+ * <p>
+ * <h3>Swap Mode Protocol Reference</h3>
+ * <ul>
+ *   <li><b>Normal</b>: {@code UpdateSelectedSlotC2SPacket} — persistent slot change, safe.</li>
+ *   <li><b>Silent</b>: {@code SetCarriedItem(tool) → Action → SetCarriedItem(orig)} — dual-packet,
+ *       server sees tool during action, client sees original.</li>
+ *   <li><b>PickSilent</b>: {@code PickItemC2SPacket} — copies item to current hotbar slot.</li>
+ *   <li><b>InvSwitch</b>: {@code ClickSlotC2SPacket(SWAP)} — swaps inventory↔hotbar.</li>
+ *   <li><b>Disabled</b>: No swap performed.</li>
+ * </ul>
+ */
 @PublicAPI
 public class InvUtils {
-    public static int pickSlot = -1;
-    public static int pickPrevSlot = -1;
-    public static int prevSlot = -1;
-    public static int silentPrevSlot = -1;
-    private static int[] slots;
+    private static SwapProtocol.SwapHandle normalHandle;
+    private static SwapProtocol.SwapHandle invSwitchHandle;
+    private static SwapProtocol.SwapHandle pickSilentHandle;
+    private static SwapProtocol.SwapHandle silentHandle;
 
     public static InteractionHand getHand(Item item) {
         return getHand(stack -> stack.getItem() == item);
@@ -132,7 +146,7 @@ public class InvUtils {
         interactSlot(handler.containerId, getId(slot), button, action);
     }
 
-    private static void clickSlotInstantly(int slot, int button, ClickType action) {
+    static void clickSlotInstantly(int slot, int button, ClickType action) {
         AbstractContainerMenu handler = BlackOut.mc.player.containerMenu;
         interactSlot(handler.containerId, getId(slot), button, action, true);
     }
@@ -179,206 +193,207 @@ public class InvUtils {
         }
     }
 
-    public static boolean pickSwap(int slot) {
-        if (slot < 0 || slot >= 36) return false;
-        pickPrevSlot = BlackOut.mc.player.getInventory().selected;
-        pickSlot = slot;
-        sendPick(slot, false);
-        return true;
-    }
-
-    public static boolean pickSwapInstantly(int slot) {
-        if (slot < 0 || slot >= 36) return false;
-        pickPrevSlot = BlackOut.mc.player.getInventory().selected;
-        pickSlot = slot;
-        sendPick(slot, true);
-        return true;
-    }
-
-    public static boolean pickSwapBack() {
-        if (pickSlot >= 0) {
-            if (pickSlot < 9 && pickPrevSlot >= 0) {
-                BlackOut.mc.player.getInventory().selected = pickPrevSlot;
-                Managers.PACKET.sendPacket(new ServerboundSetCarriedItemPacket(pickPrevSlot));
-                Managers.PACKET.slot = pickPrevSlot;
-            } else {
-                sendPick(pickSlot, false);
-            }
-            pickSlot = -1;
-            pickPrevSlot = -1;
-            return true;
-        }
-        return false;
-    }
-
-    public static boolean pickSwapBackInstantly() {
-        if (pickSlot >= 0) {
-            if (pickSlot < 9 && pickPrevSlot >= 0) {
-                BlackOut.mc.player.getInventory().selected = pickPrevSlot;
-                Managers.PACKET.sendInstantly(new ServerboundSetCarriedItemPacket(pickPrevSlot));
-                Managers.PACKET.slot = pickPrevSlot;
-            } else {
-                sendPick(pickSlot, true);
-            }
-            pickSlot = -1;
-            pickPrevSlot = -1;
-            return true;
-        }
-        return false;
-    }
-
-    private static void sendPick(int slot, boolean instant) {
-        int hbSlot = BlackOut.mc.player.getInventory().getSuitableHotbarSlot();
-
-        if (slot < 9) {
-            BlackOut.mc.player.getInventory().selected = slot;
-            if (instant) {
-                Managers.PACKET.sendInstantly(new ServerboundSetCarriedItemPacket(slot));
-            } else {
-                Managers.PACKET.sendPacket(new ServerboundSetCarriedItemPacket(slot));
-            }
-            Managers.PACKET.slot = slot;
-        } else {
-            if (instant) {
-                clickSlotInstantly(slot, hbSlot, ClickType.SWAP);
-            } else {
-                clickSlot(slot, hbSlot, ClickType.SWAP);
-            }
-        }
-
-        if (Simulation.getInstance().pickSwitch()) {
-            Managers.PACKET.ignoreSetSlot.replace(hbSlot, 0.3);
-            BlackOut.mc.player.getInventory().selected = hbSlot;
-            ItemStack stack1 = BlackOut.mc.player.getInventory().getItem(slot);
-            ItemStack stack2 = BlackOut.mc.player.getInventory().getItem(hbSlot);
-            Managers.PACKET.preApply(new ClientboundContainerSetSlotPacket(-2, 0, hbSlot, stack1));
-            Managers.PACKET.preApply(new ClientboundContainerSetSlotPacket(-2, 0, slot, stack2));
-            Managers.PACKET.addInvIgnore(new ClientboundContainerSetSlotPacket(0, 0, getId(slot), stack1));
-            Managers.PACKET.addInvIgnore(new ClientboundContainerSetSlotPacket(0, 0, getId(hbSlot), stack2));
-        }
-    }
-
-    public static boolean invSwap(int slot) {
-        if (slot < 0 || slot >= 36) return false;
-        int currentSlot = BlackOut.mc.player.getInventory().selected;
-        clickSlot(slot, currentSlot, ClickType.SWAP);
-        slots = new int[]{slot, currentSlot};
-        if (Managers.PACKET.slot != currentSlot) {
-            Managers.PACKET.slot = currentSlot;
-        }
-        return true;
-    }
-
-    public static boolean invSwapInstantly(int slot) {
-        if (slot < 0 || slot >= 36) return false;
-        int currentSlot = BlackOut.mc.player.getInventory().selected;
-        clickSlotInstantly(slot, currentSlot, ClickType.SWAP);
-        slots = new int[]{slot, currentSlot};
-        if (Managers.PACKET.slot != currentSlot) {
-            Managers.PACKET.slot = currentSlot;
-        }
-        return true;
-    }
-
-    public static boolean invSwapBack() {
-        if (slots != null) {
-            clickSlot(slots[0], slots[1], ClickType.SWAP);
-            return true;
-        }
-        return false;
-    }
-
-    public static boolean invSwapBackInstantly() {
-        if (slots != null) {
-            clickSlotInstantly(slots[0], slots[1], ClickType.SWAP);
-            return true;
-        }
-        return false;
-    }
-
+    /**
+     * Normal swap: changes the active slot both client-side and server-side
+     * via {@link ServerboundSetCarriedItemPacket}.
+     */
     public static boolean swap(int to) {
-        prevSlot = BlackOut.mc.player.getInventory().selected;
-        BlackOut.mc.player.getInventory().selected = to;
-        return syncSlot(false);
-    }
-
-    public static boolean swapInstantly(int to) {
-        prevSlot = BlackOut.mc.player.getInventory().selected;
-        BlackOut.mc.player.getInventory().selected = to;
-        return syncSlot(true);
-    }
-
-    private static boolean syncSlot(boolean instant) {
-        int i = BlackOut.mc.player.getInventory().selected;
-        if (i != Managers.PACKET.slot) {
-            if (instant) {
-                Managers.PACKET.sendInstantly(new ServerboundSetCarriedItemPacket(i));
-            } else {
-                Managers.PACKET.sendPacket(new ServerboundSetCarriedItemPacket(i));
-            }
-            Managers.PACKET.slot = i;
+        SwapProtocol.SwapHandle handle = SwapProtocol.swap(SwitchMode.Normal, to);
+        if (handle != null) {
+            normalHandle = handle;
             return true;
-        }
-        return false;
-    }
-
-    public static boolean swapBack() {
-        if (prevSlot >= 0) {
-            boolean sent = swap(prevSlot);
-            prevSlot = -1;
-            return sent;
-        }
-        return false;
-    }
-
-    public static boolean swapBackInstantly() {
-        if (prevSlot >= 0) {
-            boolean sent = swapInstantly(prevSlot);
-            prevSlot = -1;
-            return sent;
         }
         return false;
     }
 
     /**
-     * Silent swap: updates both PACKET.slot and selected for the START tick.
-     * After START_DESTROY_BLOCK is sent, call {@link #swapSilentRestoreVisual()}
-     * to restore selected to original (PACKET.slot stays on tool for getStack()).
+     * Normal swap (instant/queueless version).
+     */
+    public static boolean swapInstantly(int to) {
+        SwapProtocol.SwapHandle handle = SwapProtocol.swapInstantly(SwitchMode.Normal, to);
+        if (handle != null) {
+            normalHandle = handle;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Reverses the last normal swap.
+     */
+    public static boolean swapBack() {
+        if (normalHandle != null && !normalHandle.ended()) {
+            normalHandle.end();
+            normalHandle = null;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Reverses the last normal swap (instant version).
+     */
+    public static boolean swapBackInstantly() {
+        if (normalHandle != null && !normalHandle.ended()) {
+            normalHandle.endInstantly();
+            normalHandle = null;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Silent swap: sends the tool slot to the server via the proper packet queue,
+     * updates client visual to the tool for {@code getStack()} consistency.
+     * <p>
+     * After sending the action packet (e.g. START_DESTROY_BLOCK), call
+     * {@link #swapSilentRestoreVisual()} to fix client-side rendering WITHOUT
+     * sending a restore packet (server still sees the tool).
+     * <p>
+     * When mining completes, call {@link #swapSilentBack()} to restore the
+     * original slot on the server side.
+     *
+     * @param to target hotbar slot (0-8)
+     * @return true if the swap was initiated
      */
     public static boolean swapSilent(int to) {
         if (to < 0 || to > 8) return false;
         if (to == Managers.PACKET.slot) return true;
-        silentPrevSlot = Managers.PACKET.slot;
-        Managers.PACKET.slot = to;
-        Managers.PACKET.sendInstantly(new ServerboundSetCarriedItemPacket(to));
-        BlackOut.mc.player.getInventory().selected = to;
-        return true;
+
+        SwapProtocol.SwapHandle handle = SwapProtocol.swap(SwitchMode.Silent, to);
+        if (handle != null) {
+            silentHandle = handle;
+            return true;
+        }
+        return false;
     }
 
     /**
-     * Restores only the visual selected slot after Silent swap + START.
-     * PACKET.slot stays on the tool for Mining progress calculation via getStack().
-     * carriedIndex is synced to prevent ensureHasSentCarriedItem() from sending a
-     * conflicting SetCarriedItem(original) packet.
-     * Call this AFTER sendSequenced(START_DESTROY_BLOCK).
+     * Restores only the client-side visual selected slot after a Silent swap.
+     * <p>
+     * <b>No packet is sent</b> — the server still sees the tool in the active slot.
+     * This allows mining progress to continue while the player visually holds
+     * their original item.
+     * <p>
+     * Call this AFTER sending the action packet (e.g., START_DESTROY_BLOCK).
+     * Must still call {@link #swapSilentBack()} after the action completes.
      */
     public static void swapSilentRestoreVisual() {
-        if (silentPrevSlot >= 0) {
-            BlackOut.mc.player.getInventory().selected = silentPrevSlot;
-            BlackOut.mc.gameMode.carriedIndex = silentPrevSlot;
-            // PACKET.slot intentionally NOT restored — must stay on tool for getStack()
-            // Packet is NOT sent — server already has the tool from swapSilent's sendInstantly TODO
+        if (silentHandle != null) {
+            silentHandle.restoreVisual();
         }
     }
 
     /**
      * Restores the previous slot after a silent swap.
+     * Sends {@link ServerboundSetCarriedItemPacket} to the server through the
+     * proper packet queue.
      */
     public static boolean swapSilentBack() {
-        if (silentPrevSlot >= 0) {
-            int prev = silentPrevSlot;
-            silentPrevSlot = -1;
-            return swapSilent(prev);
+        if (silentHandle != null && !silentHandle.ended()) {
+            silentHandle.end();
+            silentHandle = null;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Inventory-swap: moves the item at the given slot to the current hotbar slot
+     * via {@link ServerboundContainerClickPacket} with SWAP type.
+     */
+    public static boolean invSwap(int slot) {
+        SwapProtocol.SwapHandle handle = SwapProtocol.swap(SwitchMode.InvSwitch, slot);
+        if (handle != null) {
+            invSwitchHandle = handle;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Inventory-swap (instant/queueless version).
+     */
+    public static boolean invSwapInstantly(int slot) {
+        SwapProtocol.SwapHandle handle = SwapProtocol.swapInstantly(SwitchMode.InvSwitch, slot);
+        if (handle != null) {
+            invSwitchHandle = handle;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Reverses the last inv-swap by sending the same SWAP click again.
+     */
+    public static boolean invSwapBack() {
+        if (invSwitchHandle != null && !invSwitchHandle.ended()) {
+            invSwitchHandle.end();
+            invSwitchHandle = null;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Reverses the last inv-swap (instant version).
+     */
+    public static boolean invSwapBackInstantly() {
+        if (invSwitchHandle != null && !invSwitchHandle.ended()) {
+            invSwitchHandle.endInstantly();
+            invSwitchHandle = null;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Pick-silent swap: copies the item at the given slot to the current hotbar slot
+     * using the PickItem protocol.
+     *
+     * @return true if the swap was initiated
+     */
+    public static boolean pickSwap(int slot) {
+        SwapProtocol.SwapHandle handle = SwapProtocol.swap(SwitchMode.PickSilent, slot);
+        if (handle != null) {
+            pickSilentHandle = handle;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Pick-silent swap (instant/queueless version).
+     */
+    public static boolean pickSwapInstantly(int slot) {
+        SwapProtocol.SwapHandle handle = SwapProtocol.swapInstantly(SwitchMode.PickSilent, slot);
+        if (handle != null) {
+            pickSilentHandle = handle;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Reverses the last pick-swap.
+     */
+    public static boolean pickSwapBack() {
+        if (pickSilentHandle != null && !pickSilentHandle.ended()) {
+            pickSilentHandle.end();
+            pickSilentHandle = null;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Instantly reverses the last pick-swap.
+     */
+    public static boolean pickSwapBackInstantly() {
+        if (pickSilentHandle != null && !pickSilentHandle.ended()) {
+            pickSilentHandle.endInstantly();
+            pickSilentHandle = null;
+            return true;
         }
         return false;
     }

@@ -24,11 +24,13 @@ import bodevelopment.client.blackout.randomstuff.timers.TimerList;
 import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import net.minecraft.client.multiplayer.prediction.BlockStatePredictionHandler;
+import net.minecraft.client.multiplayer.prediction.PredictiveAction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
@@ -174,9 +176,14 @@ public class AutoMine extends Module {
     public MineType mineType = null;
     public boolean started = false;
     /**
-     * Exposed for Silent swap temporary restoration in MixinMinecraft.onItemInteract
+     * Active swap handle from the pickaxe swap. Tracks the swap state for all
+     * modes (Silent, Normal, InvSwitch, PickSilent) and provides safe
+     * suspend/resume for temporary item restoration (e.g. eating while mining).
+     * <p>
+     * Replaces the old {@code holdingForNcp} boolean + {@code silentRestoring}
+     * flag system with a proper stateful transaction.
      */
-    boolean holdingForNcp = false;
+    private SwapProtocol.SwapHandle currentSwap = null;
     private boolean queueActive = false;
     private BlockPos prevPos = null;
     private Player target = null;
@@ -191,13 +198,11 @@ public class AutoMine extends Module {
     private BlockPos prevMined = null;
     private boolean shouldRestart = false;
     private boolean suppressResetOnSwitch = false;
-    /**
-     * Set during Silent swap item restore cycles (e.g. eating via
-     * {@code onItemInteract}) to prevent {@link #onSent} from treating
-     * AutoMine's own {@code ServerboundSetCarriedItemPacket} as a
-     * user-initiated slot change.
-     */
-    private boolean silentRestoring = false;
+    /** Prevents infinite recursion in {@link #onSend(PacketEvent.Send)} —
+     *  {@code sendSequenced()} internally calls {@code sendPacket()} which
+     *  fires another {@code PacketEvent.Send}. */
+    private boolean restoringForUseItem = false;
+
     public AutoMine() {
         super("Auto Mine", "Automatically mines enemies' surround blocks to abuse them with crystals.", SubCategory.OFFENSIVE, true);
         INSTANCE = this;
@@ -207,55 +212,61 @@ public class AutoMine extends Module {
         return INSTANCE;
     }
 
-    /**
-     * Checks if AutoMine currently has a Silent swap active.
-     * Used by {@code MixinMinecraft#onItemInteract} to temporarily restore
-     * the server-side item before sending {@code ServerboundUseItemPacket},
-     * ensuring food/potions are processed correctly by the server.
-     */
+    /** Checks if there's an active swap (any mode). */
+    public boolean isSwapActive() {
+        return currentSwap != null && !currentSwap.ended();
+    }
+
+    /** Checks if there's an active Silent swap. */
     public boolean isSilentSwapActive() {
-        return this.holdingForNcp && this.pickaxeSwitch.get() == SwitchMode.Silent;
+        return currentSwap != null && !currentSwap.ended() && pickaxeSwitch.get() == SwitchMode.Silent;
     }
 
     /**
-     * Begins a temporary item-restore cycle for Silent swap.
+     * Transaction-based UseItemPacket forwarding during Silent swap.
      * <p>
-     * Restores the player's visual item to the server (so the server sees the
-     * correct item for the interaction), and suppresses the {@link #onSent}
-     * reset that would otherwise fire on the {@code SetCarriedItem} packet.
+     * When the player right-clicks while a Silent swap is active, the server
+     * has the tool in the active slot. Sending a plain {@code ServerboundUseItemPacket}
+     * would make the server process the action with the tool (no-op), wasting the
+     * player's item usage.
      * <p>
-     * Must be paired with {@link #endItemRestore()}.
+     * Instead of changing {@code SetCarriedItem} (which would reset mining progress
+     * on anti-cheats that validate heldItem consistency), we cancel the original
+     * packet and re-send it through {@link #sendSequenced(PredictiveAction)} with
+     * a prediction sequence number. This groups the UseItemPacket with the mining
+     * prediction context, and many anti-cheats skip heldItem verification for
+     * sequenced (prediction-grouped) packets.
+     * <p>
+     * HeldItem on the server NEVER changes — mining progress is preserved.
+     * The server processes UseItemPacket as part of the prediction sequence,
+     * allowing food/potions to work during silent mining.
      */
-    public void beginItemRestore() {
-        this.silentRestoring = true;
-        InvUtils.swapSilentBack();
-    }
+    @Event
+    public void onSend(PacketEvent.Send event) {
+        if (event.packet instanceof ServerboundUseItemPacket usePacket
+                && this.isSilentSwapActive()
+                && currentSwap != null
+                && !currentSwap.ended()
+                && !this.restoringForUseItem) {
 
-    /**
-     * Ends a temporary item-restore cycle for Silent swap.
-     * <p>
-     * Re-applies the Silent swap to the tool slot and restores the visual
-     * selected slot on the client without sending another packet.
-     */
-    public void endItemRestore() {
-        int toolSlot = Managers.PACKET.slot;
-        InvUtils.swapSilent(toolSlot);
-        InvUtils.swapSilentRestoreVisual();
-        this.silentRestoring = false;
+            event.setCancelled(true);
+            this.restoringForUseItem = true;
+
+            try {
+                this.sendSequenced(s -> new ServerboundUseItemPacket(usePacket.getHand(), s,
+                        Managers.ROTATION.prevYaw, Managers.ROTATION.prevPitch));
+            } finally {
+                this.restoringForUseItem = false;
+            }
+        }
     }
 
     @Event
     public void onSent(PacketEvent.Sent event) {
         if (this.resetOnSwitch.get()
                 && !this.suppressResetOnSwitch
-                && !this.silentRestoring
+                && !this.isSwapActive()
                 && event.packet instanceof ServerboundSetCarriedItemPacket) {
-            // When Silent swap is active, the user can freely change slots or TODO: Blocks breaks correctly on server side, but on client this creating ghosts
-            // use items without AutoMine resetting mining progress. The server
-            // still sees the pickaxe from swapSilent(), and PACKET.slot stays
-            // on the tool for progress calculation. Allowing user slot changes
-            // through keeps the client responsive while mining continues.
-            if (this.isSilentSwapActive()) return;
             this.shouldRestart = true;
         }
     }
@@ -1037,7 +1048,7 @@ public class AutoMine extends Module {
                 if (!this.shouldRotateEnd() || this.rotation.rotateBlock(this.minePos, dir,
                         this.getMineEndRotationVec(), RotationType.Mining, "mining")) {
                     boolean switched = false;
-                    if (this.holdingForNcp || holding || (switched = this.pickaxeSwitch.get().swap(slot))) {
+                    if (this.isSwapActive() || holding || (switched = this.pickaxeSwitch.get().swap(slot))) {
                         InteractionHand hand = InvUtils.getHand(Items.END_CRYSTAL);
                         boolean crystalSwitched = false;
                         FindResult result = this.crystalSwitch.get().find(Items.END_CRYSTAL);
@@ -1107,7 +1118,7 @@ public class AutoMine extends Module {
                 if (dir != null) {
                     if (!this.shouldRotateEnd() || this.rotation.rotateBlock(this.minePos, dir, this.getMineEndRotationVec(), RotationType.Mining, "mining")) {
                         boolean switched = false;
-                        if (this.holdingForNcp || holding || (switched = slot >= 0 && this.pickaxeSwitch.get().swap(slot)) || slot < 0) {
+                        if (this.isSwapActive() || holding || (switched = slot >= 0 && this.pickaxeSwitch.get().swap(slot)) || slot < 0) {
                             this.sendSequenced(s -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, this.minePos, dir, s));
                             SwingSettings.getInstance().mineSwing(SwingSettings.MiningSwingState.End);
                             if (this.mineEndSwing.get()) {
@@ -1281,7 +1292,7 @@ public class AutoMine extends Module {
             if (!pos.equals(this.prevMined)) {
                 this.prevMined = null;
 
-                if (this.pickaxeSwitch.get() != SwitchMode.Disabled && !this.holdingForNcp) {
+                if (this.pickaxeSwitch.get() != SwitchMode.Disabled && !this.isSwapActive()) {
                     int slot = this.findBestSlot(
                                     stack -> BlockUtils.getBlockBreakingDelta(
                                             this.minePos, stack, this.effectCheck.get(), this.waterCheck.get(), this.onGroundCheck.get() && !this.onGroundSpoof.get()
@@ -1292,8 +1303,11 @@ public class AutoMine extends Module {
 
                     if (slot >= 0) {
                         SwitchMode mode = this.pickaxeSwitch.get();
-                        this.holdingForNcp = mode.swap(slot);
-                        if (this.holdingForNcp && (mode == SwitchMode.InvSwitch || mode == SwitchMode.PickSilent)) {
+
+                        this.currentSwap = mode.createHandle(slot);
+
+                        if (this.currentSwap != null
+                                && (mode == SwitchMode.InvSwitch || mode == SwitchMode.PickSilent)) {
                             int currentSlot = BlackOut.mc.player.getInventory().selected;
                             ItemStack fromInv = BlackOut.mc.player.getInventory().getItem(slot);
                             ItemStack fromHotbar = BlackOut.mc.player.getInventory().getItem(currentSlot);
@@ -1307,13 +1321,8 @@ public class AutoMine extends Module {
 
                 this.sendSequenced(s -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, dir, s));
 
-                /* Silent exploit: restore selected immediately after START.
-                 * Server already received SetCarriedItem(pickaxe) via swapSilent(),
-                 * and START_DESTROY_BLOCK. NCP/AC records pickaxe from START.
-                 * PACKET.slot stays on pickaxe for getStack() progress calc.
-                 * Player sees original item and can interact freely during mining. */
-                if (this.pickaxeSwitch.get() == SwitchMode.Silent) {
-                    InvUtils.swapSilentRestoreVisual();
+                if (this.pickaxeSwitch.get() == SwitchMode.Silent && currentSwap != null) {
+                    currentSwap.restoreVisual();
                 }
 
                 SwingSettings.getInstance().mineSwing(SwingSettings.MiningSwingState.Start);
@@ -1327,15 +1336,15 @@ public class AutoMine extends Module {
     }
 
     private void restoreSwap() {
-        if (this.holdingForNcp) {
-            this.pickaxeSwitch.get().swapBack();
+        if (currentSwap != null && !currentSwap.ended()) {
+            currentSwap.end();
+            currentSwap = null;
         }
-        this.holdingForNcp = false;
     }
 
     private void abort(BlockPos pos) {
         this.restoreSwap();
-        if (this.mineType != MineType.Manual || this.holdingForNcp) {
+        if (this.mineType != MineType.Manual || currentSwap != null) {
             this.sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN, 0));
         }
         this.started = false;

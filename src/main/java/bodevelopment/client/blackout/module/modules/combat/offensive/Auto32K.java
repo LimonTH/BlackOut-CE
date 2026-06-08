@@ -357,7 +357,7 @@ public class Auto32K extends Module {
                     int s = this.getSlot();
 
                     if (s != BlackOut.mc.player.getInventory().selected) {
-                        InvUtils.swap(s);
+                        SwitchMode.Normal.swap(s);
                     }
                     BlackOut.mc.gameMode.handleInventoryMouseClick(handler.containerId, slot.index, s, ClickType.SWAP, BlackOut.mc.player);
                     return true;

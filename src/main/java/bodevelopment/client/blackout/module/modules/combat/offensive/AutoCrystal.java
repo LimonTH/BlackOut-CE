@@ -1874,39 +1874,19 @@ public class AutoCrystal extends Module {
             this.inventory = i;
         }
 
+        private static final java.util.ArrayDeque<bodevelopment.client.blackout.util.SwapProtocol.SwapHandle> SWAP_STACK =
+                new java.util.ArrayDeque<>();
+
         public void swapBack() {
-            switch (this) {
-                case Silent:
-                    InvUtils.swapSilentBack();
-                    break;
-                case InvSwitch:
-                    InvUtils.invSwapBack();
-                    break;
-                case PickSilent:
-                    InvUtils.pickSwapBack();
-            }
+            bodevelopment.client.blackout.util.SwapProtocol.SwapHandle handle = SWAP_STACK.poll();
+            if (handle != null && !handle.ended()) handle.end();
         }
 
         public boolean swap(int slot) {
-            return switch (this) {
-                case Silent -> {
-                    InvUtils.swapSilent(slot);
-                    yield true;
-                }
-                case Normal, Gapple -> {
-                    InvUtils.swap(slot);
-                    yield true;
-                }
-                case InvSwitch -> {
-                    InvUtils.invSwap(slot);
-                    yield true;
-                }
-                case PickSilent -> {
-                    InvUtils.pickSwap(slot);
-                    yield true;
-                }
-                default -> false;
-            };
+            bodevelopment.client.blackout.util.SwapProtocol.SwapHandle handle =
+                    bodevelopment.client.blackout.util.SwapProtocol.swap(this == Gapple ? SwitchMode.Normal : SwitchMode.valueOf(this.name()), slot);
+            if (handle != null) SWAP_STACK.push(handle);
+            return handle != null;
         }
 
         public FindResult find(Predicate<ItemStack> predicate) {

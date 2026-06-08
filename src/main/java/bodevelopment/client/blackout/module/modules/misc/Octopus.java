@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.enums.SwitchMode;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.KeyEvent;
 import bodevelopment.client.blackout.event.events.MouseButtonEvent;
@@ -11,7 +12,6 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
-import bodevelopment.client.blackout.util.InvUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
 
 public class Octopus extends Module {
@@ -73,13 +73,13 @@ public class Octopus extends Module {
     private void use(int slot) {
         boolean switched = false;
         if (BlackOut.mc.gameMode.carriedIndex != slot) {
-            InvUtils.swap(slot);
+            SwitchMode.Normal.swap(slot);
             switched = true;
         }
 
         ((IMinecraft) BlackOut.mc).blackout_Client$useItem();
         if (switched) {
-            InvUtils.swapBack();
+            SwitchMode.Normal.swapBack();
         }
     }
 
