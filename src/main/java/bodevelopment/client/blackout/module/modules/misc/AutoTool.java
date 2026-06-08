@@ -1,6 +1,7 @@
 package bodevelopment.client.blackout.module.modules.misc;
 
 import bodevelopment.client.blackout.BlackOut;
+import bodevelopment.client.blackout.enums.SwitchMode;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.manager.Managers;
@@ -27,7 +28,7 @@ public class AutoTool extends Module {
                     FindResult best = this.bestSlot(pos);
                     if (best.wasFound()) {
                         if (!(this.miningDelta(pos, best.stack()) <= this.miningDelta(pos, Managers.PACKET.getStack()))) {
-                            InvUtils.swap(best.slot());
+                            SwitchMode.Normal.swap(best.slot());
                         }
                     }
                 }

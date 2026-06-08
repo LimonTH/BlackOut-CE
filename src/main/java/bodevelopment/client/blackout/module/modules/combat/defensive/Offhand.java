@@ -186,9 +186,9 @@ public class Offhand extends Module {
                     Slot slot = this.find(predicate);
                     if (slot != null) {
                         int selectedSlot = BlackOut.mc.player.getInventory().selected;
-                        InvUtils.pickSwap(slot.getContainerSlot());
+                        bodevelopment.client.blackout.enums.SwitchMode.PickSilent.swap(slot.getContainerSlot());
                         this.sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND, BlockPos.ZERO, Direction.DOWN));
-                        InvUtils.swap(selectedSlot);
+                        bodevelopment.client.blackout.enums.SwitchMode.Normal.swap(selectedSlot);
                         this.prevSwitch = System.currentTimeMillis();
                         this.addMoveTime(slot);
                     }
