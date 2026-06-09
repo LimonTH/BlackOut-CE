@@ -813,7 +813,9 @@ public class AutoCrystal extends Module {
             this.targetCrystal = null;
             double bestVal = 0.0;
 
-            for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
+            int count = Managers.POSITION.entityCount();
+            for (int i = 0; i < count; i++) {
+                Entity entity = Managers.POSITION.entity(i);
                 if (entity instanceof EndCrystal crystal && this.canAttack(entity, null)) {
                     double value = this.getAttackValue(crystal);
                     if (this.targetCrystal == null || !(value < bestVal)) {

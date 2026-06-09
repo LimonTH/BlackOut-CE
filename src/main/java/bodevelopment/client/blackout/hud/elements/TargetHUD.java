@@ -595,17 +595,11 @@ public class TargetHUD extends HudElement {
     }
 
     private void closestTarget() {
-        double distance = Double.MAX_VALUE;
-
-        for (AbstractClientPlayer player : BlackOut.mc.level.players()) {
-            if (player != BlackOut.mc.player && !Managers.FRIENDS.isFriend(player) && !(player.distanceTo(BlackOut.mc.player) > this.targetRange.get())) {
-                double d = BlackOut.mc.player.distanceTo(player);
-                if (d < distance) {
-                    this.target = player;
-                    distance = d;
-                }
-            }
-        }
+        int idx = Managers.POSITION.findClosest(e -> e instanceof AbstractClientPlayer p 
+            && p != BlackOut.mc.player 
+            && !Managers.FRIENDS.isFriend(p) 
+            && BlackOut.mc.player.distanceTo(p) <= this.targetRange.get());
+        this.target = idx >= 0 ? (AbstractClientPlayer) Managers.POSITION.entity(idx) : null;
     }
 
     private void drawFace(PoseStack stack, float scale, float x, float y) {

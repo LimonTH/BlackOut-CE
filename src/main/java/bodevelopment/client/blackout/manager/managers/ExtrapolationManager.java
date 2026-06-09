@@ -6,6 +6,7 @@ import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.interfaces.functional.EpicInterface;
 import bodevelopment.client.blackout.manager.Manager;
+import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.modules.client.settings.ExtrapolationSettings;
 import bodevelopment.client.blackout.randomstuff.MotionData;
 import bodevelopment.client.blackout.randomstuff.timers.TickTimerList;
@@ -105,9 +106,9 @@ public class ExtrapolationManager extends Manager {
     public AABB extrapolate(Entity entity, int ticks) {
         if (entity instanceof Player player) {
             ExtrapolationData data = this.getFromMap(player);
-            return data == null ? entity.getBoundingBox() : data.extrapolate(player, ticks);
+            return data == null ? Managers.POSITION.getBox(entity) : data.extrapolate(player, ticks);
         } else {
-            return entity.getBoundingBox();
+            return Managers.POSITION.getBox(entity);
         }
     }
 
@@ -149,7 +150,7 @@ public class ExtrapolationManager extends Manager {
             this.prevPos = currentPos;
             this.prevYaw = this.entity.getYRot();
             this.prevPitch = this.entity.getXRot();
-            this.onGrounds.addFirst(MotionSimulator.isOnGround(this.getEntity(), this.getEntity().getBoundingBox()));
+            this.onGrounds.addFirst(MotionSimulator.isOnGround(this.getEntity(), Managers.POSITION.getBox(this.getEntity())));
             CollectionUtils.limitSize(this.onGrounds, 3);
             boolean offGround = this.isOffGround();
             if (offGround && !this.prevOffGround) {
@@ -225,7 +226,7 @@ public class ExtrapolationManager extends Manager {
                 this.addMotion(new Vec3(0.0, 0.0, 0.0));
                 return true;
             } else {
-                if (motion.y >= 0.45 && motion.y <= 4.0 && MotionSimulator.isOnGround(entity, entity.getBoundingBox())) {
+                if (motion.y >= 0.45 && motion.y <= 4.0 && MotionSimulator.isOnGround(entity, Managers.POSITION.getBox(entity))) {
                     ExtrapolationSettings extSettings = ExtrapolationSettings.getInstance();
                     if (extSettings.stepPredict.get()) {
                         this.step.add(motion.y, extSettings.stepTicks.get());
@@ -233,7 +234,7 @@ public class ExtrapolationManager extends Manager {
                         this.addMotion(new Vec3(motion.x, 0.0, motion.z));
                         return true;
                     }
-                } else if (motion.y <= -0.45 && motion.y >= -6.0 && MotionSimulator.isOnGround(entity, entity.getBoundingBox())) {
+                } else if (motion.y <= -0.45 && motion.y >= -6.0 && MotionSimulator.isOnGround(entity, Managers.POSITION.getBox(entity))) {
                     ExtrapolationSettings extSettings = ExtrapolationSettings.getInstance();
                     if (extSettings.reverseStepPredict.get()) {
                         this.reverseStep.add(-motion.y, extSettings.reverseStepTicks.get());
@@ -241,7 +242,7 @@ public class ExtrapolationManager extends Manager {
                         this.addMotion(new Vec3(motion.x, 0.0, motion.z));
                         return true;
                     }
-                } else if (motion.y > 0.35 && motion.y < 0.45 && !MotionSimulator.isOnGround(entity, entity.getBoundingBox())) {
+                } else if (motion.y > 0.35 && motion.y < 0.45 && !MotionSimulator.isOnGround(entity, Managers.POSITION.getBox(entity))) {
                     this.jumpHeight = motion.y;
                 }
 
@@ -255,7 +256,7 @@ public class ExtrapolationManager extends Manager {
 
         public AABB extrapolate(Entity entity, int ticks, Consumer<AABB> consumer) {
             if (ticks == 0) {
-                return entity.getBoundingBox();
+                return Managers.POSITION.getBox(entity);
             } else {
                 SimulationContext context = new SimulationContext(entity, this.getExtTicks(ticks), this.jumpHeight, this.motionData.motion, consumer, (c, i) -> {
                     double prevYaw = this.motionYaw(c.motionX, c.motionZ);
@@ -301,7 +302,7 @@ public class ExtrapolationManager extends Manager {
         }
 
         private boolean collided() {
-            AABB box = this.entity.getBoundingBox();
+            AABB box = Managers.POSITION.getBox(this.entity);
             AABB newBox = new AABB(
                     this.prevPos.x - box.getXsize() / 2.0,
                     this.prevPos.y,

@@ -26,6 +26,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -737,8 +738,10 @@ public class BedAura extends Module {
     private void findTargets() {
         Map<Player, Double> map = new HashMap<>();
 
-        for (Player player : BlackOut.mc.level.players()) {
-            if (player != BlackOut.mc.player && !(player.getHealth() <= 0.0F)) {
+        int count = Managers.POSITION.entityCount();
+        for (int i = 0; i < count; i++) {
+            Entity entity = Managers.POSITION.entity(i);
+            if (entity instanceof Player player && !(player.getHealth() <= 0.0F)) {
                 double distance = BlackOut.mc.player.distanceTo(player);
                 if (!(distance > this.enemyDistance.get())) {
                     if (map.size() < this.maxTargets.get()) {

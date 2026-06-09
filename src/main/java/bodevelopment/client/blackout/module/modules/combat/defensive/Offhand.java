@@ -3,6 +3,7 @@ package bodevelopment.client.blackout.module.modules.combat.defensive;
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.*;
+import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.combat.misc.Suicide;
@@ -331,9 +332,11 @@ public class Offhand extends Module {
     }
 
     private boolean inDanger(AABB box, double health) {
-        for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
+        int count = Managers.POSITION.entityCount();
+        for (int i = 0; i < count; i++) {
+            Entity entity = Managers.POSITION.entity(i);
             if (entity instanceof EndCrystal
-                    && DamageUtils.crystalDamage(BlackOut.mc.player, box, entity.position()) * this.safetyMultiplier.get() >= health) {
+                    && DamageUtils.crystalDamage(BlackOut.mc.player, box, Managers.POSITION.getPosition(entity)) * this.safetyMultiplier.get() >= health) {
                 return true;
             }
         }

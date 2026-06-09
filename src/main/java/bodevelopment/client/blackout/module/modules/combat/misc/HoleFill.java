@@ -18,6 +18,7 @@ import bodevelopment.client.blackout.util.*;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.BlockItem;
@@ -206,9 +207,11 @@ public class HoleFill extends Module {
                 }
             }
 
-            for (AbstractClientPlayer player : BlackOut.mc.level.players()) {
-                if (!player.isSpectator()
-                        && player != BlackOut.mc.player
+            int count = Managers.POSITION.entityCount();
+            for (int i = 0; i < count; i++) {
+                Entity entity = Managers.POSITION.entity(i);
+                if (entity instanceof AbstractClientPlayer player
+                        && !player.isSpectator()
                         && !(player.getHealth() <= 0.0F)
                         && !Managers.FRIENDS.isFriend(player)
                         && this.nearCheck(player, hole, pDist)) {

@@ -4,6 +4,7 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
+import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.combat.misc.AntiBot;
@@ -80,13 +81,14 @@ public class BoxESP extends Module {
                 ? new BlackOutColor(customSide.getRed(), customSide.getGreen(), customSide.getBlue(), customSide.getAlpha())
                 : null;
 
-        AABB box = new AABB(
-                pos.x() - entity.getBoundingBox().getXsize() / 2.0,
+        AABB entityBox = Managers.POSITION.getBox(entity);
+        AABB box = Managers.POSITION.aabb().get(
+                pos.x() - entityBox.getXsize() / 2.0,
                 pos.y(),
-                pos.z() - entity.getBoundingBox().getZsize() / 2.0,
-                pos.x() + entity.getBoundingBox().getXsize() / 2.0,
-                pos.y() + entity.getBoundingBox().getYsize(),
-                pos.z() + entity.getBoundingBox().getZsize() / 2.0
+                pos.z() - entityBox.getZsize() / 2.0,
+                pos.x() + entityBox.getXsize() / 2.0,
+                pos.y() + entityBox.getYsize(),
+                pos.z() + entityBox.getZsize() / 2.0
         );
 
         if (lineOverride != null || sideOverride != null) {

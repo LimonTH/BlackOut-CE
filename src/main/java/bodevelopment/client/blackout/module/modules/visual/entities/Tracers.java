@@ -82,7 +82,7 @@ public class Tracers extends Module {
             color = customColor != null ? customColor : this.line.get().getColor();
         }
 
-        Vec2 f = Render2DUtils.getCoords(x, y + entity.getBoundingBox().getYsize() / 2.0, z, false);
+        Vec2 f = Render2DUtils.getCoords(x, y + Managers.POSITION.getBox(entity).getYsize() / 2.0, z, false);
         if (f == null) {
             this.stack.popPose();
         } else {

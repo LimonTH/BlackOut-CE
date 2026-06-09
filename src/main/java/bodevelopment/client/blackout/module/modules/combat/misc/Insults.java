@@ -338,10 +338,12 @@ public class Insults extends Module {
     }
 
     private boolean anyDead(double range) {
-        for (Player pl : BlackOut.mc.level.players()) {
-            if (pl != BlackOut.mc.player
+        int count = Managers.POSITION.entityCount();
+        for (int i = 0; i < count; i++) {
+            Entity entity = Managers.POSITION.entity(i);
+            if (entity instanceof Player pl
                     && !Managers.FRIENDS.isFriend(pl)
-                    && pl.position().distanceTo(BlackOut.mc.player.position()) <= range
+                    && Managers.POSITION.distance(i) <= range
                     && pl.getHealth() <= 0.0F) {
                 this.name = pl.getName().getString();
                 return true;
