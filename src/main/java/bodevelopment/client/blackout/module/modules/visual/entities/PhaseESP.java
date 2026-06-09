@@ -4,6 +4,7 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
+import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.combat.misc.AntiBot;
@@ -128,7 +129,7 @@ public class PhaseESP extends Module {
             AntiBot antiBot = AntiBot.getInstance();
             if (antiBot.enabled && antiBot.mode.get() == AntiBot.HandlingMode.Ignore && entity instanceof AbstractClientPlayer && antiBot.getBots().contains(entity)) {
                 return false;
-            } else if (!BlockUtils.hasEntityCollision(entity, entity.getBoundingBox().deflate(0.04, 0.06, 0.04))) {
+            } else if (!BlockUtils.hasEntityCollision(entity, Managers.POSITION.getBox(entity).deflate(0.04, 0.06, 0.04))) {
                 return false;
             } else {
                 return entity != BlackOut.mc.player || FreeCam.getInstance().enabled;

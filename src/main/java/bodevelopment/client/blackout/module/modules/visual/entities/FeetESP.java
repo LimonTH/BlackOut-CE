@@ -4,6 +4,7 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.enums.RenderShape;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
+import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -12,6 +13,7 @@ import bodevelopment.client.blackout.module.setting.settings.ListSetting;
 import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 import bodevelopment.client.blackout.util.render.Render3DUtils;
 import bodevelopment.client.blackout.util.render.RenderState;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -43,13 +45,18 @@ public class FeetESP extends Module {
         try (RenderState state = Render3DUtils.begin()) {
             BlackOut.mc.level.entitiesForRendering().forEach(entity -> {
                 if (this.entities.get().contains(entity.getType())) {
-                    Vec3 pos = new Vec3(entity.xo, entity.yo, entity.zo)
-                            .lerp(entity.position(), BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true));
+                    float partial = BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+                    Vec3 pos = Managers.POSITION.vec3().get(
+                            Mth.lerp(partial, entity.xo, entity.getX()),
+                            Mth.lerp(partial, entity.yo, entity.getY()),
+                            Mth.lerp(partial, entity.zo, entity.getZ())
+                    );
 
-                    double halfWidth = entity.getBoundingBox().getXsize() / 2.0;
-                    double halfDepth = entity.getBoundingBox().getZsize() / 2.0;
+                    AABB entityBox = Managers.POSITION.getBox(entity);
+                    double halfWidth = entityBox.getXsize() / 2.0;
+                    double halfDepth = entityBox.getZsize() / 2.0;
 
-                    AABB feetBox = new AABB(
+                    AABB feetBox = Managers.POSITION.aabb().get(
                             pos.x - halfWidth, pos.y, pos.z - halfDepth,
                             pos.x + halfWidth, pos.y + 0.01, pos.z + halfDepth
                     );

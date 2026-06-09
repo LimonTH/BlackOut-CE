@@ -4,6 +4,7 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
+import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.modules.combat.misc.AntiBot;
@@ -79,7 +80,13 @@ public class ESP extends Module {
                     this.entities.add(entity);
                 }
             });
-            this.entities.sort(Comparator.comparingDouble(entity -> -BlackOut.mc.player.distanceTo(entity)));
+            this.entities.sort((a, b) -> {
+                int idxA = Managers.POSITION.indexOf(a);
+                int idxB = Managers.POSITION.indexOf(b);
+                double distA = idxA >= 0 ? Managers.POSITION.distance(idxA) : BlackOut.mc.player.distanceTo(a);
+                double distB = idxB >= 0 ? Managers.POSITION.distance(idxB) : BlackOut.mc.player.distanceTo(b);
+                return Double.compare(distB, distA);
+            });
         }
     }
 

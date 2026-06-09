@@ -229,13 +229,16 @@ public class ObsidianModule extends Module {
         double lowest = 1000.0;
         AABB searchBox = BlackOut.mc.player.getBoundingBox().inflate(6.0);
 
-        for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
+        int count = Managers.POSITION.entityCount();
+        for (int i = 0; i < count; i++) {
+            Entity entity = Managers.POSITION.entity(i);
             if (!(entity instanceof EndCrystal)) continue;
-            if (!entity.getBoundingBox().intersects(searchBox)) continue;
-            if (!SettingUtils.inAttackRange(entity.getBoundingBox())) continue;
+            AABB box = Managers.POSITION.box(i);
+            if (!box.intersects(searchBox)) continue;
+            if (!SettingUtils.inAttackRange(box)) continue;
             if (!this.validForBlocking(entity)) continue;
 
-            double dmg = DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), entity.position());
+            double dmg = DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), Managers.POSITION.getPosition(entity));
             if (dmg < lowest) {
                 lowest = dmg;
                 crystal = entity;

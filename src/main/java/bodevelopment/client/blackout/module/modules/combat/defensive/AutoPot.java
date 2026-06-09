@@ -183,9 +183,11 @@ public class AutoPot extends Module {
     }
 
     private boolean inDanger() {
-        for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
+        int count = Managers.POSITION.entityCount();
+        for (int i = 0; i < count; i++) {
+            Entity entity = Managers.POSITION.entity(i);
             if (entity instanceof EndCrystal && entity.tickCount <= this.maxExisted.get()) {
-                double damage = DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), entity.position());
+                double damage = DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), Managers.POSITION.getPosition(entity));
                 if (BlackOut.mc.player.getHealth() - damage <= this.safeHealth.get()) {
                     return true;
                 }

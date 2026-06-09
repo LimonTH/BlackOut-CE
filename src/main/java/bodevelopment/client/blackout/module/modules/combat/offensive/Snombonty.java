@@ -217,18 +217,20 @@ public class Snombonty extends MoveUpdateModule {
         double dist = 10000.0;
         double maxRange = this.range.get();
 
-        for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
-            if (entity == BlackOut.mc.player || !(entity instanceof LivingEntity living) || !living.isAlive()) continue;
+        int count = Managers.POSITION.entityCount();
+        for (int i = 0; i < count; i++) {
+            Entity entity = Managers.POSITION.entity(i);
+            if (!(entity instanceof LivingEntity living) || !living.isAlive()) continue;
 
             if (this.onlyPlayers.get() && !(entity instanceof Player)) continue;
 
-            double d = BlackOut.mc.player.position().distanceTo(entity.position());
+            double d = Managers.POSITION.distance(i);
             if (maxRange > 0.0 && d > maxRange) continue;
 
             if (d < dist) {
                 AABB box = entity instanceof AbstractClientPlayer pl && this.extMap.contains(pl)
                         ? this.extMap.get(pl)
-                        : entity.getBoundingBox();
+                        : Managers.POSITION.box(i);
 
                 Rotation rotation = ProjectileUtils.calcShootingRotation(
                         BlackOut.mc.player.getEyePosition(),

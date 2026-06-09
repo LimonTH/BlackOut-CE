@@ -15,8 +15,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
-import java.util.Comparator;
-
 public class AutoCrystalBase extends ObsidianModule {
     private static AutoCrystalBase INSTANCE;
 
@@ -26,11 +24,14 @@ public class AutoCrystalBase extends ObsidianModule {
     private final Setting<Integer> updateDelay = this.sgPerformance.intSetting("Update Delay", 2, 0, 20, 1, "How many ticks to wait between full re-calculations.");
     private final Setting<Double> searchRadius = this.sgPerformance.doubleSetting("Horizontal Radius", 4.0, 1.0, 6.0, 0.1, "Horizontal radius around target.");
     private final Setting<Integer> verticalRadius = this.sgPerformance.intSetting("Vertical Depth", 3, 1, 10, 1, "How many blocks to search up and down.");
+    private final Setting<Double> mineScorePenalty = this.sgPerformance.doubleSetting("Mine Score Penalty", 3.0, 0.0, 15.0, 0.5, "Score reduction for positions requiring block mining to offset delay.");
 
     public Player target = null;
     public BlockPos bestBasePos = null;
+    public BlockPos miningTarget = null;
     BlockPos lastBestPos = null;
     private int internalTicks = 0;
+    private double lastFindScore = 0.0;
 
     public AutoCrystalBase() {
         super("Auto Crystal Base", "Dynamic obsidian placement and mining for crystals.", SubCategory.OFFENSIVE);
@@ -46,11 +47,13 @@ public class AutoCrystalBase extends ObsidianModule {
     protected void addInsideBlocks() {
         if (BlackOut.mc.level == null || BlackOut.mc.player == null) return;
 
-        this.target = BlackOut.mc.level.players().stream()
-                .filter(p -> p != BlackOut.mc.player && !Managers.FRIENDS.isFriend(p) && p.isAlive())
-                .filter(p -> BlackOut.mc.player.distanceTo(p) <= 12.0)
-                .min(Comparator.comparingDouble(p -> BlackOut.mc.player.distanceTo(p)))
-                .orElse(null);
+        int idx = Managers.POSITION.findClosest(e -> e instanceof Player p 
+            && p != BlackOut.mc.player 
+            && !Managers.FRIENDS.isFriend(p) 
+            && p.isAlive() 
+            && BlackOut.mc.player.distanceTo(p) <= 12.0);
+        
+        this.target = idx >= 0 ? (Player) Managers.POSITION.entity(idx) : null;
     }
 
     @Override
@@ -58,6 +61,7 @@ public class AutoCrystalBase extends ObsidianModule {
         if (this.target == null) {
             lastBestPos = null;
             bestBasePos = null;
+            miningTarget = null;
             return;
         }
 
@@ -72,14 +76,30 @@ public class AutoCrystalBase extends ObsidianModule {
         internalTicks = 0;
 
         AutoCrystal ac = AutoCrystal.getInstance();
-        if (ac == null || !ac.enabled) { bestBasePos = null; return; }
+        if (ac == null || !ac.enabled) { bestBasePos = null; miningTarget = null; return; }
 
         BlockPos targetPos = target.blockPosition();
         int surroundState = getSurroundState(targetPos);
         boolean isFar = BlackOut.mc.player.distanceToSqr(target) >= 16.0;
         double px = BlackOut.mc.player.getX(), py = BlackOut.mc.player.getY(), pz = BlackOut.mc.player.getZ();
 
-        BlockPos bestPos = findBestPos(ac, targetPos, surroundState, isFar, px, py, pz);
+        // Pass 1
+        BlockPos bestFree = findBestPos(ac, targetPos, surroundState, isFar, px, py, pz, false);
+        double freeScore = lastFindScore;
+
+        // Pass 2
+        BlockPos bestMine = findBestPos(ac, targetPos, surroundState, isFar, px, py, pz, true);
+        double mineScore = lastFindScore;
+
+        BlockPos bestPos;
+        boolean requiresMining;
+        if (bestMine != null && (bestFree == null || mineScore > freeScore)) {
+            bestPos = bestMine;
+            requiresMining = true;
+        } else {
+            bestPos = bestFree;
+            requiresMining = false;
+        }
 
         if (bestPos != null) {
             BlockState baseState = BlackOut.mc.level.getBlockState(bestPos);
@@ -87,23 +107,52 @@ public class AutoCrystalBase extends ObsidianModule {
             BlockState aboveState = BlackOut.mc.level.getBlockState(bestPos.above());
             boolean aboveClear = (aboveState.isAir() || BlockUtils.replaceable(bestPos.above())) && aboveState.getFluidState().isEmpty();
 
-            if (aboveClear) {
+            if (requiresMining) {
+                BlockPos abv = bestPos.above();
+                boolean baseNeedsMining = !baseClear && !baseState.is(Blocks.OBSIDIAN) && !baseState.is(Blocks.BEDROCK) && BlockUtils.mineable(bestPos);
+                boolean aboveNeedsMining = !aboveClear && BlockUtils.mineable(abv);
+
+                if (aboveNeedsMining) {
+                    miningTarget = abv;
+                    bestBasePos = bestPos;
+                    lastBestPos = bestPos;
+                    if (baseNeedsMining) miningTarget = bestPos;
+                } else if (baseNeedsMining) {
+                    miningTarget = bestPos;
+                    bestBasePos = bestPos;
+                    lastBestPos = bestPos;
+                } else {
+                    miningTarget = null;
+                    bestBasePos = null;
+                    lastBestPos = bestPos;
+                    if (baseClear && SettingUtils.inPlaceRange(bestPos)) {
+                        this.blockPlacements.add(bestPos);
+                    }
+                }
+            } else if (aboveClear) {
+                miningTarget = null;
                 bestBasePos = null;
                 lastBestPos = bestPos;
                 if (baseClear && SettingUtils.inPlaceRange(bestPos)) {
                     this.blockPlacements.add(bestPos);
                 }
             } else {
+                miningTarget = null;
                 bestBasePos = bestPos;
                 lastBestPos = bestPos;
             }
         } else {
             bestBasePos = null;
+            miningTarget = null;
             lastBestPos = null;
         }
     }
 
     private BlockPos findBestPos(AutoCrystal ac, BlockPos targetPos, int surroundState, boolean isFar, double px, double py, double pz) {
+        return findBestPos(ac, targetPos, surroundState, isFar, px, py, pz, false);
+    }
+
+    private BlockPos findBestPos(AutoCrystal ac, BlockPos targetPos, int surroundState, boolean isFar, double px, double py, double pz, boolean allowMineable) {
         double rH = searchRadius.get();
         int rV = verticalRadius.get();
         BlockPos best = null;
@@ -121,7 +170,7 @@ public class AutoCrystalBase extends ObsidianModule {
                         if (dx * dx + dy * dy + dz * dz >= BlackOut.mc.player.distanceToSqr(target)) continue;
                     }
                     if (y == -1 && surroundState == 4) continue;
-                    if (!isValid(mut, ac)) continue;
+                    if (!isValid(mut, ac, allowMineable)) continue;
 
                     double tDmg = simDamage(target, mut);
                     if (tDmg <= 0.0 && BlockUtils.isLiquid(mut.above())) tDmg = ac.getMinPlace().get() + 0.5;
@@ -139,24 +188,40 @@ public class AutoCrystalBase extends ObsidianModule {
                     double dx2 = mut.getX() + 0.5 - px, dy2 = mut.getY() + 0.5 - py, dz2 = mut.getZ() + 0.5 - pz;
                     score += Math.max(0, (25.0 - (dx2 * dx2 + dy2 * dy2 + dz2 * dz2)) * 0.1);
 
+                    if (allowMineable) score -= mineScorePenalty.get();
+
                     if (score > maxScore) { maxScore = score; best = mut.immutable(); }
                 }
             }
         }
+        lastFindScore = maxScore;
         return best;
     }
 
     private boolean isValid(BlockPos pos, AutoCrystal ac) {
+        return isValid(pos, ac, false);
+    }
+
+    private boolean isValid(BlockPos pos, AutoCrystal ac, boolean allowMineable) {
         if (BlackOut.mc.level == null || BlackOut.mc.level.isOutsideBuildHeight(pos.getY())) return false;
 
         BlockState baseState = BlackOut.mc.level.getBlockState(pos);
         boolean existing = baseState.is(Blocks.OBSIDIAN) || baseState.is(Blocks.BEDROCK);
-        if (!existing && !BlockUtils.replaceable(pos) && baseState.getFluidState().isEmpty()) return false;
+        boolean baseOk = existing || BlockUtils.replaceable(pos) || !baseState.getFluidState().isEmpty();
+        if (!baseOk) {
+            if (!allowMineable || !BlockUtils.mineable(pos)) return false;
+        }
 
         BlockPos up = pos.above();
         BlockState upState = BlackOut.mc.level.getBlockState(up);
-        if ((!upState.isAir() && !BlockUtils.replaceable(up)) || !upState.getFluidState().isEmpty()) return false;
-        if (!existing && baseState.getFluidState().isEmpty() && !hasSupport(pos, true)) return false;
+        boolean aboveOk = (upState.isAir() || BlockUtils.replaceable(up)) && upState.getFluidState().isEmpty();
+        if (!aboveOk) {
+            if (!allowMineable || !BlockUtils.mineable(up)) return false;
+        }
+
+        if (!existing && baseState.getFluidState().isEmpty() && !hasSupport(pos, true)) {
+            if (!allowMineable || !BlockUtils.mineable(pos) || !hasSupport(pos, true)) return false;
+        }
         if (ac.intersects(up)) return false;
 
         return ac.inAttackRangePlacing(up);

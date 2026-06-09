@@ -147,7 +147,7 @@ public class Nametags extends Module {
         double y = Mth.lerp(tickDelta, entity.yo, entity.getY());
         double z = Mth.lerp(tickDelta, entity.zo, entity.getZ());
 
-        Vec2 coords = Render2DUtils.getCoords(x, y + entity.getBoundingBox().getYsize() + this.yOffset.get(), z, true);
+        Vec2 coords = Render2DUtils.getCoords(x, y + Managers.POSITION.getBox(entity).getYsize() + this.yOffset.get(), z, true);
         if (coords == null) return;
 
         float distance = (float) BlackOut.mc.gameRenderer.getMainCamera().getPosition().subtract(x, y, z).length();

@@ -9,6 +9,7 @@ import bodevelopment.client.blackout.util.SettingUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 
 import java.util.Comparator;
 
@@ -43,13 +44,13 @@ public class AutoTrap extends ObsidianModule {
 
     @Override
     protected void addInsideBlocks() {
-        BlackOut.mc
-                .level
-                .players()
-                .stream()
-                .filter(player -> BlackOut.mc.player.distanceTo(player) < 15.0F && player != BlackOut.mc.player && !Managers.FRIENDS.isFriend(player))
-                .sorted(Comparator.comparingDouble(player -> BlackOut.mc.player.distanceTo(player)))
-                .forEach(player -> this.addBlocks(player, this.getSize(player)));
+        int count = Managers.POSITION.entityCount();
+        for (int i = 0; i < count; i++) {
+            Entity entity = Managers.POSITION.entity(i);
+            if (entity instanceof Player player && BlackOut.mc.player.distanceTo(player) < 15.0F && !Managers.FRIENDS.isFriend(player)) {
+                this.addBlocks(player, this.getSize(player));
+            }
+        }
     }
 
     @Override

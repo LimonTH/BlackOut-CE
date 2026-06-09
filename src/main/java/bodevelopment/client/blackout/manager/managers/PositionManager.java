@@ -38,6 +38,14 @@ public class PositionManager extends Manager {
     private final Entity[] entities = new Entity[MAX_ENTITIES];
     private final AABB[] boxes = new AABB[MAX_ENTITIES];
     private final double[] distances = new double[MAX_ENTITIES];
+    /** Raw entity coordinates (no allocation). */
+    private final double[] entityX = new double[MAX_ENTITIES];
+    private final double[] entityY = new double[MAX_ENTITIES];
+    private final double[] entityZ = new double[MAX_ENTITIES];
+    /** Previous-tick coordinates for motion calculation. */
+    private final double[] prevX = new double[MAX_ENTITIES];
+    private final double[] prevY = new double[MAX_ENTITIES];
+    private final double[] prevZ = new double[MAX_ENTITIES];
     private int count;
 
     private final Vec3Pool vecPool = new Vec3Pool(POOL_SIZE);
@@ -70,6 +78,11 @@ public class PositionManager extends Manager {
             return;
         }
 
+        // Shift current coordinates to prev for motion tracking
+        System.arraycopy(this.entityX, 0, this.prevX, 0, this.count);
+        System.arraycopy(this.entityY, 0, this.prevY, 0, this.count);
+        System.arraycopy(this.entityZ, 0, this.prevZ, 0, this.count);
+
         this.count = 0;
         Vec3 playerPos = BlackOut.mc.player.position();
 
@@ -84,6 +97,9 @@ public class PositionManager extends Manager {
                     entityBox.minX, entityBox.minY, entityBox.minZ,
                     entityBox.maxX, entityBox.maxY, entityBox.maxZ
             );
+            this.entityX[this.count] = entity.getX();
+            this.entityY[this.count] = entity.getY();
+            this.entityZ[this.count] = entity.getZ();
             this.distances[this.count] = playerPos.distanceTo(entity.position());
             this.count++;
         }
@@ -103,6 +119,20 @@ public class PositionManager extends Manager {
 
     /** Pre-computed distance from local player to entity at index {@code i}. */
     public double distance(int i) { return this.distances[i]; }
+
+    /** Raw entity X coordinate at index {@code i}. */
+    public double entityX(int i) { return this.entityX[i]; }
+    /** Raw entity Y coordinate at index {@code i}. */
+    public double entityY(int i) { return this.entityY[i]; }
+    /** Raw entity Z coordinate at index {@code i}. */
+    public double entityZ(int i) { return this.entityZ[i]; }
+
+    /** Motion (delta from previous tick) X at index {@code i}. */
+    public double motionX(int i) { return this.entityX[i] - this.prevX[i]; }
+    /** Motion (delta from previous tick) Y at index {@code i}. */
+    public double motionY(int i) { return this.entityY[i] - this.prevY[i]; }
+    /** Motion (delta from previous tick) Z at index {@code i}. */
+    public double motionZ(int i) { return this.entityZ[i] - this.prevZ[i]; }
 
     /**
      * Iterates over all cached entities, calling {@code consumer} for each.

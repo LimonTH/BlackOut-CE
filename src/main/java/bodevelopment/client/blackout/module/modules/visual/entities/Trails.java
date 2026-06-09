@@ -4,6 +4,7 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.RenderEvent;
 import bodevelopment.client.blackout.interfaces.functional.DoubleFunction;
+import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -82,8 +83,9 @@ public class Trails extends Module {
     private void addPositions(double tickDelta) {
         if (!(System.currentTimeMillis() - this.prevAdd < 1000.0 / this.maxFrequency.get())) {
             this.prevAdd = System.currentTimeMillis();
-            BlackOut.mc.level.entitiesForRendering().forEach(entity -> {
-                if (this.entities.get().contains(entity.getType())) {
+            Managers.POSITION.forEachFiltered(
+                entity -> this.entities.get().contains(entity.getType()),
+                (entity, box, distance) -> {
                     if (this.map.containsKey(entity)) {
                         this.map.get(entity).positions.add(new Pair<>(this.renderHeight.get().function.apply(entity, tickDelta), System.currentTimeMillis()));
                     } else {
@@ -92,7 +94,7 @@ public class Trails extends Module {
                         this.map.put(entity, line);
                     }
                 }
-            });
+            );
             this.map.entrySet().removeIf(entry -> entry.getValue().positions.isEmpty());
         }
     }
@@ -118,7 +120,7 @@ public class Trails extends Module {
 
     public enum HeightMode {
         Feet(EntityUtils::getLerpedPos),
-        Middle((entity, tickDelta) -> EntityUtils.getLerpedPos(entity, tickDelta).add(0.0, entity.getBoundingBox().getYsize() / 2.0, 0.0));
+        Middle((entity, tickDelta) -> EntityUtils.getLerpedPos(entity, tickDelta).add(0.0, Managers.POSITION.getBox(entity).getYsize() / 2.0, 0.0));
 
         private final DoubleFunction<Entity, Double, Vec3> function;
 

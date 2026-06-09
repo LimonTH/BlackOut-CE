@@ -106,21 +106,19 @@ public class Surround extends ObsidianModule {
         this.blockPlacements.clear();
         this.addPlacements();
         if (this.extend.get()) {
-            BlackOut.mc
-                    .level
-                    .players()
-                    .stream()
-                    .filter(player -> BlackOut.mc.player.distanceTo(player) < 5.0F && player != BlackOut.mc.player)
-                    .sorted(Comparator.comparingDouble(player -> BlackOut.mc.player.distanceTo(player)))
-                    .forEach(player -> {
-                        if (this.intersects(player)) {
-                            if (System.currentTimeMillis() - this.blockedSince.computeIfAbsent(player, p -> System.currentTimeMillis()) >= 200L) {
-                                this.addBlocks(player, this.getSize(player));
-                            }
-                        } else {
-                            this.blockedSince.remove(player);
+            int count = Managers.POSITION.entityCount();
+            for (int i = 0; i < count; i++) {
+                Entity entity = Managers.POSITION.entity(i);
+                if (entity instanceof AbstractClientPlayer player && BlackOut.mc.player.distanceTo(player) < 5.0F) {
+                    if (this.intersects(player)) {
+                        if (System.currentTimeMillis() - this.blockedSince.computeIfAbsent(player, p -> System.currentTimeMillis()) >= 200L) {
+                            this.addBlocks(player, this.getSize(player));
                         }
-                    });
+                    } else {
+                        this.blockedSince.remove(player);
+                    }
+                }
+            }
         }
 
         this.blockedSince.entrySet().removeIf(entry -> System.currentTimeMillis() - entry.getValue() > 60000L);

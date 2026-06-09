@@ -120,20 +120,12 @@ public class AntiAim extends Module {
     }
 
     private AbstractClientPlayer getEnemy(double r) {
-        AbstractClientPlayer target = null;
-        double dist = 1000.0;
-
-        for (AbstractClientPlayer player : BlackOut.mc.level.players()) {
-            if (player != BlackOut.mc.player && !Managers.FRIENDS.isFriend(player) && !(player.getHealth() <= 0.0F)) {
-                double d = BlackOut.mc.player.distanceTo(player);
-                if ((!(d > r) || !(r > 0.0)) && d < dist) {
-                    target = player;
-                    dist = d;
-                }
-            }
-        }
-
-        return target;
+        int idx = Managers.POSITION.findClosest(e -> e instanceof AbstractClientPlayer p 
+            && p != BlackOut.mc.player 
+            && !Managers.FRIENDS.isFriend(p) 
+            && p.getHealth() > 0.0F 
+            && (r <= 0.0 || BlackOut.mc.player.distanceTo(p) <= r));
+        return idx >= 0 ? (AbstractClientPlayer) Managers.POSITION.entity(idx) : null;
     }
 
     private IgnoreMode getIgnore() {

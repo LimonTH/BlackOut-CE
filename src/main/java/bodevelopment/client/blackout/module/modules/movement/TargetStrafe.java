@@ -128,20 +128,11 @@ public class TargetStrafe extends Module {
         if (this.auraTarget.get()) {
             return Aura.targetedPlayer;
         } else {
-            Player closest = null;
-            double closestDist = 0.0;
-
-            for (Player player : BlackOut.mc.level.players()) {
-                if (player != BlackOut.mc.player && !Managers.FRIENDS.isFriend(player)) {
-                    double dist = BlackOut.mc.player.distanceTo(player);
-                    if (!(dist > this.range.get()) && (closest == null || !(dist > closestDist))) {
-                        closest = player;
-                        closestDist = dist;
-                    }
-                }
-            }
-
-            return closest;
+            int idx = Managers.POSITION.findClosest(e -> e instanceof Player p 
+                && p != BlackOut.mc.player 
+                && !Managers.FRIENDS.isFriend(p) 
+                && BlackOut.mc.player.distanceTo(p) <= this.range.get());
+            return idx >= 0 ? (Player) Managers.POSITION.entity(idx) : null;
         }
     }
 }
