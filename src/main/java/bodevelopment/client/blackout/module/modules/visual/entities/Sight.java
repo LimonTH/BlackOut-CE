@@ -66,8 +66,8 @@ public class Sight extends Module {
                             this.fadeIn.get() + this.length.get()
                     );
 
-                    ((IClipContext) DamageUtils.raycastContext).blackout_Client$set(eyePos, lookPos);
-                    BlockHitResult hitResult = DamageUtils.raycast(DamageUtils.raycastContext, false);
+                    ((IClipContext) DamageUtils.getRaycastContext()).blackout_Client$set(eyePos, lookPos);
+                    BlockHitResult hitResult = DamageUtils.raycast(DamageUtils.getRaycastContext(), false);
 
                     Vec3 hitPos = (hitResult.getType() == HitResult.Type.MISS) ? lookPos : hitResult.getLocation();
 

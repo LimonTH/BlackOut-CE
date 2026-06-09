@@ -28,7 +28,7 @@ public class EntityUtils {
         double x = Mth.lerp(tickDelta, entity.xo, entity.getX());
         double y = Mth.lerp(tickDelta, entity.yo, entity.getY());
         double z = Mth.lerp(tickDelta, entity.zo, entity.getZ());
-        return new Vec3(x, y, z);
+        return Managers.POSITION.vec3().get(x, y, z);
     }
 
     public static AABB getLerpedBox(Entity entity, double tickDelta) {
@@ -37,7 +37,7 @@ public class EntityUtils {
         double z = Mth.lerp(tickDelta, entity.zo, entity.getZ());
         double halfX = entity.getBoundingBox().getXsize() / 2.0;
         double halfZ = entity.getBoundingBox().getZsize() / 2.0;
-        return new AABB(x - halfX, y, z - halfZ, x + halfX, y + entity.getBoundingBox().getYsize(), z + halfZ);
+        return Managers.POSITION.aabb().get(x - halfX, y, z - halfZ, x + halfX, y + entity.getBoundingBox().getYsize(), z + halfZ);
     }
 
     public static boolean intersects(AABB box, Predicate<Entity> predicate) {

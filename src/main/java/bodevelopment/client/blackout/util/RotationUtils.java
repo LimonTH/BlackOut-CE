@@ -2,6 +2,7 @@ package bodevelopment.client.blackout.util;
 
 import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.annotations.PublicAPI;
+import bodevelopment.client.blackout.interfaces.mixin.IVec3;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -84,10 +85,34 @@ public class RotationUtils {
         return from.add(rotationVec(yaw, pitch, distance));
     }
 
+    /** Writes rotationVec + from into target (pooled). */
+    public static void rotationVec(double yaw, double pitch, Vec3 from, double distance, Vec3 target) {
+        double rp = Math.toRadians(pitch);
+        double ry = -Math.toRadians(yaw);
+        double c = Math.cos(rp);
+        ((IVec3) target).blackout_Client$set(
+                from.x + distance * Math.sin(ry) * c,
+                from.y + distance * -Math.sin(rp),
+                from.z + distance * Math.cos(ry) * c
+        );
+    }
+
     public static Vec3 rotationVec(double yaw, double pitch, double range) {
         double rp = Math.toRadians(pitch);
         double ry = -Math.toRadians(yaw);
         double c = Math.cos(rp);
         return new Vec3(range * Math.sin(ry) * c, range * -Math.sin(rp), range * Math.cos(ry) * c);
+    }
+
+    /** Writes rotationVec into target (pooled). */
+    public static void rotationVec(double yaw, double pitch, double range, Vec3 target) {
+        double rp = Math.toRadians(pitch);
+        double ry = -Math.toRadians(yaw);
+        double c = Math.cos(rp);
+        ((IVec3) target).blackout_Client$set(
+                range * Math.sin(ry) * c,
+                range * -Math.sin(rp),
+                range * Math.cos(ry) * c
+        );
     }
 }

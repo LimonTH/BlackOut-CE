@@ -24,11 +24,26 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 @PublicAPI
 public class DamageUtils {
-    public static ClipContext raycastContext;
+    private static ClipContext raycastContext;
+    private static boolean raycastInitialized;
+
+    public static ClipContext getRaycastContext() {
+        if (!raycastInitialized) {
+            raycastContext = new ClipContext(
+                    Vec3.ZERO, Vec3.ZERO,
+                    ClipContext.Block.COLLIDER,
+                    ClipContext.Fluid.NONE,
+                    (CollisionContext) null
+            );
+            raycastInitialized = true;
+        }
+        return raycastContext;
+    }
 
     public static double crystalDamage(LivingEntity entity, AABB box, Vec3 pos) {
         return crystalDamage(entity, box, pos, null);

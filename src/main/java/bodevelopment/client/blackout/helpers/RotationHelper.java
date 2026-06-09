@@ -134,7 +134,8 @@ public class RotationHelper {
     }
 
     public boolean rotateBlock(BlockPos pos, Direction dir, RotationType type, double priority, String key) {
-        Rotation rotation = SettingUtils.getRotation(pos, dir, pos.getCenter(), type);
+        Vec3 center = Managers.POSITION.vec3().get(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+        Rotation rotation = SettingUtils.getRotation(pos, dir, center, type);
         return this.rotate(rotation.yaw(), rotation.pitch(), true, true, priority, type, (y, p) -> SettingUtils.blockRotationCheck(pos, dir, y, p, type), key);
     }
 
@@ -207,9 +208,7 @@ public class RotationHelper {
 
     public boolean checkAttackLimit() {
         RotationSettings rotSettings = RotationSettings.getInstance();
-        if (!rotSettings.attackLimit.get()) {
-            return true;
-        } else {
+        if (rotSettings.attackLimit.get()) {
             for (int i = 0; i < Math.min(Managers.ROTATION.rotationHistory.size(), rotSettings.attackTicks.get()); i++) {
                 float a = Managers.ROTATION.rotationHistory.getA(i);
                 float b = Managers.ROTATION.rotationHistory.getB(i);
@@ -219,8 +218,8 @@ public class RotationHelper {
                 }
             }
 
-            return true;
         }
+        return true;
     }
 
     public void setPitch(float pitch, double priority, String key) {

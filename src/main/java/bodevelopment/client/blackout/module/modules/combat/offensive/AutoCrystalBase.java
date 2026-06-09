@@ -212,7 +212,7 @@ public class AutoCrystalBase extends ObsidianModule {
     }
 
     private boolean isBlockedByCrystal(BlockPos pos) {
-        return EntityUtils.intersects(BoxUtils.get(pos), entity -> entity instanceof net.minecraft.world.entity.boss.enderdragon.EndCrystal);
+        return EntityUtils.intersects(Managers.POSITION.aabb().fromBlock(pos.getX(), pos.getY(), pos.getZ()), entity -> entity instanceof net.minecraft.world.entity.boss.enderdragon.EndCrystal);
     }
 
     private double getSimulatedDmg(Player p, BlockPos pos) {
@@ -231,7 +231,7 @@ public class AutoCrystalBase extends ObsidianModule {
             if (needsBase) BlackOut.mc.level.setBlock(pos, Blocks.OBSIDIAN.defaultBlockState(), 0);
             if (needsAbove) BlackOut.mc.level.setBlock(crystalPos, Blocks.AIR.defaultBlockState(), 0);
 
-            double dmg = DamageUtils.crystalDamage(p, p.getBoundingBox(), pos.getCenter().add(0, 0.5, 0));
+            double dmg = DamageUtils.crystalDamage(p, p.getBoundingBox(), Managers.POSITION.vec3().get(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5));
 
             if (needsAbove) BlackOut.mc.level.setBlock(crystalPos, oldAbove, 0);
             if (needsBase) BlackOut.mc.level.setBlock(pos, oldBase, 0);

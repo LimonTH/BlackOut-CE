@@ -1,5 +1,7 @@
 package bodevelopment.client.blackout.util;
 
+import bodevelopment.client.blackout.interfaces.mixin.IAABB;
+import bodevelopment.client.blackout.interfaces.mixin.IVec3;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
@@ -14,16 +16,47 @@ public class BoxUtils {
         );
     }
 
+    public static void clamp(Vec3 vec, AABB box, Vec3 target) {
+        ((IVec3) target).blackout_Client$set(
+                Mth.clamp(vec.x, box.minX, box.maxX),
+                Mth.clamp(vec.y, box.minY, box.maxY),
+                Mth.clamp(vec.z, box.minZ, box.maxZ)
+        );
+    }
+
     public static AABB get(BlockPos pos) {
         return new AABB(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
+    }
+
+    /** Writes a pooled AABB from a BlockPos into the target. */
+    public static void get(BlockPos pos, AABB target) {
+        ((IAABB) target).blackout_Client$set(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
     }
 
     public static Vec3 middle(AABB box) {
         return new Vec3((box.minX + box.maxX) / 2.0, (box.minY + box.maxY) / 2.0, (box.minZ + box.maxZ) / 2.0);
     }
 
+    /** Writes the middle point of a box into the target Vec3. */
+    public static void middle(AABB box, Vec3 target) {
+        ((IVec3) target).blackout_Client$set(
+                (box.minX + box.maxX) / 2.0,
+                (box.minY + box.maxY) / 2.0,
+                (box.minZ + box.maxZ) / 2.0
+        );
+    }
+
     public static Vec3 feet(AABB box) {
         return new Vec3((box.minX + box.maxX) / 2.0, box.minY, (box.minZ + box.maxZ) / 2.0);
+    }
+
+    /** Writes the feet position of a box into the target Vec3. */
+    public static void feet(AABB box, Vec3 target) {
+        ((IVec3) target).blackout_Client$set(
+                (box.minX + box.maxX) / 2.0,
+                box.minY,
+                (box.minZ + box.maxZ) / 2.0
+        );
     }
 
     public static AABB crystalSpawnBox(BlockPos pos) {
@@ -34,6 +67,15 @@ public class BoxUtils {
         double height = SettingUtils.cc() ? 1.0 : 2.0;
 
         return new AABB(x, y, z, x + 1.0, y + height, z + 1.0);
+    }
+
+    /** Writes a crystal spawn box into the target AABB. */
+    public static void crystalSpawnBox(BlockPos pos, AABB target) {
+        double x = pos.getX();
+        double y = pos.getY() + 1.0;
+        double z = pos.getZ();
+        double height = SettingUtils.cc() ? 1.0 : 2.0;
+        ((IAABB) target).blackout_Client$set(x, y, z, x + 1.0, y + height, z + 1.0);
     }
 
     public static AABB lerp(float delta, AABB start, AABB end) {
@@ -51,8 +93,28 @@ public class BoxUtils {
         );
     }
 
+    /** Writes a lerped AABB into the target. */
+    public static void territoryBox(float delta, AABB start, AABB end, AABB target) {
+        ((IAABB) target).blackout_Client$set(
+                Mth.lerp(delta, start.minX, end.minX),
+                Mth.lerp(delta, start.minY, end.minY),
+                Mth.lerp(delta, start.minZ, end.minZ),
+                Mth.lerp(delta, start.maxX, end.maxX),
+                Mth.lerp(delta, start.maxY, end.maxY),
+                Mth.lerp(delta, start.maxZ, end.maxZ)
+        );
+    }
+
     public static AABB expandBox(AABB box, double amount) {
         return new AABB(
+                box.minX - amount, box.minY - amount, box.minZ - amount,
+                box.maxX + amount, box.maxY + amount, box.maxZ + amount
+        );
+    }
+
+    /** Writes an expanded AABB into the target. */
+    public static void expandBox(AABB box, double amount, AABB target) {
+        ((IAABB) target).blackout_Client$set(
                 box.minX - amount, box.minY - amount, box.minZ - amount,
                 box.maxX + amount, box.maxY + amount, box.maxZ + amount
         );
@@ -67,12 +129,37 @@ public class BoxUtils {
         );
     }
 
+    /** Writes closest point into target. */
+    public static void getClosest(Vec3 from, Vec3 feetPos, double width, double height, Vec3 target) {
+        double halfWidth = width / 2.0;
+        getClosest(from,
+                feetPos.x() - halfWidth, feetPos.x() + halfWidth,
+                feetPos.y(), feetPos.y() + height,
+                feetPos.z() - halfWidth, feetPos.z() + halfWidth,
+                target
+        );
+    }
+
     public static Vec3 getClosest(Vec3 from, AABB box) {
         return getClosest(from, box.minX, box.maxX, box.minY, box.maxY, box.minZ, box.maxZ);
     }
 
+    /** Writes closest point from AABB into target. */
+    public static void getClosest(Vec3 from, AABB box, Vec3 target) {
+        getClosest(from, box.minX, box.maxX, box.minY, box.maxY, box.minZ, box.maxZ, target);
+    }
+
     public static Vec3 getClosest(Vec3 from, double minX, double maxX, double minY, double maxY, double minZ, double maxZ) {
         return new Vec3(
+                Mth.clamp(from.x(), minX, maxX),
+                Mth.clamp(from.y(), minY, maxY),
+                Mth.clamp(from.z(), minZ, maxZ)
+        );
+    }
+
+    /** Writes closest point into target. */
+    public static void getClosest(Vec3 from, double minX, double maxX, double minY, double maxY, double minZ, double maxZ, Vec3 target) {
+        ((IVec3) target).blackout_Client$set(
                 Mth.clamp(from.x(), minX, maxX),
                 Mth.clamp(from.y(), minY, maxY),
                 Mth.clamp(from.z(), minZ, maxZ)

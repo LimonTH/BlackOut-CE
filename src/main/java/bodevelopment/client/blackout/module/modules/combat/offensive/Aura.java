@@ -17,6 +17,7 @@ import bodevelopment.client.blackout.module.modules.combat.misc.Teams;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.module.setting.multisettings.BoxMultiSetting;
+import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.randomstuff.ExtrapolationMap;
 import bodevelopment.client.blackout.randomstuff.Pair;
 import bodevelopment.client.blackout.randomstuff.timers.RenderList;
@@ -32,6 +33,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
@@ -272,11 +274,17 @@ public class Aura extends MoveUpdateModule {
                 }
                 if (this.target != null && this.shouldRender) {
                     this.renderBox = this.getBox(this.target);
-                    Vec3 offset = this.target
-                            .position()
-                            .subtract(this.target.xo, this.target.yo, this.target.zo)
-                            .scale(BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true));
-                    this.renderBox = this.renderBox.move(offset);
+                    // Zero-allocation offset: compute lerped position directly
+                    float partial = BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+                    double ox = Mth.lerp(partial, this.target.xo, this.target.getX()) - this.target.getX();
+                    double oy = Mth.lerp(partial, this.target.yo, this.target.getY()) - this.target.getY();
+                    double oz = Mth.lerp(partial, this.target.zo, this.target.getZ()) - this.target.getZ();
+                    // Move renderBox via pooled AABB
+                    AABB moved = Managers.POSITION.aabb().get(
+                            this.renderBox.minX + ox, this.renderBox.minY + oy, this.renderBox.minZ + oz,
+                            this.renderBox.maxX + ox, this.renderBox.maxY + oy, this.renderBox.maxZ + oz
+                    );
+                    this.renderBox = moved;
                     if (this.target instanceof AbstractClientPlayer player) {
                         targetedPlayer = player;
                     } else {
@@ -354,7 +362,7 @@ public class Aura extends MoveUpdateModule {
         double x = Mth.clamp(this.target.getDeltaMovement().x + BlackOut.mc.player.getDeltaMovement().x, -0.3, 0.3);
         double y = Mth.clamp(this.getHitHeight(), this.target.getBoundingBox().minY, this.target.getBoundingBox().maxY);
         double z = Mth.clamp(this.target.getDeltaMovement().z + BlackOut.mc.player.getDeltaMovement().z, -0.3, 0.3);
-        return new Vec3(this.target.getX() + x, y, this.target.getZ() + z);
+        return Managers.POSITION.vec3().get(this.target.getX() + x, y, this.target.getZ() + z);
     }
 
     private double getHitHeight() {
@@ -583,77 +591,84 @@ public class Aura extends MoveUpdateModule {
         this.targets.clear();
         this.extrapolationMap.update(entity -> this.extrapolation.get());
 
-        List<Pair<Entity, Double>> candidates = new ArrayList<>();
+        // Zero-allocation candidate storage: entity array + score array (max 256)
+        Entity[] candidates = new Entity[256];
+        double[] scores = new double[256];
+        int candidateCount = 0;
+        Vec3 playerPos = BlackOut.mc.player.position();
+        float playerYaw = BlackOut.mc.player.getYRot();
 
-        BlackOut.mc.level.entitiesForRendering().forEach(entity -> {
-            if (this.entities.get().contains(entity.getType()) && entity != BlackOut.mc.player) {
-                if (entity instanceof ItemEntity ||
-                        entity instanceof ExperienceOrb ||
-                        entity instanceof Projectile ||
-                        entity instanceof AreaEffectCloud) {
-                    return;
-                }
-
-                double distance = BlackOut.mc.player.distanceTo(entity);
-                if (this.teleport.get()) {
-                    if (distance > this.maxPackets.get() * this.maxDistance.get()) {
-                        return;
-                    }
-                } else if (distance > 10.0) {
-                    return;
-                }
-                double val = switch (this.targetMode.get()) {
-                    case Health ->
-                            entity instanceof LivingEntity le ? 10000.0F - le.getHealth() - le.getAbsorptionAmount() : 50.0;
-                    case Angle ->
-                            10000.0 - Math.abs(RotationUtils.yawAngle(BlackOut.mc.player.getYRot(), RotationUtils.getYaw(entity)));
-                    case Distance -> 10000.0 - BlackOut.mc.player.position().distanceTo(entity.position());
-                };
-
-                if (entity instanceof LivingEntity livingEntity) {
-                    if (livingEntity.isRemoved() || !livingEntity.isAlive()) return;
-                    if (livingEntity.getHealth() <= 0.0F) {
-                        return;
-                    }
-                    if (livingEntity.isSpectator()) {
-                        return;
-                    }
-                    if (!this.inScanRange(entity) && !this.inRange(entity)) {
-                        return;
-                    }
-                }
-
-                if (entity instanceof AbstractClientPlayer player) {
-                    AntiBot antiBot = AntiBot.getInstance();
-                    Teams teams = Teams.getInstance();
-                    if (antiBot.enabled && antiBot.mode.get() == AntiBot.HandlingMode.Ignore && antiBot.getBots().contains(player)) {
-                        return;
-                    }
-                    if (teams.enabled && teams.isTeammate(player)) {
-                        return;
-                    }
-                    if (this.ignoreNaked.get() && !this.getArmor(player)) {
-                        return;
-                    }
-                    if ((player.getHealth() + player.getAbsorptionAmount()) > this.maxHp.get().intValue()) {
-                        if (this.checkMaxHP.get()) {
-                            return;
-                        }
-                    }
-                    if (Managers.FRIENDS.isFriend(player)) {
-                        return;
-                    }
-                }
-
-                candidates.add(new Pair<>(entity, val));
+        for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
+            if (candidateCount >= 256) break;
+            if (!this.entities.get().contains(entity.getType()) || entity == BlackOut.mc.player) continue;
+            if (entity instanceof ItemEntity ||
+                    entity instanceof ExperienceOrb ||
+                    entity instanceof Projectile ||
+                    entity instanceof AreaEffectCloud) {
+                continue;
             }
-        });
 
-        candidates.sort((a, b) -> Double.compare(b.getB(), a.getB()));
+            double distance = playerPos.distanceTo(entity.position());
+            if (this.teleport.get()) {
+                if (distance > this.maxPackets.get() * this.maxDistance.get()) continue;
+            } else if (distance > 10.0) {
+                continue;
+            }
 
-        int limit = Math.min(candidates.size(), this.maxTargets.get());
+            if (entity instanceof LivingEntity livingEntity) {
+                if (livingEntity.isRemoved() || !livingEntity.isAlive()) continue;
+                if (livingEntity.getHealth() <= 0.0F) continue;
+                if (livingEntity.isSpectator()) continue;
+                if (!this.inScanRange(entity) && !this.inRange(entity)) continue;
+            }
+
+            if (entity instanceof AbstractClientPlayer player) {
+                AntiBot antiBot = AntiBot.getInstance();
+                Teams teams = Teams.getInstance();
+                if (antiBot.enabled && antiBot.mode.get() == AntiBot.HandlingMode.Ignore && antiBot.getBots().contains(player)) continue;
+                if (teams.enabled && teams.isTeammate(player)) continue;
+                if (this.ignoreNaked.get() && !this.getArmor(player)) continue;
+                if (this.checkMaxHP.get() && (player.getHealth() + player.getAbsorptionAmount()) > this.maxHp.get().intValue()) continue;
+                if (Managers.FRIENDS.isFriend(player)) continue;
+            }
+
+            double val;
+            switch (this.targetMode.get()) {
+                case Health -> {
+                    val = entity instanceof LivingEntity le
+                            ? 10000.0F - le.getHealth() - le.getAbsorptionAmount()
+                            : 50.0;
+                }
+                case Angle -> {
+                    val = 10000.0 - Math.abs(RotationUtils.yawAngle(playerYaw, RotationUtils.getYaw(entity)));
+                }
+                case Distance -> {
+                    val = 10000.0 - distance;
+                }
+                default -> val = 0.0;
+            }
+
+            candidates[candidateCount] = entity;
+            scores[candidateCount] = val;
+            candidateCount++;
+        }
+
+        // Insertion-sort top N by score (avoids full sort + Pair allocation)
+        int limit = Math.min(candidateCount, this.maxTargets.get());
         for (int i = 0; i < limit; i++) {
-            this.targets.add(candidates.get(i).getA());
+            int best = i;
+            for (int j = i + 1; j < candidateCount; j++) {
+                if (scores[j] > scores[best]) best = j;
+            }
+            // Swap
+            Entity tmpE = candidates[i];
+            candidates[i] = candidates[best];
+            candidates[best] = tmpE;
+            double tmpS = scores[i];
+            scores[i] = scores[best];
+            scores[best] = tmpS;
+
+            this.targets.add(candidates[i]);
         }
 
         this.target = this.targets.isEmpty() ? null : this.targets.getFirst();
@@ -690,7 +705,7 @@ public class Aura extends MoveUpdateModule {
     }
 
     private AABB expandHitbox(AABB box, Entity entity) {
-        Vec3 pos = entity.position();
+        Vec3 pos = Managers.POSITION.getPosition(entity);
         Pair<Vec3, AABB> cached = this.expandCache.get(entity.getId());
         if (cached != null && cached.getA().equals(pos)) {
             return cached.getB();
@@ -705,7 +720,8 @@ public class Aura extends MoveUpdateModule {
             box = this.expand(entity, box, 0.0, -0.05, 0.0);
         }
 
-        this.expandCache.put(entity.getId(), new Pair<>(pos, box));
+        // Store a copy for caching (not pooled — needs to persist)
+        this.expandCache.put(entity.getId(), new Pair<>(new Vec3(pos.x, pos.y, pos.z), box));
         return box;
     }
 
@@ -868,8 +884,8 @@ public class Aura extends MoveUpdateModule {
     }
 
     private boolean raycast(Vec3 from, Vec3 to) {
-        ((IClipContext) DamageUtils.raycastContext).blackout_Client$set(from, to);
-        return DamageUtils.raycast(DamageUtils.raycastContext, false).getType() == HitResult.Type.MISS;
+        ((IClipContext) DamageUtils.getRaycastContext()).blackout_Client$set(from, to);
+        return DamageUtils.raycast(DamageUtils.getRaycastContext(), false).getType() == HitResult.Type.MISS;
     }
 
     public enum BlockMode {
