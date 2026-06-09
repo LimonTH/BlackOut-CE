@@ -67,6 +67,7 @@
     "mixins.fabricapi.MixinFabricBakedModel",
     "mixins.MixinJoinMultiplayerScreen",
     "mixins.MixinAddressCheck",
+    "mixins.MixinAABB",
   ],
   "injectors": {
     "defaultRequire": 1

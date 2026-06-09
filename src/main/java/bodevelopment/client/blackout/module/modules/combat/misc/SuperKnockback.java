@@ -15,8 +15,7 @@ import net.minecraft.world.entity.LivingEntity;
 public class SuperKnockback extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    public final Setting<Boolean> check = this.sgGeneral.booleanSetting("Movement Check", true,
-            "Only triggers packets if you have active velocity to prevent unnatural server-side behavior.");
+    public final Setting<Boolean> check = this.sgGeneral.booleanSetting("Movement Check", true, "Only triggers packets if you have active velocity to prevent unnatural server-side behavior.");
 
     public SuperKnockback() {
         super("Super Knockback", "Manipulates sprinting packets to maximize knockback on every hit.", SubCategory.MISC_COMBAT, true);

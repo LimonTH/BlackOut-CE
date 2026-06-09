@@ -38,7 +38,7 @@ public class BlockUtils {
     }
 
     public static boolean replaceable(BlockState state) {
-        return state.canBeReplaced();
+        return state.canBeReplaced() || !state.getFluidState().isEmpty();
     }
 
     public static boolean collidable(BlockPos pos) {

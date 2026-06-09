@@ -7,8 +7,6 @@ import bodevelopment.client.blackout.module.Module;
 import bodevelopment.client.blackout.module.SubCategory;
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
 
-import java.util.Random;
-
 public class AutoRespawn extends Module {
     public AutoRespawn() {
         super("Auto Respawn", "Automatically respawns after dying.", SubCategory.MISC, true);

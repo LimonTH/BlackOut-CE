@@ -23,24 +23,15 @@ public class AntiBot extends Module {
 
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    public final Setting<HandlingMode> mode = this.sgGeneral.enumSetting("How to handle bots", HandlingMode.Ignore,
-            "What to do with detected bots. 'Ignore' keeps them in world but combat modules skip them, 'Remove' deletes them client-side.");
-    public final Setting<Boolean> WD = this.sgGeneral.booleanSetting("Watchdog", true,
-            "Specific check for Hypixel's Watchdog bots. Flags entities with invalid UUIDs.");
-    public final Setting<Boolean> smart = this.sgGeneral.booleanSetting("Smart", false,
-            "Advanced check based on entity age and distance to filter out instant-spawned anticheat bots.");
-    private final Setting<Integer> range = this.sgGeneral.intSetting("Check Range", 24, 0, 64, 1,
-            "The radius around you to perform smart bot checks.", this.smart::get);
-    public final Setting<Boolean> inv = this.sgGeneral.booleanSetting("Invisible", false,
-            "Automatically flags any invisible player as a bot. Use with caution around legit invisibility potions.");
-    public final Setting<Boolean> nameCheck = this.sgGeneral.booleanSetting("Name Check", false,
-            "Filters players by common NPC name patterns (e.g., '[NPC]', 'CIT-', or special symbols).");
-    public final Setting<Boolean> bedWars = this.sgGeneral.booleanSetting("Bed Wars", false,
-            "Specific filter for BedWars shop and upgrade NPCs.");
-    public final Setting<Boolean> notif = this.sgGeneral.booleanSetting("Send Notification", false,
-            "Shows a client-side notification whenever a bot is identified and added to the list.");
-    public final Setting<Boolean> remove = this.sgGeneral.booleanSetting("Remove Notification", false,
-            "Alerts you when an entity is no longer considered a bot.");
+    public final Setting<HandlingMode> mode = this.sgGeneral.enumSetting("How to handle bots", HandlingMode.Ignore, "What to do with detected bots. 'Ignore' keeps them in world but combat modules skip them, 'Remove' deletes them client-side.");
+    public final Setting<Boolean> WD = this.sgGeneral.booleanSetting("Watchdog", true, "Specific check for Hypixel's Watchdog bots. Flags entities with invalid UUIDs.");
+    public final Setting<Boolean> smart = this.sgGeneral.booleanSetting("Smart", false, "Advanced check based on entity age and distance to filter out instant-spawned anticheat bots.");
+    private final Setting<Integer> range = this.sgGeneral.intSetting("Check Range", 24, 0, 64, 1, "The radius around you to perform smart bot checks.", this.smart::get);
+    public final Setting<Boolean> inv = this.sgGeneral.booleanSetting("Invisible", false, "Automatically flags any invisible player as a bot. Use with caution around legit invisibility potions.");
+    public final Setting<Boolean> nameCheck = this.sgGeneral.booleanSetting("Name Check", false, "Filters players by common NPC name patterns (e.g., '[NPC]', 'CIT-', or special symbols).");
+    public final Setting<Boolean> bedWars = this.sgGeneral.booleanSetting("Bed Wars", false, "Specific filter for BedWars shop and upgrade NPCs.");
+    public final Setting<Boolean> notif = this.sgGeneral.booleanSetting("Send Notification", false, "Shows a client-side notification whenever a bot is identified and added to the list.");
+    public final Setting<Boolean> remove = this.sgGeneral.booleanSetting("Remove Notification", false, "Alerts you when an entity is no longer considered a bot.");
 
     private final List<AbstractClientPlayer> bots = new ArrayList<>();
     private String info = "";

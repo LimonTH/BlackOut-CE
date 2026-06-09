@@ -274,12 +274,10 @@ public class Aura extends MoveUpdateModule {
                 }
                 if (this.target != null && this.shouldRender) {
                     this.renderBox = this.getBox(this.target);
-                    // Zero-allocation offset: compute lerped position directly
                     float partial = BlackOut.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
                     double ox = Mth.lerp(partial, this.target.xo, this.target.getX()) - this.target.getX();
                     double oy = Mth.lerp(partial, this.target.yo, this.target.getY()) - this.target.getY();
                     double oz = Mth.lerp(partial, this.target.zo, this.target.getZ()) - this.target.getZ();
-                    // Move renderBox via pooled AABB
                     AABB moved = Managers.POSITION.aabb().get(
                             this.renderBox.minX + ox, this.renderBox.minY + oy, this.renderBox.minZ + oz,
                             this.renderBox.maxX + ox, this.renderBox.maxY + oy, this.renderBox.maxZ + oz
@@ -591,7 +589,6 @@ public class Aura extends MoveUpdateModule {
         this.targets.clear();
         this.extrapolationMap.update(entity -> this.extrapolation.get());
 
-        // Zero-allocation candidate storage: entity array + score array (max 256)
         Entity[] candidates = new Entity[256];
         double[] scores = new double[256];
         int candidateCount = 0;
@@ -653,14 +650,12 @@ public class Aura extends MoveUpdateModule {
             candidateCount++;
         }
 
-        // Insertion-sort top N by score (avoids full sort + Pair allocation)
         int limit = Math.min(candidateCount, this.maxTargets.get());
         for (int i = 0; i < limit; i++) {
             int best = i;
             for (int j = i + 1; j < candidateCount; j++) {
                 if (scores[j] > scores[best]) best = j;
             }
-            // Swap
             Entity tmpE = candidates[i];
             candidates[i] = candidates[best];
             candidates[best] = tmpE;
@@ -720,7 +715,6 @@ public class Aura extends MoveUpdateModule {
             box = this.expand(entity, box, 0.0, -0.05, 0.0);
         }
 
-        // Store a copy for caching (not pooled — needs to persist)
         this.expandCache.put(entity.getId(), new Pair<>(new Vec3(pos.x, pos.y, pos.z), box));
         return box;
     }

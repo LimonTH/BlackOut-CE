@@ -31,9 +31,9 @@ import java.util.function.Predicate;
 @PublicAPI
 public class PositionManager extends Manager {
     /** Maximum entities tracked per tick. */
-    private static final int MAX_ENTITIES = 256;
+    private static final int MAX_ENTITIES = 2048;
     /** Pool sizes — must be powers of 2. */
-    private static final int POOL_SIZE = 512;
+    private static final int POOL_SIZE = 8192;
 
     private final Entity[] entities = new Entity[MAX_ENTITIES];
     private final AABB[] boxes = new AABB[MAX_ENTITIES];

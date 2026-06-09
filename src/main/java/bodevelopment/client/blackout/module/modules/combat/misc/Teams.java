@@ -13,8 +13,7 @@ public class Teams extends Module {
 
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    public final Setting<Boolean> colorCheck = this.sgGeneral.booleanSetting("Color Check", true,
-            "Treats players with the same Tab/Name color as allies.");
+    public final Setting<Boolean> colorCheck = this.sgGeneral.booleanSetting("Color Check", true, "Treats players with the same Tab/Name color as allies.");
 
     public Teams() {
         super("Teams", "Inhibits combat modules from targeting allies based on team criteria.", SubCategory.MISC_COMBAT, true);

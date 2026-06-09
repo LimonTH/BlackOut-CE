@@ -16,14 +16,10 @@ import net.minecraft.core.BlockPos;
 public class Automation extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    private final Setting<Boolean> holeSurround = this.sgGeneral.booleanSetting("Hole Surround", true,
-            "Automatically activates the Surround module the moment you step into a safe hole.");
-    private final Setting<Boolean> leaveHoleBlink = this.sgGeneral.booleanSetting("Leave Hole Blink", true,
-            "Automatically enables Blink when leaving a hole to desync your position and confuse opponents.");
-    private final Setting<Boolean> enterHoleBlink = this.sgGeneral.booleanSetting("Enter Hole Blink", true,
-            "Automatically disables Blink when you enter a new hole to prevent being teleported back outside.");
-    private final Setting<Boolean> safeHoleBlink = this.sgGeneral.booleanSetting("Safe Hole Blink", true,
-            "Forces Blink to disable if the hole you were previously in becomes compromised (e.g., walls are broken).");
+    private final Setting<Boolean> holeSurround = this.sgGeneral.booleanSetting("Hole Surround", true, "Automatically activates the Surround module the moment you step into a safe hole.");
+    private final Setting<Boolean> leaveHoleBlink = this.sgGeneral.booleanSetting("Leave Hole Blink", true, "Automatically enables Blink when leaving a hole to desync your position and confuse opponents.");
+    private final Setting<Boolean> enterHoleBlink = this.sgGeneral.booleanSetting("Enter Hole Blink", true, "Automatically disables Blink when you enter a new hole to prevent being teleported back outside.");
+    private final Setting<Boolean> safeHoleBlink = this.sgGeneral.booleanSetting("Safe Hole Blink", true, "Forces Blink to disable if the hole you were previously in becomes compromised (e.g., walls are broken).");
 
     private BlockPos currentPos = null;
     private BlockPos blinkPos = null;

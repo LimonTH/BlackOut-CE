@@ -143,8 +143,9 @@ public class DamageUtils {
     }
 
     public static double getExposure(Vec3 source, AABB box, BlockPos ignorePos) {
-        ((IClipContext) raycastContext).blackout_Client$set(ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
-        ((IClipContext) raycastContext).blackout_Client$setStart(source);
+        ClipContext ctx = getRaycastContext();
+        ((IClipContext) ctx).blackout_Client$set(ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
+        ((IClipContext) ctx).blackout_Client$setStart(source);
         Vec3 vec3d = new Vec3(0.0, 0.0, 0.0);
         double lx = box.getXsize();
         double ly = box.getYsize();
@@ -171,8 +172,8 @@ public class DamageUtils {
 
                     for (double maxZ = box.maxZ + offsetZ; z <= maxZ; z += stepZ) {
                         ((IVec3) vec3d).blackout_Client$setZ(z);
-                        ((IClipContext) raycastContext).blackout_Client$setEnd(vec3d);
-                        if (raycast(raycastContext, true, ignorePos).getType() == HitResult.Type.MISS) {
+                        ((IClipContext) ctx).blackout_Client$setEnd(vec3d);
+                        if (raycast(ctx, true, ignorePos).getType() == HitResult.Type.MISS) {
                             i++;
                         }
 
