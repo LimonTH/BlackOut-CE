@@ -5,6 +5,7 @@ import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.PacketEvent;
 import bodevelopment.client.blackout.event.events.TickEvent;
 import bodevelopment.client.blackout.interfaces.mixin.IVec3;
+import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.mixin.accessors.AccessorServerboundInteractPacket;
 import bodevelopment.client.blackout.module.SettingsModule;
 import bodevelopment.client.blackout.module.setting.Setting;
@@ -12,6 +13,7 @@ import bodevelopment.client.blackout.module.setting.SettingGroup;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.RotationUtils;
 import bodevelopment.client.blackout.util.SettingUtils;
+import bodevelopment.client.blackout.util.pool.Vec3Pool;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ServerboundInteractPacket;
 import net.minecraft.util.Mth;
@@ -213,39 +215,54 @@ public class RangeSettings extends SettingsModule {
         if (mode != AttackRangeMode.Simple) {
             from = from.add(0.0, BlackOut.mc.player.getEyeHeight(BlackOut.mc.player.getPose()), 0.0);
         }
+        Vec3Pool pool = Managers.POSITION.vec3();
         return switch (mode) {
             case NCP -> {
-                Vec3 feet = BoxUtils.feet(bb);
-                yield from.distanceTo(new Vec3(feet.x, Math.min(Math.max(from.y(), bb.minY), bb.maxY), feet.z));
+                Vec3 feet = pool.get(0, 0, 0);
+                BoxUtils.feet(bb, feet);
+                double fx = feet.x;
+                double fz = feet.z;
+                yield from.distanceTo(pool.get(fx, Math.min(Math.max(from.y(), bb.minY), bb.maxY), fz));
             }
-            case Vanilla -> from.distanceTo(
-                    BoxUtils.getClosest(
-                            BlackOut.mc.player.getEyePosition(), BoxUtils.feet(bb), Math.abs(bb.minX - bb.maxX), Math.abs(bb.minY - bb.maxY)
-                    )
-            );
+            case Vanilla -> {
+                Vec3 feet = pool.get(0, 0, 0);
+                BoxUtils.feet(bb, feet);
+                Vec3 closest = pool.get(0, 0, 0);
+                BoxUtils.getClosest(BlackOut.mc.player.getEyePosition(), feet,
+                        Math.abs(bb.minX - bb.maxX), Math.abs(bb.minY - bb.maxY), closest);
+                yield from.distanceTo(closest);
+            }
             case Middle -> from.distanceTo(
-                    new Vec3((bb.minX + bb.maxX) / 2.0, (bb.minY + bb.maxY) / 2.0, (bb.minZ + bb.maxZ) / 2.0)
+                    pool.get((bb.minX + bb.maxX) / 2.0, (bb.minY + bb.maxY) / 2.0, (bb.minZ + bb.maxZ) / 2.0)
             );
-            case CustomBox -> from.distanceTo(
-                    BoxUtils.getClosest(
-                            BlackOut.mc.player.getEyePosition(),
-                            BoxUtils.feet(bb),
-                            Math.abs(bb.minX - bb.maxX) * this.closestWallAttackWidth.get(),
-                            Math.abs(bb.minY - bb.maxY) * this.closestWallAttackHeight.get()
-                    )
-            );
-            case UpdatedNCP -> {
-                Vec3 feet = BoxUtils.feet(bb);
-                yield from.distanceTo(new Vec3(feet.x, Math.min(Math.max(from.y(), bb.minY), bb.maxY), feet.z))
-                        - this.getDistFromCenter(bb, feet, from);
+            case CustomBox -> {
+                Vec3 feet = pool.get(0, 0, 0);
+                BoxUtils.feet(bb, feet);
+                Vec3 closest = pool.get(0, 0, 0);
+                BoxUtils.getClosest(BlackOut.mc.player.getEyePosition(), feet,
+                        Math.abs(bb.minX - bb.maxX) * this.closestWallAttackWidth.get(),
+                        Math.abs(bb.minY - bb.maxY) * this.closestWallAttackHeight.get(), closest);
+                yield from.distanceTo(closest);
             }
-            case Simple -> from.distanceTo(BoxUtils.feet(bb));
+            case UpdatedNCP -> {
+                Vec3 feet = pool.get(0, 0, 0);
+                BoxUtils.feet(bb, feet);
+                double fx = feet.x;
+                double fz = feet.z;
+                double baseDist = from.distanceTo(pool.get(fx, Math.min(Math.max(from.y(), bb.minY), bb.maxY), fz));
+                yield baseDist - this.getDistFromCenter(bb, feet, from, pool);
+            }
+            case Simple -> {
+                Vec3 feet = pool.get(0, 0, 0);
+                BoxUtils.feet(bb, feet);
+                yield from.distanceTo(feet);
+            }
         };
     }
 
-    public double getDistFromCenter(AABB bb, Vec3 feet, Vec3 from) {
-        Vec3 pos = new Vec3(feet.x, feet.y, feet.z);
-        Vec3 vec1 = new Vec3(from.x() - pos.x(), 0.0, from.z() - pos.z());
+    public double getDistFromCenter(AABB bb, Vec3 feet, Vec3 from, Vec3Pool pool) {
+        Vec3 pos = pool.get(feet.x, feet.y, feet.z);
+        Vec3 vec1 = pool.get(from.x() - pos.x(), 0.0, from.z() - pos.z());
         double halfWidth = bb.getXsize() / 2.0;
         if (vec1.length() < halfWidth * Mth.SQRT_OF_TWO) {
             return 0.0;
@@ -260,7 +277,7 @@ public class RangeSettings extends SettingsModule {
                 ((IVec3) pos).blackout_Client$setX(pos.x() - halfWidth);
             }
 
-            Vec3 vec2 = new Vec3(pos.x() - feet.x(), 0.0, pos.z() - feet.z());
+            Vec3 vec2 = pool.get(pos.x() - feet.x(), 0.0, pos.z() - feet.z());
             double angle = RotationUtils.radAngle(vec1, vec2);
             if (angle > Math.PI / 4) {
                 angle = (Math.PI / 2) - angle;
@@ -268,6 +285,11 @@ public class RangeSettings extends SettingsModule {
 
             return angle >= 0.0 && angle <= Math.PI / 4 ? halfWidth / Math.cos(angle) : 0.0;
         }
+    }
+
+    /** Backward-compatible overload — allocates. Use pooled version above in hot paths. */
+    public double getDistFromCenter(AABB bb, Vec3 feet, Vec3 from) {
+        return getDistFromCenter(bb, feet, from, Managers.POSITION.vec3());
     }
 
     public boolean inMineRange(BlockPos pos) {

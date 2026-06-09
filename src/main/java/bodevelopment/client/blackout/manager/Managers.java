@@ -26,10 +26,9 @@ public class Managers {
     public static final ParticleManager PARTICLE = new ParticleManager();
     public static final PingManager PING = new PingManager();
     public static final RotationManager ROTATION = new RotationManager();
+    public static final PositionManager POSITION = new PositionManager();
     public static final StatsManager STATS = new StatsManager();
     public static final TPSManager TPS = new TPSManager();
-    public static final UtilsManager UTILS = new UtilsManager();
-
     /**
      * Initializes all managers in dependency order.
      * <p>

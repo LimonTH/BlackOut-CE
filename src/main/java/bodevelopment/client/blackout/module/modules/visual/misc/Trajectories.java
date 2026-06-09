@@ -152,8 +152,8 @@ public class Trajectories extends Module {
         for (int i = 0; i < this.maxTicks.get(); i++) {
             Vec3 prevPos = pos;
             pos = pos.add(velocity[0], velocity[1], velocity[2]);
-            ((IClipContext) DamageUtils.raycastContext).blackout_Client$set(prevPos, pos, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
-            HitResult blockHitResult = DamageUtils.raycast(DamageUtils.raycastContext, false);
+            ((IClipContext) DamageUtils.getRaycastContext()).blackout_Client$set(prevPos, pos, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
+            HitResult blockHitResult = DamageUtils.raycast(DamageUtils.getRaycastContext(), false);
             EntityHitResult entityHitResult = ProjectileUtil.getEntityHitResult(
                     BlackOut.mc.level,
                     BlackOut.mc.player,

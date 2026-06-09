@@ -248,8 +248,8 @@ public class RotationSettings extends SettingsModule {
                     return true;
                 }
 
-                ((IClipContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePosition(), end);
-                result = DamageUtils.raycast(DamageUtils.raycastContext, false);
+                ((IClipContext) DamageUtils.getRaycastContext()).blackout_Client$set(BlackOut.mc.player.getEyePosition(), end);
+                result = DamageUtils.raycast(DamageUtils.getRaycastContext(), false);
                 if (result.getType() == HitResult.Type.BLOCK && result.getBlockPos().equals(pos)) {
                     return true;
                 }
@@ -258,8 +258,8 @@ public class RotationSettings extends SettingsModule {
                         && SettingUtils.placeRangeTo(pos) < SettingUtils.getPlaceWallsRange();
             case DirectionStrict:
                 end = RotationUtils.rotationVec(yaw, pitch, BlackOut.mc.player.getEyePosition(), 7.0);
-                ((IClipContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePosition(), end);
-                result = DamageUtils.raycast(DamageUtils.raycastContext, false);
+                ((IClipContext) DamageUtils.getRaycastContext()).blackout_Client$set(BlackOut.mc.player.getEyePosition(), end);
+                result = DamageUtils.raycast(DamageUtils.getRaycastContext(), false);
                 if (result.getType() == HitResult.Type.BLOCK && result.getBlockPos().equals(pos) && result.getDirection() == dir) {
                     return true;
                 }
@@ -455,8 +455,8 @@ public class RotationSettings extends SettingsModule {
                         return false;
                     }
 
-                    ((IClipContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePosition(), pos.get());
-                    boolean visible = DamageUtils.raycast(DamageUtils.raycastContext, false).getType() == HitResult.Type.MISS;
+                    ((IClipContext) DamageUtils.getRaycastContext()).blackout_Client$set(BlackOut.mc.player.getEyePosition(), pos.get());
+                    boolean visible = DamageUtils.raycast(DamageUtils.getRaycastContext(), false).getType() == HitResult.Type.MISS;
                     if (visible) {
                         return true;
                     }
@@ -555,8 +555,8 @@ public class RotationSettings extends SettingsModule {
                     double distance = BlackOut.mc.player.getEyePosition().distanceTo(v);
                     if (!(distance >= SettingUtils.getAttackRange())) {
                         if (distance > SettingUtils.getAttackWallsRange()) {
-                            ((IClipContext) DamageUtils.raycastContext).blackout_Client$set(BlackOut.mc.player.getEyePosition(), v);
-                            BlockHitResult result = DamageUtils.raycast(DamageUtils.raycastContext, false);
+                            ((IClipContext) DamageUtils.getRaycastContext()).blackout_Client$set(BlackOut.mc.player.getEyePosition(), v);
+                            BlockHitResult result = DamageUtils.raycast(DamageUtils.getRaycastContext(), false);
                             if (result.getType() != HitResult.Type.MISS) {
                                 continue;
                             }

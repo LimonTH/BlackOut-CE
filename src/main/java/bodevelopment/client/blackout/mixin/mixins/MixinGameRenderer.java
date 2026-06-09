@@ -99,6 +99,7 @@ public abstract class MixinGameRenderer {
     private void onRenderWorldPost(DeltaTracker tickCounter, CallbackInfo ci) {
         PoseStack matrices = new PoseStack();
         BlackOut.EVENT_BUS.post(RenderEvent.World.Post.get(matrices, tickCounter.getGameTimeDeltaPartialTick(true)));
+        bodevelopment.client.blackout.util.render.Render2DUtils.onRender();
     }
 
     @Redirect(

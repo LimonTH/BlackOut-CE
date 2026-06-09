@@ -233,9 +233,9 @@ public class RaytraceSettings extends SettingsModule {
                         return this.ncpRaytrace(to, box);
                     }
 
-                    ((IClipContext) DamageUtils.raycastContext)
+                    ((IClipContext) DamageUtils.getRaycastContext())
                             .blackout_Client$set(BlackOut.mc.player.getEyePosition(), to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
-                    return DamageUtils.raycast(DamageUtils.raycastContext, false).getType() != HitResult.Type.BLOCK;
+                    return DamageUtils.raycast(DamageUtils.getRaycastContext(), false).getType() != HitResult.Type.BLOCK;
                 case DoublePoint:
                     Vec3 to1 = new Vec3(
                             (box.minX + box.maxX) / 2.0, box.minY + this.attackHeight1.get(), (box.minZ + box.maxZ) / 2.0
@@ -244,15 +244,15 @@ public class RaytraceSettings extends SettingsModule {
                             (box.minX + box.maxX) / 2.0, box.minY + this.attackHeight2.get(), (box.minZ + box.maxZ) / 2.0
                     );
                     if (!this.attackNCP.get()) {
-                        ((IClipContext) DamageUtils.raycastContext)
+                        ((IClipContext) DamageUtils.getRaycastContext())
                                 .blackout_Client$set(BlackOut.mc.player.getEyePosition(), to1, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
-                        if (DamageUtils.raycast(DamageUtils.raycastContext, false).getType() != HitResult.Type.BLOCK) {
+                        if (DamageUtils.raycast(DamageUtils.getRaycastContext(), false).getType() != HitResult.Type.BLOCK) {
                             return true;
                         }
 
-                        ((IClipContext) DamageUtils.raycastContext)
+                        ((IClipContext) DamageUtils.getRaycastContext())
                                 .blackout_Client$set(BlackOut.mc.player.getEyePosition(), to2, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, BlackOut.mc.player);
-                        return DamageUtils.raycast(DamageUtils.raycastContext, false).getType() != HitResult.Type.BLOCK;
+                        return DamageUtils.raycast(DamageUtils.getRaycastContext(), false).getType() != HitResult.Type.BLOCK;
                     }
 
                     return this.ncpRaytrace(to1, box) || this.ncpRaytrace(to2, box);

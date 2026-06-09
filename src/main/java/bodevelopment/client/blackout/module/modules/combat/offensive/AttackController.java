@@ -9,6 +9,7 @@ import bodevelopment.client.blackout.helpers.RotationHelper;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.util.BoxUtils;
 import bodevelopment.client.blackout.util.DamageUtils;
+import bodevelopment.client.blackout.manager.Managers;
 import bodevelopment.client.blackout.util.SettingUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ServerboundInteractPacket;
@@ -80,31 +81,34 @@ public class AttackController {
     }
 
     private Entity getBlocking() {
-        Entity crystal = null;
-        double lowest = Double.MAX_VALUE;
+        Entity[] crystal = {null};
+        double[] lowest = {Double.MAX_VALUE};
         AABB searchBox = BlackOut.mc.player.getBoundingBox().inflate(6.0);
 
-        for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
-            if (!(entity instanceof EndCrystal)) continue;
-            if (!entity.getBoundingBox().intersects(searchBox)) continue;
-            if (!SettingUtils.inAttackRange(entity.getBoundingBox())) continue;
-            if (!validForBlocking(entity)) continue;
+        Managers.POSITION.forEachFiltered(
+            entity -> entity instanceof EndCrystal,
+            (entity, box, distance) -> {
+                if (!box.intersects(searchBox)) return;
+                if (!SettingUtils.inAttackRange(box)) return;
+                if (!validForBlocking(entity)) return;
 
-            double dmg = DamageUtils.crystalDamage(BlackOut.mc.player,
-                    BlackOut.mc.player.getBoundingBox(), entity.position());
-            if (dmg < lowest) {
-                lowest = dmg;
-                crystal = entity;
+                double dmg = DamageUtils.crystalDamage(BlackOut.mc.player,
+                        BlackOut.mc.player.getBoundingBox(),
+                        Managers.POSITION.vec3().get(entity.position()));
+                if (dmg < lowest[0]) {
+                    lowest[0] = dmg;
+                    crystal[0] = entity;
+                }
             }
-        }
+        );
 
-        return crystal;
+        return crystal[0];
     }
 
     public boolean validForBlocking(Entity entity) {
         List<BlockPos> targets = alwaysAttack.get() ? blockPlacements : valids;
         for (int i = 0; i < targets.size(); i++) {
-            if (BoxUtils.get(targets.get(i)).intersects(entity.getBoundingBox())) {
+            if (BoxUtils.get(targets.get(i)).intersects(Managers.POSITION.getBox(entity))) {
                 return true;
             }
         }
