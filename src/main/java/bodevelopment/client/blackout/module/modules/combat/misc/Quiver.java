@@ -32,24 +32,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Quiver extends Module {
-    public static boolean charging = false;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Integer> charge = this.sgGeneral.intSetting("Charge Ticks", 5, 0, 20, 1,
-            "How many ticks to draw the bow. 3-5 is usually enough for self-buffing.");
-    public final Setting<Integer> delay = this.sgGeneral.intSetting("Shot Delay", 0, 0, 20, 1,
-            "Ticks to wait before starting the next charge cycle.");
-    public final Setting<Boolean> closeInv = this.sgGeneral.booleanSetting("Auto Close", true,
-            "Automatically closes your inventory after rearranging arrows.");
-    public final Setting<Boolean> instantMove = this.sgGeneral.booleanSetting("Instant Move", true,
-            "Moves arrows using packets for near-instant execution.");
-    public final Setting<Double> moveSpeed = this.sgGeneral.doubleSetting("Move Speed", 20.0, 0.0, 20.0, 0.2,
-            "The speed of inventory interactions if Instant Move is disabled.", () -> !this.instantMove.get());
-    public final Setting<Integer> durationLeft = this.sgGeneral.intSetting("Min Duration", 5, 0, 60, 1,
-            "Won't shoot if the current effect lasts longer than this many seconds.");
-    public final Setting<Integer> retryTime = this.sgGeneral.intSetting("Retry Cooldown", 50, 0, 100, 1,
-            "Ticks to wait before retrying a failed effect application.");
-    private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotate", true,
-            "Forces the pitch to -90 instantly for the shot.");
+
+    public final Setting<Integer> charge = this.sgGeneral.intSetting("Charge Ticks", 5, 0, 20, 1, "How many ticks to draw the bow. 3-5 is usually enough for self-buffing.");
+    public final Setting<Integer> delay = this.sgGeneral.intSetting("Shot Delay", 0, 0, 20, 1, "Ticks to wait before starting the next charge cycle.");
+    public final Setting<Boolean> closeInv = this.sgGeneral.booleanSetting("Auto Close", true, "Automatically closes your inventory after rearranging arrows.");
+    public final Setting<Boolean> instantMove = this.sgGeneral.booleanSetting("Instant Move", true, "Moves arrows using packets for near-instant execution.");
+    public final Setting<Double> moveSpeed = this.sgGeneral.doubleSetting("Move Speed", 20.0, 0.0, 20.0, 0.2, "The speed of inventory interactions if Instant Move is disabled.", () -> !this.instantMove.get());
+    public final Setting<Integer> durationLeft = this.sgGeneral.intSetting("Min Duration", 5, 0, 60, 1, "Won't shoot if the current effect lasts longer than this many seconds.");
+    public final Setting<Integer> retryTime = this.sgGeneral.intSetting("Retry Cooldown", 50, 0, 100, 1, "Ticks to wait before retrying a failed effect application.");
+    private final Setting<Boolean> instantRotate = this.sgGeneral.booleanSetting("Instant Rotate", true, "Forces the pitch to -90 instantly for the shot.");
+
+    public static boolean charging = false;
     private final List<Pair<MobEffectInstance, Integer>> arrows = new ArrayList<>();
     private final List<Integer> actions = new ArrayList<>();
     private final TickTimerList<MobEffect> shot = new TickTimerList<>(false);

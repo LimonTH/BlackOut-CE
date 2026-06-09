@@ -47,14 +47,9 @@ public class AutoTool extends Module {
     private double miningDelta(BlockPos pos, ItemStack stack) {
         double delta = BlockUtils.getBlockBreakingDelta(pos, stack);
 
-        // In 1.21.4, Mojang removed bamboo from the sword_efficient tag and added it
-        // to mineable/axe instead. This makes axes mathematically faster for bamboo,
-        // but semantically a sword should still be preferred for cutting bamboo/cobwebs.
         if (stack.getItem() instanceof SwordItem && BlackOut.mc.level != null) {
             BlockState state = BlackOut.mc.level.getBlockState(pos);
 
-            // Apply a 1.5x bonus for blocks in the SWORD_EFFICIENT tag (leaves, cobwebs, etc.)
-            // and for bamboo/bamboo_sapling which were removed from the tag in 1.21.4.
             if (state.is(BlockTags.SWORD_EFFICIENT) || state.is(Blocks.BAMBOO) || state.is(Blocks.BAMBOO_SAPLING)) {
                 delta *= 1.5;
             }

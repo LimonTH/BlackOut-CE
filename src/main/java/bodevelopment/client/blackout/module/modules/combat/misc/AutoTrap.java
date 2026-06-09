@@ -13,8 +13,7 @@ import net.minecraft.world.entity.Entity;
 import java.util.Comparator;
 
 public class AutoTrap extends ObsidianModule {
-    private final Setting<TrapMode> trapMode = this.sgGeneral.enumSetting("Trap Mode", TrapMode.Both,
-            "Determines which parts of the enemy to cover. 'Top' places a block above their head, 'Eyes' covers the sides.");
+    private final Setting<TrapMode> trapMode = this.sgGeneral.enumSetting("Trap Mode", TrapMode.Both, "Determines which parts of the enemy to cover. 'Top' places a block above their head, 'Eyes' covers the sides.");
 
     private final Direction[] directions = new Direction[]{
             Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST, Direction.UP

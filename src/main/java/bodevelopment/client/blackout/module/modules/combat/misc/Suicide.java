@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 public class Suicide extends Module {
     private static Suicide INSTANCE;
+
     private final SettingGroup sgGeneral = this.addGroup("General");
 
     public final Setting<Boolean> disableDeath = this.sgGeneral.booleanSetting("Disable On Death", true, "Automatically terminates the module upon successful respawn.");

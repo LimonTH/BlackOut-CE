@@ -22,31 +22,24 @@ public class Notifier extends Module {
     private static Notifier INSTANCE;
 
     private final SettingGroup sgGeneral = this.addGroup("General");
-    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Notify mode", Mode.Hud,
-            "Where the alerts appear. 'Hud' uses the client's notification system, 'Chat' sends messages only you can see.");
-    private final SettingGroup sgWeakness = this.addGroup("Weakness");
-    private final SettingGroup sgVisualRange = this.addGroup("Visual Range");
     private final SettingGroup sgPops = this.addGroup("Pops");
-    private final Setting<Boolean> pops = this.sgPops.booleanSetting("Pop Counter", true,
-            "Tracks and displays how many totems a player has used.");
-    private final Setting<Boolean> iOwn = this.sgPops.booleanSetting("Ignore Own", true,
-            "Toggle to stop receiving notifications when YOU pop a totem.");
-    private final Setting<Boolean> iFriends = this.sgPops.booleanSetting("Ignore Friends", true,
-            "Toggle to stop receiving notifications when your FRIENDS pop a totem.");
+    private final SettingGroup sgVisualRange = this.addGroup("Visual Range");
+    private final SettingGroup sgWeakness = this.addGroup("Weakness");
 
-    private final Setting<Boolean> visualRange = this.sgVisualRange.booleanSetting("Visual Range", true,
-            "Notifies you when a player enters or leaves your render distance.");
-    private final Setting<Boolean> vrIgnoreFriends = this.sgVisualRange.booleanSetting("Ignore Friends", true,
-            "Toggle to stop receiving visual range notifications for your friends.");
-    private final Setting<Boolean> vrSound = this.sgVisualRange.booleanSetting("Sound Notification", true,
-            "Plays a custom sound when a player enters or leaves visual range.");
+    public final Setting<Mode> mode = this.sgGeneral.enumSetting("Notify mode", Mode.Hud, "Where the alerts appear. 'Hud' uses the client's notification system, 'Chat' sends messages only you can see.");
 
-    private final Setting<Boolean> weakness = this.sgWeakness.booleanSetting("Weakness", true,
-            "Alerts you when you are affected by the Weakness effect.");
-    private final Setting<Boolean> single = this.sgWeakness.booleanSetting("Single", true,
-            "Only sends one notification when you get weakness, rather than spamming.");
-    private final Setting<Double> delay = this.sgWeakness.doubleSetting("Delay", 5.0, 0.0, 100.0, 1.0,
-            "The time (in seconds) between repeated weakness alerts if 'Single' is off.");
+    private final Setting<Boolean> pops = this.sgPops.booleanSetting("Pop Counter", true, "Tracks and displays how many totems a player has used.");
+    private final Setting<Boolean> iOwn = this.sgPops.booleanSetting("Ignore Own", true, "Toggle to stop receiving notifications when YOU pop a totem.");
+    private final Setting<Boolean> iFriends = this.sgPops.booleanSetting("Ignore Friends", true, "Toggle to stop receiving notifications when your FRIENDS pop a totem.");
+
+    private final Setting<Boolean> visualRange = this.sgVisualRange.booleanSetting("Visual Range", true, "Notifies you when a player enters or leaves your render distance.");
+    private final Setting<Boolean> vrIgnoreFriends = this.sgVisualRange.booleanSetting("Ignore Friends", true, "Toggle to stop receiving visual range notifications for your friends.");
+    private final Setting<Boolean> vrSound = this.sgVisualRange.booleanSetting("Sound Notification", true, "Plays a custom sound when a player enters or leaves visual range.");
+
+    private final Setting<Boolean> weakness = this.sgWeakness.booleanSetting("Weakness", true, "Alerts you when you are affected by the Weakness effect.");
+    private final Setting<Boolean> single = this.sgWeakness.booleanSetting("Single", true, "Only sends one notification when you get weakness, rather than spamming.");
+    private final Setting<Double> delay = this.sgWeakness.doubleSetting("Delay", 5.0, 0.0, 100.0, 1.0, "The time (in seconds) between repeated weakness alerts if 'Single' is off.");
+
     private final List<AbstractClientPlayer> knownPlayers = new ArrayList<>();
     private double timer = 0.0;
     private boolean last = false;

@@ -424,21 +424,51 @@ public class ObsidianModule extends Module {
         } else if (this.hasSupport(pos, true)) {
             return null;
         } else {
+            BlockPos bestPos = null;
+            double bestDistance = Double.MAX_VALUE;
+            int bestPriority = Integer.MAX_VALUE;
+
+            double px = BlackOut.mc.player.getX();
+            double py = BlackOut.mc.player.getY();
+            double pz = BlackOut.mc.player.getZ();
+
             for (Direction dir : Direction.values()) {
-                if (dir != Direction.UP) {
-                    BlockPos pos2 = pos.relative(dir);
-                    if (!this.blockPlacements.contains(pos2)
-                            && !this.insideBlocks.contains(pos2)
-                            && !EntityUtils.intersects(BoxUtils.get(pos2), entity -> entity instanceof Player && !entity.isSpectator())
-                            && SettingUtils.getPlaceData(pos2, !this.allowSneak.get()).valid()
-                            && SettingUtils.inPlaceRange(pos2)
-                            && SettingUtils.getPlaceData(pos, (p, d) -> d == dir, null, !this.allowSneak.get()).valid()) {
-                        return pos2;
-                    }
+                BlockPos pos2 = pos.relative(dir);
+
+                if (this.blockPlacements.contains(pos2)
+                        || this.insideBlocks.contains(pos2)
+                        || EntityUtils.intersects(BoxUtils.get(pos2), entity -> entity instanceof Player && !entity.isSpectator())) {
+                    continue;
+                }
+
+                if (!SettingUtils.getPlaceData(pos2, !this.allowSneak.get()).valid()) {
+                    continue;
+                }
+
+                if (!SettingUtils.inPlaceRange(pos2)) {
+                    continue;
+                }
+
+                if (!SettingUtils.getPlaceData(pos, (p, d) -> d == dir, null, !this.allowSneak.get()).valid()) {
+                    continue;
+                }
+
+                double dx = (pos2.getX() + 0.5) - px;
+                double dy = (pos2.getY() + 0.5) - py;
+                double dz = (pos2.getZ() + 0.5) - pz;
+                double distance = dx * dx + dy * dy + dz * dz;
+
+                int priority = dir == Direction.DOWN ? 0 : dir == Direction.UP ? 2 : 1;
+
+                if (distance < bestDistance - 0.25
+                        || (Math.abs(distance - bestDistance) <= 0.25 && priority < bestPriority)) {
+                    bestDistance = distance;
+                    bestPriority = priority;
+                    bestPos = pos2;
                 }
             }
 
-            return null;
+            return bestPos;
         }
     }
 

@@ -34,6 +34,7 @@ public class PearlPhase extends Module {
     public final Setting<Integer> pitch = this.sgGeneral.intSetting("Pitch", 85, -90, 90, 1, "The downward angle for the throw. 85 is recommended for most clips.");
     private final Setting<Boolean> ccBypass = this.sgGeneral.booleanSetting("CC Bypass", false, "Attempts to bypass pearl delay by placing a block beneath you first.");
     private final Setting<ObsidianModule.RotationMode> rotationMode = this.sgGeneral.enumSetting("Rotation Mode", ObsidianModule.RotationMode.Normal, "How rotations should be handled during the phase.");
+
     private final Setting<Boolean> swing = this.sgRender.booleanSetting("Swing", false, "Enables client-side swing animation upon throwing.");
     private final Setting<SwingHand> swingHand = this.sgRender.enumSetting("Swing Hand", SwingHand.RealHand, "Determines which hand performs the swing animation.", this.swing::get);
 

@@ -25,10 +25,8 @@ public class FastEat extends Module {
 
     private final SettingGroup sgGeneral = this.addGroup("General");
 
-    private final Setting<Boolean> antiStop = this.sgGeneral.booleanSetting("Anti Stop", false,
-            "Prevents you from accidentally stopping the eating process, even if you let go of the right-click button.");
-    private final Setting<Double> packets = this.sgGeneral.doubleSetting("Packets", 0.0, 0.0, 10.0, 1.0,
-            "The number of extra movement packets to send per tick. Higher values eat faster but may cause lag or kicks on strict anti-cheats.");
+    private final Setting<Boolean> antiStop = this.sgGeneral.booleanSetting("Anti Stop", false, "Prevents you from accidentally stopping the eating process, even if you let go of the right-click button.");
+    private final Setting<Double> packets = this.sgGeneral.doubleSetting("Packets", 0.0, 0.0, 10.0, 1.0, "The number of extra movement packets to send per tick. Higher values eat faster but may cause lag or kicks on strict anti-cheats.");
 
     private double toSend = 0.0;
 

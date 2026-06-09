@@ -234,6 +234,7 @@ public class AutoCrystal extends Module {
     private final Setting<Double> prePlaceProgress = this.sgCompatibility.doubleSetting("Handshake Buffering", 0.9, 0.0, 1.0, 0.01, "Optimizes packet timing for server compatibility.");
     private final Setting<Boolean> autoMineAttack = this.sgCompatibility.booleanSetting("AutoMine Detonation Sync", true, "Synchronizes attacks with AutoMine progress.");
     private final Setting<Double> autoMineAttackProgress = this.sgCompatibility.doubleSetting("AutoMine Sync Threshold", 0.75, 0.0, 1.0, 0.01, "Percentage of block mining completion before triggering detonation sync.", this.autoMineAttack::get);
+    private final Setting<Boolean> yieldBase = this.sgCompatibility.booleanSetting("Base Yield", true, "Yields crystal placement to AutoCrystalBase when it is actively placing blocks at the target position.");
 
     private final Setting<Boolean> debugPlace = this.sgDebug.booleanSetting("Log Placement", false, "Prints placement debug information to the console.");
     private final Setting<Boolean> debugAttack = this.sgDebug.booleanSetting("Log Detonation", false, "Prints attack debug information to the console.");
@@ -617,8 +618,8 @@ public class AutoCrystal extends Module {
                         .update(
                                 (pos, time, d) -> {
                                     float progressx = (float) (1.0 - Math.max(time - this.renderTime.get(), 0.0) / this.fadeTime.get());
-                                    this.renderSetting.render(Managers.POSITION.aabb().fromBlock(pos.getX(), pos.getY(), pos.getZ()), progressx, 1.0F);
-                                    this.calcDamage(Managers.POSITION.vec3().get(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5), false);
+                                    this.renderSetting.render(BoxUtils.get(pos), progressx, 1.0F);
+                                    this.calcDamage(new Vec3(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5), false);
                                     if (this.renderDamage.get()) {
                                         Render3DUtils.text(
                                                 String.format("%.1f", this.enemyDamage), pos.getCenter(), new Color(255, 255, 255, (int) (progressx * 255.0F)).getRGB(), textScale.get().floatValue()
@@ -630,7 +631,7 @@ public class AutoCrystal extends Module {
             case BlackOut:
                 if (renderActive) {
                     this.renderPos = this.placePos;
-                    this.renderTargetVec = new Vec3(this.placePos.getX() + 0.5, this.placePos.getY() - 0.5, this.placePos.getZ() + 0.5); // stored in field, cannot pool
+                    this.renderTargetVec = new Vec3(this.placePos.getX() + 0.5, this.placePos.getY() - 0.5, this.placePos.getZ() + 0.5);
                 }
 
                 if (this.renderProgress <= 0.0) {
@@ -643,7 +644,7 @@ public class AutoCrystal extends Module {
                 if (p > 0.0) {
                     this.renderSetting.render(this.getBox(this.renderVec, progress / 2.0), (float) p, (float) p);
                     if (this.renderDamage.get()) {
-                        this.calcDamage(Managers.POSITION.vec3().get(this.renderPos.getX() + 0.5, this.renderPos.getY(), this.renderPos.getZ() + 0.5), false);
+                        this.calcDamage(new Vec3(this.renderPos.getX() + 0.5, this.renderPos.getY(), this.renderPos.getZ() + 0.5), false);
                         Render3DUtils.text(String.format("%.1f", this.enemyDamage), this.renderVec, new Color(255, 255, 255, (int) (progress * 255.0)).getRGB(), textScale.get().floatValue());
                     }
                 }
@@ -654,9 +655,9 @@ public class AutoCrystal extends Module {
                 }
 
                 if (p > 0.0) {
-                    this.renderSetting.render(Managers.POSITION.aabb().fromBlock(this.renderPos.getX(), this.renderPos.getY(), this.renderPos.getZ()), (float) p, (float) p);
+                    this.renderSetting.render(BoxUtils.get(this.renderPos), (float) p, (float) p);
                     this.calcDamage(
-                            Managers.POSITION.vec3().get(this.renderPos.getX() + 0.5, this.renderPos.getY() + 1, this.renderPos.getZ() + 0.5), false
+                            new Vec3(this.renderPos.getX() + 0.5, this.renderPos.getY() + 1, this.renderPos.getZ() + 0.5), false
                     );
                     if (this.renderDamage.get()) {
                         Render3DUtils.text(
@@ -667,9 +668,9 @@ public class AutoCrystal extends Module {
                 break;
             case Confirm:
                 if (p > 0.0) {
-                    this.renderSetting.render(Managers.POSITION.aabb().fromBlock(this.renderPos.getX(), this.renderPos.getY(), this.renderPos.getZ()), (float) p, (float) p);
+                    this.renderSetting.render(BoxUtils.get(this.renderPos), (float) p, (float) p);
                     this.calcDamage(
-                            Managers.POSITION.vec3().get(this.renderPos.getX() + 0.5, this.renderPos.getY() + 1, this.renderPos.getZ() + 0.5), false
+                            new Vec3(this.renderPos.getX() + 0.5, this.renderPos.getY() + 1, this.renderPos.getZ() + 0.5), false
                     );
                     if (this.renderDamage.get()) {
                         Render3DUtils.text(
@@ -707,7 +708,7 @@ public class AutoCrystal extends Module {
                 up = p * 2.0 - 0.5;
         }
 
-        return Managers.POSITION.aabb().get(
+        return new AABB(
                 middle.x() - sides,
                 middle.y() - down,
                 middle.z() - sides,
@@ -743,7 +744,7 @@ public class AutoCrystal extends Module {
 
         this.updatePlacing(canPlace);
         if (this.placing) {
-            this.calcDamage(Managers.POSITION.vec3().get(this.placePos.getX() + 0.5, this.placePos.getY(), this.placePos.getZ() + 0.5), false);
+            this.calcDamage(new Vec3(this.placePos.getX() + 0.5, this.placePos.getY(), this.placePos.getZ() + 0.5), false);
             if (this.target instanceof AbstractClientPlayer player) {
                 this.targetedPlayer = player;
             } else {
@@ -768,20 +769,19 @@ public class AutoCrystal extends Module {
         if (base != null && base.enabled) {
             BlockPos crystalBasePos = this.placePos.below();
 
-            if (crystalBasePos.equals(base.lastBestPos)) {
+            if (crystalBasePos.equals(base.bestBasePos) || this.placePos.equals(base.bestBasePos)) {
                 return false;
             }
 
-            if (this.placePos.equals(base.lastBestPos)) {
-                return false;
-            }
-
-            if (crystalBasePos.equals(base.bestBasePos)) {
-                return false;
-            }
-
-            if (this.placePos.equals(base.bestBasePos)) {
-                return false;
+            if (this.yieldBase.get() && base.lastBestPos != null && base.blockPlacements.contains(base.lastBestPos)) {
+                if (crystalBasePos.equals(base.lastBestPos) || this.placePos.equals(base.lastBestPos)) {
+                    return false;
+                }
+                int dx = Math.abs(crystalBasePos.getX() - base.lastBestPos.getX());
+                int dz = Math.abs(crystalBasePos.getZ() - base.lastBestPos.getZ());
+                if (crystalBasePos.getY() == base.lastBestPos.getY() && dx <= 1 && dz <= 1 && (dx != 0 || dz != 0)) {
+                    return false;
+                }
             }
         }
 
@@ -926,7 +926,7 @@ public class AutoCrystal extends Module {
             return SettingUtils.shouldIgnoreRotations(this.targetCrystal)
                     ? this.rotation.checkAttackLimit()
                     : this.rotation.attackRotate(
-                    Managers.POSITION.getBox(this.targetCrystal), this.getAttackVec(Managers.POSITION.getPosition(this.targetCrystal)), this.lastWasAttack ? -0.1 : 0.1, "attacking"
+                    this.targetCrystal.getBoundingBox(), this.getAttackVec(this.targetCrystal.position()), this.lastWasAttack ? -0.1 : 0.1, "attacking"
             );
         }
     }
@@ -1013,9 +1013,7 @@ public class AutoCrystal extends Module {
 
     private boolean isBlocked(BlockPos pos) {
         AABB box = Managers.POSITION.aabb().get(
-                pos.getX(),
-                pos.getY(),
-                pos.getZ(),
+                pos.getX(), pos.getY(), pos.getZ(),
                 pos.getX() + 1,
                 pos.getY() + (SettingUtils.cc() ? 1 : 2),
                 pos.getZ() + 1
@@ -1092,7 +1090,7 @@ public class AutoCrystal extends Module {
                         if (this.placeDelayCheck()) {
                             if (this.antiPopMode.get() == AntiPopMode.Pause) {
                                 this.calcDamage(
-                                        Managers.POSITION.vec3().get(this.placePos.getX() + 0.5, this.placePos.getY(), this.placePos.getZ() + 0.5), false
+                                        new Vec3(this.placePos.getX() + 0.5, this.placePos.getY(), this.placePos.getZ() + 0.5), false
                                 );
                                 if (this.selfDamage * this.selfPop.get() > this.selfHealth) {
                                     return;
@@ -1114,7 +1112,7 @@ public class AutoCrystal extends Module {
                                 this.place(this.placePos.below(), this.crystalDir, this.crystalHand);
                                 if (this.predictAttacks.get() > 0) {
                                     this.sendPredictions(
-                                            Managers.POSITION.vec3().get(this.placePos.getX() + 0.5, this.placePos.getY(), this.placePos.getZ() + 0.5)
+                                            new Vec3(this.placePos.getX() + 0.5, this.placePos.getY(), this.placePos.getZ() + 0.5)
                                     );
                                 }
 
@@ -1213,7 +1211,7 @@ public class AutoCrystal extends Module {
         if (this.ignoreSlow.get() && this.shouldFacePlace()) {
             return false;
         } else {
-            this.calcDamage(Managers.POSITION.vec3().get(this.placePos.getX() + 0.5, this.placePos.getY(), this.placePos.getZ() + 0.5), false);
+            this.calcDamage(new Vec3(this.placePos.getX() + 0.5, this.placePos.getY(), this.placePos.getZ() + 0.5), false);
             return this.placePos != null && this.enemyDamage <= this.slowDamage.get() && this.enemyHealth > this.slowHealth.get();
         }
     }
@@ -1317,7 +1315,7 @@ public class AutoCrystal extends Module {
             } else if (this.intersects(this.placePos)) {
                 return true;
             } else {
-                this.calcDamage(Managers.POSITION.vec3().get(this.placePos.getX() + 0.5, this.placePos.getY(), this.placePos.getZ() + 0.5), false);
+                this.calcDamage(new Vec3(this.placePos.getX() + 0.5, this.placePos.getY(), this.placePos.getZ() + 0.5), false);
                 return !this.placeDamageCheck();
             }
         }
@@ -1342,7 +1340,7 @@ public class AutoCrystal extends Module {
                                     && (!this.ahd.get() || !this.hitBoxDesyncList.contains((p, timer) -> p.equals(pos.below()) && timer.value <= 0))
                                     && this.inPlaceRange(pos.below())
                                     && this.inAttackRangePlacing(pos)) {
-                                this.calcDamage(Managers.POSITION.vec3().get(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5), false);
+                                this.calcDamage(new Vec3(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5), false);
                                 if ((!bestPop || this.isPop) && this.placeDamageCheck()) {
                                     double value = this.getPlaceValue(pos);
                                     if (!(value + (this.raytraceBypass.get() ? this.raytraceBypassValue.get() : 0.0) <= highest)) {
@@ -1403,9 +1401,7 @@ public class AutoCrystal extends Module {
 
     protected boolean intersects(BlockPos pos) {
         AABB box = Managers.POSITION.aabb().get(
-                pos.getX(),
-                pos.getY(),
-                pos.getZ(),
+                pos.getX(), pos.getY(), pos.getZ(),
                 pos.getX() + 1,
                 pos.getY() + (SettingUtils.cc() ? 1 : 2),
                 pos.getZ() + 1
@@ -1442,7 +1438,7 @@ public class AutoCrystal extends Module {
 
     private boolean canAttack(Entity entity, BlockPos placingPos) {
         boolean placing = placingPos != null;
-        AABB box = Managers.POSITION.getBox(entity);
+        AABB box = entity.getBoundingBox();
         if (placing) {
             if (!this.inAttackRangePlacing(box, null)) {
                 return false;
@@ -1590,7 +1586,7 @@ public class AutoCrystal extends Module {
         }
 
         BlockPos collidePos = this.autoMineIgnore();
-        if (collidePos != null && Managers.POSITION.getBox(crystal).intersects(Managers.POSITION.aabb().fromBlock(collidePos.getX(), collidePos.getY(), collidePos.getZ()))) {
+        if (collidePos != null && crystal.getBoundingBox().intersects(BoxUtils.get(collidePos))) {
             value += this.autoMineCollideValue.get();
         }
 
@@ -1598,7 +1594,7 @@ public class AutoCrystal extends Module {
         value += this.enemyMod();
         value += this.selfMod();
         value += this.friendMod();
-        value += this.distMod(SettingUtils.attackRangeTo(Managers.POSITION.getBox(crystal), feet));
+        value += this.distMod(SettingUtils.attackRangeTo(crystal.getBoundingBox(), feet));
         if (SettingUtils.shouldIgnoreRotations(crystal)) {
             value -= this.noRotateValue.get();
         }
@@ -1618,7 +1614,7 @@ public class AutoCrystal extends Module {
         }
 
         BlockPos collidePos = this.autoMineIgnore();
-        if (collidePos != null && Managers.POSITION.aabb().fromBlock(pos.getX(), pos.getY(), pos.getZ()).intersects(Managers.POSITION.aabb().fromBlock(collidePos.getX(), collidePos.getY(), collidePos.getZ()))) {
+        if (collidePos != null && BoxUtils.get(pos).intersects(BoxUtils.get(collidePos))) {
             value += this.autoMineCollideValue.get();
         }
 
@@ -1633,7 +1629,7 @@ public class AutoCrystal extends Module {
             }
         }
 
-        value += this.moveMod(Managers.POSITION.vec3().get(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5));
+        value += this.moveMod(new Vec3(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5));
         value += this.enemyMod();
         value += this.selfMod();
         value += this.friendMod();
@@ -1704,10 +1700,10 @@ public class AutoCrystal extends Module {
                     if (entity instanceof EndCrystal) {
                         yield false;
                     }
-                    yield Managers.POSITION.aabb().fromBlock(autoMine.minePos.getX(), autoMine.minePos.getY(), autoMine.minePos.getZ()).intersects(Managers.POSITION.getBox(entity));
+                    yield BoxUtils.get(autoMine.minePos).intersects(entity.getBoundingBox());
                 }
                 case SurroundMiner, AutoCity, AntiBurrow, Manual ->
-                        Managers.POSITION.aabb().fromBlock(autoMine.minePos.getX(), autoMine.minePos.getY(), autoMine.minePos.getZ()).intersects(Managers.POSITION.getBox(entity));
+                        BoxUtils.get(autoMine.minePos).intersects(entity.getBoundingBox());
                 default -> false;
             };
         } else {
@@ -1717,7 +1713,7 @@ public class AutoCrystal extends Module {
 
     public void calcDamage(Vec3 vec, boolean attacking) {
         this.selfDamage = this.crystalDamage(
-                BlackOut.mc.player, attacking ? Managers.POSITION.getBox(BlackOut.mc.player) : this.extMap.get(BlackOut.mc.player), vec
+                BlackOut.mc.player, attacking ? BlackOut.mc.player.getBoundingBox() : this.extMap.get(BlackOut.mc.player), vec
         );
         this.enemyDamage = 0.0;
         this.friendDamage = 0.0;
