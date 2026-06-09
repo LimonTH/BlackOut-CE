@@ -592,11 +592,12 @@ public class Aura extends MoveUpdateModule {
         Entity[] candidates = new Entity[256];
         double[] scores = new double[256];
         int candidateCount = 0;
-        Vec3 playerPos = BlackOut.mc.player.position();
         float playerYaw = BlackOut.mc.player.getYRot();
 
-        for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
+        int count = Managers.POSITION.entityCount();
+        for (int i = 0; i < count; i++) {
             if (candidateCount >= 256) break;
+            Entity entity = Managers.POSITION.entity(i);
             if (!this.entities.get().contains(entity.getType()) || entity == BlackOut.mc.player) continue;
             if (entity instanceof ItemEntity ||
                     entity instanceof ExperienceOrb ||
@@ -605,7 +606,7 @@ public class Aura extends MoveUpdateModule {
                 continue;
             }
 
-            double distance = playerPos.distanceTo(entity.position());
+            double distance = Managers.POSITION.distance(i);
             if (this.teleport.get()) {
                 if (distance > this.maxPackets.get() * this.maxDistance.get()) continue;
             } else if (distance > 10.0) {

@@ -655,11 +655,13 @@ public class Scaffold extends MoveUpdateModule {
         Entity crystal = null;
         double lowest = 1000.0;
 
-        for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
-            if (entity instanceof EndCrystal && !(BlackOut.mc.player.distanceTo(entity) > 5.0F) && SettingUtils.inAttackRange(entity.getBoundingBox())) {
+        int count = Managers.POSITION.entityCount();
+        for (int i = 0; i < count; i++) {
+            Entity entity = Managers.POSITION.entity(i);
+            if (entity instanceof EndCrystal && Managers.POSITION.distance(i) <= 5.0F && SettingUtils.inAttackRange(Managers.POSITION.box(i))) {
                 for (BlockPos pos : this.valids) {
-                    if (BoxUtils.get(pos).intersects(entity.getBoundingBox())) {
-                        double dmg = DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), entity.position());
+                    if (BoxUtils.get(pos).intersects(Managers.POSITION.box(i))) {
+                        double dmg = DamageUtils.crystalDamage(BlackOut.mc.player, BlackOut.mc.player.getBoundingBox(), Managers.POSITION.getPosition(entity));
                         if (dmg < lowest) {
                             crystal = entity;
                             lowest = dmg;

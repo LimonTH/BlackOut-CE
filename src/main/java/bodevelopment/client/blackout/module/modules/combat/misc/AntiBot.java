@@ -59,65 +59,63 @@ public class AntiBot extends Module {
     public void onTick(TickEvent.Pre event) {
         if (PlayerUtils.isInGame()) {
             CollectionUtils.limitSize(this.bots, 100);
-            BlackOut.mc
-                    .level
-                    .players()
-                    .forEach(
-                            player -> {
-                                if (this.WD.get()) {
-                                    if (player.getUUID() == null) {
-                                        this.addBot(player);
-                                    } else {
-                                        this.removeBot(player);
-                                    }
+            int count = Managers.POSITION.entityCount();
+            for (int i = 0; i < count; i++) {
+                Entity entity = Managers.POSITION.entity(i);
+                if (entity instanceof AbstractClientPlayer player) {
+                    if (this.WD.get()) {
+                        if (player.getUUID() == null) {
+                            this.addBot(player);
+                        } else {
+                            this.removeBot(player);
+                        }
 
-                                    this.info = this.WD.name;
-                                }
+                        this.info = this.WD.name;
+                    }
 
-                                if (this.smart.get()) {
-                                    if (player.tickCount < 10
-                                            && BlackOut.mc.player.tickCount > 10
-                                            && BlackOut.mc.player.distanceTo(player) < this.range.get()
-                                            && player != BlackOut.mc.player) {
-                                        this.addBot(player);
-                                    }
+                    if (this.smart.get()) {
+                        if (player.tickCount < 10
+                                && BlackOut.mc.player.tickCount > 10
+                                && BlackOut.mc.player.distanceTo(player) < this.range.get()) {
+                            this.addBot(player);
+                        }
 
-                                    if (BlackOut.mc.player.distanceTo(player) > this.range.get()) {
-                                        this.removeBot(player);
-                                    }
+                        if (BlackOut.mc.player.distanceTo(player) > this.range.get()) {
+                            this.removeBot(player);
+                        }
 
-                                    this.info = this.smart.name;
-                                }
+                        this.info = this.smart.name;
+                    }
 
-                                if (this.inv.get()) {
-                                    if (player.isInvisible()) {
-                                        this.bots.add(player);
-                                    } else {
-                                        this.removeBot(player);
-                                    }
+                    if (this.inv.get()) {
+                        if (player.isInvisible()) {
+                            this.bots.add(player);
+                        } else {
+                            this.removeBot(player);
+                        }
 
-                                    this.info = this.inv.name;
-                                }
+                        this.info = this.inv.name;
+                    }
 
-                                if (this.nameCheck.get()) {
-                                    if (player.getName().getString().contains("[NPC]")
-                                            || player.getName().getString().contains("§")
-                                            || player.getName().getString().contains("CIT-")) {
-                                        this.addBot(player);
-                                    }
+                    if (this.nameCheck.get()) {
+                        if (player.getName().getString().contains("[NPC]")
+                                || player.getName().getString().contains("§")
+                                || player.getName().getString().contains("CIT-")) {
+                            this.addBot(player);
+                        }
 
-                                    this.info = this.nameCheck.name;
-                                }
+                        this.info = this.nameCheck.name;
+                    }
 
-                                if (this.bedWars.get()) {
-                                    if (player.getName().getString().contains("SHOP") || player.getName().getString().contains("UPGRADES")) {
-                                        this.addBot(player);
-                                    }
+                    if (this.bedWars.get()) {
+                        if (player.getName().getString().contains("SHOP") || player.getName().getString().contains("UPGRADES")) {
+                            this.addBot(player);
+                        }
 
-                                    this.info = this.bedWars.name;
-                                }
-                            }
-                    );
+                        this.info = this.bedWars.name;
+                    }
+                }
+            }
             if (this.mode.get() == HandlingMode.Remove) {
                 this.getBots().forEach(bot -> BlackOut.mc.level.removeEntity(bot.getId(), Entity.RemovalReason.DISCARDED));
             }

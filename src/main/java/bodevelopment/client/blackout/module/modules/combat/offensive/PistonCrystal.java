@@ -372,11 +372,13 @@ public class PistonCrystal extends Module {
         EndCrystal crystal = null;
         double cd = 10000.0;
 
-        for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
+        int count = Managers.POSITION.entityCount();
+        for (int i = 0; i < count; i++) {
+            Entity entity = Managers.POSITION.entity(i);
             if (entity instanceof EndCrystal c
-                    && (blocked || c.getX() != this.crystalPos.getX() + 0.5 || c.getZ() != this.crystalPos.getZ() + 0.5)
-                    && (this.alwaysAttack.get() || blocked || c.getX() - c.getBlockX() != 0.5 || c.getZ() - c.getBlockZ() != 0.5)
-                    && (c.getBoundingBox().intersects(BoxUtils.crystalSpawnBox(this.crystalPos)) || blocked && c.getBoundingBox().intersects(BoxUtils.get(this.pistonPos)))) {
+                    && (blocked || Managers.POSITION.entityX(i) != this.crystalPos.getX() + 0.5 || Managers.POSITION.entityZ(i) != this.crystalPos.getZ() + 0.5)
+                    && (this.alwaysAttack.get() || blocked || Managers.POSITION.entityX(i) - c.getBlockX() != 0.5 || Managers.POSITION.entityZ(i) - c.getBlockZ() != 0.5)
+                    && (Managers.POSITION.getBox(entity).intersects(BoxUtils.crystalSpawnBox(this.crystalPos)) || blocked && Managers.POSITION.getBox(entity).intersects(BoxUtils.get(this.pistonPos)))) {
                 double d = BlackOut.mc.player.getEyePosition().distanceTo(c.position());
                 if (d < cd) {
                     cd = d;

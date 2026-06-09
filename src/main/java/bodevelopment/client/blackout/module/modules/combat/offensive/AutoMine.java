@@ -764,9 +764,24 @@ public class AutoMine extends Module {
     private Target getCrystalBase() {
         AutoCrystalBase crystalBase = AutoCrystalBase.getInstance();
 
-        if (crystalBase == null || !crystalBase.enabled || crystalBase.bestBasePos == null) {
+        if (crystalBase == null || !crystalBase.enabled) {
             return null;
         }
+
+        if (crystalBase.miningTarget != null) {
+            if (BlockUtils.mineable(crystalBase.miningTarget) && SettingUtils.inMineRange(crystalBase.miningTarget)) {
+                return new Target(
+                        crystalBase.miningTarget,
+                        null,
+                        MineType.CrystalBase,
+                        this.crystalBasePriority.get().priority,
+                        crystalBase.target
+                );
+            }
+            crystalBase.miningTarget = null;
+        }
+
+        if (crystalBase.bestBasePos == null) return null;
 
         BlockPos obstacle = getObstacle(crystalBase.bestBasePos);
         if (obstacle == null) return null;
@@ -910,12 +925,14 @@ public class AutoMine extends Module {
         EndCrystal closestCrystal = null;
         double closestDistance = Double.MAX_VALUE;
 
-        for (Entity entity : BlackOut.mc.level.entitiesForRendering()) {
+        int count = Managers.POSITION.entityCount();
+        for (int i = 0; i < count; i++) {
+            Entity entity = Managers.POSITION.entity(i);
             if (entity instanceof EndCrystal crystal
                     && this.crystals.contains(crystal.blockPosition())
                     && !AutoCrystal.getInstance().shouldAutoMineStop(entity)
-                    && SettingUtils.inAttackRange(entity.getBoundingBox())) {
-                double distance = BlackOut.mc.player.distanceTo(entity);
+                    && SettingUtils.inAttackRange(Managers.POSITION.getBox(entity))) {
+                double distance = Managers.POSITION.distance(i);
                 if (!(distance >= closestDistance)) {
                     closestCrystal = crystal;
                     closestDistance = distance;

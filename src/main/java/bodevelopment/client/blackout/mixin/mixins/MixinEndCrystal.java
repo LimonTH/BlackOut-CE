@@ -39,6 +39,12 @@ public class MixinEndCrystal implements IEndCrystal {
         NoRender noRender = NoRender.getInstance();
         if (noRender.enabled && noRender.crystalBase.get()) {
             cir.setReturnValue(false);
+            return;
+        }
+
+        // Всегда прячем платформу для кристаллов, поставленных нами
+        if (this.isOwn) {
+            cir.setReturnValue(false);
         }
     }
 }

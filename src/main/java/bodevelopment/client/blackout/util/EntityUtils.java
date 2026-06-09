@@ -82,9 +82,9 @@ public class EntityUtils {
     }
 
     private static AABB getBox(Entity entity, Map<Entity, AABB> map) {
-        if (map == null) return entity.getBoundingBox();
+        if (map == null) return Managers.POSITION.getBox(entity);
         AABB cached = map.get(entity);
-        return cached != null ? cached : entity.getBoundingBox();
+        return cached != null ? cached : Managers.POSITION.getBox(entity);
     }
 
     public static boolean intersectsWithSpawningItem(BlockPos pos) {

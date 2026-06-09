@@ -139,18 +139,9 @@ public class StatsHUD extends HudElement {
     }
 
     private AbstractClientPlayer getClosest(Predicate<AbstractClientPlayer> predicate) {
-        double closestDist = 0.0;
-        AbstractClientPlayer closest = null;
-
-        for (AbstractClientPlayer player : BlackOut.mc.level.players()) {
-            double d = BlackOut.mc.player.distanceTo(player);
-            if (predicate.test(player) && (closest == null || !(d > closestDist))) {
-                closest = player;
-                closestDist = d;
-            }
-        }
-
-        return closest;
+        int idx = Managers.POSITION.findClosest(e -> e instanceof AbstractClientPlayer p 
+            && predicate.test(p));
+        return idx >= 0 ? (AbstractClientPlayer) Managers.POSITION.entity(idx) : null;
     }
 
     public enum TargetMode {
