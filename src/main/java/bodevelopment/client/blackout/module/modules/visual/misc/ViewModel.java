@@ -1,3 +1,22 @@
+/*
+ * Blackout Client (CE) - A cutting-edge, feature-rich cheat client for Minecraft.
+ * A modernized continuation of the original Blackout project by OLEPOSSU & KassuK.
+ * Copyright (C) 2026  LimonTH
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://gnu.org>.
+ */
+
 package bodevelopment.client.blackout.module.modules.visual.misc;
 
 import bodevelopment.client.blackout.module.Module;
@@ -48,11 +67,11 @@ public class ViewModel extends Module {
     private float mainRotationX = 0.0F;
     private float mainRotationY = 0.0F;
     private float mainRotationZ = 0.0F;
-    private long mainTime = 0L;
+    private long mainTime = System.currentTimeMillis();
     private float offRotationX = 0.0F;
     private float offRotationY = 0.0F;
     private float offRotationZ = 0.0F;
-    private long offTime = 0L;
+    private long offTime = System.currentTimeMillis();
 
     public ViewModel() {
         super("View Model", "Grants precise control over the first-person hand and item camera transformations, including translation, scaling, and rotation.", SubCategory.MISC_VISUAL, false);

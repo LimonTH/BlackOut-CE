@@ -1,3 +1,22 @@
+/*
+ * Blackout Client (CE) - A cutting-edge, feature-rich cheat client for Minecraft.
+ * A modernized continuation of the original Blackout project by OLEPOSSU & KassuK.
+ * Copyright (C) 2026  LimonTH
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://gnu.org>.
+ */
+
 package bodevelopment.client.blackout.module.modules.visual.misc;
 
 import bodevelopment.client.blackout.BlackOut;
@@ -46,7 +65,7 @@ public class Trajectories extends Module {
     private final SettingGroup sgGeneral = this.addGroup("General");
     private final SettingGroup sgColor = this.addGroup("Color");
 
-    private final Setting<Integer> maxTicks = this.sgGeneral.intSetting("Simulation Depth", 500, 0, 500, 5, "The maximum number of physics steps to calculate for the projected path.");
+    private final Setting<Integer> maxTicks = this.sgGeneral.intSetting("Simulation Depth", 200, 0, 300, 5, "The maximum number of physics steps to calculate for the projected path.");
     private final Setting<Boolean> playerVelocity = this.sgGeneral.booleanSetting("Inertia Compensation", true, "Includes the player's current movement velocity in the initial projectile calculation.");
 
     public final Setting<Trails.ColorMode> colorMode = this.sgColor.enumSetting("Color Logic", Trails.ColorMode.Custom, "The algorithmic style used to calculate the trajectory line colors.");
@@ -107,39 +126,42 @@ public class Trajectories extends Module {
     }
 
     private void draw(SimulationData data, double[] velocity, ItemStack itemStack, float tickDelta, PoseStack stack) {
-        HitResult hitResult = this.drawLine(data, velocity, itemStack, tickDelta, stack);
+        TrajectoryResult result = this.drawLine(data, velocity, itemStack, tickDelta, stack);
+        if (result == null) return;
 
-        if (hitResult != null) {
-            Color color = this.getColor();
-            int rgb = color.getRGB();
+        Color color = this.getColor();
+        int rgb = color.getRGB();
+        Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
+        Vec3 worldPos = result.finalPos.subtract(camPos);
+
+        if (result.hitResult instanceof BlockHitResult blockHitResult) {
             double radius = 0.25;
 
-            if (hitResult instanceof BlockHitResult blockHitResult) {
-                Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
-                Vec3 pos = blockHitResult.getLocation().subtract(camPos);
+            Render3DUtils.Orientation orientation = switch (blockHitResult.getDirection()) {
+                case DOWN, UP -> Render3DUtils.Orientation.XZ;
+                case NORTH, SOUTH -> Render3DUtils.Orientation.XY;
+                case WEST, EAST -> Render3DUtils.Orientation.YZ;
+            };
 
-                Render3DUtils.Orientation orientation = switch (blockHitResult.getDirection()) {
-                    case DOWN, UP -> Render3DUtils.Orientation.XZ;
-                    case NORTH, SOUTH -> Render3DUtils.Orientation.XY;
-                    case WEST, EAST -> Render3DUtils.Orientation.YZ;
-                };
+            Render3DUtils.circle(stack, worldPos, radius, rgb, 360, orientation);
 
-                Render3DUtils.circle(stack, pos, radius, rgb, 360, orientation);
+            int fillCol = (color.getAlpha() / 4 << 24) | (rgb & 0x00FFFFFF);
+            Render3DUtils.fillCircle(stack, worldPos, radius, fillCol, 360, orientation);
 
-                int fillCol = (color.getAlpha() / 4 << 24) | (rgb & 0x00FFFFFF);
-                Render3DUtils.fillCircle(stack, pos, radius, fillCol, 360, orientation);
+        } else if (result.hitResult instanceof EntityHitResult entityHitResult) {
+            AABB box = EntityUtils.getLerpedBox(entityHitResult.getEntity(), tickDelta)
+                    .move(-camPos.x, -camPos.y, -camPos.z);
 
-            } else if (hitResult instanceof EntityHitResult entityHitResult) {
-                Vec3 camPos = BlackOut.mc.gameRenderer.getMainCamera().getPosition();
-                AABB box = EntityUtils.getLerpedBox(entityHitResult.getEntity(), tickDelta)
-                        .move(-camPos.x, -camPos.y, -camPos.z);
+            Render3DUtils.renderOutlines(stack, box, rgb);
 
-                Render3DUtils.renderOutlines(stack, box, rgb);
-            }
+        } else {
+            int fadedRgb = (color.getAlpha() / 2 << 24) | (rgb & 0x00FFFFFF);
+            Render3DUtils.fillCircle(stack, worldPos, 0.15, fadedRgb, 16, Render3DUtils.Orientation.XZ);
+            Render3DUtils.circle(stack, worldPos, 0.25, fadedRgb, 16, Render3DUtils.Orientation.XZ);
         }
     }
 
-    private HitResult drawLine(SimulationData data, double[] velocity, ItemStack itemStack, float tickDelta, PoseStack stack) {
+    private TrajectoryResult drawLine(SimulationData data, double[] velocity, ItemStack itemStack, float tickDelta, PoseStack stack) {
         Vec3 pos = data.startPos.apply(itemStack, tickDelta);
         Matrix4f matrix4f = stack.last().pose();
         RenderSystem.setShader(CoreShaders.POSITION_COLOR);
@@ -183,7 +205,7 @@ public class Trajectories extends Module {
             if (hitResult != null) {
                 this.vertex(bufferBuilder, matrix4f, hitResult.getLocation(), prevPos, dist);
                 BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
-                return hitResult;
+                return new TrajectoryResult(hitResult, hitResult.getLocation());
             }
 
             data.physics.accept(box, velocity);
@@ -192,7 +214,7 @@ public class Trajectories extends Module {
         }
 
         BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
-        return null;
+        return new TrajectoryResult(null, pos);
     }
 
     private void vertex(BufferBuilder bufferBuilder, Matrix4f matrix4f, Vec3 pos, Vec3 prevPos, MutableDouble dist) {
@@ -410,4 +432,6 @@ public class Trajectories extends Module {
             DoubleConsumer<AABB, double[]> physics
     ) {
     }
+
+    private record TrajectoryResult(HitResult hitResult, Vec3 finalPos) {}
 }

@@ -1,3 +1,22 @@
+/*
+ * Blackout Client (CE) - A cutting-edge, feature-rich cheat client for Minecraft.
+ * A modernized continuation of the original Blackout project by OLEPOSSU & KassuK.
+ * Copyright (C) 2026  LimonTH
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://gnu.org>.
+ */
+
 package bodevelopment.client.blackout.module.modules.combat.defensive;
 
 import bodevelopment.client.blackout.BlackOut;
@@ -56,6 +75,8 @@ public class AutoMend extends Module {
             "Pauses mending for a set amount of ticks after you move to a different block.");
     private final Setting<Integer> airPause = this.sgPause.intSetting("Air Pause", 0, 0, 100, 1,
             "Pauses mending while you are not on the ground.");
+    private final Setting<Boolean> disableWhileFlying = this.sgPause.booleanSetting("Disable While Flying", true,
+            "Prevents throwing bottles while flying with an elytra.");
 
     private final Setting<Boolean> renderSwing = this.sgRender.booleanSetting("Render Swing", true,
             "Shows the arm swing animation when throwing bottles.");
@@ -149,7 +170,7 @@ public class AutoMend extends Module {
     }
 
     private boolean shouldThrow() {
-        return this.shouldMend() && this.acTimer <= 0 && this.surroundTimer <= 0 && this.selfTrapTimer <= 0 && this.moveTimer <= 0 && this.offGroundTimer <= 0;
+        return (!this.disableWhileFlying.get() || !BlackOut.mc.player.isFallFlying()) && this.shouldMend() && this.acTimer <= 0 && this.surroundTimer <= 0 && this.selfTrapTimer <= 0 && this.moveTimer <= 0 && this.offGroundTimer <= 0;
     }
 
     private void updateTimers() {
