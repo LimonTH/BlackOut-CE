@@ -31,6 +31,7 @@ import bodevelopment.client.blackout.gui.clickgui.screens.SearchScreen;
 import bodevelopment.client.blackout.helpers.ScrollHelper;
 import bodevelopment.client.blackout.helpers.SmoothScrollHelper;
 import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.manager.managers.ClickGuiManager;
 import bodevelopment.client.blackout.module.AbstractModule;
 import bodevelopment.client.blackout.module.ParentCategory;
 import bodevelopment.client.blackout.module.SubCategory;
@@ -849,7 +850,7 @@ public class ClickGui extends Screen {
             return true;
         }
 
-        if (keyCode == 344) {
+        if (ClickGuiManager.isClickGuiKey(keyCode)) {
             if (System.currentTimeMillis() - this.openTime > 100L) {
                 this.onClose();
                 return true;
