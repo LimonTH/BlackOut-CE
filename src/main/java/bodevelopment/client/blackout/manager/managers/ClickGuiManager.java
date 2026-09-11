@@ -23,10 +23,14 @@ import bodevelopment.client.blackout.BlackOut;
 import bodevelopment.client.blackout.annotations.PublicAPI;
 import bodevelopment.client.blackout.event.Event;
 import bodevelopment.client.blackout.event.events.KeyEvent;
+import bodevelopment.client.blackout.event.events.MouseButtonEvent;
 import bodevelopment.client.blackout.gui.clickgui.ClickGui;
 import bodevelopment.client.blackout.gui.clickgui.ClickGuiScreen;
+import bodevelopment.client.blackout.keys.Key;
+import bodevelopment.client.blackout.keys.KeyBind;
 import bodevelopment.client.blackout.manager.Manager;
 import bodevelopment.client.blackout.manager.Managers;
+import bodevelopment.client.blackout.module.modules.client.GuiSettings;
 import bodevelopment.client.blackout.util.PlayerUtils;
 
 @PublicAPI
@@ -43,8 +47,19 @@ public class ClickGuiManager extends Manager {
     public void onKey(KeyEvent event) {
         if (!event.pressed || !PlayerUtils.isInGame()) return;
 
-        if (event.key == 344) {
+        if (isClickGuiKey(event.key)) {
             if (BlackOut.mc.screen == null || Managers.CLICK_GUI.CLICK_GUI.isOpen()) {
+                this.toggle();
+            }
+        }
+    }
+
+    @Event
+    public void onMouse(MouseButtonEvent event) {
+        if (!event.pressed || !PlayerUtils.isInGame()) return;
+
+        if (isClickGuiMouse(event.button)) {
+            if (BlackOut.mc.screen == null) {
                 this.toggle();
             }
         }
@@ -58,7 +73,26 @@ public class ClickGuiManager extends Manager {
         }
     }
 
-    private void toggle() {
+    public static KeyBind getOpenBind() {
+        try {
+            GuiSettings settings = GuiSettings.getInstance();
+            if (settings != null && settings.openKey != null && settings.openKey.get() != null) {
+                return settings.openKey.get();
+            }
+        } catch (Exception ignored) {
+        }
+        return new KeyBind(new Key(344));
+    }
+
+    public static boolean isClickGuiKey(int key) {
+        return getOpenBind().isKey(key);
+    }
+
+    public static boolean isClickGuiMouse(int button) {
+        return getOpenBind().isMouse(button);
+    }
+
+    public void toggle() {
         if (this.CLICK_GUI.isOpen()) {
             if (System.currentTimeMillis() - this.CLICK_GUI.toggleTime < 500L) return;
 

@@ -24,6 +24,7 @@ import bodevelopment.client.blackout.interfaces.functional.SingleOut;
 import bodevelopment.client.blackout.keys.Key;
 import bodevelopment.client.blackout.keys.KeyBind;
 import bodevelopment.client.blackout.keys.MouseButton;
+import bodevelopment.client.blackout.manager.managers.ClickGuiManager;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.util.GuiColorUtils;
 import bodevelopment.client.blackout.util.SelectedComponent;
@@ -70,7 +71,7 @@ public class KeyBindSetting extends Setting<KeyBind> {
     @Override
     public void onKey(int key, boolean pressed) {
         this.get().onKey(key, pressed);
-        if (key == 256 || key == 344 || !this.get().isBinding()) {
+        if (key == 256 || ClickGuiManager.isClickGuiKey(key) || !this.get().isBinding()) {
             if (SelectedComponent.is(this.id)) {
                 SelectedComponent.reset();
             }

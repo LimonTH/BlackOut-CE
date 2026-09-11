@@ -20,6 +20,8 @@
 package bodevelopment.client.blackout.module.modules.client;
 
 import bodevelopment.client.blackout.enums.TextColorMode;
+import bodevelopment.client.blackout.keys.Key;
+import bodevelopment.client.blackout.keys.KeyBind;
 import bodevelopment.client.blackout.module.SettingsModule;
 import bodevelopment.client.blackout.module.setting.Setting;
 import bodevelopment.client.blackout.module.setting.SettingGroup;
@@ -29,10 +31,15 @@ import bodevelopment.client.blackout.randomstuff.BlackOutColor;
 public class GuiSettings extends SettingsModule {
     private static GuiSettings INSTANCE;
 
+    private final SettingGroup sgBind = this.addGroup("Bind");
     private final SettingGroup sgScreens = this.addGroup("Screens");
     private final SettingGroup sgStyle = this.addGroup("Style");
     private final SettingGroup sgOpen = this.addGroup("Open");
     private final SettingGroup sgClosed = this.addGroup("Closed");
+
+    public final Setting<KeyBind> openKey = this.sgBind.keySetting("Open Key",
+            "Keybind to open the ClickGUI.",
+            new KeyBind(new Key(344)));
 
     public final Setting<Boolean> searchScreen = this.sgScreens.booleanSetting("Search Screen", true,
             "Allows opening the search menu by typing any letter while in ClickGUI.");
